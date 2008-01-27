@@ -1,9 +1,9 @@
-function [vols_s,extras] = fmni_smooth_vols(vols,opt)
+function [vols_s,extras] = niak_smooth_vols(vols,opt)
 
 % Spatial smoothing of 3D+t data with a Gaussian kernel
 %
 % SYNTAX
-% vol_s = fmni_smooth_vols(vols,opt)
+% vol_s = niak_smooth_vols(vols,opt)
 %
 % INPUTS
 % vols        (4D array) a 3D+t dataset
