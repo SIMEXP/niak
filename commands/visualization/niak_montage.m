@@ -2,38 +2,44 @@ function [] = niak_montage(vol,opt)
 
 % Visualization of a 3D volume in a montage style (all slices in one image)
 %
-% SYNTAX
+% SYNTAX:
 % []=niak_montage(vol,opt)
 %
-% INPUTS
-% vol           (3D array) a 3D volume
-% opt           (structure, optional) has the following fields:
+% INPUTS:
+% VOL           (3D array) a 3D volume
+% OPT           (structure, optional) has the following fields:
 %
-%                   type_visu (string, default 'axial') the plane of slices
-%                       in the montage. Available options :'axial', 'coronal',
-%                       'sagital'.
+%                   TYPE_SLICE (string, default 'axial') the plane of slices
+%                       in the montage. Available options : 'axial', 'coronal',
+%                       'sagital'. This option assumes the volume is in
+%                       'xyz' convention (left to right, posterior to
+%                       anterior, ventral to dorsal).
 %
-%                   limits (vector 2*1, default [min(vol(:)) max(vol(:))]) limits of color scaling.
+%                   VOL_LIMITS (vector 2*1, default [min(vol(:)) max(vol(:))]) 
+%                       limits of the color scaling.
 %
-%                   type_color (string, default 'gray') colormap name.
+%                   TYPE_COLOR (string, default 'gray') colormap name.
 %
-%                   flag_smooth (boolean, default 0) smooth the image with a 3
-%                          voxels whm Gaussian kernel.
+%                   FWHM_SMOOTH (double, default 0) smooth the image with a 
+%                       isotropic Gaussian kernel of SMOOTH fwhm (in voxels).
 %
-%                   'type_flip' (boolean, default '') make rotation and
+%                   TYPE_FLIP (boolean, default '') make rotation and
 %                           flip of the slice representation. see
 %                           niak_flip_vol for options.
 %
-% OUTPUTS
+% OUTPUTS:
 % a 'montage' style visualization of each slice of the volume
 %
-% TODO
+% TODO:
 % The smoothing option is not currently implemented.
 %
-% COMMENTS
+% COMMENTS:
 %
-% Copyright (c) Pierre Bellec 01/2008
-%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, I/O, reader, minc
+
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -54,24 +60,24 @@ function [] = niak_montage(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'type_visu','limits','type_color','flag_smooth','type_flip'};
+gb_list_fields = {'type_slice','vol_limits','type_color','fwhm_smooth','type_flip'};
 gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'gray',0,''};
 niak_set_defaults
 
 colormap(type_color);
 
-if strcmp(type_visu,'coronal');
+if strcmp(type_slice,'coronal');
 
     vol = permute(vol,[1 3 2]);
 
-elseif strcmp(type_visu,'sagital');
+elseif strcmp(type_slice,'sagital');
 
     vol = permute(vol,[2 3 1]);
 
-elseif strcmp(type_visu,'axial')
+elseif strcmp(type_slice,'axial')
 
 else
-    fprintf('%s is an unkwon view type.\n',type_visu);
+    fprintf('%s is an unkwon view type.\n',type_slice);
     return
 end
 
@@ -79,6 +85,11 @@ end
 
 N = ceil(sqrt(nz));
 M = ceil(nz/N);
+
+if fwhm_smooth>0
+    opt_smooth.fwhm = fwhm_smooth;
+    vol = niak_smooth_vols(vol,opt_smooth);
+end
 
 if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')
     vol2 = zeros([nx*N ny*M]);
@@ -97,4 +108,4 @@ for num_z = 1:nz
     end
 end
 
-imagesc(vol2,limits)
+imagesc(vol2,vol_limits)

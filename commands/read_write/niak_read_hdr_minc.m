@@ -1,0 +1,247 @@
+function hdr = niak_read_hdr_minc(file_name)
+
+% Read the header of a MINC(1/2) file (.mnc)
+% http://www.bic.mni.mcgill.ca/software/minc/
+%
+% SYNTAX:
+% HDR = NIAK_READ_HDR_MINC(FILE_NAME)
+%
+% INPUT:
+% FILE_NAME     (string) name of a single 3D+t minc file 
+%               or a 3D minc file.
+%
+% OUTPUT:
+% HDR           (structure) contain a description of the data. For a list
+%                   of fields common to all data types, see NIAK_READ_VOL.
+%
+%               HDR.DETAILS (structure) describe the standard variables 
+%                   of a minc file.
+%                   Each field of HDR.DETAILS is one variable of the MINC
+%                   files, and is a structure with two fields.
+%
+%                   HDR.DETAILS.<VAR_NAME>.VARATTS (cell of string) the
+%                       list of the attribute name.
+%                   HDR.DETAILS.<VAR_NAME>.VARATTS (cell of string/double).
+%                       a list of the attribute values.
+%
+% COMMENTS:
+% Use system calls to MINCINFO and MINCHEADER, which requires a 
+% version of minc tools available.
+% 
+% SEE ALSO:
+% NIAK_READ_MINC, NIAK_WRITE_MINC, NIAK_READ_VOL, NIAK_WRITE_VOL
+%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, I/O, reader, minc
+
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
+
+%% Initialization of variables
+niak_gb_vars
+list_vars = {'image','image-min','image-max','time','xspace','yspace','zspace','acquisition','patient','study'};
+
+%% Checking for existence of the file
+if ~exist(file_name)
+    error('niak:file_not_found',cat(2,'File ',file_name,' not found'))
+end
+
+%% Reading the header with 'mincheader'
+[flag,str_header] = system(cat(2,'mincheader ',file_name));
+
+cell_header = niak_string2lines(str_header);
+
+%% Setting up the file type and file name
+if ~isempty(strfind(cell_header{1},'netcdf'))
+    hdr.type = 'minc1';
+elseif~isempty(strfind(cell_header{1},'hdf5'))
+    hdr.type = 'minc2';
+else
+    error('niak:minc','Could not parse the minc header !')
+end
+
+hdr.file_name = '';
+path_f = fileparts(file_name);
+if isempty(path_f)
+    hdr.info.file_parent = cat(2,pwd,filesep,file_name);
+else
+    hdr.info.file_parent = file_name;
+end
+
+%% Initialization of variables for parsing the header
+cell_header = cell_header(2:end-1);
+
+flag_var_mode = 0;
+flag_var = 0;
+flag_end = 0;
+
+hdr.details = struct();
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Parsing the header into HDR.DETAILS  %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+while ~isempty(cell_header)&~flag_end
+
+    str_line = cell_header{1};
+
+    if ~isempty(str_line) % Do not process empty lines
+        
+        flag_root = ~strcmp(str_line(1),char(9)); % lines which do not start with a tabulation represent big categories of entries
+
+        if flag_root
+            if flag_var_mode    % we're just interested in the variables. If a new category is reached (after the variable one), then stop
+                flag_end = 1>0;
+            end
+            flag_var_mode = 0;
+        end        
+
+        if flag_var_mode    % To pass this flag we must have entered the 'variables' category
+
+            flag_var = isempty(findstr(str_line,':'));  % Within the 'variables', lines without : contain the name of variables            
+
+            if flag_var % To pass this flag, the line must be defining a variable
+
+                %% we parse the line to get the name of the variable. If it
+                %% does not work, then it must be a weird attribute field
+                %% that will be ignored.                
+                cell_words = niak_string2words(str_line,{' ',char(9),'('}); 
+                nb_atts = 0;
+                
+                if length(cell_words)>1
+                    var_name = cell_words{2};
+                else
+                    var_name = '';
+                end
+
+                if max(niak_find_str_cell(list_vars,var_name))>0 % The name of the variable is a classic one. Let's parse the attributes (flag_OK=1).
+                    flag_OK = 1;
+                    if strcmp(var_name,'image-min')
+                        var_name = 'image_min';
+                    elseif strcmp(var_name,'image-max')
+                        var_name = 'image_max';
+                    end
+                    setfield(hdr.details,var_name,{});
+                else % The name of the variable is weird (probably a dicom header or something of the kind). Let's skip it (flag_OK = 0).
+                    flag_OK = 0>0;
+                end
+
+            else % If the line does not define a variable, then it defines the attribute of a variable
+
+                if flag_OK % The attribute is from a standard variable
+                    
+                    %% Parse the attribute line                    
+                    cell_words = niak_string2words(str_line,{' ',char(9),':',';','='});
+
+                    nb_atts = nb_atts+1;
+                    eval(cat(2,'hdr.details.',var_name,'.varatts{nb_atts} = ''',cell_words{2},''';'));
+
+                    pos = findstr(str_line,'"');
+                    if ~isempty(pos)
+                        eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = ''',str_line(pos(1)+1:pos(2)-1),''';')); % It's a string
+                    else
+                        str_val = niak_rm_blank([cell_words{3:end}],{'b','d','f'}); % we get rid of type marks
+                        eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = [',str_val,'];')); % It's an array of numbers
+                    end
+                end
+            end
+        end
+        
+        flag_var_mode = strcmp(str_line,'variables:')|flag_var_mode; % When meeting for the first time the 'variables:' line, we switch on the 'variables' mode (flag_var_mode = 1)
+    end
+    cell_header = cell_header(2:end);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Building a simplified version of the header common %%
+%% to all data formats in the NIAK                    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+hdr.info.precision = 'float'; % by default, data are imported/exported in float.
+
+%% Get information on history
+[flag,str_info] = system(cat(2,'mincinfo -attvalue :history ',file_name));
+hdr.info.history = str_info;
+
+%% Get information on the order of the dimensions
+if strcmp(hdr.type,'minc1')
+    [flag,str_info] = system(cat(2,'mincinfo ',file_name));
+    cell_lines = niak_string2lines(str_info);   
+    str_dim = cell_lines{3};
+end
+
+if strcmp(hdr.type,'minc2')
+    pos_do = find(niak_find_str_cell(hdr.details.image.varatts,'dimorder'));
+    str_dim = hdr.details.image.attvalue{pos_do};
+end
+
+list_dim_long = {'xspace','yspace','zspace','time'};
+list_dim_short = 'xyzt';
+
+pos_xyzt = zeros([length(list_dim_long) 1]);
+for num_e = 1:length(list_dim_long)
+    pos = findstr(str_dim,list_dim_long{num_e});
+    if ~isempty(pos)
+        pos_xyzt(num_e) = pos(1);
+    end
+end
+
+list_dim_long = list_dim_long(pos_xyzt~=0);
+[tmp,order_xyzt] = sort(pos_xyzt);
+order_xyzt = order_xyzt(tmp~=0);
+order_xyzt = order_xyzt(end:-1:1); % the order convention for dimensions in Matlab and Minc are reverse
+hdr.info.dimension_order = list_dim_short(order_xyzt);
+
+%% For each dimension, get the step, start and cosines information
+start_v = zeros([length(list_dim_long) 1]);
+cosines_v = zeros([3 3]);
+hdr.info.voxel_size = zeros([1 3]);
+hdr.info.dimensions = ones([1 length(list_dim_long)]);
+
+for num_e = 1:length(list_dim_long)
+    
+    struct_dim = getfield(hdr.details,list_dim_long{num_e});
+    
+    pos = find(niak_find_str_cell(struct_dim.varatts,'start'));
+    start_v(num_e) = struct_dim.attvalue{pos};
+    
+    pos = find(niak_find_str_cell(struct_dim.varatts,'length'));
+    hdr.info.dimensions(num_e) = struct_dim.attvalue{pos};
+    
+    pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
+    if num_e < 4
+        hdr.info.voxel_size(num_e) = struct_dim.attvalue{pos};
+    else
+        hdr.info.TR =  abs(struct_dim.attvalue{pos});
+    end
+    
+    if num_e~=4
+        pos = find(niak_find_str_cell(struct_dim.varatts,'direction_cosines'));
+        cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
+    end
+    
+end
+
+% Constructing the voxel-to-worldspace affine transformation
+origin_v = cosines_v*start_v(1:3);
+hdr.info.mat = zeros(4,4);
+hdr.info.mat(1:3,1:3) = cosines_v*diag(hdr.info.voxel_size);
+hdr.info.mat(1:3,4) = origin_v;
+hdr.info.mat(4,4) = 1;

@@ -1,12 +1,14 @@
-function cell_words = niak_string2words(vec_string)
+function cell_words = niak_string2words(vec_string,list_blanks)
 
 % Converts a strings into a cell of strings with individual words
 %
 % SYNTAX
-% cell_words = niak_string2words(vec_string)
+% cell_words = niak_string2words(vec_string,list_blanks)
 % 
 % INPUT
 % vec_string    (vector of strings) containing words separated by blanks
+% list_blanks   (cell of string, default {}) a list of characters that
+%                will be considered as blanks in addition to ' '.
 %
 % OUTPUT
 % cell_words    (cell of string) cell_words{n} is the nth word in
@@ -15,7 +17,7 @@ function cell_words = niak_string2words(vec_string)
 % COMMENTS
 % 
 % Copyright (c) Pierre Bellec 01/2008
-%
+
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -34,11 +36,20 @@ function cell_words = niak_string2words(vec_string)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-vec_string = niak_rm_blank(vec_string);
+% Setting up default
+if nargin < 2
+    list_blanks = {};
+end
 
-ind = findstr([' ' vec_string ' '],' ');
+vec_string = niak_rm_blank(vec_string,list_blanks);
 
-for num_i = 1:length(ind)-1
-    cell_words{num_i} = vec_string(ind(num_i):ind(num_i+1)-2);
+if ~isempty(vec_string)
+    ind = findstr([' ' vec_string ' '],' ');
+
+    for num_i = 1:length(ind)-1
+        cell_words{num_i} = vec_string(ind(num_i):ind(num_i+1)-2);
+    end
+else
+    cell_words = cell(0);
 end
 

@@ -1,24 +1,35 @@
-function [vols,hdr] = niak_read_minc(file_name)
+function [vol,hdr] = niak_read_minc(file_name,precision_data)
 
-% Reads fMRI data in MINC format
+% Read 3D or 3D+t data in MINC format.
+% http://www.bic.mni.mcgill.ca/software/minc/
 %
-% SYNTAX
-% [vols,hdr] = niak_read_minc(file_name)
+% SYNTAX:
+% [VOL,HDR] = NIAK_READ_MINC(FILE_NAME)
 % 
-% INPUT
-% file_name     a full path name of a 3D+t fMRI minc file or a 3D MRI minc file.
+% INPUT:
+% FILE_NAME         (string) a 3D+t or 3D minc file.
 %
-% OUTPUT
-% vols          a 3D+t (resp. 3D) matrix containing the fMRI (resp. MRI).
-% hdr           a structure containing a description of the data (TR,
-%               voxel size, etc ...).
+% OUTPUT:
+% VOL           (3D+t or 3D array of double) the fMRI or MRI data.
+%
+% HDR           a structure containing a description of the data. See
+%               NIAK_READ_VOL and NIAK_READ_HDR_MINC for details.
 % 
-% COMMENTS
-% Uses shell commands mincinfo and rawtominc, which assumes a Linux architecture with a proper install of minc tools.
-% The reader assumes that the dimension order in mincinfo is time, z, y x.
+% COMMENTS: 
+% Use shell commands MINCINFO (for minc1), MINCHEADER and MINCTORAW which 
+% requires a proper install of minc tools. This function is
+% creating temporary files. If it does not work, try to change the location 
+% of temporary files using the GB_NIAK_TMP variable defined in 
+% the NIAK_GB_VARS function.
+% 
+% SEE ALSO:
+% NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_READ_VOL, NIAK_WRITE_VOL
 %
-% Copyright (c) Pierre Bellec 01/2008
-%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, I/O, reader, minc
+
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -37,59 +48,35 @@ function [vols,hdr] = niak_read_minc(file_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-niak_gb_vars;
-
-% Reading the main characteristics of the image and setting the header
-hdr.type = 'minc';
-hdr.parent_file = file_name;
-hdr.size = zeros([1 4]);
-hdr.step = zeros([1 4]);
-hdr.origin = zeros([1 4]);
-
-if strcmp(gb_niak_language,'octave')
-    str_info = system(cat(2,'mincinfo ',file_name));
-else
-    [tmp,str_info] = system(cat(2,'mincinfo ',file_name));
-end
-cell_lines = niak_string2lines(str_info);
-nb_lines = length(cell_lines);
-
-for num_line = nb_lines-3:nb_lines
-    
-    cell_words = niak_string2words(cell_lines{num_line});
-    type_line = cell_words{1};
-    if strcmp(type_line,'time')
-        num_e = 4;
-    elseif strcmp(type_line,'xspace')
-        num_e = 1;
-    elseif strcmp(type_line,'yspace')
-        num_e = 2;
-    elseif strcmp(type_line,'zspace')
-        num_e = 3;        
-    else
-        fprintf('Problem interpreting outputs of mincinfo !! I got confused so I do nothing...')
-        return
-    end
-    
-    hdr.size(num_e) = str2num(cell_words{2});
-    hdr.step(num_e) = str2num(cell_words{3});
-    hdr.origin(num_e) = str2num(cell_words{4});
-    
+if nargin < 2
+    precision_data = 'float';
 end
 
-% Generating a name for a temporary file
+%% Parsing the header
+try,
+hdr = niak_read_hdr_minc(file_name);
+catch
+    error('niak:read_minc_header','Couldn''t parse the header')
+end
+
+hdr.info.precision = precision_data;
+
+%% Generating a name for a temporary file
 file_tmp = niak_file_tmp('.data');
 
-% extracting the data in double precision in the temporary file
-system(cat(2,'minctoraw -double -nonormalize ',file_name,' > ',file_tmp));
+%% extracting the data in float precision in the temporary file
+[flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -nonormalize ',file_name,' > ',file_tmp));
+if flag>0
+    error('niak:minc',str_info)
+end
+
+%% reading information
 hf = fopen(file_tmp,'r');
+vol = fread(hf,prod(hdr.info.dimensions),precision_data);
 
-% reading information
-vols = fread(hf,prod(hdr.size),'double');
-
-% Remonving temporary stuff
+%% Remonving temporary stuff
 fclose(hf);
 system(cat(2,'rm -f ',file_tmp));
 
-% Shapping vols as 3D+t array
-vols = reshape(vols,hdr.size);
+%% Shapping vol as 3D+t array
+vol = reshape(vol,hdr.info.dimensions);     

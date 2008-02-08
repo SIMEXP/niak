@@ -44,7 +44,7 @@ function [vols_a,extras] = niak_slice_timing(vols,opt)
 %
 % The linear interpolation was coded by P Bellec, MNI 2008
 %
-% The sync interpolation is a port from SPM5.
+% The sync interpolation is a port from SPM5, under the GNU license.
 % First code : Darren Gitelman at Northwestern U., 1998
 % Based (in large part) on ACQCORRECT.PRO from Geoff Aguirre and
 % Eric Zarahn at U. Penn.

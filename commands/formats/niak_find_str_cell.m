@@ -1,23 +1,21 @@
-function str_b = niak_rm_blank(str,list_blanks)
+function mask_f = niak_find_str_cell(cell_str,str)
 
-% Remove leading and trailing blanks from str, and suppress blanks
-% following a blank.
+% Find a string in a cell of strings
 %
 % SYNTAX
-% STR_B = NIAK_RM_BLANK(STR,LIST_BLANKS)
+% mask_f = niak_find_str_cell(cell_str,str)
 % 
-% INPUT
-% STR           (vector of strings)
-% LIST_BLANKS   (cell of string, default {}) a list of characters that
-%                will be considered as blanks
-%
-% OUTPUT
-% STR_B         (vector of strings) a "deblanked" version of str
+% INPUTS
+% cell_str      (string or cell of strings)
+% str           (string or cell of strings)
+% 
+% OUTPUTS
+% mask_f        (vector) mask_f(i) equals 1 if cell_str{i} contains str{j} for any j, 0
+%                   otherwise.
 %
 % COMMENTS
-% 
 % Copyright (c) Pierre Bellec 01/2008
-%
+
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -36,32 +34,24 @@ function str_b = niak_rm_blank(str,list_blanks)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-% Setting up default
-if nargin < 2
-    list_blanks = {};
+if ischar(str)
+    str2{1} = str;
+    str = str2;
+    clear str2
 end
 
-str_b = str;
-for num_e = 1:length(list_blanks)
-    str_b = strrep(str_b,list_blanks{num_e},' ');
+if ischar(cell_str)
+    str2{1} = cell_str;
+    cell_str = str2;
+    clear str2
 end
 
-ind = 1:length(str);
+nb_e = length(cell_str);
+nb_f = length(str);
+mask_f = zeros([nb_e 1]);
 
-pos = findstr(str_b,' ');
-if length(pos)>1
-    to_trash = find(pos(2:end)-pos(1:end-1)==1);
-    str_b = str_b(~ismember(ind,pos(to_trash)));
-end
-
-if ~isempty(str_b)
-    if strcmp(str_b(1),' ')
-        str_b = str_b(2:end);
-    end
-end
-
-if ~isempty(str_b)
-    if strcmp(str_b(end),' ')
-        str_b = str_b(1:end-1);
+for num_e = 1:nb_e
+    for num_f = 1:nb_f
+        mask_f(num_e) = mask_f(num_e)|~isempty(findstr(cell_str{num_e},str{num_f}));
     end
 end
