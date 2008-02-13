@@ -1,9 +1,9 @@
-function [vol,hdr] = niak_read_vol(file_name)
+function [hdr,vol] = niak_read_vol(file_name)
 
 % Read 3D or 3D+t data in various formats.
 %
 % SYNTAX:
-% [VOL,HDR] = NIAK_READ_VOL(FILE_NAME)
+% [HDR,VOL] = NIAK_READ_VOL(FILE_NAME)
 % 
 % INPUT:
 % FILE_NAME         (string) a 3D+t or 3D file name of MINC(1 or 2) data,
@@ -21,6 +21,9 @@ function [vol,hdr] = niak_read_vol(file_name)
 %                   associated with the header.
 %               HDR.TYPE   (string) the file format (either
 %                   'minc1', 'minc2').
+%               HDR.FLAG_ZIP (boolean, default 0) if the file name ended by
+%                   '.gz', the file was unzipped and FLAG_ZIP is 1, and
+%                   FLAG_ZIP is 0 otherwise.
 %
 %               HDR.INFO is a structure with the following subfields:
 %                   FILE_PARENT (string) name of the file that was read.
@@ -88,12 +91,16 @@ if iscell(file_name)
     nb_file = length(file_name);
     
     for num_f = 1:nb_file
-        [vol_tmp,hdr_tmp] = niak_read_vol(file_name{num_f});
-        if num_f == 1
-            hdr = hdr_tmp;
-            vol = zeros([size(vol_tmp) nb_file]);
-        end
-        vol(:,:,:,num_f) = vol_tmp;
+        if nargout == 2
+            [hdr_tmp,vol_tmp] = niak_read_vol(file_name{num_f});
+            if num_f == 1            
+                vol = zeros([size(vol_tmp) nb_file]);
+            end
+            vol(:,:,:,num_f) = vol_tmp;
+        else
+            hdr_tmp = niak_read_vol(file_name{num_f});
+        end                
+        hdr(num_f) = hdr_tmp;        
     end
         
 elseif ischar(file_name)
@@ -104,14 +111,51 @@ elseif ischar(file_name)
         if length(file_name)==0
             error('niak:read_vol','Couldn''t find any file fitting the description %s\n',file_name)
         else
-            [vol,hdr] = niak_read_vol(file_name);
+            if nargout == 2
+                [hdr,vol] = niak_read_vol(file_name);
+            else
+                hdr = niak_read_vol(file_name);
+            end
         end
     else
-        [tmp1,tmp2,type] = fileparts(file_name);
+        
+        [pat_f,name_f,type] = fileparts(file_name);
 
         switch type
-            case {'.mnc','.gz'}
-                [vol,hdr] = niak_read_minc(file_name);
+            case '.gz'
+
+                niak_gb_vars
+                
+                file_tmp_gz = niak_file_tmp('.gz');
+                
+                if strcmp(gb_niak_language,'matlab')
+                    flag = copyfile(file_name,file_tmp_gz);
+                else
+                    system(cat(2,'cp ',file_name,' ',file_tmp_gz))
+                end
+                
+                instr_unzip = cat(2,gb_niak_zip,' -df ',file_tmp_gz);
+                
+                try
+                    system(instr_unzip);
+                catch
+                    error('niak:read','There was a problem unzipping the file. Please check that the program %s is properly installd, or change program using the variable gb_niak_zip in the file niak_g_vars',gb_niak_zip);
+                end
+                
+                if nargout == 2
+                    [hdr,vol] = niak_read_minc(file_tmp_gz(1:end-3));
+                else
+                    hdr = niak_read_minc(file_tmp_gz(1:end-3));                    
+                end
+                
+                delete(file_tmp_gz(1:end-3)); 
+                
+            case {'.mnc'}
+                if nargout == 2
+                    [hdr,vol] = niak_read_minc(file_name);
+                else
+                    hdr = niak_read_minc(file_name);
+                end
             otherwise
                 error('niak:read_vol','Unsupported file format %s\n',type)
         end

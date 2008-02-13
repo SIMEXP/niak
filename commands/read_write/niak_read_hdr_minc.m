@@ -174,6 +174,9 @@ end
 %% to all data formats in the NIAK                    %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+list_dim_long = {'xspace','yspace','zspace','time'};
+list_dim_short = 'xyzt';
+
 hdr.info.precision = 'float'; % by default, data are imported/exported in float.
 
 %% Get information on history
@@ -192,9 +195,6 @@ if strcmp(hdr.type,'minc2')
     str_dim = hdr.details.image.attvalue{pos_do};
 end
 
-list_dim_long = {'xspace','yspace','zspace','time'};
-list_dim_short = 'xyzt';
-
 pos_xyzt = zeros([length(list_dim_long) 1]);
 for num_e = 1:length(list_dim_long)
     pos = findstr(str_dim,list_dim_long{num_e});
@@ -203,39 +203,51 @@ for num_e = 1:length(list_dim_long)
     end
 end
 
-list_dim_long = list_dim_long(pos_xyzt~=0);
+for num_f = 1:length(list_dim_long)
+    [flag,str_dim] = system(cat(2,'mincinfo -dimlength ',list_dim_long{num_f},' ',file_name));
+    if flag == 0
+        hdr.info.dimensions(num_f) = str2num(str_dim);
+    else
+        if num_f < 4
+            error('niak:read','Could not find the spatial dimensions. I expect ''xspace'', ''yspace'' and ''zspace'' to be defined')        
+        end
+    end
+end
+
 [tmp,order_xyzt] = sort(pos_xyzt);
 order_xyzt = order_xyzt(tmp~=0);
 order_xyzt = order_xyzt(end:-1:1); % the order convention for dimensions in Matlab and Minc are reverse
+hdr.info.dimensions = hdr.info.dimensions(order_xyzt);
 hdr.info.dimension_order = list_dim_short(order_xyzt);
 
 %% For each dimension, get the step, start and cosines information
-start_v = zeros([length(list_dim_long) 1]);
+start_v = zeros([3 1]);
 cosines_v = zeros([3 3]);
 hdr.info.voxel_size = zeros([1 3]);
-hdr.info.dimensions = ones([1 length(list_dim_long)]);
 
-for num_e = 1:length(list_dim_long)
+num_e = 1;
+list_dim_long = list_dim_long(pos_xyzt~=0);
+list_dim_long = list_dim_long(order_xyzt);
+
+for num_d = 1:length(list_dim_long)
     
-    struct_dim = getfield(hdr.details,list_dim_long{num_e});
+    struct_dim = getfield(hdr.details,list_dim_long{num_d});
     
-    pos = find(niak_find_str_cell(struct_dim.varatts,'start'));
-    start_v(num_e) = struct_dim.attvalue{pos};
-    
-    pos = find(niak_find_str_cell(struct_dim.varatts,'length'));
-    hdr.info.dimensions(num_e) = struct_dim.attvalue{pos};
-    
-    pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
-    if num_e < 4
+    if ~strcmp(list_dim_long{num_d},'time')
+        pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
         hdr.info.voxel_size(num_e) = struct_dim.attvalue{pos};
-    else
-        hdr.info.TR =  abs(struct_dim.attvalue{pos});
-    end
-    
-    if num_e~=4
+        
         pos = find(niak_find_str_cell(struct_dim.varatts,'direction_cosines'));
         cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
-    end
+        
+        pos = find(niak_find_str_cell(struct_dim.varatts,'start'));
+        start_v(num_e) = struct_dim.attvalue{pos};
+
+        num_e = num_e + 1;        
+    else
+        pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
+        hdr.info.TR =  abs(struct_dim.attvalue{pos});
+    end    
     
 end
 

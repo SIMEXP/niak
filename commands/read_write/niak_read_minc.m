@@ -1,10 +1,10 @@
-function [vol,hdr] = niak_read_minc(file_name,precision_data)
+function [hdr,vol] = niak_read_minc(file_name,precision_data)
 
 % Read 3D or 3D+t data in MINC format.
 % http://www.bic.mni.mcgill.ca/software/minc/
 %
 % SYNTAX:
-% [VOL,HDR] = NIAK_READ_MINC(FILE_NAME)
+% [HDR,VOL] = NIAK_READ_MINC(FILE_NAME)
 % 
 % INPUT:
 % FILE_NAME         (string) a 3D+t or 3D minc file.
@@ -61,22 +61,24 @@ end
 
 hdr.info.precision = precision_data;
 
-%% Generating a name for a temporary file
-file_tmp = niak_file_tmp('.data');
+if nargout == 2
+    %% Generating a name for a temporary file
+    file_tmp = niak_file_tmp('.data');
 
-%% extracting the data in float precision in the temporary file
-[flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -nonormalize ',file_name,' > ',file_tmp));
-if flag>0
-    error('niak:minc',str_info)
+    %% extracting the data in float precision in the temporary file
+    [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -nonormalize ',file_name,' > ',file_tmp));
+    if flag>0
+        error('niak:minc',str_info)
+    end
+
+    %% reading information
+    hf = fopen(file_tmp,'r');
+    vol = fread(hf,prod(hdr.info.dimensions),precision_data);
+
+    %% Remonving temporary stuff
+    fclose(hf);
+    system(cat(2,'rm -f ',file_tmp));
+
+    %% Shapping vol as 3D+t array
+    vol = reshape(vol,hdr.info.dimensions);
 end
-
-%% reading information
-hf = fopen(file_tmp,'r');
-vol = fread(hf,prod(hdr.info.dimensions),precision_data);
-
-%% Remonving temporary stuff
-fclose(hf);
-system(cat(2,'rm -f ',file_tmp));
-
-%% Shapping vol as 3D+t array
-vol = reshape(vol,hdr.info.dimensions);     

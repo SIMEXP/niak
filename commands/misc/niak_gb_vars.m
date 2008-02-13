@@ -21,7 +21,7 @@ gb_niak_zip = 'gzip'; % The command to zip files
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_version = '0.0'; % 
+gb_niak_version = '0.1.2'; % 
 
 if exist('OCTAVE_VERSION')    
     gb_niak_language = 'octave'; %% this is octave !

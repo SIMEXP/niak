@@ -1,10 +1,10 @@
-function [] = niak_write_minc(vol,hdr)
+function [] = niak_write_minc(hdr,vol)
 
 % Write a 3D or 3D+t dataset into a MINC file
 % http://www.bic.mni.mcgill.ca/software/minc/
 %
 % SYNTAX:
-% [FLAG_ERR,ERR_MSG] = niak_write_minc(VOL,HDR)
+% [] = niak_write_minc(hdr,vol)
 %
 % INPUTS:
 % VOL           (3D or 4D array) a 3D or 3D+t dataset
@@ -118,10 +118,10 @@ if length(hdr.info.dimension_order)==4
     dim_order(4) = findstr(hdr.info.dimension_order,'t');
 end
 dim_names = {'xspace,','yspace,','zspace,','time,'};
+dim_order = dim_order(dim_order);
 arg_dim_order = [dim_names{dim_order(end:-1:1)}]; % the order notations in NetCDF/HDF5 is reversed compared to matlab
-arg_dim_order = arg_dim_order(1:end-1);
 
-str_raw = [str_raw '-dimorder ' arg_dim_order,' '];
+str_raw = [str_raw '-dimorder ' arg_dim_order(1:end-1),' '];
 
 str_raw = [str_raw '-' hdr.info.precision ' ']; % setting up the precision of the file
 
@@ -148,6 +148,8 @@ str_raw = [str_raw ' ' size_vol]; % set up the size
 
 system(str_raw); % Writting the new minc file
 
+delete(file_tmp); % deleting temporary file
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Override the inherited header informations with user-specified values %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,6 +157,7 @@ system(str_raw); % Writting the new minc file
 hdr_minc = hdr.details;
 
 hdr_minc.image = sub_set_att(hdr_minc.image,'dimorder',arg_dim_order);
+dim_order = dim_order(dim_order);
 
 %% step values
 hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'step',voxel_size(dim_order(1)));
@@ -166,9 +169,10 @@ end
 
 %% start values
 for num_d = 1:3
-    direction_cosines_val(:,num_d) = hdr.info.mat(1:3,num_d)/voxel_size(num_d);
+    direction_cosines_val(:,num_d) = hdr.info.mat(1:3,dim_order(num_d))/voxel_size(dim_order(num_d));
 end
-start_val = direction_cosines_val^(-1)*hdr.info.mat(1:3,4);
+start_val = (hdr.info.mat(1:3,1:3)*diag(1./voxel_size))^(-1)*hdr.info.mat(1:3,4);
+start_val = start_val(dim_order(1:3));
 
 hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'start',start_val(1));
 hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'start',start_val(2));

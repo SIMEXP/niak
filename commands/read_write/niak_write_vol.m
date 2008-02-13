@@ -1,21 +1,27 @@
-function [] = niak_write_minc(vol,hdr)
+function [] = niak_write_vol(hdr,vol)
 
 % Write a 3D or 3D+t dataset into a file
 %
 % SYNTAX:
-% [FLAG_ERR,err_msg] = niak_write_vol(vol,hdr)
+% [] = niak_write_vol(HDR,VOL)
 %
 % INPUTS:
 % VOL          (3D or 4D array) a 3D or 3D+t dataset
 %
-% HDR           (structure) a header structure (usually modified from the 
+% HDR           (structure) a header structure (usually modified from the
 %               output of niak_read_vol). The following fields are of
 %               particular importance :
 %
-%               HDR.FILE_NAME   (string or cell of strings) the name(s) of 
+%               HDR.FILE_NAME   (string or cell of strings) the name(s) of
 %                   the file that will be written.
 %               HDR.TYPE   (string, default 'minc2') the output format (either
 %                   'minc1' or 'minc2').
+%               HDR.FLAG_ZIP (boolean) if this field exists and is non-zero,
+%                   the function will attempt to zip the file after writting.
+%                   The extension depends on the zip program, which is
+%                   'gzip' by default. The choice of the zipper can be
+%                   changed using the GB_NIAK_ZIP variable in the NIAK_GB_VARS
+%                   file. A warning will be issue if zipping fails.
 %
 %               The following subfields are optional :
 %               HDR.INFO.PRECISION      (string, default 'float') the
@@ -31,11 +37,11 @@ function [] = niak_write_minc(vol,hdr)
 %               HDR.DIMENSION_ORDER (string, default 'xyz') describes the dimensions of
 %                  vol. Letter 'x' is for 'left to right, 'y' for
 %                  'posterior to anterior', 'z' for 'ventral to dorsal' and
-%                  't' is time. Example : 'xzyt' means that dimension 1 of 
+%                  't' is time. Example : 'xzyt' means that dimension 1 of
 %                   vol is 'x', dimension 2 is 'z', etc.
 %               HDR.HISTORY (string, default '') history of the operations applied to
 %                  the data.
-%                  
+%
 %               HDR.DETAILS (structure, default struct()) This field
 %                  contains some format specific information, but is not
 %                  necessary to write a file. If present, the information
@@ -56,7 +62,7 @@ function [] = niak_write_minc(vol,hdr)
 % One file will be written for each volume VOL(:,:,:,i) in the file
 % [HDR.FILE_NAME 000i]. The '000i' part meaning that i is converted to a
 % string and padded with '0' to reach at least four digits.
-% 
+%
 % COMMENTS:
 %
 % SEE ALSO:
@@ -86,52 +92,56 @@ function [] = niak_write_minc(vol,hdr)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-try 
+try
     file_name = hdr.file_name;
 catch
     error('niak:write_vol','Please specify a file name in hdr.file_name.\n')
 end
 
 if iscell(file_name)
-    
+
     %% Case 2: a cell of strings for multiple files
     nb_f = length(file_name);
     if size(vol,4)~= nb_f
         warning('The number of files in hdr.file_name does not correspond to size(vol,4)! Try to proceed anyway...')
     end
-    
+
     hdr2 = hdr;
-    
+
     for num_f = 1:nb_f
         hdr2.file_name = hdr.file_name{num_f};
-        niak_write_vol(vol(:,:,:,num_f),hdr2);
+        niak_write_vol(hdr2,vol(:,:,:,num_f));
         if num_f == 1
             warning('off','niak:default')
         end
     end
     warning('on','niak:default')
-    
+
 elseif ischar(file_name)
-    
+
+    if isempty(file_name)
+        error('niak:write','Please specify a file name in hdr.file_name')
+    end
+
     if strcmp(file_name(end),'_')
         %% Case 3 : A string ending by '_'
-        
+
         nt = size(vol,4);
         nb_digits = max(4,ceil(log10(nt)));
-        
+
         try
             type_f = hdr.type;
         catch
             error('niak:write_vol','Please specify a file format in hdr.type.\n')
         end
-        
+
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 ext_f = '.mnc';
             otherwise
                 error('niak:write_vol','%s : unrecognized file format\n',type_f);
         end
-        
+
         base_name = hdr.file_name;
         for num_f = 1:nt
             file_names = cat(2,base_name,repmat('0',1,nb_digits-length(num2str(num_f))),num2str(num_f),ext_f);
@@ -139,23 +149,37 @@ elseif ischar(file_name)
             if num_f > 1
                 warning('off','niak:default')
             end
-            niak_write_vol(vol(:,:,:,num_f),hdr);
+            niak_write_vol(hdr,vol(:,:,:,num_f));
         end
         warning('on','niak:default')
+
     else
-        %% Case 1 : a regular string       
+
+        %% Case 1 : a regular string
         try
             type_f = hdr.type;
         catch
             error('niak:write_vol','Please specify a file format in hdr.type.\n')
         end
-        
+
         switch type_f
             case {'minc1','minc2'} % That's a minc file
-                niak_write_minc(vol,hdr);
+                niak_write_minc(hdr,vol);
             otherwise
                 error('niak:write_vol','%s : unrecognized file format\n',type_f);
         end
-        
+
+        if isfield(hdr,'flag_zip')
+            if ~(hdr.flag_zip==0)
+                niak_gb_vars;
+                instr_zip = cat(2,gb_niak_zip,' ',hdr.file_name);
+                try
+                    system(instr_zip);
+                catch
+                    warning('niak:write','There was a problem when attempting to zip the file. Please check that the program %s is properly installd, or change program using the variable gb_niak_zip in the file niak_g_vars',gb_niak_zip);
+                end
+            end
+
+        end
     end
 end
