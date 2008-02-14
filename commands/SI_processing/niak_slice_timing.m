@@ -1,47 +1,52 @@
-function [vols_a,extras] = niak_slice_timing(vols,opt)
+function [vol_a,opt] = niak_slice_timing(vol,opt)
 
 % Correct for differences in slice timing in a 4D fMRI acquisition via
-% linear temporal interpolation
+% temporal interpolation
 %
-% SYNTAX
-% vol_a = niak_slice_timing(vols,opt)
+% SYNTAX:
+% [VOL_A,OPT] = NIAK_SLICE_TIMING(VOL,OPT)
 %
-% INPUTS
-% vols          (4D array) a 3D+t dataset
-% opt           (structure) with the following fields :
+% INPUTS:
+% VOL           (4D array) a 3D+t dataset
+% OPT           (structure) with the following fields :
 %
-%               interpolation_method   (string, default 'linear') the method for
+%               INTERPOLATION_METHOD   (string, default 'linear') the method for
 %                       temporal interpolation, choices 'linear' or 'sync'.
 %                       Linear interpolation is not exact,
 %                       yet it is much more stable than sync interpolation
 %                       regarding noise and discontinuities and therefore recommended.
 %
-%               slice_order	(vector of integer) slice_order(i) is the number of the ith slice
-%                       in the volume (assumed to be identical in all
-%                       volumes), the order of slices representing their
-%                       temporal acquisition order.
-%                       ex : slice_order = [1 3 5 2 4 6]
-%                       for 6 slices acquired in 'interleaved' mode,
-%                       starting by odd slices. Note that the slices are
-%                       assumed to be axial, i.e. slice z at time t is
-%                       vols(:,:,z,t).
+%               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
+%                      that the kth slice was acquired in ith position. The
+%                      order of the slices is assumed to be the same in all
+%                      volumes.
+%                      ex : slice_order = [1 3 5 2 4 6]
+%                      for 6 slices acquired in 'interleaved' mode,
+%                      starting by odd slices(slice 5 was acquired in 3rd 
+%                      position). Note that the slices are assumed to be 
+%                      axial, i.e. slice z at time t is
+%                      vols(:,:,z,t).
 %
-%               ref_slice	(integer, default midle slice in acquisition time)
+%               REF_SLICE	(integer, default midle slice in acquisition time)
 %                       slice for time 0
 %
-%               timing		(vector 2*1) timing(1) : time between two slices
-%                           timing(2) : time between last slice and next volume
+%               TIMING		(vector 2*1) TIMING(1) : time between two slices
+%                           TIMING(2) : time between last slice and next volume
 %
-%               flag_verbose (boolean, default 1) if the flag is 1, then
+%               FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
 %                       the function prints some infos during the
 %                       processing.
 %
-% OUTPUTS
-% vols_a        (4D array) same as vols after slice timing correction has
-%                       been applied through linear interpolation
+% OUTPUTS:
+% VOL_A        (4D array) same as VOL after slice timing correction has
+%                       been applied through temporal interpolation
+% OPT          (structure) same as the input, but fields have been updated
+%                       with default values.
 %
-% COMMENTS
+% SEE ALSO:
+% NIAK_BRICK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
 %
+% COMMENTS:
 % The linear interpolation was coded by P Bellec, MNI 2008
 %
 % The sync interpolation is a port from SPM5, under the GNU license.
@@ -52,7 +57,10 @@ function [vols_a,extras] = niak_slice_timing(vols,opt)
 % adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
 %
 % Copyright (C) Wellcome Department of Imaging Neuroscience 2005
-% Copyright (C) Pierre Bellec 2008
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, slice timing, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -79,15 +87,15 @@ gb_list_defaults = {'linear',NaN,[],NaN,1};
 niak_set_defaults
 
 nb_slices = length(slice_order);
-if length(size(vols))>3
-    [nx,ny,nz,nt] = size(vols);
+if length(size(vol))>3
+    [nx,ny,nz,nt] = size(vol);
 else
-    [nx,ny,nz] = size(vols);
+    [nx,ny,nz] = size(vol);
     nt = 1;
 end
 
 if ~(nz == nb_slices)
-    fprintf('Error : the number of slices in slice_order should correspond to the 3rd dimension of vols. Try to proceed anyway...')
+    fprintf('Error : the number of slices in slice_order should correspond to the 3rd dimension of vol. Try to proceed anyway...')
 end
 
 if isempty(ref_slice)
@@ -100,7 +108,7 @@ if flag_verbose == 1
     fprintf('Your TR is %1.1f\n',TR);
 end
     
-vols_a = zeros(size(vols));
+vol_a = zeros(size(vol));
 
 if strcmp(interpolation_method,'linear')
     
@@ -112,10 +120,10 @@ if strcmp(interpolation_method,'linear')
         times_ref = (0:nt+1)*TR;
         times_z = (1:nt)*TR+time_slices(num_z);
         
-        slices_z = squeeze(vols(:,:,num_z,:));
+        slices_z = squeeze(vol(:,:,num_z,:));
         slices_z = reshape(slices_z,[nx*ny,nt])';
         slices_z_a = interp1(times_ref(:),[slices_z(1,:) ; slices_z ; slices_z(nt,:)],times_z(:),'linear');
-        vols_a(:,:,num_z,:) = reshape(slices_z_a',[nx ny nt]);
+        vol_a(:,:,num_z,:) = reshape(slices_z_a',[nx ny nt]);
     end
     
 elseif strcmp(interpolation_method,'sync')
@@ -136,7 +144,7 @@ elseif strcmp(interpolation_method,'sync')
 
         % Extracting all time series in a slice.
         slices_z = zeros([nt2 nx*ny]);
-        slices_tmp = squeeze(vols(:,:,num_z,:));
+        slices_tmp = squeeze(vol(:,:,num_z,:));
         slices_z(1:nt,:) = reshape(slices_tmp,[nx*ny nt])';
         % linear interpolation to avoid edge effect
         vals1 = slices_z(nt,:);
@@ -163,7 +171,7 @@ elseif strcmp(interpolation_method,'sync')
         % Applying the filter in the Fourier domain, and going back in the real
         % domain
         fslices_z = real(ifft(fft(slices_z).*shifter));
-        vols_a(:,:,num_z,:) = reshape(fslices_z(1:nt,:)',[nx ny nt]);
+        vol_a(:,:,num_z,:) = reshape(fslices_z(1:nt,:)',[nx ny nt]);
 
     end
     

@@ -17,6 +17,10 @@ gb_niak_viewersvg = 'eog'; % program to display svg files
 
 gb_niak_zip = 'gzip'; % The command to zip files
 
+gb_niak_format_demo = 'minc2'; % The file format of the default data. That could be 'minc1','minc2','analyze' or 'nifti'.
+
+gb_niak_path_demo = cat(2,'/media/hda3/database/data_niak/',gb_niak_format_demo,filesep); % Where to find demo data
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

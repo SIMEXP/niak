@@ -1,34 +1,39 @@
-function [vols_s,extras] = niak_smooth_vols(vols,opt)
+function [vol_s,extras] = niak_smooth_vol(vol,opt)
 
 % Spatial smoothing of 3D+t data with a Gaussian kernel
 %
-% SYNTAX
-% vol_s = niak_smooth_vols(vols,opt)
+% SYNTAX:
+% VOL_S = NIAK_SMOOTH_VOL(VOL,OPT)
 %
-% INPUTS
-% vols        (4D array) a 3D+t dataset
-% opt         (structure, optional) with the following fields :
+% INPUTS:
+% VOL         (4D array) a 3D+t dataset
+% OPT         (structure, optional) with the following fields :
 %
-%             step  (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%             STEP  (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
 %                   in the respective dimensions, i.e. the space in mmm
 %                   between two voxels in x, y, and z (yet the unit is
 %                   irrelevant and just need to be consistent with
 %                   the filter width (fwhm)). The fourth element is ignored.
 %
-%             fwhm (vector of size [3 1], default [2 2 2]) the full width at half maximum of
+%             FWHM  (vector of size [3 1], default [2 2 2]) the full width at half maximum of
 %                   the Gaussian kernel, in each dimension. If fwhm has length 1,
 %                   an isotropic kernel is implemented.
 %
-% OUTPUTS
-% vols_s      (4D array) same as vols after each volume has been spatially
+% OUTPUTS:
+% VOL_S       (4D array) same as VOL after each volume has been spatially
 %                   convolved with a 3D separable Gaussian kernel.
 %
-% SEE ALSO
-% niak_conv3_sep
+% SEE ALSO:
+% NIAK_CONV3_SEP
 %
-% COMMENTS
+% COMMENTS:
 %
-% Copyright (c) John Ashburner, Tom Nichols 08/02, Pierre Bellec 01/2008
+% Copyright (c) John Ashburner, Tom Nichols 08/02
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, smoothing, fMRI
+
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -62,11 +67,11 @@ if length(fwhm)==1
     fwhm = [fwhm,fwhm,fwhm];
 end
 
-if length(size(vols))<4
-    [nx,ny,nz] = size(vols);
+if length(size(vol))<4
+    [nx,ny,nz] = size(vol);
     nt = 1;
 else
-    [nx,ny,nz,nt] = size(vols);
+    [nx,ny,nz,nt] = size(vol);
 end
 
 step = abs(step);
@@ -90,9 +95,9 @@ fy  = fy/sum(fy);
 fz  = fz/sum(fz);
 
 % Performing convolution
-vols_s = zeros(size(vols));
+vol_s = zeros(size(vol));
 for num_t = 1:nt
-    vols_s(:,:,:,num_t) = niak_conv3_sep(vols(:,:,:,num_t),fx,fy,fz);
+    vol_s(:,:,:,num_t) = niak_conv3_sep(vol(:,:,:,num_t),fx,fy,fz);
 end
 
 if nargout == 2

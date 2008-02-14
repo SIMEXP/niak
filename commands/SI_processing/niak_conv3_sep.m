@@ -1,24 +1,27 @@
-function vol3d2 = niak_conv3_sep(vol3d,fx,fy,fz)
+function vol_c = niak_conv3_sep(vol,fx,fy,fz)
 
 % 3D convolution of a volume with a separable kernel
 %
-% SYNTAX
-% vol3d2 = niak_conv3_sep(vol3d,fx,fy,fz)
+% SYNTAX:
+% VOL_C = NIAK_CONV3_SEP(VOL,FX,FY,FZ)
 %
-% INPUTS
-% vol3d       (3D array) a volume
-% fx,fy,fz    (1D arry) the respective kernels in dimensions x, y and z
+% INPUTS:
+% VOL         (3D array) a volume
+% FX,FY,FZ    (1D arry) the respective kernels in dimensions x, y and z
 %               respectively.
 %
-% OUTPUTS
-% vol3d2      (3D array) the (3D) convolution (fz*fy*fz)*vol3d.
+% OUTPUTS:
+% VOL      (3D array) the (3D) convolution (FZ*FY*FZ)*VOL, where * is convolution.
 %
-% SEE ALSO
-% niak_smooth_vol
+% SEE ALSO:
+% NIAK_SMOOTH_VOL
 %
 % COMMENTS
 % 
-% Copyright (c) Pierre Bellec 01/2008
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, convolution, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -39,27 +42,27 @@ function vol3d2 = niak_conv3_sep(vol3d,fx,fy,fz)
 % THE SOFTWARE.
 
 
-[nx,ny,nz] = size(vol3d);
+[nx,ny,nz] = size(vol);
 
 % Performing convolution along the x axis
-vol3d2 = reshape(vol3d,[nx ny*nz]);
-vol3d2 = sub_convfft(vol3d2,fx);
+vol_c = reshape(vol,[nx ny*nz]);
+vol_c = sub_convfft(vol_c,fx);
 
 % Performing the convolution along the y axis
-vol3d2 = reshape(vol3d2,[nx ny nz]);
-vol3d2 = permute(vol3d2,[2 1 3]);
-vol3d2 = reshape(vol3d2,[ny nx*nz]);
-vol3d2 = sub_convfft(vol3d2,fy);
+vol_c = reshape(vol_c,[nx ny nz]);
+vol_c = permute(vol_c,[2 1 3]);
+vol_c = reshape(vol_c,[ny nx*nz]);
+vol_c = sub_convfft(vol_c,fy);
 
 % Performing the convolution along the z axis
-vol3d2 = reshape(vol3d2,[ny nx nz]);
-vol3d2 = permute(vol3d2,[3 2 1]);
-vol3d2 = reshape(vol3d2,[nz nx*ny]);
-vol3d2 = sub_convfft(vol3d2,fz);
+vol_c = reshape(vol_c,[ny nx nz]);
+vol_c = permute(vol_c,[3 2 1]);
+vol_c = reshape(vol_c,[nz nx*ny]);
+vol_c = sub_convfft(vol_c,fz);
 
 % Output
-vol3d2 = reshape(vol3d2,[nz nx ny]);
-vol3d2 = permute(vol3d2,[2 3 1]);
+vol_c = reshape(vol_c,[nz nx ny]);
+vol_c = permute(vol_c,[2 3 1]);
 
 function sig2 = sub_convfft(sig,ker)
 % 1-D convolution implemented through fft
