@@ -1,20 +1,26 @@
-function mask_f = niak_comp_str_cell(cell_str,str)
+function mask_f = niak_cmp_str_cell(cell_str,str)
 
-% Find a string in a cell of strings
+% Test if one of many strings exist in another list of strings
 %
-% SYNTAX
-% mask_f = niak_comp_str_cell(cell_str,str)
+% SYNTAX:
+% MASK_F = niak_cmp_str_cell(CELL_STR,CELL_STR2)
 % 
-% INPUTS
-% cell_str      (string or cell of strings)
-% str           (string or cell of strings)
+% INPUTS:
+% CELL_STR      (string or cell of strings)
+% STR           (string or cell of strings)
 % 
-% OUTPUTS
-% mask_f        (vector) mask_f(i) equals 1 if cell_str{i} is identical to str{j} for any j, 0
-%                   otherwise.
+% OUTPUTS:
+% MASK_F        (vector) MASK_F(i) equals 1 if CELL_STR2{i} is identical to 
+%               CELL_STR{j} for any j, 0 otherwise.
 %
-% COMMENTS
-% Copyright (c) Pierre Bellec 01/2008
+% SEE ALSO:
+% NIAK_FIND_STR_CELL
+%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : string
+
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal

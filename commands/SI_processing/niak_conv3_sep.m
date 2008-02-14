@@ -41,42 +41,43 @@ function vol_c = niak_conv3_sep(vol,fx,fy,fz)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-
 [nx,ny,nz] = size(vol);
 
-% Performing convolution along the x axis
-vol_c = reshape(vol,[nx ny*nz]);
-vol_c = sub_convfft(vol_c,fx);
+%% Fourier transform of the kernels
+ffx = fft([fx(:) ; zeros([nx-1 1])]);
+ffy = fft([fy(:) ; zeros([ny-1 1])]);
+ffz = fft([fz(:) ; zeros([nz-1 1])]);
 
-% Performing the convolution along the y axis
+%% Performing convolution along the x axis
+vol_c = reshape(vol,[nx ny*nz]);
+clear vol % VOL is not necessary anymore
+
+vol_c = [vol_c ; zeros([length(fx)-1 size(vol_c,2)])];
+vol_c = fft(vol_c);
+vol_c = diag(ffx)*vol_c;
+vol_c = ifft(vol_c);
+vol_c = real(vol_c(1+ceil((length(fx)-1)/2):end-(floor((length(fx)-1)/2)),:));
+
+%% Performing the convolution along the y axis
 vol_c = reshape(vol_c,[nx ny nz]);
 vol_c = permute(vol_c,[2 1 3]);
 vol_c = reshape(vol_c,[ny nx*nz]);
-vol_c = sub_convfft(vol_c,fy);
+vol_c = [vol_c ; zeros([length(fy)-1 size(vol_c,2)])];
+vol_c = fft(vol_c);
+vol_c = diag(ffy)*vol_c;
+vol_c = ifft(vol_c);
+vol_c = real(vol_c(1+ceil((length(fy)-1)/2):end-(floor((length(fy)-1)/2)),:));
 
-% Performing the convolution along the z axis
+%% Performing the convolution along the z axis
 vol_c = reshape(vol_c,[ny nx nz]);
 vol_c = permute(vol_c,[3 2 1]);
 vol_c = reshape(vol_c,[nz nx*ny]);
-vol_c = sub_convfft(vol_c,fz);
+vol_c = [vol_c ; zeros([length(fz)-1 size(vol_c,2)])];
+vol_c = fft(vol_c);
+vol_c = diag(ffz)*vol_c;
+vol_c = ifft(vol_c);
+vol_c = real(vol_c(1+ceil((length(fz)-1)/2):end-(floor((length(fz)-1)/2)),:));
 
 % Output
 vol_c = reshape(vol_c,[nz nx ny]);
 vol_c = permute(vol_c,[2 3 1]);
-
-function sig2 = sub_convfft(sig,ker)
-% 1-D convolution implemented through fft
-
-flag_err = 0;
-nbm = size(sig,1);
-nbn = length(ker);
-
-% Zeros-padding of the signals and kernel, and Fourier transform
-
-fker = fft([ker(:) ; zeros([nbm-1 1])]);
-fsig = fft([sig ; zeros([nbn-1 size(sig,2)])]);
-% convolution by multiplication in the Fourier domain and inverse Fourier
-% transform
-sig2 = ifft((fker*ones([1 size(fsig,2)])).*fsig);
-sig2 = real(sig2(1+ceil((nbn-1)/2):end-(floor((nbn-1)/2)),:));
-
