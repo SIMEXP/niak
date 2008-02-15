@@ -1,6 +1,6 @@
 function mask = niak_mask_brain(vol,fwhm_kernel)
 
-% Create a binary mask of the inside of the brain in an MRI/fMRI volset
+% Create a binary mask of the inside of the brain in an MRI/fMRI dataset
 %
 % SYNTAX:
 % MASK = NIAK_MASK_BRAIN(VOL)
