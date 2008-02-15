@@ -82,9 +82,9 @@ s  = max(s,ones(size(s)));	    % lower bound on FWHM
 s  = s/sqrt(8*log(2));          % FWHM -> Gaussian parameter
 
 % Building a spatial grid
-x  = round(6*s(1)); x = [-x:x];
-y  = round(6*s(2)); y = [-y:y];
-z  = round(6*s(3)); z = [-z:z];
+x  = round(6*s(1)); x = [0:x -x:-1];
+y  = round(6*s(2)); y = [0:y -y:-1];
+z  = round(6*s(3)); z = [0:z -z:-1];
 
 % Deriving the 1D kernel
 fx  = exp(-(x).^2/(2*(s(1)).^2));
