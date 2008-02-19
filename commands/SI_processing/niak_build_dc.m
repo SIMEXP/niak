@@ -82,18 +82,18 @@ switch type_fw
 
     case 'high'
         
-        num_dc = max(ceil((2*nt*tr)*cutoff),0);
-        if num_dc > nt-1
+        num_dc = max(ceil((2*nt*tr)*cutoff),1);
+        if num_dc > nt
             tseries_dc = [];
             freq_num = [];
         else
-            freq_num = num_dc:nt-1;
+            freq_num = num_dc:nt;
             tseries_dc  = zeros([nt num_dc+1]);
             tseries_dc = cos(pi*tim*freq_num/nt);
             tseries_dc = niak_correct_mean_var(tseries_dc);
 
             if num_dc == 0
-                tseries(:,1) = sqrt((nt-1)/nt);
+                tseries_dc(:,1) = sqrt((nt-1)/nt);
             end
         end
         

@@ -75,12 +75,12 @@ gb_list_defaults = {NaN,-Inf,Inf};
 niak_set_defaults
 
 if ~isinf(lp)&((lp<0)|(lp>(1/(2*tr))))
-    error('niak:SI_processing','Please specify a cut-off frequency for low-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*TR))
+    error('niak:SI_processing','Please specify a cut-off frequency for low-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))
     return
 end
     
 if ~isinf(hp)&((hp<0)|(hp>(1/(2*tr))))
-    error('niak:SI_processing','Please specify a cut-off frequency for high-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*TR))   
+    error('niak:SI_processing','Please specify a cut-off frequency for high-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))   
 end
 
 nt = size(tseries,1);

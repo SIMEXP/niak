@@ -11,7 +11,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %                       a cell of strings where each entry is a file name
 %                       of 3D data, all in the same space.
 %
-% FILES_OUT       (string or cell of strings) identical to FILES_IN. NOTE that
+% FILES_OUT       (string or cell of strings) File names for outputs. NOTE that
 %                       if FILES_OUT is an empty string or cell, the name 
 %                       of the outputs will be the same as the inputs, 
 %                       with a '_a' suffix added at the end.
@@ -49,8 +49,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %                       values in FILES_IN and FILES_OUT.
 %               
 % OUTPUTS:
-% The slice timing corrected data for the input files are saved into the 
-% output files.
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % SEE ALSO:
 % NIAK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
@@ -148,11 +148,17 @@ if flag_test == 1
     return
 end
 
-%% Performing slice timing correction and saving data
+%% Performing slice timing correction 
 [hdr,vol] = niak_read_vol(files_in);
 opt = rmfield(opt,'flag_test');
 vol_a = niak_slice_timing(vol,opt);
 hdr.file_name = files_out;
+
+%% Updating the history and saving output
+opt_hist.command = 'niak_slice_timing';
+opt_hist.files_in = files_in;
+opt_hist.files_out = files_out;
+hdr = niak_set_history(hdr,opt);
 niak_write_vol(hdr,vol_a);
 
 

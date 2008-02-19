@@ -21,7 +21,7 @@ function [] = niak_write_vol(hdr,vol)
 %                   The extension depends on the zip program, which is
 %                   'gzip' by default. The choice of the zipper can be
 %                   changed using the GB_NIAK_ZIP variable in the NIAK_GB_VARS
-%                   file. A warning will be issue if zipping fails.
+%                   file. A warning will be issued if zipping fails.
 %
 %               The following subfields are optional :
 %               HDR.INFO.PRECISION      (string, default 'float') the
@@ -138,6 +138,10 @@ elseif ischar(file_name)
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 ext_f = '.mnc';
+            case {'nii'}
+                ext_f = '.nii';
+            case{'img','analyze'}
+                ext_f = '.img';                
             otherwise
                 error('niak:write_vol','%s : unrecognized file format\n',type_f);
         end
@@ -165,6 +169,8 @@ elseif ischar(file_name)
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 niak_write_minc(hdr,vol);
+            case {'nii','img','analyze'}
+                niak_write_nifti(hdr,vol);
             otherwise
                 error('niak:write_vol','%s : unrecognized file format\n',type_f);
         end
