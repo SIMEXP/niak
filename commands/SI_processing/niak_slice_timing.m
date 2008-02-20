@@ -99,7 +99,8 @@ if ~(nz == nb_slices)
 end
 
 if isempty(ref_slice)
-    ref_slice = slice_order(ceil(nb_slices/2));
+    opt.ref_slice = slice_order(ceil(nb_slices/2));
+    ref_slice = opt.ref_slice;
 end
 
 TR 	= (nb_slices-1)*timing(1)+timing(2);
@@ -117,12 +118,12 @@ if strcmp(interpolation_method,'linear')
     time_slices = time_slices-time_slices(ref_slice);
     
     for num_z = 1:nz
-        times_ref = (0:nt+1)*TR;
-        times_z = (1:nt)*TR+time_slices(num_z);
+        times_ref = (1:nt)*TR;
+        times_z = (0:nt+1)*TR+time_slices(num_z);
         
         slices_z = squeeze(vol(:,:,num_z,:));
         slices_z = reshape(slices_z,[nx*ny,nt])';
-        slices_z_a = interp1(times_ref(:),[slices_z(1,:) ; slices_z ; slices_z(nt,:)],times_z(:),'linear');
+        slices_z_a = interp1(times_z(:),[slices_z(1,:) ; slices_z ; slices_z(nt,:)],times_ref(:),'linear');
         vol_a(:,:,num_z,:) = reshape(slices_z_a',[nx ny nt]);
     end
     

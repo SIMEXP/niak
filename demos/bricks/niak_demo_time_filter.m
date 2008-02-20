@@ -1,14 +1,15 @@
 % This is a script to demonstrate the usage of :
-% NIAK_BRICK_SLICE_TIMING
+% NIAK_BRICK_TIME_FILTER
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_SLICE_TIMING. 
+% Just type in NIAK_DEMO_TIME_FILTER
 %
 % OUTPUT:
 %
 % This script will clear the workspace !!
-% It will apply a slice timing correction on the functional data of subject
-% 1 (motor condition) and use the default output name.
+% It will apply a temporal filtering on the functional data of subject
+% 1 (motor condition) and use the default output name. The frequencies
+% below 0.01 Hz and above 0.1 Hz will be suppressed.
 %
 % Note that the path to access the demo data is stored in a variable
 % called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
@@ -20,7 +21,7 @@
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, temporal filtering, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -43,13 +44,12 @@
 clear
 niak_gb_vars
 
-%% Setting input/output files
+%% Setting input files
 switch gb_niak_format_demo
     
     case 'minc2' % If data are in minc2 format
         
         files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
-        files_out = ''; % The default output name will be used
     
     otherwise 
         
@@ -57,15 +57,21 @@ switch gb_niak_format_demo
         
 end
 
-%% Options
-TR = 2.33; % Repetition time in seconds
-nb_slices = 42; % Number of slices in a volume
-opt.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
-opt.timing(1)=TR/nb_slices; % Time beetween slices
-opt.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
-opt.flag_test = 1; % This is not a test, the slice timing is actually performed
+%% Setting input files
+files_out.filtered_data = '';
+files_out.var_high = '';
+files_out.var_low = '';
+files_out.dc_high = '';
+files_out.dc_low = '';
+files_out.beta_high = '';
+files_out.beta_low = '';
 
-[files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt);
+%% Setting options
+opt.tr = 2.33; % Repetition time in seconds
+opt.lp = 0.1; % Exclude frequencies above 0.1 Hz
+opt.hp = 0.01; % Exclude frequencies below 0.01 Hz
+opt.flag_test = 0; % This is not a test, the slice timing is actually performed
+
+[files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt);
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
-

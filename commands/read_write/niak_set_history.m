@@ -166,8 +166,8 @@ while (length(hdr2.info.history)>1)&(flag_done == 0)
     end
 end
 
-if ~isempty(hdr2.info.history)
-    hdr2.info.history = [hdr2.info.history char(10) str_hist char(10)];
-else
+if (isempty(hdr2.info.history))|strcmp(hdr2.info.history,char(10))
     hdr2.info.history = [str_hist char(10)];
+else
+    hdr2.info.history = [hdr2.info.history char(10) str_hist char(10)];    
 end

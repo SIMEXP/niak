@@ -188,4 +188,6 @@ elseif ischar(file_name)
 
         end
     end
+else
+    error('niak:write','hdr.filename has to be a string or a char array')
 end

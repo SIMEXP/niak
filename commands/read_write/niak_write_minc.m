@@ -74,15 +74,15 @@ function [] = niak_write_minc(hdr,vol)
 
 %% Setting up default values for the header
 gb_name_structure = 'hdr';
-gb_list_fields = {'file_name','type','info'};
-gb_list_defaults = {NaN,'minc2',struct()};
+gb_list_fields = {'file_name','type','info','details'};
+gb_list_defaults = {NaN,'minc2',struct(),struct()};
 niak_set_defaults
 
 %% Setting up default values for the 'info' part of the header
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
-gb_list_fields = {'precision','voxel_size','mat','dimension_order','TR','history'};
-gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,''};
+gb_list_fields = {'precision','voxel_size','mat','dimension_order','TR','history','file_parent','dimensions'};
+gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','',[]};
 niak_set_defaults
 
 %% Generating a temporary file with the data in float format
