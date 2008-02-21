@@ -88,7 +88,7 @@ M = ceil(nz/N);
 
 if fwhm_smooth>0
     opt_smooth.fwhm = fwhm_smooth;
-    vol = niak_smooth_vols(vol,opt_smooth);
+    vol = niak_smooth_vol(vol,opt_smooth);
 end
 
 if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')

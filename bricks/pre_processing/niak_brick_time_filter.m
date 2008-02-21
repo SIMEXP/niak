@@ -1,6 +1,6 @@
 function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt)
 
-% Perform time low-pass and high-pass filtering using linear fitting of
+% Perform time high-pass and low-pass filtering using linear fitting of
 % a discrete cosine basis. 
 %
 % SYNTAX:
@@ -18,27 +18,29 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                       of the outputs will be the same as the inputs, 
 %                       with a '_f' suffix added at the end.
 %
-%                 VAR_HIGH (string, default <FILES_IN>_VAR_HIGH) File name for the volume of variance in
-%                       high frequencies. If this field is ommited, the
-%                       volume will not be saved. If it is empty, the
-%                       default name will be applied.
-%
-%                 VAR_LOW (string, default <FILES_IN>_VAR_LOW) File name for the volume of variance in
-%                       low frequencies. If this field is ommited, the
-%                       volume will not be saved. If it is empty, the
-%                       default name will be applied.
-%
 %                 BETA_HIGH (string or array of strings, default <FILES_IN>_BETA_HIGH) File name 
-%                       for the volumes of the regression coeffients in low
+%                       for the volumes of the regression coeffients in high
 %                       frequency. If this field is ommited, the
 %                       volumes will not be saved. If it is empty, the
 %                       default name will be applied.
+%                       Tip : In ANLYZE 7.5 format, a file name needs to be specified for each
+%                       DC. You can use the function NIAK_BUILD_DC to
+%                       determine how many high-frequency DC there will be,
+%                       OR you can specify one string ending by '_'. File
+%                       names with suffix '000<i>.ext' will be automatically
+%                       generated.
 %
 %                 BETA_LOW (string or array of strings, default <FILES_IN>_BETA_LOW) File name 
 %                       for the volumes of the regression coeffients in low
 %                       frequency. If this field is ommited, the
 %                       volumes will not be saved. If it is empty, the
 %                       default name will be applied.
+%                       Tip : In ANLYZE 7.5 format, a file name needs to be specified for each
+%                       DC. You can use the function NIAK_BUILD_DC to
+%                       determine how many low-frequency DC there will be,
+%                       OR you can specify one string ending by '_'. File
+%                       names with suffix '000<i>.ext' will be automatically
+%                       generated.
 %
 %                 DC_HIGH (string, default <FILES_IN>_DC_HIGH.DAT) File name 
 %                       for the matrix of high frequency discrete cosine.
@@ -56,6 +58,15 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                       volumes will not be saved. If it is empty, the
 %                       default name will be applied.
 %                 
+%                 VAR_HIGH (string, default <FILES_IN>_VAR_HIGH) File name for the volume of percentage of variance in
+%                       high frequencies. If this field is ommited, the
+%                       volume will not be saved. If it is empty, the
+%                       default name will be applied.
+%
+%                 VAR_LOW (string, default <FILES_IN>_VAR_LOW) File name for the volume of percentage of variance in
+%                       low frequencies. If this field is ommited, the
+%                       volume will not be saved. If it is empty, the
+%                       default name will be applied.
 %
 % OPT           (structure) with the following fields:
 % 
@@ -123,7 +134,7 @@ end
 %% Output files
 gb_name_structure = 'files_out';
 gb_list_fields = {'filtered_data','var_high','var_low','beta_high','beta_low','dc_high','dc_low'};
-gb_list_defaults = {'','gb_niak_ommit','gb_niak_ommited','gb_niak_ommited','gb_niak_ommited','gb_niak_ommited','gb_niak_ommited'};
+gb_list_defaults = {'','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% Options
@@ -177,19 +188,19 @@ if isempty(files_out.var_low)
     files_out.var_low = cat(2,opt.folder_out,filesep,name_f,'_var_low',ext_f);
 end
 
-if isempty(files_out.beta_low)
-    if size(files_in,1) == 1
-        files_out.beta_low = cat(2,opt.folder_out,filesep,name_f,'_beta_low',ext_f);
-    else
-        files_out.beta_low = cat(2,opt.folder_out,filesep,name_f,'_beta_low_');
-    end
-end
-
 if isempty(files_out.beta_high)
     if size(files_in,1) == 1
         files_out.beta_high = cat(2,opt.folder_out,filesep,name_f,'_beta_high',ext_f);
     else
         files_out.beta_high = cat(2,opt.folder_out,filesep,name_f,'_beta_high_');
+    end
+end
+
+if isempty(files_out.beta_low)
+    if size(files_in,1) == 1
+        files_out.beta_low = cat(2,opt.folder_out,filesep,name_f,'_beta_low',ext_f);
+    else
+        files_out.beta_low = cat(2,opt.folder_out,filesep,name_f,'_beta_low_');
     end
 end
 
@@ -232,20 +243,114 @@ opt_f.hp = opt.hp;
 opt_f.lp = opt.lp;
 [tseries_f,extras] = niak_filter_tseries(vol,opt_f);
 
+%% If relative variance maps have been requested, compute total variance of
+%% the time series
+if ~strcmp(files_out.var_high,'gb_niak_omitted')|~strcmp(files_out.var_low,'gb_niak_omitted')
+    var_vol = var(vol);
+end
+
 %% Reshaping the filtered time series into a 3D+t volume
-clear vol
+%clear vol
 vol_f = zeros([nx*ny*nz nt]);
 vol_f(mask>0,:) = tseries_f';
 clear tseries_f
 vol_f = reshape(vol_f,[nx ny nz nt]);
 
-%% Updating the history in the header
-hdr = hdr(1);
-hdr.file_name = files_out.filtered_data;
+%% Writting the filtered data
+hdr_out = hdr(1);
+hdr_out.file_name = files_out.filtered_data;
 opt_hist.command = 'niak_brick_time_filter';
 opt_hist.files_in = files_in;
 opt_hist.files_out = files_out.filtered_data;
-hdr = niak_set_history(hdr(1),opt_hist);
-niak_write_vol(hdr,vol_f);
+opt_hist.comment = sprintf('Filtered data, high-pass filter cut-off= %1.2f Hz, low pass filter cut-off=%1.2f Hz, TR=%1.2f',opt.hp,opt.lp,opt.tr);
+hdr_out = niak_set_history(hdr_out,opt_hist);
+niak_write_vol(hdr_out,vol_f);
+clear vol_f
 
+%% Writting the regression coefficients for high frequencies
+if ~strcmp(files_out.beta_high,'gb_niak_omitted')
+    hdr_out = hdr(1);
+    hdr_out.file_name = files_out.beta_high;
+    vol_beta_high = zeros([nx*ny*nz size(extras.beta_dc_high,1)]);
+    vol_beta_high(mask>0,:) = extras.beta_dc_high';
+    vol_beta_high = reshape(vol_beta_high,[nx,ny,nz,size(extras.beta_dc_high,1)]);
+    opt_hist.command = 'niak_brick_time_filter';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out.beta_high;
+    opt_hist.comment = sprintf('Regression coefficients for high-frequency discrete cosines, cut-off %1.2f Hz',opt.lp);
+    hdr_out = niak_set_history(hdr_out,opt_hist);
+    niak_write_vol(hdr_out,vol_beta_high);
+    clear vol_beta_high
+end
 
+%% Writting the regression coefficients for low frequencies
+if ~strcmp(files_out.beta_low,'gb_niak_omitted')
+    hdr_out = hdr(1);
+    hdr_out.file_name = files_out.beta_low;
+    vol_beta_low = zeros([nx*ny*nz size(extras.beta_dc_low,1)]);
+    vol_beta_low(mask>0,:) = extras.beta_dc_low';
+    vol_beta_low = reshape(vol_beta_low,[nx,ny,nz,size(extras.beta_dc_low,1)]);
+    opt_hist.command = 'niak_brick_time_filter';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out.beta_low;
+    opt_hist.comment = sprintf('Regression coefficients for low-frequency discrete cosines, cut-off %1.2f Hz',opt.hp);
+    hdr_out = niak_set_history(hdr_out,opt_hist);
+    niak_write_vol(hdr_out,vol_beta_low);
+    clear vol_beta_low
+end
+
+%% Writting the discrete cosine basis for low frequencies
+if ~strcmp(files_out.dc_low,'gb_niak_omitted')
+    fid = fopen(files_out.dc_low,'w');    
+    fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_low) ; extras.freq_dc_low']);
+    fprintf(fid,'\n');
+    
+    for num_l = 1:size(extras.tseries_dc_low,1)
+        fprintf(fid,'%1.5f ',extras.tseries_dc_low(num_l,:));
+        fprintf(fid,'\n');
+    end
+end
+
+%% Writting the discrete cosine basis for high frequencies
+if ~strcmp(files_out.dc_high,'gb_niak_omitted')
+    fid = fopen(files_out.dc_high,'w');    
+    fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_high)'; extras.freq_dc_high']);
+    fprintf(fid,'\n');
+    
+    for num_l = 1:size(extras.tseries_dc_high,1)
+        fprintf(fid,'%1.5f ',extras.tseries_dc_high(num_l,:));
+        fprintf(fid,'\n');
+    end
+end
+
+%% Writting the relative variance for low frequencies
+if ~strcmp(files_out.var_low,'gb_niak_omitted')
+    hdr_out = hdr(1);
+    hdr_out.file_name = files_out.var_low;
+    vol_var_low = zeros([nx ny nz]);
+    var_low = var(extras.tseries_dc_low*extras.beta_dc_low);
+    vol_var_low(mask>0) = var_low./var_vol;    
+    opt_hist.command = 'niak_brick_time_filter';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out.beta_low;
+    opt_hist.comment = sprintf('Relative variance of low-frequency discrete cosines, cut-off %1.2f Hz',opt.hp);
+    hdr_out = niak_set_history(hdr_out,opt_hist);
+    niak_write_vol(hdr_out,vol_var_low);
+    clear vol_val_low
+end
+
+%% Writting the relative variance for high frequencies
+if ~strcmp(files_out.var_high,'gb_niak_omitted')
+    hdr_out = hdr(1);
+    hdr_out.file_name = files_out.var_high;
+    vol_var_high = zeros([nx ny nz]);
+    var_high = var(extras.tseries_dc_high*extras.beta_dc_high);    
+    vol_var_high(mask>0) = var_high./var_vol;    
+    opt_hist.command = 'niak_brick_time_filter';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out.beta_high;
+    opt_hist.comment = sprintf('Relative variance of high-frequency discrete cosines, cut-off %1.2f Hz',opt.hp);
+    hdr_out = niak_set_history(hdr_out,opt_hist);
+    niak_write_vol(hdr_out,vol_var_high);
+    clear vol_val_high
+end
