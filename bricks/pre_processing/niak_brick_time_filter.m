@@ -11,10 +11,10 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                       an array of strings where each line is a file name
 %                       of 3D data, all in the same space.
 %
-% FILES_OUT       (structure, with the following fields :
+% FILES_OUT       (structure), with the following fields :
 %                       
 %                 FILTERED_DATA (string or array of strings, default <FILES_IN>_F) File names for outputs. NOTE that
-%                       if FILES_OUT is an empty string or cell, the name 
+%                       if FILTERED_DATA does not exist, or if it is an empty string, the name 
 %                       of the outputs will be the same as the inputs, 
 %                       with a '_f' suffix added at the end.
 %
@@ -83,7 +83,7 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                   attempt will be made to zip the outputs.
 %
 %                FOLDER_OUT (string, default: path of FILES_IN) If present,
-%                    all outputs will be created in the folder FOLDER_OUT.
+%                    all default outputs will be created in the folder FOLDER_OUT.
 %                    The folder needs to be created beforehand.
 %
 %                FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
@@ -257,7 +257,10 @@ clear tseries_f
 vol_f = reshape(vol_f,[nx ny nz nt]);
 
 %% Writting the filtered data
-hdr_out = hdr(1);
+hdr = hdr(1);
+hdr.flag_zip = flag_zip;
+
+hdr_out = hdr;
 hdr_out.file_name = files_out.filtered_data;
 opt_hist.command = 'niak_brick_time_filter';
 opt_hist.files_in = files_in;
@@ -269,7 +272,7 @@ clear vol_f
 
 %% Writting the regression coefficients for high frequencies
 if ~strcmp(files_out.beta_high,'gb_niak_omitted')
-    hdr_out = hdr(1);
+    hdr_out = hdr;
     hdr_out.file_name = files_out.beta_high;
     vol_beta_high = zeros([nx*ny*nz size(extras.beta_dc_high,1)]);
     vol_beta_high(mask>0,:) = extras.beta_dc_high';
@@ -285,7 +288,7 @@ end
 
 %% Writting the regression coefficients for low frequencies
 if ~strcmp(files_out.beta_low,'gb_niak_omitted')
-    hdr_out = hdr(1);
+    hdr_out = hdr;
     hdr_out.file_name = files_out.beta_low;
     vol_beta_low = zeros([nx*ny*nz size(extras.beta_dc_low,1)]);
     vol_beta_low(mask>0,:) = extras.beta_dc_low';
@@ -325,7 +328,7 @@ end
 
 %% Writting the relative variance for low frequencies
 if ~strcmp(files_out.var_low,'gb_niak_omitted')
-    hdr_out = hdr(1);
+    hdr_out = hdr;
     hdr_out.file_name = files_out.var_low;
     vol_var_low = zeros([nx ny nz]);
     var_low = var(extras.tseries_dc_low*extras.beta_dc_low);
@@ -341,7 +344,7 @@ end
 
 %% Writting the relative variance for high frequencies
 if ~strcmp(files_out.var_high,'gb_niak_omitted')
-    hdr_out = hdr(1);
+    hdr_out = hdr;
     hdr_out.file_name = files_out.var_high;
     vol_var_high = zeros([nx ny nz]);
     var_high = var(extras.tseries_dc_high*extras.beta_dc_high);    

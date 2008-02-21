@@ -1,7 +1,6 @@
-function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt)
 
-% Correct for differences in slice timing in a 4D fMRI acquisition via
-% temporal interpolation
+% Spatial smoothing of 3D or 3D+t data, using a Gaussian separable kernel
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
@@ -14,32 +13,24 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % FILES_OUT       (string or cell of strings) File names for outputs. NOTE that
 %                       if FILES_OUT is an empty string or cell, the name 
 %                       of the outputs will be the same as the inputs, 
-%                       with a '_a' suffix added at the end.
+%                       with a '_s' suffix added at the end.
 %
 % OPT           (structure) with the following fields :
 %
-%               OPT.INTERPOLATON METHOD (string, default 'linear') the method for
-%                       temporal interpolation, choices 'linear' or 'sync'.
-%                       Linear interpolation is not exact,
-%                       yet it is much more stable than sync interpolation
-%                       regarding noise and discontinuities and therefore recommended.
+%               FWHM  (vector of size [3 1], default [2 2 2]) the full width at half maximum of
+%                      the Gaussian kernel, in each dimension. If fwhm has length 1,
+%                      an isotropic kernel is implemented.
 %
-%               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
-%                      that the kth slice was acquired in ith position. The
-%                      order of the slices is assumed to be the same in all
-%                      volumes.
-%                      ex : slice_order = [1 3 5 2 4 6]
-%                      for 6 slices acquired in 'interleaved' mode,
-%                      starting by odd slices(slice 5 was acquired in 3rd 
-%                      position). Note that the slices are assumed to be 
-%                      axial, i.e. slice z at time t is
-%                      vols(:,:,z,t).
-%
-%               REF_SLICE	(integer, default midle slice in acquisition time)
-%                      slice for time 0
-%
-%               TIMING		(vector 2*1) TIMING(1) : time between two slices
-%                      TIMING(2) : time between last slice and next volume
+%               STEP  (vector of size [3 1] or [4 1], default resolution of 
+%                      input files). This parameter usually does not need to be
+%                      manually specified, but is rather read from the input 
+%                      file. Specification through this file will override 
+%                      these values. STEP is the resolution
+%                      in the respective dimensions, i.e. the space in mmm
+%                      between two voxels in x, y, and z. Note that the unit is
+%                      irrelevant and just need to be consistent with
+%                      the filter width (fwhm)). The fourth element is
+%                      ignored.
 %
 %               FLAG_ZIP   (boolean, deafult 0) if FLAG_ZIP equals 1, an
 %                      attempt will be made to zip the outputs.
@@ -99,14 +90,9 @@ end
 %% Options
 opt = rmfield(opt,'flag_test');
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation_method','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {'linear',NaN,[],NaN,1,0,'',0};
+gb_list_fields = {'fwhm','step','flag_verbose','flag_test','folder_out','flag_zip'};
+gb_list_defaults = {[2 2 2],[],1,0,'',0};
 niak_set_defaults
-
-nb_slices = length(opt.slice_order);
-if isempty(ref_slice)
-    ref_slice = slice_order(ceil(nb_slices/2));
-end
 
 %% Output files
 
@@ -128,7 +114,7 @@ if isempty(files_out)
 
     if size(files_in,1) == 1
 
-        files_out = cat(2,opt.folder_out,filesep,name_f,'_a',ext_f);
+        files_out = cat(2,opt.folder_out,filesep,name_f,'_s',ext_f);
 
     else
 
@@ -141,7 +127,7 @@ if isempty(files_out)
                 [tmp,name_f,ext_f] = fileparts(name_f);
             end
             
-            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_a',ext_f);
+            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_s',ext_f);
         end
         files_out = char(name_filtered_data);
 
@@ -152,23 +138,23 @@ if flag_test == 1
     return
 end
 
-%% Performing slice timing correction 
+%% Performing slice timing correction
 [hdr,vol] = niak_read_vol(files_in);
 
-opt_a.slice_order = opt.slice_order;
-opt_a.timing = opt.timing;
-opt_a.ref_slice = opt.ref_slice;
-opt_a.interpolation_method = opt.interpolation_method;
-[vol_a,opt] = niak_slice_timing(vol,opt_a);
+if isempty(opt.step)
+    opt.step = hdr.info.voxel_size;
+end
+
+opt_s.step = opt.step;
+opt_s.fwhm = opt.fwhm;
+[vol_s,opt] = niak_smooth_vol(vol,opt_s);
 
 %% Updating the history and saving output
 hdr = hdr(1);
 hdr.flag_zip = flag_zip;
 hdr.file_name = files_out;
-opt_hist.command = 'niak_slice_timing';
+opt_hist.command = 'niak_smooth_vol';
 opt_hist.files_in = files_in;
 opt_hist.files_out = files_out;
 hdr = niak_set_history(hdr,opt_hist);
-niak_write_vol(hdr,vol_a);
-
-
+niak_write_vol(hdr,vol_s);

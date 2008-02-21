@@ -74,8 +74,8 @@ function [] = niak_write_minc(hdr,vol)
 
 %% Setting up default values for the header
 gb_name_structure = 'hdr';
-gb_list_fields = {'file_name','type','info','details'};
-gb_list_defaults = {NaN,'minc2',struct(),struct()};
+gb_list_fields = {'file_name','type','info','details','flag_zip'};
+gb_list_defaults = {NaN,'minc2',struct(),struct(),0};
 niak_set_defaults
 
 %% Setting up default values for the 'info' part of the header

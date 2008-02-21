@@ -81,8 +81,8 @@ end
 
 %% Setting up default values for the header
 gb_name_structure = 'hdr';
-gb_list_fields = {'file_name','type','info'};
-gb_list_defaults = {NaN,'nii',struct()};
+gb_list_fields = {'file_name','type','info','flag_zip'};
+gb_list_defaults = {NaN,'nii',struct(),0};
 niak_set_defaults
 
 %% Setting up default values for the 'info' part of the header
