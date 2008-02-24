@@ -97,7 +97,6 @@ if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
 end
 
 %% Options
-opt = rmfield(opt,'flag_test');
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation_method','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out','flag_zip'};
 gb_list_defaults = {'linear',NaN,[],NaN,1,0,'',0};

@@ -7,7 +7,7 @@ function mask = niak_mask_brain(vol,fwhm_kernel)
 % 
 % INPUT: 
 % VOL           (4D array) a 3D or 3D+t dataset
-% FWHM_KERNEL   (real value, default 2) the FWHM of the blurring kernel in 
+% FWHM_KERNEL   (real value, default 3) the FWHM of the blurring kernel in 
 %                   voxel units (can also be a 3*1 vector for anisotropic 
 %                   filtering if the voxel size is anisotropic). A value of
 %                   0 for FWHM_KERNEL will skip the smoothing step.
@@ -50,7 +50,7 @@ function mask = niak_mask_brain(vol,fwhm_kernel)
 
 %% Setting up default arguments
 if nargin < 2
-    opt_smooth.fwhm = 2;
+    opt_smooth.fwhm = 3;
 else
     opt_smooth.fwhm = fwhm_kernel;
 end

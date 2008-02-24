@@ -88,7 +88,6 @@ if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
 end
 
 %% Options
-opt = rmfield(opt,'flag_test');
 gb_name_structure = 'opt';
 gb_list_fields = {'fwhm','step','flag_verbose','flag_test','folder_out','flag_zip'};
 gb_list_defaults = {[2 2 2],[],1,0,'',0};
