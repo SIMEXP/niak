@@ -35,6 +35,9 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % workaround :-((. Moreover, the call to MKDIR is slightly different in
 % Matlab and Octave. This function fixes that too.
 %
+% Contrary to the regular MKDIR command, SUCCESS = 1 if the directory
+% already exists.
+%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -68,9 +71,13 @@ success = 1;
 message = '';
 messageid = '';
 
+if exist(path_name)
+    return
+end
+
 for num_p = 1:length(list_path)
     
-    if ~exist(cat(2,path_curr,list_path{num_p}))
+    if ~exist(cat(2,path_curr,list_path{num_p}),'dir')
         
         if isempty(path_curr)
             [success,message,messageid] = mkdir(list_path{num_p});

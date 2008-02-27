@@ -21,6 +21,8 @@ gb_niak_format_demo = 'minc2'; % The file format of the default data. That could
 
 gb_niak_path_demo = cat(2,'/media/hda3/database/data_niak/',gb_niak_format_demo,filesep); % Where to find demo data
 
+gb_niak_path_civet = '/media/hda3/quarantines/Feb-14-2008/';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

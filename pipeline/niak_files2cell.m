@@ -1,21 +1,21 @@
-function str_files = niak_files2str(files,pref)
+function cell_files = niak_files2cell(files)
 
 % Convert a string, cell of strings or a structure where each field is a
 % string or a cell of strings into one single string, formatted for PMP
 %
 % SYNTAX :
-% STR_FILES = NIAK_FILES2STR(FILES)
+% CELL_FILES = NIAK_FILES2CELL(FILES)
 %
 % INPUTS :
 % FILES         (string, cell of strings or a structure where each field is a
 %               string or a cell of strings) All those strings are file
 %               names.
 %
-% PREF          (string)
-%
 % OUTPUTS :
-% STR_FILES     (string) all file names in FILES are concatenated in a
-%               string of the form '[PREFfilename1]', '[PREFfilename2]' ...
+%
+% CELL_FILES    (cell of strings) all file names in FILES stored in a cell
+%               of strings (wheter it was initially string, cell of strings
+%               or structure does not matter).
 %
 % COMMENTS : 
 % Copyright (c) Pierre Bellec 01/2008
@@ -38,12 +38,8 @@ function str_files = niak_files2str(files,pref)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if nargin < 2
-    pref = '';
-end
-
-
-str_files = '';
+num_cell = 1;
+cell_files = cell(0);
 
 if isstruct(files)
     list_field = fieldnames(files);
@@ -57,20 +53,14 @@ if isstruct(files)
                 for num_i = 1:length(list_files_in)
 
                     if ~strcmp(list_files_in{num_i},'gb_niak_omitted')
-                        if isempty(str_files)
-                            str_files = [str_files '"' pref list_files_in{num_i} '"'];
-                        else
-                            str_files = [str_files ', ' '"' pref list_files_in{num_i} '"'];
-                        end
+                        cell_files{num_cell} = list_files_in{num_i};
+                        num_cell = num_cell + 1;
                     end
                 end
             else
                 if ~strcmp(list_files_in,'gb_niak_omitted')
-                    if isempty(str_files)
-                        str_files = [str_files '"' pref list_files_in '"'];
-                    else
-                        str_files = [str_files ', ' '"' pref list_files_in '"'];
-                    end
+                    cell_files{num_cell} = list_files_in;
+                    num_cell = num_cell + 1;
                 end
             end
 
@@ -83,11 +73,8 @@ elseif iscellstr(files)
 
         for num_f = 1:length(list_field)
             if ~strcmp(files{num_f},'gb_niak_omitted')
-                if isempty(str_files)
-                    str_files = [str_files '"' pref files{num_f} '"'];
-                else
-                    str_files = [str_files ', ' '"' pref files{num_f} '"'];
-                end
+                cell_files{num_cell} = files{num_f};
+                num_cell = num_cell + 1;
             end
         end
 
@@ -95,8 +82,8 @@ elseif iscellstr(files)
 
 elseif ischar(files)
 
-    if ~strcmp(files,'gb_niak_omitted')
-        str_files = [str_files '"' pref files '"'];
+    if ~strcmp(files,'gb_niak_omitted')    
+        cell_files{num_cell} = files;
     end
 
 end

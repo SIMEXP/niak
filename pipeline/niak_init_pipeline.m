@@ -1,7 +1,7 @@
 function file_pipeline = niak_init_pipeline(pipeline,opt)
 
-% Create some perl and bash scripts ready to be fed in the poor man's pipeline
-% (PMP) system.
+% Convert a matlab-based pipeline structure into a set of PERL and BASH 
+% scripts ready to run using the poor man's pipeline (PMP) PERL library.
 %
 % SYNTAX:
 % FILE_PIPELINE = NIAK_INIT_PIPELINE(PIPELINE,OPT)
@@ -57,30 +57,19 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                      where input files are preceded by a 'in:' and output
 %                      files preceded by a 'out:'.
 %
-%               FOLDER_LOGS (string, default '') The path where the BASH scripts
-%                      will be generated for this stage of the pipeline.
-%                      If needed, the FOLDER will be created. All folders
-%                      live in the OPT.PATH_LOGS folder (see below).
-% 
 %
 % OPT           (structure) with the following fields :
 %
 %               PATH_LOGS (string, default PWD) The folder where the PERL 
-%                      and BASH scripts will be stored. All 
-%                      PIPELINE.<STAGE_NAME>.FOLDER_LOGS will be created in
-%                      this path.
+%                      and BASH scripts will be stored.
 %
-%               QUARANTINE (string) Path to the CIVET quarantine. This
-%                      quarantine includes the minc tools, perl, civet and
-%                       PMP. Those tools are prerequesites of all BRICK which
-%                      deals with MINC files or with T1 images. It is also
-%                      a prerequesite of the pipeline system itself !
-%
-%               INIT_SH (string, default PATH_QUARANTINE/INIT-SGE.SH) 
+%               INIT_SH (string, default GB_NIAK_PATH_CIVET/INIT-SGE.SH) 
 %                      a file name of a script to init the SH
 %                      environment if you are using any BRICK using the 
 %                      'bash' environement. The default value will work if
-%                      you want to use tools from the quarantine.
+%                      you want to use tools from the quarantine. The
+%                      variable GB_NIAK_PATH_CIVET can be manually
+%                      specified in the file NIAK_GB_VARS.
 %
 %               MATLAB_COMMAND	(string, default 'matlab') how to invoke
 %                      matlab. You may want to update that to add the full
@@ -90,14 +79,18 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                      octave. You may want to update that to add the full
 %                      path of the command.
 %
-%               FILE_PATH_MAT (string, default PATH_LOGS/PATH_DEF.MAT) 
+%               FILE_PATH_MAT (string, default PATH_LOGS/NAME_PIPELINE.path_def.mat) 
 %                      If a non-empty string is provided, PATH_DEF_MAT should be 
 %                      a '.MAT' file (in actual matlab format, not octave) that will be
 %                      loaded and set as search path in the matlab/octave sessions.
-%                      If omitted or the file does not exist, the current 
+%                      If omitted or if the file does not exist, the current 
 %                      search path will be saved in PATH_LOGS under the 
-%                       name PATH_DEF_MAT. If CLOBBER == 0 and the file
-%                       already exists, nothing will be done.
+%                       name NAME_PIPELINE.path_def.mat .
+%                      If CLOBBER == 0 and the file already exists, nothing 
+%                       will be done.
+%
+%               NAME_PIPELINE (string, default 'NIAK_pipeline') the name of
+%                      the pipeline. No space, no weird characters please. 
 %
 %               CLOBBER (boolean, default 0) if clobber == 1, the PATH_LOGS
 %                      will be cleared and all files written again from
@@ -114,40 +107,55 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %
 % FILE_PIPELINE     (string) the name of a PERL script implementing the
 %                   pipeline through PMP.
-%              
-% The directories PATH_LOGS/FOLDER_LOGS are created. In PATH_LOGS, a PERL
-% script named 'pipeline.pmp' is created which implements the pipeline in PMP.
-% This script is overwritten every time NIAK_INIT_PIPELINE is executed in
-% the folder PATH_LOGS.
 %
-% There is also a file 'pipeline.mat' in PATh_LOGS. The first time 
-% NIAK_INIT_PIPELINE is used, the structures pipeline and opt are saved
-% here in matlab format, along with a string called history which describes
-% the date, user name and system. Subsequent use of NIAK_INIT_PIPELINE will
-% update these values and, if CLOBBER==0, previous values are saved in a
-% structure called PREVIOUS_PIPELINE. Multiple use of NIAK_INIT_PIPELINE
-% will result into nested structures PREVIOUS_PIPELINE.PREVIOUS_PIPELINE.(...)
+% All output directories for output files are created here.
 %
-% A bash script called PATH_LOGS/FOLDER_LOGS/<STAGE_NAME>.SH is created for
-% each stage of the pipeline. This script is the one executed at the given stage.
-% If the script lives in matlab and octave environment, a file
-% PATH_LOGS/FOLDER_LOGS/<STAGE_NAME>.MAT is also created where the fields
-% BRICK, FILES_IN, FILES_OUT and OPT of the current stage are saved.
+% The directory PATH_LOGS is created. It contains the following files :
+%
+% PATH_LOGS/NAME_PIPELINE.pl : A PERL script which implements the pipeline in PMP.
+%       This script is overwritten every time NIAK_INIT_PIPELINE is executed in
+%       the folder PATH_LOGS.
+%
+% PATH_LOGS/NAME_PIPELINE.mat : The first time NIAK_INIT_PIPELINE is used, the 
+%       structures PIPELINE and OPT are saved here in matlab format, along 
+%       with a string called HISTORY which describes the date, user name 
+%       and system. Subsequent use of NIAK_INIT_PIPELINE will update these 
+%       values and, if CLOBBER==0, previous values are saved in a structure
+%       called PREVIOUS_PIPELINE. Multiple use of NIAK_INIT_PIPELINE
+%       will result into nested structures
+%       PREVIOUS_PIPELINE.PREVIOUS_PIPELINE.
+%
+% PATH_LOGS/NAME_PIPELINE.path_def.mat : The c
+%
+% PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.SH : This script is the one executed at the given stage.
+% 
+% PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.MAT : If the stage lives in matlab and octave 
+%       environment, this file contains the variables BRICK, FILES_IN, 
+%       FILES_OUT and OPT of the current stage.
+%
+% PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.M : If the stage lives in octave, this is an
+%       octave script which is run at the current stage.
+%
 % If CLOBBER == 0, the files won't be written : if a stage has been
-% completed (file PATH_LOGS/FOLDER_LOGS/<STAGE_NAME>.LOCK exists), nothing
-% is done ; otherwise, previous content is saved in a PREVIOUS_PIPELINE
-% structure, and variables are updated.
-%
-% Note that other files will be created in PATH_LOGS/FOLDER_LOGS when
-% running the pipeline. See NIAK_RUN_PIPELINE for more information.
+%       completed (file PATH_LOGS/FOLDER_LOGS/<STAGE_NAME>.LOCK exists), nothing
+%       is done ; otherwise, previous content is saved in a PREVIOUS_PIPELINE
+%       structure, and variables are updated.
 %
 % SEE ALSO:
-% NIAK_RUN_PIPELINE, NIAK_DEMO_PIPELINE*
+% NIAK_MANAGE_PIPELINE, NIAK_VISU_PIPELINE, NIAK_DEMO_PIPELINE*
 %
 % COMMENTS
 % A description of the Poor Man's Pipeline system written in PERL can be
 % found on the BIC wiki :
 % http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
+%
+% Note that other files will be created in PATH_LOGS when
+% running the pipeline. See NIAK_RUN_PIPELINE for more information.
+%
+% This function needs a CIVET quarantine to run, see :
+% http://wiki.bic.mni.mcgill.ca/index.php/CIVET
+% The path to the quarantine can be manually specified in the variable
+% GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -176,8 +184,8 @@ niak_gb_vars
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'path_logs','quarantine','init_sh','matlab_command','octave_command','file_path_mat','clobber','flag_verbose'};
-gb_list_defaults = {pwd,NaN,'','matlab','octave','',0,1};
+gb_list_fields = {'path_logs','init_sh','matlab_command','octave_command','file_path_mat','clobber','flag_verbose','name_pipeline'};
+gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,'init-sge.sh'),'matlab','octave','',0,1,'NIAK_pipeline'};
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -185,14 +193,15 @@ niak_set_defaults
 %%%%%%%%%%%%%%%%%%%%%%%
 [succ,messg,messgid] = niak_mkdir(path_logs);
 
-if succ == 0
+if succ == 0 
     error('niak:pipeline',messg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Saving the matlab version of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-file_pipeline_mat = cat(2,path_logs,'pipeline.mat');
+
+file_pipeline_mat = cat(2,path_logs,filesep,name_pipeline,'.mat');
 
 if (clobber == 1)|~exist(file_pipeline_mat,'file')
     history = [datestr(now) ' ' gb_niak_user ' on a ' gb_niak_OS ' system used NIAK v' gb_niak_version '>>>> Created a pipeline !\n'];
@@ -206,8 +215,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Setting up path for the Matlab/Octave environment %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if isempty(file_path_mat)
-    file_path_mat = cat(2,path_logs,filesep,'path_def.mat');
+    file_path_mat = cat(2,path_logs,filesep,name_pipeline,'.path_def.mat');
 
     if (clobber == 1)|~exist(file_path_mat,'file')
         path_work = path;
@@ -215,12 +225,52 @@ if isempty(file_path_mat)
     end    
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Initialization of the pipeline %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Creating the bash scripts for all stages of the pipeline, as well as the PMP script %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+file_pipeline = cat(2,path_logs,name_pipeline,'.pl');
+hp = fopen(file_pipeline,'w');
 
-file_pipeline = cat(2,path_logs,'pipeline.pm');
+fprintf(hp,'#!/usr/bin/env perl\n\n'); % The script is written in PERL
+
+%% A small help for the script
+fprintf(hp,'if ($ARGV[0] eq help) {\n');
+fprintf(hp,'print '' \nThis PERL script has been generated on %s by %s on a %s system, using NIAK version %s. It is running a processing pipeline on neuroimaging data. While it can be used as a stand-alone command, it is meant to be used via the NIAK_RUN_PIPELINE and NIAK_VISU_PIPELINE commands in Matlab/Octave.\n',datestr(now),gb_niak_user,gb_niak_OS,gb_niak_version);
+fprintf(hp,'\n SYNTAX: \n %s%s%s ARG0 ARG1\n\n','./',name_pipeline,'.pl');
+fprintf(hp,'ARG0 is optional. A first set of commands gives control on the pipeline execution :\n');
+fprintf(hp,'    help : Show this message and die \n');
+fprintf(hp,'    run : Run all the incomplete stages of the pipeline. \n');
+fprintf(hp,'    resetFailures : Reset all stages that have failed so that they can be run again.\n');
+fprintf(hp,'    resetAll : Reset all stages of the pipeline.\n');
+fprintf(hp,'    resetFromStage : Take a stage name as an argument and resets all stages from that stage onwards (including that stage itself).\n');
+fprintf(hp,'    resetRunning : Reset all stages thought to be running.\n');
+fprintf(hp,'\nA second set of commands in ARG0 allows to monitor the pipeline design and execution :\n');
+fprintf(hp,'    GetPipelineStatus : Get the pipeline’s status (not started, running, failed or finished).\n');
+fprintf(hp,'    printStages : Print all stages in the pipeline.\n');
+fprintf(hp,'    createDotGraph : Generate a graph representation of the stages of the pipeline in dot format (see graphviz package on internet).\n');
+fprintf(hp,'    createFilenameDotGraph : Generate a graph representation of the files of the pipeline in dot format (see graphviz package on internet).\n');
+fprintf(hp,'    printUnfinished : Print the unfinished stages of the pipeline.\n');
+fprintf(hp,'\nARG1 is optional. It specifies how the pipeline will run :\n');
+fprintf(hp,'    spawn (default) : sequential execution on the local machine \n');
+fprintf(hp,'    sge : parallel execution, using the sge qsub system \n');
+fprintf(hp,'    pbs : parallel execution, using pbs \n\n'';\nexit 0\n');
+fprintf(hp,'}\n\n');
+
+fprintf(hp,'use PMP::PMP; \nuse PMP::spawn; \nuse PMP::pbs; \nuse PMP::sge; \nuse PMP::Array;\nuse Env qw( PATH ) ; \nuse FindBin; \nuse lib "FindBin::Bin"; \n\n'); % Import the necessary PERL libraries, notably PMP
+fprintf(hp,'$PATH = "$FindBin::Bin:${PATH}" ;\n'); % Add the log path to the path search of PMP
+fprintf(hp,'my $pipeline = undef;\n\n'); % Initialization of a new pipeline
+fprintf(hp,'if ($ARGV[1] eq sge) { \n$pipeline = PMP::sge->new(); \n} \nelsif ($ARGV[1] eq pbs) { \n$pipeline = PMP::pbs->new(); \n}\nelse {\n$pipeline = PMP::spawn->new();\n}\n\n'); % Choose the execution mode : SPAWN is local, PBS is parallel using PBS, SGE is parallel using the SGE QSUB system
+
+fprintf(hp,'$pipeline->name(''NIAK_pipeline'');\n\n'); % The name of the pipeline
+fprintf(hp,'$pipeline->statusDir(''%s'');\n\n',path_logs); % Where to access logs
+fprintf(hp,'my $pipes = PMP::Array->new();\n'); % Create a new array of pipelines
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating the bash scripts for all stages of the pipeline, as well as the core of the PMP script %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 list_stage = fieldnames(pipeline);
 
 for num_s = 1:length(list_stage)
@@ -230,23 +280,24 @@ for num_s = 1:length(list_stage)
     stage = getfield(pipeline,stage_name);
         
     gb_name_structure = 'stage';
-    gb_list_fields = {'label','brick','files_in','files_out','opt','environment','folder_logs',};
-    gb_list_defaults = {'',NaN,NaN,NaN,NaN,'octave',''};
-    niak_set_defaults
+    gb_list_fields = {'label','brick','files_in','files_out','opt','environment',};
+    gb_list_defaults = {'',NaN,NaN,NaN,NaN,'octave'};
+    niak_set_defaults        
     
-    [succ,messg,messgid] = niak_mkdir(cat(2,path_logs,filesep,folder_logs));
-
-    if succ == 0
-        error('niak:pipeline',messg);
+    %% Creation of output directories
+    cell_files = niak_files2cell(files_out);
+    for num_cell = 1:length(cell_files)
+        path_cell = fileparts(cell_files{num_cell});
+        niak_mkdir(path_cell);
     end
-    
+        
     %% Generation of file names
     
-    file_var = cat(2,path_logs,filesep,folder_logs,filesep,stage_name,'.mat');
-    file_sh =  cat(2,path_logs,filesep,folder_logs,filesep,stage_name,'.sh');
-    file_log = cat(2,path_logs,filesep,folder_logs,filesep,stage_name,'.log');
-    file_lock = cat(2,path_logs,filesep,folder_logs,filesep,stage_name,'.lock');
-    file_oct = cat(2,path_logs,filesep,folder_logs,filesep,stage_name,'.m');
+    file_var = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.mat');
+    file_sh =  cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.sh');
+    file_log = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.log');
+    file_lock = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.lock');
+    file_oct = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.m');
     
     %% Creation of the .mat file with all variables necessary to perform
     %% the stage
@@ -272,17 +323,19 @@ for num_s = 1:length(list_stage)
         
         switch environment
             case 'matlab'
-                
-                %fprintf(hs,'%s -nojvm -nosplash -logfile %s -r ''load(''-mat'',%s), path(path_work), load(''-mat'',%s), %s(files_in,files_out,opt), exit''\n',matlab_command,file_log,file_path_mat,file_var,brick);
-                fprintf(hs,'%s -nojvm -nosplash -r ''load(''-mat'',%s), path(path_work), load(''-mat'',%s), %s(files_in,files_out,opt), exit''\n',matlab_command,file_path_mat,file_var,brick);
+                                
+                fprintf(hs,'#!/bin/sh -f\n');
+                fprintf(hs,'source %s \n',init_sh);
+                fprintf(hs,'%s -nojvm -nosplash -r ''load -mat %s, path(path_work), load -mat %s, files_in, files_out, opt, %s(files_in,files_out,opt), exit''\n',matlab_command,file_path_mat,file_var,brick);
                 
             case 'octave'
                 
-                %fprintf(hs,'%s %s -x > %s\n',octave_command,file_oct,file_log);
-                fprintf(hs,'%s %s \n',octave_command,file_oct);
+                fprintf(hs,'#!/bin/sh -f\n');
+                fprintf(hs,'source %s \n',init_sh);                
+                fprintf(hs,'%s %s -x \n',octave_command,file_oct);
                 
                 ho = fopen(file_oct,'w');
-                fprintf(ho,'load(''-mat'',%s), path(path_work), load(''-mat'',%s), %s(files_in,files_out,opt),',file_path_mat,file_var,brick);
+                fprintf(ho,'load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''),\n %s(files_in,files_out,opt),\n',file_path_mat,file_var,brick);
                 fclose(ho);
                 
             case 'bash'
@@ -295,38 +348,40 @@ for num_s = 1:length(list_stage)
                 
         end
         
+        for num_cell = 1:length(cell_files)
+            fprintf(hs,'\nif [ ! -e %s ]; then \n exit 1 \nfi',cell_files{num_cell});
+        end
         fclose(hs);
         
     end    
-    
-    %% In the first iteration, generating the header of the PMP script
-    
-    if num_s == 1
         
-        hp = fopen(file_pipeline,'w');
-       
-        fprintf(hp,'#!/usr/bin/env perl\n\n'); % The script is written in PERL
-        fprintf(hp,'use PMP::PMP; \nuse PMP::spawn; \nuse PMP::pbs; \nuse PMP::sge; \nuse PMP::Array;\n\n'); % Import the necessary PERL libraries, notably PMP        
-        fprintf(hp,'my $pipes = PMP::Array->new();\n\n'); % Create a new array of pipelines
-        fprintf(hp,'if ($ARGV[0] == 1) { \nmy $pipeline = PMP::sge->new(); \n} \nelsif ($ARGV[0] == 2) { \nmy $pipeline = PMP::pbs->new(); \n}\nelse {\nmy $pipeline = PMP::spawn->new();\n}\n\n'); % Choose the execution mode : SPAWN is local, PBS is parallel using PBS, SGE is parallel using the SGE QSUB system
-        fprintf(hp,'$pipeline->name(''%s'');\n\n',[datestr(now) ' ' gb_niak_user ' on a ' gb_niak_OS ' system used NIAK v' gb_niak_version ' to create this pipeline']); % The name of the pipeline
-        fprintf(hp,'$pipeline->statusDir(''%s'');\n\n',path_logs); % Where to access log
-        
-    end
-    
     %% Adding the stage of the pipeline in the PMP script
     
     fprintf(hp,'$pipeline->addStage(\n');
-    fprintf(hp,'{ name => ''%s''\n',stage_name); % The name of the stage is used for the graph representation of the pipeline and to sort out dependencies
-    
-    fprintf(hp,'  args => [''%s'', %s, %s] });\n\n',file_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
+    fprintf(hp,'{ name => ''%s'',\n',stage_name); % The name of the stage is used for the graph representation of the pipeline and to sort out dependencies
+    [path_sh,name_sh,ext_sh] = fileparts(file_sh);
+    fprintf(hp,'  args => [''%s%s'', %s, %s] });\n\n',name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
     
 end
 
-fprintf(hp,'# compute the dependencies based on the filenames:\n$pipeline->computeDependenciesFromInputs()\n\n');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating the end of the PMP script, with the actual commands where PMP do something %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fprintf(hp,'# compute the dependencies based on the filenames:\n$pipeline->computeDependenciesFromInputs(); \n\n');
 fprintf(hp,'# update the status of all stages based on previous pipeline runs\n$pipeline->updateStatus();\n\n');
-fprintf(hp,'# update the status of all stages based on previous pipeline runs\n$pipeline->updateStatus();\n\n');
-fprintf(hp,'# restart all stages that failed in a previous run\n$pipeline->resetFailures();\n\n');
-fprintf(hp,'$pipes->addPipe($pipeline);\n\n');
-fprintf(hp,'# loop until all pipes are done\n$pipes->run();\n\n');
+fprintf(hp,'# Add the pipeline to the pipeline array\n$pipes->addPipe($pipeline);\n\n'); % Add the pipeline to the pipeline array
+
+fprintf(hp,'if ($ARGV[0] eq run) { \n# loop until all pipes are done\n$pipes->run(); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq resetFailures) { \n$pipes->resetFailures(); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq resetAll) {\n$pipes->resetAll(); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq resetRunning) { \n$pipes->resetRunning(); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq resetFromStage) { \n$pipes->resetFromStage($ARGV[3]); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq getPipelineStatus) { \n$pipes->getPipelineStatus(); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq printStages) { \n$pipes->printStages(); \n}');
+fprintf(hp,'\nelsif ($ARGV[0] eq createDotGraph) { \n$pipes->createDotGraph(''%s.graph_stages.dot''); \n}',name_pipeline);
+fprintf(hp,'\nelsif ($ARGV[0] eq createFilenameDotGraph) { \n$pipes->createFilenameDotGraph(''%s.graph_filenames.dot''); \n}',name_pipeline);
+fprintf(hp,'\nelsif ($ARGV[0] eq printUnfinished) { \n$pipes->printUnfinished(); \n}');
+
+fprintf(hp,'\nelse { \nprint ''\nSYNTAX :\n ./%s.pl arg0 arg1 \n Type ./%s.pl help for details.\n\n''\n}',name_pipeline,name_pipeline);
 fclose(hp);
