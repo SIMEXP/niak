@@ -18,11 +18,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 % OPT           (structure) with the following fields :
 %
-%               OPT.INTERPOLATON METHOD (string, default 'linear') the method for
+%               OPT.INTERPOLATON METHOD (string, default 'sync') the method for
 %                       temporal interpolation, choices 'linear' or 'sync'.
-%                       Linear interpolation is not exact,
-%                       yet it is much more stable than sync interpolation
-%                       regarding noise and discontinuities and therefore recommended.
 %
 %               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
 %                      that the kth slice was acquired in ith position. The
@@ -99,7 +96,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation_method','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {'linear',NaN,[],NaN,1,0,'',0};
+gb_list_defaults = {'sync',NaN,[],NaN,1,0,'',0};
 niak_set_defaults
 
 nb_slices = length(opt.slice_order);

@@ -19,14 +19,16 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                       in the verbose mode, and in the dot graph
 %                       recapitulating all the jobs and dependencies.
 %
-%               BRICK (string) the name of the brick you want to apply at 
-%                       this stage, e.g. NIAK_BRICK_SLICE_TIMING.
+%               COMMAND (string) the name of the command you want to apply at 
+%                       this stage. This command can use the variables 
+%                       FILES_IN, FILES_OUT and OPT. Example :
+%                       'niak_brick_something(files_in,files_out,opt);'
 %
 %               FILES_IN (string, cell of strings, structure) the argument
 %                      FILES_IN of the BRICK. Note that for properly
 %                      handling dependencies, this field needs to contain
 %                      the exact name of the file (no wildcards, no '' for
-%                      default values). One way is to run the brick with
+%                      default values). One way is to run the command with
 %                       OPT.FLAG_TEST = 1 a first time in order to get all
 %                       default values set for you.
 %
@@ -34,7 +36,7 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                      FILES_OUT of the BRICK. Note that for properly
 %                      handling dependencies, this field needs to contain
 %                      the exact name of the file (no wildcards, no '' for
-%                      default values). One way is to run the brick with
+%                      default values). One way is to run the command with
 %                       OPT.FLAG_TEST = 1 a first time in order to get all
 %                       default values set for you.
 %
@@ -42,8 +44,8 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                      FILES_OUT of the BRICK. Note that for properly
 %                      keeping track of the options you used, all fields of 
 %                      this structure should be specified, meaning that you 
-%                      won't let the brick apply default values. One way to
-%                      do that is to run the brick with OPT.FLAG_TEST = 1 a
+%                      won't let the command apply default values. One way to
+%                      do that is to run the command with OPT.FLAG_TEST = 1 a
 %                       first time in order to get all default values set for 
 %                       you.
 %
@@ -60,37 +62,11 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %
 % OPT           (structure) with the following fields :
 %
+%               NAME_PIPELINE (string, default 'NIAK_pipeline') the name of
+%                      the pipeline. No space, no weird characters please.
+%
 %               PATH_LOGS (string, default PWD) The folder where the PERL 
 %                      and BASH scripts will be stored.
-%
-%               INIT_SH (string, default GB_NIAK_PATH_CIVET/INIT-SGE.SH) 
-%                      a file name of a script to init the SH
-%                      environment if you are using any BRICK using the 
-%                      'bash' environement. The default value will work if
-%                      you want to use tools from the quarantine. The
-%                      variable GB_NIAK_PATH_CIVET can be manually
-%                      specified in the file NIAK_GB_VARS.
-%
-%               MATLAB_COMMAND	(string, default 'matlab') how to invoke
-%                      matlab. You may want to update that to add the full
-%                      path of the command.
-%
-%               OCTAVE_COMMAND (string, default 'octave') how to invoke
-%                      octave. You may want to update that to add the full
-%                      path of the command.
-%
-%               FILE_PATH_MAT (string, default PATH_LOGS/NAME_PIPELINE.path_def.mat) 
-%                      If a non-empty string is provided, PATH_DEF_MAT should be 
-%                      a '.MAT' file (in actual matlab format, not octave) that will be
-%                      loaded and set as search path in the matlab/octave sessions.
-%                      If omitted or if the file does not exist, the current 
-%                      search path will be saved in PATH_LOGS under the 
-%                       name NAME_PIPELINE.path_def.mat .
-%                      If CLOBBER == 0 and the file already exists, nothing 
-%                       will be done.
-%
-%               NAME_PIPELINE (string, default 'NIAK_pipeline') the name of
-%                      the pipeline. No space, no weird characters please. 
 %
 %               CLOBBER (boolean, default 0) if clobber == 1, the PATH_LOGS
 %                      will be cleared and all files written again from
@@ -102,6 +78,45 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %               FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
 %                      the function prints some infos during the
 %                      processing.
+%
+%               INIT_SH (string, default GB_NIAK_PATH_CIVET/INIT-SGE.SH) 
+%                      a file name of a script to init the SH
+%                      environment if you are using any BRICK using the 
+%                      'bash' environement. The default value will work if
+%                      you want to use tools from the quarantine. The
+%                      variable GB_NIAK_PATH_CIVET can be manually
+%                      specified in the file NIAK_GB_VARS.
+%
+%               COMMAND_MATLAB (string, default GB_NIAK_COMMAND_MATLAB) 
+%                      how to invoke matlab. You may want to update that 
+%                      to add the full path of the command. The defaut for
+%                      this field can be set using the variable
+%                      GB_NIAK_COMMAND_MATLAB in the file NIAK_GB_VARS.
+%
+%               COMMAND_OCTAVE (string, default GB_NIAK_COMMAND_MATLAB) 
+%                      how to invoke matlab. You may want to update that 
+%                      to add the full path of the command. The defaut for
+%                      this field can be set using the variable
+%                      GB_NIAK_COMMAND_MATLAB in the file NIAK_GB_VARS.
+%
+%               FILE_PATH_MAT (string, default PATH_LOGS/NAME_PIPELINE.path_def.mat) 
+%                      If a non-empty string is provided, PATH_DEF_MAT should be 
+%                      a '.MAT' file (in actual matlab format, not octave) that will be
+%                      loaded and set as search path in the matlab/octave sessions.
+%                      If omitted or if the file does not exist, the current 
+%                      search path will be saved in PATH_LOGS under the 
+%                       name NAME_PIPELINE.path_def.mat .
+%                      If CLOBBER == 0 and the file already exists, nothing 
+%                       will be done.
+%
+%               SGE_HOSTS (string, default '') A string which is directly 
+%                       passed to qsub when using the SGE execution mode 
+%                       (and is ignored otherwise). The following string 
+%                       "-l vf=2G" would, for example, reserve 2 gigabytes 
+%                       of memory, and "-l aces.q@node0,aces.q@node1" would 
+%                       specify to run the jobs through the aces queue, 
+%                       and specifically on node0 or node1.
+%
 %               
 % OUTPUTS:
 %
@@ -156,6 +171,8 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 % http://wiki.bic.mni.mcgill.ca/index.php/CIVET
 % The path to the quarantine can be manually specified in the variable
 % GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
+% The initialization script of the quarantine can be specified through the
+% variable GB_NIAK_INIT_CIVET.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -184,8 +201,8 @@ niak_gb_vars
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'path_logs','init_sh','matlab_command','octave_command','file_path_mat','clobber','flag_verbose','name_pipeline'};
-gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,'init-sge.sh'),'matlab','octave','',0,1,'NIAK_pipeline'};
+gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_hosts'};
+gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',''};
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -280,7 +297,7 @@ for num_s = 1:length(list_stage)
     stage = getfield(pipeline,stage_name);
         
     gb_name_structure = 'stage';
-    gb_list_fields = {'label','brick','files_in','files_out','opt','environment',};
+    gb_list_fields = {'label','command','files_in','files_out','opt','environment',};
     gb_list_defaults = {'',NaN,NaN,NaN,NaN,'octave'};
     niak_set_defaults        
     
@@ -302,7 +319,7 @@ for num_s = 1:length(list_stage)
     %% Creation of the .mat file with all variables necessary to perform
     %% the stage
     if (clobber == 1)|~exist(file_var,'file')
-        save('-mat',file_var,'brick','files_in','files_out','opt')
+        save('-mat',file_var,'command','files_in','files_out','opt')
     else
         if ~exist(file_lock,'file')
             previous_pipeline = load(file_var);
@@ -311,7 +328,7 @@ for num_s = 1:length(list_stage)
                 previous_pipeline.file_sh = fread(fid, Inf, 'uint8=>char')';
                 fclose(fid);
             end
-            save('-mat',file_var,'brick','files_in','files_out','opt','previous_pipeline')
+            save('-mat',file_var,'command','files_in','files_out','opt','previous_pipeline')
         end
     end
     
@@ -324,23 +341,23 @@ for num_s = 1:length(list_stage)
         switch environment
             case 'matlab'
                                 
-                fprintf(hs,'#!/bin/sh -f\n');
+                fprintf(hs,'#!/bin/bash \n');
                 fprintf(hs,'source %s \n',init_sh);
-                fprintf(hs,'%s -nojvm -nosplash -r ''load -mat %s, path(path_work), load -mat %s, files_in, files_out, opt, %s(files_in,files_out,opt), exit''\n',matlab_command,file_path_mat,file_var,brick);
+                fprintf(hs,'%s -nojvm -nosplash -r ''load -mat %s, path(path_work), load -mat %s, files_in, files_out, opt, %s; exit''\n',command_matlab,file_path_mat,file_var,command);
                 
             case 'octave'
                 
-                fprintf(hs,'#!/bin/sh -f\n');
+                fprintf(hs,'#!/bin/bash \n');
                 fprintf(hs,'source %s \n',init_sh);                
-                fprintf(hs,'%s %s -x \n',octave_command,file_oct);
+                fprintf(hs,'%s %s -x \n',command_octave,file_oct);
                 
                 ho = fopen(file_oct,'w');
-                fprintf(ho,'load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''),\n %s(files_in,files_out,opt),\n',file_path_mat,file_var,brick);
+                fprintf(ho,'load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''), files_in, files_out, opt,\n %s;\n',file_path_mat,file_var,command);
                 fclose(ho);
                 
             case 'bash'
                 
-                fprintf(hs,'%s \n',brick);
+                fprintf(hs,'%s \n',command);
                 
             otherwise
                 
@@ -360,8 +377,8 @@ for num_s = 1:length(list_stage)
     fprintf(hp,'$pipeline->addStage(\n');
     fprintf(hp,'{ name => ''%s'',\n',stage_name); % The name of the stage is used for the graph representation of the pipeline and to sort out dependencies
     [path_sh,name_sh,ext_sh] = fileparts(file_sh);
-    fprintf(hp,'  args => [''%s%s'', %s, %s] });\n\n',name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
-    
+    fprintf(hp,'  args => [''%s%s'', %s, %s],\n',name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
+    fprintf(hp,'  sge_opts => ''%s''});\n\n',sge_hosts);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -379,8 +396,8 @@ fprintf(hp,'\nelsif ($ARGV[0] eq resetRunning) { \n$pipes->resetRunning(); \n}')
 fprintf(hp,'\nelsif ($ARGV[0] eq resetFromStage) { \n$pipes->resetFromStage($ARGV[3]); \n}');
 fprintf(hp,'\nelsif ($ARGV[0] eq getPipelineStatus) { \n$pipes->getPipelineStatus(); \n}');
 fprintf(hp,'\nelsif ($ARGV[0] eq printStages) { \n$pipes->printStages(); \n}');
-fprintf(hp,'\nelsif ($ARGV[0] eq createDotGraph) { \n$pipes->createDotGraph(''%s.graph_stages.dot''); \n}',name_pipeline);
-fprintf(hp,'\nelsif ($ARGV[0] eq createFilenameDotGraph) { \n$pipes->createFilenameDotGraph(''%s.graph_filenames.dot''); \n}',name_pipeline);
+fprintf(hp,'\nelsif ($ARGV[0] eq createDotGraph) { \n$pipes->createDotGraph(''%s%s.graph_stages.dot''); \n}',cat(2,path_logs,filesep),name_pipeline);
+fprintf(hp,'\nelsif ($ARGV[0] eq createFilenameDotGraph) { \n$pipes->createFilenameDotGraph(''%s%s.graph_filenames.dot''); \n}',cat(2,path_logs,filesep),name_pipeline);
 fprintf(hp,'\nelsif ($ARGV[0] eq printUnfinished) { \n$pipes->printUnfinished(); \n}');
 
 fprintf(hp,'\nelse { \nprint ''\nSYNTAX :\n ./%s.pl arg0 arg1 \n Type ./%s.pl help for details.\n\n''\n}',name_pipeline,name_pipeline);

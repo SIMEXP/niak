@@ -10,11 +10,8 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 % VOL           (4D array) a 3D+t dataset
 % OPT           (structure) with the following fields :
 %
-%               INTERPOLATION_METHOD   (string, default 'linear') the method for
+%               INTERPOLATION_METHOD   (string, default 'sync') the method for
 %                       temporal interpolation, choices 'linear' or 'sync'.
-%                       Linear interpolation is not exact,
-%                       yet it is much more stable than sync interpolation
-%                       regarding noise and discontinuities and therefore recommended.
 %
 %               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
 %                      that the kth slice was acquired in ith position. The
@@ -83,7 +80,7 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 % Setting up default
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation_method','slice_order','ref_slice','timing','flag_verbose'};
-gb_list_defaults = {'linear',NaN,[],NaN,1};
+gb_list_defaults = {'sync',NaN,[],NaN,1};
 niak_set_defaults
 
 nb_slices = length(slice_order);

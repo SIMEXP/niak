@@ -109,7 +109,7 @@ for num_s = list_num_subject
         
         %% Adding stage to the pipeline
         stage.label = 'Correction of difference in slice timing via temporal interpolation';
-        stage.brick = 'niak_brick_slice_timing';        
+        stage.brick = 'niak_brick_slice_timing(files_in,files_out,opt)';        
         stage.files_in = files_in;
         stage.files_out = files_out;
         stage.opt = opt_a;
@@ -147,7 +147,7 @@ for num_s = list_num_subject
         
         %% Adding stage to the pipeline
         stage.label = 'Temporal filtering of fMRI data';
-        stage.brick = 'niak_brick_time_filter';       
+        stage.brick = 'niak_brick_time_filter(files_in,files_out,opt)';       
         stage.files_in = files_in;
         stage.files_out = files_out;
         stage.opt = opt_f;
@@ -181,7 +181,7 @@ for num_s = list_num_subject
         
         %% Adding stage to the pipeline
         stage.label = 'Spatial smoothing of fMRI data';
-        stage.brick = 'niak_brick_smooth_vol';        
+        stage.brick = 'niak_brick_smooth_vol(files_in,files_out,opt)';        
         stage.files_in = files_in;
         stage.files_out = files_out;
         stage.opt = opt_s;
@@ -191,11 +191,18 @@ for num_s = list_num_subject
     end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Creating the pipeline files       %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Running the pipeline %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 opt_pipe.path_logs = cat(2,path_data,filesep,'logs',filesep);
 opt_pipe.clobber = 1;
 
-file_pipeline = niak_init_pipeline(pipeline,opt_pipe);
+file_pipeline = niak_init_pipeline(pipeline,opt_pipe); % Initialization
+
+niak_visu_pipeline(file_pipeline,'graph_stages');
+
+%niak_manage_pipeline(file_pipeline,'run');
+
+
+
