@@ -109,13 +109,15 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                      If CLOBBER == 0 and the file already exists, nothing 
 %                       will be done.
 %
-%               SGE_HOSTS (string, default '') A string which is directly 
+%               SGE_OPTIONS (string, default GB_NIAK_SGE_OPTIONS) A string which is directly 
 %                       passed to qsub when using the SGE execution mode 
 %                       (and is ignored otherwise). The following string 
 %                       "-l vf=2G" would, for example, reserve 2 gigabytes 
-%                       of memory, and "-l aces.q@node0,aces.q@node1" would 
+%                       of memory, and "-q aces.q@node0,aces.q@node1" would 
 %                       specify to run the jobs through the aces queue, 
-%                       and specifically on node0 or node1.
+%                       and specifically on node0 or node1. The defaut for
+%                      this field can be set using the variable
+%                      GB_NIAK_SGE_OPTIONS in the file NIAK_GB_VARS.
 %
 %               
 % OUTPUTS:
@@ -201,8 +203,8 @@ niak_gb_vars
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_hosts'};
-gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',''};
+gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_options'};
+gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',gb_niak_sge_options};
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -378,7 +380,7 @@ for num_s = 1:length(list_stage)
     fprintf(hp,'{ name => ''%s'',\n',stage_name); % The name of the stage is used for the graph representation of the pipeline and to sort out dependencies
     [path_sh,name_sh,ext_sh] = fileparts(file_sh);
     fprintf(hp,'  args => [''%s%s'', %s, %s],\n',name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
-    fprintf(hp,'  sge_opts => ''%s''});\n\n',sge_hosts);
+    fprintf(hp,'  sge_opts => ''%s''});\n\n',sge_options);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
