@@ -73,7 +73,7 @@ niak_gb_vars
 
 init_sh = cat(2,gb_niak_path_civet,gb_niak_init_civet);
 
-if ~exist('action','var'); error('niak:pipeline','please specify an action'); end
+if ~exist('action','var'); error('niak:pipeline: please specify an action'); end
 
 [path_logs,name_pipeline,ext_pl] = fileparts(file_pipeline);
 
@@ -104,7 +104,7 @@ switch action
         
         system(cat(2,'dot -Tsvg -o ',file_svg_stages,' ',file_graph_stages));
         
-        system(cat(2,gb_niak_viewersvg,' ',file_svg_stages));
+        system(cat(2,gb_niak_viewersvg,' ',file_svg_stages,'&'));
         
    case 'graph_filenames'
         
@@ -114,7 +114,7 @@ switch action
 
         fprintf(hs,'#!/bin/bash \n');
         fprintf(hs,'source %s \n',init_sh);
-        fprintf(hs,'%s createDotGraph',file_pipeline);
+        fprintf(hs,'%s createFilenameDotGraph',file_pipeline);
         
         fclose(hs);
         
@@ -127,7 +127,7 @@ switch action
         
         system(cat(2,'dot -Tsvg -o ',file_svg_filenames,' ',file_graph_filenames));
         
-        system(cat(2,gb_niak_viewersvg,' ',file_svg_filenames));
+        system(cat(2,gb_niak_viewersvg,' ',file_svg_filenames,'&'));
         
     case 'unfinished'
         
@@ -149,5 +149,5 @@ switch action
         delete(file_tmp)                
         
     otherwise
-        error('niak:pipeline','%s : unknown action',action);
+        error('niak:pipeline: unknown action',action);
 end

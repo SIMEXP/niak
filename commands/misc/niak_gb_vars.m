@@ -27,9 +27,9 @@ gb_niak_init_civet = 'init-sge.sh'; % Which script to use for initializing the C
 
 gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
 
-gb_niak_command_octave = 'cd /data/aces/aces1/pbellec/public/octave-3.0.0/bin/; octave'; % how to invoke octave
+gb_niak_command_octave = 'octave-2.9.9'; % how to invoke octave
 
-gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all.q@dow,all.q@gertrude,all.q@gobbo,all.q@gonzalo,all.q@grumpy,all.q@gypsy,all.q@mustardseed,all.q@oberon,all.q@penfolds,all.q@phebe,all.q@philemon,all.q@pluto,all.q@portia,all.q@rosaline,all.q@silius,all.q@snout,all.q@snug,all.q@somerset,all.q@taylor,all.q@theseus,all.q@valhalla,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
+gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all.q@dow,all.q@gertrude,all.q@gobbo,all.q@gonzalo,all.q@grumpy,all.q@gypsy,all.q@oberon,all.q@penfolds,all.q@phebe,all.q@philemon,all.q@pluto,all.q@portia,all.q@rosaline,all.q@silius,all.q@snout,all.q@snug,all.q@taylor,all.q@theseus,all.q@valhalla,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%

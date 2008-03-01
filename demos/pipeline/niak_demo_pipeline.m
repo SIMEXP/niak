@@ -109,7 +109,7 @@ for num_s = list_num_subject
         
         %% Adding stage to the pipeline
         stage.label = 'Correction of difference in slice timing via temporal interpolation';
-        stage.brick = 'niak_brick_slice_timing(files_in,files_out,opt)';        
+        stage.command = 'niak_brick_slice_timing(files_in,files_out,opt)';        
         stage.files_in = files_in;
         stage.files_out = files_out;
         stage.opt = opt_a;
@@ -147,7 +147,7 @@ for num_s = list_num_subject
         
         %% Adding stage to the pipeline
         stage.label = 'Temporal filtering of fMRI data';
-        stage.brick = 'niak_brick_time_filter(files_in,files_out,opt)';       
+        stage.command = 'niak_brick_time_filter(files_in,files_out,opt)';       
         stage.files_in = files_in;
         stage.files_out = files_out;
         stage.opt = opt_f;
@@ -181,7 +181,7 @@ for num_s = list_num_subject
         
         %% Adding stage to the pipeline
         stage.label = 'Spatial smoothing of fMRI data';
-        stage.brick = 'niak_brick_smooth_vol(files_in,files_out,opt)';        
+        stage.command = 'niak_brick_smooth_vol(files_in,files_out,opt)';        
         stage.files_in = files_in;
         stage.files_out = files_out;
         stage.opt = opt_s;

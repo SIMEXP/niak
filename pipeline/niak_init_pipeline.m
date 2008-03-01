@@ -16,7 +16,7 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                       following fields : 
 %               
 %               LABEL (string, default '') any string you want. This will only be used
-%                       in the verbose mode, and in the dot graph
+%                       in the flag_verbose mode, and in the dot graph
 %                       recapitulating all the jobs and dependencies.
 %
 %               COMMAND (string) the name of the command you want to apply at 
@@ -207,9 +207,25 @@ gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_
 gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',gb_niak_sge_options};
 niak_set_defaults
 
+%% Issue warning in clobber mode
+
+if clobber
+    if flag_verbose
+        disp(sprintf('WARNING!!\n clobber mode is on. Previously generated datasets are going to be deleted and recreated. All previously finished jobs are going to be restarted.\n Press CTRL-C now if it''s not what you want !\n'));
+        pause
+    end
+else
+    if flag_verbose
+        disp(sprintf('WARNING : clobber mode is off.\n Previously finished jobs are not going to be restarted  !\n Variables for the pipeline and unfinished jobs are going to be updated. Older values are saved of a PREVIOUS_PIPELINE structure in the relevant .mat file.'));
+    end
+end
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Creating log path %%
 %%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    disp(sprintf('Creating logs path...\n'));
+end
+
 [succ,messg,messgid] = niak_mkdir(path_logs);
 
 if succ == 0 
@@ -219,6 +235,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Saving the matlab version of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if flag_verbose
+    disp(sprintf('Saving the pipeline structure inside the logs path in .mat format...\n'));
+end
 
 file_pipeline_mat = cat(2,path_logs,filesep,name_pipeline,'.mat');
 
@@ -235,13 +255,19 @@ end
 %% Setting up path for the Matlab/Octave environment %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 if isempty(file_path_mat)
     file_path_mat = cat(2,path_logs,filesep,name_pipeline,'.path_def.mat');
 
     if (clobber == 1)|~exist(file_path_mat,'file')
         path_work = path;
         save('-mat',file_path_mat,'path_work')
+        if flag_verbose
+            disp(sprintf('Saving the path for Matlab or octave stages in %s... Note that you should initialize and run the pipeline within the same environment (either Matlab or octave) or the pipeline will crash (matlab and octave search paths are different)\n',file_path_mat));
+        end
     end    
+else
+    disp(sprintf('The search path for Matlab or octave stages is defined in %s.)\n',file_path_mat));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -249,6 +275,23 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
 file_pipeline = cat(2,path_logs,name_pipeline,'.pl');
+file_lock = cat(2,path_logs,name_pipeline,'.lock');
+
+if exist(file_lock,'file')
+    if ~(clobber == 1)
+        error('Error niak:pipeline: A lock was find on the pipeline, I cannot proceed unless you specify the clobber option or you remove manually the file : %s',file_lock);
+    else
+        if flag_verbose
+            disp(sprintf('WARNING : removing the lock file %s to reinitialize the pipeline (clobber mode)',file_lock));
+        end
+        system(cat(2,'rm - ',file_lock));
+    end
+end    
+
+if flag_verbose
+    disp(sprintf('Generating the header of the PERL pipeline script before adding stages ...\n'));
+end
+
 hp = fopen(file_pipeline,'w');
 
 fprintf(hp,'#!/usr/bin/env perl\n\n'); % The script is written in PERL
@@ -290,24 +333,43 @@ fprintf(hp,'my $pipes = PMP::Array->new();\n'); % Create a new array of pipeline
 %% Creating the bash scripts for all stages of the pipeline, as well as the core of the PMP script %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if flag_verbose
+    disp(sprintf('********\n Adding new stages now ! \n********\n'));
+end
+
 list_stage = fieldnames(pipeline);
 
-for num_s = 1:length(list_stage)
-    
+for num_s = 1:length(list_stage)    
+
     %% Getting information on the stage
     stage_name = list_stage{num_s};
     stage = getfield(pipeline,stage_name);
-        
+    if flag_verbose
+        disp(sprintf('\n********\n Stage : %s \n********\n',stage_name));
+    end        
+    
     gb_name_structure = 'stage';
     gb_list_fields = {'label','command','files_in','files_out','opt','environment',};
     gb_list_defaults = {'',NaN,NaN,NaN,NaN,'octave'};
     niak_set_defaults        
     
-    %% Creation of output directories
+    %% Creation of output directories, in clobber mode previous outputs are
+    %% deleted
     cell_files = niak_files2cell(files_out);
     for num_cell = 1:length(cell_files)
         path_cell = fileparts(cell_files{num_cell});
-        niak_mkdir(path_cell);
+        if ~exist(path_cell,'dir')
+            niak_mkdir(path_cell);
+            if flag_verbose
+                disp(sprintf('WARNING : I had to create the directory %s for outputs\n',path_cell));
+            end
+        end
+        if (clobber == 1)&(exist(cell_files{num_cell},'file'))
+            system(cat(2,'rm ',cell_files{num_cell}));
+            if flag_verbose
+                disp(sprintf('WARNING : I had to remove the file %s (clobber mode)\n',cell_files{num_cell}));
+            end
+        end
     end
         
     %% Generation of file names
@@ -315,15 +377,29 @@ for num_s = 1:length(list_stage)
     file_var = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.mat');
     file_sh =  cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.sh');
     file_log = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.log');
-    file_lock = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.lock');
+    file_finished = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.finished');
+    file_failed = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.failed');
+    file_running = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.running');
     file_oct = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.m');
+    
+    if clobber
+        system(cat(2,'rm -f ',file_running));
+        system(cat(2,'rm -f ',file_failed));
+        system(cat(2,'rm -f ',file_finished));
+        if flag_verbose
+            disp(sprintf('Cleaning .running .failed and .finished files for the stage %s (clobber mode)',stage_name));
+        end
+    end
     
     %% Creation of the .mat file with all variables necessary to perform
     %% the stage
     if (clobber == 1)|~exist(file_var,'file')
         save('-mat',file_var,'command','files_in','files_out','opt')
+        if flag_verbose
+            disp(sprintf('Saving the variables for stage %s in file %s. OLD VARIABLES ARE LOST (clobber mode).\n',stage_name,file_var));
+        end
     else
-        if ~exist(file_lock,'file')
+        if ~exist(file_finished,'file')
             previous_pipeline = load(file_var);
             if exist(file_sh,'file')
                 fid = fopen(file_sh,'r');                
@@ -331,12 +407,19 @@ for num_s = 1:length(list_stage)
                 fclose(fid);
             end
             save('-mat',file_var,'command','files_in','files_out','opt','previous_pipeline')
+            if flag_verbose
+                disp(sprintf('Saving the variables for the (unfinished) stage %s in file %s. Old variables have been saved in the PREVIOUS_PIPELINE structure (no clobber mode).\n',stage_name,file_var));
+            end
+        else
+            if flag_verbose
+                disp(sprintf('A ''.finished'' has been found for stage %s, files related to this stage won''t be changed (no clobber mode).\n',stage_name));
+            end
         end
     end
     
     %% Creation of the bash script for the stage, along with a .m file if
     %% the stage lives in octave
-    if ~exist(file_lock,'file')|(clobber == 1)
+    if ~exist(file_finished,'file')|(clobber == 1)
     
         hs = fopen(file_sh,'w');
         
@@ -345,8 +428,15 @@ for num_s = 1:length(list_stage)
                                 
                 fprintf(hs,'#!/bin/bash \n');
                 fprintf(hs,'source %s \n',init_sh);
-                fprintf(hs,'%s -nojvm -nosplash -r ''load -mat %s, path(path_work), load -mat %s, files_in, files_out, opt, %s; exit''\n',command_matlab,file_path_mat,file_var,command);
-                
+                fprintf(hs,'%s -nojvm -nosplash -r ''load -mat %s, path(path_work), load -mat %s, files_in, files_out, opt, %s; exit''\n',command_matlab,file_path_mat,file_var,command);                
+                if flag_verbose
+                    if ~clobber
+                        disp(sprintf('Creation of a shell script for the (unfinished) matlab stage %s in file %s. Old shell script have been saved in the PREVIOUS_PIPELINE structure of the file %s (no clobber mode).\n',stage_name,file_sh,file_var));
+                    else                        
+                        disp(sprintf('Creation of a shell script for the matlab stage %s in file %s. Any old shell script will be lose (clobber mode).\n',stage_name,file_sh,file_var));
+                    end
+                end
+
             case 'octave'
                 
                 fprintf(hs,'#!/bin/bash \n');
@@ -356,11 +446,28 @@ for num_s = 1:length(list_stage)
                 ho = fopen(file_oct,'w');
                 fprintf(ho,'load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''), files_in, files_out, opt,\n %s;\n',file_path_mat,file_var,command);
                 fclose(ho);
+                if flag_verbose
+                    if clobber
+                        disp(sprintf('Creation of a shell script for the octave stage %s in file %s. Any old shell script is lost (clobber mode).\n',stage_name,file_sh,file_var));
+                        disp(sprintf('Creation of a matlab script for the octave stage %s in file %s. \n',stage_name,file_oct));
+                    else
+                        disp(sprintf('Creation of a shell script for the (unfinished) octave stage %s in file %s. Old shell script have been saved in the PREVIOUS_PIPELINE structure of the file %s (no clobber mode).\n',stage_name,file_sh,file_var));
+                        disp(sprintf('Creation of a matlab script for the (unfinished) octave stage %s in file %s. \n',stage_name,file_oct));
+                    end
+                end
+
                 
             case 'bash'
                 
                 fprintf(hs,'%s \n',command);
-                
+                if flag_verbose
+                    if clobber
+                        disp(sprintf('Creation of a shell script for the shell stage %s in file %s. Any old shell script is lost (clobber mode).\n',stage_name,file_sh,file_var));
+                    else
+                        disp(sprintf('Creation of a shell script for the (unfinished) shell stage %s in file %s. Old shell script have been saved in the PREVIOUS_PIPELINE structure of the file %s (no clobber mode).\n',stage_name,file_sh,file_var));
+                    end
+                end
+                                
             otherwise
                 
                 error('niak:pipeline','%s is an unknown environment for stage %s of the pipeline',environment,stage_name);
@@ -372,6 +479,8 @@ for num_s = 1:length(list_stage)
         end
         fclose(hs);
         
+        system(cat(2,'chmod u+x ',file_sh));
+    
     end    
         
     %% Adding the stage of the pipeline in the PMP script
@@ -381,11 +490,18 @@ for num_s = 1:length(list_stage)
     [path_sh,name_sh,ext_sh] = fileparts(file_sh);
     fprintf(hp,'  args => [''%s%s'', %s, %s],\n',name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
     fprintf(hp,'  sge_opts => ''%s''});\n\n',sge_options);
+    if flag_verbose
+        disp(sprintf('\nAdding a PERL (PMP) description of the stage %s in the file %s.\n',stage_name,file_pipeline));
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Creating the end of the PMP script, with the actual commands where PMP do something %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if flag_verbose
+    disp(sprintf('Adding options for execution and monitoring of the pipeline in the PERL script %s.\n',file_pipeline));
+end
 
 fprintf(hp,'# compute the dependencies based on the filenames:\n$pipeline->computeDependenciesFromInputs(); \n\n');
 fprintf(hp,'# update the status of all stages based on previous pipeline runs\n$pipeline->updateStatus();\n\n');
@@ -404,3 +520,9 @@ fprintf(hp,'\nelsif ($ARGV[0] eq printUnfinished) { \n$pipes->printUnfinished();
 
 fprintf(hp,'\nelse { \nprint ''\nSYNTAX :\n ./%s.pl arg0 arg1 \n Type ./%s.pl help for details.\n\n''\n}',name_pipeline,name_pipeline);
 fclose(hp);
+
+system(cat(2,'chmod u+x ',file_pipeline));
+
+if flag_verbose
+    disp(sprintf('The pipeline has been successfully initialized, now you can use NIAK_MANAGE_PIPELINE or NIAK_VISU_PIPELINE.\n'));
+end

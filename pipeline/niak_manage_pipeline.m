@@ -102,7 +102,7 @@ switch action
     
     case 'run'
         if exist(file_lock,'file')
-            error('niak:pipeline','A lock file has been found ! This means the pipeline is either running or crashed. Try a ''restart'' or ''reset'' action instead')
+            error('niak:pipeline:A lock file has been found ! This means the pipeline is either running or crashed.\n If it is crashed, try a ''restart'' or ''reset'' action instead of ''run''')
         end
         
         fprintf('Starting the pipeline ... \n');
@@ -111,9 +111,13 @@ switch action
         
         hs = fopen(file_tmp,'w');
 
+        if exist(file_log,'file')
+            system(cat(2,'rm -f ',file_log));
+        end
+        
         fprintf(hs,'#!/bin/bash \n');
         fprintf(hs,'source %s \n',init_sh);
-        fprintf(hs,'%s run %s > %s',file_pipeline,opt,file_log)
+        fprintf(hs,'%s run %s > %s &',file_pipeline,opt,file_log)
         
         fclose(hs);
         
@@ -128,24 +132,23 @@ switch action
         
         fprintf('Cleaning all .lock .running and .failed files ... \n');
         
-        delete(cat(2,path_logs,filesep,'*.running'));
-        delete(cat(2,path_logs,filesep,'*.failed'));
-        delete(cat(2,path_logs,filesep,'*.lock'));
+        system(cat(2,'rm -f ',path_logs,filesep,'*.running'));
+        system(cat(2,'rm -f ',path_logs,filesep,'*.failed'));
+        system(cat(2,'rm -f ',path_logs,filesep,'*.lock'));
                 
         s = niak_manage_pipeline(file_pipeline,'run',opt)
         
     case 'reset'
         
-        fprintf('Cleaning all .lock .running, .failed and .finished files ... \n');
-        
-        delete(cat(2,path_logs,filesep,'*.running'));
-        delete(cat(2,path_logs,filesep,'*.failed'));
-        delete(cat(2,path_logs,filesep,'*.lock'));
-        delete(cat(2,path_logs,filesep,'*.finished'));
+        fprintf('Cleaning all .lock .running, .failed and .finished files ... \n');        
+        system(cat(2,'rm -f ',path_logs,filesep,'*.running'));
+        system(cat(2,'rm -f ',path_logs,filesep,'*.failed'));
+        system(cat(2,'rm -f ',path_logs,filesep,'*.lock'));
+        system(cat(2,'rm -f ',path_logs,filesep,'*.finished'));
         
         fprintf('Restarting the pipeline ... \n')
         s = niak_manage_pipeline(file_pipeline,'run',opt);        
         
     otherwise
-        error('niak:pipeline','%s : unknown action',action);
+        error('niak:pipeline:%s : unknown action',action);
 end
