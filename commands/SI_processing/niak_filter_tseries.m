@@ -1,9 +1,9 @@
-function [tseries_f,extras] = dnm_filter_tseries(tseries,opt)
+function [tseries_f,extras] = niak_time_filter(tseries,opt)
 
 % Filter time series using Discrete-Cosine (DC) least-square linear regression.
 %
 % SYNTAX:
-% TSERIES_F = DNM_FILTER_TSERIES(TSERIES,OPT) 
+% TSERIES_F = NIAK_TIME_FILTER(TSERIES,OPT) 
 %
 % INPUTS:
 % TSERIES       (2D array, size T*N) a time*space array of time series.

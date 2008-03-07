@@ -90,7 +90,7 @@ file_tmp = niak_file_tmp('.data');
 [hf,err_msg] = fopen(file_tmp,'w');
 
 if hf == -1
-    error('niak:write_vol',err_msg)    
+    error('niak:write: %s',err_msg)    
 end
 
 fwrite(hf,vol(:),hdr.info.precision);
@@ -137,7 +137,7 @@ end
 if ~isempty(file_name)
     str_raw = [str_raw '-input ' file_tmp ' ' file_name]; % read the temporary raw file and write it in minc format
 else
-    error('niak:write_minc','hdr.file_name is empty !')
+    error('niak:write: hdr.file_name is empty !')
 end
 
 for num_d = 1:length(hdr.info.dimension_order)

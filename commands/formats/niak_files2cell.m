@@ -1,7 +1,7 @@
 function cell_files = niak_files2cell(files)
 
 % Convert a string, cell of strings or a structure where each field is a
-% string or a cell of strings into one single string, formatted for PMP
+% string into one single cell of strings.
 %
 % SYNTAX :
 % CELL_FILES = NIAK_FILES2CELL(FILES)

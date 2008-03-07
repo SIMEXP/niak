@@ -53,12 +53,7 @@ if nargin < 2
 end
 
 %% Parsing the header
-try,
 hdr = niak_read_hdr_minc(file_name);
-catch
-    error('niak:read_minc_header','Couldn''t parse the header')
-end
-
 hdr.info.precision = precision_data;
 
 if nargout == 2
@@ -68,7 +63,7 @@ if nargout == 2
     %% extracting the data in float precision in the temporary file
     [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -nonormalize ',file_name,' > ',file_tmp));
     if flag>0
-        error('niak:minc',str_info)
+        error('niak:read : %s',str_info)
     end
 
     %% reading information

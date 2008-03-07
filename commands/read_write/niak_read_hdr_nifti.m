@@ -30,8 +30,7 @@ function hdr = niak_read_hdr_nifti(file_name)
 % Important parts of this code are copied and modified from a matlab
 % toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
 % toolbox did not include a copyright notice.
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
-% 8797&objectType=file
+% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8797&objectType=file
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -63,7 +62,7 @@ end
 
 %% Checking for existence of the file
 if ~exist(file_name)
-    error('niak:file_not_found',cat(2,'File ',file_name,' not found'))
+    error('niak:read: File %s not found',file_name)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,7 +86,7 @@ while (tag_OK == 0)&(fid < 0)&(num_f <= length(list_formats))
 end
 
 if tag_OK == 0
-    error('niak:read','Could not open file %s',file_name)    
+    error('niak:read: Could not open file %s',file_name)    
 end
 
 hdr.info.machine = list_formats{num_f-1};

@@ -7,14 +7,14 @@ function hdr = niak_read_hdr_minc(file_name)
 % HDR = NIAK_READ_HDR_MINC(FILE_NAME)
 %
 % INPUT:
-% FILE_NAME     (string) name of a single 3D+t minc file 
+% FILE_NAME     (string) name of a single 3D+t minc file
 %               or a 3D minc file.
 %
 % OUTPUT:
 % HDR           (structure) contain a description of the data. For a list
 %                   of fields common to all data types, see NIAK_READ_VOL.
 %
-%               HDR.DETAILS (structure) describe the standard variables 
+%               HDR.DETAILS (structure) describe the standard variables
 %                   of a minc file.
 %                   Each field of HDR.DETAILS is one variable of the MINC
 %                   files, and is a structure with two fields.
@@ -25,13 +25,13 @@ function hdr = niak_read_hdr_minc(file_name)
 %                       a list of the attribute values.
 %
 % COMMENTS:
-% Use system calls to MINCINFO and MINCHEADER, which requires a 
-% version of minc tools available.
-% 
+% The reader uses system calls to MINCINFO and MINCHEADER, which requires
+% a version of minc tools available.
+%
 % SEE ALSO:
 % NIAK_READ_MINC, NIAK_WRITE_MINC, NIAK_READ_VOL, NIAK_WRITE_VOL
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, Montreal Neurological Institute, McGill, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, I/O, reader, minc
@@ -60,8 +60,17 @@ list_vars = {'image','image-min','image-max','time','xspace','yspace','zspace','
 
 %% Checking for existence of the file
 if ~exist(file_name)
-    error('niak:file_not_found',cat(2,'File ',file_name,' not found'))
+    error('niak:read: File %s not found',file_name)
 end
+
+hdr.file_name = '';
+path_f = fileparts(file_name);
+if isempty(path_f)
+    hdr.info.file_parent = cat(2,pwd,filesep,file_name);
+else
+    hdr.info.file_parent = file_name;
+end
+
 
 %% Reading the header with 'mincheader'
 [flag,str_header] = system(cat(2,'mincheader ',file_name));
@@ -74,16 +83,9 @@ if ~isempty(strfind(cell_header{1},'netcdf'))
 elseif~isempty(strfind(cell_header{1},'hdf5'))
     hdr.type = 'minc2';
 else
-    error('niak:minc','Could not parse the minc header !')
+    error('niak:read: Could not parse the minc header !')
 end
 
-hdr.file_name = '';
-path_f = fileparts(file_name);
-if isempty(path_f)
-    hdr.info.file_parent = cat(2,pwd,filesep,file_name);
-else
-    hdr.info.file_parent = file_name;
-end
 
 %% Initialization of variables for parsing the header
 cell_header = cell_header(2:end-1);
@@ -103,7 +105,7 @@ while ~isempty(cell_header)&~flag_end
     str_line = cell_header{1};
 
     if ~isempty(str_line) % Do not process empty lines
-        
+
         flag_root = ~strcmp(str_line(1),char(9)); % lines which do not start with a tabulation represent big categories of entries
 
         if flag_root
@@ -111,20 +113,20 @@ while ~isempty(cell_header)&~flag_end
                 flag_end = 1>0;
             end
             flag_var_mode = 0;
-        end        
+        end
 
         if flag_var_mode    % To pass this flag we must have entered the 'variables' category
 
-            flag_var = isempty(findstr(str_line,':'));  % Within the 'variables', lines without : contain the name of variables            
+            flag_var = isempty(findstr(str_line,':'));  % Within the 'variables', lines without : contain the name of variables
 
             if flag_var % To pass this flag, the line must be defining a variable
 
                 %% we parse the line to get the name of the variable. If it
                 %% does not work, then it must be a weird attribute field
-                %% that will be ignored.                
-                cell_words = niak_string2words(str_line,{' ',char(9),'('}); 
+                %% that will be ignored.
+                cell_words = niak_string2words(str_line,{' ',char(9),'('});
                 nb_atts = 0;
-                
+
                 if length(cell_words)>1
                     var_name = cell_words{2};
                 else
@@ -146,8 +148,8 @@ while ~isempty(cell_header)&~flag_end
             else % If the line does not define a variable, then it defines the attribute of a variable
 
                 if flag_OK % The attribute is from a standard variable
-                    
-                    %% Parse the attribute line                    
+
+                    %% Parse the attribute line
                     cell_words = niak_string2words(str_line,{' ',char(9),':',';','='});
 
                     nb_atts = nb_atts+1;
@@ -163,7 +165,7 @@ while ~isempty(cell_header)&~flag_end
                 end
             end
         end
-        
+
         flag_var_mode = strcmp(str_line,'variables:')|flag_var_mode; % When meeting for the first time the 'variables:' line, we switch on the 'variables' mode (flag_var_mode = 1)
     end
     cell_header = cell_header(2:end);
@@ -186,7 +188,7 @@ hdr.info.history = str_info;
 %% Get information on the order of the dimensions
 if strcmp(hdr.type,'minc1')
     [flag,str_info] = system(cat(2,'mincinfo ',file_name));
-    cell_lines = niak_string2lines(str_info);   
+    cell_lines = niak_string2lines(str_info);
     str_dim = cell_lines{3};
 end
 
@@ -205,13 +207,13 @@ end
 
 nb_dim = sum(pos_xyzt ~=  0);
 
-for num_f = 1:length(list_dim_long)    
+for num_f = 1:length(list_dim_long)
     if num_f <= nb_dim
         [flag,str_dim] = system(cat(2,'mincinfo -dimlength ',list_dim_long{num_f},' ',file_name));
         if flag == 0
             hdr.info.dimensions(num_f) = str2num(str_dim);
         else
-            error('niak:read','Could not find the spatial dimensions. I expect ''xspace'', ''yspace'' and ''zspace'' to be defined')
+            error('niak:read: Could not find the spatial dimensions. I expect ''xspace'', ''yspace'' and ''zspace'' to be defined')
         end
     end
 end
@@ -232,25 +234,25 @@ list_dim_long = list_dim_long(pos_xyzt~=0);
 list_dim_long = list_dim_long(order_xyzt);
 
 for num_d = 1:length(list_dim_long)
-    
+
     struct_dim = getfield(hdr.details,list_dim_long{num_d});
-    
+
     if ~strcmp(list_dim_long{num_d},'time')
         pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
         hdr.info.voxel_size(num_e) = struct_dim.attvalue{pos};
-        
+
         pos = find(niak_find_str_cell(struct_dim.varatts,'direction_cosines'));
         cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
-        
+
         pos = find(niak_find_str_cell(struct_dim.varatts,'start'));
         start_v(num_e) = struct_dim.attvalue{pos};
 
-        num_e = num_e + 1;        
+        num_e = num_e + 1;
     else
         pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
         hdr.info.TR =  abs(struct_dim.attvalue{pos});
-    end    
-    
+    end
+
 end
 
 % Constructing the voxel-to-worldspace affine transformation

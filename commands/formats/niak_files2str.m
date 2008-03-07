@@ -1,7 +1,8 @@
 function str_files = niak_files2str(files,pref)
 
 % Convert a string, cell of strings or a structure where each field is a
-% string or a cell of strings into one single string, formatted for PMP
+% string into one single string, where each string is between " " and
+% multiple strings are separated by a ,.
 %
 % SYNTAX :
 % STR_FILES = NIAK_FILES2STR(FILES)

@@ -95,7 +95,7 @@ function [] = niak_write_vol(hdr,vol)
 try
     file_name = hdr.file_name;
 catch
-    error('niak:write_vol','Please specify a file name in hdr.file_name.\n')
+    error('niak:write: Please specify a file name in hdr.file_name.\n')
 end
 
 if iscell(file_name)
@@ -120,7 +120,7 @@ if iscell(file_name)
 elseif ischar(file_name)
 
     if isempty(file_name)
-        error('niak:write','Please specify a file name in hdr.file_name')
+        error('niak:write: Please specify a file name in hdr.file_name')
     end
 
     if strcmp(file_name(end),'_')
@@ -132,7 +132,7 @@ elseif ischar(file_name)
         try
             type_f = hdr.type;
         catch
-            error('niak:write_vol','Please specify a file format in hdr.type.\n')
+            error('niak:write_vol: Please specify a file format in hdr.type.\n')
         end
 
         switch type_f
@@ -143,7 +143,7 @@ elseif ischar(file_name)
             case{'img','analyze'}
                 ext_f = '.img';                
             otherwise
-                error('niak:write_vol','%s : unrecognized file format\n',type_f);
+                error('niak:write: %s : unrecognized file format\n',type_f);
         end
 
         base_name = hdr.file_name;
@@ -163,7 +163,7 @@ elseif ischar(file_name)
         try
             type_f = hdr.type;
         catch
-            error('niak:write_vol','Please specify a file format in hdr.type.\n')
+            error('niak:write: Please specify a file format in hdr.type.\n')
         end
 
         switch type_f
@@ -172,7 +172,7 @@ elseif ischar(file_name)
             case {'nii','img','analyze'}
                 niak_write_nifti(hdr,vol);
             otherwise
-                error('niak:write_vol','%s : unrecognized file format\n',type_f);
+                error('niak:write: %s : unrecognized file format\n',type_f);
         end
 
         if isfield(hdr,'flag_zip')
@@ -189,5 +189,5 @@ elseif ischar(file_name)
         end
     end
 else
-    error('niak:write','hdr.filename has to be a string or a char array')
+    error('niak:write: hdr.filename has to be a string or a char array')
 end

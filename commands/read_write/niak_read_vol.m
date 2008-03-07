@@ -109,7 +109,7 @@ elseif ischar(file_name)
         cell_name = dir(file_name);
         file_name2 = {cell_name.name};
         if length(file_name2)==0
-            error('niak:read_vol','Couldn''t find any file fitting the description %s\n',file_name)
+            error('niak:read: Couldn''t find any file fitting the description %s\n',file_name)
         else
             if nargout == 2
                 [hdr,vol] = niak_read_vol(file_name2);
@@ -139,7 +139,7 @@ elseif ischar(file_name)
                 try
                     system(instr_unzip);
                 catch
-                    error('niak:read','There was a problem unzipping the file. Please check that the program %s is properly installd, or change program using the variable gb_niak_zip in the file niak_g_vars',gb_niak_zip);
+                    error('niak:read: There was a problem unzipping the file. Please check that the program %s is properly installd, or change program using the variable gb_niak_zip in the file niak_g_vars',gb_niak_zip);
                 end
                 
                 if nargout == 2
@@ -163,7 +163,7 @@ elseif ischar(file_name)
                     hdr = niak_read_nifti(file_name);
                 end
             otherwise
-                error('niak:read_vol','Unknown file extension %s. Only .mnc, .nii and .img are supported.\n',type)
+                error('niak:read: Unknown file extension %s. Only .mnc, .nii and .img are supported.\n',type)
         end
     end
     

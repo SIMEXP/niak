@@ -73,14 +73,14 @@ switch ext_f
     case '.img'
         file_header = cat(2,path_f,filesep,name_f,'.hdr');
     otherwise
-        error('niak:read','Unkown extension type : %s. I am expecting ''.nii'' or ''.img''',ext_f)
+        error('niak:read: Unkown extension type : %s. I am expecting ''.nii'' or ''.img''',ext_f)
 end
 
 %% Parsing the header
 try,
     hdr = niak_read_hdr_nifti(file_header);
 catch
-    error('niak:read_minc_header','Couldn''t parse the header')
+    error('niak:read: Couldn''t parse the header')
 end
 
 if nargout > 1
