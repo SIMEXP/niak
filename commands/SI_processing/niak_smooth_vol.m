@@ -27,8 +27,9 @@ function [vol_s,extras] = niak_smooth_vol(vol,opt)
 % NIAK_CONV3_SEP
 %
 % COMMENTS:
+% A small part of the code (build of 1D Gaussian kernels) is copied from
+% SPM2, copyright (c) John Ashburner, Tom Nichols 08/02.
 %
-% Copyright (c) John Ashburner, Tom Nichols 08/02
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.

@@ -1,17 +1,19 @@
-function mask_f = niak_cmp_str_cell(cell_str,str)
+function mask_f = niak_cmp_str_cell(cell_str1,cell_str2)
 
 % Test if one of many strings exist in another list of strings
 %
 % SYNTAX:
-% MASK_F = niak_cmp_str_cell(CELL_STR,CELL_STR2)
+% MASK_F = niak_cmp_str_cell(CELL_STR1,CELL_STR2)
 % 
 % INPUTS:
-% CELL_STR      (string or cell of strings)
-% STR           (string or cell of strings)
+% CELL_STR1     (string or cell of strings)
+% CELL_STR2     (string or cell of strings)
 % 
 % OUTPUTS:
-% MASK_F        (vector) MASK_F(i) equals 1 if CELL_STR2{i} is identical to 
-%               CELL_STR{j} for any j, 0 otherwise.
+% MASK_F        (vector) MASK_F(i) equals 1 if CELL_STR{i} is identical to 
+%               CELL_STR2{j} for any j, 0 otherwise. If one argument is a
+%               simple string, it is converted into a cell of string with
+%               one element.
 %
 % SEE ALSO:
 % NIAK_FIND_STR_CELL
@@ -40,24 +42,16 @@ function mask_f = niak_cmp_str_cell(cell_str,str)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if ischar(str)
-    str2{1} = str;
-    str = str2;
+if ischar(cell_str1)
+    str1{1} = cell_str1;
+    cell_str = str1;
+    clear str1
+end
+
+if ischar(cell_str2)
+    str2{1} = cell_str2;
+    cell_str2 = str2;
     clear str2
 end
 
-if ischar(cell_str)
-    str2{1} = cell_str;
-    cell_str = str2;
-    clear str2
-end
-
-nb_e = length(cell_str);
-nb_f = length(str);
-mask_f = zeros([nb_e 1]);
-
-for num_e = 1:nb_e
-    for num_f = 1:nb_f
-        mask_f(num_e) = mask_f(num_e)|strcmp(cell_str{num_e},str{num_f});
-    end
-end
+mask_f = ismember(cell_str1,cell_str2)';

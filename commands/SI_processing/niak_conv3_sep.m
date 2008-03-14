@@ -67,7 +67,7 @@ vol_c = [vol_c ; zeros([mx size(vol_c,2)])]; % Zero-padding in the x direction
 vol_c = fft(vol_c); % 1D Fourier transform along x direction
 vol_c = diag(ffx)*vol_c; % Multiplying each column by the Fourier transform of the kernel. Doing it this way favors memory against computational time...
 vol_c = ifft(vol_c); % Getting back to real values
-vol_c = real(vol_c(1:nx,:)); % Extracting the part of the signal unspoined by padding
+vol_c = real(vol_c(1:nx,:)); % Extracting the part of the signal unspoiled by padding
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Performing the convolution along the y axis %%
@@ -81,7 +81,7 @@ vol_c = [vol_c ; zeros([my size(vol_c,2)])]; % Zero-padding in the y direction
 vol_c = fft(vol_c); % 1D Fourier transform along y direction
 vol_c = diag(ffy)*vol_c; % Multiplying each column by the Fourier transform of the kernel. Doing it this way favors memory against computational time...
 vol_c = ifft(vol_c); % Getting back to real values
-vol_c = real(vol_c(1:ny,:)); % Extracting the part of the signal unspoined by padding
+vol_c = real(vol_c(1:ny,:)); % Extracting the part of the signal unspoiled by padding
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Performing the convolution along the z axis %%
@@ -95,7 +95,7 @@ vol_c = [vol_c ; zeros([mz size(vol_c,2)])]; % Zero-padding in the z direction
 vol_c = fft(vol_c); % 1D Fourier transform along z direction
 vol_c = diag(ffz)*vol_c; % Multiplying each column by the Fourier transform of the kernel. Doing it this way favors memory against computational time...
 vol_c = ifft(vol_c); % Getting back to real values
-vol_c = real(vol_c(1:nz,:)); % Extracting the part of the signal unspoined by padding
+vol_c = real(vol_c(1:nz,:)); % Extracting the part of the signal unspoiled by padding
 
 %%%%%%%%%%%%
 %% Output %%
