@@ -227,6 +227,7 @@ hdr.info.dimension_order = list_dim_short(order_xyzt);
 %% For each dimension, get the step, start and cosines information
 start_v = zeros([3 1]);
 cosines_v = zeros([3 3]);
+step_v = zeros([1 3]);
 hdr.info.voxel_size = zeros([1 3]);
 
 num_e = 1;
@@ -239,7 +240,7 @@ for num_d = 1:length(list_dim_long)
 
     if ~strcmp(list_dim_long{num_d},'time')
         pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
-        hdr.info.voxel_size(num_e) = struct_dim.attvalue{pos};
+        step_v(num_e) = struct_dim.attvalue{pos};
 
         pos = find(niak_find_str_cell(struct_dim.varatts,'direction_cosines'));
         cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
@@ -250,14 +251,10 @@ for num_d = 1:length(list_dim_long)
         num_e = num_e + 1;
     else
         pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
-        hdr.info.TR =  abs(struct_dim.attvalue{pos});
+        hdr.info.tr =  abs(struct_dim.attvalue{pos});
     end
 
 end
 
-% Constructing the voxel-to-worldspace affine transformation
-origin_v = cosines_v*start_v(1:3);
-hdr.info.mat = zeros(4,4);
-hdr.info.mat(1:3,1:3) = cosines_v*diag(hdr.info.voxel_size);
-hdr.info.mat(1:3,4) = origin_v;
-hdr.info.mat(4,4) = 1;
+hdr.info.voxel_size = abs(step_v);
+hdr.info.mat = niak_hdr_minc2mat(cosines_v,step_v,start_v); % Constructing the voxel-to-worldspace affine transformation

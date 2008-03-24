@@ -27,6 +27,10 @@ function [hdr,vol] = niak_read_vol(file_name)
 %
 %               HDR.INFO is a structure with the following subfields:
 %                   FILE_PARENT (string) name of the file that was read.
+%                   DIMENSIONS (vector 3*1) the number of elements in each
+%                       dimensions of the data array. Warning : the first
+%                       dimension is not necessarily the "x" axis. See the
+%                       DIMENSION_ORDER field below.
 %                   PRECISION (string, default 'float') the
 %                       precision of data ('int', 'float' or 'double').
 %                   VOXEL_SIZE  (vector 1*3, default [1 1 1]) the

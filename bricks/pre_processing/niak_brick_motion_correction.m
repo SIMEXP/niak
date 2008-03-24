@@ -4,90 +4,156 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % rigid-body transform and spatial resampling.
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT)
+%   [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
-% FILES_IN        DATA (cell of strings OR cell of array of strings) 
-%                       each entry of DATA is a file name of a 3D+t dataset OR
-%                       an array of strings where each line is a file name
-%                       of 3D data, all in the same space. The files within
-%                       a same entry are considered to be acquired in the
-%                       same run, and files from different entries are 
-%                       considered to be acquired in different runs. 
-%                       All files should be fMRI data of ONE subject.
+%   FILES_IN
+%       SESSIONS (structure)
+%           Each field of SESSIONS is a cell of strings, where each string
+%           is the file name of a 3D+t dataset.
+%           The files attached to a single field are considered to be acquired in
+%           the same session, and files from different fields are considered
+%           to have been acquired in different sessions. All files should be
+%           fMRI data of ONE subject.
 %
-%                 MOTION_PARAMETERS_XFM (cell of array of strings, default 
-%                       <FILES_IN>_<000I>_MPARAMS_DAT).                       
-%                       File name for the estimated parameters. A different 
-%                       file needs to be specified for each run and each 
-%                       volume. It is a spatial (either linear or non-linear)
-%                       transformation in XFM format. If
-%                       MOTION_PARAMETERS_XFM is specified, 
-%                       this transformation will be used for resampling and  
-%                       no transformation will be estimated.
+%       T1 (string)
+%           This is a file name for an anatomical image of the subject. If
+%           such an image is provided, all the estimated transformations
+%           will be pointing to that space.
 %
-% FILES_OUT       (structure), with the following fields :
-%                       
-%                 MOTION_CORRECTED_DATA (cell of strings or cell of array 
-%                       of strings, default <FILES_IN>_MC).
-%                       File names for saving the motion corrected datasets. 
-%                       NOTE that FILTERED_DATA is an empty string, the name 
-%                       of the outputs will be the same as the inputs, 
-%                       with a '_mc' suffix added at the end. If this field
-%                       is ommited, the motion corrected data won't be
-%                       saved (but the transformation will still be
-%                       estimated).
+%       MOTION_PARAMETERS_XFM (structure of cell of array of strings)
+%           File name for the estimated parameters. A different file needs
+%           to be specified for each volume of each dataset within a session.
+%           MOTION_PARAMETERS_XFM.<NAME_SESSION>{NUM_D}(NUM_VOL,:) is the
+%           transformation file of the dataset NUM_D in session NAME_SESSION
+%           and volume NUM_VOL. The transformation is expected in XFM format.
+%           If MOTION_PARAMETERS_XFM is specified, this transformation will
+%           be used for resampling and no transformation will be estimated.
 %
-%                 MOTION_PARAMETERS_DAT (cell of strings, default
-%                       <FILES_IN>_MPARAMS.DAT) 
-%                       File name for the estimated motion parameters. A 
-%                       different file is created for each run. The first line
-%                       describes the content of each column. Each
-%                       subsequent line I+1 is a representation of the motion
-%                       parameters estimated for volume I. If a
-%                       transformation is specified in FILES_IN, this field
-%                       will be ignored, and no transformation will be
-%                       estimated.
+%   FILES_OUT  (structure) with the following fields. Note that if
+%     a field is an empty string, a default value will be used to
+%     name the outputs. If a field is ommited, the output won't be
+%     saved at all (this is equivalent to setting up the output file
+%     names to 'gb_niak_omitted'.
 %
-%                 MOTION_PARAMETERS_XFM (cell of array of strings, default 
-%                       <FILES_IN>_<000I>_MPARAMS_DAT).                     
-%                       File name for the estimated parameters. A different 
-%                       file is created for each run and each volume. Each 
-%                       file is a spatial (rigid-body) transformation in XFM
-%                       format. If a transformation is specified in FILES_IN, 
-%                       this field will be ignored, and no transformation 
-%                       will be estimated.
+%       MOTION_CORRECTED_DATA (structure of cell of strings, default base
+%           name <BASE_FILES_IN>_MC)
+%           File names for saving the motion corrected datasets.
+%           The images will be resampled at the resolution of the
+%           between-run functional image of reference.
 %
-% OPT           (structure) with the following fields:
-% 
-%                TR (real) the repetition time of the time series (s)
-%                    which is the inverse of the sampling frequency (Hz).
+%     If a field MOTION_PARAMETERS_XFM is specified in FILES_IN, the
+%     following fields will be ignored  and no transformation will actually be
+%     estimated (the one specified by the user is used).
 %
-%                HP (real, default: -Inf) the cut-off frequency for high pass
-%                    filtering. opt.hp = -Inf means no high-pass filtering.
+%       MOTION_PARAMETERS_XFM (structure of cells of array of strings, default
+%           base MOTION_PARAMS_<FILES_IN>_<000I>.XFM)
+%           MOTION_PARAMETERS_XFM.<NAME_SESSION>{NUM_D}(NUM_V,:) is the file name for
+%           the estimated motion parameters of the dataset NUM_D in session
+%           NAME_SESSION and volume NUM_VOL. The (rigid-body) transformation
+%           is saved in XFM format.
 %
-%                LP (real, default: Inf) the cut-off frequency for low pass
-%                    filtering. opt.lp = Inf means no low-pass filtering.
+%       MOTION_PARAMETERS_DAT (structure of cells of strings,
+%           default base MOTION_PARAMS_<BASE_FILE_IN>.DAT)
+%           MOTION_PARAMETERS_DAT.<NAME_SESSION>{NUM_D} is the file name for
+%           the estimated motion parameters of the dataset NUM_D in session
+%           NAME_SESSION. The first line describes the content
+%           of each column. Each subsequent line I+1 is a representation
+%           of the motion parameters estimated for session I.
 %
-%                FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
-%                   attempt will be made to zip the outputs.
+%       TRANSF_WITHIN_SESSION_DAT (structure of cells of strings,
+%           default base TRANS_WS_<FILE_IN>.DAT)
+%           TRANSF_WITHIN_SESSION_DAT.<NAME_SESSION>{NUM_D} is the file name for
+%           the estimated within-session motion parameters of the dataset
+%           NUM_D in session NAME_SESSION. The first line describes the content
+%           of each column. Each subsequent line I+1 is a representation
+%           of the motion parameters estimated for session I.
 %
-%                FOLDER_OUT (string, default: path of FILES_IN) If present,
-%                    all default outputs will be created in the folder FOLDER_OUT.
-%                    The folder needs to be created beforehand.
+%       TRANSF_WITHIN_SESSION_XFM (structure of cells of arrays of strings,
+%           default base TRANSF_WS_<FILES_IN>_<000I>.XFM).
+%           TRANSF_WITHIN_SESSION_XFM.<NAME_SESSION>{NUM_D}(NUM_V,:) is the
+%           file name for the estimated within-session motion parameters
+%           of the dataset NUM_D in session NAME_SESSION and volume
+%           NUM_VOL. Each file is a spatial (rigid-body) transformation in
+%           XFM format.
 %
-%                FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
-%                    brick does not do anything but update the default 
-%                    values in FILES_IN and FILES_OUT.
-%               
+%       TRANSF_BETWEEN_SESSION_DAT (cell of strings, default
+%           base TRANSF_BS_<name of the first dataset of the session of reference>.DAT)
+%           The first line describes the content of each column. Each subsequent
+%           line I+1 is a representation of the between-session parameters
+%           estimated for session I, i.e. the transformation between the mean volume
+%           of the session and the mean volume of the session of reference.
+%
+%       TRANSF_BETWEEN_SESSION_XFM (cell of strings, default
+%           base TRANSF_BS_<name of the first dataset of the session>.DAT)
+%           For each session, this is the transformation between the mean volume
+%           of the session and the mean volume of the session of reference.
+%
+%       TRANSF_FUNC2T1  (string, default
+%           TRANSF_FUNC2T1_<base of the first dataset in SESSION_REF>.XFM)
+%           The transformation between the mean image of the session of
+%           reference and the T1 image of the same subject.
+%
+%   OPT   (structure) with the following fields:
+%
+%       VOL_REF (vector, default 1) VOL_REF(NUM) is
+%           the number of the volume that will be used as target for
+%           session NUM. If VOL_REF is a single integer, the same number will be
+%           used for all sessions.
+%
+%       RUN_REF (vector, default 1) RUN_REF(NUM) is
+%           the number of the run that will be used as target for
+%           each session. Currently, the same number has to be used for 
+%           all sessions.
+%
+%       SESSION_REF (string, default first session) name of the session of
+%           reference. By default, it is the first field of
+%           FILES_IN.SESSIONS.
+%
+%       INTERPOLATION (string, default 'trilinear') the spatial
+%          interpolation method. Available options : 'trilinear', 'tricubic',
+%          'nearest_neighbour', 'sinc'.
+%
+%       FLAG_SESSION (boolean, default 1) if FLAG_SESSION == 1, the
+%          intra-session motion parameters are included in the final transformation.
+%          If FLAG_RUN == 0, the intra-session motion parameters are still estimated
+%          for quality check, but only the between-session and T1 to fMRI
+%           transform only are actually included in the motion parameters.
+%
+%       FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
+%           attempt will be made to zip the outputs.
+%
+%       FOLDER_OUT (string, default: path of FILES_IN) If present,
+%           all default outputs will be created in the folder FOLDER_OUT.
+%           The folder needs to be created beforehand.
+%
+%       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
+%           brick does not do anything but update the default
+%           values in FILES_IN and FILES_OUT.
+%
 % OUTPUTS:
-% The structures FILES_IN, FILES_OUT and OPT are updated with default
-% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%              
+%   The structures FILES_IN, FILES_OUT and OPT are updated with default
+%   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
+%
 % SEE ALSO:
-% NIAK_FILTER_TSERIES, NIAK_DEMO_FILTER
+%  NIAK_BRICK_MOTION_CORRECTION, NIAK_DEMO_MOTION_CORRECTION
 %
 % COMMENTS
+% The motion correction follows a hierachical strategy :
+% Rigid-body transforms are first estimated within each session
+% independently by registering all volumes to one single reference volume.
+% Then, the mean image of each session is coregistered with the mean image
+% of the session of reference, and the within-session transformation is combined with that
+% between-session transformation for each volume. If an anatomical image is
+% specified, the mean functional image of the run of reference is co-registered with
+% this image, and this additional transformation is added to each volume.
+%
+% The final motion correction parameters are volume-specific and points to
+% the mean volume of reference or the T1 space if specified. The
+% intra-session transformations, the transformation between the mean volume
+% of each session and the run of reference and the transformation
+% between the mean functional of reference and the T1 image can be saved as
+% outputs for quality checking.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -116,234 +182,225 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Input files
+%% SYNTAX
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_time_filter'' for more info.')
+    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_time_filter'' for more info.')
 end
 
-%% Output files
+%% FILES_IN
+gb_name_structure = 'files_in';
+gb_list_fields = {'sessions','t1','motion_parameters_xfm'};
+gb_list_defaults = {NaN,'gb_niak_omitted','gb_niak_omitted'};
+niak_set_defaults
+
+%% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'filtered_data','var_high','var_low','beta_high','beta_low','dc_high','dc_low'};
-gb_list_defaults = {'','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'motion_corrected_data','motion_parameters_dat','motion_parameters_xfm','transf_within_session_dat','transf_within_session_xfm','transf_between_session_dat','transf_between_session_xfm','transf_func2t1_xfm'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
-%% Options
+%% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'tr','hp','lp','folder_out','flag_test','flag_zip'};
-gb_list_defaults = {NaN,NaN,NaN,'',0,0};
+gb_list_fields = {'vol_ref','run_ref','session_ref','flag_session','flag_zip','flag_test','folder_out','interpolation'};
+gb_list_defaults = {1,1,'',0,0,0,'','trilinear'};
 niak_set_defaults
 
-[path_f,name_f,ext_f] = fileparts(files_in(1,:));
-if isempty(path_f)
-    path_f = '.';
-end
+list_sessions = fieldnames(files_in.sessions);
+nb_sessions = length(list_sessions);
 
-if strcmp(ext_f,'.gz')
-    [tmp,name_f,ext_f] = fileparts(name_f);
-end
-
-if strcmp(opt.folder_out,'')
-    opt.folder_out = path_f;
+if isempty(opt.session_ref)
+    opt.session_ref = list_sessions{1};
 end
 
 %% Building default output names
-if isempty(files_out.filtered_data)
 
-    if size(files_in,1) == 1
+flag_def_data = isempty(files_out.motion_corrected_data);
+flag_def_mp_dat = isempty(files_out.motion_parameters_dat);
+flag_def_mp_xfm = isempty(files_out.motion_parameters_xfm);
+flag_def_trans_ws_dat = isempty(files_out.transf_within_session_dat);
+flag_def_trans_ws_xfm = isempty(files_out.transf_within_session_xfm);
+flag_def_trans_bs_dat = isempty(files_out.transf_between_session_dat);
+flag_def_trans_bs_xfm = isempty(files_out.transf_between_session_xfm);
+flag_def_trans_func2t1_xfm = isempty(files_out.transf_func2t1_xfm);
 
-        files_out.filtered_data = cat(2,opt.folder_out,filesep,name_f,'_f',ext_f);
+if flag_def_data
+    files_out.motion_corrected_data = struct([]);
+end
 
-    else
+if flag_def_mp_dat
+    files_out.motion_parameters_dat = struct([]);
+end
 
-        name_filtered_data = cell([size(files_in,1) 1]);
+if flag_def_mp_xfm
+    files_out.motion_parameters_xfm = struct([]);
+end
 
-        for num_f = 1:size(files_in,1)
-            [path_f,name_f,ext_f] = fileparts(files_in(1,:));
+if flag_def_trans_ws_dat
+    files_out.transf_within_session_dat = struct([]);
+end
 
-            if strcmp(ext_f,'.gz')
-                [tmp,name_f,ext_f] = fileparts(name_f);
-            end
-            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_f',ext_f);
+if flag_def_trans_ws_xfm
+    files_out.transf_within_session_xfm = struct([]);
+end
+
+if flag_def_trans_bs_dat
+    files_out.transf_between_session_dat = cell([nb_sessions 1]);
+end
+
+if flag_def_trans_bs_dat
+    files_out.transf_between_session_xfm =  cell([nb_sessions 1]);
+end
+
+for num_s = 1:length(list_sessions)
+
+    name_session = list_sessions{num_s};
+    files_name = getfield(files_in.sessions,name_session);
+    nb_files = length(files_name);
+
+    motion_corrected_data = cell([nb_files 1]);
+    motion_parameters_dat = cell([nb_files 1]);
+    motion_parameters_xfm = cell([nb_files 1]);
+    transf_within_session_dat = cell([nb_files 1]);
+    transf_within_session_xfm = cell([nb_files 1]);
+
+    for num_d = 1:length(files_name)
+
+        [path_f,name_f,ext_f] = fileparts(files_name{num_d});
+
+        if isempty(path_f)
+            path_f = '.';
         end
-        files_out.filtered_data = char(name_filtered_data);
 
+        if strcmp(ext_f,'.gz')
+            [tmp,name_f,ext_f] = fileparts(name_f);
+        end
+
+        if isempty(opt.folder_out)
+            folder_write = path_f;
+        else
+            folder_write = opt.folder_out;
+        end
+
+        if flag_def_data
+            motion_corrected_data{num_d} = cat(2,folder_write,filesep,name_f,'_mc',ext_f);
+        end
+
+        if flag_def_mp_dat
+            motion_parameters_dat{num_d} = cat(2,folder_write,filesep,'motion_params_',name_f,'.dat');
+        end
+
+        if flag_def_mp_xfm
+            hdr = niak_read_vol(files_name{num_d});
+
+            if length(hdr.info.dimensions)<4
+                nt = 1;
+            else
+                nt = hdr.info.dimensions(4);
+            end
+
+            nb_digits = max(length(num2str(nt)),4);
+
+            for num_t = 1:nt
+
+                strt = num2str(num_t);
+                strt = [repmat('0',1,nb_digits-length(strt)) strt];
+
+                if num_t == 1
+                    motion_parameters_xfm{num_d} = cat(2,folder_write,filesep,'motion_params_',name_f,'_',strt,'.xfm');
+                else
+                    motion_parameters_xfm{num_d} = char(motion_parameters_xfm{num_d},cat(2,folder_write,filesep,'motion_params_',name_f,'_',strt,'.xfm'));
+                end
+
+            end
+        end % if flag_def_mp_xfm
+
+        if flag_def_trans_ws_dat
+            transf_ws_dat{num_d} = cat(2,folder_write,filesep,'transf_ws_',name_f,'.dat');
+        end
+
+        if flag_def_trans_ws_xfm
+            hdr = niak_read_vol(files_name{num_d});
+
+            if length(hdr.info.dimensions)<4
+                nt = 1;
+            else
+                nt = hdr.info.dimensions(4);
+            end
+
+            nb_digits = max(length(num2str(nt)),4);
+
+            for num_t = 1:nt
+
+                strt = num2str(num_t);
+                strt = [repmat('0',1,nb_digits-length(strt)) strt];
+
+                if num_t == 1
+                    transf_ws_xfm{num_d} = cat(2,folder_write,filesep,'transf_ws_',name_f,'_',strt,'.xfm');
+                else
+                    transf_ws_xfm{num_d} = char(transf_ws_xfm{num_d},cat(2,folder_write,filesep,'transf_ws_',name_f,'_',strt,'.xfm'));
+                end
+
+            end
+        end % if flag_def_trans_ws_xfm
+
+        if (flag_def_trans_func2t1_xfm)&strcmp(name_session,opt.session_ref)&(num_d==1)
+            files_out.transf_func2t1_xfm = cat(2,folder_write,filesep,'trans_func2t1_',name_f,'.xfm');
+        end
+
+        if flag_def_trans_bs_dat&strcmp(name_session,opt.session_ref)&(num_d==1)
+            files_out.transf_between_session_dat = cat(2,folder_write,filesep,'transf_bs_',name_f,'.dat');
+        end
+
+        if flag_def_trans_bs_xfm&(num_d==1)
+            files_out.transf_between_session_xfm{num_s} = cat(2,folder_write,filesep,'transf_bs_',name_f,'.xfm');
+        end
+
+    end %loop over datasets
+
+    if flag_def_data
+        if num_s == 1
+            eval(cat(2,'files_out.motion_corrected_data(1).',name_session,' = motion_corrected_data;'));
+        else
+            setfield(files_out.motion_corrected_data,name_session,motion_corrected_data);
+        end
     end
-end
 
-if isempty(files_out.var_high)
-    files_out.var_high = cat(2,opt.folder_out,filesep,name_f,'_var_high',ext_f);
-end
-
-if isempty(files_out.var_low)
-    files_out.var_low = cat(2,opt.folder_out,filesep,name_f,'_var_low',ext_f);
-end
-
-if isempty(files_out.beta_high)
-    if size(files_in,1) == 1
-        files_out.beta_high = cat(2,opt.folder_out,filesep,name_f,'_beta_high',ext_f);
-    else
-        files_out.beta_high = cat(2,opt.folder_out,filesep,name_f,'_beta_high_');
+    if flag_def_mp_dat
+        if num_s == 1
+            eval(cat(2,'files_out.motion_parameters_dat(1).',name_session,' = motion_parameters_dat;'));
+        else
+            setfield(files_out.motion_parameters_dat,name_session,motion_parameters_dat);
+        end
     end
-end
 
-if isempty(files_out.beta_low)
-    if size(files_in,1) == 1
-        files_out.beta_low = cat(2,opt.folder_out,filesep,name_f,'_beta_low',ext_f);
-    else
-        files_out.beta_low = cat(2,opt.folder_out,filesep,name_f,'_beta_low_');
+    if flag_def_mp_xfm
+        if num_s == 1
+            eval(cat(2,'files_out.motion_parameters_xfm(1).',name_session,' = motion_parameters_xfm;'));
+        else
+            setfield(files_out.motion_parameters_xfm,name_session,motion_parameters_xfm);
+        end
     end
-end
 
-if isempty(files_out.dc_high)
-    files_out.dc_high = cat(2,opt.folder_out,filesep,name_f,'_dc_high.dat');
-end
+    if flag_def_trans_ws_dat
+        if num_s == 1
+            eval(cat(2,'files_out.transf_within_session_dat(1).',name_session,' = transf_ws_dat;'));
+        else
+            setfield(files_out.transf_within_session_dat,name_session,transf_ws_dat);
+        end
+    end
 
-if isempty(files_out.dc_low)
-    files_out.dc_low = cat(2,opt.folder_out,filesep,name_f,'_dc_low.dat');
-end
+    if flag_def_trans_ws_xfm
+        if num_s == 1
+            eval(cat(2,'files_out.transf_within_session_xfm(1).',name_session,' = transf_ws_xfm;'));
+        else
+            setfield(files_out.transf_within_session_xfm,name_session,transf_ws_xfm);
+        end
+    end
 
 
-if flag_test == 1    
+end % loop over sessions
+
+if flag_test == 1
     return
 end
 
-%% Performing temporal filtering
-[hdr,vol] = niak_read_vol(files_in);
-opt_f.tr = opt.tr;
-opt_f.lp = opt.lp;
-opt_f.hp = opt.hp;
-
-%% We restrict the filtering in a mask of the brain to save time
-%% The data are converted into a array of time series
-mask = mean(abs(vol),4);
-mask = niak_mask_brain(mask);
-
-if ndims(vol)==3
-    [nx,ny,nz] = size(vol); nt = 1;
-else
-    [nx,ny,nz,nt] = size(vol);
-end
-
-vol = reshape(vol,[nx*ny*nz nt])';
-vol = vol(:,mask>0);
-
-%% Filtering the data
-opt_f.tr = opt.tr;
-opt_f.hp = opt.hp;
-opt_f.lp = opt.lp;
-[tseries_f,extras] = niak_filter_tseries(vol,opt_f);
-
-%% If relative variance maps have been requested, compute total variance of
-%% the time series
-if ~strcmp(files_out.var_high,'gb_niak_omitted')|~strcmp(files_out.var_low,'gb_niak_omitted')
-    var_vol = var(vol);
-end
-
-%% Reshaping the filtered time series into a 3D+t volume
-%clear vol
-vol_f = zeros([nx*ny*nz nt]);
-vol_f(mask>0,:) = tseries_f';
-clear tseries_f
-vol_f = reshape(vol_f,[nx ny nz nt]);
-
-%% Writting the filtered data
-hdr = hdr(1);
-hdr.flag_zip = flag_zip;
-
-hdr_out = hdr;
-hdr_out.file_name = files_out.filtered_data;
-opt_hist.command = 'niak_brick_time_filter';
-opt_hist.files_in = files_in;
-opt_hist.files_out = files_out.filtered_data;
-opt_hist.comment = sprintf('Filtered data, high-pass filter cut-off= %1.2f Hz, low pass filter cut-off=%1.2f Hz, TR=%1.2f',opt.hp,opt.lp,opt.tr);
-hdr_out = niak_set_history(hdr_out,opt_hist);
-niak_write_vol(hdr_out,vol_f);
-clear vol_f
-
-%% Writting the regression coefficients for high frequencies
-if ~strcmp(files_out.beta_high,'gb_niak_omitted')
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.beta_high;
-    vol_beta_high = zeros([nx*ny*nz size(extras.beta_dc_high,1)]);
-    vol_beta_high(mask>0,:) = extras.beta_dc_high';
-    vol_beta_high = reshape(vol_beta_high,[nx,ny,nz,size(extras.beta_dc_high,1)]);
-    opt_hist.command = 'niak_brick_time_filter';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.beta_high;
-    opt_hist.comment = sprintf('Regression coefficients for high-frequency discrete cosines, cut-off %1.2f Hz',opt.lp);
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,vol_beta_high);
-    clear vol_beta_high
-end
-
-%% Writting the regression coefficients for low frequencies
-if ~strcmp(files_out.beta_low,'gb_niak_omitted')
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.beta_low;
-    vol_beta_low = zeros([nx*ny*nz size(extras.beta_dc_low,1)]);
-    vol_beta_low(mask>0,:) = extras.beta_dc_low';
-    vol_beta_low = reshape(vol_beta_low,[nx,ny,nz,size(extras.beta_dc_low,1)]);
-    opt_hist.command = 'niak_brick_time_filter';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.beta_low;
-    opt_hist.comment = sprintf('Regression coefficients for low-frequency discrete cosines, cut-off %1.2f Hz',opt.hp);
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,vol_beta_low);
-    clear vol_beta_low
-end
-
-%% Writting the discrete cosine basis for low frequencies
-if ~strcmp(files_out.dc_low,'gb_niak_omitted')
-    fid = fopen(files_out.dc_low,'w');    
-    fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_low) ; extras.freq_dc_low']);
-    fprintf(fid,'\n');
-    
-    for num_l = 1:size(extras.tseries_dc_low,1)
-        fprintf(fid,'%1.5f ',extras.tseries_dc_low(num_l,:));
-        fprintf(fid,'\n');
-    end
-end
-
-%% Writting the discrete cosine basis for high frequencies
-if ~strcmp(files_out.dc_high,'gb_niak_omitted')
-    fid = fopen(files_out.dc_high,'w');    
-    fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_high)'; extras.freq_dc_high']);
-    fprintf(fid,'\n');
-    
-    for num_l = 1:size(extras.tseries_dc_high,1)
-        fprintf(fid,'%1.5f ',extras.tseries_dc_high(num_l,:));
-        fprintf(fid,'\n');
-    end
-end
-
-%% Writting the relative variance for low frequencies
-if ~strcmp(files_out.var_low,'gb_niak_omitted')
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.var_low;
-    vol_var_low = zeros([nx ny nz]);
-    var_low = var(extras.tseries_dc_low*extras.beta_dc_low);
-    vol_var_low(mask>0) = var_low./var_vol;    
-    opt_hist.command = 'niak_brick_time_filter';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.beta_low;
-    opt_hist.comment = sprintf('Relative variance of low-frequency discrete cosines, cut-off %1.2f Hz',opt.hp);
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,vol_var_low);
-    clear vol_val_low
-end
-
-%% Writting the relative variance for high frequencies
-if ~strcmp(files_out.var_high,'gb_niak_omitted')
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.var_high;
-    vol_var_high = zeros([nx ny nz]);
-    var_high = var(extras.tseries_dc_high*extras.beta_dc_high);    
-    vol_var_high(mask>0) = var_high./var_vol;    
-    opt_hist.command = 'niak_brick_time_filter';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.beta_high;
-    opt_hist.comment = sprintf('Relative variance of high-frequency discrete cosines, cut-off %1.2f Hz',opt.hp);
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,vol_var_high);
-    clear vol_val_high
-end

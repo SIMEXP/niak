@@ -43,61 +43,16 @@ if nargin < 2
     pref = '';
 end
 
+cell_files = niak_files2cell(files);
 
 str_files = '';
 
-if isstruct(files)
-    list_field = fieldnames(files);
-
-    if ~isempty(list_field);
-
-        for num_f = 1:length(list_field)
-            list_files_in = getfield(files,list_field{num_f});
-
-            if iscell(list_files_in)
-                for num_i = 1:length(list_files_in)
-
-                    if ~strcmp(list_files_in{num_i},'gb_niak_omitted')
-                        if isempty(str_files)
-                            str_files = [str_files '"' pref list_files_in{num_i} '"'];
-                        else
-                            str_files = [str_files ', ' '"' pref list_files_in{num_i} '"'];
-                        end
-                    end
-                end
-            else
-                if ~strcmp(list_files_in,'gb_niak_omitted')
-                    if isempty(str_files)
-                        str_files = [str_files '"' pref list_files_in '"'];
-                    else
-                        str_files = [str_files ', ' '"' pref list_files_in '"'];
-                    end
-                end
-            end
-
+for num_f = 1:length(cell_files);
+    if ~strcmp(cell_files{num_f},'gb_niak_omitted')
+        if isempty(str_files)
+            str_files = [str_files '"' pref cell_files{num_f} '"'];
+        else
+            str_files = [str_files ', "' pref cell_files{num_f} '"'];
         end
     end
-
-elseif iscellstr(files)
-
-    if ~isempty(files);
-
-        for num_f = 1:length(list_field)
-            if ~strcmp(files{num_f},'gb_niak_omitted')
-                if isempty(str_files)
-                    str_files = [str_files '"' pref files{num_f} '"'];
-                else
-                    str_files = [str_files ', ' '"' pref files{num_f} '"'];
-                end
-            end
-        end
-
-    end
-
-elseif ischar(files)
-
-    if ~strcmp(files,'gb_niak_omitted')
-        str_files = [str_files '"' pref files '"'];
-    end
-
 end

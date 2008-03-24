@@ -49,7 +49,14 @@ if isstruct(files)
         for num_f = 1:length(list_field)
             list_files_in = getfield(files,list_field{num_f});
 
-            if iscell(list_files_in)
+            if isstruct(list_files_in)
+                
+                cell_tmp = niak_files2cell(list_files_in);
+                cell_files(end+1:end+length(cell_tmp)) = cell_tmp;
+                num_cell = num_cell + length(cell_tmp);
+                
+            elseif iscell(list_files_in)
+                
                 for num_i = 1:length(list_files_in)
 
                     if ~strcmp(list_files_in{num_i},'gb_niak_omitted')
@@ -57,15 +64,17 @@ if isstruct(files)
                         num_cell = num_cell + 1;
                     end
                 end
+                
             else
+                
                 if ~strcmp(list_files_in,'gb_niak_omitted')
                     cell_files{num_cell} = list_files_in;
                     num_cell = num_cell + 1;
                 end
+                
             end
-
-        end
-    end
+        end % loop over all fields
+    end % if ~isempty(list_field)
 
 elseif iscellstr(files)
 
@@ -82,8 +91,10 @@ elseif iscellstr(files)
 
 elseif ischar(files)
 
-    if ~strcmp(files,'gb_niak_omitted')    
-        cell_files{num_cell} = files;
+    for num_f = 1:size(files)
+        if ~strcmp(deblank(files(num_f,:)),'gb_niak_omitted')
+            cell_files{num_cell} = deblank(files(num_f,:));
+        end
     end
 
 end

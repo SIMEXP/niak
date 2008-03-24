@@ -1,15 +1,14 @@
 % This is a script to demonstrate the usage of :
-% NIAK_BRICK_TIME_FILTER
+% NIAK_BRICK_MOTION_CORRECTION_WS
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_TIME_FILTER
+% Just type in NIAK_DEMO_MOTION_CORRECTION_WS
 %
 % OUTPUT:
 %
 % This script will clear the workspace !!
-% It will apply a temporal filtering on the functional data of subject
-% 1 (motor condition) and use the default output name. The frequencies
-% below 0.01 Hz and above 0.1 Hz will be suppressed.
+% It will apply a motion correction on the functional data of subject
+% 1 and use the default output name.
 %
 % Note that the path to access the demo data is stored in a variable
 % called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
@@ -21,7 +20,7 @@
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, temporal filtering, fMRI
+% Keywords : medical imaging, slice timing, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -44,35 +43,30 @@
 clear
 niak_gb_vars
 
-%% Setting input files
+%% Setting input/output files
 switch gb_niak_format_demo
     
     case 'minc2' % If data are in minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
-    
+        %% There is only one session...
+        %files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};                
+        files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc')};
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
-        
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
 end
 
 %% Setting output files
-files_out.filtered_data = '';
-files_out.var_high = '';
-files_out.var_low = '';
-files_out.dc_high = '';
-files_out.dc_low = '';
-files_out.beta_high = '';
-files_out.beta_low = '';
+files_out.motion_corrected_data = ''; % use default names
+files_out.motion_parameters_dat = ''; % use default names
+files_out.motion_parameters_xfm = ''; % use default names
 
-%% Setting options
-opt.tr = 2.33; % Repetition time in seconds
-opt.lp = 0.1; % Exclude frequencies above 0.1 Hz
-opt.hp = 0.01; % Exclude frequencies below 0.01 Hz
-opt.flag_zip = 0; % Do not attempt to zip the outputs
-opt.flag_test = 0; % This is not a test, the slice timing is actually performed
+%% Options
+opt.run_ref = 1;
+opt.fwhm = 6;
 
-[files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt);
+%opt.flag_test = 1;
+[files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,files_out,opt);
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
+

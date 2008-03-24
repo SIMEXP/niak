@@ -81,7 +81,7 @@ niak_set_defaults
 %% Setting up default values for the 'info' part of the header
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
-gb_list_fields = {'precision','voxel_size','mat','dimension_order','TR','history','file_parent','dimensions'};
+gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','file_parent','dimensions'};
 gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','',[]};
 niak_set_defaults
 
@@ -159,32 +159,28 @@ hdr_minc = hdr.details;
 hdr_minc.image = sub_set_att(hdr_minc.image,'dimorder',arg_dim_order);
 dim_order = dim_order(dim_order);
 
+[cosines_v,step_v,start_v] = niak_hdr_mat2minc(hdr.info.mat);
+
 %% step values
-hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'step',voxel_size(dim_order(1)));
-hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'step',voxel_size(dim_order(2)));
-hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'step',voxel_size(dim_order(3)));
+hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'step',step_v(1));
+hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'step',step_v(2));
+hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'step',step_v(3));
 if length(size(vol))==4
     hdr_minc.time = sub_set_att(hdr_minc.time,'step',TR);
 end
 
 %% start values
-for num_d = 1:3
-    direction_cosines_val(:,num_d) = hdr.info.mat(1:3,dim_order(num_d))/voxel_size(dim_order(num_d));
-end
-start_val = (hdr.info.mat(1:3,1:3)*diag(1./voxel_size))^(-1)*hdr.info.mat(1:3,4);
-start_val = start_val(dim_order(1:3));
-
-hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'start',start_val(1));
-hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'start',start_val(2));
-hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'start',start_val(3));
+hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'start',start_v(1));
+hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'start',start_v(2));
+hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'start',start_v(3));
 if length(size(vol))==4
     hdr_minc.time = sub_set_att(hdr_minc.time,'start',0);
 end
 
 %% cosines values
-hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'direction_cosines',direction_cosines_val(:,1)');
-hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'direction_cosines',direction_cosines_val(:,2)');
-hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'direction_cosines',direction_cosines_val(:,3)');
+hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'direction_cosines',cosines_v(:,1)');
+hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'direction_cosines',cosines_v(:,2)');
+hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'direction_cosines',cosines_v(:,3)');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Updating the variables of the minc file %%%
