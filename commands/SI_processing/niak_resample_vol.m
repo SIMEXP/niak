@@ -20,14 +20,12 @@ function [vol_r,hdr_r] = niak_resample_vol(vol,hdr,opt)
 %           the spatial interpolation. Available options are :
 %           'nearest','linear','spline','cubic'
 % 
-%       VOXEL_SIZE (vector 3*1) the new voxel size for the respective
-%          dimensions of VOL.
+%       VOXEL_SIZE (vector 3*1, default same as original) the new voxel size 
+%          for the respective dimensions of VOL.
 %
 %       MAT (4*4 matrix, default identity) a transformation to apply on 
-%           the data. TRANSF(1:3,1:3) defines the rotation, while
-%           TRANSF(1:3,4) defines the translation. For 3D+t data, MAT can
-%           have a fourth dimension (time) matching the one of VOL. In this
-%           case, volume-specific transformation will be used.
+%           the data. MAT(1:3,1:3) defines the rotation, while
+%           MAT(1:3,4) defines the translation. 
 % 
 % OUTPUT:
 % VOL_R (3D+t or 3D array) the resampled data.
@@ -83,6 +81,7 @@ end
 transf1 = hdr.info.mat;
 voxel_size1 = abs(hdr.info.voxel_size);
 step = sign(hdr.info.voxel_size);
+
 %% Setting up default values for options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation','mat','voxel_size'};

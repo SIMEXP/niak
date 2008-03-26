@@ -28,7 +28,7 @@ function [rpy,tsl] = niak_transf2param(transf)
 %
 % Modified by Pierre Bellec, McConnel Brain Imaging Center, Montreal 
 % Neurological Institute, McGill University, Montreal, Canada, 2008.
-% Changing inputs.outputs formats.
+% Changing inputs/outputs formats.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : rigid-body transformation, rotation, Euler angles

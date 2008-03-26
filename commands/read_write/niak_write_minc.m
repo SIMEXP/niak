@@ -166,7 +166,7 @@ hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'step',step_v(1));
 hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'step',step_v(2));
 hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'step',step_v(3));
 if length(size(vol))==4
-    hdr_minc.time = sub_set_att(hdr_minc.time,'step',TR);
+    hdr_minc.time = sub_set_att(hdr_minc.time,'step',tr);
 end
 
 %% start values

@@ -58,12 +58,13 @@ end
 
 %% Setting output files
 files_out.motion_corrected_data = ''; % use default names
-files_out.motion_parameters_dat = ''; % use default names
-files_out.motion_parameters_xfm = ''; % use default names
+files_out.motion_parameters = ''; % use default names
+files_out.mask_volume = ''; % use default names
+files_out.mean_volume = ''; % use default names
 
 %% Options
 opt.run_ref = 1;
-opt.fwhm = 6;
+opt.vol_ref = 25;
 
 %opt.flag_test = 1;
 [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,files_out,opt);
