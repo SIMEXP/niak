@@ -51,7 +51,9 @@ ind = 1:length(str);
 pos = findstr(str_b,' ');
 if length(pos)>1
     to_trash = find(pos(2:end)-pos(1:end-1)==1);
-    str_b = str_b(~ismember(ind,pos(to_trash)));
+    if ~isempty(to_trash)    
+        str_b = str_b(~ismember(ind,pos(to_trash)));    
+    end
 end
 
 if ~isempty(str_b)

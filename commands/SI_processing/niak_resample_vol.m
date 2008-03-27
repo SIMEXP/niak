@@ -102,15 +102,21 @@ nx2 = ceil((voxel_size1(1)/voxel_size2(1))*nx);
 ny2 = ceil((voxel_size1(2)/voxel_size2(2))*ny);
 nz2 = ceil((voxel_size1(3)/voxel_size2(3))*nz);
 
-ind2 = (1:prod([nx2,ny2,nz2]))'; % the target space ....
-[indx2,indy2,indz2] = ind2sub([nx2,ny2,nz2],ind2);
-clear ind2
-coord2 = transf1^(-1)*transf2*transf1*[diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1]*[indx2'-1;indy2'-1;indz2'-1; ones([1 length(indx2)])];
-clear indx2 indy2 indz2
+[XI,YI,ZI] = meshgrid(1:nx2,1:ny2,1:nz2);
+coord2 = transf1^(-1) * transf2 * transf1 * [diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1] * [XI(:)'-1;YI(:)'-1;ZI(:)'-1; ones([1 length(XI(:))])];
 coord2 = coord2(1:3,:)';
+coord2 = reshape(coord2,[size(XI,1),size(XI,2),size(XI,3),3]);
+clear XI YI ZI 
+% ind2 = (1:prod([nx2,ny2,nz2]))'; % the target space ....
+% [indx2,indy2,indz2] = ind2sub([nx2,ny2,nz2],ind2);
+% clear ind2
+% coord2 = transf1^(-1)*transf2*transf1*[diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1]*[indx2'-1;indy2'-1;indz2'-1; ones([1 length(indx2)])];
+% clear indx2 indy2 indz2
+% coord2 = coord2(1:3,:)';
 
 %% Applying the resampling
-vol_r = interp3(0:nx-1,0:ny-1,0:nz-1,vol,coord2(:,2),coord2(:,1),coord2(:,3),interpolation,0);
+%vol_r = interp3(0:nx-1,0:ny-1,0:nz-1,vol,coord2(:,2),coord2(:,1),coord2(:,3),interpolation,0);
+vol_r = interp3(0:nx-1,0:ny-1,0:nz-1,vol,coord2(:,:,:,1),coord2(:,:,:,2),coord2(:,:,:,3),interpolation,0);
 vol_r = reshape(vol_r,[nx2,ny2,nz2]);
 hdr_r = hdr;
 hdr_r.info.mat = transf2*transf1*[diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1];

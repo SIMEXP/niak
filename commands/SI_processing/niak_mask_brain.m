@@ -65,7 +65,7 @@ end
 
 %% Building an histogram of the smoothed mean
 [Y,X] = hist(abs_vol_mean(:),256);
-ind_seuil = otsu(Y);
+ind_seuil = min(max(otsu(Y),1),length(X));
 
 %% Building the mask
 mask = (abs_vol_mean>X(ind_seuil));

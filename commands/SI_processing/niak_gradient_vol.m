@@ -13,7 +13,7 @@ function vol_g = niak_gradient_vol(vol,opt)
 %       MASK    (3D array, same size as VOL, default ones(size(VOL))) 
 %          a binary mask of interest (0 outside the mask, 1 inside).
 %
-%       NEIGH   (string, default '6-connexity') the type of neighborhood 
+%       NEIGH   (string, default '26-connexity') the type of neighborhood 
 %           to include in the gradient calculation. Possible values :
 %          '4-connexity','6-connexity','26-connexity'.
 %

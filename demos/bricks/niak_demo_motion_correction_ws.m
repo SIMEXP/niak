@@ -50,7 +50,8 @@ switch gb_niak_format_demo
         
         %% There is only one session...
         %files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};                
-        files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc')};
+        files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc')};
+        
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
@@ -61,10 +62,11 @@ files_out.motion_corrected_data = ''; % use default names
 files_out.motion_parameters = ''; % use default names
 files_out.mask_volume = ''; % use default names
 files_out.mean_volume = ''; % use default names
+files_out.fig_motion = ''; % use default names
 
 %% Options
 opt.run_ref = 1;
-opt.vol_ref = 25;
+opt.vol_ref = 1;
 
 %opt.flag_test = 1;
 [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,files_out,opt);
