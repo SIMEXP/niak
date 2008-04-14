@@ -260,9 +260,22 @@ for num_r = list_run
         vol_target = niak_smooth_vol(vol_target,opt_s);        
         
         %% writting the target
-        file_target = niak_file_tmp('_target.mnc');
-        hdr.file_name = file_target;
+        file_target_tmp = niak_file_tmp('_target_tmp.mnc');
+        hdr.file_name = file_target_tmp;
         niak_write_vol(hdr,vol_target);
+
+        %% Resample the target in its own space
+        file_target = niak_file_tmp('_target.mnc');        
+        if exist('files_in_res')
+            clear files_in_res
+        end
+        files_in_res.source = file_target_tmp;
+        files_in_res.target = file_target_tmp;        
+        files_out_res = file_target;
+        opt_res.flag_tfm_space = 1;
+        opt_res.voxel_size = [];        
+        niak_resample_vol(files_in_res,files_out_res,opt_res);
+        delete(file_target_tmp);
 
         %% Writting the mask of the target
         file_mask_target = niak_file_tmp('_mask_target.mnc');
@@ -361,7 +374,7 @@ for num_r = list_run
             files_in_res.target = file_target;
             files_in_res.transformation = xfm_tmp;
             files_out_res = niak_file_tmp('_vol_r.mnc');
-            opt_res.flag_tfm_space = 1;
+            opt_res.flag_tfm_space = 0;
             opt_res.voxel_size = [];
             hdr.file_name = files_in_res.source;            
             niak_write_vol(hdr,data(:,:,:,num_v));            
@@ -387,6 +400,7 @@ for num_r = list_run
         xfm_tmp_old = xfm_tmp;
 
     end
+    
     delete(xfm_tmp); % Delete the last temporary file...
     fprintf('\n')
     hdr.flag_zip = flag_zip;
