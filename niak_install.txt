@@ -1,0 +1,20 @@
+﻿#summary How to install the NIAK
+
+==General instruction==
+
+To install the NIAK, download the file niak-0.2.tar.gz, uncompress it in a folder `path_niak`, and add this path (with all subfolders) to your matlab or octave path :
+{{{
+path_niak = '/home/pbellec/bibliotheque/niak/';
+P = genpath(path_niak);
+addpath(P);
+}}}
+
+You may have to edit the file `path_niak`/'commands/misc/niak_gb_vars/' to change a couple of variables, notably the path to access the demo data. You need to download the [DocumentationDemo demo] data independently from [http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/ here] and copy the data in any format in the folder `PATH_NIAK/data_demo/`.
+
+==Compatibility and dependencies==
+
+Release 0.2 has been tested on Linux and should work fine on Windows or Mac OSX.
+
+The NIAK has been tested with Matlab 6.5 and Matlab 7.0.1 (R14). NIAK r0.2 should also work with Octave 2.9+, but it is not compatible with Octave 2.1~.
+
+For most operation you will need at least a version of the MINC tools available. MINC tools are available for LINUX and MAC OSX [http://packages.bic.mni.mcgill.ca/ here]. There should be a windows version soon.

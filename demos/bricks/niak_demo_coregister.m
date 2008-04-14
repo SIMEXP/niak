@@ -1,8 +1,8 @@
 % This is a script to demonstrate the usage of :
-% NIAK_BRICK_MOTION_CORRECTION_WS
+% NIAK_BRICK_COREGISTER
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_MOTION_CORRECTION_WS
+% Just type in NIAK_DEMO_COREGISTER
 %
 % OUTPUT:
 %
@@ -46,30 +46,32 @@ niak_gb_vars
 %% Setting input/output files
 switch gb_niak_format_demo
     
-    case 'minc2' % If data are in minc2 format
-        
-        %% There is only one session...
-        %files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};                
-        files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
+    case {'minc1','minc2'} % If data are in minc1 or minc2 format
+                
+        files_in.functional = cat(2,gb_niak_path_demo,filesep,'mean_func_rest_subject2.mnc');
+        files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject2.mnc');
         
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
 end
 
+%% Creating a mean functional image
+[hdr,vol] = niak_read_vol(cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc'));
+vol = mean(vol,4);
+hdr.file_name = files_in.functional;
+niak_write_vol(hdr,vol);
+
 %% Setting output files
-files_out.motion_corrected_data = ''; % use default names
-files_out.motion_parameters = ''; % use default names
-files_out.mask_volume = ''; % use default names
-files_out.mean_volume = ''; % use default names
-files_out.fig_motion = ''; % use default names
+files_out.transformation = ''; % use default names
+files_out.anat_hires = ''; % use default names
+files_out.anat_lowres = ''; % use default names
 
 %% Options
-opt.run_ref = 1;
-opt.vol_ref = 1;
+opt.flag_test = 0;
 
 %opt.flag_test = 1;
-[files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,files_out,opt);
+[files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt);
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
 

@@ -20,7 +20,7 @@ function [hdr,vol] = niak_read_vol(file_name)
 %               HDR.FILE_NAME   (empty string '') name of the file currently
 %                   associated with the header.
 %               HDR.TYPE   (string) the file format (either
-%                   'minc1', 'minc2').
+%                   'minc1', 'minc2','nii').
 %               HDR.FLAG_ZIP (boolean, default 0) if the file name ended by
 %                   '.gz', the file was unzipped and FLAG_ZIP is 1, and
 %                   FLAG_ZIP is 0 otherwise.

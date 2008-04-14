@@ -1,16 +1,22 @@
-function mask = niak_mask_brain(vol,fwhm_kernel)
+function mask = niak_mask_brain(vol,opt)
 
 % Create a binary mask of the inside of the brain in an MRI/fMRI dataset
 %
 % SYNTAX:
-% MASK = NIAK_MASK_BRAIN(VOL)
+% MASK = NIAK_MASK_BRAIN(VOL,FWHM_KERNEL)
 % 
 % INPUT: 
-% VOL           (4D array) a 3D or 3D+t dataset
-% FWHM_KERNEL   (real value, default 3) the FWHM of the blurring kernel in 
-%                   voxel units (can also be a 3*1 vector for anisotropic 
-%                   filtering if the voxel size is anisotropic). A value of
-%                   0 for FWHM_KERNEL will skip the smoothing step.
+% VOL       (4D array) a 3D or 3D+t dataset
+% OPT       (structure, optional) with the following fields:   
+%       FWHM (real value, default 3) the FWHM of the blurring kernel in 
+%           voxel size unit. A value of 0 for FWHM will skip the smoothing step.
+%       VOXEL_SIZE (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%           in the respective dimensions, i.e. the space in mmm
+%           between two voxels in x, y, and z (yet the unit is
+%           irrelevant and just need to be consistent with
+%           the filter width (fwhm)). The fourth element is ignored.
+%       FLAG_REMOVE_EYES (boolean, default 1) if FLAG_REMOVE_EYES == 1, an
+%           attempt is done to remove the eyes from the mask.
 %
 % OUTPUT:
 % MASK          (3D array) binary mask of the inside of the brain
@@ -48,18 +54,20 @@ function mask = niak_mask_brain(vol,fwhm_kernel)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-%% Setting up default arguments
-if nargin < 2
-    opt_smooth.fwhm = 3;
-else
-    opt_smooth.fwhm = fwhm_kernel;
-end
+%% OPTIONS
+gb_name_structure = 'opt';
+gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes'};
+gb_list_defaults = {6,[3 3 3],1};
+niak_set_defaults
+
 
 %% Getting the mean of absolute values for all volumes
 abs_vol_mean = mean(abs(vol),4);
 
 %% Smoothing the mean
-if max(opt_smooth.fwhm) ~=0
+if max(opt.fwhm) ~=0
+    opt_smooth.fwhm = fwhm;
+    opt_smooth.voxel_size = voxel_size;
     abs_vol_mean = niak_smooth_vol(abs_vol_mean,opt_smooth);
 end
 
@@ -70,6 +78,13 @@ ind_seuil = min(max(otsu(Y),1),length(X));
 %% Building the mask
 mask = (abs_vol_mean>X(ind_seuil));
 
+%% Removing the eyes
+if flag_remove_eyes
+    [mask,list_size] = niak_find_connex_roi(mask);
+    [val,ind] = max(list_size);
+    mask = mask == ind;
+end
+    
 function seuil = otsu(hist)
 % An implementation of the Otsu algorithm to separate two Gaussian
 % distribution in an histogram.

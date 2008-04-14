@@ -54,6 +54,14 @@ function [direction_cosine,step,start] = niak_hdr_mat2minc(mat)
 % THE SOFTWARE.
 
 R = mat(1:3,1:3);
-step = eig(R);
+step = sqrt(diag(R'*R));
+
+%% Trying to guess the orientation of axis in voxel space.
+%% This is ugly ! but I don't have anything better for now.
+[val,ind] = max(abs(R),[],1);
+for num_d = 1:3
+    step(num_d) = step(num_d) * sign(R(ind(num_d),num_d));    
+end
+
 direction_cosine = R * (diag(step.^(-1)));
 start = direction_cosine^(-1)*mat(1:3,4);

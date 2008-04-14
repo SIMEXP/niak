@@ -17,11 +17,6 @@ gb_niak_viewersvg = 'eog'; % program to display svg files
 
 gb_niak_zip = 'gzip'; % The command to zip files
 
-gb_niak_format_demo = 'minc2'; % The file format of the default data. That could be 'minc1','minc2','analyze' or 'nifti'.
-
-%gb_niak_path_demo = cat(2,'/data/aces/aces1/pbellec/public/data_niak/',gb_niak_format_demo,filesep); % Where to find demo data
-gb_niak_path_demo = cat(2,'/media/hda3/database/data_niak/',gb_niak_format_demo,filesep); % Where to find demo data
-
 gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
 
 gb_niak_init_civet = 'init-sge.sh'; % Which script to use for initializing the CIVET quarantine
@@ -42,6 +37,28 @@ if exist('OCTAVE_VERSION')
     gb_niak_language = 'octave'; %% this is octave !
 else
     gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab
+end
+
+%% Where is NIAK ?
+str_read_vol = which('niak_read_vol');
+if isempty(str_read_vol)
+    error('NIAK is not in the path ! (could not find NIAK_READ_VOL)')
+end
+tmp_folder = niak_string2words(str_read_vol,{filesep});
+gb_niak_path_niak = filesep;
+for num_f = 1:(length(tmp_folder)-3)
+    gb_niak_path_niak = [gb_niak_path_niak tmp_folder{num_f} filesep];
+end
+
+%% Where is the NIAK demo 
+gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
+
+%% In which format is the niak demo
+gb_niak_format_demo = '';
+if exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc'))
+    gb_niak_format_demo = 'minc2';
+elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'))
+    gb_niak_format_demo = 'nii';
 end
 
 %% What is the operating system ?

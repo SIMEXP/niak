@@ -1,48 +1,61 @@
-function [vol_r,hdr_r] = niak_resample_vol(vol,hdr,opt)
+function [files_in,files_out,opt] = niak_resample_self(files_in,files_out,opt)
 
-% Resample a 3D volume by allowing a change in "voxel-to-world" coordinates
-% rigid-body transformation, and change in the voxel size.
+% Apply MINCRESAMPLE to resample a volume with a transformation to a target
+% space. The function allows to use source or target resolution, and to
+% resample the data such that the direction cosines are x, y and z
 %
 % SYNTAX:
-% [VOL_R,HDR_R] = NIAK_RESAMPLE_VOL(VOL,HDR,OPT)
-% 
-% INPUT:
-% VOL   (3D or 3D+t array) data that needs to be resampled.
+% [FILES_IN,FILES_OUT,OPT] = NIAK_RESAMPLE_SELF(FILES_IN,FILES_OUT,OPT)
 %
-% HDR   (structure) the header associated with the data (see
-%           NIAK_READ_VOL). The only important fields are HDR.INFO.VOXEL_SIZE 
-%           and HDR.INFO.MAT (they define the "voxel-to-world" coordinates 
-%           transformation and the sampling rate).
+% INPUTS:
+% FILES_IN      (structure) with the following fields :
+%                 SOURCE (string) name of the file to resample.
+%                 TARGET (string) name of the file defining space (can be
+%                   the same as SOURCE)
+%                 TRANSFORMATION (string, default identity)  name of a xfm transformation file
+%                   to apply on SOURCE.
 %
-% OPT   (structure) with the following fields :
+% FILES_OUT     (string,default <BASE_SOURCE>_res) the name of the output resampled volume.
 %
-%       INTERPOLATION (string, default 'linear') The method for performing 
-%           the spatial interpolation. Available options are :
-%           'nearest','linear','spline','cubic'
-% 
-%       VOXEL_SIZE (vector 3*1, default same as original) the new voxel size 
-%          for the respective dimensions of VOL.
+% OPT           (structure, optional) has the following fields:
 %
-%       MAT (4*4 matrix, default identity) a transformation to apply on 
-%           the data. MAT(1:3,1:3) defines the rotation, while
-%           MAT(1:3,4) defines the translation. 
-% 
-% OUTPUT:
-% VOL_R (3D+t or 3D array) the resampled data.
+%       INTERPOLATION (string, default 'sinc') the spatial
+%          interpolation method. Available options : 'trilinear', 'tricubic',
+%          'nearest_neighbour','sinc'.
 %
-% HDR_R (structure) an updated version of HDR.
-% 
+%         FLAG_TFM_SPACE (boolean, default 1) if FLAG_TFM_SPACE is 0, the
+%            transformation is applied and the volume is resampled in the 
+%            target space. If FLAG_TFM_SPACE is 1, the volume is resampled 
+%           in such a way that there is no rotations anymore between voxel 
+%           and world space.
+%
+%         VOXEL_SIZE (vector 1*3, default same as target space) If
+%            voxel_size is set to 0, the resolution for resampling
+%            will be the same as the source space. Otherwise, the specified
+%            resolution will be used.
+%
+%         FOLDER_OUT (string, default: path of FILES_IN) If present,
+%            all default outputs will be created in the folder FOLDER_OUT.
+%            The folder needs to be created beforehand.
+%
+%         FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
+%            brick does not do anything but update the default
+%            values in FILES_IN and FILES_OUT.
+%
+%
+% OUTPUTS:
+% The resampled volume.
+%
 % COMMENTS:
-% This function is based on the matlab function INTERP3.
+% This is a simple wrapper of MINCRESAMPLE.
+% This function will work only for images in axial convention. Apply
+% MINCRESHAPE to the images beforehand if it is not the case.
 %
-% SEE ALSO:
-% niak_read_hdr_minc, niak_write_minc, niak_write_vol.
-%
-% Copyright (c) Pierre Bellec, McConnel Brain Imaging Center, Montreal 
-% Neurological Institute, McGill University, Montreal, Canada, 2008.
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
+% Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, I/O, reader, minc
+% Keywords : medical imaging, minc
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -62,63 +75,103 @@ function [vol_r,hdr_r] = niak_resample_vol(vol,hdr,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-%% Setting up default values for the header
-if ~exist('hdr')
-    error('Please specify HDR, the header associated with your data');
-else
-    if ~isfield(hdr,'info')
-        error('HDR should have a field INFO');
-    else
-        if ~isfield(hdr.info,'mat')
-            error('HDR.INFO should have a field MAT');
-        end
-        if ~isfield(hdr.info,'voxel_size')
-            error('HDR.INFO should have a field VOXEL_SIZE');
-        end
-    end
-end
-
-transf1 = hdr.info.mat;
-voxel_size1 = abs(hdr.info.voxel_size);
-step = sign(hdr.info.voxel_size);
-
-%% Setting up default values for options
-gb_name_structure = 'opt';
-gb_list_fields = {'interpolation','mat','voxel_size'};
-gb_list_defaults = {'linear',[eye(3) zeros([3 1]); zeros([1 3]) 1],[]};
+% Setting up inputs
+gb_name_structure = 'files_in';
+gb_list_fields = {'source','target','transformation'};
+gb_list_defaults = {NaN,NaN,''};
 niak_set_defaults
 
-transf2 = opt.mat;
-if isempty(opt.voxel_size)
-    voxel_size2 = voxel_size1;
-else
-    voxel_size2 = opt.voxel_size;
+% Setting up default
+gb_name_structure = 'opt';
+gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test'};
+gb_list_defaults = {'sinc',1,[],'',0};
+niak_set_defaults
+
+%% Generating default ouputs
+[path_f,name_f,ext_f] = fileparts(files_in.source);
+
+if isempty(path_f)
+    path_f = '.';
 end
 
-%% Initializing the coordinates 
-[nx,ny,nz,nt] = size(vol);
+if strcmp(ext_f,'.gz')
+    [tmp,name_f,ext_f] = fileparts(name_f);
+end
 
-nx2 = ceil((voxel_size1(1)/voxel_size2(1))*nx);
-ny2 = ceil((voxel_size1(2)/voxel_size2(2))*ny);
-nz2 = ceil((voxel_size1(3)/voxel_size2(3))*nz);
+if isempty(opt.folder_out)
+    folder_write = path_f;
+else
+    folder_write = opt.folder_out;
+end
 
-[XI,YI,ZI] = meshgrid(1:nx2,1:ny2,1:nz2);
-coord2 = transf1^(-1) * transf2 * transf1 * [diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1] * [XI(:)'-1;YI(:)'-1;ZI(:)'-1; ones([1 length(XI(:))])];
-coord2 = coord2(1:3,:)';
-coord2 = reshape(coord2,[size(XI,1),size(XI,2),size(XI,3),3]);
-clear XI YI ZI 
-% ind2 = (1:prod([nx2,ny2,nz2]))'; % the target space ....
-% [indx2,indy2,indz2] = ind2sub([nx2,ny2,nz2],ind2);
-% clear ind2
-% coord2 = transf1^(-1)*transf2*transf1*[diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1]*[indx2'-1;indy2'-1;indz2'-1; ones([1 length(indx2)])];
-% clear indx2 indy2 indz2
-% coord2 = coord2(1:3,:)';
+if isempty(files_out)
+    files_out = cat(2,folder_write,filesep,name_f,'_res',ext_f);
+end
 
-%% Applying the resampling
-%vol_r = interp3(0:nx-1,0:ny-1,0:nz-1,vol,coord2(:,2),coord2(:,1),coord2(:,3),interpolation,0);
-vol_r = interp3(0:nx-1,0:ny-1,0:nz-1,vol,coord2(:,:,:,1),coord2(:,:,:,2),coord2(:,:,:,3),interpolation,0);
-vol_r = reshape(vol_r,[nx2,ny2,nz2]);
-hdr_r = hdr;
-hdr_r.info.mat = transf2*transf1*[diag(voxel_size2./voxel_size1) zeros([3 1]); zeros([1 3]) 1];
-hdr_r.info.voxel_size = voxel_size2.*step;
+if flag_test == 1
+    return
+end
+
+%% Reading the source/target space information
+hdr_source = niak_read_vol(files_in.source);
+[dircos1,step1,start1] = niak_hdr_mat2minc(hdr_source.info.mat);
+if min(voxel_size == 0) == 1
+    voxel_size = abs(step1(:))';
+end
+nx1 = hdr_source.info.dimensions(1);
+ny1 = hdr_source.info.dimensions(2);
+nz1 = hdr_source.info.dimensions(3);
+
+hdr_target = niak_read_vol(files_in.target);
+[dircos2,step2,start2] = niak_hdr_mat2minc(hdr_target.info.mat);
+if isempty(voxel_size)
+    voxel_size = abs(step2(:))';
+end
+nx2 = hdr_target.info.dimensions(1);
+ny2 = hdr_target.info.dimensions(2);
+nz2 = hdr_target.info.dimensions(3);
+
+%% Resample the target if necessary
+if flag_tfm_space | (min(voxel_size == step2)<1)
+    nx3 = ceil(abs(step2(1)./voxel_size(1))*nx2);
+    ny3 = ceil(abs(step2(2)./voxel_size(2))*ny2);
+    nz3 = ceil(abs(step2(3)./voxel_size(3))*nz2);
+    
+    if step2(1) < 0
+        start2(1) = start2(1) + step2(1)*nx2;
+        step2(1) = abs(step2(1));
+    end
+   
+    if step2(2) < 0
+        start2(2) = start2(2) + step2(2)*nx2;
+        step2(2) = abs(step2(2));
+    end
+    
+    if step2(3) < 0
+        start2(3) = start2(1) + step2(3)*nx2;
+        step2(3) = abs(step2(3));
+    end
+
+    if flag_tfm_space
+        dircos = [1 0 0 0 1 0 0 0 1];
+    else
+        dircos = dircos2;
+    end
+    
+    file_target_tmp = niak_file_tmp('_target.mnc');
+    instr_target = cat(2,'mincresample ',files_in.target,' ',file_target_tmp,' -clobber -dircos ',num2str(dircos),' -step ',num2str(voxel_size),' -start ',num2str(start2'),' -trilinear -nelements ',num2str(nx3),' ',num2str(ny3),' ',num2str(nz3));
+    [tmp,str_tmp] = system(instr_target);
+end
+
+%% Resample the source on the target
+if ~isempty(files_in.transformation)
+    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp);
+else
+    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp);
+end
+[tmp,str_tmp] = system(instr_resample);
+
+%% Clean temporary stuff
+delete(file_target_tmp)
+
 

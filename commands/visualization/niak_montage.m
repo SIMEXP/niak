@@ -18,27 +18,29 @@ function [] = niak_montage(vol,opt)
 %                   VOL_LIMITS (vector 2*1, default [min(vol(:)) max(vol(:))]) 
 %                       limits of the color scaling.
 %
-%                   TYPE_COLOR (string, default 'gray') colormap name.
+%                   TYPE_COLOR (string, default 'jet') colormap name.
 %
 %                   FWHM_SMOOTH (double, default 0) smooth the image with a 
 %                       isotropic Gaussian kernel of SMOOTH fwhm (in voxels).
 %
-%                   TYPE_FLIP (boolean, default '') make rotation and
+%                   TYPE_FLIP (boolean, default 'rot90') make rotation and
 %                           flip of the slice representation. see
-%                           niak_flip_vol for options.
+%                           niak_flip_vol for options. 'rot90' will work
+%                           for images whose voxels is x/y/z respectively
+%                           oriented from left to right, from anterior to
+%                           posterior, and from ventral to dorsal. In this
+%                           case, left is left on the image.
 %
 % OUTPUTS:
 % a 'montage' style visualization of each slice of the volume
 %
-% TODO:
-% The smoothing option is not currently implemented.
-%
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
+% Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, I/O, reader, minc
+% Keywords : medical imaging, montage, visualization
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -60,8 +62,8 @@ function [] = niak_montage(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'type_slice','vol_limits','type_color','fwhm_smooth','type_flip'};
-gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'gray',0,''};
+gb_list_fields = {'type_slice','vol_limits','type_color','fwhm','type_flip'};
+gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90'};
 niak_set_defaults
 
 colormap(type_color);
@@ -87,7 +89,7 @@ N = ceil(sqrt(nz));
 M = ceil(nz/N);
 
 if fwhm_smooth>0
-    opt_smooth.fwhm = fwhm_smooth;
+    opt_smooth.fwhm = opt.fwhm;
     vol = niak_smooth_vol(vol,opt_smooth);
 end
 

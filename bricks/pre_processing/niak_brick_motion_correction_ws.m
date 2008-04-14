@@ -56,9 +56,9 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
-%       INTERPOLATION (string, default 'linear') the spatial
-%          interpolation method. Available options : 'linear', 'cubic',
-%          'spline'.
+%       INTERPOLATION (string, default 'sinc') the spatial
+%          interpolation method. Available options : 'trilinear', 'tricubic',
+%          'nearest_neighbour','sinc'.
 %
 %       FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
 %           attempt will be made to zip the outputs.
@@ -137,7 +137,7 @@ niak_set_defaults
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'vol_ref','run_ref','flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm'};
-gb_list_defaults = {1,1,0,0,'','linear',1,8};
+gb_list_defaults = {1,1,0,0,'','sinc',1,8};
 niak_set_defaults
 
 %% Building default output names
@@ -224,6 +224,7 @@ for num_r = list_run
 
     [hdr,data] = niak_read_vol(file_name);
     hdr.flag_zip = 0;
+    data_r = zeros(size(data));
 
     %% Generating brain mask
     vol_abs = mean(abs(data),4);
@@ -255,7 +256,7 @@ for num_r = list_run
         end
         
         %% Smoothing
-        opt_s.step = hdr.info.voxel_size;
+        opt_s.voxel_size = hdr.info.voxel_size;
         vol_target = niak_smooth_vol(vol_target,opt_s);        
         
         %% writting the target
@@ -284,7 +285,7 @@ for num_r = list_run
         nb_vol(num_r) = 1;
     end
 
-    opt_s.step = hdr.info.voxel_size;
+    opt_s.voxel_size = hdr.info.voxel_size;
 
     tab_parameters = zeros([nb_vol(num_r) 8]);
 
@@ -294,8 +295,8 @@ for num_r = list_run
         fprintf(hf_mp,'pitch roll yaw tx ty tz XCORR_init XCORR_final\n');
     end
 
-    for num_v = 1:nb_vol(num_r)    
-    %for num_v = [1 11 12];    
+    list_vols = 1:nb_vol(num_r);    
+    for num_v = list_vols
         
         if flag_verbose
             fprintf('%i ',num_v);
@@ -321,7 +322,7 @@ for num_r = list_run
         else
 
             if num_v == 1               
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 6 6 6'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -voxel_size 6 6 6'));
             else                                
                 [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 6 6 6'));
             end
@@ -350,8 +351,32 @@ for num_r = list_run
         [pry,tsl] = niak_transf2param(transf);
 
         tab_parameters(num_v,1:3) = pry';
-        tab_parameters(num_v,4:6) = tsl';
+        tab_parameters(num_v,4:6) = tsl';                
 
+        %% If resampling data has been requested (or deriving the resampled
+        %% mean or mask), perform linear interpolation
+        if ~strcmp(files_out.motion_corrected_data,'gb_niak_omitted')|~strcmp(files_out.mask_volume,'gb_niak_omitted')|~strcmp(files_out.mean_volume,'gb_niak_omitted')           
+            
+            files_in_res.source = niak_file_tmp('_vol_orig.mnc');
+            files_in_res.target = file_target;
+            files_in_res.transformation = xfm_tmp;
+            files_out_res = niak_file_tmp('_vol_r.mnc');
+            opt_res.flag_tfm_space = 1;
+            opt_res.voxel_size = [];
+            hdr.file_name = files_in_res.source;            
+            niak_write_vol(hdr,data(:,:,:,num_v));            
+            niak_resample_vol(files_in_res,files_out_res,opt_res);            
+            [hdr_r,vol_r] = niak_read_vol(files_out_res);
+            delete(files_out_res);
+            delete(files_in_res.source);            
+            data_r(:,:,:,num_v) = vol_r;
+            
+        end
+
+        %% If requested, write the motion parameters in a log file
+        if ~strcmp(files_out.motion_parameters,'gb_niak_omitted')            
+            fprintf(hf_mp,'%s\n',num2str(tab_parameters(num_v,:),12));
+        end
         
         % Cleaning temporary files
         if num_v > 1
@@ -360,21 +385,6 @@ for num_r = list_run
 
         delete(file_vol);
         xfm_tmp_old = xfm_tmp;
-
-        %% If resampling data has been requested (or deriving the resampled
-        %% mean or mask), perform linear interpolation
-        if ~strcmp(files_out.motion_corrected_data,'gb_niak_omitted')|~strcmp(files_out.mask_volume,'gb_niak_omitted')|~strcmp(files_out.mean_volume,'gb_niak_omitted')
-            hdr_r2 = hdr;
-            opt_r2.voxel_size = hdr_ref.info.voxel_size; % The resampling is done at the same resolution as the run of reference
-            opt_r2.interpolation = interpolation;
-            opt_r2.mat = transf; % The transformation estimated by MINCTRACC is applied
-            data(:,:,:,num_v) = niak_resample_vol(data(:,:,:,num_v),hdr_r2,opt_r2); % The resampling per say
-        end
-
-        %% If requested, write the motion parameters in a log file
-        if ~strcmp(files_out.motion_parameters,'gb_niak_omitted')            
-            fprintf(hf_mp,'%s\n',num2str(tab_parameters(num_v,:),12));
-        end
 
     end
     delete(xfm_tmp); % Delete the last temporary file...
@@ -387,8 +397,8 @@ for num_r = list_run
     end
 
     if ~strcmp(files_out.motion_corrected_data,'gb_niak_omitted')
-        hdr_ref.file_name = files_out.motion_corrected_data{num_r};
-        niak_write_vol(hdr_ref,data);
+        hdr_r.file_name = files_out.motion_corrected_data{num_r};
+        niak_write_vol(hdr_r,data_r);
     end
 
     %% If requested, write the motion parameters in a log file
@@ -415,11 +425,13 @@ for num_r = list_run
         
     %% If requested, keep track of the functional mean
     if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
-        mean_vol{num_r} = mean(data,4);
+        mean_vol{num_r} = mean(data_r(:,:,:,list_vols),4);
     end
 
     %% If requested, keep track of the functional mask
     if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
+        vol_mean_abs_r = mean(abs(data_r(:,:,:,list_vols)),4);
+        mask = niak_mask_brain(vol_mean_abs_r);
         mask_vol{num_r} = mask;
     end
 
@@ -438,8 +450,8 @@ if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
     end
 
     mean_vol_all = mean_vol_all/nb_run;
-    hdr_ref.file_name = files_out.mean_volume;
-    niak_write_vol(hdr_ref,mean_vol_all);
+    hdr_r.file_name = files_out.mean_volume;
+    niak_write_vol(hdr_r,mean_vol_all);
 
 end
 
@@ -452,8 +464,8 @@ if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
         mask_vol_all = mask_vol_all & mask_vol{num_r};
     end
 
-    hdr_ref.file_name = files_out.mask_volume;
-    niak_write_vol(hdr_ref,mask_vol_all);
+    hdr_r.file_name = files_out.mask_volume;
+    niak_write_vol(hdr_r,mask_vol_all);
 
 end
 

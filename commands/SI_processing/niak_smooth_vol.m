@@ -9,7 +9,7 @@ function [vol_s,extras] = niak_smooth_vol(vol,opt)
 % VOL         (4D array) a 3D+t dataset
 % OPT         (structure, optional) with the following fields :
 %
-%             STEP  (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%             VOXEL_SIZE  (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
 %                   in the respective dimensions, i.e. the space in mmm
 %                   between two voxels in x, y, and z (yet the unit is
 %                   irrelevant and just need to be consistent with
@@ -56,12 +56,12 @@ function [vol_s,extras] = niak_smooth_vol(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'step','fwhm'};
+gb_list_fields = {'voxel_size','fwhm'};
 gb_list_defaults = {[1 1 1],[2 2 2]};
 niak_set_defaults
 
-if length(step)>3
-    step = step(1:3);
+if length(voxel_size)>3
+    voxel_size = voxel_size(1:3);
 end
 
 if length(fwhm)==1
@@ -75,10 +75,10 @@ else
     [nx,ny,nz,nt] = size(vol);
 end
 
-step = abs(step);
+voxel_size = abs(voxel_size);
 
 % Deriving kernel parameters
-s  = fwhm(1:3)./step(1:3);      % fwhm relative to voxel size
+s  = fwhm(1:3)./voxel_size(1:3);      % fwhm relative to voxel size
 s  = max(s,ones(size(s)));	    % lower bound on FWHM
 s  = s/sqrt(8*log(2));          % FWHM -> Gaussian parameter
 

@@ -89,7 +89,7 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','step','flag_verbose','flag_test','folder_out','flag_zip'};
+gb_list_fields = {'fwhm','voxel_size','flag_verbose','flag_test','folder_out','flag_zip'};
 gb_list_defaults = {[2 2 2],[],1,0,'',0};
 niak_set_defaults
 
@@ -140,11 +140,11 @@ end
 %% Performing slice timing correction
 [hdr,vol] = niak_read_vol(files_in);
 
-if isempty(opt.step)
-    opt.step = hdr.info.voxel_size;
+if isempty(opt.voxel_size)
+    opt.voxel_size = hdr.info.voxel_size;
 end
 
-opt_s.step = opt.step;
+opt_s.voxel_size = opt.voxel_size;
 opt_s.fwhm = opt.fwhm;
 [vol_s,opt] = niak_smooth_vol(vol,opt_s);
 
