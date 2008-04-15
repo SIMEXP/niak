@@ -20,7 +20,7 @@ function [] = niak_montage(vol,opt)
 %
 %                   TYPE_COLOR (string, default 'jet') colormap name.
 %
-%                   FWHM_SMOOTH (double, default 0) smooth the image with a 
+%                   FWHM (double, default 0) smooth the image with a 
 %                       isotropic Gaussian kernel of SMOOTH fwhm (in voxels).
 %
 %                   TYPE_FLIP (boolean, default 'rot90') make rotation and
@@ -88,7 +88,7 @@ end
 N = ceil(sqrt(nz));
 M = ceil(nz/N);
 
-if fwhm_smooth>0
+if fwhm>0
     opt_smooth.fwhm = opt.fwhm;
     vol = niak_smooth_vol(vol,opt_smooth);
 end
