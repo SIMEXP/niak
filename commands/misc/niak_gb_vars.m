@@ -17,13 +17,13 @@ gb_niak_viewersvg = 'eog'; % program to display svg files
 
 gb_niak_zip = 'gzip'; % The command to zip files
 
-gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
+gb_niak_path_civet = '/media/hda3/quarantines/Feb-14-2008/'; % Where to find the CIVET quarantine
 
 gb_niak_init_civet = 'init-sge.sh'; % Which script to use for initializing the CIVET quarantine
 
 gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
 
-gb_niak_command_octave = 'octave-2.9.9'; % how to invoke octave
+gb_niak_command_octave = 'octave'; % how to invoke octave
 
 gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all.q@dow,all.q@gertrude,all.q@gobbo,all.q@gonzalo,all.q@grumpy,all.q@gypsy,all.q@oberon,all.q@penfolds,all.q@phebe,all.q@philemon,all.q@pluto,all.q@portia,all.q@rosaline,all.q@silius,all.q@snout,all.q@snug,all.q@taylor,all.q@theseus,all.q@valhalla,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
 
@@ -31,7 +31,7 @@ gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_version = '0.1.2'; % 
+gb_niak_version = '0.2.2'; % 
 
 if exist('OCTAVE_VERSION')    
     gb_niak_language = 'octave'; %% this is octave !

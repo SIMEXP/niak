@@ -1,11 +1,11 @@
-function [files_in,files_out,opt] = niak_resample_self(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_resample_vol(files_in,files_out,opt)
 
 % Apply MINCRESAMPLE to resample a volume with a transformation to a target
 % space. The function allows to use source or target resolution, and to
 % resample the data such that the direction cosines are x, y and z
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_RESAMPLE_SELF(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
 % FILES_IN      (structure) with the following fields :

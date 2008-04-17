@@ -69,9 +69,10 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                       default name will be applied.
 %
 % OPT           (structure) with the following fields:
-% 
-%                TR (real) the repetition time of the time series (s)
-%                    which is the inverse of the sampling frequency (Hz).
+%
+%                FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
+%                    brick does not do anything but update the default 
+%                    values in FILES_IN and FILES_OUT.
 %
 %                HP (real, default: -Inf) the cut-off frequency for high pass
 %                    filtering. opt.hp = -Inf means no high-pass filtering.
@@ -86,9 +87,12 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                    all default outputs will be created in the folder FOLDER_OUT.
 %                    The folder needs to be created beforehand.
 %
-%                FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
-%                    brick does not do anything but update the default 
-%                    values in FILES_IN and FILES_OUT.
+%                TR (real, default : use image information) the repetition 
+%                    time of the time series (s) which is the inverse of the 
+%                    sampling frequency (Hz). Specify a value here only if
+%                    you want to override the information in the image, or
+%                    if you are using an image format where this
+%                    information is absent, i.e. analyze.
 %               
 % OUTPUTS:
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
@@ -140,7 +144,7 @@ niak_set_defaults
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'tr','hp','lp','folder_out','flag_test','flag_zip'};
-gb_list_defaults = {NaN,NaN,NaN,'',0,0};
+gb_list_defaults = {-Inf,-Inf,Inf,'',0,0};
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));
@@ -219,7 +223,18 @@ end
 
 %% Performing temporal filtering
 [hdr,vol] = niak_read_vol(files_in);
-opt_f.tr = opt.tr;
+
+if tr == -Inf
+    
+    if isfield(opt.info,'tr')
+        opt_f.tr = hdr.info.tr;
+    else
+        error('please specify the TR of the fMRI data in opt.tr')
+    end
+    
+else
+    opt_f.tr = opt.tr;
+end
 opt_f.lp = opt.lp;
 opt_f.hp = opt.hp;
 

@@ -1,27 +1,24 @@
-function mask_f = niak_find_str_cell(cell_str,cell_str2)
+function flag = niak_write_transf(transf,file_name)
 
-% Test if one of many strings are substrings of another list of strings
+% Save a lsq12 transformation matrix into an xfm file
 %
 % SYNTAX:
-% MASK_F = NIAK_FIND_STR_CELL(CELL_STR,CELL_STR2)
+% [FLAG,MSG] = NIAK_WRITE_TRANSF(TRANSF,FILE_NAME)
 % 
 % INPUTS:
-% CELL_STR      (string or cell of strings)
-% CELL_STR2     (string or cell of strings)
+% TRANSF        (matrix 4*4) a classical matrix representation of an lsq12
+%               transformation.
+% FILE_NAME     (string) the name of the xfm file (usually ends in .xfm)
 % 
 % OUTPUTS:
-% MASK_F        (vector) MASK_F(i) equals 1 if CELL_STR2{j} contains 
-%               CELL_STR{i} for any j, 0 otherwise. If one argument is a
-%               simple string, it is converted into a cell of string with
-%               one element.
+% FLAG          (real number) if FLAG == -1, an error occured
 %
 % SEE ALSO:
-% NIAK_CMP_STR_CELL
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : string
+% Keywords : xfm, minc
 
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -42,24 +39,21 @@ function mask_f = niak_find_str_cell(cell_str,cell_str2)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if ischar(cell_str)
-    str2{1} = cell_str;
-    cell_str = str2;
-    clear str2
+niak_gb_vars
+
+hf = fopen(file_name,'w');
+if hf == -1
+    flag = -1;
+    error('could not create file %s',file_name)
+else
+    flag = 1;
 end
 
-if ischar(cell_str2)
-    str2{1} = cell_str2;
-    cell_str2 = str2;
-    clear str2
-end
+fprintf(hf,'MNI Transform File\n');
+fprintf(hf,'%%Created using NIAK v.%s, %s, by %s\n',gb_niak_version,datestr(now),gb_niak_user)  ;
+fprintf(hf,'\nTransform_Type = Linear;\nLinear_Transform =\n');
+fprintf(hf,'%s\n',num2str(transf(1,:),15));
+fprintf(hf,'%s\n',num2str(transf(2,:),15));
+fprintf(hf,'%s;\n',num2str(transf(3,:),15));
 
-nb_e = length(cell_str);
-nb_f = length(cell_str2);
-mask_f = zeros([nb_e 1]);
-
-for num_e = 1:nb_e
-    for num_f = 1:nb_f
-        mask_f(num_e) = mask_f(num_e)|~isempty(findstr(cell_str{num_e},cell_str2{num_f}));
-    end
-end
+fclose(hf);

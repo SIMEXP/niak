@@ -46,11 +46,9 @@ niak_gb_vars
 %% Setting input/output files
 switch gb_niak_format_demo
     
-    case 'minc2' % If data are in minc2 format
+    case 'minc2' % If data are in minc2 format        
         
-        %% There is only one session...
-        %files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};                
-        files_in.runs = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
+        files_in = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
         
     otherwise 
         
@@ -60,8 +58,7 @@ end
 %% Setting output files
 files_out.motion_corrected_data = ''; % use default names
 files_out.motion_parameters = ''; % use default names
-files_out.mask_volume = ''; % use default names
-files_out.mean_volume = ''; % use default names
+files_out.target = ''; % use default names
 files_out.fig_motion = ''; % use default names
 
 %% Options

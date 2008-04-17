@@ -10,9 +10,7 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 % PIPELINE      (structure) a matlab structure which defines a pipeline.
 %                       Each field <STAGE_NAME> is a structure. Note that 
 %                       <STAGE_NAME> will be used to name jobs in PMP and 
-%                       set dependencies. Note also that, by
-%                       definition of a matlab structure, all <STAGE_NAME>
-%                       are distinct from each other). <STAGE_NAME> has the
+%                       set dependencies. <STAGE_NAME> has the
 %                       following fields : 
 %               
 %               LABEL (string, default '') any string you want. This will only be used
@@ -23,41 +21,25 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %                       this stage. This command can use the variables 
 %                       FILES_IN, FILES_OUT and OPT. Example :
 %                       'niak_brick_something(files_in,files_out,opt);'
+%                       'my_function(opt)'
 %
 %               FILES_IN (string, cell of strings, structure) the argument
 %                      FILES_IN of the BRICK. Note that for properly
 %                      handling dependencies, this field needs to contain
 %                      the exact name of the file (no wildcards, no '' for
-%                      default values). One way is to run the command with
-%                       OPT.FLAG_TEST = 1 a first time in order to get all
-%                       default values set for you.
+%                      default values). 
 %
 %               FILES_OUT (string, cell of strings, structure) the argument
 %                      FILES_OUT of the BRICK. Note that for properly
 %                      handling dependencies, this field needs to contain
 %                      the exact name of the file (no wildcards, no '' for
-%                      default values). One way is to run the command with
-%                       OPT.FLAG_TEST = 1 a first time in order to get all
-%                       default values set for you.
+%                      default values). 
 %
-%               OPT (string, structure) the argument
-%                      FILES_OUT of the BRICK. Note that for properly
-%                      keeping track of the options you used, all fields of 
-%                      this structure should be specified, meaning that you 
-%                      won't let the command apply default values. One way to
-%                      do that is to run the command with OPT.FLAG_TEST = 1 a
-%                       first time in order to get all default values set for 
-%                       you.
+%               OPT (any matlab variable) options of the BRICK. 
 %
 %               ENVIRONMENT (string, default 'octave') the environment 
 %                      where the BRICK should run. Available options : 
-%                       'matlab', 'octave' or 'bash'. 
-%                      In 'bash' mode, the 'int-sge.sh' script of
-%                      the CIVET quarantine will be sourced by default. The
-%                      fields FILES_IN, FILES_OUT and OPT will be ignored. The
-%                      field BRICK should be a (string) shell command, 
-%                      where input files are preceded by a 'in:' and output
-%                      files preceded by a 'out:'.
+%                       'matlab', 'octave'. 
 %
 %
 % OPT           (structure) with the following fields :

@@ -7,9 +7,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %   [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION_WS(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
-%   FILES_IN
-%
-%       RUNS (cell of strings, where each string is the file name of a
+%   FILES_IN (cell of strings, where each string is the file name of a
 %           3D+t dataset)
 %           All files should be fMRI data of ONE subject acquired in a
 %           single session (small movements).
@@ -34,13 +32,14 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %           Each subsequent line I+1 is a representation
 %           of the motion parameters estimated for session I.
 %
-%       MEAN_VOLUME (string, default base MEAN_<BASE_FILE_IN>) the mean volume
-%           of all coregistered runs.
+%       TARGET (string, default TARGET_<BASE_FILE_IN>) the target for
+%           coregistration (smoothed volume of reference of the run of
+%           reference).
 %
-%       MASK_VOLUME (string, default base MASK_<BASE_FILE_IN>) A mask of
-%           the brain common to all runs (after motion correction).
+%       MASK (string, default MASK_<BASE_FILE_IN>) the mask used for
+%          coregistration.
 %
-%       FIG_MOTION  (string, default base FIG_MOTION_<BASE_FILE_IN>.JPG) A figure
+%       FIG_MOTION  (string, default base FIG_MOTION_<BASE_FILE_IN>.EPS) A figure
 %          representing the motion parameters.
 %
 %   OPT   (structure) with the following fields:
@@ -130,7 +129,7 @@ end
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'motion_corrected_data','motion_parameters','mean_volume','mask_volume','fig_motion'};
+gb_list_fields = {'motion_corrected_data','motion_parameters','fig_motion','target','mask'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
@@ -145,7 +144,7 @@ flag_def_data = isempty(files_out.motion_corrected_data);
 flag_def_mp= isempty(files_out.motion_parameters);
 flag_def_fm = isempty(files_out.fig_motion);
 
-files_name = files_in.runs;
+files_name = files_in;
 nb_files = length(files_name);
 
 motion_corrected_data = cell([nb_files 1]);
@@ -177,8 +176,8 @@ for num_d = 1:length(files_name)
         motion_parameters{num_d} = cat(2,folder_write,filesep,'motion_params_',name_f,'.log');
     end
     
-    if flag_def_fm
-        files_out.fig_motion{num_d} = cat(2,folder_write,filesep,'fig_motion_',name_f,'.jpg');
+    if (flag_def_fm)&(num_d==run_ref)
+        files_out.fig_motion = cat(2,folder_write,filesep,'fig_motion_',name_f,'.eps');
     end
 
 end %loop over datasets
@@ -191,12 +190,12 @@ if flag_def_mp
     files_out.motion_parameters = motion_parameters;
 end
 
-if isempty(files_out.mask_volume)
-    files_out.mask_volume = cat(2,folder_write,filesep,'mask_',name_f,ext_f);
+if isempty(files_out.target)
+    files_out.target = cat(2,folder_write,filesep,'target_',name_f,ext_f);
 end
 
-if isempty(files_out.mean_volume)
-    files_out.mean_volume = cat(2,folder_write,filesep,'mean_',name_f,ext_f);
+if isempty(files_out.mask)
+    files_out.target = cat(2,folder_write,filesep,'mask_',name_f,ext_f);
 end
 
 if flag_test == 1
@@ -207,16 +206,16 @@ end
 %% Estimation of motion parameters %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nb_run = length(files_in.runs);
+nb_run = length(files_in);
 nb_vol = zeros([nb_run 1]);
-hdr = niak_read_vol(files_in.runs{1});
+hdr = niak_read_vol(files_in{1});
 list_run = 1:nb_files;
 list_run = [run_ref list_run(list_run~=run_ref)];
 opt_s.fwhm = fwhm;
 
 for num_r = list_run
 
-    file_name = files_in.runs{list_run(num_r)};
+    file_name = files_in{list_run(num_r)};
 
     if flag_verbose
         fprintf('\n********\nrun %s\n********\n',file_name);
@@ -309,6 +308,7 @@ for num_r = list_run
     end
 
     list_vols = 1:nb_vol(num_r);    
+    %list_vols = 1:3;
     for num_v = list_vols
         
         if flag_verbose
@@ -335,21 +335,13 @@ for num_r = list_run
         else
 
             if num_v == 1               
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -voxel_size 6 6 6'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 6 6 6'));
             else                                
                 [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 6 6 6'));
             end
 
-            %% Converting the xfm transformation into a roll/pitch/yaw and
-            %% translation format
-            hf = fopen(xfm_tmp);
-            xfm_info = fread(hf,Inf,'uint8=>char')';
-            cell_info = niak_string2lines(xfm_info);
-            transf = eye(4);
-            transf(1,:) = str2num(cell_info{end-2});
-            transf(2,:) = str2num(cell_info{end-1});
-            transf(3,:) = str2num(cell_info{end}(1:end-1));
-            fclose(hf);
+            %% Reading the transformation
+            transf = niak_read_transf(xfm_tmp);
 
             %% Keeping record of the objective function values before and after
             %% optimization
@@ -361,6 +353,8 @@ for num_r = list_run
             
         end
 
+        %% Converting the xfm transformation into a roll/pitch/yaw and
+        %% translation format
         [pry,tsl] = niak_transf2param(transf);
 
         tab_parameters(num_v,1:3) = pry';
@@ -368,7 +362,7 @@ for num_r = list_run
 
         %% If resampling data has been requested (or deriving the resampled
         %% mean or mask), perform linear interpolation
-        if ~strcmp(files_out.motion_corrected_data,'gb_niak_omitted')|~strcmp(files_out.mask_volume,'gb_niak_omitted')|~strcmp(files_out.mean_volume,'gb_niak_omitted')           
+        if ~ischar(files_out.motion_corrected_data)
             
             files_in_res.source = niak_file_tmp('_vol_orig.mnc');
             files_in_res.target = file_target;
@@ -420,67 +414,40 @@ for num_r = list_run
         fclose(hf_mp);
     end
 
-    %% If requested, write the figure of motion parameters
+    %% If requested, create a figure of motion parameters
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
             hfig = figure;
-            subplot(2,1,1);
+            subplot(2,num_r,1);
             plot(tab_parameters(:,4:6));
             title(sprintf('Estimated translation parameters, file %s',file_name));
             legend('x','y','z');
-            subplot(2,1,2);
+            subplot(2,num_r,2);
             plot(tab_parameters(:,[2 1 3]));
             title(sprintf('Estimated rotation parameters, file %s',file_name));
-            legend('pitch','roll','yaw');
-            saveas(hfig,files_out.fig_motion{num_r},'jpg')
-            close(hfig)
+            legend('pitch','roll','yaw');            
         end
-    end
-        
-    %% If requested, keep track of the functional mean
-    if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
-        mean_vol{num_r} = mean(data_r(:,:,:,list_vols),4);
-    end
-
-    %% If requested, keep track of the functional mask
-    if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
-        vol_mean_abs_r = mean(abs(data_r(:,:,:,list_vols)),4);
-        mask = niak_mask_brain(vol_mean_abs_r);
-        mask_vol{num_r} = mask;
-    end
+    end        
 
     % Cleaning temporary files
     delete(file_mask_source);
 
 end
 
-%% If requested, write the mean volume
-if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
-
-    mean_vol_all = zeros(size(mean_vol{1}));
-
-    for num_r = 1:nb_run
-        mean_vol_all = mean_vol_all + mean_vol{num_r};
-    end
-
-    mean_vol_all = mean_vol_all/nb_run;
-    hdr_r.file_name = files_out.mean_volume;
-    niak_write_vol(hdr_r,mean_vol_all);
-
+%% If requested, save a figure of motion parameters
+if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
+    saveas(hfig,files_out.fig_motion,'epsc')
+    close(hfig)
 end
 
-%% If requested, write the mask volume
-if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
+%% If requested, write the target volume
+if ~strcmp(files_out.target,'gb_niak_omitted')
+    copyfile(file_target,files_out.target);
+end
 
-    mask_vol_all = mask_vol{num_r};
-
-    for num_r = 1:nb_run
-        mask_vol_all = mask_vol_all & mask_vol{num_r};
-    end
-
-    hdr_r.file_name = files_out.mask_volume;
-    niak_write_vol(hdr_r,mask_vol_all);
-
+%% If requested, write the mask
+if ~strcmp(files_out.mask,'gb_niak_omitted')
+    copyfile(file_mask_target,files_out.mask);
 end
 
 % Cleaning temporary files

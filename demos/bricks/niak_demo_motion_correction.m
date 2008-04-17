@@ -45,12 +45,15 @@ niak_gb_vars
 
 %% Setting input/output files
 switch gb_niak_format_demo
-    
+        
     case 'minc2' % If data are in minc2 format
         
-        %% There is only one session...
-        files_in.sessions.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};        
-        files_in.t1 = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
+        %% The two datasets have actually been acquired in the same
+        %% session, but this is just to demonstrate how the procedure works
+        %% in general.
+        files_in.sessions.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc')};
+        files_in.sessions.session2 = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};        
+
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
@@ -58,19 +61,21 @@ end
 
 %% Setting output files
 files_out.motion_corrected_data = ''; % use default names
-files_out.motion_parameters_dat = ''; % use default names
-files_out.motion_parameters_xfm = ''; % use default names
-files_out.transf_within_session_dat = ''; % use default names
-files_out.transf_within_session_xfm = ''; % use default names
-files_out.transf_between_session_dat  = ''; % use default names
-files_out.transf_between_session_xfm  = ''; % use default names
-files_out.transf_func2t1_xfm = ''; % use default names
+files_out.motion_parameters = ''; % use default names
+files_out.transf_within_session = ''; % use default names
+files_out.transf_between_session  = ''; % use default names
+files_out.mean_volume = ''; % use default names
+files_out.mask_volume = ''; % use default names
+files_out.fig_motion  = ''; % use default names
 
 %% Options
-opt.vol_ref = 40;
 
-opt.flag_test = 1;
-[files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);
+opt.flag_session = 0; % Correct for within-run motion
+opt.vol_ref = 1; % Use the 40th volume as a reference 
+opt.flag_test = 0; % Actually perform the motion correction
+
+niak_brick_motion_correction
+%[files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
 

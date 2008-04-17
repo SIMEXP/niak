@@ -48,8 +48,8 @@ switch gb_niak_format_demo
     
     case {'minc1','minc2'} % If data are in minc1 or minc2 format
                 
-        files_in.functional = cat(2,gb_niak_path_demo,filesep,'mean_func_rest_subject2.mnc');
-        files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject2.mnc');
+        files_in.functional = cat(2,gb_niak_path_demo,filesep,'mean_func_tmp_subject1.mnc');
+        files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
         
     otherwise 
         
@@ -57,7 +57,7 @@ switch gb_niak_format_demo
 end
 
 %% Creating a mean functional image
-[hdr,vol] = niak_read_vol(cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc'));
+[hdr,vol] = niak_read_vol(cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc'));
 vol = mean(vol,4);
 hdr.file_name = files_in.functional;
 niak_write_vol(hdr,vol);

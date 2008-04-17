@@ -100,8 +100,10 @@ gb_list_defaults = {'sync',NaN,[],NaN,1,0,'',0};
 niak_set_defaults
 
 nb_slices = length(opt.slice_order);
-if isempty(ref_slice)
+
+if isempty(ref_slice)        
     ref_slice = slice_order(ceil(nb_slices/2));
+    opt.ref_slice = ref_slice;
 end
 
 %% Output files

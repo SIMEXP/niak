@@ -3,7 +3,7 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % Run or reset a PMP pipeline.
 %
 % SYNTAX:
-% [] = NIAK_VISU_PIPELINE(FILE_PIPELINE,ACTION,OPT)
+% [] = NIAK_VISU_PIPELINE(FILE_PIPELINE,ACTION)
 %
 % INPUTS:
 % FILE_PIPELINE      (string) The file name of a PMP script generated using
