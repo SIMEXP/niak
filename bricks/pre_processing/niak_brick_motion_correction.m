@@ -1,4 +1,4 @@
-%function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt)
 
 % Perfom within-subject motion correction of fMRI data via estimation of a
 % rigid-body transform and spatial resampling.
@@ -43,10 +43,13 @@
 %           between-run functional image of reference.
 %
 %       MEAN_VOLUME (string, default MEAN_<BASE_FILE_IN>) the mean volume
-%           of all coregistered runs of all sessions.
+%           of all coregistered runs of all sessions. This volume can be
+%           generated only if MOTION_CORRECTED_DATA is generated too.
 %
 %       MASK_VOLUME (string, default base MASK_<BASE_FILE_IN>) A mask of
 %           the brain common to all runs and all sessions (after motion correction).
+%           This volume can be generated only if MOTION_CORRECTED_DATA is 
+%           generated too.
 %
 %   If a field FILES_IN.MOTION_PARAMETERS has been specified, the following
 %   fields of FILES_OUT will be ignored
@@ -524,26 +527,26 @@ else % if ~ischar(files_in.motion_parameter)
 
     for num_s = 1:length(list_sessions)
 
-        name_session = list_sessions(num_s);
+        name_session = list_sessions{num_s};
         list_mp_runs = getfield(files_in.motion_parameters,name_session);        
 
-        for num_r = 1:length(list_runs)
+        for num_r = 1:length(list_mp_runs)
 
             %% Reading the within-run motion parameters file
-            hf_ws = fopen(list_runs{num_r});
-            str_mp_ws = fread(hf,Inf,'char')';
-            cell_mp_ws = niak_string2lines(str_mp_ws);
-            tab_mp_ws = zeros([length(cell_mp_ws)-1 6]);
+            hf_ws = fopen(list_mp_runs{num_r});
+            str_mp_ws = fread(hf_ws,Inf,'uint8=>char')';
+            cell_mp_ws = niak_string2lines(str_mp_ws);            
             fclose(hf_ws);
 
             %% Combining the within- and between-sessions motion parameters
             tab_tmp = zeros([length(cell_mp_ws)-1 6]);
             for num_v = 2:length(cell_mp_ws)
-                param_ws = niak_string2words(char(cell_mp_ws{num_v}));
+                param_ws = str2num(char(niak_string2words(cell_mp_ws{num_v})));
                 transf = niak_param2transf(param_ws(1:3),param_ws(4:6));                
                 [pry,tsl] = niak_transf2param(transf);
                 tab_tmp(num_v-1,:) = [pry' tsl'];                
             end
+            
             eval(cat(2,'tab_mp.',name_session,'{num_r} = tab_tmp;'));
 
         end
@@ -552,11 +555,18 @@ else % if ~ischar(files_in.motion_parameter)
     
     %% Create a target file
     file_target = niak_file_tmp('_target.mnc');
+    file_target2 = niak_file_tmp('_target.mnc');
     list_runs = getfield(files_in.sessions,session_ref);
     hdr_target = niak_read_vol(list_runs{1});
-    hdr_target.file_name = file_target;
+    hdr_target.file_name = file_target2;
     dim_t = hdr_target.info.dimensions;
     niak_write_vol(hdr_target,zeros([dim_t(1:3)]));    
+    files_in_r.source = file_target2;
+    files_in_r.target = file_target2;
+    opt_r.flag_tfm_space = 1;
+    files_out_r = file_target;
+    niak_resample_vol(files_in_r,files_out_r,opt_r);
+    delete(file_target2);
     
 end
         
@@ -565,7 +575,7 @@ end
 %% Spatial resampling of the data %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ischar(files_in.motion_parameters)
+if ~ischar(files_out.motion_corrected_data)
 
     if flag_verbose
         fprintf('\nResampling data...\n')
@@ -583,7 +593,7 @@ if ischar(files_in.motion_parameters)
     hdr_target = niak_read_vol(file_target);
     dim_t = hdr_target.info.dimensions;
     if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
-        mask_all = zeros(dim_t(1:3));
+        mask_all = ones(dim_t(1:3));
     end
     if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
         mean_all = zeros(dim_t(1:3));
@@ -631,6 +641,7 @@ if ischar(files_in.motion_parameters)
                 
                 [hdr2,vol2] = niak_read_vol(files_out_r);
                 data_r(:,:,:,num_v) = vol2;
+                
             end
             
             if ~ischar(files_out.motion_corrected_data)
@@ -661,11 +672,10 @@ if ischar(files_in.motion_parameters)
     end
 
     %% Write the mask of all runs
-    if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
-        mean_all = mean_all/nb_runs;
-        hdr_target.file_name = files_out.mean_volume;
+    if ~strcmp(files_out.mask_volume,'gb_niak_omitted')                
+        hdr_target.file_name = files_out.mask_volume;
         hdr_target.flag_zip = flag_zip;
-        niak_write_vol(hdr_target,mean_all);
+        niak_write_vol(hdr_target,mask_all);
     end
 
     %% Clean up temporary files
@@ -676,4 +686,6 @@ if ischar(files_in.motion_parameters)
 end
 
 %% Clean up temporary files
-delete(file_target);
+if exist(file_target)
+    delete(file_target);
+end

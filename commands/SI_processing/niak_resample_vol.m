@@ -132,7 +132,7 @@ ny2 = hdr_target.info.dimensions(2);
 nz2 = hdr_target.info.dimensions(3);
 
 %% Resample the target if necessary
-if flag_tfm_space | (min(voxel_size(:) == step2(:))<1)
+if flag_tfm_space | (min(abs(voxel_size(:)) == abs(step2(:)))<1)
     nx3 = ceil(abs(step2(1)./voxel_size(1))*nx2);
     ny3 = ceil(abs(step2(2)./voxel_size(2))*ny2);
     nz3 = ceil(abs(step2(3)./voxel_size(3))*nz2);
@@ -159,7 +159,7 @@ if flag_tfm_space | (min(voxel_size(:) == step2(:))<1)
     end
     
     file_target_tmp = niak_file_tmp('_target.mnc');
-    instr_target = cat(2,'mincresample ',files_in.target,' ',file_target_tmp,' -clobber -dircos ',num2str(dircos),' -step ',num2str(voxel_size),' -start ',num2str(start2'),' -trilinear -nelements ',num2str(nx3),' ',num2str(ny3),' ',num2str(nz3));
+    instr_target = cat(2,'mincresample ',files_in.target,' ',file_target_tmp,' -clobber -dircos ',num2str(dircos(:)'),' -step ',num2str(voxel_size),' -start ',num2str(start2'),' -trilinear -nelements ',num2str(nx3),' ',num2str(ny3),' ',num2str(nz3));
     [tmp,str_tmp] = system(instr_target);
 else
     file_target_tmp = files_in.target;
@@ -167,9 +167,9 @@ end
 
 %% Resample the source on the target
 if ~isempty(files_in.transformation)
-    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp);
+    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
 else
-    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp);
+    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp,' -clobber');
 end
 [tmp,str_tmp] = system(instr_resample);
 

@@ -74,8 +74,7 @@ opt.flag_session = 0; % Correct for within-run motion
 opt.vol_ref = 1; % Use the 40th volume as a reference 
 opt.flag_test = 0; % Actually perform the motion correction
 
-niak_brick_motion_correction
-%[files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);
+[files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
 
