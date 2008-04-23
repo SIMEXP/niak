@@ -663,6 +663,10 @@ if ~ischar(files_out.motion_corrected_data)
         end
     end
     
+    if flag_verbose
+        fprintf('\n')
+    end
+    
     %% Write the mean of all volumes
     if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
         mean_all = mean_all/nb_runs;

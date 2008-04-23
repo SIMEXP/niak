@@ -335,9 +335,9 @@ for num_r = list_run
         else
 
             if num_v == 1               
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 6 6 6'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 10 10 10'));
             else                                
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 6 6 6'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 10 10 10'));
             end
 
             %% Reading the transformation
