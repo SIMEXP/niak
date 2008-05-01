@@ -19,6 +19,8 @@ gb_niak_zip = 'gzip'; % The command to zip files
 
 gb_niak_path_civet = '/media/hda3/quarantines/Feb-14-2008/'; % Where to find the CIVET quarantine
 
+gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
+
 gb_niak_init_civet = 'init-sge.sh'; % Which script to use for initializing the CIVET quarantine
 
 gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
