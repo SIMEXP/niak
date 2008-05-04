@@ -84,7 +84,7 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_slice_timing'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SMOOTH_VOL(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_smooth_vol'' for more info.')
 end
 
 %% Options
