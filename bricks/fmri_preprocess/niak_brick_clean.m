@@ -12,7 +12,7 @@ function [files_in,files_out,opt] = niak_brick_clean(files_in,files_out,opt)
 %                   when stage N+1 is complete. In this case, FILES_IN
 %                   would be the list of outputs at stage N+1.
 %
-% FILES_OUT       (empty string) This field is ignored. The clean-up does
+% FILES_OUT       (empty cell) This field is ignored. The clean-up does
 %                   not produce any output.
 %
 % OPT           (structure) with the following fields :
@@ -85,6 +85,8 @@ if ~isempty(opt.clean)
         error('OPT.CLEAN should be a cell of strings !');
     end
 end
+
+files_out = {};
 
 if flag_test
     return

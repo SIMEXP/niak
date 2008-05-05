@@ -7,12 +7,10 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
-% FILES_IN        (string OR cell of string) a file name of a 3D+t dataset OR
-%                       a cell of strings where each entry is a file name
-%                       of 3D data, all in the same space.
+% FILES_IN        (string) a file name of a 3D+t dataset .
 %
-% FILES_OUT       (string or cell of strings) File names for outputs. NOTE that
-%                       if FILES_OUT is an empty string or cell, the name 
+% FILES_OUT       (string, default <BASE_NAME>_a.<EXT>) File name for outputs. 
+%                       If FILES_OUT is an empty string, the name 
 %                       of the outputs will be the same as the inputs, 
 %                       with a '_a' suffix added at the end.
 %
@@ -133,7 +131,7 @@ if isempty(files_out)
         name_filtered_data = cell([size(files_in,1) 1]);
 
         for num_f = 1:size(files_in,1)
-            [path_f,name_f,ext_f] = fileparts(files_in(1,:));
+            [path_f,name_f,ext_f] = fileparts(files_in(num_f,:));
 
             if strcmp(ext_f,'.gz')
                 [tmp,name_f,ext_f] = fileparts(name_f);

@@ -74,7 +74,7 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                    brick does not do anything but update the default 
 %                    values in FILES_IN and FILES_OUT.
 %
-%                HP (real, default: -Inf) the cut-off frequency for high pass
+%                HP (real, default: 0.01) the cut-off frequency for high pass
 %                    filtering. opt.hp = -Inf means no high-pass filtering.
 %
 %                LP (real, default: Inf) the cut-off frequency for low pass
@@ -103,7 +103,8 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %
 % COMMENTS
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
+% Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, filtering, fMRI
@@ -144,7 +145,7 @@ niak_set_defaults
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'tr','hp','lp','folder_out','flag_test','flag_zip'};
-gb_list_defaults = {-Inf,-Inf,Inf,'',0,0};
+gb_list_defaults = {-Inf,0.01,Inf,'',0,0};
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));

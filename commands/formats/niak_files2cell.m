@@ -77,18 +77,7 @@ if isstruct(files)
     end % if ~isempty(list_field)
 
 elseif iscellstr(files)
-
-    if ~isempty(files);
-
-        for num_f = 1:length(list_field)
-            if ~strcmp(files{num_f},'gb_niak_omitted')
-                cell_files{num_cell} = files{num_f};
-                num_cell = num_cell + 1;
-            end
-        end
-
-    end
-
+    cell_files = files;
 elseif ischar(files)
 
     for num_f = 1:size(files)
