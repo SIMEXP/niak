@@ -537,3 +537,116 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
         end % run
     end % subject
 end % style of pipeline
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% spatial smoothing %%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'smooth_vol';
+
+for num_s = 1:nb_subject
+
+    subject = list_subject{num_s};
+    job_pipeline = fieldnames(pipeline);
+    files_raw = niak_files2cell(getfield(files_in,subject,'fmri'));
+    nb_run = length(files_raw);
+    
+    switch style
+            case 'fmristat'
+                name_stage_in = cat(2,'motion_correction_',subject);
+                files_run = niak_files2cell(getfield(pipeline,name_stage_in,'files_out','motion_corrected_data'));                
+            case {'standard-native','standard-stereotaxic'}
+                name_stage_in = cat(2,'time_filter_',subject,'_',run);
+                files_in_tmp = getfield(pipeline,name_stage_in,'files_out','filtered_data');
+        end     
+    
+
+    
+    
+        
+    for num_r = 1:nb_run
+
+        clear opt_tmp files_in_tmp files_out_tmp
+
+        run = cat(2,'run',num2str(num_r));
+        name_stage = cat(2,name_process,'_',subject,'_',run);
+        
+        %% Building inputs for NIAK_BRICK_TIME_FILTER
+        switch style
+            case 'fmristat'                
+                files_in_tmp = files_run{num_r};
+            case {'standard-native','standard-stereotaxic'}
+                name_stage_in = cat(2,'time_filter_',subject,'_',run);
+                files_in_tmp = getfield(pipeline,name_stage_in,'files_out','filtered_data');
+        end                
+
+        %% Building outputs for NIAK_BRICK_SMOOTH_VOL
+        files_out_tmp = '';
+        
+        %% Setting up options
+        opt_tmp = opt.bricks.smooth_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+
+        %% Setting up defaults of the motion correction
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'spatial smoothing';
+        stage.command = 'niak_brick_smooth_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+
+        if isempty(pipeline)
+            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
+        else
+            pipeline = setfield(pipeline,name_stage,stage);
+        end
+
+        %% If the amount of outputs is 'minimum' or 'quality_control',
+        %% clean the inputs when the outpus have been successfully
+        %% generated
+
+        if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
+            clear files_in_tmp
+            files_in_tmp = stage.files_out;
+            clear opt_tmp
+            opt_tmp.clean = stage.files_in;
+            files_out_tmp = {};
+            
+            opt_tmp.flag_test = 1;
+            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
+            opt_tmp.flag_test = 0;
+
+            %% Adding the stage to the pipeline
+            clear stage
+            switch style
+                case 'fmristat'
+                    stage.label = 'Cleaning motion-corrected data';
+                case {'standard-native','standard-stereotaxic'}
+                    stage.label = 'Cleaning temporelly filtered data';
+            end
+            
+            stage.command = 'niak_brick_clean(files_in,files_out,opt)';
+            stage.files_in = files_in_tmp;
+            stage.files_out = files_out_tmp;
+            stage.opt = opt_tmp;
+            stage.environment = opt.environment;
+            
+            switch style
+                case 'fmristat'
+                    pipeline = setfield(pipeline,cat(2,'clean_motion_correction_',subject,'_run',num2str(num_r)),stage);
+                case {'standard-native','standard-stereotaxic'}
+                    pipeline = setfield(pipeline,cat(2,'clean_time_filter_',subject,'_run',num2str(num_r)),stage);
+            end            
+        end
+
+    end % run
+end % subject
+
+
