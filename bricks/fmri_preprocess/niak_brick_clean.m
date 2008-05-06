@@ -6,8 +6,9 @@ function [files_in,files_out,opt] = niak_brick_clean(files_in,files_out,opt)
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CLEAN(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
-% FILES_IN        (cell of string) A list of files that need to exist
-%                   before the clean up can start. Typically, in a
+% FILES_IN        (string, cell of string or structure) A list of files that need to exist
+%                   before the clean up can start. The files can be organized 
+%                   as a cell of strings or nested structures. Typically, in a
 %                   pipeline, you may want to clean the outputs of stage N
 %                   when stage N+1 is complete. In this case, FILES_IN
 %                   would be the list of outputs at stage N+1.
@@ -17,8 +18,10 @@ function [files_in,files_out,opt] = niak_brick_clean(files_in,files_out,opt)
 %
 % OPT           (structure) with the following fields :
 %
-%               CLEAN  (cell of string) A list of files that need to be cleaned up. Typically, in a
-%                   pipeline, you may want to clean the outputs of stage N
+%               CLEAN  (string, cell of string or structure) A list of files that need to be cleaned up. 
+%                   The files can be organized as a cell of strings or 
+%                   nested structures. Typically, in a pipeline, you may want 
+%                   to clean the outputs of stage N
 %                   when stage N+1 is complete. In this case, OPT.CLEAN
 %                   would be the list of outputs at stage N.
 %
@@ -69,22 +72,15 @@ if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CLEAN(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_clean'' for more info.')
 end
 
-%% Test on formats
-if ~iscellstr(files_in)
-    error('FILES_IN should be a cell of strings !');
-end
+files_in = niak_files2cell(files_in);
 
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'clean','flag_verbose','flag_test'};
-gb_list_defaults = {{},1,0};
+gb_list_defaults = {NaN,1,0};
 niak_set_defaults
 
-if ~isempty(opt.clean)
-    if ~iscellstr(opt.clean)
-        error('OPT.CLEAN should be a cell of strings !');
-    end
-end
+opt.clean = niak_files2cell(opt.clean);
 
 files_out = {};
 

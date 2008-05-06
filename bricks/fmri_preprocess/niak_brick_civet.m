@@ -16,7 +16,9 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 % INPUTS:
 %   FILES_IN (structure) with the following fields
 %     ANAT (string)
-%           a file with an individual T1 anatomical volume.
+%           a file with an individual T1 anatomical volume. If previous
+%           results of civet are used (see below), this should be an empty
+%           string.
 %
 %     CIVET (structure) 
 %           If OPT.CIVET is specified to import results of a previously
@@ -227,6 +229,8 @@ else
     civet_folder = opt.civet.folder;
     civet_id = opt.civet.id;
     civet_prefix = opt.civet.prefix;
+    
+    files_in.anat = 'gb_niak_omitted';
     
 end
        

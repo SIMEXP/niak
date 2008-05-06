@@ -183,6 +183,11 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 
 niak_gb_vars
 
+%% Syntax
+if ~exist('pipeline','var')|~exist('opt','var')
+    error('syntax: FILE_PIPELINE = NIAK_INIT_PIPELINE(PIPELINE,OPT).\n Type ''help niak_init_pipeline'' for more info.')
+end
+
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_options'};

@@ -66,6 +66,7 @@ end
 %% Options
 opt.style = 'standard-native';
 opt.size_output = 'quality_control';
+%opt.size_output = 'all';
 opt.folder_out = cat(2,gb_niak_path_demo,filesep,'fmri_preprocess',filesep);
 opt.environment = 'matlab';
 
