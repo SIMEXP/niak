@@ -17,11 +17,11 @@ gb_niak_viewersvg = 'eog'; % program to display svg files
 
 gb_niak_zip = 'gzip'; % The command to zip files
 
-gb_niak_path_civet = '/media/hda3/quarantines/Feb-14-2008/'; % Where to find the CIVET quarantine
+gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
 
 gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
 
-gb_niak_init_civet = 'init-sge.sh'; % Which script to use for initializing the CIVET quarantine
+gb_niak_init_civet = 'init.sh'; % Which script to use for initializing the CIVET quarantine
 
 gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
 
@@ -33,7 +33,7 @@ gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_version = '0.2.2'; % 
+gb_niak_version = '0.2.4'; % 
 
 if exist('OCTAVE_VERSION')    
     gb_niak_language = 'octave'; %% this is octave !
