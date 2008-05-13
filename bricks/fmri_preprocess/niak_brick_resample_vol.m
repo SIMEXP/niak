@@ -1,15 +1,15 @@
-function [files_in,files_out,opt] = niak_resample_vol(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,opt)
 
 % Apply MINCRESAMPLE to resample a volume with a transformation to a target
 % space. The function allows to use source or target resolution, and to
 % resample the data such that the direction cosines are x, y and z
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
 % FILES_IN      (structure) with the following fields :
-%                 SOURCE (string) name of the file to resample.
+%                 SOURCE (string) name of the file to resample (can be 3D+t).
 %                 TARGET (string) name of the file defining space (can be
 %                   the same as SOURCE)
 %                 TRANSFORMATION (string, default identity)  name of a xfm transformation file
@@ -122,6 +122,12 @@ nx1 = hdr_source.info.dimensions(1);
 ny1 = hdr_source.info.dimensions(2);
 nz1 = hdr_source.info.dimensions(3);
 
+if length(hdr_source.info.dimensions)>3
+    nt1 = hdr_source.info.dimensions(4);
+else
+    nt1 = 1;
+end
+
 hdr_target = niak_read_vol(files_in.target);
 [dircos2,step2,start2] = niak_hdr_mat2minc(hdr_target.info.mat);
 if isempty(voxel_size)
@@ -165,13 +171,60 @@ else
     file_target_tmp = files_in.target;
 end
 
-%% Resample the source on the target
-if ~isempty(files_in.transformation)
-    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+if nt1 == 1
+
+    %% Resample the source on the target
+    if ~isempty(files_in.transformation)
+        instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+    else
+        instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+    end
+    [flag_tmp,str_tmp] = system(instr_resample);
+    
+    if flag_tmp~=0
+        error(str_tmp);
+    end
+
 else
-    instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+    
+    %% we have to extract and resample in functional volume independently,
+    %% and then put them together back into a 3D+t dataset
+    file_func_tmp = niak_file_tmp('func.mnc'); % temporary file for input
+    file_func_tmp2 = niak_file_tmp('func2.mnc'); % temporary file for output
+    
+    [hdr_source,vol_source] = niak_read_vol(files_in.source); % read the source
+    vol_resampled = zeros([nx2,ny2,nz2,nt1]); % initialize a resampled space
+    hdr_source.file_name = file_func_tmp;
+    
+    for num_t = 1:nt1
+        
+        niak_write_vol(hdr_source,vol_source(:,:,:,num_t)); % write one temporary volume
+        
+        %% Resample
+        if ~isempty(files_in.transformation)
+            instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+        else
+            instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+        end
+        [flag_tmp,str_tmp] = system(instr_resample);
+        
+        if flag_tmp~=0
+            error(str_tmp);
+        end
+        
+        [hdr_target,vol_tmp] = niak_read_vol(file_func_tmp2);
+        vol_resampled = vol_tmp;
+        
+    end
+
+    %% write the resampled volumes in a 3D+t dataset
+    hdr_target.file_name = file_out;
+    niak_write_vol(hdr_target,vol_resampled);
+    
+    %% clean the temporary files
+    delete(file_func_tmp);
+    delete(file_func_tmp2);
 end
-[tmp,str_tmp] = system(instr_resample);
 
 %% Clean temporary stuff
 if ~(strcmp(file_target_tmp,files_in.target))

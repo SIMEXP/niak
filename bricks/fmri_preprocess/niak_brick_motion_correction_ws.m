@@ -273,7 +273,7 @@ for num_r = list_run
         files_out_res = file_target;
         opt_res.flag_tfm_space = 1;
         opt_res.voxel_size = [];        
-        niak_resample_vol(files_in_res,files_out_res,opt_res);
+        niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
         delete(file_target_tmp);
 
         %% Writting the mask of the target
@@ -372,7 +372,7 @@ for num_r = list_run
             opt_res.voxel_size = [];
             hdr.file_name = files_in_res.source;            
             niak_write_vol(hdr,data(:,:,:,num_v));            
-            niak_resample_vol(files_in_res,files_out_res,opt_res);            
+            niak_brick_resample_vol(files_in_res,files_out_res,opt_res);            
             [hdr_r,vol_r] = niak_read_vol(files_out_res);
             delete(files_out_res);
             delete(files_in_res.source);            

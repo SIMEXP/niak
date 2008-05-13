@@ -64,7 +64,7 @@ switch gb_niak_format_demo
 end
 
 %% Options
-opt.style = 'standard-native';
+opt.style = 'standard-stereotaxic';
 %opt.style = 'fmristat';
 opt.size_output = 'quality_control';
 %opt.size_output = 'all';

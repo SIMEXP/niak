@@ -29,11 +29,11 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %           File name for saving the transformation from the functional
 %           space to the anatomical space.
 %
-%       ANAT_RESAMPLED_HIRES (string, default <BASE_ANAT>_hires)
+%       ANAT_HIRES (string, default <BASE_ANAT>_hires)
 %           File name for saving the anatomical image resampled in the
 %           space of the functional space, using native resolution.
 %     
-%       ANAT_RESAMPLED_LOWRES (string, default <BASE_ANAT>_hires)
+%       ANAT_LOWRES (string, default <BASE_ANAT>_hires)
 %           File name for saving the anatomical image resampled in the
 %           space of the functional space, using the target resolution.
 %
@@ -111,8 +111,8 @@ niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation','functional_resampled','anat_hires','anat_lowres'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'transformation','anat_hires','anat_lowres'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS
@@ -156,10 +156,6 @@ end
 
 if isempty(files_out.transformation)
     files_out.transformation = cat(2,folder_func,filesep,name_func,'_to_',name_anat,'.xfm');
-end
-
-if isempty(files_out.functional_resampled)
-    files_out.functional_resampled = cat(2,folder_func,filesep,name_func,'_res',ext_func);
 end
 
 if isempty(files_out.anat_lowres)
@@ -252,7 +248,7 @@ if ~strcmp(files_out.functional_resampled,'gb_niak_omitted')|~strcmp(files_out.a
         files_out_res = files_out.anat_hires;
         opt_res.flag_tfm_space = 1;
         opt_res.voxel_size = 0;
-        niak_resample_vol(files_in_res,files_out_res,opt_res);        
+        niak_brick_resample_vol(files_in_res,files_out_res,opt_res);        
         
     end
 
@@ -267,7 +263,7 @@ if ~strcmp(files_out.functional_resampled,'gb_niak_omitted')|~strcmp(files_out.a
         files_out_res = files_out.anat_lowres;
         opt_res.flag_tfm_space = 1;
         opt_res.voxel_size = [];
-        niak_resample_vol(files_in_res,files_out_res,opt_res);                
+        niak_brick_resample_vol(files_in_res,files_out_res,opt_res);                
     end
 
 end

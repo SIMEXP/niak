@@ -565,7 +565,7 @@ else % if ~ischar(files_in.motion_parameter)
     files_in_r.target = file_target2;
     opt_r.flag_tfm_space = 1;
     files_out_r = file_target;
-    niak_resample_vol(files_in_r,files_out_r,opt_r);
+    niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
     delete(file_target2);
     
 end
@@ -637,7 +637,7 @@ if ~ischar(files_out.motion_corrected_data)
                 niak_write_transf(transf,files_in_r.transformation);
                 niak_write_vol(hdr,data(:,:,:,num_v));
 
-                niak_resample_vol(files_in_r,files_out_r,opt_r);
+                niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
                 
                 [hdr2,vol2] = niak_read_vol(files_out_r);
                 data_r(:,:,:,num_v) = vol2;
