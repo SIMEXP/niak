@@ -1,6 +1,6 @@
 ﻿#summary Summary of the NIAK project
 
-This is NIAK v0.2.3
+This is NIAK v0.3
 
 Permission is hereby granted, free of charge, to any person obtaining a copy 
 of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,11 @@ The core functions are implemented in .m code, compatible with both Matlab and o
 ==What do the NIAK exactly do ?==
 At release 1.0, the NIAK will include the necessary components for fMRI data pre-processing and linear modelling and will deal with a variety of file [http://code.google.com/p/niak/wiki/FileFormats formats]. The Milestones of the project can be found [http://code.google.com/p/niak/wiki/Milestones here].
  
-The kit is now at its very early stage of development and does not yet include a lot of functionalities. Available features (release 0.2) are :
+The kit is now at its very early stage of development and does not yet include a lot of functionalities. Available features (release 0.3) are :
   * reader/writer for MINC1, MINC2, NIFTI and ANALYZE files
   * the pipeline system 
-  * A few bricks for fMRI data preprocessing (slice timing, spatial smoothing, temporal filtering).
+  * All the necessary bricks for fMRI data preprocessing (slice timing, spatial smoothing, temporal filtering).
+  * A pipeline template for fMRI preprocessing
 
 ==Who has contributed to the NIAK ?==
 The kit was initially designed and assembled by Pierre [http://wiki.bic.mni.mcgill.ca/index.php/PierreBellec Bellec] at the !McConnell Brain Imaging Center, Montreal Neurological Institute, !McGill University, Canada, 2008. 

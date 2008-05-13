@@ -52,6 +52,9 @@ for num_f = 1:(length(tmp_folder)-3)
     gb_niak_path_niak = [gb_niak_path_niak tmp_folder{num_f} filesep];
 end
 
+%% Where are the templates
+gb_niak_path_demo = cat(2,gb_niak_path_niak,'template',filesep);
+
 %% Where is the NIAK demo 
 gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
 

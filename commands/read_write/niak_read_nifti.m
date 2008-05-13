@@ -77,11 +77,7 @@ switch ext_f
 end
 
 %% Parsing the header
-try,
-    hdr = niak_read_hdr_nifti(file_header);
-catch
-    error('niak:read: Couldn''t parse the header')
-end
+hdr = niak_read_hdr_nifti(file_header);
 
 if nargout > 1
     %% Opening the data file

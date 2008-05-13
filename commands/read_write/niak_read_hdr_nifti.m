@@ -75,7 +75,7 @@ fid = -1;
 tag_OK = 0;
 num_f = 1;
 
-while (tag_OK == 0)&(fid < 0)&(num_f <= length(list_formats))
+while ((tag_OK == 0)|(fid < 0))&(num_f <= length(list_formats))
     fid = fopen(file_name,'r',list_formats{num_f});
     if ~(fid<0)
         fseek(fid,0,'bof');
@@ -305,6 +305,9 @@ end
 
 %% hdr.info.voxel_size
 hdr.info.voxel_size = hdr.details.pixdim(2:4);
+
+%% hdr.info.dimensions
+hdr.info.dimensions = hdr.details.dim(2:5);
 
 %% hdr.info.tr
 if hdr.details.dim(1) == 4

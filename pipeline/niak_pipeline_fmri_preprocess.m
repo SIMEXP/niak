@@ -1,8 +1,8 @@
 function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 
-% Build a pipeline structure for performing preprocessing of an fMRI
+% Build a pipeline structure to preprocess an fMRI
 % database. Mutliple preprocessing "styles" are available, depending on the
-% analysis planned afterwards, and the amount of outputs generated can adjusted.
+% analysis planned afterwards, and the amount of generated outputs can be adjusted.
 %
 % INPUTS : 
 % FILES_IN  (structure) with the following fields : 
@@ -103,7 +103,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 %  OUTPUTS : 
 %
-%  PIPELINE (structure) describes all jobs that need to be performed in the
+%  PIPELINE (structure) describe all jobs that need to be performed in the
 %           pipeline. This structure is meant to be use in the function
 %           NIAK_INIT_PIPELINE.
 %
@@ -125,12 +125,13 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           functional volume.
 %       4.  Correction of slow time drifts.
 %       5.  Spatial smoothing.
-%       6.  Spatial normalization of the anatomical image, after 
-%           coregistration with the functional.
+%       6.  Spatial normalization of the anatomical image.
 %   
 %  * style 'standard-stereotaxic'
-%       Same as 'standard-native', with the following additional step : 
-%       7.  Resampling of the functional data in the stereotaxic space.
+%       Same as 'standard-native', with the following additional steps : 
+%       7.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%           transformations.
+%       8.  Resampling of the functional data in the stereotaxic space.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008.

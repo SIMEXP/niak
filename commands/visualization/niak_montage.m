@@ -23,7 +23,7 @@ function [] = niak_montage(vol,opt)
 %                   FWHM (double, default 0) smooth the image with a 
 %                       isotropic Gaussian kernel of SMOOTH fwhm (in voxels).
 %
-%                   TYPE_FLIP (string, default 'rot270') make rotation and
+%                   TYPE_FLIP (string, default 'rot90') make rotation and
 %                           flip of the slice representation. see
 %                           niak_flip_vol for options. 'rot90' will work
 %                           for images whose voxels is x/y/z respectively
@@ -66,7 +66,7 @@ function [] = niak_montage(vol,opt)
 % Setting up default
 gb_name_structure = 'opt';
 gb_list_fields = {'type_slice','vol_limits','type_color','fwhm','type_flip','flag_colorbar'};
-gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot270',1};
+gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90',1};
 niak_set_defaults
 
 colormap(type_color);

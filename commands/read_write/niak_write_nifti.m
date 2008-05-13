@@ -81,15 +81,15 @@ end
 
 %% Setting up default values for the header
 gb_name_structure = 'hdr';
-gb_list_fields = {'file_name','type','info','flag_zip'};
-gb_list_defaults = {NaN,'nii',struct(),0};
+gb_list_fields = {'file_name','type','info','details','flag_zip'};
+gb_list_defaults = {NaN,'nii',struct(),struct([]),0};
 niak_set_defaults
 
 %% Setting up default values for the 'info' part of the header
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
-gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history'};
-gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,''};
+gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','machine','dimensions'};
+gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','native',size(vol)};
 niak_set_defaults
 
 %% Seting up the name of the header
@@ -98,6 +98,7 @@ file_name = hdr.file_name;
 if isempty(path_f)
     path_f = '.';
 end
+
 switch hdr.type
     case 'nii'
         file_hdr = file_name;
@@ -113,6 +114,16 @@ end
 %% Updating information of the header
 hdr.info.precision = class(vol);
 precision = hdr.info.precision;
+
+hdr.info.dimensions = size(vol);
+if length(size(vol))==3
+    hdr.details.dim(2:4) = size(vol);
+    hdr.details.dim(5) = 1;
+elseif length(size(vol))==4
+    hdr.details.dim(2:5) = size(vol);
+else
+    error('VOL need to be a 3D or 4D array!');
+end
 
 hdr.descrip = hdr.info.history;
 
@@ -164,18 +175,18 @@ end
 
 if hdr.details.qform_code == 0 & hdr.details.sform_code == 0
     hdr.details.sform_code = 1;
-    hdr.details.srow_x(1) = hdr.hdr.details.pixdim(2);
+    hdr.details.srow_x(1) = hdr.details.pixdim(2);
     hdr.details.srow_x(2) = 0;
     hdr.details.srow_x(3) = 0;
     hdr.details.srow_y(1) = 0;
-    hdr.details.srow_y(2) = hdr.hdr.details.pixdim(3);
+    hdr.details.srow_y(2) = hdr.details.pixdim(3);
     hdr.details.srow_y(3) = 0;
     hdr.details.srow_z(1) = 0;
     hdr.details.srow_z(2) = 0;
-    hdr.details.srow_z(3) = hdr.hdr.details.pixdim(4);
-    hdr.details.srow_x(4) = (1-hdr.details.originator(1))*hdr.hdr.details.pixdim(2);
-    hdr.details.srow_y(4) = (1-hdr.details.originator(2))*hdr.hdr.details.pixdim(3);
-    hdr.details.srow_z(4) = (1-hdr.details.originator(3))*hdr.hdr.details.pixdim(4);
+    hdr.details.srow_z(3) = hdr.details.pixdim(4);
+    hdr.details.srow_x(4) = (1-hdr.details.originator(1))*hdr.details.pixdim(2);
+    hdr.details.srow_y(4) = (1-hdr.details.originator(2))*hdr.details.pixdim(3);
+    hdr.details.srow_z(4) = (1-hdr.details.originator(3))*hdr.details.pixdim(4);
 end
 
 %  struct header_key                      /* header key      */
@@ -313,7 +324,7 @@ fclose(fid);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Writting the image part %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fid = fopen(file_name,'w');
+fid = fopen(file_name,'a');
 
 ScanDim = double(hdr.details.dim(5));		% t
 SliceDim = double(hdr.details.dim(4));		% z
