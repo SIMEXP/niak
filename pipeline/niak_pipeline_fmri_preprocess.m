@@ -796,7 +796,7 @@ if strcmp(style,'standard-stereotaxic')
 
             %% Building inputs 
             files_in_tmp.source = getfield(pipeline,name_stage_smooth,'files_out');
-            files_in_tmp.target = cat(2,gb_niak_path_demo,filesep,'t1_nl_avg_2mm.mnc');
+            files_in_tmp.target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
             files_in_tmp.transformation = getfield(pipeline,name_stage_transf,'files_out');
 
             %% Building outputs 
