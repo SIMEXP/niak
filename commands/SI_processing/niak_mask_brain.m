@@ -15,7 +15,7 @@ function mask = niak_mask_brain(vol,opt)
 %           between two voxels in x, y, and z (yet the unit is
 %           irrelevant and just need to be consistent with
 %           the filter width (fwhm)). The fourth element is ignored.
-%       FLAG_REMOVE_EYES (boolean, default 1) if FLAG_REMOVE_EYES == 1, an
+%       FLAG_REMOVE_EYES (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
 %           attempt is done to remove the eyes from the mask.
 %
 % OUTPUT:
@@ -57,7 +57,7 @@ function mask = niak_mask_brain(vol,opt)
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes'};
-gb_list_defaults = {6,[3 3 3],1};
+gb_list_defaults = {6,[3 3 3],0};
 niak_set_defaults
 
 

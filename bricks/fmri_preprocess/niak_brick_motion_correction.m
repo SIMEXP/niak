@@ -409,7 +409,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
             %% optimization
             cell_log = niak_string2lines(str_log);
             line_log = niak_string2words(cell_log{end-1});
-            tab_parameters(num_s,7) = str2num(line_log{end});
+            tab_mp_bs(num_s,7) = str2num(line_log{end});
             line_log = niak_string2words(cell_log{end});
             tab_mp_bs(num_s,8) = str2num(line_log{end});            
             
@@ -424,7 +424,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         tab_mp_bs(num_s,4:6) = tsl';
 
         %% If requested, write the between-session motion parameters in a file
-        if ~ischar(files_out.motion_parameters)
+        if ~ischar(files_out.transf_between_session)
             fprintf(hf_mp,'%s',num2str(tab_mp_bs(num_s,:),12));
             fprintf(hf_mp,' %s\n',name_session);
         end

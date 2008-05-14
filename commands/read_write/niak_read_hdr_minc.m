@@ -94,7 +94,7 @@ flag_var_mode = 0;
 flag_var = 0;
 flag_end = 0;
 
-hdr.details = struct();
+hdr.details.image = {};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parsing the header into HDR.DETAILS  %%%

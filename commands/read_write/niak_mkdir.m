@@ -83,9 +83,9 @@ for num_p = 1:length(list_path)
             [success,message,messageid] = mkdir(list_path{num_p});
         else
             if strcmp(gb_niak_language,'matlab')
-                [success,message,messageid] = mkdir(path_curr,list_path{num_p});
+                [success,message] = mkdir(path_curr,list_path{num_p});
             elseif strcmp(gb_niak_language,'octave')
-                [success,message,messageid] = mkdir(cat(2,path_curr,filesep,list_path{num_p}));
+                [success,message] = mkdir(cat(2,path_curr,filesep,list_path{num_p}));
             end
         end
         

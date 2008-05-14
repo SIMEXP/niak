@@ -50,7 +50,7 @@
 try
     eval(cat(2,'gb_niak_struct = ',gb_name_structure,';'));    
 catch
-    gb_niak_struct = struct();
+    gb_niak_struct = struct([]);
 end
    
 %% Loop on every field
@@ -68,7 +68,13 @@ for num_f = 1:nb_fields
                 error('niak:defaults',cat(2,'Please specify field ',field,' in structure ',gb_name_structure,' !\n'))                
             end
         end
-        gb_niak_struct = setfield(gb_niak_struct,field,val);
+        
+        if isempty(gb_niak_struct)
+            eval(cat(2,'gb_niak_struct(1).',field,' = val;'));
+        else
+            gb_niak_struct = setfield(gb_niak_struct,field,val);
+        end
+        
     end    
                     
     % Upload the field as a variable

@@ -216,7 +216,7 @@ end
 [succ,messg,messgid] = niak_mkdir(path_logs);
 
 if succ == 0 
-    error('niak:pipeline',messg);
+    error(messg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -457,7 +457,7 @@ for num_s = 1:length(list_stage)
                                 
             otherwise
                 
-                error('niak:pipeline','%s is an unknown environment for stage %s of the pipeline',environment,stage_name);
+                error('%s is an unknown environment for stage %s of the pipeline',environment,stage_name);
                 
         end
         

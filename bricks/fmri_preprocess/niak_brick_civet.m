@@ -324,7 +324,7 @@ if ~flag_civet
     
     %% Copy the anatomical volume in a temporary folder, under a
     %% civet-compliant name.
-    flag = mkdir(civet_folder);
+    flag = niak_mkdir(civet_folder);
     copyfile(files_in.anat,cat(2,civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'))
     
     %% Run CIVET in spawn mode

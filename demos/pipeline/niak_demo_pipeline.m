@@ -68,7 +68,7 @@ end
 %% Initialization %%
 %%%%%%%%%%%%%%%%%%%%
 
-pipeline = struct();
+pipeline = struct([]);
 
 list_subject = {'1','2'}; % List of the tags used to build path and file names for each subject
 list_condition = {'rest','motor'}; % List of the tags used to build path and file names for each condition
