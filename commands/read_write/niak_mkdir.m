@@ -80,7 +80,7 @@ for num_p = 1:length(list_path)
     if ~exist(cat(2,path_curr,list_path{num_p}),'dir')
         
         if isempty(path_curr)
-            [success,message,messageid] = mkdir(list_path{num_p});
+            [success,message] = mkdir(list_path{num_p});
         else
             if strcmp(gb_niak_language,'matlab')
                 [success,message] = mkdir(path_curr,list_path{num_p});
