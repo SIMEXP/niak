@@ -71,7 +71,7 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 
 niak_gb_vars
 
-init_sh = cat(2,gb_niak_path_civet,gb_niak_init_civet);
+init_sh = cat(2,gb_niak_path_civet,'init.sh');
 
 if ~exist('action','var'); error('niak:pipeline: please specify an action'); end
 
@@ -96,7 +96,7 @@ switch action
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(file_tmp);
+        [succ,messg] = system(cat(2,'sh ',file_tmp));
         
         fprintf(messg);
         
@@ -119,7 +119,7 @@ switch action
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(file_tmp);
+        [succ,messg] = system(cat(2,'sh ',file_tmp));
         
         fprintf(messg);
         
@@ -142,7 +142,7 @@ switch action
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(file_tmp);
+        [succ,messg] = system(cat(2,'sh ',file_tmp));
         
         fprintf(messg);
         
