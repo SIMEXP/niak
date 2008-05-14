@@ -325,7 +325,10 @@ if ~flag_civet
     %% Copy the anatomical volume in a temporary folder, under a
     %% civet-compliant name.
     flag = niak_mkdir(civet_folder);
-    copyfile(files_in.anat,cat(2,civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'))
+    [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'))
+    if succ~=0
+        error(msg);
+    end
     
     %% Run CIVET in spawn mode
     niak_gb_vars
@@ -357,8 +360,8 @@ for num_r = 1:length(list_results)
         if ~strcmp(list_results{num_r},'transformation_nl')
 
             %% Just copy and rename the stuff
-            [flag,str] = copyfile(name_civet,name_res,'f');
-            if ~flag
+            [flag,str] = system(cat(2,'cp ',name_civet,' ',name_res));
+            if flag~=0
                 warning(str)
             end
         else

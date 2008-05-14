@@ -266,7 +266,7 @@ file_lock = cat(2,path_logs,name_pipeline,'.lock');
 
 if exist(file_lock,'file')
     if ~(clobber == 1)
-        error('Error niak:pipeline: A lock was find on the pipeline, I cannot proceed unless you specify the clobber option or you remove manually the file : %s',file_lock);
+        error(cat(2,'Error niak:pipeline: A lock was find on the pipeline, I cannot proceed unless you specify the clobber option or you remove manually the file : ',file_lock));
     else
         if flag_verbose
             disp(sprintf('WARNING : removing the lock file %s to reinitialize the pipeline (clobber mode)',file_lock));

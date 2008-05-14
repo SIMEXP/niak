@@ -69,7 +69,7 @@ opt.style = 'standard-stereotaxic';
 opt.size_output = 'quality_control';
 %opt.size_output = 'all';
 opt.folder_out = cat(2,gb_niak_path_demo,filesep,'fmri_preprocess',filesep);
-opt.environment = 'matlab';
+opt.environment = 'octave';
 
 TR = 2.33; % Repetition time in seconds
 nb_slices = 42; % Number of slices in a volume
