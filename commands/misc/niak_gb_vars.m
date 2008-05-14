@@ -12,7 +12,7 @@ gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % W
 
 gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
 
-gb_niak_init_civet = 'init.csh'; % Which script to use for initializing the CIVET quarantine
+gb_niak_init_civet = 'init.sh'; % Which script to use for initializing the CIVET quarantine
 
 gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
 
