@@ -116,26 +116,17 @@ switch action
         end
         
         fprintf(hs,'#!/bin/bash \n');
-        fprintf(hs,'source %s \n',init_sh);
-        fclose(hs);
-        
-        %% Little test to check if we can run the script
-        system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'sh ',file_tmp));                          
-        if succ~=0
-            error(messg);
-        end
-        
-        %% Run the pipeline in the background
-        hs = fopen(file_tmp,'a');
-        fprintf(hs,'%s run %s > %s &',file_pipeline,opt,file_log);        
+        fprintf(hs,'source %s \n',init_sh);        
+        fprintf(hs,'%s run %s > %s&',file_pipeline,opt,file_log);        
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'sh ',file_tmp,'&'));
+        [succ,messg] = system(cat(2,'sh ',file_tmp));
         
         if succ == 0
             fprintf('The pipeline was started in the background');
+        else
+            error(messg)
         end        
         
         delete(file_tmp)
