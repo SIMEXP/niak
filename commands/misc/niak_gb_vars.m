@@ -3,6 +3,24 @@
 %% this script to initialize the variables. If NIAK does not behave the way
 %% you want, this might be the place to fix that.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The following variables need to be changed to configure the pipeline %%
+%% system                                                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
+
+gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
+
+gb_niak_init_civet = 'init.csh'; % Which script to use for initializing the CIVET quarantine
+
+gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
+
+gb_niak_command_octave = 'octave'; % how to invoke octave
+
+gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all.q@dow,all.q@gertrude,all.q@gobbo,all.q@gonzalo,all.q@grumpy,all.q@gypsy,all.q@oberon,all.q@penfolds,all.q@phebe,all.q@philemon,all.q@pluto,all.q@portia,all.q@rosaline,all.q@silius,all.q@snout,all.q@snug,all.q@taylor,all.q@theseus,all.q@valhalla,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
+%gb_niak_sge_options = '-q all.q@node0,all.q@node1,all.q@node7'; % send jobs only to the "fetch" systems
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% User may want to change some of the following variables %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,32 +35,21 @@ gb_niak_viewersvg = 'eog'; % program to display svg files
 
 gb_niak_zip = 'gzip'; % The command to zip files
 
-gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
-
-gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
-
-gb_niak_init_civet = 'init.csh'; % Which script to use for initializing the CIVET quarantine
-
-gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
-
-gb_niak_command_octave = 'octave'; % how to invoke octave
-
-%gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all.q@dow,all.q@gertrude,all.q@gobbo,all.q@gonzalo,all.q@grumpy,all.q@gypsy,all.q@oberon,all.q@penfolds,all.q@phebe,all.q@philemon,all.q@pluto,all.q@portia,all.q@rosaline,all.q@silius,all.q@snout,all.q@snug,all.q@taylor,all.q@theseus,all.q@valhalla,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
-gb_niak_sge_options = '-q all.q@node0,all.q@node1,all.q@node7'; % send jobs only to the "fetch" systems
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_version = '0.2.4'; % 
+%% NIAK version
+gb_niak_version = '0.2.5'; % 
 
+%% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION')    
     gb_niak_language = 'octave'; %% this is octave !
 else
     gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab
 end
 
-%% Where is NIAK ?
+%% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');
 if isempty(str_read_vol)
     error('NIAK is not in the path ! (could not find NIAK_READ_VOL)')
@@ -53,13 +60,13 @@ for num_f = 1:(length(tmp_folder)-3)
     gb_niak_path_niak = [gb_niak_path_niak tmp_folder{num_f} filesep];
 end
 
-%% Where are the templates
+%% In which path are the templates ?
 gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
 
-%% Where is the NIAK demo 
+%% In which path is the NIAK demo ?
 gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
 
-%% In which format is the niak demo
+%% In which format is the niak demo ?
 gb_niak_format_demo = '';
 if exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc'))
     gb_niak_format_demo = 'minc2';
@@ -81,7 +88,7 @@ else
     gb_niak_OS = 'unkown';
 end
 
-%% getting user name
+%% getting user name.
 switch (gb_niak_OS)
 case 'unix'
 	gb_niak_user = getenv('USER');
