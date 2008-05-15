@@ -218,7 +218,7 @@ else
     end
 
     %% write the resampled volumes in a 3D+t dataset
-    hdr_target.file_name = file_out;
+    hdr_target.file_name = files_out;
     niak_write_vol(hdr_target,vol_resampled);
     
     %% clean the temporary files
