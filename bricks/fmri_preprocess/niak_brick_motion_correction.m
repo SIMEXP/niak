@@ -511,6 +511,13 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     end    
 
     %% Clean the temporary files
+    if ischar(files_out.transf_within_session)
+        cell_ws = niak_files2cell(files_transf_ws);
+        for num_ws = 1:length(cell_ws)
+            delete(files_transf_ws{num_ws});
+        end        
+    end
+    
     for num_s = 1:length(list_sessions)
         delete(mask_session{num_s})
         delete(target_session{num_s});

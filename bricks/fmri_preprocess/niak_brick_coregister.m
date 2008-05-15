@@ -226,7 +226,7 @@ if ~strcmp(files_out.transformation,'gb_niak_omitted')
     end        
 end
 
-if ~strcmp(files_out.functional_resampled,'gb_niak_omitted')|~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')
+if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')
 
     %% Read the xfm transformation
     hf = fopen(file_transf_tmp);

@@ -257,7 +257,7 @@ vol = vol(:,mask>0);
 opt_f.tr = opt.tr;
 opt_f.hp = opt.hp;
 opt_f.lp = opt.lp;
-[tseries_f,extras] = niak_time_filter(vol,opt_f);
+[tseries_f,extras] = niak_filter_tseries(vol,opt_f);
 
 %% If relative variance maps have been requested, compute total variance of
 %% the time series
