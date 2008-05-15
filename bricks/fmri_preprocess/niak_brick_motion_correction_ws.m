@@ -442,12 +442,18 @@ end
 
 %% If requested, write the target volume
 if ~strcmp(files_out.target,'gb_niak_omitted')
-    copyfile(file_target,files_out.target);
+    [succ,msg] = system(cat(2,'cp ',file_target,' ',files_out.target));
+    if succ~=0
+        error(msg)
+    end    
 end
 
 %% If requested, write the mask
 if ~strcmp(files_out.mask,'gb_niak_omitted')
-    copyfile(file_mask_target,files_out.mask);
+    [succ,msg] = system(cat(2,'cp ',file_mask_target,' ',files_out.mask));
+    if succ~=0
+        error(msg)
+    end        
 end
 
 % Cleaning temporary files

@@ -505,7 +505,10 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
 
     %% Copy the target
     file_target = niak_file_tmp('_target.mnc');
-    copyfile(target_session{num_session_ref},file_target);
+    [succ,msg] = system(cat(2,'cp ',target_session{num_session_ref},' ',file_target));
+    if succ~=0
+        error(msg)
+    end    
 
     %% Clean the temporary files
     for num_s = 1:length(list_sessions)
