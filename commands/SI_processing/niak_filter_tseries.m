@@ -1,9 +1,9 @@
-function [tseries_f,extras] = niak_time_filter(tseries,opt)
+function [tseries_f,extras] = niak_filter_tseries(tseries,opt)
 
 % Filter time series using Discrete-Cosine (DC) least-square linear regression.
 %
 % SYNTAX:
-% TSERIES_F = NIAK_TIME_FILTER(TSERIES,OPT) 
+% TSERIES_F = NIAK_FILTER_TSERIES(TSERIES,OPT) 
 %
 % INPUTS:
 % TSERIES       (2D array, size T*N) a time*space array of time series.
@@ -74,13 +74,13 @@ gb_list_fields = {'tr','hp','lp'};
 gb_list_defaults = {NaN,-Inf,Inf};
 niak_set_defaults
 
-if ~isinf(lp)&((lp<0)|(lp>(1/(2*tr))))
-    error('niak:SI_processing','Please specify a cut-off frequency for low-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))
+if ~(isinf(lp)==1)&((lp<0)|(lp>(1/(2*tr))))
+    error('niak:SI_processing : Please specify a cut-off frequency for low-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))
     return
 end
     
-if ~isinf(hp)&((hp<0)|(hp>(1/(2*tr))))
-    error('niak:SI_processing','Please specify a cut-off frequency for high-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))   
+if ~(isinf(hp)==1)&((hp<0)|(hp>(1/(2*tr))))
+    error('niak:SI_processing : Please specify a cut-off frequency for high-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))   
 end
 
 nt = size(tseries,1);
