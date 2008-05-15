@@ -30,6 +30,11 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % into a svg file using dot, and displays it using the program specified in
 % the variable GB_NIAK_VIEWER_SVG in the file NIAK_GB_VARS.
 %
+% ACTION = 'status'
+% Print the current status of the pipeline (running or not), and displays
+% the log file of the initialization and execution of the pipeline, if they
+% exist.
+%
 % ACTION = 'unfinished'
 % Display a list of the unfinished stages of the pipeline.
 %
@@ -131,6 +136,40 @@ switch action
         system(cat(2,gb_niak_viewersvg,' ',file_svg_filenames,'&'));
         
     case 'status'
+        
+        fprintf('\n\n***********\n Status of th pipeline %s\n***********\n',name_pipeline);
+        
+        %% Running or not ...
+        file_lock = cat(2,path_logs,filesep,name_pipeline,'.lock');
+        if exist(file_lock,'file')
+            fprintf('The pipeline is currently running (a lock file is present)\n');
+        else
+            fprintf('The pipeline is not currently running\n');
+        end
+        
+        %% Initialization of the pipeline
+        file_start = cat(2,path_logs,filesep,name_pipeline,'.start');
+        hf = fopen(file_start);
+        if hf == -1
+            str_start = cat(2,'Could not find file ',file_start);
+        else
+            str_start = fread(hf,Inf,'uint8=>char');
+            fclose(hf);
+        end
+        fprintf('\n\n***********\n Log of pipeline initialization \n***********\n%s\n',str_start)
+        
+        
+        %% Excecution of the pipeline
+        file_exec = cat(2,path_logs,filesep,name_pipeline,'.log');
+        hf = fopen(file_exec);
+        if hf == -1
+            str_exec = cat(2,'Could not find file ',file_exec);
+        else
+            str_exec = fread(hf,Inf,'uint8=>char');
+            fclose(hf);
+        end
+        fprintf('\n\n***********\n Log of pipeline execution \n***********\n%s\n',str_exec)
+                   
     case 'unfinished'
         
                
