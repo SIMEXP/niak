@@ -118,6 +118,8 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -416,17 +418,24 @@ for num_r = list_run
 
     %% If requested, create a figure of motion parameters
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
-        if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
+        
+        if strcmp(gb_niak_language,'matlab')
             hfig = figure;
-            subplot(2,num_r,1);
+            subplot(1,2,1)
             plot(tab_parameters(:,4:6));
-            title(sprintf('Estimated translation parameters, file %s',file_name));
             legend('x','y','z');
-            subplot(2,num_r,2);
-            plot(tab_parameters(:,[2 1 3]));
+            title(sprintf('Estimated translation parameters, file %s',file_name));
+            subplot(1,2,2)
+            plot(tab_parameters(:,[2 1 3]),'.');
+            legend('pitch','roll','yaw');
             title(sprintf('Estimated rotation parameters, file %s',file_name));
-            legend('pitch','roll','yaw');            
+        else
+            plot(tab_parameters(:,4:6));
+            hold on
+            plot(tab_parameters(:,[2 1 3]),'-@');
+            title(sprintf('Estimated translation (plain,x y z) and rotation (marked, pitch, roll, yaw) parameters, file %s',file_name));
         end
+        
     end        
 
     % Cleaning temporary files
@@ -438,6 +447,8 @@ end
 if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
     saveas(hfig,files_out.fig_motion,'epsc')
     close(hfig)
+else
+    print(files_out.fig_motion,'-deps','-color');
 end
 
 %% If requested, write the target volume
