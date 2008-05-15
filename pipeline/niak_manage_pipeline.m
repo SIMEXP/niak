@@ -87,7 +87,7 @@ function [succ] = niak_manage_pipeline(file_pipeline,action,opt)
 
 niak_gb_vars
 
-init_sh = cat(2,gb_niak_path_civet,'init.sh');
+init_sh = cat(2,gb_niak_path_civet,gb_niak_init_civet_local);
 
 if ~exist('action','var'); error('niak:pipeline','please specify an action'); end
 

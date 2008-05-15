@@ -373,8 +373,9 @@ for num_s = 1:length(list_stage)
         system(cat(2,'rm -f ',file_running));
         system(cat(2,'rm -f ',file_failed));
         system(cat(2,'rm -f ',file_finished));
+        system(cat(2,'rm -f ',file_log));
         if flag_verbose
-            disp(sprintf('Cleaning .running .failed and .finished files for the stage %s (clobber mode)',stage_name));
+            disp(sprintf('Cleaning .running .failed .log and .finished files for the stage %s (clobber mode)',stage_name));
         end
     end
     
