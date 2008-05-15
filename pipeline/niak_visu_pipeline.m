@@ -35,8 +35,8 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % the log file of the initialization and execution of the pipeline, if they
 % exist.
 %
-% ACTION = 'unfinished'
-% Display a list of the unfinished stages of the pipeline.
+% ACTION = 'running'
+% Display a list of the stages of the pipeline that are currently running.
 %
 % SEE ALSO:
 % NIAK_INIT_PIPELINE, NIAK_MANAGE_PIPELINE, NIAK_DEMO_PIPELINE*

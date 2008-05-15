@@ -220,7 +220,10 @@ end
 [s,str_log] = system(instr_minctracc);
 
 if ~strcmp(files_out.transformation,'gb_niak_omitted')
-    copyfile(file_transf_tmp,files_out.transformation,'f');
+    [succ,msg] = system(cat(2,'cp ',file_transf_tmp,' ',files_out.transformation));
+    if succ~=0
+        error(msg)
+    end        
 end
 
 if ~strcmp(files_out.functional_resampled,'gb_niak_omitted')|~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')

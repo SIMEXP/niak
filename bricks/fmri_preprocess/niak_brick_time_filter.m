@@ -227,7 +227,7 @@ end
 
 if tr == -Inf
     
-    if isfield(opt.info,'tr')
+    if isfield(hdr.info,'tr')
         opt_f.tr = hdr.info.tr;
     else
         error('please specify the TR of the fMRI data in opt.tr')
