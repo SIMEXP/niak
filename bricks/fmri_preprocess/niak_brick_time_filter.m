@@ -225,7 +225,7 @@ end
 %% Performing temporal filtering
 [hdr,vol] = niak_read_vol(files_in);
 
-if tr == -Inf
+if (opt_f.tr == -Inf)
     
     if isfield(hdr.info,'tr')
         opt_f.tr = hdr.info.tr;
