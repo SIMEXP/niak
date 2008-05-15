@@ -225,10 +225,10 @@ end
 %% Performing temporal filtering
 [hdr,vol] = niak_read_vol(files_in);
 
-if (opt_f.tr == -Inf)
+if (opt.tr == -Inf)
     
     if isfield(hdr.info,'tr')
-        opt_f.tr = hdr.info.tr;
+        opt.tr = hdr.info.tr;
     else
         error('please specify the TR of the fMRI data in opt.tr')
     end
