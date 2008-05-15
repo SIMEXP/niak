@@ -97,6 +97,7 @@ if ~exist('opt','var'); opt = 'spawn'; end
 
 file_lock = cat(2,path_logs,filesep,name_pipeline,'.lock');
 file_log = cat(2,path_logs,filesep,name_pipeline,'.log');
+file_start = cat(2,path_logs,filesep,name_pipeline,'.start');
 
 switch action
     
@@ -121,10 +122,10 @@ switch action
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'sh ',file_tmp));
+        [succ,messg] = system(cat(2,'sh ',file_tmp,' > ',file_start));
         
         if succ == 0
-            fprintf('The pipeline was started in the background');
+            fprintf('The pipeline was started in the background\n');
         else
             error(messg)
         end        
