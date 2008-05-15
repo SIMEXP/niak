@@ -432,7 +432,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     end
 
     %% If necessary, close the between-session motion parameters file
-    if ~ischar(files_out.motion_parameters)
+    if ~ischar(files_out.transf_between_session)
         fclose(hf_mp);
     end
 

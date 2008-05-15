@@ -81,6 +81,7 @@ file_graph_stages = cat(2,path_logs,filesep,name_pipeline,'.graph_stages.dot');
 file_svg_stages = cat(2,path_logs,filesep,name_pipeline,'.graph_stages.svg');
 file_graph_filenames = cat(2,path_logs,filesep,name_pipeline,'.graph_filenames.dot');
 file_svg_filenames = cat(2,path_logs,filesep,name_pipeline,'.graph_filenames.svg');
+
 switch action
     
     case 'graph_stages'
@@ -129,24 +130,10 @@ switch action
         
         system(cat(2,gb_niak_viewersvg,' ',file_svg_filenames,'&'));
         
+    case 'status'
     case 'unfinished'
         
-        file_tmp = niak_file_tmp('.sh');
-        
-        hs = fopen(file_tmp,'w');
-
-        fprintf(hs,'#!/bin/bash \n');
-        fprintf(hs,'source %s \n',init_sh);
-        fprintf(hs,'%s printUnfinished',file_pipeline);
-        
-        fclose(hs);
-        
-        system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'sh ',file_tmp));
-        
-        fprintf(messg);
-        
-        delete(file_tmp)                
+               
         
     otherwise
         error('niak:pipeline: unknown action',action);
