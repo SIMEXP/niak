@@ -363,8 +363,10 @@ if ~strcmp(files_out.var_high,'gb_niak_omitted')
     hdr_out = hdr;
     hdr_out.file_name = files_out.var_high;
     vol_var_high = zeros([nx ny nz]);
-    var_high = var(extras.tseries_dc_high*extras.beta_dc_high);    
-    vol_var_high(mask>0) = var_high./var_vol;    
+    if ~isempty(extras.tseries_dc_high)
+        var_high = var(extras.tseries_dc_high*extras.beta_dc_high);    
+        vol_var_high(mask>0) = var_high./var_vol;    
+    end
     opt_hist.command = 'niak_brick_time_filter';
     opt_hist.files_in = files_in;
     opt_hist.files_out = files_out.beta_high;
