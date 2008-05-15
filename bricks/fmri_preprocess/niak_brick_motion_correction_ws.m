@@ -428,12 +428,7 @@ for num_r = list_run
             subplot(1,2,2)
             plot(tab_parameters(:,[2 1 3]),'.');
             legend('pitch','roll','yaw');
-            title(sprintf('Estimated rotation parameters, file %s',file_name));
-        else
-            plot(tab_parameters(:,4:6));
-            hold on
-            plot(tab_parameters(:,[2 1 3]),'-@');
-            title(sprintf('Estimated translation (plain,x y z) and rotation (marked, pitch, roll, yaw) parameters, file %s',file_name));
+            title(sprintf('Estimated rotation parameters, file %s',file_name));        
         end
         
     end        
@@ -448,7 +443,8 @@ if exist('saveas') % octave do not have the saveas command, it won't be possible
     saveas(hfig,files_out.fig_motion,'epsc')
     close(hfig)
 else
-    print(files_out.fig_motion,'-deps','-color');
+    tmp = 'sorry, octave 2.9.9 do not allow to save the figure';
+    save(files_out.fig_motion,'tmp');        
 end
 
 %% If requested, write the target volume
