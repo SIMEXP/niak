@@ -190,7 +190,7 @@ switch action
                 log_job = cat(2,files_running{num_j}(1:end-8),'.log');
                 file_log_job = cat(2,path_logs,filesep,log_job);
                 
-                if ~exist(file_log_job,'f')
+                if ~exist(file_log_job,'file')
                     fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
                 else
                     fprintf('\n\n***********\nLog file %s\n***********\n%s\n',log_job)
