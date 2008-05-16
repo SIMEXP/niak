@@ -10,8 +10,8 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 %                  NIAK_INIT_PIPELINE.
 %               
 % ACTION         (string) Possible values :
-%                  'graph_stages', 'graph_filenames', 'status' or 'running'.
-%
+%                  'graph_stages', 'graph_filenames', 'status', 'running',
+%                  'failed' or 'unfinished'
 % OUTPUTS:
 % 
 % What the function does depends on the argument ACTION :
@@ -39,6 +39,13 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % ACTION = 'running'
 % Display a list of the stages of the pipeline that are currently running,
 % and the current log file for each of these stages.
+%
+% ACTION = 'failed'
+% Display a list of the stages of the pipeline that have failed,
+% and the associated log files.
+%
+% ACTION = 'unfinished'
+% Display a list of unfinished stages.
 %
 % SEE ALSO:
 % NIAK_INIT_PIPELINE, NIAK_MANAGE_PIPELINE, NIAK_DEMO_PIPELINE*
@@ -203,10 +210,59 @@ switch action
             end
         end        
                    
+    case 'failed'
+
+        files_failed = dir(cat(2,path_logs,filesep,name_pipeline,'*.failed'));
+        files_failed = {files_failed.name};
+
+        if length(files_failed)==0
+            fprintf('\n\n***********\n No jobs have failed (so far !)\n***********\n%s\n')
+        else
+            fprintf('\n\n***********\n List of failed job(s) \n***********\n%s\n')
+            for num_j = 1:length(files_failed)
+                fprintf('%s\n',files_failed{num_j});
+            end
+
+            for num_j = 1:length(files_failed)
+
+                log_job = cat(2,files_failed{num_j}(1:end-8),'.log');
+                file_log_job = cat(2,path_logs,filesep,log_job);
+
+                if ~exist(file_log_job,'file')
+                    fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
+                else
+                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',log_job)
+                    hf = fopen(file_log_job,'r');
+                    str_log = fread(hf,Inf,'uint8=>char');
+                    fclose(hf);
+                    fprintf('%s\n',str_log)
+                end
+
+            end
+        end
+        
     case 'unfinished'
         
-               
+        file_mat = cat(2,path_logs,filesep,name_pipeline,'.mat');
+
+        if ~exist(file_log_job,'file')
+            fprintf('\n\n***********\nCould not find the pipeline mat file %s\n***********\n%s\n',file_mat);
+        else
+            fprintf('\n\n***********\nList of unfinished jobs\n***********\n%s\n');
+            
+            load(file_mat)
+            list_jobs = fieldnames(file_mat);
+
+            for num_j = 1:length(list_jobs)
+                file_job = cat(2,path_logs,filesep,name_pipeline,'.',list_jobs{num_j},'.finished')
+                if ~exist(file_log_job,'file')
+                    fprintf('%s\n',list_jobs{num_j});
+                end
+            end
+        end
         
     otherwise
+        
         error('niak:pipeline: unknown action',action);
+        
 end
