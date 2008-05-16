@@ -20,8 +20,9 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           the type of algorithm to be used for the sica decomposition.
 %           Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
-%       NB_COMP (optional, default 50) 
-%           number of components to compute
+%       NB_COMP (optional, default min(50,T)) 
+%           number of components to compute (for default : T is the number
+%           of time samples.
 %
 %       FOLDER_OUT (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -139,7 +140,7 @@ if flag_verbose
     fprintf('Performing spatial independent component analysis with %i components, this might take a while ...\n',nb_comp);
 end
 opt_sica.algo = opt.algo;
-opt_sica.param_nb_comp = nb_comp;
+opt_sica.param_nb_comp = min(nb_comp,nt);
 opt_sica.type_nb_comp = 0;
 opt_sica.verbose = 'off';
 res_ica = st_do_sica(vol,opt_sica);

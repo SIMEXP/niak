@@ -178,13 +178,13 @@ if nt1 == 1
 
     %% Resample the source on the target
     if ~isempty(files_in.transformation)
-        if flag_invert_transform
+        if flag_invert_transf
             instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
         else
             instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
         end
     else
-        if flag_invert_transform
+        if flag_invert_transf
             instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -invert_transformation -like ',file_target_tmp,' -clobber');
         else
             instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp,' -clobber');
@@ -213,13 +213,13 @@ else
         
         %% Resample
         if ~isempty(files_in.transformation)
-            if flag_invert_transform
+            if flag_invert_transf
                 instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -transform ',files_in.transformation,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
             else
                 instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
             end
         else
-            if flag_invert_transform
+            if flag_invert_transf
                 instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
             else
                 instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -',interpolation,' -like ',file_target_tmp,' -clobber');

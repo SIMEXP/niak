@@ -43,7 +43,7 @@ gb_niak_zip = 'gzip'; % The command to zip files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-gb_niak_version = '0.2.5'; % 
+gb_niak_version = '0.3'; % 
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION')    
