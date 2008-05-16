@@ -245,7 +245,7 @@ switch action
         
         file_mat = cat(2,path_logs,filesep,name_pipeline,'.mat');
 
-        if ~exist(file_log_job,'file')
+        if ~exist(file_mat,'file')
             fprintf('\n\n***********\nCould not find the pipeline mat file %s\n***********\n%s\n',file_mat);
         else
             fprintf('\n\n***********\nList of unfinished jobs\n***********\n%s\n');
