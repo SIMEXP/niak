@@ -229,7 +229,7 @@ switch action
 
             for num_j = 1:length(files_failed)
 
-                log_job = cat(2,files_failed{num_j}(1:end-8),'.log');
+                log_job = cat(2,files_failed{num_j}(1:end-7),'.log');
                 file_log_job = cat(2,path_logs,filesep,log_job);
 
                 if ~exist(file_log_job,'file')
@@ -260,7 +260,7 @@ switch action
 
             for num_j = 1:length(files_finished)
 
-                log_job = cat(2,files_finished{num_j}(1:end-8),'.log');
+                log_job = cat(2,files_finished{num_j}(1:end-9),'.log');
                 file_log_job = cat(2,path_logs,filesep,log_job);
 
                 if ~exist(file_log_job,'file')
