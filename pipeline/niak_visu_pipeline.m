@@ -212,13 +212,13 @@ switch action
                    
     case 'failed'
 
-        files_failed = dir(cat(2,path_logs,filesep,name_pipeline,'*.failed'));
-        files_failed = {files_failed.name};
+        files_failed = dir(cat(2,path_logs,filesep,name_pipeline,'*.failed'));        
 
         if length(files_failed)==0
             fprintf('\n\n***********\n No jobs have failed (so far !)\n***********\n%s\n')
-        else
+        else            
             fprintf('\n\n***********\n List of failed job(s) \n***********\n%s\n')
+            files_failed = {files_failed.name};
             for num_j = 1:length(files_failed)
                 fprintf('%s\n',files_failed{num_j});
             end
