@@ -169,6 +169,35 @@ switch action
             fclose(hf);
         end
         fprintf('\n\n***********\n Log of pipeline execution \n***********\n%s\n',str_exec)
+        
+    case 'running'
+        
+        files_running = dir(cat(2,path_logs,filesep,name_pipeline,'*.running'));
+        files_running = {files_running.name};
+        
+        if length(files_running)==0
+            fprintf('\n\n***********\n There is currently no job running \n***********\n%s\n')
+        else
+            fprintf('\n\n***********\n List of job(s) currently running \n***********\n%s\n')
+            for num_j = 1:length(files_running)
+                fprintf('%s\n',files_running{num_j});                
+            end
+            
+            for num_j = 1:length(files_running)
+                
+                file_log_job = cat(2,files_running{num_j}(1:end-7),'.log');
+                if ~exist(file_log_job,'f')
+                    fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
+                else
+                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',file_log_job)
+                    hf = fopen(file_log_job,'r');
+                    str_log = fread(hf,Inf,'uint8=>char');
+                    fclose(hf);        
+                    fprintf('%s\n',str_start)
+                end
+                
+            end
+        end        
                    
     case 'unfinished'
         
