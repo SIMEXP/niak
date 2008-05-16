@@ -80,7 +80,7 @@ end
 
 instr_concat = 'xfmconcat';
 
-for num_f = 1:length(files_in)
+for num_f = length(files_in):-1:1
     instr_concat = cat(2,instr_concat,' ',files_in{num_f});
 end
 

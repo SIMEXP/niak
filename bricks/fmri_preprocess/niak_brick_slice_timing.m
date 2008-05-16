@@ -49,7 +49,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 %               FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
 %                      brick does not do anything but update the default 
-%                      values in FILES_IN and FILES_OUT.
+%                      values in FILES_IN, FILES_OUT and OPT.
 %               
 % OUTPUTS:
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
