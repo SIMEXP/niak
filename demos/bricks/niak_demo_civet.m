@@ -49,12 +49,8 @@ switch gb_niak_format_demo
     case 'minc2' % If data are in minc2 format
 
         files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
-        
-%         opt.civet.folder = cat(2,gb_niak_path_demo,filesep,'civet',filesep); 
-%         opt.civet.prefix = 'anat';
-%         opt.civet.id = 'subject1';
-
         opt.folder_out = cat(2,gb_niak_path_demo,filesep,'anat_subject1',filesep); 
+        
         if ~exist(opt.folder_out)
             str = mkdir(opt.folder_out);
         end
@@ -69,10 +65,10 @@ end
 files_out.transformation_lin = '';
 files_out.transformation_nl = '';
 files_out.transformation_nl_grid = '';
-files_out.anat_nuc_native = '';
+files_out.anat_nuc = '';
 files_out.anat_nuc_stereo_lin = '';
 files_out.anat_nuc_stereo_nl = '';
-files_out.mask_native = '';
+files_out.mask = '';
 files_out.mask_stereo = '';
 files_out.classify = '';
 files_out.pve_wm = '';

@@ -277,10 +277,10 @@ for num_s = 1:nb_subject
     files_out_tmp.transformation_lin = '';
     files_out_tmp.transformation_nl = '';
     files_out_tmp.transformation_nl_grid = '';
-    files_out_tmp.anat_nuc_native = '';
+    files_out_tmp.anat_nuc = '';
     files_out_tmp.anat_nuc_stereo_lin = '';
     files_out_tmp.anat_nuc_stereo_nl = '';
-    files_out_tmp.mask_native = '';
+    files_out_tmp.mask = '';
     files_out_tmp.mask_stereo = '';
     files_out_tmp.classify = '';
     files_out_tmp.pve_wm = '';
@@ -400,7 +400,7 @@ for num_s = 1:nb_subject
 
     %% Building inputs for NIAK_BRICK_TIME_FILTER
     files_in_tmp.functional = getfield(pipeline,name_stage_motion,'files_out','mean_volume');
-    files_in_tmp.anat = getfield(pipeline,name_stage_anat,'files_out','anat_nuc_native');
+    files_in_tmp.anat = getfield(pipeline,name_stage_anat,'files_out','anat_nuc');
     
     %% Building outputs for NIAK_BRICK_TIME_FILTER
     files_out_tmp.transformation = '';
@@ -743,7 +743,8 @@ if strcmp(style,'standard-stereotaxic')
 
         %% Building inputs for NIAK_BRICK_TIME_FILTER
         files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
-        files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
+        files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');
+        files_in_tmp{3} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
 
         %% Building outputs for NIAK_BRICK_TIME_FILTER
         files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_func_to_stereotaxic_nl.xfm');        

@@ -34,17 +34,17 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %     names to 'gb_niak_omitted').
 %
 %
-%       TRANSFORMATION_LIN (string, default <BASE_ANAT>_transf_lin.xfm)
+%       TRANSFORMATION_LIN (string, default transf_<BASE_ANAT>_to_stereo_lin.xfm)
 %           Linear transformation from native to stereotaxic space (lsq9).
 %
-%       TRANSFORMATION_NL (string, default <BASE_ANAT>_transf_nl.xfm)
+%       TRANSFORMATION_NL (string, default transf_<BASE_ANAT>_stereo_lin_to_stereo_nl.xfm)
 %           Non-linear transformation from linear stereotaxic space to
 %           stereotaxic space.
 %
-%       TRANSFORMATION_NL_GRID (string, default <BASE_ANAT>_transf_nl_grid.xfm)
+%       TRANSFORMATION_NL_GRID (string, default transf_<BASE_ANAT>_stereo_lin_to_stereo_nl_grid.mnc)
 %           Deformation field for non-linear transformation.
 %
-%       ANAT_NUC_NATIVE (string, default <BASE_ANAT>_nuc_native.<EXT>)
+%       ANAT_NUC (string, default <BASE_ANAT>_nuc.<EXT>)
 %           t1 image partially corrected for non-uniformities (without
 %           mask), in native space.
 %       
@@ -57,23 +57,23 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %           non-linear transformation, fully corrected for non-uniformities (with
 %           mask)
 %       
-%       MASK_NATIVE (string, default <BASE_ANAT>_mask_native.<EXT>)
+%       MASK (string, default <BASE_ANAT>_mask.<EXT>)
 %           brain mask in native space.
 %
 %       MASK_STEREO (string, default <BASE_ANAT>_mask_stereo.<EXT>)
 %           brain mask in stereotaxic space.
 %
-%       CLASSIFY (string, default <BASE_ANAT>_classify.<EXT>)
+%       CLASSIFY (string, default <BASE_ANAT>_classify_stereo.<EXT>)
 %           final masked discrete tissue classification in stereotaxic
 %           space after correction for partial volumes.
 %
-%       PVE_WM (string, default <BASE_ANAT>_pve_wm.<EXT>)
+%       PVE_WM (string, default <BASE_ANAT>_pve_wm_stereo.<EXT>)
 %           partial volume estimates for white matter in stereotaxic space.
 %
-%       PVE_GM (string, default <BASE_ANAT>_pve_gm.<EXT>)
+%       PVE_GM (string, default <BASE_ANAT>_pve_gm_stereo.<EXT>)
 %           partial volume estimates for grey matter in stereotaxic space.
 %
-%       PVE_CSF (string, default <BASE_ANAT>_pve_csf.<EXT>)
+%       PVE_CSF (string, default <BASE_ANAT>_pve_csf_stereo.<EXT>)
 %           partial volume estimates for cerebro-spinal fluids in stereotaxic space.
 %
 %       VERIFY (string, default <BASE_ANAT>_verify.png)
@@ -166,7 +166,7 @@ niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc_native','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask_native','mask_stereo','classify','pve_wm','pve_gm','pve_csf','verify'};
+gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask','mask_stereo','classify','pve_wm','pve_gm','pve_csf','verify'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
@@ -237,24 +237,24 @@ end
 %% Generating the default outputs of the NIAK brick and civet
 
 if strcmp(files_out.transformation_lin,'')    
-    files_out.transformation_lin = cat(2,folder_anat,name_anat,'_transf_lin.xfm');        
+    files_out.transformation_lin = cat(2,folder_anat,'transf',name_anat,'_to_stereo_lin.xfm');        
 end
 files_civet.transformation_lin = cat(2,civet_folder,civet_id,filesep,'transforms',filesep,'linear',filesep,civet_prefix,'_',civet_id,'_t1_tal.xfm');
 
 if strcmp(files_out.transformation_nl,'')    
-    files_out.transformation_nl = cat(2,folder_anat,name_anat,'_transf_nl.xfm');    
+    files_out.transformation_nl = cat(2,folder_anat,'transf_',name_anat,'_stereo_lin_to_stereo_nl.xfm');    
 end
 files_civet.transformation_nl = cat(2,civet_folder,civet_id,filesep,'transforms',filesep,'nonlinear',filesep,civet_prefix,'_',civet_id,'_nlfit_It.xfm');
 
 if strcmp(files_out.transformation_nl_grid,'')    
-    files_out.transformation_nl_grid = cat(2,folder_anat,name_anat,'_transf_nl_grid.mnc');    
+    files_out.transformation_nl_grid = cat(2,folder_anat,'transf',name_anat,'_stereo_lin_to_stereo_nl_grid.mnc');    
 end
 files_civet.transformation_nl_grid = cat(2,civet_folder,civet_id,filesep,'transforms',filesep,'nonlinear',filesep,civet_prefix,'_',civet_id,'_nlfit_It_grid_0.mnc');
 
-if strcmp(files_out.anat_nuc_native,'')    
-    files_out.anat_nuc_native = cat(2,folder_anat,name_anat,'_nuc_native',ext_anat);    
+if strcmp(files_out.anat_nuc,'')    
+    files_out.anat_nuc = cat(2,folder_anat,name_anat,'_nuc',ext_anat);    
 end
-files_civet.anat_nuc_native = cat(2,civet_folder,civet_id,filesep,'native',filesep,civet_prefix,'_',civet_id,'_t1_nuc.mnc');
+files_civet.anat_nuc = cat(2,civet_folder,civet_id,filesep,'native',filesep,civet_prefix,'_',civet_id,'_t1_nuc.mnc');
 
 if strcmp(files_out.anat_nuc_stereo_lin,'')    
     files_out.anat_nuc_stereo_lin = cat(2,folder_anat,name_anat,'_nuc_stereo_lin',ext_anat);    
@@ -266,10 +266,10 @@ if strcmp(files_out.anat_nuc_stereo_nl,'')
 end
 files_civet.anat_nuc_stereo_nl = cat(2,civet_folder,civet_id,filesep,'final',filesep,civet_prefix,'_',civet_id,'_t1_nl.mnc');
 
-if strcmp(files_out.mask_native,'')    
-    files_out.mask_native = cat(2,folder_anat,name_anat,'_mask_native',ext_anat);
+if strcmp(files_out.mask,'')    
+    files_out.mask = cat(2,folder_anat,name_anat,'_mask',ext_anat);
 end
-files_civet.mask_native = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask_native.mnc');
+files_civet.mask = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask_native.mnc');
 
 if strcmp(files_out.mask_stereo,'')    
     files_out.mask_stereo = cat(2,folder_anat,name_anat,'_mask_stereo',ext_anat);
@@ -277,22 +277,22 @@ end
 files_civet.mask_stereo = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask.mnc');
 
 if strcmp(files_out.classify,'')    
-    files_out.classify = cat(2,folder_anat,name_anat,'_classify',ext_anat);
+    files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereo',ext_anat);
 end
 files_civet.classify = cat(2,civet_folder,civet_id,filesep,'classify',filesep,civet_prefix,'_',civet_id,'_classify.mnc');
 
 if strcmp(files_out.pve_wm,'')    
-    files_out.pve_wm = cat(2,folder_anat,name_anat,'_pve_wm',ext_anat);
+    files_out.pve_wm = cat(2,folder_anat,name_anat,'_pve_wm_stereo',ext_anat);
 end
 files_civet.pve_wm = cat(2,civet_folder,civet_id,filesep,'classify',filesep,civet_prefix,'_',civet_id,'_pve_wm.mnc');
 
 if strcmp(files_out.pve_gm,'')    
-    files_out.pve_gm = cat(2,folder_anat,name_anat,'_pve_gm',ext_anat);
+    files_out.pve_gm = cat(2,folder_anat,name_anat,'_pve_gm_stereo',ext_anat);
 end
 files_civet.pve_gm = cat(2,civet_folder,civet_id,filesep,'classify',filesep,civet_prefix,'_',civet_id,'_pve_gm.mnc');
 
 if strcmp(files_out.pve_csf,'')
-    files_out.pve_csf = cat(2,folder_anat,name_anat,'_pve_csf',ext_anat);
+    files_out.pve_csf = cat(2,folder_anat,name_anat,'_pve_csf_stereo',ext_anat);
 end
 files_civet.pve_csf = cat(2,civet_folder,civet_id,filesep,'classify',filesep,civet_prefix,'_',civet_id,'_pve_csf.mnc');
 
@@ -344,7 +344,7 @@ end
 %% Copying and renaming the results of CIVET %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc_native','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask_native','mask_stereo','classify','pve_wm','pve_gm','pve_csf','verify'};
+list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask','mask_stereo','classify','pve_wm','pve_gm','pve_csf','verify'};
 
 for num_r = 1:length(list_results)
 
@@ -387,8 +387,7 @@ for num_r = 1:length(list_results)
         end
                                
     end
-       
-    
+           
     %% Zip the outputs if specified
     if flag_zip
         if num_r == 1

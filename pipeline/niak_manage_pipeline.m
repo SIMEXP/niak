@@ -118,7 +118,7 @@ switch action
         
         fprintf(hs,'#!/bin/bash \n');
         fprintf(hs,'source %s \n',init_sh);        
-        fprintf(hs,'%s run %s > %s',file_pipeline,opt,file_log);        
+        fprintf(hs,'%s run %s > %s &',file_pipeline,opt,file_log);        
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
