@@ -255,7 +255,7 @@ switch action
 
             for num_j = 1:length(list_jobs)
                 file_job = cat(2,path_logs,filesep,name_pipeline,'.',list_jobs{num_j},'.finished')
-                if ~exist(file_log_job,'file')
+                if ~exist(file_job,'file')
                     fprintf('%s\n',list_jobs{num_j});
                 end
             end
