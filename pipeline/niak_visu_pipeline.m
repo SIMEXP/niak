@@ -251,7 +251,7 @@ switch action
             fprintf('\n\n***********\nList of unfinished jobs\n***********\n%s\n');
             
             load(file_mat)
-            list_jobs = fieldnames(file_mat);
+            list_jobs = fieldnames(pipeline);
 
             for num_j = 1:length(list_jobs)
                 file_job = cat(2,path_logs,filesep,name_pipeline,'.',list_jobs{num_j},'.finished')
