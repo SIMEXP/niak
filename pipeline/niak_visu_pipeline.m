@@ -11,7 +11,7 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 %               
 % ACTION         (string) Possible values :
 %                  'graph_stages', 'graph_filenames', 'status', 'running',
-%                  'failed' or 'unfinished'
+%                  'failed', 'finished' or 'unfinished'
 % OUTPUTS:
 % 
 % What the function does depends on the argument ACTION :
@@ -42,6 +42,10 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 %
 % ACTION = 'failed'
 % Display a list of the stages of the pipeline that have failed,
+% and the associated log files.
+%
+% ACTION = 'finished'
+% Display a list of finished stages of the pipeline,
 % and the associated log files.
 %
 % ACTION = 'unfinished'
@@ -181,13 +185,13 @@ switch action
         
     case 'running'
         
-        files_running = dir(cat(2,path_logs,filesep,name_pipeline,'*.running'));
-        files_running = {files_running.name};
+        files_running = dir(cat(2,path_logs,filesep,name_pipeline,'*.running'));        
         
         if length(files_running)==0
             fprintf('\n\n***********\n There is currently no job running \n***********\n%s\n')
         else
             fprintf('\n\n***********\n List of job(s) currently running \n***********\n%s\n')
+            files_running = {files_running.name};
             for num_j = 1:length(files_running)
                 fprintf('%s\n',files_running{num_j});                
             end
@@ -226,6 +230,37 @@ switch action
             for num_j = 1:length(files_failed)
 
                 log_job = cat(2,files_failed{num_j}(1:end-8),'.log');
+                file_log_job = cat(2,path_logs,filesep,log_job);
+
+                if ~exist(file_log_job,'file')
+                    fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
+                else
+                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',log_job)
+                    hf = fopen(file_log_job,'r');
+                    str_log = fread(hf,Inf,'uint8=>char');
+                    fclose(hf);
+                    fprintf('%s\n',str_log)
+                end
+
+            end
+        end
+        
+    case 'finished'
+
+        files_finished = dir(cat(2,path_logs,filesep,name_pipeline,'*.finished'));
+
+        if length(files_finished)==0
+            fprintf('\n\n***********\n No jobs have been completed\n***********\n%s\n')
+        else
+            fprintf('\n\n***********\n List of finished job(s) \n***********\n%s\n')
+            files_finished = {files_finished.name};
+            for num_j = 1:length(files_finished)
+                fprintf('%s\n',files_finished{num_j});
+            end
+
+            for num_j = 1:length(files_finished)
+
+                log_job = cat(2,files_finished{num_j}(1:end-8),'.log');
                 file_log_job = cat(2,path_logs,filesep,log_job);
 
                 if ~exist(file_log_job,'file')
