@@ -187,11 +187,13 @@ switch action
             
             for num_j = 1:length(files_running)
                 
-                file_log_job = cat(2,files_running{num_j}(1:end-8),'.log');
+                log_job = cat(2,files_running{num_j}(1:end-8),'.log');
+                file_log_job = cat(2,path_logs,filesep,log_job);
+                
                 if ~exist(file_log_job,'f')
                     fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
                 else
-                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',file_log_job)
+                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',log_job)
                     hf = fopen(file_log_job,'r');
                     str_log = fread(hf,Inf,'uint8=>char');
                     fclose(hf);        
