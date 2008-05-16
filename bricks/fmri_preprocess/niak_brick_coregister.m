@@ -39,7 +39,7 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %
 %   OPT   (structure) with the following fields:
 %
-%       FWHM (real number, default 5 mm) the fwhm of the blurring kernel
+%       FWHM (real number, default 3 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
 %       INTERPOLATION (string, default 'trilinear') the spatial
@@ -213,7 +213,7 @@ niak_write_vol(hdr_func,func);
 
 %% applying minc tracc
 file_transf_tmp = niak_file_tmp('_transf.mnc');
-instr_minctracc = cat(2,'minctracc ',file_anat_tmp,' ',file_func_tmp,' ',file_transf_tmp,' -mi -debug -simplex 20 -step 5 5 5 -lsq6 -clobber');
+instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -mi -debug -simplex 20 -step 5 5 5 -lsq6 -clobber');
 if flag_verbose
     fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
 end
@@ -250,6 +250,7 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
         files_in_res.transformation = file_transf_tmp;
         files_out_res = files_out.anat_hires;
         opt_res.flag_tfm_space = 1;
+        opt_res.flag_invert_transf = 1;
         opt_res.voxel_size = 0;
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);        
         
@@ -263,6 +264,7 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
         files_in_res.source = files_in.anat;
         files_in_res.target = files_in.functional;
         files_in_res.transformation = file_transf_tmp;
+        opt_res.flag_invert_transf = 1;
         files_out_res = files_out.anat_lowres;
         opt_res.flag_tfm_space = 1;
         opt_res.voxel_size = [];
@@ -271,7 +273,7 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
 
 end
 
-%% Get rif of the temporary file
+%% Get rid of the temporary file
 delete(file_transf_tmp);
 delete(file_anat_tmp);
 delete(file_func_tmp);

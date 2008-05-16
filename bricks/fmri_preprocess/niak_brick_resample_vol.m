@@ -23,22 +23,25 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %          interpolation method. Available options : 'trilinear', 'tricubic',
 %          'nearest_neighbour','sinc'.
 %
-%         FLAG_TFM_SPACE (boolean, default 1) if FLAG_TFM_SPACE is 0, the
+%       FLAG_TFM_SPACE (boolean, default 1) if FLAG_TFM_SPACE is 0, the
 %            transformation is applied and the volume is resampled in the 
 %            target space. If FLAG_TFM_SPACE is 1, the volume is resampled 
 %           in such a way that there is no rotations anymore between voxel 
 %           and world space.
 %
-%         VOXEL_SIZE (vector 1*3, default same as target space) If
+%       FLAG_INVERT_TRANSF (boolean, default 0) if FLAG_INVERT_TRANSF is 1,
+%           the specified transformation is inverted before being applied.
+%
+%       VOXEL_SIZE (vector 1*3, default same as target space) If
 %            voxel_size is set to 0, the resolution for resampling
 %            will be the same as the source space. Otherwise, the specified
 %            resolution will be used.
 %
-%         FOLDER_OUT (string, default: path of FILES_IN) If present,
+%       FOLDER_OUT (string, default: path of FILES_IN) If present,
 %            all default outputs will be created in the folder FOLDER_OUT.
 %            The folder needs to be created beforehand.
 %
-%         FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
+%       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
 %            brick does not do anything but update the default
 %            values in FILES_IN and FILES_OUT.
 %
@@ -83,8 +86,8 @@ niak_set_defaults
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test'};
-gb_list_defaults = {'sinc',1,[],'',0};
+gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf'};
+gb_list_defaults = {'sinc',1,[],'',0,0};
 niak_set_defaults
 
 %% Generating default ouputs
@@ -175,9 +178,17 @@ if nt1 == 1
 
     %% Resample the source on the target
     if ~isempty(files_in.transformation)
-        instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+        if flag_invert_transform
+            instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
+        else
+            instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+        end
     else
-        instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+        if flag_invert_transform
+            instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -invert_transformation -like ',file_target_tmp,' -clobber');
+        else
+            instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+        end
     end
     [flag_tmp,str_tmp] = system(instr_resample);
     
@@ -202,9 +213,17 @@ else
         
         %% Resample
         if ~isempty(files_in.transformation)
-            instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+            if flag_invert_transform
+                instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -transform ',files_in.transformation,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
+            else
+                instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -transform ',files_in.transformation,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+            end
         else
-            instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+            if flag_invert_transform
+                instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
+            else
+                instr_resample = cat(2,'mincresample ',file_func_tmp,' ',file_func_tmp2,' -',interpolation,' -like ',file_target_tmp,' -clobber');
+            end
         end
         [flag_tmp,str_tmp] = system(instr_resample);
         

@@ -826,11 +826,13 @@ if strcmp(style,'standard-stereotaxic')
                 pipeline = setfield(pipeline,name_stage,stage);
             end
             
-            %% If the amount of outputs is 'minimum' or 'quality_control',
+            %% If the amount of outputs is 'minimum' 
             %% clean the slice-timing-corrected data when temporally
             %% filtered images have been successfully generated.
+            %% In 'quality-control mode' we keep these images as there are
+            %% the only one left in native space.
             
-            if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
+            if strcmp(size_output,'minimum')
                 clear files_in_tmp
                 files_in_tmp = stage.files_out;
                 clear opt_tmp
