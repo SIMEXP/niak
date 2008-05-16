@@ -197,7 +197,7 @@ switch action
                     hf = fopen(file_log_job,'r');
                     str_log = fread(hf,Inf,'uint8=>char');
                     fclose(hf);        
-                    fprintf('%s\n',str_start)
+                    fprintf('%s\n',str_log)
                 end
                 
             end
