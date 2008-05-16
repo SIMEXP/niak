@@ -6,10 +6,11 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % [] = NIAK_VISU_PIPELINE(FILE_PIPELINE,ACTION)
 %
 % INPUTS:
-% FILE_PIPELINE      (string) The file name of a PMP script generated using
-%                           NIAK_INIT_PIPELINE.
+% FILE_PIPELINE  (string) The file name of a PMP script generated using
+%                  NIAK_INIT_PIPELINE.
 %               
-% ACTION             (string) either 'graph_stages', 'graph_filenames' or 'unfinished'.
+% ACTION         (string) Possible values :
+%                  'graph_stages', 'graph_filenames', 'status' or 'running'.
 %
 % OUTPUTS:
 % 
@@ -36,7 +37,8 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % exist.
 %
 % ACTION = 'running'
-% Display a list of the stages of the pipeline that are currently running.
+% Display a list of the stages of the pipeline that are currently running,
+% and the current log file for each of these stages.
 %
 % SEE ALSO:
 % NIAK_INIT_PIPELINE, NIAK_MANAGE_PIPELINE, NIAK_DEMO_PIPELINE*
@@ -185,7 +187,7 @@ switch action
             
             for num_j = 1:length(files_running)
                 
-                file_log_job = cat(2,files_running{num_j}(1:end-7),'.log');
+                file_log_job = cat(2,files_running{num_j}(1:end-8),'.log');
                 if ~exist(file_log_job,'f')
                     fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
                 else
