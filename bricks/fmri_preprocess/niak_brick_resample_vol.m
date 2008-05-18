@@ -78,13 +78,17 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Seting up default arguments %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Setting up inputs
 gb_name_structure = 'files_in';
 gb_list_fields = {'source','target','transformation'};
 gb_list_defaults = {NaN,NaN,''};
 niak_set_defaults
 
-% Setting up default
+% Setting up options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf'};
 gb_list_defaults = {'sinc',1,[],'',0,0};
@@ -115,7 +119,10 @@ if flag_test == 1
     return
 end
 
-%% Reading the source/target space information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Reading the source space information %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 hdr_source = niak_read_vol(files_in.source);
 [dircos1,step1,start1] = niak_hdr_mat2minc(hdr_source.info.mat);
 if min(voxel_size == 0) == 1
@@ -131,6 +138,10 @@ else
     nt1 = 1;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Reading the target space information %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 hdr_target = niak_read_vol(files_in.target);
 [dircos2,step2,start2] = niak_hdr_mat2minc(hdr_target.info.mat);
 if isempty(voxel_size)
@@ -140,8 +151,12 @@ nx2 = hdr_target.info.dimensions(1);
 ny2 = hdr_target.info.dimensions(2);
 nz2 = hdr_target.info.dimensions(3);
 
-%% Resample the target if necessary
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Resample the target if necessary %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if flag_tfm_space | (min(abs(voxel_size(:)) == abs(step2(:)))<1)
+    
     nx3 = ceil(abs(step2(1)./voxel_size(1))*nx2);
     ny3 = ceil(abs(step2(2)./voxel_size(2))*ny2);
     nz3 = ceil(abs(step2(3)./voxel_size(3))*nz2);
@@ -170,13 +185,24 @@ if flag_tfm_space | (min(abs(voxel_size(:)) == abs(step2(:)))<1)
     file_target_tmp = niak_file_tmp('_target.mnc');
     instr_target = cat(2,'mincresample ',files_in.target,' ',file_target_tmp,' -clobber -dircos ',num2str(dircos(:)'),' -step ',num2str(voxel_size),' -start ',num2str(start2'),' -trilinear -nelements ',num2str(nx3),' ',num2str(ny3),' ',num2str(nz3));
     [tmp,str_tmp] = system(instr_target);
+
+    %% Update the target space information
+    hdr_target = niak_read_vol(file_target_tmp);        
+    nx2 = hdr_target.info.dimensions(1);
+    ny2 = hdr_target.info.dimensions(2);
+    nz2 = hdr_target.info.dimensions(3);
+
 else
     file_target_tmp = files_in.target;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Resample the source on the target %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if nt1 == 1
 
-    %% Resample the source on the target
+    %% Case of a single 3D volume
     if ~isempty(files_in.transformation)
         if flag_invert_transf
             instr_resample = cat(2,'mincresample ',files_in.source,' ',files_out,' -transform ',files_in.transformation,' -invert_transformation -',interpolation,' -like ',file_target_tmp,' -clobber');
@@ -198,11 +224,10 @@ if nt1 == 1
 
 else
     
-    %% we have to extract and resample in functional volume independently,
-    %% and then put them together back into a 3D+t dataset
+    %% Case of 3D + t data
+        
     file_func_tmp = niak_file_tmp('func.mnc'); % temporary file for input
     file_func_tmp2 = niak_file_tmp('func2.mnc'); % temporary file for output
-    
     [hdr_source,vol_source] = niak_read_vol(files_in.source); % read the source
     vol_resampled = zeros([nx2,ny2,nz2,nt1]); % initialize a resampled space
     hdr_source.file_name = file_func_tmp;
@@ -232,7 +257,7 @@ else
         end
         
         [hdr_target,vol_tmp] = niak_read_vol(file_func_tmp2);
-        vol_resampled = vol_tmp;
+        vol_resampled(:,:,:,num_t) = vol_tmp;
         
     end
 

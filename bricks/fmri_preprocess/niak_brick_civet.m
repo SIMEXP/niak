@@ -237,7 +237,7 @@ end
 %% Generating the default outputs of the NIAK brick and civet
 
 if strcmp(files_out.transformation_lin,'')    
-    files_out.transformation_lin = cat(2,folder_anat,'transf',name_anat,'_to_stereo_lin.xfm');        
+    files_out.transformation_lin = cat(2,folder_anat,'transf_',name_anat,'_to_stereo_lin.xfm');        
 end
 files_civet.transformation_lin = cat(2,civet_folder,civet_id,filesep,'transforms',filesep,'linear',filesep,civet_prefix,'_',civet_id,'_t1_tal.xfm');
 
@@ -247,7 +247,7 @@ end
 files_civet.transformation_nl = cat(2,civet_folder,civet_id,filesep,'transforms',filesep,'nonlinear',filesep,civet_prefix,'_',civet_id,'_nlfit_It.xfm');
 
 if strcmp(files_out.transformation_nl_grid,'')    
-    files_out.transformation_nl_grid = cat(2,folder_anat,'transf',name_anat,'_stereo_lin_to_stereo_nl_grid.mnc');    
+    files_out.transformation_nl_grid = cat(2,folder_anat,'transf_',name_anat,'_stereo_lin_to_stereo_nl_grid.mnc');    
 end
 files_civet.transformation_nl_grid = cat(2,civet_folder,civet_id,filesep,'transforms',filesep,'nonlinear',filesep,civet_prefix,'_',civet_id,'_nlfit_It_grid_0.mnc');
 

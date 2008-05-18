@@ -14,7 +14,11 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %                       of the outputs will be the same as the inputs, 
 %                       with a '_a' suffix added at the end.
 %
-% OPT           (structure) with the following fields :
+% OPT           (structure) with the following fields.  Note that if
+%     a field is an empty string, a default value will be used to
+%     name the outputs. If a field is ommited, the output won't be
+%     saved at all (this is equivalent to setting up the output file
+%     names to 'gb_niak_omitted'). 
 %
 %               OPT.INTERPOLATON METHOD (string, default 'sync') the method for
 %                       temporal interpolation, choices 'linear' or 'sync'.

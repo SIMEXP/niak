@@ -11,7 +11,11 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %                       an array of strings where each line is a file name
 %                       of 3D data, all in the same space.
 %
-% FILES_OUT       (structure), with the following fields :
+% FILES_OUT       (structure), with the following fields.  Note that if
+%     a field is an empty string, a default value will be used to
+%     name the outputs. If a field is ommited, the output won't be
+%     saved at all (this is equivalent to setting up the output file
+%     names to 'gb_niak_omitted'). 
 %                       
 %                 FILTERED_DATA (string or array of strings, default <FILES_IN>_F) File names for outputs. NOTE that
 %                       if FILTERED_DATA does not exist, or if it is an empty string, the name 

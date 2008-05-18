@@ -814,7 +814,7 @@ if strcmp(style,'standard-stereotaxic')
                         
             %% Adding the stage to the pipeline
             clear stage
-            stage.label = 'temporal filtering';
+            stage.label = 'resampling in stereotaxic space';
             stage.command = 'niak_brick_resample_vol(files_in,files_out,opt)';
             stage.files_in = files_in_tmp;
             stage.files_out = files_out_tmp;
