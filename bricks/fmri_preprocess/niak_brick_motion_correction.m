@@ -644,7 +644,7 @@ if ~ischar(files_out.motion_corrected_data)
             data_r = zeros([nx ny nz nt-suppress_vol]);
             
             %% Resampling each volume
-            for num_v = suppress_vol:size(data,4)
+            for num_v = 1+suppress_vol:size(data,4)
 
                 if flag_verbose
                     fprintf(' %i',num_v)
@@ -657,7 +657,7 @@ if ~ischar(files_out.motion_corrected_data)
                 niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
                 
                 [hdr2,vol2] = niak_read_vol(files_out_r);
-                data_r(:,:,:,num_v-suppress_vol+1) = vol2;
+                data_r(:,:,:,num_v-suppress_vol) = vol2;
                 
             end
             
