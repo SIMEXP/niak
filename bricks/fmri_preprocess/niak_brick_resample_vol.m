@@ -19,7 +19,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %
 % OPT           (structure, optional) has the following fields:
 %
-%       INTERPOLATION (string, default 'sinc') the spatial
+%       INTERPOLATION (string, default 'trilinear') the spatial
 %          interpolation method. Available options : 'trilinear', 'tricubic',
 %          'nearest_neighbour','sinc'.
 %
@@ -91,7 +91,7 @@ niak_set_defaults
 % Setting up options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf'};
-gb_list_defaults = {'sinc',1,[],'',0,0};
+gb_list_defaults = {'trilinear',1,[],'',0,0};
 niak_set_defaults
 
 %% Generating default ouputs

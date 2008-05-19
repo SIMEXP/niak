@@ -10,8 +10,8 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 % VOL           (4D array) a 3D+t dataset
 % OPT           (structure) with the following fields :
 %
-%               INTERPOLATION_METHOD   (string, default 'sync') the method for
-%                       temporal interpolation, choices 'linear' or 'sync'.
+%               INTERPOLATION   (string, default 'sinc') the method for
+%                       temporal interpolation, choices 'linear' or 'sinc'.
 %
 %               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
 %                      that the kth slice was acquired in ith position. The
@@ -46,7 +46,7 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 % COMMENTS:
 % The linear interpolation was coded by P Bellec, MNI 2008
 %
-% The sync interpolation is a port from SPM5, under the GNU license.
+% The sinc interpolation is a port from SPM5, under the GNU license.
 % First code : Darren Gitelman at Northwestern U., 1998
 % Based (in large part) on ACQCORRECT.PRO from Geoff Aguirre and
 % Eric Zarahn at U. Penn.
@@ -79,8 +79,8 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation_method','slice_order','ref_slice','timing','flag_verbose'};
-gb_list_defaults = {'sync',NaN,[],NaN,1};
+gb_list_fields = {'interpolation','slice_order','ref_slice','timing','flag_verbose'};
+gb_list_defaults = {'sinc',NaN,[],NaN,1};
 niak_set_defaults
 
 nb_slices = length(slice_order);
@@ -108,7 +108,7 @@ end
     
 vol_a = zeros(size(vol));
 
-if strcmp(interpolation_method,'linear')
+if strcmp(interpolation,'linear')
     
     [tmp,time_slices] = sort(slice_order);
     time_slices = time_slices * timing(1);
@@ -124,7 +124,7 @@ if strcmp(interpolation_method,'linear')
         vol_a(:,:,num_z,:) = reshape(slices_z_a',[nx ny nt]);
     end
     
-elseif strcmp(interpolation_method,'sync')
+elseif strcmp(interpolation,'sinc')
        
     nt2	= 2^(floor(log2(nt))+1);
 
@@ -175,6 +175,6 @@ elseif strcmp(interpolation_method,'sync')
     
 else
     
-    fprintf('Unkown interpolation method : %s',interpolation_method)
+    fprintf('Unkown interpolation method : %s',interpolation)
     
 end

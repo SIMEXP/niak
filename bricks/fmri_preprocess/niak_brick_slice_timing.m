@@ -20,8 +20,16 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %     saved at all (this is equivalent to setting up the output file
 %     names to 'gb_niak_omitted'). 
 %
-%               OPT.INTERPOLATON METHOD (string, default 'sync') the method for
-%                       temporal interpolation, choices 'linear' or 'sync'.
+%               SUPPRESS_VOL (integer, default 1) the number of volumes
+%                   that are suppressed at the begining of the time series.
+%                   This is a good stage to get rid of "dummy scans"
+%                   necessary to reach signal stabilization (that takes
+%                   about 3 volumes), and there are also edges effects in the
+%                   sinc interpolation, so it is preferable to get rid of
+%                   at least one volume.
+%
+%               INTERPOLATON (string, default 'sinc') the method for
+%                   temporal interpolation, choices 'linear' or 'sinc'.
 %
 %               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
 %                      that the kth slice was acquired in ith position. The
@@ -64,6 +72,14 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 % COMMENTS
 %
+% This stage changes the timing of your experiment ! Those changes are
+% twofold : 
+% 1. Some volumes are removed
+% 2. The time of reference in a volume is now the time of the slice of
+% reference.
+% It is important that you take these effects into account if you include
+% stimulus timing in any further anaysis, typically a general linear model.
+%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -97,8 +113,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation_method','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {'sync',NaN,[],NaN,1,0,'',0};
+gb_list_fields = {'suppress_vol','interpolation','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out','flag_zip'};
+gb_list_defaults = {1,'sinc',NaN,[],NaN,1,0,'',0};
 niak_set_defaults
 
 nb_slices = length(opt.slice_order);
@@ -158,7 +174,7 @@ end
 opt_a.slice_order = opt.slice_order;
 opt_a.timing = opt.timing;
 opt_a.ref_slice = opt.ref_slice;
-opt_a.interpolation_method = opt.interpolation_method;
+opt_a.interpolation = opt.interpolation;
 [vol_a,opt] = niak_slice_timing(vol,opt_a);
 
 %% Updating the history and saving output
@@ -169,6 +185,6 @@ opt_hist.command = 'niak_slice_timing';
 opt_hist.files_in = files_in;
 opt_hist.files_out = files_out;
 hdr = niak_set_history(hdr,opt_hist);
-niak_write_vol(hdr,vol_a);
+niak_write_vol(hdr,vol_a(:,:,:,min(1+suppress_vol,size(vol_a,4)):end));
 
 
