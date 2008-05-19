@@ -96,7 +96,7 @@ opt.bricks.motion_correction.suppress_vol = 0; % There is no dummy scan to supre
 opt.bricks.motion_correction.vol_ref = 25; % The runs are 50 volumes long, we use the middle volume as a reference.
 opt.bricks.motion_correction.run_ref = 1; % The first run of each session is used as a reference.
 opt.bricks.motion_correction.session_ref = 'session1'; % The first session is used as a reference.
-opt.bricks.flag_session = 0; % Correct for both within and between sessions motion
+opt.bricks.motion_correction.flag_session = 0; % Correct for both within and between sessions motion
 
 %% 2. Slice timing correction (niak_brick_slice_timing)
 TR = 2.33; % Repetition time in seconds
