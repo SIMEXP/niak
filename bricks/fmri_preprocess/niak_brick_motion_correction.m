@@ -83,6 +83,12 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %
 %   OPT   (structure) with the following fields:
 %
+%       SUPPRESS_VOL (integer, default 0) the number of volumes
+%           that are suppressed at the begining of the time series.
+%           This is a good stage to get rid of "dummy scans"
+%           necessary to reach signal stabilization (that takes
+%           about 3 volumes).
+%
 %       VOL_REF (vector, default 1) VOL_REF(NUM) is
 %           the number of the volume that will be used as target for
 %           session NUM. If VOL_REF is a single integer, the same number will be
@@ -104,10 +110,10 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
-%       FLAG_SESSION (boolean, default 0) if FLAG_SESSION == 1, the
+%       FLAG_SESSION (boolean, default 0) if FLAG_SESSION == 0, the
 %          intra-session motion parameters are included in the final transformation.
-%          If FLAG_RUN == 0, the intra-session motion parameters are still estimated
-%          for quality check, but the between-session transformation only are
+%          If FLAG_SESSION == 1, the intra-session motion parameters are still estimated
+%          for purpose of quality control, but the between-session transformation only are
 %          actually included in the resampling.
 %
 %       FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
@@ -193,8 +199,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'vol_ref','run_ref','session_ref','flag_session','flag_zip','flag_test','folder_out','interpolation','fwhm','flag_verbose'};
-gb_list_defaults = {1,1,'',0,0,0,'','sinc',8,1};
+gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_zip','flag_test','folder_out','interpolation','fwhm','flag_verbose'};
+gb_list_defaults = {0,1,1,'',0,0,0,'','sinc',8,1};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);

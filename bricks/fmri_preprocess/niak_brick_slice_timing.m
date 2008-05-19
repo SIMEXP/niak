@@ -21,12 +21,9 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %     names to 'gb_niak_omitted'). 
 %
 %               SUPPRESS_VOL (integer, default 1) the number of volumes
-%                   that are suppressed at the begining of the time series.
-%                   This is a good stage to get rid of "dummy scans"
-%                   necessary to reach signal stabilization (that takes
-%                   about 3 volumes), and there are also edges effects in the
-%                   sinc interpolation, so it is preferable to get rid of
-%                   at least one volume.
+%                   that are suppressed at the begining and the end of the time series.
+%                   This is done to limit the edges effects in the
+%                   sinc interpolation.
 %
 %               INTERPOLATON (string, default 'sinc') the method for
 %                   temporal interpolation, choices 'linear' or 'sinc'.
@@ -74,11 +71,15 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 % This stage changes the timing of your experiment ! Those changes are
 % twofold : 
-% 1. Some volumes are removed
+% 1. Some volumes are removed at the begining of the acquisition 
+%    (see OPT.SUPPRESS_VOL).
 % 2. The time of reference in a volume is now the time of the slice of
-% reference.
-% It is important that you take these effects into account if you include
-% stimulus timing in any further anaysis, typically a general linear model.
+%    reference.
+% It is important that these effects are taken into account if 
+% stimulus timing are considered in any further anaysis, 
+% typically in a general linear model. Packages like fMRIstat includes the
+% slice timing in the model, so this stage of analysis may not be
+% necessary.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -185,6 +186,6 @@ opt_hist.command = 'niak_slice_timing';
 opt_hist.files_in = files_in;
 opt_hist.files_out = files_out;
 hdr = niak_set_history(hdr,opt_hist);
-niak_write_vol(hdr,vol_a(:,:,:,min(1+suppress_vol,size(vol_a,4)):end));
+niak_write_vol(hdr,vol_a(:,:,:,1+suppress_vol:end-suppress_vol));
 
 
