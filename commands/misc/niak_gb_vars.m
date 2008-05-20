@@ -12,9 +12,9 @@ gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % W
 
 gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
 
-gb_niak_init_civet_local = 'init-sge.sh'; % Which CIVET configuration to use locally
+gb_niak_init_civet_local = 'init-sge.sh'; % Which CIVET configuration to use locally. Keep it sh !
 
-gb_niak_init_civet = 'init.csh'; % Which CIVET configuration to use for jobs on the cluster
+gb_niak_init_civet = 'init.csh'; % Which CIVET configuration to use for jobs on the cluster. Keep is csh !
 
 gb_niak_command_matlab = 'matlab'; % how to invoke matlab   
 

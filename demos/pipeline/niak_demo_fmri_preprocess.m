@@ -113,7 +113,7 @@ opt.bricks.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequenc
 opt.bricks.time_filter.lp = Inf; % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
 
 %% 5. Spatial smoothing (niak_brick_smooth_vol)
-opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
+opt.bricks.smooth_vol.fwhm = 4; % Apply an isotropic 6 mm gaussin smoothing.
 
 %% 6. Linear and non-linear fit of the anatomical image in the stereotaxic
 %% space (niak_brick_civet)

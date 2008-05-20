@@ -17,7 +17,7 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %
 % OPT           (structure) with the following fields :
 %
-%               FWHM  (vector of size [3 1], default [6 6 6]) the full width at half maximum of
+%               FWHM  (vector of size [3 1], default [4 4 4]) the full width at half maximum of
 %                      the Gaussian kernel, in each dimension. If fwhm has length 1,
 %                      an isotropic kernel is implemented.
 %
@@ -90,7 +90,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'fwhm','voxel_size','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {[6 6 6],[],1,0,'',0};
+gb_list_defaults = {[4 4 4],[],1,0,'',0};
 niak_set_defaults
 
 %% Output files
