@@ -428,7 +428,8 @@ for num_s = 1:length(list_stage)
             case 'octave'
                 
                 fprintf(hs,'#!/bin/bash \n');
-                fprintf(hs,'source %s \n',init_sh);                
+                fprintf(hs,'source %s \n',init_sh);
+                fprintf(hs,'export MINC_COMPRESS=0'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
                 fprintf(hs,'%s %s -x \n',command_octave,file_oct);
                 
                 ho = fopen(file_oct,'w');

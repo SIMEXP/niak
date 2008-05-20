@@ -294,22 +294,15 @@ else
     if flag_verbose
         fprintf('Writing the 3D+t output\n')
     end
-
-    files_out_tmp = niak_file_tmp('_final.mnc');
-    hdr_target.file_name = files_out_tmp;
-    niak_write_vol(hdr_target,vol_resampled);
-    instr_mv = cat(2,'cp ',files_out_tmp,' ',files_out)
-    [succ,msg] = system(instr_mv);
-    if ~(succ==0)
-        warning(msg);
-    end
+    
+    hdr_target.file_name = files_out;
+    niak_write_vol(hdr_target,vol_resampled);    
     
     %% clean the temporary files
     if flag_verbose
         fprintf('Cleaning temporary files\n')
     end
-
-    delete(files_out_tmp);
+    
     delete(file_func_tmp);
     delete(file_func_tmp2);
 end
