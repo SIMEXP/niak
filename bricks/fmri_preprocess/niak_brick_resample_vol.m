@@ -288,11 +288,13 @@ else
         
     end
 
-    if flag_verbose
-        fprintf('Done!\n')
-    end
+    
         
     %% write the resampled volumes in a 3D+t dataset
+    if flag_verbose
+        fprintf('Writing the 3D+t output\n')
+    end
+
     files_out_tmp = niak_file_tmp('_final.mnc');
     hdr_target.file_name = files_out_tmp;
     niak_write_vol(hdr_target,vol_resampled);
@@ -303,6 +305,10 @@ else
     end
     
     %% clean the temporary files
+    if flag_verbose
+        fprintf('Cleaning temporary files\n')
+    end
+
     delete(files_out_tmp);
     delete(file_func_tmp);
     delete(file_func_tmp2);
@@ -310,7 +316,12 @@ end
 
 %% Clean temporary stuff
 if ~(strcmp(file_target_tmp,files_in.target))
+    if flag_verbose
+        fprintf('Cleaning temporary files\n')
+    end
     delete(file_target_tmp)
 end
 
-
+if flag_verbose
+    fprintf('Done!\n')
+end
