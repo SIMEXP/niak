@@ -432,7 +432,7 @@ for num_s = 1:length(list_stage)
                 fprintf(hs,'%s %s -x \n',command_octave,file_oct);
                 
                 ho = fopen(file_oct,'w');
-                fprintf(ho,'tic,load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''), files_in, files_out, opt,\n %s;\n',file_path_mat,file_var,command);
+                fprintf(ho,'tic,\nload(''-mat'',''%s''),\n path(path_work),\nload(''-mat'',''%s''),\nfiles_in,\nfiles_out,\nopt,\n%s;\n',file_path_mat,file_var,command);
                 fprintf(ho,'fprintf(''\\n*************\\nDone !\\n*************\\n'');\n');
                 fprintf(ho,'elt = toc;\nfprintf(''Time elapsed: %%1.2fs, %%1.2fmn, %%1.2fh\\n'',elt,elt/60,elt/3600);\n');
                 fclose(ho);
