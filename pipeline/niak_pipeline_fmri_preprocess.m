@@ -126,9 +126,17 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       4.  Correction of slow time drifts.
 %       5.  Spatial smoothing.
 %       6.  Spatial normalization of the anatomical image.
+%       7.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%           transformations.
 %   
 %  * style 'standard-stereotaxic'
-%       Same as 'standard-native', with the following additional steps : 
+%       1.  Motion correction (within- and between-run for each subject).
+%       2.  Slice timing correction
+%       3.  Coregistration of the anatomical volume with the mean 
+%           functional volume.
+%       4.  Correction of slow time drifts.
+%       5.  Spatial smoothing.
+%       6.  Spatial normalization of the anatomical image.
 %       7.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
 %       8.  Resampling of the functional data in the stereotaxic space.
@@ -721,14 +729,61 @@ for num_s = 1:nb_subject
     end % run
 end % subject
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Concatenate T2-to-T1 and T1-to-stereotaxic-lin spatial transformation %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Concatenate T2-to-T1 and T1-to-stereotaxic spatial transformation %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
 
-if strcmp(style,'standard-stereotaxic')
+    name_process = 'concat_transf_lin';
 
-    name_process = 'concat_transf';
+    for num_s = 1:nb_subject
+
+        subject = list_subject{num_s};
+
+        clear opt_tmp files_in_tmp files_out_tmp
+
+        %% Names of input/output stages
+        name_stage = cat(2,name_process,'_',subject);
+        name_stage_coregister = cat(2,'coregister_',subject);
+        name_stage_anat = cat(2,'anat_',subject);
+
+        %% Building inputs for NIAK_BRICK_TIME_FILTER
+        files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
+        files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');        
+
+        %% Building outputs for NIAK_BRICK_TIME_FILTER
+        files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_func_to_stereotaxic_lin.xfm');        
+
+        %% Setting up options
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'concat spatial transformations (linear)';
+        stage.command = 'niak_brick_concat_transf(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+
+        if isempty(pipeline)
+            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
+        else
+            pipeline = setfield(pipeline,name_stage,stage);
+        end
+
+    end % subject
+
+end % if (pipeline style)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Concatenate T2-to-T1 and T1-to-stereotaxic-nl spatial transformation %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
+
+    name_process = 'concat_transf_nl';
 
     for num_s = 1:nb_subject
 
@@ -754,7 +809,7 @@ if strcmp(style,'standard-stereotaxic')
 
         %% Adding the stage to the pipeline
         clear stage
-        stage.label = 'concat spatial transformations';
+        stage.label = 'concat spatial transformations (non-linear)';
         stage.command = 'niak_brick_concat_transf(files_in,files_out,opt)';
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
@@ -785,7 +840,7 @@ if strcmp(style,'standard-stereotaxic')
         job_pipeline = fieldnames(pipeline);
         files_raw = niak_files2cell(getfield(files_in,subject,'fmri'));
         nb_run = length(files_raw);
-        name_stage_transf = cat(2,'concat_transf_',subject);
+        name_stage_transf = cat(2,'concat_transf_nl_',subject);
         
         for num_r = 1:nb_run
 

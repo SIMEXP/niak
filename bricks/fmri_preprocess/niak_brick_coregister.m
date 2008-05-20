@@ -29,11 +29,11 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %           File name for saving the transformation from the functional
 %           space to the anatomical space.
 %
-%       ANAT_HIRES (string, default <BASE_ANAT>_hires)
+%       ANAT_FUNCSPACE_HIRES (string, default <BASE_ANAT>_funcspace_hires)
 %           File name for saving the anatomical image resampled in the
 %           space of the functional space, using native resolution.
 %     
-%       ANAT_LOWRES (string, default <BASE_ANAT>_hires)
+%       ANAT_FUNCSPACE_LOWRES (string, default <BASE_ANAT>_funcspace_hires)
 %           File name for saving the anatomical image resampled in the
 %           space of the functional space, using the target resolution.
 %
@@ -159,11 +159,11 @@ if isempty(files_out.transformation)
 end
 
 if isempty(files_out.anat_lowres)
-    files_out.anat_lowres = cat(2,folder_anat,filesep,name_anat,'_lowres',ext_anat);
+    files_out.anat_lowres = cat(2,folder_anat,filesep,name_anat,'_funcspace_lowres',ext_anat);
 end
 
 if isempty(files_out.anat_hires)
-    files_out.anat_hires = cat(2,folder_anat,filesep,name_anat,'_hires',ext_anat);
+    files_out.anat_hires = cat(2,folder_anat,filesep,name_anat,'_funcspace_hires',ext_anat);
 end
 
 if flag_test == 1

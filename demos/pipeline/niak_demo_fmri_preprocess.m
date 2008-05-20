@@ -43,7 +43,7 @@
 
 clear
 niak_gb_vars
-
+gb_niak_path_demo = '/media/disk/database/data_demo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Setting input/output files %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

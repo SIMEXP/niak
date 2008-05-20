@@ -432,7 +432,9 @@ for num_s = 1:length(list_stage)
                 fprintf(hs,'%s %s -x \n',command_octave,file_oct);
                 
                 ho = fopen(file_oct,'w');
-                fprintf(ho,'load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''), files_in, files_out, opt,\n %s;\n',file_path_mat,file_var,command);
+                fprintf(ho,'tic,load(''-mat'',''%s''),\n path(path_work),\n load(''-mat'',''%s''), files_in, files_out, opt,\n %s;\n',file_path_mat,file_var,command);
+                fprintf(ho,'fprintf(''\n*************\nDone !\n*************\n'');');
+                fprintf(ho,'elt = toc;\nfprintf(''Time elapsed: %1.2fs, %1.2fmn, %1.2fh\n'');\n',elt,elt/60,elt/3600);
                 fclose(ho);
                 if flag_verbose
                     if clobber

@@ -45,6 +45,9 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %            brick does not do anything but update the default
 %            values in FILES_IN and FILES_OUT.
 %
+%       FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
+%            the function prints some infos during the processing.
+%
 %
 % OUTPUTS:
 % The resampled volume.
@@ -90,8 +93,8 @@ niak_set_defaults
 
 % Setting up options
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf'};
-gb_list_defaults = {'trilinear',1,[],'',0,0};
+gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf','flag_verbose'};
+gb_list_defaults = {'trilinear',1,[],'',0,0,1};
 niak_set_defaults
 
 %% Generating default ouputs
@@ -123,6 +126,10 @@ end
 %% Reading the source space information %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if flag_verbose
+    fprintf('\n Reading source volume information %s ...\n',files_in.source);
+end
+
 hdr_source = niak_read_vol(files_in.source);
 [dircos1,step1,start1] = niak_hdr_mat2minc(hdr_source.info.mat);
 if min(voxel_size == 0) == 1
@@ -142,6 +149,10 @@ end
 %% Reading the target space information %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if flag_verbose
+    fprintf('\n Reading target volume information %s ...\n',files_in.target);
+end
+
 hdr_target = niak_read_vol(files_in.target);
 [dircos2,step2,start2] = niak_hdr_mat2minc(hdr_target.info.mat);
 if isempty(voxel_size)
@@ -157,6 +168,10 @@ nz2 = hdr_target.info.dimensions(3);
 
 if flag_tfm_space | (min(abs(voxel_size(:)) == abs(step2(:)))<1)
     
+    if flag_verbose
+        fprintf('\n Resampling target space to get rid of "voxel-to-world" transformation (except voxel size)...\n');
+    end
+
     nx3 = ceil(abs(step2(1)./voxel_size(1))*nx2);
     ny3 = ceil(abs(step2(2)./voxel_size(2))*ny2);
     nz3 = ceil(abs(step2(3)./voxel_size(3))*nz2);
@@ -202,6 +217,10 @@ end
 
 if nt1 == 1
 
+    if flag_verbose
+        fprintf('\n Resampling source on target ...\n');
+    end
+
     %% Case of a single 3D volume
     if ~isempty(files_in.transformation)
         if flag_invert_transf
@@ -224,6 +243,10 @@ if nt1 == 1
 
 else
     
+    if flag_verbose
+        fprintf('\n Resampling source on target, volume : ');
+    end
+    
     %% Case of 3D + t data
         
     file_func_tmp = niak_file_tmp('func.mnc'); % temporary file for input
@@ -234,6 +257,10 @@ else
     
     for num_t = 1:nt1
         
+        if flag_verbose
+            fprintf('%i ',num_t)
+        end
+
         niak_write_vol(hdr_source,vol_source(:,:,:,num_t)); % write one temporary volume
         
         %% Resample
@@ -261,6 +288,10 @@ else
         
     end
 
+    if flag_verbose
+        fprintf('Done!\n')
+    end
+        
     %% write the resampled volumes in a 3D+t dataset
     hdr_target.file_name = files_out;
     niak_write_vol(hdr_target,vol_resampled);
