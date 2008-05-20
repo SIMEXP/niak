@@ -216,7 +216,7 @@ end
 [succ,messg,messgid] = niak_mkdir(path_logs);
 
 if succ == 0 
-    error(messg);
+    warning(messg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
