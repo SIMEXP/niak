@@ -97,10 +97,11 @@ neig2(to_keep==0) = 0; % Get rid of neighbours that fall outside the mask
 
 %% Converting the linear indices into position within the list IND
 neig3 = neig2(to_keep == 1);
-[tf,loc] = ismember(neig3,ind);
-neig3(tf) = loc(tf);
+mask_ind = zeros(size(mask));
+mask_ind(mask>0) = 1:sum(mask(:)>0);
+neig3 = mask_ind(neig3);
 
-%% Converting the linear indices into position within the list IND
+%% Reshaping the neighbor matrix
 neig2(to_keep == 1) = neig3;
 neig(~isnan(neig)) = neig2; 
 neig(isnan(neig)) = 0;
