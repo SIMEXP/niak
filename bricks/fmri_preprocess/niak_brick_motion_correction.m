@@ -601,6 +601,7 @@ if ~ischar(files_out.motion_corrected_data)
     opt_r.interpolation = opt.interpolation;
     opt_r.flag_tfm_space = 0;
     opt_r.flag_test = 0;
+    opt_r.flag_verbose = 0;
     files_in_r.source = niak_file_tmp('_vol.mnc');
     files_in_r.target = file_target;
     files_in_r.transformation = niak_file_tmp('_transf.xfm');

@@ -51,8 +51,8 @@ switch gb_niak_format_demo
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.sessions.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc')};
-        files_in.sessions.session2 = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};        
+        files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc');
+        files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc');        
 
     otherwise 
         
@@ -71,7 +71,7 @@ files_out.fig_motion  = ''; % use default names
 %% Options
 
 opt.flag_session = 0; % Correct for within-run motion
-opt.vol_ref = 1; % Use the 40th volume as a reference 
+opt.vol_ref = 5; % Use the 40th volume as a reference 
 opt.flag_test = 0; % Actually perform the motion correction
 
 [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);

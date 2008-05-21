@@ -214,6 +214,7 @@ hdr = niak_read_vol(files_in{1});
 list_run = 1:nb_files;
 list_run = [run_ref list_run(list_run~=run_ref)];
 opt_s.fwhm = fwhm;
+hfig = figure;
 
 for num_r = list_run
 
@@ -419,13 +420,12 @@ for num_r = list_run
     %% If requested, create a figure of motion parameters
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         
-        if strcmp(gb_niak_language,'matlab')
-            hfig = figure;
-            subplot(num_r,2,1+(num_r-1)*2)
+        if strcmp(gb_niak_language,'matlab')            
+            subplot(max(list_run),2,1+(num_r-1)*2)
             plot(tab_parameters(:,4:6));
             legend('x','y','z');
             title(sprintf('Estimated translation parameters, file %s',file_name));
-            subplot(num_r,2,2+(num_r-1)*2)
+            subplot(max(list_run),2,2+(num_r-1)*2)
             plot(tab_parameters(:,[2 1 3]));
             legend('pitch','roll','yaw');
             title(sprintf('Estimated rotation parameters, file %s',file_name));        
