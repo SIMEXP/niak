@@ -236,7 +236,7 @@ for num_r = list_run
     hdr.file_name = file_mask_source;
     niak_write_vol(hdr,mask);
 
-    if num_r == 1
+    if num_r == run_ref
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Generating the target %%
@@ -329,7 +329,7 @@ for num_r = list_run
         hdr.file_name = file_vol;
         niak_write_vol(hdr,vol_source);
 
-        if max(num_v == vol_ref)
+        if (num_v == vol_ref) & (num_r == run_ref)
 
             transf = eye(4);
             [flag,str_log] = system(cat(2,'param2xfm ',xfm_tmp,' -translation 0 0 0 -rotations 0 0 0'));
@@ -421,12 +421,12 @@ for num_r = list_run
         
         if strcmp(gb_niak_language,'matlab')
             hfig = figure;
-            subplot(1,2,1)
+            subplot(num_r,2,1+(num_r-1)*2)
             plot(tab_parameters(:,4:6));
             legend('x','y','z');
             title(sprintf('Estimated translation parameters, file %s',file_name));
-            subplot(1,2,2)
-            plot(tab_parameters(:,[2 1 3]),'.');
+            subplot(num_r,2,2+(num_r-1)*2)
+            plot(tab_parameters(:,[2 1 3]));
             legend('pitch','roll','yaw');
             title(sprintf('Estimated rotation parameters, file %s',file_name));        
         end
