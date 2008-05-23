@@ -52,7 +52,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %       RUN_REF (vector, default 1) RUN_REF is
 %           the number of the run that will be used as target.
 %
-%       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
+%       FWHM (real number, default 3 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
 %       INTERPOLATION (string, default 'sinc') the spatial
@@ -138,7 +138,7 @@ niak_set_defaults
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'vol_ref','run_ref','flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm'};
-gb_list_defaults = {1,1,0,0,'','sinc',1,8};
+gb_list_defaults = {1,1,0,0,'','sinc',1,3};
 niak_set_defaults
 
 %% Building default output names
@@ -231,6 +231,8 @@ for num_r = list_run
     %% Generating brain mask
     vol_abs = mean(abs(data),4);
     mask = niak_mask_brain(vol_abs);
+    mask = niak_dilate_mask(mask);
+    mask = niak_dilate_mask(mask);
 
     %% Writting the mask of the target
     file_mask_source = niak_file_tmp('_mask_source.mnc');
@@ -257,9 +259,15 @@ for num_r = list_run
             vol_target = data(:,:,:,vol_ref); % Extracting median volume
         end
         
+        %% Extracting the gradients 
+        vol_target = sqrt(niak_gradient_vol(vol_target));
+        
         %% Smoothing
         opt_s.voxel_size = hdr.info.voxel_size;
-        vol_target = niak_smooth_vol(vol_target,opt_s);        
+        vol_target = niak_smooth_vol(vol_target,opt_s);                        
+        
+        %% Getting rid of voxel outside the mask
+        vol_target(mask==0) = 0;
         
         %% writting the target
         file_target_tmp = niak_file_tmp('_target_tmp.mnc');
@@ -276,6 +284,7 @@ for num_r = list_run
         files_out_res = file_target;
         opt_res.flag_tfm_space = 1;
         opt_res.voxel_size = [];        
+        %opt_res.voxel_size = [2 2 2];        
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
         delete(file_target_tmp);
 
@@ -310,8 +319,8 @@ for num_r = list_run
         fprintf(hf_mp,'pitch roll yaw tx ty tz XCORR_init XCORR_final\n');
     end
 
-    list_vols = 1:nb_vol(num_r);    
-    %list_vols = 1:3;
+    %list_vols = 1:nb_vol(num_r);    
+    list_vols = 80:90;
     for num_v = list_vols
         
         if flag_verbose
@@ -323,9 +332,15 @@ for num_r = list_run
         xfm_tmp = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'.xfm'));
         hdr.file_name = file_vol;
         
+        %% Extracting the gradient
+        vol_source = niak_gradient_vol(data(:,:,:,num_v));
+        
         %% Smoothing        
-        vol_source = niak_smooth_vol(data(:,:,:,num_v),opt_s);
-
+        vol_source = niak_smooth_vol(sqrt(vol_source),opt_s);
+       
+        %% Getting rid of voxels outside the mask
+        vol_source(mask==0) = 0;
+        
         %% writting the source
         hdr.file_name = file_vol;
         niak_write_vol(hdr,vol_source);
@@ -337,7 +352,7 @@ for num_r = list_run
 
         else
 
-            if num_v == 1               
+            if num_v == list_vols(1)               
                 [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 10 10 10'));
             else                                
                 [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 10 10 10'));
@@ -364,7 +379,7 @@ for num_r = list_run
         tab_parameters(num_v,4:6) = tsl';                
 
         %% If resampling data has been requested (or deriving the resampled
-        %% mean or mask), perform linear interpolation
+        %% mean or mask), perform spatial interpolation
         if ~ischar(files_out.motion_corrected_data)
             
             files_in_res.source = niak_file_tmp('_vol_orig.mnc');
@@ -372,7 +387,8 @@ for num_r = list_run
             files_in_res.transformation = xfm_tmp;
             files_out_res = niak_file_tmp('_vol_r.mnc');
             opt_res.flag_tfm_space = 0;
-            opt_res.voxel_size = [];
+            opt_res.voxel_size = hdr.info.voxel_size;
+            opt_res.flag_verbose = 0;
             hdr.file_name = files_in_res.source;            
             niak_write_vol(hdr,data(:,:,:,num_v));            
             niak_brick_resample_vol(files_in_res,files_out_res,opt_res);            
@@ -389,7 +405,7 @@ for num_r = list_run
         end
         
         % Cleaning temporary files
-        if num_v > 1
+        if num_v > list_vols(1)
             delete(xfm_tmp_old);
         end
 

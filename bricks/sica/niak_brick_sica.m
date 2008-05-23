@@ -5,8 +5,19 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % INPUTS:
 % FILES_IN  (string) an fMRI dataset.
 %
-% FILES_OUT (string, default <BASE_NAME>_sica.mat) a MAT file with a
-%       spatial ICA decomposition. 
+% FILES_OUT (structure) with the following fields.  Note that if
+%     a field is an empty string, a default value will be used to
+%     name the outputs. If a field is ommited, the output won't be
+%     saved at all (this is equivalent to setting up the output file
+%     names to 'gb_niak_omitted'). 
+%
+%       SPACE (string, default <BASE_NAME>_sica_space.mat) 
+%           a 3D+t dataset. Volume K is the spatial distribution of the Kth
+%           source estimaed through ICA.
+%
+%       TIME (string, default <BASE_NAME>_sica_time.dat) 
+%           a text file. Column Kth is the temporal distribution of the Kth
+%           ica source.
 %
 % OPT   (structure) with the following fields : 
 %       
@@ -85,6 +96,10 @@ gb_list_defaults = {'mean','Infomax',50,1,0,''};
 niak_set_defaults
 
 %% Output files
+gb_name_structure = 'files_out';
+gb_list_fields = {'space','time'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
+niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));
 if isempty(path_f)
@@ -95,11 +110,17 @@ if strcmp(ext_f,'.gz')
     [tmp,name_f,ext_f] = fileparts(name_f);
 end
 
-if strcmp(opt.folder_out,'')
+if isempty(opt.folder_out)
     opt.folder_out = path_f;
 end
 
-files_out = cat(2,opt.folder_out,filesep,name_f,'_sica.mat');
+if isempty(files_out.space)
+    files_out.space = cat(2,opt.folder_out,filesep,name_f,'_sica_space',ext_f);
+end
+
+if isempty(files_out.time)
+    files_out.time = cat(2,opt.folder_out,filesep,name_f,'_sica_time.dat');
+end
 
 if flag_test == 1
     return
@@ -145,56 +166,33 @@ opt_sica.type_nb_comp = 0;
 opt_sica.verbose = 'off';
 res_ica = st_do_sica(vol,opt_sica);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Reformatting outputs %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-sica.S = res_ica.composantes;
-res_ica = rmfield(res_ica,'composantes');
-sica.A = res_ica.poids;
-res_ica = rmfield(res_ica,'poids');
-sica.nbcomp = res_ica.nbcomp;
-sica.contrib = res_ica.contrib;
-if isfield(res_ica,'residus')
-    sica.residus = res_ica.residus;
-end
-clear res_ica
-sica.TR = hdr.info.tr;
-sica.mask = mask;
-sica.data_name = files_in;
-hdr(1).fname = '.';
-sica.header = hdr;
-sica.algo = opt.algo;
-sica.detrend = 0;
-sica.filter.high = -Inf;
-sica.filter.low = Inf;
-sica.slice_correction = 0;
-sica.suppress_vol = [];
-sica.type_norm = 2;
-sica.className(1).name = 'N/A';
-sica.className(1).color = [0.7 0.7 0.7];
-sica.className(2).name = 'FAR';
-sica.className(2).color = [1 0 0];
-sica.className(3).name = 'FAR(t)';
-sica.className(3).color = [1 0 0];
-sica.className(4).name = 'FAR(o)';
-sica.className(4).color = [1 0 0];
-sica.className(5).name = 'PNR';
-sica.className(5).color = [0 1 0];
-sica.className(6).name = 'PNR(c)';
-sica.className(6).color = [0 1 0];
-sica.className(7).name = 'PNR(r)';
-sica.className(7).color = [0 1 0];
-sica.className(8).name = 'PNR(m)';
-sica.className(8).color = [0 1 0];
-sica.className(9).name = 'SAR';
-sica.className(9).color = [1 1 0];
-sica.className(10).name = 'SAR(a)';
-sica.className(10).color = [1 1 0];
-sica.className(11).name = 'SAR(d)';
-sica.className(11).color = [1 1 0];
-sica.labels = ones(1,sica.nbcomp);
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generating outputs %%
+%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%
-%% Saving outputs %%
-%%%%%%%%%%%%%%%%%%%%
-save(files_out,'sica');
+%% Spatial sources
+S = res_ica.composantes;
+res_ica = rmfield(res_ica,'composantes');
+vol_space = zeros([nx*ny*nz opt_sica.param_nb_comp]);
+vol_space(mask>0,:) = S;
+clear S
+vol_space = reshape(vol_space,[nx ny nz opt_sica.param_nb_comp]);
+if ~strcmp(files_out.space,'gb_niak_omitted')
+    hdr.file_name = files_out.space;
+    niak_write_vol(hdr,vol_space)
+end
+
+%% Temporal sources
+A = res_ica.poids;
+res_ica = rmfield(res_ica,'poids');
+if ~strcmp(files_out.time,'gb_niak_omitted')
+    [hf,mesg] = fopen(files_out.time,'w');
+    if hf == -1
+        error(mesg);
+    end
+    for  num_l = 1:size(A,1)
+        fprintf(hf,'%1.15f ',A(num_l,:));
+    end
+    fclose(hf)
+    
+end

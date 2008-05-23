@@ -4,12 +4,14 @@ function [neig,ind] = niak_build_neighbour(mask,type_neig)
 % a 3D binary mask.
 %
 % SYNTAX :
-% NEIG = NIAK_BUILD_NEIGTYPE_NEIGH)
+% NEIG = NIAK_BUILD_NEIG(MASK,TYPE_NEIGH)
 %
 % INPUTS :
 % MASK    (3D array) binary mask of one 3D-region of interest (1s inside,
 %           0s outside)
-% TYPE_NEIG    (integer value, default 26) definition of 3D-connexity (possible value 6,26)
+%
+% TYPE_NEIG    (integer value, default 26) 
+%           definition of 3D-connexity (possible value 6,26)
 %
 % OUTPUTS :
 % NEIG     (2D array) NEIG(i,:) is the list of neiighbours of voxel i. All 

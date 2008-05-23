@@ -68,7 +68,7 @@ gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
 gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
 
 %% In which format is the niak demo ?
-gb_niak_format_demo = '';
+gb_niak_format_demo = 'minc2';
 if exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc'))
     gb_niak_format_demo = 'minc2';
 elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'))
