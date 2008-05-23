@@ -11,7 +11,10 @@ function [succ] = niak_manage_pipeline(file_pipeline,action,opt)
 %               
 % ACTION             (string) either 'run', 'restart' or 'reset'.
 %
-% OPT                (string) options dependent on ACTION. See OUTPUTS.
+% OPT                (string) how to execute the pipeline :
+%                    'spawn' : local execution
+%                    'sge' : sge qsub system
+%
 %
 % OUTPUTS:
 % 

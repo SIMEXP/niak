@@ -44,11 +44,11 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %
 % OPT           (structure) with the following fields :
 %
+%               PATH_LOGS (string) The folder where the PERL 
+%                      and BASH scripts will be stored.
+%
 %               NAME_PIPELINE (string, default 'NIAK_pipeline') the name of
 %                      the pipeline. No space, no weird characters please.
-%
-%               PATH_LOGS (string, default PWD) The folder where the PERL 
-%                      and BASH scripts will be stored.
 %
 %               CLOBBER (boolean, default 0) if clobber == 1, the PATH_LOGS
 %                      will be cleared and all files written again from
@@ -191,7 +191,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_options'};
-gb_list_defaults = {pwd,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',gb_niak_sge_options};
+gb_list_defaults = {NaN,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',gb_niak_sge_options};
 niak_set_defaults
 
 %% Issue warning in clobber mode
@@ -206,6 +206,7 @@ else
         disp(sprintf('WARNING : clobber mode is off.\n Previously finished jobs are not going to be restarted  !\n Variables for the pipeline and unfinished jobs are going to be updated. Older values are saved of a PREVIOUS_PIPELINE structure in the relevant .mat file.'));
     end
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Creating log path %%
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -261,8 +262,8 @@ end
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
-file_pipeline = cat(2,path_logs,name_pipeline,'.pl');
-file_lock = cat(2,path_logs,name_pipeline,'.lock');
+file_pipeline = cat(2,path_logs,filesep,name_pipeline,'.pl');
+file_lock = cat(2,path_logs,filesep,name_pipeline,'.lock');
 
 if exist(file_lock,'file')
     if ~(clobber == 1)
@@ -367,7 +368,7 @@ for num_s = 1:length(list_stage)
     file_finished = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.finished');
     file_failed = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.failed');
     file_running = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.running');
-    file_oct = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.m');
+    file_oct = cat(2,path_logs,filesep,filesep,name_pipeline,'_',stage_name,'.m');
     
     if clobber
         system(cat(2,'rm -f ',file_running));
@@ -408,36 +409,47 @@ for num_s = 1:length(list_stage)
     %% Creation of the bash script for the stage, along with a .m file if
     %% the stage lives in octave
     if ~exist(file_finished,'file')|(clobber == 1)
-    
-        hs = fopen(file_sh,'w');
         
+        hs = fopen(file_sh,'w');
+
+        % Initialization of the script
+        fprintf(hs,'#!/bin/bash \n');
+        fprintf(hs,'source %s \n',init_sh);
+        fprintf(hs,'export MINC_COMPRESS=0\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
+        fprintf(hs,'unset MINC_FORCE_V2\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
+       
         switch environment
             case 'matlab'
-                                
-                fprintf(hs,'#!/bin/bash \n');
-                fprintf(hs,'source %s \n',init_sh);
-                fprintf(hs,'%s -nojvm -nosplash -r ''load -mat %s, path(path_work), load -mat %s, files_in, files_out, opt, %s; exit''\n',command_matlab,file_path_mat,file_var,command);                
+                %% Generation of the mat file
+                ho = fopen(file_oct,'w');
+                fprintf(ho,'tic,\nload(''%s''),\n path(path_work),\nload(''%s''),\nfiles_in,\nfiles_out,\nopt,\n%s;\n',file_path_mat,file_var,command);
+                fprintf(ho,'fprintf(''\\n*************\\nDone !\\n*************\\n'');\n');
+                fprintf(ho,'elt = toc;\nfprintf(''Time elapsed: %%1.2fs, %%1.2fmn, %%1.2fh\\n'',elt,elt/60,elt/3600);\n');
+                fclose(ho);
+
+                [path_oct,base_oct,ext_oct] = fileparts(file_oct);
+                fprintf(hs,'%s -r ''cd %s,%s''\n',command_matlab,path_oct,cat(2,base_oct));
+
                 if flag_verbose
                     if ~clobber
                         disp(sprintf('Creation of a shell script for the (unfinished) matlab stage %s in file %s. Old shell script have been saved in the PREVIOUS_PIPELINE structure of the file %s (no clobber mode).\n',stage_name,file_sh,file_var));
-                    else                        
+                        disp(sprintf('Creation of a matlab script for the octave stage %s in file %s. \n',stage_name,file_oct));
+                    else
                         disp(sprintf('Creation of a shell script for the matlab stage %s in file %s. Any old shell script will be lose (clobber mode).\n',stage_name,file_sh,file_var));
+                        disp(sprintf('Creation of a matlab script for the (unfinished) octave stage %s in file %s. \n',stage_name,file_oct));
                     end
                 end
 
             case 'octave'
-                
-                fprintf(hs,'#!/bin/bash \n');
-                fprintf(hs,'source %s \n',init_sh);
-                fprintf(hs,'export MINC_COMPRESS=0\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
-                fprintf(hs,'unset MINC_FORCE_V2\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
-                fprintf(hs,'%s %s -x \n',command_octave,file_oct);
-                
+                %% Generation of the mat file
                 ho = fopen(file_oct,'w');
                 fprintf(ho,'tic,\nload(''-mat'',''%s''),\n path(path_work),\nload(''-mat'',''%s''),\nfiles_in,\nfiles_out,\nopt,\n%s;\n',file_path_mat,file_var,command);
                 fprintf(ho,'fprintf(''\\n*************\\nDone !\\n*************\\n'');\n');
                 fprintf(ho,'elt = toc;\nfprintf(''Time elapsed: %%1.2fs, %%1.2fmn, %%1.2fh\\n'',elt,elt/60,elt/3600);\n');
                 fclose(ho);
+
+                fprintf(hs,'%s %s -x \n',command_octave,file_oct);
+
                 if flag_verbose
                     if clobber
                         disp(sprintf('Creation of a shell script for the octave stage %s in file %s. Any old shell script is lost (clobber mode).\n',stage_name,file_sh,file_var));
@@ -448,10 +460,11 @@ for num_s = 1:length(list_stage)
                     end
                 end
 
-                
+
             case 'bash'
-                
+
                 fprintf(hs,'%s \n',command);
+                
                 if flag_verbose
                     if clobber
                         disp(sprintf('Creation of a shell script for the shell stage %s in file %s. Any old shell script is lost (clobber mode).\n',stage_name,file_sh,file_var));
@@ -459,15 +472,15 @@ for num_s = 1:length(list_stage)
                         disp(sprintf('Creation of a shell script for the (unfinished) shell stage %s in file %s. Old shell script have been saved in the PREVIOUS_PIPELINE structure of the file %s (no clobber mode).\n',stage_name,file_sh,file_var));
                     end
                 end
-                                
+
             otherwise
-                
+
                 error('%s is an unknown environment for stage %s of the pipeline',environment,stage_name);
-                
+
         end
         
         for num_cell = 1:length(cell_files)
-            fprintf(hs,'\nif [ ! -e %s ]; then \n exit 1 \nfi',cell_files{num_cell});
+            fprintf(hs,'\nif [ ! -e %s ]; then \n echo ''Could not find output %s''\nexit 1 \nfi',cell_files{num_cell},cell_files{num_cell});
         end
         fclose(hs);
         

@@ -20,9 +20,7 @@ gb_niak_command_matlab = 'matlab -nojvm -nosplash'; % how to invoke matlab
 
 gb_niak_command_octave = 'octave-2.9.9'; % how to invoke octave
 
-gb_niak_sge_options = '-q all.q@caius,all.q@silius,all.q@theseus,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
-%gb_niak_sge_options = '-q all.q@audrey,all.q@banquo,all.q@caius,all.q@denney,all.q@dow,all.q@gertrude,all.q@gobbo,all.q@gonzalo,all.q@grumpy,all.q@gypsy,all.q@oberon,all.q@penfolds,all.q@phebe,all.q@philemon,all.q@pluto,all.q@portia,all.q@rosaline,all.q@silius,all.q@snout,all.q@snug,all.q@taylor,all.q@theseus,all.q@valhalla,all.q@yeatman,all.q@zeus'; % send jobs only to the "fetch" systems
-%gb_niak_sge_options = '-q all.q@node0,all.q@node1,all.q@node7'; % send jobs only to the "fetch" systems
+gb_niak_sge_options = ''; % Options for the sge qsub system, example : '-q all.q@yeatman,all.q@zeus' will force qsub to only use the yeatman workstation;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% User may want to change some of the following variables %%
