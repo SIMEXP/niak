@@ -427,7 +427,7 @@ for num_s = 1:length(list_stage)
                 fprintf(ho,'elt = toc;\nfprintf(''Time elapsed: %%1.2fs, %%1.2fmn, %%1.2fh\\n'',elt,elt/60,elt/3600);\n');
                 fclose(ho);
                 
-                fprintf(hs,'%s -r ''cd %s,%s''\n',command_matlab,path_logs,cat(2,name_pipeline,'_',stage_name));
+                fprintf(hs,'%s -r ''cd %s,%s''\n',command_matlab,path_logs,stage_name);
 
                 if flag_verbose
                     if ~clobber
