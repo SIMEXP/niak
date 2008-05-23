@@ -368,7 +368,7 @@ for num_s = 1:length(list_stage)
     file_finished = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.finished');
     file_failed = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.failed');
     file_running = cat(2,path_logs,filesep,filesep,name_pipeline,'.',stage_name,'.running');
-    file_oct = cat(2,path_logs,filesep,filesep,name_pipeline,'_',stage_name,'.m');
+    file_oct = cat(2,path_logs,filesep,filesep,stage_name,'.m');
     
     if clobber
         system(cat(2,'rm -f ',file_running));
