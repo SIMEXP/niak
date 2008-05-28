@@ -182,8 +182,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Coregistration of the anatomical and functional images %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-list_fwhm = {8,2};
+list_fwhm = {8,3};
 list_step = {3,3};
+list_spline = {30,3};
 
 %% Generating temporary file names
 file_func_tmp = niak_file_tmp('_func_blur.mnc');
@@ -203,7 +204,7 @@ if strcmp(files_in.transformation,'gb_niak_omitted')
     niak_write_transf(transf,file_transf_tmp);
 else
     [succ,msg] = system(cat(2,'cp ',files_in.transformation,' ',file_transf_tmp));
-    if succ == 0
+    if succ ~= 0
         error(msg);
     end
 end
@@ -212,6 +213,7 @@ for num_i = 1:length(list_fwhm)
 
     fwhm = list_fwhm{num_i};
     step = list_step{num_i};
+    spline = list_spline{num_i};
     
     if flag_verbose
         fprintf('\n*************\nIteration %i, smoothing %1.2f, step %1.2f\n*************\n',num_i,fwhm,step);
@@ -260,7 +262,7 @@ for num_i = 1:length(list_fwhm)
 
     %% applying minc tracc    
     %instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -source_mask ',file_mask_func,' -mi -debug -est_center -simplex 30 -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
-    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex 30 -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
+    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex ',spline,' -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
     
     if flag_verbose
         fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
@@ -280,18 +282,7 @@ for num_i = 1:length(list_fwhm)
     end
 end
 
-if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')
-
-    %% Read the xfm transformation
-    hf = fopen(file_transf_tmp);
-    xfm_info = fread(hf,Inf,'uint8=>char')';
-    cell_info = niak_string2lines(xfm_info);
-    transf = eye(4);
-    transf(1,:) = str2num(cell_info{end-2});
-    transf(2,:) = str2num(cell_info{end-1});
-    transf(3,:) = str2num(cell_info{end}(1:end-1));
-    transf(4,:) = [0 0 0 1];
-    fclose(hf);
+if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')  
 
     %% Resample the anat at hi-res
     if ~strcmp(files_out.anat_hires,'gb_niak_omitted')

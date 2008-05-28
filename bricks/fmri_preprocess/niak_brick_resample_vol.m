@@ -297,6 +297,7 @@ else
     
     hdr_target.file_name = files_out;
     hdr_target.info.tr = hdr_source.info.tr;
+    hdr_target.details.time = hdr_source.details.time;
     niak_write_vol(hdr_target,vol_resampled);    
     
     %% clean the temporary files
