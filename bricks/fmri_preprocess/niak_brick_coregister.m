@@ -188,6 +188,7 @@ list_spline = {30,3};
 
 %% Generating temporary file names
 file_func_tmp = niak_file_tmp('_func_blur.mnc');
+file_func_init = niak_file_tmp('_func_init.mnc');
 file_transf_tmp = niak_file_tmp('_transf.xfm');
 file_transf_init = niak_file_tmp('_transf_init.xfm');
 file_anat_tmp = niak_file_tmp('_anat_blur.mnc');
@@ -203,6 +204,20 @@ else
     [succ,msg] = system(cat(2,'cp ',files_in.transformation,' ',file_transf_init));
     if succ ~= 0
         error(msg);
+    end
+end
+
+%% Writing the functional image in the anatomical space
+if flag_verbose
+    fprintf('Resampling the functional image in the anatomical space...\n');
+end
+instr_resampling = cat(2,'mincresample -clobber ',files_in.functional,' ',file_func_init,' -like ',file_anat_tmp,' -transform ',file_transf_init);
+if flag_verbose
+    system(instr_resampling)
+else
+    [succ,msg] = system(instr_resampling);
+    if succ ~= 0
+        error(msg)
     end
 end
 
@@ -241,27 +256,13 @@ for num_i = 1:length(list_fwhm)
         if succ ~= 0
             error(msg)
         end
-    end    
-
-    %% Writing the functional image in the anatomical space
-    if flag_verbose
-        fprintf('Resampling the functional image in the anatomical space...\n');
-    end    
-    instr_resampling = cat(2,'mincresample -clobber ',files_in.functional,' ',file_func_tmp,' -like ',file_anat_tmp,' -transform ',file_transf_init);
-    if flag_verbose
-        system(instr_resampling)
-    else
-        [succ,msg] = system(instr_resampling);
-        if succ ~= 0
-            error(msg)
-        end
-    end
+    end        
     
     %% Smoothing the funcitonal image
     if flag_verbose
         fprintf('Smoothing the functional image ...\n');
     end
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val/2),' ',files_in.functional,' ',file_func_tmp(1:end-9));
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val/2),' ',file_func_init,' ',file_func_tmp(1:end-9));
     if flag_verbose
         system(instr_smooth)
     else
@@ -334,4 +335,5 @@ delete(file_transf_init);
 delete(file_transf_tmp);
 delete(file_anat_tmp);
 delete(file_func_tmp);
+delete(file_func_init);
 delete(file_mask_func);
