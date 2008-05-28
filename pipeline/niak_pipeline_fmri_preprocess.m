@@ -117,6 +117,8 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       3.  Spatial normalization of the anatomical image, after 
 %           coregistration with the functional.
 %       4.  Spatial smoothing.
+%       5.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%           transformations.
 %
 %  * style 'standard-native'
 %       1.  Motion correction (within- and between-run for each subject).
@@ -408,7 +410,9 @@ for num_s = 1:nb_subject
 
     %% Building inputs for NIAK_BRICK_TIME_FILTER
     files_in_tmp.functional = getfield(pipeline,name_stage_motion,'files_out','mean_volume');
-    files_in_tmp.anat = getfield(pipeline,name_stage_anat,'files_out','anat_nuc');
+    files_in_tmp.anat = getfield(pipeline,name_stage_anat,'files_out','anat_nuc_stereo_lin');
+    files_in_tmp.csf = getfield(pipeline,name_stage_anat,'files_out','pve_csf');
+    files_in.transformation = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');
     
     %% Building outputs for NIAK_BRICK_TIME_FILTER
     files_out_tmp.transformation = '';
@@ -729,102 +733,51 @@ for num_s = 1:nb_subject
     end % run
 end % subject
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Concatenate T2-to-T1 and T1-to-stereotaxic-lin spatial transformation %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Concatenate T2-to-T1_stereo_lin and T1_stereo_lin-to-stereotaxic-nl spatial transformation %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
+name_process = 'concat_transf_nl';
 
-    name_process = 'concat_transf_lin';
+for num_s = 1:nb_subject
 
-    for num_s = 1:nb_subject
+    subject = list_subject{num_s};
 
-        subject = list_subject{num_s};
+    clear opt_tmp files_in_tmp files_out_tmp
 
-        clear opt_tmp files_in_tmp files_out_tmp
+    %% Names of input/output stages
+    name_stage = cat(2,name_process,'_',subject);
+    name_stage_coregister = cat(2,'coregister_',subject);
+    name_stage_anat = cat(2,'anat_',subject);
 
-        %% Names of input/output stages
-        name_stage = cat(2,name_process,'_',subject);
-        name_stage_coregister = cat(2,'coregister_',subject);
-        name_stage_anat = cat(2,'anat_',subject);
+    %% Building inputs for NIAK_BRICK_TIME_FILTER
+    files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
+    files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
 
-        %% Building inputs for NIAK_BRICK_TIME_FILTER
-        files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
-        files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');        
+    %% Building outputs for NIAK_BRICK_TIME_FILTER
+    files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_func_to_stereotaxic_nl.xfm');
 
-        %% Building outputs for NIAK_BRICK_TIME_FILTER
-        files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_func_to_stereotaxic_lin.xfm');        
+    %% Setting up options
+    opt_tmp.flag_test = 0;
 
-        %% Setting up options
-        opt_tmp.flag_test = 0;
+    %% Adding the stage to the pipeline
+    clear stage
+    stage.label = 'concat spatial transformations (non-linear)';
+    stage.command = 'niak_brick_concat_transf(files_in,files_out,opt)';
+    stage.files_in = files_in_tmp;
+    stage.files_out = files_out_tmp;
+    stage.opt = opt_tmp;
+    stage.environment = opt.environment;
 
-        %% Adding the stage to the pipeline
-        clear stage
-        stage.label = 'concat spatial transformations (linear)';
-        stage.command = 'niak_brick_concat_transf(files_in,files_out,opt)';
-        stage.files_in = files_in_tmp;
-        stage.files_out = files_out_tmp;
-        stage.opt = opt_tmp;
-        stage.environment = opt.environment;
+    if isempty(pipeline)
+        eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
+    else
+        pipeline = setfield(pipeline,name_stage,stage);
+    end
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+end % subject
 
-    end % subject
 
-end % if (pipeline style)
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Concatenate T2-to-T1 and T1-to-stereotaxic-nl spatial transformation %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
-
-    name_process = 'concat_transf_nl';
-
-    for num_s = 1:nb_subject
-
-        subject = list_subject{num_s};
-
-        clear opt_tmp files_in_tmp files_out_tmp
-
-        %% Names of input/output stages
-        name_stage = cat(2,name_process,'_',subject);
-        name_stage_coregister = cat(2,'coregister_',subject);
-        name_stage_anat = cat(2,'anat_',subject);
-
-        %% Building inputs for NIAK_BRICK_TIME_FILTER
-        files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
-        files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');
-        files_in_tmp{3} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
-
-        %% Building outputs for NIAK_BRICK_TIME_FILTER
-        files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_func_to_stereotaxic_nl.xfm');        
-
-        %% Setting up options
-        opt_tmp.flag_test = 0;
-
-        %% Adding the stage to the pipeline
-        clear stage
-        stage.label = 'concat spatial transformations (non-linear)';
-        stage.command = 'niak_brick_concat_transf(files_in,files_out,opt)';
-        stage.files_in = files_in_tmp;
-        stage.files_out = files_out_tmp;
-        stage.opt = opt_tmp;
-        stage.environment = opt.environment;
-
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
-
-    end % subject
-
-end % if (pipeline style)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Spatial resampling in stereotaxic space %%

@@ -33,8 +33,8 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %     saved at all (this is equivalent to setting up the output file
 %     names to 'gb_niak_omitted').
 %
-%       TRANSFORMATION (string, default base
-%           name <BASE_FUNCTIONAL>_to_<BASE_ANAT>.XFM)
+%       TRANSFORMATION (string, 
+%           default: transf_<BASE_FUNCTIONAL>_to_<BASE_ANAT>.XFM)
 %           File name for saving the transformation from the functional
 %           space to the anatomical space.
 %
@@ -164,7 +164,7 @@ else
 end
 
 if isempty(files_out.transformation)
-    files_out.transformation = cat(2,folder_func,filesep,name_func,'_to_',name_anat,'.xfm');
+    files_out.transformation = cat(2,folder_func,filesep,'transf_',name_func,'_to_',name_anat,'.xfm');
 end
 
 if isempty(files_out.anat_lowres)
