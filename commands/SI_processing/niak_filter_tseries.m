@@ -74,12 +74,12 @@ gb_list_fields = {'tr','hp','lp'};
 gb_list_defaults = {NaN,-Inf,Inf};
 niak_set_defaults
 
-if ~(isinf(lp)==1)&((lp<0)|(lp>(1/(2*tr))))
+if ~(isinf(opt.lp)==1)&((opt.lp<0)|(opt.lp>(1/(2*tr))))
     error('niak:SI_processing : Please specify a cut-off frequency for low-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))
     return
 end
     
-if ~(isinf(hp)==1)&((hp<0)|(hp>(1/(2*tr))))
+if ~(isinf(opt.hp)==1)&((opt.hp<0)|(opt.hp>(1/(2*tr))))
     error('niak:SI_processing : Please specify a cut-off frequency for high-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))   
 end
 
@@ -89,12 +89,12 @@ nt = size(tseries,1);
 opt_dc.tr = tr;
 opt_dc.nt = nt;
 opt_dc.type_fw = 'low';
-opt_dc.cutoff = hp;
+opt_dc.cutoff = opt.hp;
 [Q_low,freq_low] = niak_build_dc(opt_dc);
 
 % Building the high-frequency DC matrix
 opt_dc.type_fw = 'high';
-opt_dc.cutoff = lp;
+opt_dc.cutoff = opt.lp;
 [Q_high,freq_high] = niak_build_dc(opt_dc);
 
 %%% Exctracting residuals after linear regression
