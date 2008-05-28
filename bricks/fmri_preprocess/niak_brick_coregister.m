@@ -189,6 +189,7 @@ list_spline = {30,3};
 %% Generating temporary file names
 file_func_tmp = niak_file_tmp('_func_blur.mnc');
 file_transf_tmp = niak_file_tmp('_transf.xfm');
+file_transf_init = niak_file_tmp('_transf_init.xfm');
 file_anat_tmp = niak_file_tmp('_anat_blur.mnc');
 
 %% Generating a mask of the functional volume
@@ -199,11 +200,14 @@ hdr_func.file_name = file_mask_func;
 niak_write_vol(hdr_func,mask);
 
 %% Initialization of the transformation
+transf = eye(4);
+niak_write_transf(transf,file_transf_tmp);
+    
 if strcmp(files_in.transformation,'gb_niak_omitted')
     transf = eye(4);
-    niak_write_transf(transf,file_transf_tmp);
+    niak_write_transf(transf,file_transf_init);
 else
-    [succ,msg] = system(cat(2,'cp ',files_in.transformation,' ',file_transf_tmp));
+    [succ,msg] = system(cat(2,'cp ',files_in.transformation,' ',file_transf_init));
     if succ ~= 0
         error(msg);
     end
@@ -211,12 +215,12 @@ end
 
 for num_i = 1:length(list_fwhm)
 
-    fwhm = list_fwhm{num_i};
-    step = list_step{num_i};
-    spline = list_spline{num_i};
+    fwhm_val = list_fwhm{num_i};
+    step_val = list_step{num_i};
+    spline_val = list_spline{num_i};
     
     if flag_verbose
-        fprintf('\n*************\nIteration %i, smoothing %1.2f, step %1.2f\n*************\n',num_i,fwhm,step);
+        fprintf('\n*************\nIteration %i, smoothing %1.2f, step %1.2f\n*************\n',num_i,fwhm_val,step_val);
     end
     
     if flag_verbose
@@ -233,9 +237,9 @@ for num_i = 1:length(list_fwhm)
     end
         
     if ~strcmp(files_in.csf,'gb_niak_omitted')
-        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm),' ',files_in.csf,' ',file_anat_tmp(1:end-9));
+        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val),' ',files_in.csf,' ',file_anat_tmp(1:end-9));
     else
-        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm),' ',files_in.anat,' ',file_anat_tmp(1:end-9));
+        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val),' ',files_in.anat,' ',file_anat_tmp(1:end-9));
     end
     if flag_verbose
         system(instr_smooth)
@@ -246,11 +250,25 @@ for num_i = 1:length(list_fwhm)
         end
     end    
 
-    %% Writing the smoothed functional image
+    %% Writing the functional image in the anatomical space
     if flag_verbose
-        fprintf('Writting a smoothed version of the functional image ...\n');
+        fprintf('Resampling the functional image in the anatomical space...\n');
     end    
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm),' ',files_in.functional,' ',file_func_tmp(1:end-9));
+    instr_resampling = cat(2,'mincresample -clobber ',files_in.functional,' ',file_func_tmp,' -like ',file_anat_tmp,' -transform ',file_transf_init);
+    if flag_verbose
+        system(instr_resampling)
+    else
+        [succ,msg] = system(instr_resampling);
+        if succ ~= 0
+            error(msg)
+        end
+    end
+    
+    %% Smoothing the funcitonal image
+    if flag_verbose
+        fprintf('Smoothing the functional image ...\n');
+    end
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val),' ',files_in.functional,' ',file_func_tmp(1:end-9));
     if flag_verbose
         system(instr_smooth)
     else
@@ -260,9 +278,8 @@ for num_i = 1:length(list_fwhm)
         end
     end
 
-    %% applying minc tracc    
-    %instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -source_mask ',file_mask_func,' -mi -debug -est_center -simplex 30 -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
-    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex ',num2str(spline),' -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq9 -clobber');
+    %% applying minc tracc        
+    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
     
     if flag_verbose
         fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
@@ -272,13 +289,14 @@ for num_i = 1:length(list_fwhm)
     else
         [s,str_log] = system(instr_minctracc);
     end
-    
+       
+end
 
-    if ~strcmp(files_out.transformation,'gb_niak_omitted')
-        [succ,msg] = system(cat(2,'cp ',file_transf_tmp,' ',files_out.transformation));
-        if succ~=0
-            error(msg)
-        end
+%% Saving the transformation
+if ~strcmp(files_out.transformation,'gb_niak_omitted')
+    [succ,msg] = system(cat(2,'mincconcat ',file_transf_init,' ',file_transf_tmp,' ',files_out.transformation));
+    if succ~=0
+        error(msg)
     end
 end
 
@@ -319,6 +337,7 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
 end
 
 %% Get rid of the temporary file
+delete(file_transf_init);
 delete(file_transf_tmp);
 delete(file_anat_tmp);
 delete(file_func_tmp);
