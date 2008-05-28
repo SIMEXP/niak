@@ -262,7 +262,7 @@ for num_i = 1:length(list_fwhm)
 
     %% applying minc tracc    
     %instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -source_mask ',file_mask_func,' -mi -debug -est_center -simplex 30 -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
-    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex ',spline,' -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
+    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex ',spline,' -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq9 -clobber');
     
     if flag_verbose
         fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
