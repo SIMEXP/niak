@@ -322,7 +322,7 @@ for num_r = list_run
     list_vols = 1:nb_vol(num_r);    
     %list_vols = 70:75;
     for num_v = list_vols
-        tic,
+        %tic,
         if flag_verbose
             fprintf('%i ',num_v);
         end
@@ -415,7 +415,7 @@ for num_r = list_run
 
         delete(file_vol);
         xfm_tmp_old = xfm_tmp;
-        toc,
+        %toc,
     end
     
     delete(xfm_tmp); % Delete the last temporary file...

@@ -44,7 +44,7 @@ function hdr2 = niak_set_history(hdr,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 gb_name_structure = 'opt';
 gb_list_fields = {'command','files_in','files_out','comment'};
-gb_list_defaults = {'',struct(),struct(),''};
+gb_list_defaults = {'',struct([]),struct([]),''};
 niak_set_defaults
 
 niak_gb_vars
