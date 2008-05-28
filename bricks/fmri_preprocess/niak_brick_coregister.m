@@ -354,4 +354,3 @@ delete(file_transf_tmp);
 delete(file_anat_tmp);
 delete(file_func_tmp);
 delete(file_func_init);
-delete(file_mask_func);
