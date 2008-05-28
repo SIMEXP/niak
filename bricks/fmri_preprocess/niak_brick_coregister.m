@@ -211,7 +211,7 @@ end
 if flag_verbose
     fprintf('Resampling the functional image in the anatomical space...\n');
 end
-instr_resampling = cat(2,'mincresample -clobber ',files_in.functional,' ',file_func_init,' -like ',file_anat_tmp,' -transform ',file_transf_init);
+instr_resampling = cat(2,'mincresample -clobber ',files_in.functional,' ',file_func_init,' -like ',files_in.anat,' -transform ',file_transf_init);
 if flag_verbose
     system(instr_resampling)
 else
