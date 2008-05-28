@@ -82,7 +82,7 @@ niak_set_defaults
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
 gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','file_parent','dimensions'};
-gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','',[]};
+gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt',0,1,'','',[]};
 niak_set_defaults
 
 %% Generating a temporary file with the data in float format
@@ -111,11 +111,24 @@ end
 
 str_raw = 'rawtominc '; % rawtominc is used to create the file
 
+if length(size(vol))~=4
+    tmp = findstr(hdr.info.dimension_order,'t');    
+    if ~isempty(tmp)
+        list_ind_order = 1:4;
+        list_ind_order = list_ind_order(list_ind_order~=tmp);
+        hdr.info.dimension_order = hdr.info.dimension_order(list_ind_order);
+    end
+end
 dim_order(1) = findstr(hdr.info.dimension_order,'x'); % setting up the dimension order
 dim_order(2) = findstr(hdr.info.dimension_order,'y');
 dim_order(3) = findstr(hdr.info.dimension_order,'z');
-if length(hdr.info.dimension_order)==4
-    dim_order(4) = findstr(hdr.info.dimension_order,'t');
+if length(size(vol))==4
+    tmp = findstr(hdr.info.dimension_order,'t');
+    if ~isempty(tmp)
+        dim_order(4) = tmp;    
+    else
+        dim_order(4) = 4;
+    end
 end
 dim_names = {'xspace,','yspace,','zspace,','time,'};
 dim_order = dim_order(dim_order);
@@ -143,9 +156,13 @@ else
     error('niak:write: hdr.file_name is empty !')
 end
 
-for num_d = 1:length(hdr.info.dimension_order)
-    size_vol(num_d) = size(vol,num_d);
+size_vol = size(vol);
+if length(size_vol)==4
+    if size_vol(4) == 1
+        size_vol = size_vol(1:3);
+    end
 end
+
 size_vol = num2str(size_vol(end:-1:1));
 str_raw = [str_raw ' ' size_vol]; % set up the size
 
@@ -159,6 +176,12 @@ delete(file_tmp); % deleting temporary file
 
 hdr_minc = hdr.details;
 
+%% For 3D volume, get rid of the time information
+if size(vol,4) == 1;
+    if isfield(hdr_minc,'time')
+        hdr_minc = rmfield(hdr_minc,'time');
+    end
+end
 hdr_minc.image = sub_set_att(hdr_minc.image,'dimorder',arg_dim_order);
 dim_order = dim_order(dim_order);
 
@@ -169,7 +192,12 @@ hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'step',step_v(1));
 hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'step',step_v(2));
 hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'step',step_v(3));
 if length(size(vol))==4
-    hdr_minc.time = sub_set_att(hdr_minc.time,'step',tr);
+    if ~isfield(hdr_minc,'time')
+        hdr_minc.time.varatts{1} = 'step';
+        hdr_minc.time.attvalue{1} = hdr.info.tr;
+    else
+        hdr_minc.time = sub_set_att(hdr_minc.time,'step',tr);
+    end
 end
 
 %% start values

@@ -350,8 +350,8 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
 
         %% Generate temporary names for within-session motion correction
         files_session_in = getfield(files_in.sessions,name_session);        
-        mask_session{num_s} = niak_file_tmp(cat(2,'_',name_session,'_mask.dat'));
-        target_session{num_s} = niak_file_tmp(cat(2,'_',name_session,'_target.dat'));
+        mask_session{num_s} = niak_file_tmp(cat(2,'_',name_session,'_mask.mnc'));
+        target_session{num_s} = niak_file_tmp(cat(2,'_',name_session,'_target.mnc'));
 
         if ~ischar(files_out.transf_within_session)
             files_session_out.motion_parameters = getfield(files_out.transf_within_session,name_session);
@@ -403,9 +403,10 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     tab_mp_bs = zeros([length(nb_sessions) 8]);
 
     for num_s = 1:length(list_sessions)
+        name_session = list_sessions{num_s};
         if num_s~=num_session_ref
             xfm_tmp = niak_file_tmp(cat(2,name_session,'_mp.xfm'));
-            [flag,str_log] = system(cat(2,'minctracc ',target_session{num_s},' ',target_session{num_session_ref},' ',xfm_tmp,' -xcorr -source_mask ',mask_session{num_s},' -model_mask ',mask_session{num_session_ref},' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 20 -source_lattice -step 5 5 5'));
+            [flag,str_log] = system(cat(2,'minctracc ',target_session{num_s},' ',target_session{num_session_ref},' ',xfm_tmp,' -xcorr -source_mask ',mask_session{num_s},' -model_mask ',mask_session{num_session_ref},' -forward -clobber -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 20 -source_lattice -step 3 3 3'));
 
             %% Read the rigid-body transformation (lsq6)
             transf = niak_read_transf(xfm_tmp);
@@ -430,7 +431,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         tab_mp_bs(num_s,4:6) = tsl';
 
         %% If requested, write the between-session motion parameters in a file
-        if ~ischar(files_out.transf_between_session)
+        if ~strcmp(files_out.transf_between_session,'gb_niak_omitted')
             fprintf(hf_mp,'%s',num2str(tab_mp_bs(num_s,:),12));
             fprintf(hf_mp,' %s\n',name_session);
         end
@@ -438,7 +439,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     end
 
     %% If necessary, close the between-session motion parameters file
-    if ~ischar(files_out.transf_between_session)
+    if ~strcmp(files_out.transf_between_session,'gb_niak_omitted')
         fclose(hf_mp);
     end
 
@@ -607,6 +608,7 @@ if ~ischar(files_out.motion_corrected_data)
     files_in_r.transformation = niak_file_tmp('_transf.xfm');
     files_out_r = niak_file_tmp('_vol2.mnc');
 
+    niak_resample_to_self(file_target);
     hdr_target = niak_read_vol(file_target);
     dim_t = hdr_target.info.dimensions;
     if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
@@ -630,17 +632,18 @@ if ~ischar(files_out.motion_corrected_data)
             motion_corrected_data_session = getfield(files_out.motion_corrected_data,name_session);
         end
         
-        for num_r = 1:length(files_name);
+        for num_r = 1:length(files_session);
 
             if flag_verbose
                 fprintf('\nRun %i... volume :',num_r)
             end
 
             %% Reading data
-            [hdr,data] = niak_read_vol(files_name{num_r});
+            [hdr,data] = niak_read_vol(files_session{num_r});
             [nx,ny,nz,nt] = size(data);
             hdr.file_name = files_in_r.source;
             hdr.flag_zip = 0;
+            hdr_target.details.time = hdr.details.time;            
             [nx,ny,nz,nt] = size(data);            
             data_r = zeros([nx ny nz nt-suppress_vol]);
             

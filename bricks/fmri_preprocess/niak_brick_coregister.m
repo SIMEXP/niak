@@ -18,6 +18,15 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %       ANAT (string)
 %           a file with one T1 volume of the same subject.
 %
+%       CSF (string, default not used)
+%           a segmentation of the cerebro-spinal fluid in the anatomical
+%           image. If such a segmentation is provided, it will be used
+%           instead of the anatomical image in the coregistration.
+%
+%       TRANSFORMATION (string, default identity)
+%           an initial guess of the transformation between the functional
+%           image and the anatomical image.
+%
 %   FILES_OUT  (structure) with the following fields. Note that if
 %     a field is an empty string, a default value will be used to
 %     name the outputs. If a field is ommited, the output won't be
@@ -29,17 +38,17 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %           File name for saving the transformation from the functional
 %           space to the anatomical space.
 %
-%       ANAT_FUNCSPACE_HIRES (string, default <BASE_ANAT>_funcspace_hires)
+%       ANAT_HIRES (string, default <BASE_ANAT>_funcspace_hires)
 %           File name for saving the anatomical image resampled in the
 %           space of the functional space, using native resolution.
 %     
-%       ANAT_FUNCSPACE_LOWRES (string, default <BASE_ANAT>_funcspace_hires)
+%       ANAT_LOWRES (string, default <BASE_ANAT>_funcspace_hires)
 %           File name for saving the anatomical image resampled in the
 %           space of the functional space, using the target resolution.
 %
 %   OPT   (structure) with the following fields:
 %
-%       FWHM (real number, default 3 mm) the fwhm of the blurring kernel
+%       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
 %       INTERPOLATION (string, default 'trilinear') the spatial
@@ -105,8 +114,8 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields = {'anat','functional'};
-gb_list_defaults = {NaN,NaN};
+gb_list_fields = {'anat','functional','csf','transformation'};
+gb_list_defaults = {NaN,NaN,'gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% FILES_OUT
@@ -118,7 +127,7 @@ niak_set_defaults
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm'};
-gb_list_defaults = {0,0,'','trilinear',1,5};
+gb_list_defaults = {0,0,'','trilinear',1,8};
 niak_set_defaults
         
 %% Building default output names
@@ -173,57 +182,102 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Coregistration of the anatomical and functional images %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+list_fwhm = {8,2};
+list_step = {3,3};
 
-if flag_verbose 
-    fprintf('\n*************\nCoregistration of T1 image %s on the T2* image %s\n*************\n',files_in.anat,files_in.functional);
+%% Generating temporary file names
+file_func_tmp = niak_file_tmp('_func_blur.mnc');
+file_transf_tmp = niak_file_tmp('_transf.xfm');
+file_anat_tmp = niak_file_tmp('_anat_blur.mnc');
+
+%% Generating a mask of the functional volume
+[hdr_func,vol] = niak_read_vol(files_in.functional);
+mask = niak_mask_brain(abs(vol));
+file_mask_func = niak_file_tmp('_mask.mnc');
+hdr_func.file_name = file_mask_func;
+niak_write_vol(hdr_func,mask);
+
+%% Initialization of the transformation
+if strcmp(files_in.transformation,'gb_niak_omitted')
+    transf = eye(4);
+    niak_write_transf(transf,file_transf_tmp);
+else
+    [succ,msg] = system(cat(2,'cp ',files_in.transformation,' ',file_transf_tmp));
+    if succ == 0
+        error(msg);
+    end
 end
-%% Reading inputs
-if flag_verbose
-    fprintf('Reading inputs ...\n');
-end
-[hdr_func,func] = niak_read_vol(files_in.functional);
-hdr_func.flag_zip = 0;
-[hdr_anat,anat] = niak_read_vol(files_in.anat);
-hdr_anat.flag_zip = 0;
 
-opt_s.fwhm = fwhm;
-hdr_func.flag_zip = 0;
+for num_i = 1:length(list_fwhm)
 
-%% Writing the smoothed anat
-if flag_verbose
-    fprintf('Writting a smoothed version of the anatomical image ...\n');
-end
-opt_s.voxel_size = hdr_anat.info.voxel_size;
-anat = niak_smooth_vol(anat,opt_s);
-file_anat_tmp = niak_file_tmp('_anat.mnc');
-hdr_anat.file_name = file_anat_tmp;
-niak_write_vol(hdr_anat,anat);
+    fwhm = list_fwhm{num_i};
+    step = list_step{num_i};
+    
+    if flag_verbose
+        fprintf('\n*************\nIteration %i, smoothing %1.2f, step %1.2f\n*************\n',num_i,fwhm,step);
+    end
+    
+    if flag_verbose
+        fprintf('\n*************\nCoregistration of T1 image %s on the T2* image %s\n*************\n',files_in.anat,files_in.functional);
+    end
 
-%% Writing the smoothed functional image
-if flag_verbose
-    fprintf('Writting a smoothed version of the functional image ...\n');
-end
-file_func_tmp = niak_file_tmp('_func.mnc');
-func = mean(func,4);
-opt_s.voxel_size = hdr_func.info.voxel_size;
-func = niak_smooth_vol(func,opt_s);
+    %% Writing the smoothed anat
+    if flag_verbose
+        if ~strcmp(files_in.csf,'gb_niak_omitted')
+            fprintf('Writting a smoothed version of the csf image ...\n');
+        else
+            fprintf('Writting a smoothed version of the anatomical image ...\n');
+        end
+    end
+        
+    if ~strcmp(files_in.csf,'gb_niak_omitted')
+        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm),' ',files_in.csf,' ',file_anat_tmp(1:end-9));
+    else
+        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm),' ',files_in.anat,' ',file_anat_tmp(1:end-9));
+    end
+    if flag_verbose
+        system(instr_smooth)
+    else
+        [succ,msg] = system(instr_smooth);
+        if succ ~= 0
+            error(msg)
+        end
+    end    
 
-hdr_func.file_name = file_func_tmp;
-niak_write_vol(hdr_func,func);
+    %% Writing the smoothed functional image
+    if flag_verbose
+        fprintf('Writting a smoothed version of the functional image ...\n');
+    end    
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm),' ',files_in.functional,' ',file_func_tmp(1:end-9));
+    if flag_verbose
+        system(instr_smooth)
+    else
+        [succ,msg] = system(instr_smooth);
+        if succ ~= 0
+            error(msg)
+        end
+    end
 
-%% applying minc tracc
-file_transf_tmp = niak_file_tmp('_transf.mnc');
-instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -mi -debug -simplex 20 -step 5 5 5 -lsq6 -clobber');
-if flag_verbose
-    fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
-end
-[s,str_log] = system(instr_minctracc);
+    %% applying minc tracc    
+    %instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -source_mask ',file_mask_func,' -mi -debug -est_center -simplex 30 -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
+    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -est_center -simplex 30 -tol 0.00005 -step ',num2str(step),' ',num2str(step),' ',num2str(step),' -lsq6 -clobber');
+    
+    if flag_verbose
+        fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
+    end
+    if flag_verbose
+        system(instr_minctracc)
+    else
+        [s,str_log] = system(instr_minctracc);
+    end
+    
 
-if ~strcmp(files_out.transformation,'gb_niak_omitted')
-    [succ,msg] = system(cat(2,'cp ',file_transf_tmp,' ',files_out.transformation));
-    if succ~=0
-        error(msg)
-    end        
+    if ~strcmp(files_out.transformation,'gb_niak_omitted')
+        [succ,msg] = system(cat(2,'cp ',file_transf_tmp,' ',files_out.transformation));
+        if succ~=0
+            error(msg)
+        end
+    end
 end
 
 if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')
@@ -257,7 +311,7 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
     end
 
     %% Resample the anat at low-res
-    if ~strcmp(files_out.anat_hires,'gb_niak_omitted')
+    if ~strcmp(files_out.anat_lowres,'gb_niak_omitted')
         if flag_verbose
             fprintf('Resampling the anatomical image at low resolution in the functional space : %s\n',files_out.anat_lowres);
         end
@@ -277,3 +331,4 @@ end
 delete(file_transf_tmp);
 delete(file_anat_tmp);
 delete(file_func_tmp);
+delete(file_mask_func);

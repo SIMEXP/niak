@@ -92,6 +92,9 @@ function [] = niak_write_vol(hdr,vol)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if isempty(vol)
+    warning('you are trying to write an empty dataset (I honestly do not know what is going to happen)!');
+end
 try
     file_name = hdr.file_name;
 catch

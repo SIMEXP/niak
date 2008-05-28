@@ -25,7 +25,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %           functional run of reference.
 %
 %       MOTION_PARAMETERS (cells of string,
-%           default base MOTION_PARAMS_<BASE_FILE_IN>.LOG)
+%           default base MOTION_PARAMS_WS_<BASE_FILE_IN>.DAT)
 %           MOTION_PARAMETERS.{NUM_R} is the file name for
 %           the estimated motion parameters of the functional run NUM_R.
 %           The first line describes the content of each column.
@@ -52,7 +52,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %       RUN_REF (vector, default 1) RUN_REF is
 %           the number of the run that will be used as target.
 %
-%       FWHM (real number, default 3 mm) the fwhm of the blurring kernel
+%       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
 %       INTERPOLATION (string, default 'sinc') the spatial
@@ -88,12 +88,13 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 % The core of the function is a MINC tool called MINCTRACC which performs
 % rigid-body coregistration.
 %
-% This function is an adaptation of a PERL script written by Richard D. Hoge,
+% This function was based on a PERL script written by Richard D. Hoge,
 % McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill
 % University, 1996.
-% It also includes modifications of the original script made by Leili
-% Torab, McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill
-% University, 2004.
+% A gradient image of each volume is extracted after applying a
+% Kuwahara filter (smoothing and edge preserving filter). The gradient
+% images are coregistered to one volume of reference using MINCTRACC (xcorr
+% similarity function).
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -138,7 +139,7 @@ niak_set_defaults
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'vol_ref','run_ref','flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm'};
-gb_list_defaults = {1,1,0,0,'','sinc',1,3};
+gb_list_defaults = {1,1,0,0,'','sinc',1,8};
 niak_set_defaults
 
 %% Building default output names
@@ -175,7 +176,7 @@ for num_d = 1:length(files_name)
     end
 
     if flag_def_mp
-        motion_parameters{num_d} = cat(2,folder_write,filesep,'motion_params_',name_f,'.log');
+        motion_parameters{num_d} = cat(2,folder_write,filesep,'motion_params_ws_',name_f,'.dat');
     end
     
     if (flag_def_fm)&(num_d==run_ref)
@@ -232,7 +233,8 @@ for num_r = list_run
     vol_abs = mean(abs(data),4);
     mask = niak_mask_brain(vol_abs);
     mask = niak_dilate_mask(mask);
-    mask = niak_dilate_mask(mask);
+    mask(:,:,1) = 0;
+    %mask = niak_dilate_mask(mask);
 
     %% Writting the mask of the target
     file_mask_source = niak_file_tmp('_mask_source.mnc');
@@ -258,35 +260,33 @@ for num_r = list_run
         else
             vol_target = data(:,:,:,vol_ref); % Extracting median volume
         end
-        
-        %% Extracting the gradients 
-        vol_target = sqrt(niak_gradient_vol(vol_target));
-        
-        %% Smoothing
-        opt_s.voxel_size = hdr.info.voxel_size;
-        vol_target = niak_smooth_vol(vol_target,opt_s);                        
-        
+                
         %% Getting rid of voxel outside the mask
         vol_target(mask==0) = 0;
         
         %% writting the target
+        file_target = niak_file_tmp('_target_dxyz.mnc');
         file_target_tmp = niak_file_tmp('_target_tmp.mnc');
         hdr.file_name = file_target_tmp;
         niak_write_vol(hdr,vol_target);
-
+        [succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' -gradient ',file_target_tmp,' ',file_target(1:end-9)));        
+        if succ ~= 0
+            error(mesg);
+        end
+        
+        delete(cat(2,file_target(1:end-9),'_blur.mnc'));        
+        delete(file_target_tmp);
+        
         %% Resample the target in its own space
-        file_target = niak_file_tmp('_target.mnc');        
+        file_target_native = niak_file_tmp('_target_native.mnc');       
         if exist('files_in_res')
             clear files_in_res
         end
-        files_in_res.source = file_target_tmp;
-        files_in_res.target = file_target_tmp;        
-        files_out_res = file_target;
-        opt_res.flag_tfm_space = 1;
-        opt_res.voxel_size = [];        
-        %opt_res.voxel_size = [2 2 2];        
+        files_in_res.source = file_target;
+        files_in_res.target = file_target;        
+        files_out_res = file_target_native;
+        opt_res.flag_tfm_space = 1;                 
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
-        delete(file_target_tmp);
 
         %% Writting the mask of the target
         file_mask_target = niak_file_tmp('_mask_target.mnc');
@@ -319,31 +319,35 @@ for num_r = list_run
         fprintf(hf_mp,'pitch roll yaw tx ty tz XCORR_init XCORR_final\n');
     end
 
-    %list_vols = 1:nb_vol(num_r);    
-    list_vols = 80:90;
+    list_vols = 1:nb_vol(num_r);    
+    %list_vols = 70:75;
     for num_v = list_vols
-        
+        tic,
         if flag_verbose
             fprintf('%i ',num_v);
         end
 
         %% Generating file names
-        file_vol = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'.mnc'));
+        file_vol = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'_dxyz.mnc'));
+        file_vol_tmp = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'_tmp.mnc'));
         xfm_tmp = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'.xfm'));
         hdr.file_name = file_vol;
         
-        %% Extracting the gradient
-        vol_source = niak_gradient_vol(data(:,:,:,num_v));
-        
-        %% Smoothing        
-        vol_source = niak_smooth_vol(sqrt(vol_source),opt_s);
-       
-        %% Getting rid of voxels outside the mask
+        vol_source = data(:,:,:,num_v);
+
+        %% Getting rid of voxels outside the mask        
         vol_source(mask==0) = 0;
         
-        %% writting the source
-        hdr.file_name = file_vol;
+        %% writting the source                
+        hdr.file_name = file_vol_tmp;
         niak_write_vol(hdr,vol_source);
+        [succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' -gradient ',file_vol_tmp,' ',file_vol(1:end-9)));
+        if succ ~= 0
+            error(mesg);
+        end
+         
+        delete(cat(2,file_vol(1:end-9),'_blur.mnc'));             
+        delete(file_vol_tmp);        
 
         if (num_v == vol_ref) & (num_r == run_ref)
 
@@ -353,9 +357,9 @@ for num_r = list_run
         else
 
             if num_v == list_vols(1)               
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -tol 1.2 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 10 10 10'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 20 -model_lattice -step 7 7 7'));
             else                                
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.05 -tricubic -simplex 3 -source_lattice -step 10 10 10'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 20 -model_lattice -step 7 7 7'));
             end
 
             %% Reading the transformation
@@ -383,11 +387,11 @@ for num_r = list_run
         if ~ischar(files_out.motion_corrected_data)
             
             files_in_res.source = niak_file_tmp('_vol_orig.mnc');
-            files_in_res.target = file_target;
+            files_in_res.target = file_target_native;
             files_in_res.transformation = xfm_tmp;
             files_out_res = niak_file_tmp('_vol_r.mnc');
             opt_res.flag_tfm_space = 0;
-            opt_res.voxel_size = hdr.info.voxel_size;
+            opt_res.voxel_size = [];
             opt_res.flag_verbose = 0;
             hdr.file_name = files_in_res.source;            
             niak_write_vol(hdr,data(:,:,:,num_v));            
@@ -411,7 +415,7 @@ for num_r = list_run
 
         delete(file_vol);
         xfm_tmp_old = xfm_tmp;
-
+        toc,
     end
     
     delete(xfm_tmp); % Delete the last temporary file...
@@ -437,14 +441,13 @@ for num_r = list_run
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         
         if strcmp(gb_niak_language,'matlab')            
+            [path_f,name_f,ext_f] = fileparts(file_name);
             subplot(max(list_run),2,1+(num_r-1)*2)
-            plot(tab_parameters(:,4:6));
-            legend('x','y','z');
-            title(sprintf('Estimated translation parameters, file %s',file_name));
+            plot(tab_parameters(:,4:6));            
+            title(sprintf('translation (mm, bgr/xyz) %s',name_f));
             subplot(max(list_run),2,2+(num_r-1)*2)
-            plot(tab_parameters(:,[2 1 3]));
-            legend('pitch','roll','yaw');
-            title(sprintf('Estimated rotation parameters, file %s',file_name));        
+            plot(tab_parameters(:,1:3));            
+            title(sprintf('rotation (deg, bgr/rpy) %s ',name_f));
         end
         
     end        
@@ -482,3 +485,4 @@ end
 % Cleaning temporary files
 delete(file_mask_target);
 delete(file_target);
+delete(file_target_native);

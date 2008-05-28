@@ -62,12 +62,11 @@ function [] = niak_visu_motion(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'speed','type_slice','vol_limits','type_color','fwhm','type_flip'};
-gb_list_defaults = {0.2,'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90'};
+gb_list_fields = {'speed','type_slice','vol_limits','type_color','fwhm','type_flip','vol_limits'};
+gb_list_defaults = {0.2,'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90',[min(vol(:)) max(vol(:))]};
 niak_set_defaults
 
 opt = rmfield(opt,'speed');
-opt.vol_limits = [min(vol(:)) max(vol(:))];
 
 nt = size(vol,4);
 
@@ -79,9 +78,8 @@ flag_play = 0;
 while ~flag_exit
     niak_montage(vol(:,:,:,num_t),opt);
     if ~flag_play
-        uk = input('Press a key (w : rewind, x : exit, c : forward, p : play)','s')
+        uk = input('Press a key (w : rewind, x : exit, '' : forward, p : play)','s');
     end
-    
     switch uk
         case 'w'
             if num_t > 1
@@ -89,9 +87,11 @@ while ~flag_exit
             end
         case 'x'
             return
-        case 'c'
+        case ''
             if num_t < nt
                 num_t = num_t+1;
+            else 
+                num_t = 1;
             end
         case 'p'
             if num_t == nt
@@ -101,7 +101,7 @@ while ~flag_exit
                 num_t = num_t+1;
                 flag_play = 1;
             end
-                
+
     end
     fprintf(' %i',num_t)
     %pause(speed);
