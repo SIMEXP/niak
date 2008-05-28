@@ -192,13 +192,6 @@ file_transf_tmp = niak_file_tmp('_transf.xfm');
 file_transf_init = niak_file_tmp('_transf_init.xfm');
 file_anat_tmp = niak_file_tmp('_anat_blur.mnc');
 
-%% Generating a mask of the functional volume
-[hdr_func,vol] = niak_read_vol(files_in.functional);
-mask = niak_mask_brain(abs(vol));
-file_mask_func = niak_file_tmp('_mask.mnc');
-hdr_func.file_name = file_mask_func;
-niak_write_vol(hdr_func,mask);
-
 %% Initialization of the transformation
 transf = eye(4);
 niak_write_transf(transf,file_transf_tmp);
@@ -268,7 +261,7 @@ for num_i = 1:length(list_fwhm)
     if flag_verbose
         fprintf('Smoothing the functional image ...\n');
     end
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val),' ',files_in.functional,' ',file_func_tmp(1:end-9));
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val/2),' ',files_in.functional,' ',file_func_tmp(1:end-9));
     if flag_verbose
         system(instr_smooth)
     else
@@ -294,7 +287,7 @@ end
 
 %% Saving the transformation
 if ~strcmp(files_out.transformation,'gb_niak_omitted')
-    [succ,msg] = system(cat(2,'mincconcat ',file_transf_init,' ',file_transf_tmp,' ',files_out.transformation));
+    [succ,msg] = system(cat(2,'mincconcat -clobber ',file_transf_init,' ',file_transf_tmp,' ',files_out.transformation));
     if succ~=0
         error(msg)
     end
