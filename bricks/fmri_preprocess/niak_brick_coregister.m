@@ -292,6 +292,12 @@ if ~strcmp(files_out.transformation,'gb_niak_omitted')
     if succ~=0
         error(msg)
     end
+else
+    file_transf_tmp2 = niak_file_tmp('_transf_tmp2.xfm');
+    [succ,msg] = system(cat(2,'xfmconcat -clobber ',file_transf_init,' ',file_transf_tmp,' ',file_transf_tmp2));
+    if succ~=0
+        error(msg)
+    end
 end
 
 if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')  
@@ -304,7 +310,11 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
         end
         files_in_res.source = files_in.anat;
         files_in_res.target = files_in.functional;
-        files_in_res.transformation = file_transf_tmp;
+        if ~strcmp(files_out.transformation,'gb_niak_omitted')
+            files_in_res.transformation = files_out.transformation;
+        else
+            files_in_res.transformation = file_transf_tmp2;
+        end
         files_out_res = files_out.anat_hires;
         opt_res.flag_tfm_space = 1;
         opt_res.flag_invert_transf = 1;
@@ -320,10 +330,15 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
         end
         files_in_res.source = files_in.anat;
         files_in_res.target = files_in.functional;
-        files_in_res.transformation = file_transf_tmp;
+        if ~strcmp(files_out.transformation,'gb_niak_omitted')
+            files_in_res.transformation = files_out.transformation;
+        else
+            files_in_res.transformation = file_transf_tmp2;
+        end
         opt_res.flag_invert_transf = 1;
         files_out_res = files_out.anat_lowres;
         opt_res.flag_tfm_space = 1;
+        opt_res.flag_invert_transf = 1;
         opt_res.voxel_size = [];
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);                
     end
@@ -331,6 +346,9 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
 end
 
 %% Get rid of the temporary file
+if ~strcmp(files_out.transformation,'gb_niak_omitted')
+    delete(file_transf_tmp2);
+end
 delete(file_transf_init);
 delete(file_transf_tmp);
 delete(file_anat_tmp);
