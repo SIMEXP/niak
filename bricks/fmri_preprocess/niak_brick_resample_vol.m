@@ -94,7 +94,7 @@ niak_set_defaults
 % Setting up options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf','flag_verbose'};
-gb_list_defaults = {'trilinear',1,[],'',0,0,1};
+gb_list_defaults = {'trilinear',1,0,'',0,0,1};
 niak_set_defaults
 
 %% Generating default ouputs
