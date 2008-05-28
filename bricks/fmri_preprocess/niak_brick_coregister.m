@@ -288,7 +288,7 @@ end
 
 %% Saving the transformation
 if ~strcmp(files_out.transformation,'gb_niak_omitted')
-    [succ,msg] = system(cat(2,'mincconcat -clobber ',file_transf_init,' ',file_transf_tmp,' ',files_out.transformation));
+    [succ,msg] = system(cat(2,'xfmconcat -clobber ',file_transf_init,' ',file_transf_tmp,' ',files_out.transformation));
     if succ~=0
         error(msg)
     end
