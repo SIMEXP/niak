@@ -644,7 +644,7 @@ if ~ischar(files_out.motion_corrected_data)
             hdr.file_name = files_in_r.source;
             hdr.flag_zip = 0;
             hdr_target.details.time = hdr.details.time;
-            hdr_target.info.tr = hdr.details.tr;
+            hdr_target.info.tr = hdr.info.tr;
             [nx,ny,nz,nt] = size(data);            
             data_r = zeros([nx ny nz nt-suppress_vol]);
             
