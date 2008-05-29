@@ -1,28 +1,24 @@
-function mask_f = niak_find_str_cell(cell_str,cell_str2)
+function struct2 = niak_rm_field(struct,str_field)
 
-% Test if one of many strings are substrings of another list of strings
+% Remove all fields from a structure that contain a string.
 %
 % SYNTAX:
-% MASK_F = NIAK_FIND_STR_CELL(CELL_STR,CELL_STR2)
-% 
-% INPUTS:
-% CELL_STR      (string or cell of strings)
-% CELL_STR2     (string or cell of strings)
-% 
-% OUTPUTS:
-% MASK_F        (vector) MASK_F(i) equals 1 if CELL_STR2{j} contains 
-%               CELL_STR{i} for any j, 0 otherwise. If one argument is a
-%               simple string, it is converted into a cell of string with
-%               one element.
+%   STRUCT2 = NIAK_RM_FIELD(STRUCT,STR_FIELD)
 %
-% SEE ALSO:
-% NIAK_CMP_STR_CELL
+% INPUTS:
+% STRUCT    (structure)
+% STR_FIELD (string)
+%
+% OUTPUTS:
+% STRUCT2   (structure) same as STRUCT, but all fields whose name contains
+%       the  string STR_FIELD have been removed.
+%
+% COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : string
-
+% Keywords : structure
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -42,26 +38,6 @@ function mask_f = niak_find_str_cell(cell_str,cell_str2)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if ischar(cell_str)
-    str2{1} = cell_str;
-    cell_str = str2;
-    clear str2
-end
-
-if ischar(cell_str2)
-    str2{1} = cell_str2;
-    cell_str2 = str2;
-    clear str2
-end
-
-nb_e = length(cell_str);
-nb_f = length(cell_str2);
-mask_f = zeros([nb_e 1]);
-
-for num_e = 1:nb_e
-    for num_f = 1:nb_f
-        mask_f(num_e) = mask_f(num_e)|~isempty(findstr(cell_str{num_e},cell_str2{num_f}));
-    end
-end
-
-mask_f = mask_f>0;
+list_fields = fieldnames(struct);
+mask_f = niak_find_str_cell(list_fields,str_field);
+struct2 = rmfield(struct,list_fields(mask_f));
