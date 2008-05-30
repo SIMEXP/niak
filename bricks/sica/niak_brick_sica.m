@@ -1,5 +1,8 @@
 function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 
+% Compute a decomposition of an (individual) fMRI dataset into spatially 
+% independent components.
+%
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SICA(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
@@ -9,29 +12,35 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %     a field is an empty string, a default value will be used to
 %     name the outputs. If a field is ommited, the output won't be
 %     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted'). 
+%     names to 'gb_niak_omitted').
 %
-%       SPACE (string, default <BASE_NAME>_sica_space.mat) 
+%       SPACE (string, default <BASE_NAME>_sica_space.mat)
 %           a 3D+t dataset. Volume K is the spatial distribution of the Kth
 %           source estimaed through ICA.
 %
-%       TIME (string, default <BASE_NAME>_sica_time.dat) 
+%       TIME (string, default <BASE_NAME>_sica_time.dat)
 %           a text file. Column Kth is the temporal distribution of the Kth
 %           ica source.
 %
-% OPT   (structure) with the following fields : 
-%       
-%       NORM (optional, default 'mean') 
+%       FIGURE (string, default <BASE_NAME>_sica_fig.eps)
+%           an eps figure showing the spatial distribution of the
+%           components on axial slices after robust correction to normal
+%           distribution, as well as the time, spectral and time frequency
+%           representation of the time component.
+%
+% OPT   (structure) with the following fields :
+%
+%       NORM (optional, default 'mean')
 %           Correction of the time series, possible values :
 %           'mean' (correction to zero mean), 'mean_var' (correction
 %           to zero mean and unit variance), 'mean_var2' (same
 %           as 'mean_var' but slower, yet does not use as much memory).
 %
-%       ALGO (optional, default 'Infomax') 
+%       ALGO (optional, default 'Infomax')
 %           the type of algorithm to be used for the sica decomposition.
 %           Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
-%       NB_COMP (optional, default min(50,T)) 
+%       NB_COMP (optional, default min(50,foor(0.95*T)))
 %           number of components to compute (for default : T is the number
 %           of time samples.
 %
@@ -43,9 +52,9 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           the function prints some infos during the processing.
 %
 %       FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default 
+%           brick does not do anything but update the default
 %           values in FILES_IN, FILES_OUT and OPT.
-%               
+%
 %
 % OUTPUTS
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
@@ -57,7 +66,7 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % Pitie-Salpetriere, Universite Pierre et Marie Curie, France.
 % E-mail: Vincent.Perlbarg@imed.jussieu.fr
 %
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -97,8 +106,8 @@ niak_set_defaults
 
 %% Output files
 gb_name_structure = 'files_out';
-gb_list_fields = {'space','time'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'space','time','figure'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));
@@ -122,6 +131,10 @@ if isempty(files_out.time)
     files_out.time = cat(2,opt.folder_out,filesep,name_f,'_sica_time.dat');
 end
 
+if isempty(files_out.figure)
+    files_out.figure = cat(2,opt.folder_out,filesep,name_f,'_sica_figure.eps');
+end
+
 if flag_test == 1
     return
 end
@@ -142,6 +155,7 @@ if flag_verbose
 end
 mean_vol = mean(abs(vol),4);
 mask = niak_mask_brain(mean_vol);
+mask = mask & (mean_vol>0);
 
 %% Reshaping data
 [nx,ny,nz,nt]=size(vol);
@@ -154,6 +168,7 @@ if flag_verbose
 end
 vol = niak_correct_mean_var(vol,opt.norm);
 
+
 %%%%%%%%%%%%%%%%%%%%%%
 %% sica computation %%
 %%%%%%%%%%%%%%%%%%%%%%
@@ -161,7 +176,7 @@ if flag_verbose
     fprintf('Performing spatial independent component analysis with %i components, this might take a while ...\n',nb_comp);
 end
 opt_sica.algo = opt.algo;
-opt_sica.param_nb_comp = min(nb_comp,nt);
+opt_sica.param_nb_comp = min(nb_comp,floor(0.95*nt));
 opt_sica.type_nb_comp = 0;
 opt_sica.verbose = 'off';
 res_ica = st_do_sica(vol,opt_sica);
@@ -192,7 +207,56 @@ if ~strcmp(files_out.time,'gb_niak_omitted')
     end
     for  num_l = 1:size(A,1)
         fprintf(hf,'%1.15f ',A(num_l,:));
+        fprintf(hf,'\n');
     end
     fclose(hf)
-    
+end
+
+if ~strcmp(files_out.figure,'gb_niak_omitted')
+
+    %% Options for the montage
+    opt_visu.voxel_size = hdr.info.voxel_size;
+    opt_visu.fwhm = max(hdr.info.voxel_size)*1.5;
+    opt_visu.vol_limits = [0 3];
+    opt_visu.type_slice = 'axial';
+    opt_visu.type_color = 'jet';
+
+    for num_c = 1:size(vol_space,4)
+
+        vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
+        niak_montage(abs(vol_c),opt_visu);
+        title(sprintf('Spatial component %i, file %s',num_c,name_f));
+        if num_c == 1
+            print(hf,'-dpsc','-r300',files_out.figure);
+        else
+            print(hf,'-dpsc','-r300','-append',files_out.figure);
+        end
+
+        clf
+
+        nt = size(A,1);
+
+        %% temporal distribution
+        subplot(3,1,1)
+        plot(hdr.info.tr*(1:nt),A(:,num_c));
+        xlabel('time')
+        ylabel('a.u.')
+        title(sprintf('Time component %i, file %s',num_c,name_f));
+
+        %% Frequency distribution
+        subplot(3,1,2)
+        niak_visu_spectrum(A(:,num_c),hdr.info.tr);
+
+        %% Time-frequency distribution
+        subplot(3,1,3)
+        niak_visu_wft(A(:,num_c),hdr.info.tr);
+
+        print(hf,'-dpsc','-r300','-append',files_out.figure);
+
+        clf
+
+    end
+
+    close(hf);
+
 end

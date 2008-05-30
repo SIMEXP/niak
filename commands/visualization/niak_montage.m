@@ -9,11 +9,22 @@ function [] = niak_montage(vol,opt)
 % VOL           (3D array) a 3D volume
 % OPT           (structure, optional) has the following fields:
 %
+%                   NB_ROWS (integer, default : optimized for a square
+%                      montage) the number of rows in the montage.
+%               
+%                   NB_COLUMNS (insteger, default : optimized for a square
+%                      montage) the number of columns in the montage.
+%
+%                   VOXEL_SIZE (vector 1*3, default [1 1 1]) resolution in
+%                      x, y and z dimensions.
+%
 %                   TYPE_SLICE (string, default 'axial') the plane of slices
 %                       in the montage. Available options : 'axial', 'coronal',
-%                       'sagital'. This option assumes the volume is in
+%                       'sagital', 'all'. This option assumes the volume is in
 %                       'xyz' convention (left to right, posterior to
-%                       anterior, ventral to dorsal).
+%                       anterior, ventral to dorsal). With 'all' option,
+%                       three subplots will be made, one for each slice
+%                       type.
 %
 %                   VOL_LIMITS (vector 2*1, default [min(vol(:)) max(vol(:))]) 
 %                       limits of the color scaling.
@@ -34,10 +45,15 @@ function [] = niak_montage(vol,opt)
 %                   FLAG_COLORBAR (boolean, default 1) if flag_colorbar is
 %                       true, a colorbar in included in the figure
 %
+%                   COMMENT (string, default '') a string that will appear in all
+%                      figure titles.
+%
 % OUTPUTS:
 % a 'montage' style visualization of each slice of the volume
 %
 % COMMENTS:
+% If both the number of rows ans the number of columns are specified, the
+% number of slices are adapted to match the montage.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -65,41 +81,81 @@ function [] = niak_montage(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'type_slice','vol_limits','type_color','fwhm','type_flip','flag_colorbar'};
-gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90',1};
+gb_list_fields = {'type_slice','vol_limits','type_color','fwhm','type_flip','flag_colorbar','nb_rows','nb_columns','voxel_size','comment'};
+gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90',1,0,0,[1 1 1],''};
 niak_set_defaults
 
-colormap(type_color);
+if strcmp(type_color,'hot_cold')
+    c1 = hot(128);
+    c1 = c1(1:100,:);
+    c2 = c1(:,[3 2 1]);
+    c= [c2(size(c2,1):-1:1,:) ; c1];
+    colormap(c)   
+else
+    colormap(type_color)
+end
 
-if strcmp(type_slice,'coronal');
+switch type_slice
+    case 'coronal'
 
     vol = permute(vol,[1 3 2]);
+    voxel_size = voxel_size([1 3 2]);
 
-elseif strcmp(type_slice,'sagital');
+    case 'sagital'
 
     vol = permute(vol,[2 3 1]);
+    voxel_size = voxel_size([2 3 1]);
 
-elseif strcmp(type_slice,'axial')
+    case 'axial'
 
-else
-    fprintf('%s is an unkwon view type.\n',type_slice);
+    case 'all'
+
+    list_view = {'axial','sagital','coronal'};
+    
+    for num_v = 1:length(list_view)
+        opt.type_slice = list_view{num_v};
+        subplot(3,1,num_v)
+        niak_montage(vol,opt);
+        title(sprintf('%s - %s',list_view{num_v},opt.comment));
+    end
     return
+
+    otherwise
+        fprintf('%s is an unkwon view type.\n',type_slice);
+        return
 end
 
 [nx,ny,nz] = size(vol);
 
-N = ceil(sqrt(nz));
-M = ceil(nz/N);
+if nb_rows == 0
+    N = ceil(sqrt(nz));
+else
+    N = nb_rows;
+end
+
+if nb_columns == 0
+    M = ceil(nz/N);
+else    
+    M = nb_columns;
+end
+
+if nz > M*N
+    samp_slice = 1:max(floor(nz/(M*N)),1):nz;
+    samp_slice = samp_slice(1+ceil((length(samp_slice)-M*N)/2):(length(samp_slice)-floor((length(samp_slice)-M*N)/2)));
+    vol = vol(:,:,samp_slice);
+    [nx,ny,nz] = size(vol);
+end
 
 if fwhm>0
     opt_smooth.fwhm = opt.fwhm;
+    opt_smooth.voxel_size = opt.voxel_size;
     vol = niak_smooth_vol(vol,opt_smooth);
 end
 
 if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')
-    vol2 = zeros([nx*N ny*M]);
-else
     vol2 = zeros([ny*N nx*M]);
+else
+    vol2 = zeros([nx*N ny*M]);    
 end
 
 [indy,indx] = find(ones([M,N]));
@@ -113,8 +169,18 @@ for num_z = 1:nz
     end
 end
 
-imagesc(vol2,vol_limits)
-axis square
+imagesc(vol2,vol_limits);
+if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')    
+    %axis([1 ny*N 1 nx*M]);
+    siz_tot = [size(vol2).*voxel_size([2 1])];
+    siz_tot = siz_tot/sum(siz_tot);    
+    set(gca,'DataAspectRatio',[siz_tot 1]);
+else
+    %axis([1 nx*N 1 ny*M]);    
+    set(gca,'DataAspectRatio',[size(vol2).*voxel_size([1 2]) 1]);
+end
+
+
 
 if flag_colorbar
     colorbar
