@@ -220,6 +220,8 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     opt_visu.vol_limits = [0 3];
     opt_visu.type_slice = 'axial';
     opt_visu.type_color = 'jet';
+    
+    hf = figure;
 
     for num_c = 1:size(vol_space,4)
 

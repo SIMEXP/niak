@@ -79,7 +79,8 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %
 %       FIG_MOTION  (cell of strings, default base
 %       FIG_MOTION_<BASE_FILE_IN>.EPS) For each session, a figure
-%       representing the within-run motion parameters for all runs.
+%       representing the within-session motion parameters for all runs.  
+%       The motion parameters are corrected of the mean within-run value.
 %
 %   OPT   (structure) with the following fields:
 %
