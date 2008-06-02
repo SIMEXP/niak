@@ -65,7 +65,7 @@ for num_f = 1:nb_fields
     if ~flag_field  
         if isnumeric(val)
             if isnan(val)
-                error('niak:defaults',cat(2,'Please specify field ',field,' in structure ',gb_name_structure,' !\n'))                
+                error(cat(2,'niak:defaults: Please specify field ',field,' in structure ',gb_name_structure,' !\n'))                
             end
         end
         
@@ -90,7 +90,7 @@ if min(gb_mask_init)==0
     for num_i = 1:length(gb_ind_init)
         gb_fields_warning = [gb_fields_warning ' ' gb_list_fields_init{gb_ind_init(num_i)}];
     end
-    warning('niak:default',cat(2,'The following field(s) were ignored in the structure ',gb_name_structure,' : ',gb_fields_warning));
+    warning(cat(2,'niak:default: The following field(s) were ignored in the structure ',gb_name_structure,' : ',gb_fields_warning));
 end
 
 %% Export the structure
