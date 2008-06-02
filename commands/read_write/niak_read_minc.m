@@ -61,7 +61,8 @@ if nargout == 2
     file_tmp = niak_file_tmp('.data');
 
     %% extracting the data in float precision in the temporary file
-    [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -nonormalize ',file_name,' > ',file_tmp));
+    [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -normalize ',file_name,' > ',file_tmp));
+    
     if flag>0
         error('niak:read : %s',str_info)
     end

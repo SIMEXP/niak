@@ -137,21 +137,46 @@ switch action
         
     case 'restart'
         
-        fprintf('Cleaning all .lock .running and .failed files ... \n');
+        fprintf('Cleaning all .lock .running and .failed jobs and associated jobs ... \n');
         
-        system(cat(2,'rm -f ',path_logs,filesep,'*.running'));
-        system(cat(2,'rm -f ',path_logs,filesep,'*.failed'));
-        system(cat(2,'rm -f ',path_logs,filesep,'*.lock'));
-                
+        list_ext = {'running','failed','lock'};
+        
+        for num_e = 1:length(list_ext)
+            
+            list_files = dir(cat(2,path_logs,filesep,'*',list_ext{num_e}));
+            list_files = {list_files.name};
+            
+            for num_f = 1:length(list_files)
+                base_file = list_files{num_f};
+                base_file = base_file(1:end-length(list_ext{num_e}));
+                system(cat(2,'rm -f ',path_logs,filesep,base_file,'log'));
+                system(cat(2,'rm -f ',path_logs,filesep,base_file,list_ext{num_e}));
+            end
+            
+        end                    
+        
+        fprintf('Restarting the pipeline ... \n')
         s = niak_manage_pipeline(file_pipeline,'run',opt)
         
     case 'reset'
         
         fprintf('Cleaning all .lock .running, .failed and .finished files ... \n');        
-        system(cat(2,'rm -f ',path_logs,filesep,'*.running'));
-        system(cat(2,'rm -f ',path_logs,filesep,'*.failed'));
-        system(cat(2,'rm -f ',path_logs,filesep,'*.lock'));
-        system(cat(2,'rm -f ',path_logs,filesep,'*.finished'));
+        
+        list_ext = {'running','failed','lock','finished'};
+        
+        for num_e = 1:length(list_ext)
+            
+            list_files = dir(cat(2,path_logs,filesep,'*',list_ext{num_e}));
+            list_files = {list_files.name};
+            
+            for num_f = 1:length(list_files)
+                base_file = list_files{num_f};
+                base_file = base_file(1:end-length(list_ext{num_e}));
+                system(cat(2,'rm -f ',path_logs,filesep,base_file,'log'));
+                system(cat(2,'rm -f ',path_logs,filesep,base_file,list_ext{num_e}));
+            end
+            
+        end                    
         
         fprintf('Restarting the pipeline ... \n')
         s = niak_manage_pipeline(file_pipeline,'run',opt);        
