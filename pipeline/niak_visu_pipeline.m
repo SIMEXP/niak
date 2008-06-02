@@ -3,15 +3,17 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % Run or reset a PMP pipeline.
 %
 % SYNTAX:
-% [] = NIAK_VISU_PIPELINE(FILE_PIPELINE,ACTION)
+% [] = NIAK_VISU_PIPELINE(FILE_PIPELINE,ACTION,OPT)
 %
 % INPUTS:
 % FILE_PIPELINE  (string) The file name of a PMP script generated using
 %                  NIAK_INIT_PIPELINE.
 %               
 % ACTION         (string) Possible values :
-%                  'graph_stages', 'graph_filenames', 'status', 'running',
+%                  'graph_stages', 'graph_filenames', 'log', 'status', 'running',
 %                  'failed', 'finished' or 'unfinished'
+%
+% OPT           (string) see action 'log'.
 % OUTPUTS:
 % 
 % What the function does depends on the argument ACTION :
@@ -31,22 +33,23 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 % into a svg file using dot, and displays it using the program specified in
 % the variable GB_NIAK_VIEWER_SVG in the file NIAK_GB_VARS.
 %
+% ACTION = 'log'
+% Print the log files for all jobs whose name include the string OPT.
+%
 % ACTION = 'status'
 % Print the current status of the pipeline (running or not), and displays
 % the log file of the initialization and execution of the pipeline, if they
 % exist.
 %
 % ACTION = 'running'
-% Display a list of the stages of the pipeline that are currently running,
-% and the current log file for each of these stages.
+% Display a list of the stages of the pipeline that are currently running
+% and that are scheduled in the queue.
 %
 % ACTION = 'failed'
-% Display a list of the stages of the pipeline that have failed,
-% and the associated log files.
+% Display a list of the stages of the pipeline that have failed.
 %
 % ACTION = 'finished'
-% Display a list of finished stages of the pipeline,
-% and the associated log files.
+% Display a list of finished stages of the pipeline.
 %
 % ACTION = 'unfinished'
 % Display a list of unfinished stages.
@@ -146,7 +149,7 @@ switch action
         
         system(cat(2,'dot -Tsvg -o ',file_svg_filenames,' ',file_graph_filenames));
         
-        system(cat(2,gb_niak_viewersvg,' ',file_svg_filenames,'&'));
+        system(cat(2,gb_niak_viewersvg,' ',file_svg_filenames,'&'));    
         
     case 'status'
         
@@ -183,22 +186,18 @@ switch action
         end
         fprintf('\n\n***********\n Log of pipeline execution \n***********\n%s\n',str_exec)
         
-    case 'running'
+    case 'log'
         
-        files_running = dir(cat(2,path_logs,filesep,name_pipeline,'*.running'));        
+        files_log = dir(cat(2,path_logs,filesep,'*',name_log,'*.log'));        
         
-        if length(files_running)==0
-            fprintf('\n\n***********\n There is currently no job running \n***********\n%s\n')
+        if length(files_log)==0
+            fprintf('\n\n***********\n Could not find any log fitting the filter %s \n***********\n%s\n',name_log)
         else
-            fprintf('\n\n***********\n List of job(s) currently running \n***********\n%s\n')
-            files_running = {files_running.name};
-            for num_j = 1:length(files_running)
-                fprintf('%s\n',files_running{num_j});                
-            end
+            files_log = {files_log.name};
             
-            for num_j = 1:length(files_running)
+            for num_j = 1:length(files_log)
                 
-                log_job = cat(2,files_running{num_j}(1:end-8),'.log');
+                log_job = cat(2,files_log{num_j});
                 file_log_job = cat(2,path_logs,filesep,log_job);
                 
                 if ~exist(file_log_job,'file')
@@ -212,7 +211,30 @@ switch action
                 end
                 
             end
-        end        
+        end      
+        
+    case 'running'
+        
+        files_running = dir(cat(2,path_logs,filesep,name_pipeline,'*.running'));        
+        
+        if length(files_running)==0
+            fprintf('\n\n***********\n There is currently no job running \n***********\n%s\n')
+        else
+
+            fprintf('\n\n***********\n List of submitted job(s) \n***********\n%s\n')
+            
+            files_running = {files_running.name};            
+            
+            for num_j = 1:length(files_running)
+                fprintf('%s : ',files_running{num_j}(1:end-8));                
+                log_job = cat(2,files_running{num_j}(1:end-8),'.log');
+                if exist(log_job)
+                    fprintf('currently running\n');
+                else
+                    fprintf('scheduled, but not currently running\n');
+                end                    
+            end            
+        end       
                    
     case 'failed'
 
@@ -224,25 +246,8 @@ switch action
             fprintf('\n\n***********\n List of failed job(s) \n***********\n%s\n')
             files_failed = {files_failed.name};
             for num_j = 1:length(files_failed)
-                fprintf('%s\n',files_failed{num_j});
-            end
-
-            for num_j = 1:length(files_failed)
-
-                log_job = cat(2,files_failed{num_j}(1:end-7),'.log');
-                file_log_job = cat(2,path_logs,filesep,log_job);
-
-                if ~exist(file_log_job,'file')
-                    fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
-                else
-                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',log_job)
-                    hf = fopen(file_log_job,'r');
-                    str_log = fread(hf,Inf,'uint8=>char');
-                    fclose(hf);
-                    fprintf('%s\n',str_log)
-                end
-
-            end
+                fprintf('%s\n',files_failed{num_j}(1:end-7));
+            end            
         end
         
     case 'finished'
@@ -252,28 +257,13 @@ switch action
         if length(files_finished)==0
             fprintf('\n\n***********\n No jobs have been completed\n***********\n%s\n')
         else
+
             fprintf('\n\n***********\n List of finished job(s) \n***********\n%s\n')
             files_finished = {files_finished.name};
             for num_j = 1:length(files_finished)
-                fprintf('%s\n',files_finished{num_j});
+                fprintf('%s\n',files_finished{num_j}(1:end-9));
             end
-
-            for num_j = 1:length(files_finished)
-
-                log_job = cat(2,files_finished{num_j}(1:end-9),'.log');
-                file_log_job = cat(2,path_logs,filesep,log_job);
-
-                if ~exist(file_log_job,'file')
-                    fprintf('\n\n***********\nCould not find the log file %s\n***********\n%s\n',file_log_job)
-                else
-                    fprintf('\n\n***********\nLog file %s\n***********\n%s\n',log_job)
-                    hf = fopen(file_log_job,'r');
-                    str_log = fread(hf,Inf,'uint8=>char');
-                    fclose(hf);
-                    fprintf('%s\n',str_log)
-                end
-
-            end
+            
         end
         
     case 'unfinished'
