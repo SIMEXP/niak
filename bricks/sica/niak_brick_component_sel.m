@@ -18,42 +18,27 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %       TRANSFORMATION (string, default identity) a transformation from the
 %           functional space to the mask space.
 %
-% FILES_OUT (structure)  with the following fields.  Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is ommited, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted').
-%
-%       FIGURE (string, , default <base COMPONENT>_<base MASK>_fig_compsel.dat)
-%           an eps figure showing the spatial distribution of the
-%           components on axial slices after robust correction to a normal
-%           distribution, as well as the time, spectral and time frequency
-%           representation of the time component.
-%
-%       COMP_SEL (string, default <base COMPONENT>_<base MASK>_compsel.dat)
+% FILES_OUT (string, default <base COMPONENT>_<base MASK>_compsel.dat)
 %           A text file. First column gives the numbers of the selected
 %           components in the order of selection, and the second column
 %           gives the score of selection.
 %
 % OPT   (structure) with the following fields :
 %
-%       NB_CLUSTER (default floor(nbvox/10), where nbvox is the number of 
-%           voxels in the region). The number of clusters used in stepwise
-%           regression.
+%       NB_CLUSTER (default 10). The number of spatial clusters used in 
+%           stepwise regression. If NB_CLUSTER == 0, the number of clusters
+%           is set to (nb_vox/10), where nb_vox is the number of voxels in
+%           the region.
 %
 %       P (real number, 0<P<1, default 0.0001) the p-value of the stepwise
 %           regression.
 %
-%       NB_KMEANS (default 10) the number of repetition for kmeans clustering.
+%       NB_SAMPS (default 10) the number of kmeans repetition.
 %
 %       TYPE_SCORE (string, default 'freq') Score function. 'freq' for the
 %           frequency of selection of the regressor and 'inertia' for the
 %           relative part of inertia explained by the clusters "selecting"
 %           the regressor.
-%
-%       THRESHOLD (default 0.15) the threshold of the scores to select the
-%           components. value between 0 and 1. =-1 for automatic threshold
-%           by Otsu algorithm.
 %
 %       FOLDER_OUT (string, default: path of FILES_IN.SPACE) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -113,16 +98,15 @@ gb_list_fields = {'fmri','component','mask','transformation'};
 gb_list_defaults = {NaN,NaN,NaN,NaN,'gb_niak_omitted'};
 niak_set_defaults
 
-%% Output files
-gb_name_structure = 'files_out';
-gb_list_fields = {'comp_sel','figure'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
-niak_set_defaults
+%% Output file
+if ~ischar(files_out)
+    error('FILES_OUT should be a string !');
+end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'nb_cluster','p','nb_kmeans','type_score','threshold','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0,0.001,'freq',0.15,10,1,0,''};
+gb_list_fields = {'ww','nb_cluster','p','nb_samps','type_score','flag_verbose','flag_test','folder_out'};
+gb_list_defaults = {0,0,0.001,10,'freq',1,0,''};
 niak_set_defaults
 
 %% Parsing the input names
@@ -149,12 +133,12 @@ if isempty(opt.folder_out)
     opt.folder_out = path_s;
 end
 
-if isempty(files_out.comp_sel)
-    files_out.comp_sel = cat(2,opt.folder_out,filesep,name_s,'_',name_m,'_compsel.dat');
+if isempty(files_out)
+    files_out = cat(2,opt.folder_out,filesep,name_s,'_',name_m,'_compsel.dat');
 end
 
-if isempty(files_out.figure)
-    files_out.figure = cat(2,opt.folder_out,filesep,name_s,'_',name_m,'_fig_compsel.eps');
+if ~strcmp(opt.type_score,'freq')&~strcmp(opt.type_score,'inertia')
+    error(sprintf('%s is an unknown score function type',opt.type_score));
 end
 
 if flag_test == 1
@@ -194,10 +178,12 @@ if flag_verbose
 end
 [hdr_func,vol_func] = niak_read_vol(files_in.fmri);
 tseries_roi = niak_build_tseries(vol_func,mask_roi);
+[nt,nb_vox] = size(tseries_roi);
 clear vol_func
 
 %% Temporal sica components
 A = load(files_in.component);
+nb_comp = size(A,2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Stepwise regression %%
@@ -207,83 +193,30 @@ if flag_verbose
     fprintf('\n*********\nPerforming stepwise regression\n*********\n\n');
 end
 
-%% Correcting time series for mean and variances.
-sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
-tseries_ica = niak_correct_mean_var(A,'mean_var');
-clear A
-
-%% Selecting number of classe
-nbvox = size(sigs{1},2);
+%% Selecting number of spatial classes
 
 if nb_cluster == 0
-    nb_cluster = floor(nbvox/10); % default value for the number of clusters.
+    nb_cluster = floor(nb_vox/10); % default value for the number of clusters.
     opt.nb_cluster = nb_cluster;
 end
 
-[intersec,selecVector,selecInfo] = st_automatic_selection(sigs,tseries_ica,opt.p,opt.nb_kmeans,opt.nb_cluster,opt.type_score,0,'off');
+%% Computing score and score significance
+sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
+tseries_ica = niak_correct_mean_var(A,'mean_var');
+[intersec,selecVector,selecInfo] = st_automatic_selection(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'off');
 
-[A,B] = sort(selecVector);
-sortS = A(end:-1:1);
-num_comp = B(end:-1:1);
+%% Reordering scores
+[score,num_comp] = sort(selecVector',1,'descend');
 
-if threshold == -1
-    threshold = sub_otsu_corsica(selecVector);
+%% Writting the results of component selection
+[hf,msg] = fopen(files_out,'w');
+
+if hf == -1
+    error(msg);
 end
 
-I = find(sortS>threshold);
-
-% Building output structure
-
-compSelInfo.numcomp = num_comp(I);
-compSelInfo.score = selecVector;
-compSelInfo.thres = sugThres;
-compSelInfo.add = [];
-compSelInfo.rem = [];
-
-opt_comp_sel.scoreType = 'S3';
-opt_comp_sel.win=[];
-opt_comp_sel.tc_file=[];
-opt_comp_sel.mask_file=mask_file;
-opt_comp_sel.thres_p=[];
-
-compSelInfo.date = datestr(now);
-compSelInfo.name = strcat(opt_comp_sel.scoreType,'_',sicaName,'_',compSelInfo.date);
-compSelInfo.label = 'N/A';
-compSelInfo.opt_comp_sel = opt_comp_sel;
-
-function sugThres = sub_otsu_corsica(SelecVecor)
-
-%%%%%%%%%% suggested threshold using Otsu algorithm %%%%%%%%%%%%
-[H,X] = hist(selecVector,floor(length(selecVector)/5));
-H = H/sum(H);
-ngr = length(H);
-somme = sum((1:(ngr)).*H);
-eps = 10^(-10);
-seuil = 0;
-smax = 0;
-p = 0;
-a = 0;
-for i = 1:(ngr-1)
-    a = a+(i)*H(i);
-    p = p+H(i);
-    s = somme*p-a;
-    d = p*(1-p);
-    if (d>=eps)
-        s = s*s/d;
-        if (s >= smax)
-            smax = s;
-            amax = a;
-            pmax = p;
-            seuil = i;
-        end
-    end
+for num_l = 1:length(score)
+    fprintf(hf,'%i %1.12f \n',num_comp(num_l),score(num_l));
 end
-seuil = seuil-1;
 
-if seuil > 0
-    sugThres = X(seuil);
-else
-    sugThres = mean(selecVector);
-end
-sugThres = round(1000*sugThres)/1000;
-
+fclose(hf)

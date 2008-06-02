@@ -1,7 +1,8 @@
 function vol_c = niak_correct_vol(vol,mask);
 
 % Correct the distribution of a 3D random field to zero mean and unit
-% variance using robust statistics.
+% variance using robust statistics (fitted Gaussian distribution, initialized
+% the median and the median absolute deviation to the median).
 %
 % SYNTAX:
 % VOL_C = NIAK_CORRECT_VOL(VOL,MASK)
@@ -41,7 +42,8 @@ function vol_c = niak_correct_vol(vol,mask);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-visu = 0;
+flag_visu = 0;
+
 global X Y
 
 if nargin < 3
@@ -55,12 +57,9 @@ M = M(:);
 Y = Y/(length(M)*(max(X)-min(X)))*length(X);
 
 % Gaussian parameters fitting.
-%par = fminsearch('gaussien',[median(M);compute_qn_mex(M)]);
 par = fminsearch('gaussien',[median(M);1.4826*median(abs(M-median(M)))]);
-%par = fminsearch('gaussien',[mean(M);std(M)]);
-%par = [median(M),compute_qn_mex(M)];
 
-if visu
+if flag_visu
     [err,val] = gaussien(par);
     figure
     bar(X,Y); hold on; plot(X,val,'r');
@@ -70,18 +69,3 @@ end
 % Volume correction
 vol_c = zeros(size(vol));
 vol_c(mask) = (vol(mask) - par(1))/par(2);
-
-% Threshold computation
-if nargout > 1
-    t_c = st_normal_inverse_cdf(p/(2*sum(mask(:)>0)));
-    t_u = st_normal_inverse_cdf(p/2);
-end
-
-% Thresolded volumes
-
-if nargout >3
-    z_c = zeros(size(mask));
-    z_c(mask) = abs(vol_c(mask))>=t_c;
-    z_u = zeros(size(mask));
-    z_u(mask) = abs(vol_c(mask))>=t_u;
-end
