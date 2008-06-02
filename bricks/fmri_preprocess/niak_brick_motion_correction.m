@@ -345,6 +345,9 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     for num_s = 1:length(list_sessions)
 
         name_session = list_sessions{num_s};
+        clear files_session_in
+        clear files_session_out
+        
         if flag_verbose
             fprintf('\n* %s : \n',name_session)
         end
@@ -357,7 +360,9 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         if ~ischar(files_out.transf_within_session)
             files_session_out.motion_parameters = getfield(files_out.transf_within_session,name_session);
         else
-            files_session_out.motion_parameters = '';
+            for num_f = 1:length(files_session_in)
+                files_session_out.motion_parameters{num_f} = niak_file_tmp(cat(2,'_mp_run',num2str(num_f),'.dat'));
+            end
         end
         files_session_out.mask = mask_session{num_s};
         files_session_out.target = target_session{num_s};
