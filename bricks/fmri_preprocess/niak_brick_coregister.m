@@ -339,7 +339,7 @@ if  ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowre
         files_out_res = files_out.anat_lowres;
         opt_res.flag_tfm_space = 1;
         opt_res.flag_invert_transf = 1;
-        opt_res.voxel_size = [];
+        opt_res.voxel_size = 0;
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);                
     end
 
