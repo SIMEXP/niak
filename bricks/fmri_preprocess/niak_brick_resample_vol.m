@@ -34,8 +34,9 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %
 %       VOXEL_SIZE (vector 1*3, default same as target space) If
 %            voxel_size is set to 0, the resolution for resampling
-%            will be the same as the target space. Otherwise, the specified
-%            resolution will be used.
+%            will be the same as the target space. If voxel_size is set to -1, 
+%            the resolution will be the same as source sapce. Otherwise, 
+%            the specified resolution will be used.
 %
 %       FOLDER_OUT (string, default: path of FILES_IN) If present,
 %            all default outputs will be created in the folder FOLDER_OUT.
@@ -132,6 +133,10 @@ end
 
 hdr_source = niak_read_vol(files_in.source);
 [dircos1,step1,start1] = niak_hdr_mat2minc(hdr_source.info.mat);
+
+if min(voxel_size == -1) == 1
+    voxel_size = abs(step1(:))'; % By default, the voxel size is the voxel size of target space
+end
 
 nx1 = hdr_source.info.dimensions(1);
 ny1 = hdr_source.info.dimensions(2);
