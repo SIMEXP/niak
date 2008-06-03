@@ -137,17 +137,43 @@ if flag_test == 1
     return
 end
 
-%% Performing slice timing correction
-[hdr,vol] = niak_read_vol(files_in);
+%% Blurring
 
-if isempty(opt.voxel_size)
-    opt.voxel_size = hdr.info.voxel_size;
+if flag_verbose
+    fprintf('Reading data ...\n');
 end
 
-opt_s.voxel_size = opt.voxel_size;
-opt_s.fwhm = opt.fwhm;
-[vol_s,opt] = niak_smooth_vol(vol,opt_s);
+[hdr,vol] = niak_read_vol(files_in);
 
+file_vol_tmp = niak_file_tmp('_vol.mnc');
+file_vol_tmp_s = niak_file_tmp('_blur.mnc');
+instr_smooth = cat(2,'mincblur -fwhm ',num2str(opt.fwhm),' -no_apodize -clobber ',file_vol_tmp,' ',file_vol_tmp_s(1:end-9));
+
+if flag_verbose
+    fprintf('Smoothing volume :');
+end
+
+for num_v = 1:size(vol,4)
+    if flag_verbose
+        fprintf('%i ',num_v);
+    end
+    hdr.file_name = file_vol_tmp;
+    niak_write_vol(hdr,vol(:,:,:,num_v));
+    [succ,msg] = system(instr_smooth);
+    if succ~=0
+        error(msg)
+    end
+    [hdr_tmp,tmp] = niak_read_vol(file_vol_tmp_s);
+    vol(:,:,:,num_v) = tmp;
+end
+
+if flag_verbose
+    fprintf('\n');
+end
+
+delete(file_vol_tmp);
+delete(file_vol_tmp_s);
+    
 %% Updating the history and saving output
 hdr = hdr(1);
 hdr.flag_zip = flag_zip;
@@ -156,4 +182,4 @@ opt_hist.command = 'niak_smooth_vol';
 opt_hist.files_in = files_in;
 opt_hist.files_out = files_out;
 hdr = niak_set_history(hdr,opt_hist);
-niak_write_vol(hdr,vol_s);
+niak_write_vol(hdr,vol);

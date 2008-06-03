@@ -240,13 +240,20 @@ for num_d = 1:length(list_dim_long)
 
     if ~strcmp(list_dim_long{num_d},'time')
         pos = find(niak_find_str_cell(struct_dim.varatts,'step'));
-        step_v(num_e) = struct_dim.attvalue{pos};
+        if ~isempty(pos)
+            step_v(num_e) = struct_dim.attvalue{pos};
+        end
+
 
         pos = find(niak_find_str_cell(struct_dim.varatts,'direction_cosines'));
-        cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
+        if ~isempty(pos)
+            cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
+        end
 
         pos = find(niak_find_str_cell(struct_dim.varatts,'start'));
-        start_v(num_e) = struct_dim.attvalue{pos};
+        if ~isempty(pos)
+            start_v(num_e) = struct_dim.attvalue{pos};
+        end
 
         num_e = num_e + 1;
     else
