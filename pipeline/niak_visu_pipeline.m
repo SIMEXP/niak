@@ -188,10 +188,10 @@ switch action
         
     case 'log'
         
-        files_log = dir(cat(2,path_logs,filesep,'*',name_log,'*.log'));        
+        files_log = dir(cat(2,path_logs,filesep,'*',opt,'*.log'));        
         
         if length(files_log)==0
-            fprintf('\n\n***********\n Could not find any log fitting the filter %s \n***********\n%s\n',name_log)
+            fprintf('\n\n***********\n Could not find any log fitting the filter %s \n***********\n%s\n',opt)
         else
             files_log = {files_log.name};
             
@@ -226,9 +226,11 @@ switch action
             files_running = {files_running.name};            
             
             for num_j = 1:length(files_running)
+                
                 fprintf('%s : ',files_running{num_j}(1:end-8));                
-                log_job = cat(2,files_running{num_j}(1:end-8),'.log');
-                if exist(log_job)
+                log_job = cat(2,path_logs,file_sep,files_running{num_j}(1:end-8),'.log');
+                
+                if exist(log_job,'file')
                     fprintf('currently running\n');
                 else
                     fprintf('scheduled, but not currently running\n');
