@@ -188,7 +188,7 @@ switch action
         
     case 'log'
         
-        files_log = dir(cat(2,path_logs,filesep,'*',opt,'*.log'));        
+        files_log = dir(cat(2,path_logs,filesep,'*',opt,'.log'));        
         
         if length(files_log)==0
             fprintf('\n\n***********\n Could not find any log fitting the filter %s \n***********\n%s\n',opt)

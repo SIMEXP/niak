@@ -413,6 +413,7 @@ for num_s = 1:nb_subject
     files_in_tmp.anat = getfield(pipeline,name_stage_anat,'files_out','anat_nuc_stereo_lin');
     files_in_tmp.csf = getfield(pipeline,name_stage_anat,'files_out','pve_csf');
     files_in_tmp.transformation = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');
+    files_in_tmp.mask = getfield(pipeline,name_stage_anat,'files_out','mask_stereo');
     
     %% Building outputs for NIAK_BRICK_TIME_FILTER
     files_out_tmp.transformation = '';
