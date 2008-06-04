@@ -228,7 +228,7 @@ switch action
             for num_j = 1:length(files_running)
                 
                 fprintf('%s : ',files_running{num_j}(1:end-8));                
-                log_job = cat(2,path_logs,file_sep,files_running{num_j}(1:end-8),'.log');
+                log_job = cat(2,path_logs,filesep,files_running{num_j}(1:end-8),'.log');
                 
                 if exist(log_job,'file')
                     fprintf('currently running\n');
