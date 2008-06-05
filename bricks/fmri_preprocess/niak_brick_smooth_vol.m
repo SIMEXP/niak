@@ -6,13 +6,11 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
-% FILES_IN        (string OR cell of string) a file name of a 3D+t dataset OR
-%                       a cell of strings where each entry is a file name
-%                       of 3D data, all in the same space.
+% FILES_IN        (string) a file name of a 3D+t dataset
 %
-% FILES_OUT       (string or cell of strings) File names for outputs. NOTE that
-%                       if FILES_OUT is an empty string or cell, the name 
-%                       of the outputs will be the same as the inputs, 
+% FILES_OUT       (string) File name for outputs. NOTE that
+%                       if FILES_OUT is an empty string or cell, the name
+%                       of the outputs will be the same as the inputs,
 %                       with a '_s' suffix added at the end.
 %
 % OPT           (structure) with the following fields :
@@ -21,10 +19,10 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %                      the Gaussian kernel, in each dimension. If fwhm has length 1,
 %                      an isotropic kernel is implemented.
 %
-%               STEP  (vector of size [3 1] or [4 1], default resolution of 
+%               STEP  (vector of size [3 1] or [4 1], default resolution of
 %                      input files). This parameter usually does not need to be
-%                      manually specified, but is rather read from the input 
-%                      file. Specification through this file will override 
+%                      manually specified, but is rather read from the input
+%                      file. Specification through this file will override
 %                      these values. STEP is the resolution
 %                      in the respective dimensions, i.e. the space in mmm
 %                      between two voxels in x, y, and z. Note that the unit is
@@ -44,13 +42,13 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %                      processing.
 %
 %               FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
-%                      brick does not do anything but update the default 
+%                      brick does not do anything but update the default
 %                      values in FILES_IN and FILES_OUT.
-%               
+%
 % OUTPUTS:
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%              
+%
 % SEE ALSO:
 % NIAK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
 %
@@ -125,7 +123,7 @@ if isempty(files_out)
             if strcmp(ext_f,'.gz')
                 [tmp,name_f,ext_f] = fileparts(name_f);
             end
-            
+
             name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_s',ext_f);
         end
         files_out = char(name_filtered_data);
@@ -137,49 +135,62 @@ if flag_test == 1
     return
 end
 
-%% Blurring
+if opt.fwhm ~=0
 
-if flag_verbose
-    fprintf('Reading data ...\n');
-end
+    %% Blurring
 
-[hdr,vol] = niak_read_vol(files_in);
-
-file_vol_tmp = niak_file_tmp('_vol.mnc');
-file_vol_tmp_s = niak_file_tmp('_blur.mnc');
-instr_smooth = cat(2,'mincblur -fwhm ',num2str(opt.fwhm),' -no_apodize -clobber ',file_vol_tmp,' ',file_vol_tmp_s(1:end-9));
-
-if flag_verbose
-    fprintf('Smoothing volume :');
-end
-
-for num_v = 1:size(vol,4)
     if flag_verbose
-        fprintf('%i ',num_v);
+        fprintf('Reading data ...\n');
     end
-    hdr.file_name = file_vol_tmp;
-    niak_write_vol(hdr,vol(:,:,:,num_v));
-    [succ,msg] = system(instr_smooth);
+
+    [hdr,vol] = niak_read_vol(files_in);
+
+    file_vol_tmp = niak_file_tmp('_vol.mnc');
+    file_vol_tmp_s = niak_file_tmp('_blur.mnc');
+    instr_smooth = cat(2,'mincblur -fwhm ',num2str(opt.fwhm),' -no_apodize -clobber ',file_vol_tmp,' ',file_vol_tmp_s(1:end-9));
+
+    if flag_verbose
+        fprintf('Smoothing volume :');
+    end
+
+    for num_v = 1:size(vol,4)
+        if flag_verbose
+            fprintf('%i ',num_v);
+        end
+        hdr.file_name = file_vol_tmp;
+        niak_write_vol(hdr,vol(:,:,:,num_v));
+        [succ,msg] = system(instr_smooth);
+        if succ~=0
+            error(msg)
+        end
+        [hdr_tmp,tmp] = niak_read_vol(file_vol_tmp_s);
+        vol(:,:,:,num_v) = tmp;
+    end
+
+    if flag_verbose
+        fprintf('\n');
+    end
+
+    delete(file_vol_tmp);
+    delete(file_vol_tmp_s);
+
+    %% Updating the history and saving output
+    hdr = hdr(1);
+    hdr.flag_zip = flag_zip;
+    hdr.file_name = files_out;
+    opt_hist.command = 'niak_smooth_vol';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out;
+    hdr = niak_set_history(hdr,opt_hist);
+    niak_write_vol(hdr,vol);
+
+else
+
+    instr_copy = cat(2,'cp ',files_in,' ',files_out);
+    
+    [succ,msg] = system(instr_copy);
     if succ~=0
         error(msg)
     end
-    [hdr_tmp,tmp] = niak_read_vol(file_vol_tmp_s);
-    vol(:,:,:,num_v) = tmp;
-end
 
-if flag_verbose
-    fprintf('\n');
 end
-
-delete(file_vol_tmp);
-delete(file_vol_tmp_s);
-    
-%% Updating the history and saving output
-hdr = hdr(1);
-hdr.flag_zip = flag_zip;
-hdr.file_name = files_out;
-opt_hist.command = 'niak_smooth_vol';
-opt_hist.files_in = files_in;
-opt_hist.files_out = files_out;
-hdr = niak_set_history(hdr,opt_hist);
-niak_write_vol(hdr,vol);
