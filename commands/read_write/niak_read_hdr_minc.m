@@ -226,7 +226,7 @@ hdr.info.dimension_order = list_dim_short(order_xyzt);
 
 %% For each dimension, get the step, start and cosines information
 start_v = zeros([3 1]);
-cosines_v = zeros([3 3]);
+cosines_v = eye([3 3]);
 step_v = zeros([1 3]);
 hdr.info.voxel_size = zeros([1 3]);
 

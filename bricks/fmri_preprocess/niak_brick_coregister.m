@@ -21,7 +21,8 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %       MASK (string)
 %           a file with the mask of brain of the anatomical data.
 %           If this field is not specified, no mask will be used for the
-%           coregistration.
+%           coregistration. The mask needs to be in the same world and
+%           voxel space as the anatomical image.
 %
 %       CSF (string)
 %           a segmentation of the cerebro-spinal fluid in the anatomical
@@ -32,7 +33,8 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %           an initial guess of the transformation between the functional
 %           image and the anatomical image (e.g. the transformation from T1
 %           native space to stereotaxic linear space if the anat is in
-%           stereotaxic linear space).
+%           stereotaxic linear space). This initial transformation may be
+%           combined with an additional guess (see OPT.INIT).
 %
 %   FILES_OUT  (structure) with the following fields. Note that if
 %     a field is an empty string, a default value will be used to
@@ -54,6 +56,10 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %           space of the functional space, using the target resolution.
 %
 %   OPT   (structure) with the following fields:
+%
+%       INIT (string, default 'center') how to set the initial guess
+%           of the transformation. 'center': translation to align the
+%           center of mass. 'identity' : identity transformation.
 %
 %       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
@@ -134,9 +140,13 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm'};
-gb_list_defaults = {0,0,'','trilinear',1,8};
+gb_list_fields = {'flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm','init'};
+gb_list_defaults = {0,0,'','trilinear',1,8,'center'};
 niak_set_defaults
+
+if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
+    error('OPT.INIT should be either ''center'' or ''identity''');
+end
 
 %% Building default output names
 [path_anat,name_anat,ext_anat] = fileparts(files_in.anat);
@@ -190,8 +200,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Coregistration of the anatomical and functional images %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-list_fwhm = {8,3};
-list_fwhm_func = {4,1.5};
+list_fwhm = {8,4};
+list_fwhm_func = {4,1};
 list_step = {3,3};
 list_spline = {20,3};
 
@@ -223,8 +233,9 @@ files_in_res.source = files_in.functional;
 files_in_res.target = files_in.anat;
 files_in_res.transformation = file_transf_init;
 files_out_res = file_func_init;
-opt_res.voxel_size = -1;
+opt_res.voxel_size = 0;
 opt_res.flag_verbose = 0;
+opt_res.interpolation = 'sinc';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
 %% Generating functional mask
@@ -235,27 +246,44 @@ end
 [hdr_func,vol_func] = niak_read_vol(file_func_init);
 opt_mask.fwhm = 0;
 mask_func = niak_mask_brain(mean(abs(vol_func),4),opt_mask);
-file_mask_func = niak_file_tmp('_mask_func.mnc');
-hdr_func.file_name = file_mask_func;
+mean_func = mean(vol_func(mask_func>0));
+file_mask_func_init = niak_file_tmp('_mask_func_init.mnc');
+hdr_func.file_name = file_mask_func_init;
 niak_write_vol(hdr_func,mask_func);
+nb_erode = ceil(6/min(hdr_func.info.voxel_size));
+file_mask_func = niak_file_tmp('_mask_func.mnc');
+instr_erode = cat(2,'mincmorph -clobber -successive CC',repmat('E',[1 nb_erode]),' ',file_mask_func_init,' ',file_mask_func);
+if flag_verbose
+    system(instr_erode)
+else
+    [succ,msg] = system(instr_erode);
+    if succ ~= 0
+        error(msg)
+    end
+end
 
 %% Generating anatomical mask
 if flag_verbose
     fprintf('Building a mask of the anatomical space...\n');
 end
 
-hdr_mask = niak_read_vol(files_in.mask);
-file_mask_anat_init = niak_file_tmp('_mask_anat_init.mnc');
+[hdr_mask,mask_anat] = niak_read_vol(files_in.mask);
+nb_erode = ceil(6/min(hdr_mask.info.voxel_size));
 file_mask_anat = niak_file_tmp('_mask_anat.mnc');
 
-clear files_in_res files_out_res opt_res
-files_in_res.source = files_in.mask;
-files_in_res.target = files_in.anat;
-files_out_res = file_mask_anat;
-opt_res.interpolation = 'nearest_neighbour';
-opt_res.flag_verbose = 0;
-niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
+instr_erode = cat(2,'mincmorph -clobber -successive CC',repmat('E',[1 nb_erode]),' ',files_in.mask,' ',file_mask_anat);
+if flag_verbose
+    system(instr_erode)
+else
+    [succ,msg] = system(instr_erode);
+    if succ ~= 0
+        error(msg)
+    end
+end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Iterative coregistration %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for num_i = 1:length(list_fwhm)
 
@@ -266,15 +294,29 @@ for num_i = 1:length(list_fwhm)
 
     if flag_verbose
         fprintf('\n*************\nIteration %i, smoothing anatomical %1.2f, smoothing functional %1.2f, step %1.2f\n*************\n',num_i,fwhm_val,fwhm_val_func,step_val);
-    end
-        
+    end             
+    
     %% adjusting the csf segmentation   
     if flag_verbose
         fprintf('Masking the brain in anatomical space ...\n');
     end    
-    [hdr_anat,vol_anat] = niak_read_vol(files_in.anat);
-    [hdr_mask,mask_anat] = niak_read_vol(file_mask_anat);    
-    vol_anat(round(mask_anat)==0) = -1;
+    [hdr_anat,vol_anat] = niak_read_vol(files_in.csf);
+    [hdr_mask_anat,mask_anat] = niak_read_vol(file_mask_anat);    
+    if num_i == 1
+        %% this is the first iteration : big spline. 
+        %% Use a specic class tag for the part
+        %% of the volume outside the brain. This will prevent the
+        %% coregistration to go completely off the track
+        vol_anat(round(mask_anat)==0) = -1;
+    else
+        %% this is the second iteration : small spline. 
+        %% Use the same tag for the part
+        %% of the volume outside the brain as the WM and GM. 
+        %% This will reduce the weight of edges effect and let the
+        %% algorithm concentrate on what really matters (ventricles and
+        %% sulci).
+        vol_anat(round(mask_anat)==0) = 0;
+    end
     hdr_anat.file_name = file_anat_init;
     niak_write_vol(hdr_anat,vol_anat);
     
@@ -291,13 +333,23 @@ for num_i = 1:length(list_fwhm)
             error(msg)
         end
     end
-
+    
     %% Masking the brain in functional space
     if flag_verbose
         fprintf('Masking the brain in functional space ...\n');
     end
     [hdr_func,vol_func] = niak_read_vol(file_func_init);
-    vol_func(mask_func==0) = -1;
+    [hdr_mask_func,mask_func] = niak_read_vol(file_mask_func);
+    if num_i == 1
+        %% this is the first iteration : big spline. 
+        %% Use a specic class tag for the part
+        %% of the volume outside the brain. This will prevent the
+        %% coregistration to go completely off the track
+        vol_func(mask_func==0) = -mean_func;
+    else
+        %% this is the second iteration : small spline.         
+        vol_func(mask_func==0) = 0;
+    end
     hdr_func.file_name = file_func_init;
     niak_write_vol(hdr_func,vol_func);
     
@@ -319,25 +371,45 @@ for num_i = 1:length(list_fwhm)
     %% matching the centers of mass.
     if num_i == 1
         
-        if flag_verbose
-            fprintf('Deriving a reasonable guess of the transformation by matching the centers of mass ...\n');
+        switch opt.init
+            
+            case 'center'
+        
+                if flag_verbose
+                    fprintf('Deriving a reasonable guess of the transformation by matching the centers of mass ...\n');
+                end                
+                ind = find(mask_func>0);
+                [x,y,z] = ind2sub(size(mask_func),ind);
+                coord = (hdr_func.info.mat*[x';y';z';ones([1 length(x)])])';
+                center_func = mean(coord,1);                
+                ind = find(mask_anat>0);
+                [x,y,z] = ind2sub(size(mask_anat),ind);
+                coord = (hdr_mask.info.mat*[x';y';z';ones([1 length(x)])])';
+                center_anat = mean(coord,1);
+                transf = eye(4);
+                transf(1:3,4) = (center_anat(1:3)-center_func(1:3))';
+                niak_write_transf(transf,file_transf_tmp);
+                
+            case 'identity'
+                
+                if flag_verbose
+                    fprintf('Initial transformation is the identity...\n');
+                end
+                transf = eye(4);
+                niak_write_transf(transf,file_transf_tmp);
+                
         end
-        ind = find(mask_func>0);
-        [x,y,z] = ind2sub(size(mask_func),ind);
-        coord = (hdr_func.info.mat*[x';y';z';ones([1 length(x)])])';
-        center_func = mean(coord,1);
-        ind = find(mask_anat>0);
-        [x,y,z] = ind2sub(size(mask_anat),ind);
-        coord = (hdr_mask.info.mat*[x';y';z';ones([1 length(x)])])';
-        center_anat = mean(coord,1);
-        transf = eye(4);
-        transf(1:3,4) = (center_anat(1:3)-center_func(1:3))';
-        niak_write_transf(transf,file_transf_tmp);
+
         
     end
 
     %% applying minc tracc    
-    instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
+    if num_i == 1
+        instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
+    else
+        instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -xcorr -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
+    end
+    
     if flag_verbose
         fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
     end
@@ -415,11 +487,12 @@ if strcmp(files_out.transformation,'gb_niak_omitted')
     delete(file_transf_tmp2);
 end
 
-if ~strcmp(files_in.mask,'gb_niak_omitted')
-    delete(file_mask_anat);
-end
+delete(file_mask_anat);
+delete(file_mask_func);
+delete(file_mask_func_init)
 delete(file_transf_init);
 delete(file_transf_tmp);
 delete(file_anat_tmp);
+delete(file_anat_init);
 delete(file_func_tmp);
 delete(file_func_init);
