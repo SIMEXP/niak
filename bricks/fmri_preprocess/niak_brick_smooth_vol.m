@@ -3,7 +3,7 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % Spatial smoothing of 3D or 3D+t data, using a Gaussian separable kernel
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SMOOTH_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % INPUTS:
 % FILES_IN        (string) a file name of a 3D+t dataset
@@ -47,10 +47,10 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %
 % OUTPUTS:
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
-% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
+% valued. If OPT.FLAG_TEST == 0, the specified outputs are generated.
 %
 % SEE ALSO:
-% NIAK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
+% NIAK_SMOOTH_VOL
 %
 % COMMENTS
 %

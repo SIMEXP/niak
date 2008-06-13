@@ -37,7 +37,7 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %
 %               OPT (any matlab variable) options of the BRICK. 
 %
-%               ENVIRONMENT (string, default 'octave') the environment 
+%               ENVIRONMENT (string, default current) the environment 
 %                      where the BRICK should run. Available options : 
 %                       'matlab', 'octave'. 
 %
@@ -338,7 +338,7 @@ for num_s = 1:length(list_stage)
     
     gb_name_structure = 'stage';
     gb_list_fields = {'label','command','files_in','files_out','opt','environment',};
-    gb_list_defaults = {'',NaN,NaN,NaN,NaN,'octave'};
+    gb_list_defaults = {'',NaN,NaN,NaN,NaN,gb_niak_language};
     niak_set_defaults        
     
     %% Creation of output directories, in clobber mode previous outputs are

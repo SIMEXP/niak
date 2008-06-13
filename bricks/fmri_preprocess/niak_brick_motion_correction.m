@@ -195,7 +195,7 @@ niak_set_defaults
 %% FILES_OUT
 gb_name_structure = 'files_out';
 gb_list_fields = {'motion_corrected_data','motion_parameters','transf_within_session','transf_between_session','mask_volume','mean_volume','fig_motion'};
-gb_list_defaults = {'gb_niak_omitted','','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS

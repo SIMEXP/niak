@@ -86,7 +86,7 @@ gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt'
 niak_set_defaults
 
 %% Generating a temporary file with the data in float format
-file_tmp = niak_file_tmp('.data');
+file_tmp = niak_file_tmp(file_name);
 [hf,err_msg] = fopen(file_tmp,'w');
 
 if hf == -1

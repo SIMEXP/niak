@@ -58,7 +58,7 @@ hdr.info.precision = precision_data;
 
 if nargout == 2
     %% Generating a name for a temporary file
-    file_tmp = niak_file_tmp('.data');
+    file_tmp = niak_file_tmp(file_name);
 
     %% extracting the data in float precision in the temporary file
     [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -normalize ',file_name,' > ',file_tmp));
