@@ -352,7 +352,7 @@ for num_r = list_run
         if (num_v == vol_ref) & (num_r == run_ref)
 
             transf = eye(4);
-            [flag,str_log] = system(cat(2,'param2xfm ',xfm_tmp,' -translation 0 0 0 -rotations 0 0 0'));
+            [flag,str_log] = system(cat(2,'param2xfm ',xfm_tmp,' -translation 0 0 0 -rotations 0 0 0 -clobber'));
 
         else
 
