@@ -155,7 +155,7 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 
 %% SYNTAX
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CIVET(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_civet'' for more info.')
+    error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CIVET(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_civet'' for more info.')
 end
 
 %% FILES_IN
@@ -208,7 +208,7 @@ if ~flag_civet
     end
     
     %% Generate temporary names to run the CIVET pipeline.   
-    civet_folder = cat(2,niak_file_tmp('_civet'),filesep);    
+    civet_folder = niak_path_tmp('_civet');   
     civet_id = 'coco';
     civet_prefix = 'anat';        
     

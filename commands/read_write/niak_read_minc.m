@@ -64,7 +64,7 @@ if nargout == 2
     [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -normalize ',file_name,' > ',file_tmp));
     
     if flag>0
-        error('niak:read : %s',str_info)
+        error(sprintf('niak:read : %s',str_info))
     end
 
     %% reading information
