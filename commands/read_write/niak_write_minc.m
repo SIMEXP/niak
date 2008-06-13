@@ -86,11 +86,12 @@ gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt'
 niak_set_defaults
 
 %% Generating a temporary file with the data in float format
-file_tmp = niak_file_tmp(file_name);
+[path_tmp,name_tmp,ext_tmp] = fileparts(file_name);
+file_tmp = niak_file_tmp(name_tmp);
 [hf,err_msg] = fopen(file_tmp,'w');
 
 if hf == -1
-    error('niak:write: %s',err_msg)    
+    error('niak:write: %s %s',file_tmp,err_msg)    
 end
 
 fwrite(hf,vol(:),hdr.info.precision);

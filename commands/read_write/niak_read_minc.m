@@ -56,9 +56,11 @@ end
 hdr = niak_read_hdr_minc(file_name);
 hdr.info.precision = precision_data;
 
+[path_tmp,name_tmp,ext_tmp] = fileparts(file_name);
+
 if nargout == 2
     %% Generating a name for a temporary file
-    file_tmp = niak_file_tmp(file_name);
+    file_tmp = niak_file_tmp(name_tmp);
 
     %% extracting the data in float precision in the temporary file
     [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -normalize ',file_name,' > ',file_tmp));
