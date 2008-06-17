@@ -137,7 +137,7 @@ switch action
         
     case 'restart'
         
-        fprintf('Cleaning all .lock .running and .failed jobs and associated jobs ... \n');
+        fprintf('Cleaning all lock, running and failed jobs ... \n');
         
         list_ext = {'running','failed','lock'};
         
@@ -154,13 +154,12 @@ switch action
             end
             
         end                    
-        
-        fprintf('Restarting the pipeline ... \n')
+                
         s = niak_manage_pipeline(file_pipeline,'run',opt)
         
     case 'reset'
         
-        fprintf('Cleaning all .lock .running, .failed and .finished files ... \n');        
+        fprintf('Cleaning all lock, running, failed and finished jobs ... \n');        
         
         list_ext = {'running','failed','lock','finished'};
         
@@ -177,8 +176,7 @@ switch action
             end
             
         end                    
-        
-        fprintf('Restarting the pipeline ... \n')
+               
         s = niak_manage_pipeline(file_pipeline,'run',opt);        
         
     otherwise

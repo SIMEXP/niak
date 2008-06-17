@@ -79,7 +79,6 @@ voxel_size = abs(voxel_size);
 
 % Deriving kernel parameters
 s  = fwhm(1:3)./voxel_size(1:3);      % fwhm relative to voxel size
-s  = max(s,ones(size(s)));	    % lower bound on FWHM
 s  = s/sqrt(8*log(2));          % FWHM -> Gaussian parameter
 
 % Building a spatial grid
