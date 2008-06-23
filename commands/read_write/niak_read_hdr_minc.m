@@ -157,7 +157,9 @@ while ~isempty(cell_header)&~flag_end
 
                     pos = findstr(str_line,'"');
                     if ~isempty(pos)
-                        eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = ''',str_line(pos(1)+1:pos(2)-1),''';')); % It's a string
+                        att_value = str_line(pos(1)+1:pos(2)-1);
+                        att_value = niak_replace_str(att_value,'\''','''');
+                        eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = att_value;')); % It's a string
                     else
                         str_val = niak_rm_blank([cell_words{3:end}],{'b','d','f'}); % we get rid of type marks
                         eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = [',str_val,'];')); % It's an array of numbers

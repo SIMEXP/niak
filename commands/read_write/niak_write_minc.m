@@ -247,6 +247,7 @@ for num_v = 1:length(list_var)
             
             if ~strcmp(att,'length')
                 if ischar(att_val)
+                    att_val = niak_replace_str(att_val,'''','"');
                     str_hdr = [str_hdr ' -sinsert ' var ':' att '=''' att_val ''''];
                 elseif isnumeric(att_val)
                     str_val = sprintf('%0.15f',att_val(1));
