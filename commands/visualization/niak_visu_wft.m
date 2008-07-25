@@ -19,7 +19,8 @@ function [] = niak_visu_wft(tseries,tr);
 %
 % COMMENTS:
 % The core of this function is part of the Wavelab toolbox :
-% http://www-stat.stanford.edu/~wavelab/ 
+% http://www-stat.stanford.edu/~wavelab/
+% See the code of subfunctions for licensing information.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -80,47 +81,47 @@ function win=MakeWindow(Name,n)
 %     win = MakeWindow('Rectangle',17);	plot(win);
 %     win = MakeWindow('Hanning',  17);	plot(win);
 %     win = MakeWindow('Hamming',  17);	plot(win);
-%     win = MakeWindow('Gaussian', 17);	plot(win); 
+%     win = MakeWindow('Gaussian', 17);	plot(win);
 %     win = MakeWindow('Blackman', 17);	plot(win);
 %  See Also
-% 
+%
 %  Algorithm
 %    Easy to implement.
 %  References
 %    Mallat, "Wavelet Signal Processing"; 4.2.2 Choice of Window.
 %
- t = ((1:(2*n+1))-(n+1))./n./2;
+t = ((1:(2*n+1))-(n+1))./n./2;
 
- if strcmp(Name,'Rectangle'),
- 	win = ones(size(t));
- elseif strcmp(Name,'Hanning'),
-	win = realpow(cos(pi.*t),2);
- elseif strcmp(Name,'Hamming'),
-	win = .54 + .46*cos(2.*pi.*t);
- elseif strcmp(Name,'Gaussian'),
-	win = exp(-realpow(t,2)*18);
- elseif strcmp(Name,'Blackman'),
-	win = .42 + .50*cos(2.*pi.*t) + .08*cos(4.*pi.*t);
- end;
+if strcmp(Name,'Rectangle'),
+    win = ones(size(t));
+elseif strcmp(Name,'Hanning'),
+    win = realpow(cos(pi.*t),2);
+elseif strcmp(Name,'Hamming'),
+    win = .54 + .46*cos(2.*pi.*t);
+elseif strcmp(Name,'Gaussian'),
+    win = exp(-realpow(t,2)*18);
+elseif strcmp(Name,'Blackman'),
+    win = .42 + .50*cos(2.*pi.*t) + .08*cos(4.*pi.*t);
+end;
 
 %
- 
+
 
 %
 % Copyright (c) 1996. Xiaoming Huo
-% 
+%
 % Modified by Maureen Clerc and Jerome Kalifa, 1997
 % clerc@cmapx.polytechnique.fr, kalifa@cmapx.polytechnique.fr
-    
-    
-%   
+
+
+%
 % Part of WaveLab Version 802
 % Built Sunday, October 3, 1999 8:52:27 AM
 % This is Copyrighted Material
 % For Copying permissions see COPYING.m
 % Comments? e-mail wavelab@stat.stanford.edu
-%   
-    
+%
+
 function [specgm,specgmShow,T,F] = WFT(sig,w,m,Name,tr,trace)
 % WindowFT -- Window Fourier Transform
 %  Usage
@@ -145,7 +146,7 @@ function [specgm,specgmShow,T,F] = WFT(sig,w,m,Name,tr,trace)
 %  See Also
 %    MakeWindow IWindowFT
 %  References
-%    Mallat, "A Wavelet Tour in Signal Processing"; 
+%    Mallat, "A Wavelet Tour in Signal Processing";
 %            4.2.3 Discrete Windowed Fourier Transform.
 %
 sig = sig(:);
@@ -170,38 +171,40 @@ for l=1:nw,
     tim = n + t + ix;
     seg = f(tim);
     seg = seg.*win;
-    
+
     totseg(tim) = seg;
-    
+
     localspec = fft(totseg(n+1:2*n));
     specgm(:,l)  = localspec(1:n)';
-    %window = rshift(window')';
 end
-%
+
 % Make Window Fourier Transform Display
 
-    specgmShow = abs(specgm(1:(n/2+1),:));
-    spmax = max(max(specgmShow));
-    spmin = min(min(specgmShow));    
-    T = linspace(0,tr*n,n);
-    F = linspace(0,1/(2*tr),n/2+1);
+specgmShow = abs(specgm((1:(n/2+1))',:));
+spmax = max(max(specgmShow));
+spmin = min(min(specgmShow));
+T = linspace(0,tr*n,n);
+F = linspace(0,1/(2*tr),n/2+1);
+
 if trace
     colormap(1-gray(256))
-        
+
     imagesc(linspace(0,tr*n,n),linspace(0,1/(2*tr),n/2+1),specgmShow);
     %hold on
     %contour(linspace(0,tr*n,n),linspace(0,1/(2*tr),n/2+1),specgmShow,'k-');
-    
+
     axis('xy')
     xlabel('')
     ylabel('Frequency')
 end
+
 if nargout==0,
     specgm = [];
 end
+
 %
 % Copyright (c) 1996. Xiaoming Huo
-% 
+%
 % Modified by Maureen Clerc and Jerome Kalifa, 1997
 % clerc@cmapx.polytechnique.fr, kalifa@cmapx.polytechnique.fr
 % Modified by Pierre Bellec and Vincent Perlbarg 2003

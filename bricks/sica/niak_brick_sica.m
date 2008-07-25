@@ -22,8 +22,8 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           a text file. Column Kth is the temporal distribution of the Kth
 %           ica source.
 %
-%       FIGURE (string, default <BASE_NAME>_sica_fig.eps)
-%           an eps figure showing the spatial distribution of the
+%       FIGURE (string, default <BASE_NAME>_sica_fig.pdf )
+%           a pdf figure showing the spatial distribution of the
 %           components on axial slices after robust correction to normal
 %           distribution, as well as the time, spectral and time frequency
 %           representation of the time component.
@@ -90,6 +90,8 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars; % Importing NIAK global variables
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,7 +134,7 @@ if isempty(files_out.time)
 end
 
 if isempty(files_out.figure)
-    files_out.figure = cat(2,opt.folder_out,filesep,name_f,'_sica_figure.eps');
+    files_out.figure = cat(2,opt.folder_out,filesep,name_f,'_sica_figure.pdf');
 end
 
 if flag_test == 1
@@ -214,6 +216,9 @@ end
 
 if ~strcmp(files_out.figure,'gb_niak_omitted')
 
+    %% Generating a temporary eps output
+    file_fig_eps = niak_file_tmp('.eps');
+    
     %% Options for the montage
     opt_visu.voxel_size = hdr.info.voxel_size;
     opt_visu.fwhm = max(hdr.info.voxel_size)*1.5;
@@ -229,9 +234,9 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         niak_montage(abs(vol_c),opt_visu);
         title(sprintf('Spatial component %i, file %s',num_c,name_f));
         if num_c == 1
-            print(hf,'-dpsc','-r300',files_out.figure);
+            print(hf,'-dpsc','-r300',file_fig_eps);
         else
-            print(hf,'-dpsc','-r300','-append',files_out.figure);
+            print(hf,'-dpsc','-r300','-append',file_fig_eps);
         end
 
         clf
@@ -240,25 +245,56 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
 
         %% temporal distribution
         subplot(3,1,1)
-        plot(hdr.info.tr*(1:nt),A(:,num_c));
+        if isfield(hdr.info,'tr')
+            if hdr.info.tr~=0
+                plot(hdr.info.tr*(1:nt),A(:,num_c));
+            else
+                plot(A(:,num_c));
+            end
+        else
+            plot(A(:,num_c));
+        end
+                
         xlabel('time')
         ylabel('a.u.')
         title(sprintf('Time component %i, file %s',num_c,name_f));
 
         %% Frequency distribution
         subplot(3,1,2)
-        niak_visu_spectrum(A(:,num_c),hdr.info.tr);
+        if isfield(hdr.info,'tr')
+            if hdr.info.tr~=0
+                niak_visu_spectrum(A(:,num_c),hdr.info.tr);
+            else
+                niak_visu_spectrum(A(:,num_c),1);
+            end
+        else
+            niak_visu_spectrum(A(:,num_c),1);
+        end
 
         %% Time-frequency distribution
         subplot(3,1,3)
-        niak_visu_wft(A(:,num_c),hdr.info.tr);
+        if isfield(hdr.info,'tr')
+            if hdr.info.tr~=0
+                niak_visu_wft(A(:,num_c),hdr.info.tr);
+            else
+                niak_visu_wft(A(:,num_c),1);
+            end
+        else
+            niak_visu_wft(A(:,num_c),1);
+        end
 
-        print(hf,'-dpsc','-r300','-append',files_out.figure);
+        print(hf,'-dpsc','-r300','-append',file_fig_eps);
 
         clf
 
     end
 
     close(hf);
-
+    
+    instr_ps2pdf = cat(2,gb_niak_ps2pdf,' ',file_fig_eps,' ',files_out.figure);
+    [succ,msg] = system(instr_ps2pdf);
+    if succ~=0
+        warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf : ',msg));
+    end
+    delete(file_fig_eps)
 end

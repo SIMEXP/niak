@@ -3,7 +3,7 @@ function [] = niak_write_vol(hdr,vol)
 % Write a 3D or 3D+t dataset into a file
 %
 % SYNTAX:
-% [] = niak_write_vol(HDR,VOL)
+% [] = NIAK_WRITE_VOL(HDR,VOL)
 %
 % INPUTS:
 % VOL          (3D or 4D array) a 3D or 3D+t dataset

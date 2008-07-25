@@ -22,9 +22,9 @@ gb_niak_command_octave = 'octave-2.9.9'; % how to invoke octave
 
 gb_niak_sge_options = ''; % Options for the sge qsub system, example : '-q all.q@yeatman,all.q@zeus' will force qsub to only use the yeatman workstation;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% User may want to change some of the following variables %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The following variables describe the folders and external tools NIAK is using for various tasks %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 gb_niak_tmp = cat(2,filesep,'tmp',filesep); % where to store temporary files
 
@@ -36,12 +36,14 @@ gb_niak_viewersvg = 'eog'; % program to display svg files
 
 gb_niak_zip = 'gzip'; % The command to zip files
 
+gb_niak_ps2pdf = 'ps2pdf'; % The command to convert ps or eps documents into the pdf file format
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-gb_niak_version = '0.3'; % 
+gb_niak_version = '0.3.7'; % 
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION')    

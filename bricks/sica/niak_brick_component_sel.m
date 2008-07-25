@@ -25,12 +25,12 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %
 % OPT   (structure) with the following fields :
 %
-%       NB_CLUSTER (default 10). The number of spatial clusters used in 
+%       NB_CLUSTER (default 0). The number of spatial clusters used in 
 %           stepwise regression. If NB_CLUSTER == 0, the number of clusters
 %           is set to (nb_vox/10), where nb_vox is the number of voxels in
 %           the region.
 %
-%       P (real number, 0<P<1, default 0.0001) the p-value of the stepwise
+%       P (real number, 0<P<1, default 0.001) the p-value of the stepwise
 %           regression.
 %
 %       NB_SAMPS (default 10) the number of kmeans repetition.
@@ -95,7 +95,7 @@ end
 %% Input files
 gb_name_structure = 'files_in';
 gb_list_fields = {'fmri','component','mask','transformation'};
-gb_list_defaults = {NaN,NaN,NaN,NaN,'gb_niak_omitted'};
+gb_list_defaults = {NaN,NaN,NaN,'gb_niak_omitted'};
 niak_set_defaults
 
 %% Output file
@@ -153,30 +153,33 @@ end
 if flag_verbose
     fprintf('Reading (and eventually resampling) the mask of interest ...\n');
 end
+
+file_mask_tmp = niak_file_tmp('_mask_roi.mnc');
 if strcmp(files_in.transformation,'gb_niak_omitted');
-    [hdr_roi,mask_roi] = niak_read_vol(files_in.mask);
-    mask_roi = mask_roi>0;
+    instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour',files_in.mask,file_mask_tmp,files_in.fmri);
 else
-    file_mask_tmp = niak_file_tmp('_mask_roi.mnc');
-    instr_res = sprintf('mincresample %s %s -like %s -tricubic -transform %s -invert_transformation',files_in.mask,file_mask_tmp,files_in.fmri,files_in.transformation);
-    if flag_verbose
-        system(instr_res)
-    else
-        [succ,msg] = system(instr_res);
-        if succ~=0
-            error(masg);
-        end
-    end
-    [hdr_roi,mask_roi] = niak_read_vol(file_mask_tmp);
-    mask_roi = mask_roi>0.9;
-    delete(file_mask_tmp);
+    instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour -transform %s -invert_transformation',files_in.mask,file_mask_tmp,files_in.fmri,files_in.transformation);
 end
+
+if flag_verbose
+    system(instr_res)
+else
+    [succ,msg] = system(instr_res);
+    if succ~=0
+        error(masg);
+    end
+end
+[hdr_roi,mask_roi] = niak_read_vol(file_mask_tmp);
+mask_roi = mask_roi>0.9;
+delete(file_mask_tmp);
+
 
 %% Extracting time series in the mask
 if flag_verbose
     fprintf('Extracting time series in the mask ...\n');
 end
 [hdr_func,vol_func] = niak_read_vol(files_in.fmri);
+mask_roi = mask_roi & niak_mask_brain(mean(abs(vol_func),4));
 tseries_roi = niak_build_tseries(vol_func,mask_roi);
 [nt,nb_vox] = size(tseries_roi);
 clear vol_func
@@ -193,22 +196,33 @@ if flag_verbose
     fprintf('\n*********\nPerforming stepwise regression\n*********\n\n');
 end
 
-%% Selecting number of spatial classes
+if nb_vox == 0
+    
+    %% There is no functional data in the mask, no component is selected...
+    num_comp = 1:nb_comp;
+    score = zeros(size(num_comp));
+    
+else
 
-if nb_cluster == 0
-    nb_cluster = floor(nb_vox/10); % default value for the number of clusters.
-    opt.nb_cluster = nb_cluster;
+    %% Selecting number of spatial classes
+    if nb_cluster == 0
+        nb_cluster = floor(nb_vox/10); % default value for the number of clusters.
+        opt.nb_cluster = nb_cluster;
+    end
+
+    %% Computing score and score significance
+    sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
+    tseries_ica = niak_correct_mean_var(A,'mean_var');
+    [intersec,selecVector,selecInfo] = st_automatic_selection(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'off');
+
+    %% Reordering scores
+    [score,num_comp] = sort(selecVector',1,'descend');
 end
 
-%% Computing score and score significance
-sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
-tseries_ica = niak_correct_mean_var(A,'mean_var');
-[intersec,selecVector,selecInfo] = st_automatic_selection(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'off');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Writting the results of component selection %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Reordering scores
-[score,num_comp] = sort(selecVector',1,'descend');
-
-%% Writting the results of component selection
 [hf,msg] = fopen(files_out,'w');
 
 if hf == -1
