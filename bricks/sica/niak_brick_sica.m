@@ -40,7 +40,7 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           the type of algorithm to be used for the sica decomposition.
 %           Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
-%       NB_COMP (optional, default min(50,foor(0.95*T)))
+%       NB_COMP (optional, default min(60,foor(0.95*T)))
 %           number of components to compute (for default : T is the number
 %           of time samples.
 %
@@ -103,7 +103,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'norm','algo','nb_comp','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {'mean','Infomax',50,1,0,''};
+gb_list_defaults = {'mean','Infomax',60,1,0,''};
 niak_set_defaults
 
 %% Output files

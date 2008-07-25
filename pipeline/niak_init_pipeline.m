@@ -37,7 +37,7 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %
 %               OPT (any matlab variable) options of the BRICK. 
 %
-%               ENVIRONMENT (string, default current) the environment 
+%               ENVIRONMENT (string, default current environment) the environment 
 %                      where the BRICK should run. Available options : 
 %                       'matlab', 'octave'. 
 %

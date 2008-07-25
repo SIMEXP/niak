@@ -193,7 +193,7 @@ else
         data_subject = getfield(files_in,subject);
         
         if ~isstruct(data_subject)
-            error('FILE_IN.%s should be a struture!',upper(subject));
+            error('FILE_IN.%s should be a structure!',upper(subject));
         end
         
         if ~isfield(data_subject,'fmri')
