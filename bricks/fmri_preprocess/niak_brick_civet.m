@@ -306,6 +306,9 @@ if flag_civet
 end
 
 if flag_test == 1
+    if ~flag_civet
+        rmdir(civet_folder);
+    end
     return
 end
 

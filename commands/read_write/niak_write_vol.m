@@ -12,10 +12,15 @@ function [] = niak_write_vol(hdr,vol)
 %               output of niak_read_vol). The following fields are of
 %               particular importance :
 %
-%               HDR.FILE_NAME   (string or cell of strings) the name(s) of
-%                   the file that will be written.
+%               HDR.FILE_NAME   (string) a single 4D fMRI image file with multiple  
+%                  frames, or a matrix of image file names, each with a single 3D frame,
+%                   either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC (.mnc) format. 
+%                   Extra blanks are ignored. Frames are assumed to be
+%                   equally spaced in time.
+%
 %               HDR.TYPE   (string, default 'minc2') the output format (either
 %                   'minc1' or 'minc2').
+%
 %               HDR.FLAG_ZIP (boolean) if this field exists and is non-zero,
 %                   the function will attempt to zip the file after writting.
 %                   The extension depends on the zip program, which is
@@ -27,18 +32,23 @@ function [] = niak_write_vol(hdr,vol)
 %               HDR.INFO.PRECISION      (string, default 'float') the
 %                   precision for writting data ('int', 'float' or
 %                   'double').
+%
 %               HDR.INFO.VOXEL_SIZE     (vector 1*3, default [1 1 1]) the
 %                   size of voxels along each spatial dimension in the same
 %                   order as in vol.
+%
 %               HDR.INFO.TR     (double, default 1) the time between two
 %                   volumes (in second)
+%
 %               HDR.MAT (2D array 4*4, default identity) an affine transform from voxel to
 %                   world space.
+%
 %               HDR.DIMENSION_ORDER (string, default 'xyz') describes the dimensions of
 %                  vol. Letter 'x' is for 'left to right, 'y' for
 %                  'posterior to anterior', 'z' for 'ventral to dorsal' and
 %                  't' is time. Example : 'xzyt' means that dimension 1 of
 %                   vol is 'x', dimension 2 is 'z', etc.
+%
 %               HDR.HISTORY (string, default '') history of the operations applied to
 %                  the data.
 %
@@ -53,10 +63,10 @@ function [] = niak_write_vol(hdr,vol)
 % Case 1: HDR.FILE_NAME is a string.
 % The data is written in a file called HDR.FILE_NAME in HDR.TYPE format.
 %
-% Case 2: HDR.FILE_NAME is a cell of strings.
-% The number of file names has to correspond to the fourth dimension of
-% VOL. One file will be written for each volume VOL(:,:,:,i) in the file
-% HDR.FILE_NAME{i};
+% Case 2: HDR.FILE_NAME is a matrix of strings
+% Each row of file names has to correspond to the one element in the fourth 
+% dimension of VOL. One file will be written for each volume VOL(:,:,:,i) in the file
+% HDR.FILE_NAME(i,:) after blanks have been removed.
 %
 % Case 3: HDR.FILE_NAME is a string, ending by '_'.
 % One file will be written for each volume VOL(:,:,:,i) in the file
@@ -64,6 +74,8 @@ function [] = niak_write_vol(hdr,vol)
 % string and padded with '0' to reach at least four digits.
 %
 % COMMENTS:
+% If HDR.FLAG_ZIP is 1, the file is zipped and a .gz is appended at the end
+% of the file name. 
 %
 % SEE ALSO:
 % niak_read_header_minc, niak_read_minc, niak_read_vol, niak_read_vol
@@ -95,24 +107,31 @@ function [] = niak_write_vol(hdr,vol)
 if isempty(vol)
     warning('you are trying to write an empty dataset (I honestly do not know what is going to happen)!');
 end
+
 try
     file_name = hdr.file_name;
 catch
-    error('niak:write: Please specify a file name in hdr.file_name.\n')
+    error('niak_write_vol: Please specify a file name in hdr.file_name.\n')
 end
 
-if iscell(file_name)
+if ~ischar(file_name)
+    error('niak_write_vol: FILE_NAME should be a string or a matrix of strings')
+end
 
-    %% Case 2: a cell of strings for multiple files
-    nb_f = length(file_name);
-    if size(vol,4)~= nb_f
+nb_file = size(file_name,1);
+
+if nb_file > 1
+
+    %% Case 1: multiple file names have been specified
+
+    if size(vol,4)~= nb_file
         warning('The number of files in hdr.file_name does not correspond to size(vol,4)! Try to proceed anyway...')
     end
 
     hdr2 = hdr;
 
-    for num_f = 1:nb_f
-        hdr2.file_name = hdr.file_name{num_f};
+    for num_f = 1:nb_file
+        hdr2.file_name = deblank(hdr.file_name(num_f,:));
         niak_write_vol(hdr2,vol(:,:,:,num_f));
         if num_f == 1
             warning('off','niak:default')
@@ -122,12 +141,15 @@ if iscell(file_name)
 
 elseif ischar(file_name)
 
+    %% Case 2: a single file name has been specified
+    
     if isempty(file_name)
-        error('niak:write: Please specify a file name in hdr.file_name')
+        error('niak_write_vol: Please specify a non-empty file name in hdr.file_name')
     end
 
     if strcmp(file_name(end),'_')
-        %% Case 3 : A string ending by '_'
+        
+        %% Case 2a : A string ending by '_'
 
         nt = size(vol,4);
         nb_digits = max(4,ceil(log10(nt)));
@@ -162,7 +184,7 @@ elseif ischar(file_name)
 
     else
 
-        %% Case 1 : a regular string
+        %% Case 2b : a regular string
         try
             type_f = hdr.type;
         catch
