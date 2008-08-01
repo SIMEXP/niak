@@ -255,11 +255,11 @@ if ~ischar(files_in.design)
 end
 
 if ~exist(files_in.fmri,'file')
-    error(cat(2,'niak_brick_glm_level1: FILES_IN.FMRI does not exist (',files_in.fmri,')');
+    error(cat(2,'niak_brick_glm_level1: FILES_IN.FMRI does not exist (',files_in.fmri,')'));
 end
 
 if ~exist(files_in.design,'file')
-    error(cat(2,'niak_brick_glm_level1: FILES_IN.DESIGN does not exist (',files_in.design,')');
+    error(cat(2,'niak_brick_glm_level1: FILES_IN.DESIGN does not exist (',files_in.design,')'));
 end
     
 %% OPTIONS
@@ -281,11 +281,11 @@ end
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'df','spatial_av','mag_t','del_t','mag_ef','del_ef','mag_f','corr','resid','wresid','ar','fwhm'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'df','spatial_av','mag_t','del_t','mag_ef','del_ef','mag_sd','del_sd','mag_f','cor','resid','wresid','ar','fwhm'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults        
 
-%% Building default output names
+%% Parsing base names
 [path_f,name_f,ext_f] = fileparts(files_in.fmri);
 
 if isempty(path_f)
@@ -302,9 +302,8 @@ else
     folder_f = opt.folder_out;
 end
        
-%% Generating the default outputs of the NIAK brick and civet
-
-list_contrast = getfield(contrast);
+%% Generating the default outputs of the FMRILM function and the NIAK brick
+list_contrast = fieldnames(opt.contrast);
 folder_fmri = niak_path_tmp('_fmristat');
 nb_cont = length(list_contrast);
 
@@ -316,103 +315,136 @@ if strcmp(files_out.spatial_av,'')  % spatial_av
     files_out.spatial_av = cat(2,folder_f,name_f,'_spatial_av.mat');
 end
 
-if strcmp(files_out.mag_t,'')  % mag_t
+%% contrast-dependent outputs
+list_outputs = {'_mag_t','_del_t','_mag_ef','_del_ef','_mag_sd','_del_sd','_mag_F','_cor','_fwhm','_resid','_wresid','_AR'};
+files_fmri.tmp = '';
+which_stats = '';
+
+for num_l = 1:length(list_outputs)
+
+    str_tmp = cell([nb_cont 1]);
+    str_tmp2 = cell([nb_cont 1]);
     for num_c = 1:nb_cont
-        files_out.mag_t{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_mag_t',ext_f);
+        str_tmp{num_c} = cat(2,folder_f,name_f,'_',list_contrast{num_c},list_outputs{num_l},ext_f);
+        str_tmp2{num_c} = cat(2,folder_fmri,name_f,'_',list_contrast{num_c},list_outputs{num_l},ext_f);
     end
-end
-for num_c = 1:nb_cont
-    files_fmri.mag_t{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_mag_t',ext_f);
-end
 
-if strcmp(files_out.del_t,'')  % del_t
-    for num_c = 1:nb_cont
-        files_out.del_t{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_del_t',ext_f);
+    field_name = lower(list_outputs{num_l}(2:end));
+    if strcmp(getfield(files_out,field_name),'')
+        files_out = setfield(files_out,field_name,str_tmp);
+        which_stats = cat(2,which_stats,' ',list_outputs{num_l});
     end
-end
-for num_c = 1:nb_cont
-    files_fmri.del_t{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_del_t',ext_f);
-end
+    files_fmri = setfield(files_fmri,field_name,str_tmp2);
 
-if strcmp(files_out.mag_ef,'')  % mag_ef
-    for num_c = 1:nb_cont
-        files_out.mag_ef{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_mag_ef',ext_f);
-    end
 end
-for num_c = 1:nb_cont
-    files_fmri.mag_ef{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_mag_ef',ext_f);
-end
+files_fmri = rmfield(files_fmri,'tmp');
 
-if strcmp(files_out.del_f,'')  % del_ef
-    for num_c = 1:nb_cont
-        files_out.del_ef{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_del_ef',ext_f);
-    end
-end
-for num_c = 1:nb_cont
-    files_fmri.del_ef{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_del_ef',ext_f);
-end
-
-if strcmp(files_out.mag_sd,'')  % mag_sd
-    for num_c = 1:nb_cont
-        files_out.mag_sd{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_mag_sd',ext_f);
-    end
-end
-for num_c = 1:nb_cont
-    files_fmri.mag_sd{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_mag_sd',ext_f);
-end
-
-if strcmp(files_out.del_sd,'')  % del_sd
-    for num_c = 1:nb_cont
-        files_out.del_sd{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_del_sd',ext_f);
-    end
-end
-for num_c = 1:nb_cont
-    files_fmri.del_sd{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_del_sd',ext_f);
-end
-
-if strcmp(files_out.mag_f,'')  % mag_f
-    for num_c = 1:nb_cont
-        files_out.mag_f{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_mag_F',ext_f);
-    end
-end
-for num_c = 1:nb_cont
-    files_fmri.mag_f{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_mag_F',ext_f);
-end
-
-if strcmp(files_out.cor,'')  % cor
-    for num_c = 1:nb_cont
-        files_out.cor{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_cor',ext_f);
-    end
-end
-for num_c = 1:nb_cont
-    files_fmri.cor{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_cor',ext_f);
-end
-
-if strcmp(files_out.fwhm,'')  % fwhm
-    for num_c = 1:nb_cont
-        files_out.fwhm{num_c} = cat(2,folder_f,name_f,'_,'list_cont{num_c},'_fwhm',ext_f);
-    end
-end
-for num_c = 1:nb_cont
-    files_fmri.fwhm{num_c} = cat(2,civet_fmri,name_f,'_,'list_cont{num_c},'_fwhm',ext_f);
-end
-
-if strcmp(files_out.resid,'')  % resid
-    files_out.resid = cat(2,folder_f,name_f,'_resid',ext_f);
-end
-files_fmri.resid = cat(2,civet_fmri,name_f,'_resid',ext_f);
-
-if strcmp(files_out.wresid,'')  % wresid
-    files_out.wresid = cat(2,folder_f,name_f,'_wresid',ext_f);
-end
-files_fmri.wresid = cat(2,civet_fmri,name_f,'_wresid',ext_f);
-
-if strcmp(files_out.ar,'')  % ar
-    files_out.ar = cat(2,folder_f,name_f,'_ar',ext_f);
-end
-files_fmri.ar = cat(2,civet_fmri,name_f,'_ar',ext_f);
+% %% Other outputs (do not depend on the contrast)
+% list_outputs = {'_resid','_wresid','_ar'};
+% for num_l = 1:length(list_outputs)
+%     field_name = lower(list_outputs{num_l}(2:end));
+%     if strcmp(getfield(files_out,field_name),'')
+%         files_out = setfield(files_out,field_name,cat(2,folder_f,name_f,'_resid',ext_f));
+%         which_stats = cat(2,which_stats,' ',list_outputs{num_l});
+%     end
+%     files_fmri = setfield(files_fmri,field_name,cat(2,folder_fmri,name_f,list_outputs{num_l},ext_f));
+% end
 
 if flag_test == 1
     rmdir(folder_fmri);
     return
 end
+
+%%%%%%%%%%%%
+%% fmrilm %%
+%%%%%%%%%%%%
+
+flag_exist = exist('fmrilm');
+if ~(flag_exist==2)
+    error('I could not find the FMRILM function of the fMRIstat package. Instructions for installation can be found at http://www.math.mcgill.ca/keith/fmristat/')
+end
+
+%% output base name
+output_file_base = [];
+for num_c = 1:nb_cont
+    if size(output_file_base,1)>0
+        output_file_base = char(output_file_base,cat(2,folder_fmri,name_f,'_',list_contrast{num_c}));
+    else
+        output_file_base = cat(2,folder_fmri,name_f,'_',list_contrast{num_c});
+    end
+end
+
+%% Design
+design = load(files_in.design);
+if  ~isfield(design,'X_cache')
+    error('The file FMRI.DESIGN should be a matrix containing a matlab variable called X_cache')
+end
+
+%% contrast
+nb_reg = 0;
+for num_c = 1:nb_cont
+    cont = getfield(opt.contrast,list_contrast{num_c});
+    nb_reg = max(nb_reg,length(cont));
+end
+
+mat_contrast = zeros([nb_cont nb_reg]);
+for num_c = 1:nb_cont
+    cont = getfield(opt.contrast,list_contrast{num_c});
+    mat_contrast(1:length(cont),:) = cont(:)';
+end
+
+%% Actual call to fmrilm   
+[df,spatial_av] = fmrilm(files_in.fmri,output_file_base,design.X_cache,mat_contrast,exclude,which_stats,fwhm_cor,[nb_trends_temporal nb_trends_spatial pcnt],confounds,[],num_hrf_bases,basis_type,numlags,df_limit);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Moving outputs to the right folder %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if ~strcmp(files_out.df,'gb_niak_omitted');
+    save(files_out.df,'df');
+end
+
+if ~strcmp(files_out.spatial_av,'gb_niak_omitted');
+    save(files_out.spatial_av,'spatial_av');
+end
+
+list_fields = fieldnames(files_out);
+mask_totej = niak_cmp_str_cell(list_fields,{'df','spatial_av'});
+list_fields = list_fields(~mask_totej);
+
+for num_l = 1:length(list_fields)
+    
+    field_name = list_fields{num_l};
+    
+    val_field_out = getfield(files_out,field_name);
+    val_field_fmri = getfield(files_fmri,field_name);
+    
+    if ~ischar(val_field_out)
+        
+        %% Multiple outputs in a cell of strings
+        nb_entries = length(val_field_out);
+        for num_e = 1:nb_entries
+            instr_mv = cat(2,'mv ',val_field_fmri{num_e},' ',val_field_out{num_e});
+            [err,msg] = system(instr_mv);
+            if err~=0
+                warning(msg)
+            end
+        end
+        
+    else
+        
+        %% A single output, maybe an 'omitted' tag
+        if ~strcmp(val_field_out,'gb_niak_omitted')
+            instr_mv = cat(2,'mv ',val_field_fmri,' ',val_field_out);
+            [err,msg] = system(instr_mv);
+            if err~=0
+                warning(msg)
+            end
+        end
+        
+    end
+    
+end
+    
+%% Deleting temporary files
+system(cat(2,'rm -rf ',folder_fmri));

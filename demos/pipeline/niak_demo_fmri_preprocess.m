@@ -104,7 +104,7 @@ nb_slices = 42; % Number of slices in a volume
 opt.bricks.slice_timing.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
 opt.bricks.slice_timing.timing(1)=TR/nb_slices; % Time beetween slices
 opt.bricks.slice_timing.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
-opt.bricks.slice_timing.suppress_vol = 1; % Remove the first volume after slice-timing correction to prevent edges effects.
+opt.bricks.slice_timing.suppress_vol = 1; % Remove the first and last volume after slice-timing correction to prevent edges effects.
 
 %% 3. Coregistration between T1 and T2 (niak_brick_coregister)
 

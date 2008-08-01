@@ -39,7 +39,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %                      axial, i.e. slice z at time t is
 %                      vols(:,:,z,t).
 %
-%               REF_SLICE	(integer, default midle slice in acquisition time)
+%               REF_SLICE	(integer, default middle slice in acquisition time)
 %                      slice for time 0
 %
 %               TIMING		(vector 2*1) TIMING(1) : time between two slices

@@ -107,6 +107,9 @@ gb_list_defaults = {'mean','Infomax',60,1,0,''};
 niak_set_defaults
 
 %% Output files
+if ~isstruct(files_out)
+    error('FILES_OUT should be a structure.');
+end
 gb_name_structure = 'files_out';
 gb_list_fields = {'space','time','figure'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
