@@ -284,19 +284,19 @@ for num_s = 1:nb_subject
     end
 
     %% Outputs
-    files_out_tmp.transformation_lin = '';
-    files_out_tmp.transformation_nl = '';
-    files_out_tmp.transformation_nl_grid = '';
-    files_out_tmp.anat_nuc = '';
-    files_out_tmp.anat_nuc_stereo_lin = '';
-    files_out_tmp.anat_nuc_stereo_nl = '';
-    files_out_tmp.mask = '';
-    files_out_tmp.mask_stereo = '';
-    files_out_tmp.classify = '';
-    files_out_tmp.pve_wm = '';
-    files_out_tmp.pve_gm = '';
-    files_out_tmp.pve_csf = '';
-    files_out_tmp.verify = '';
+    files_out_tmp.transformation_lin = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereolin.xfm');
+    files_out_tmp.transformation_nl = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereonl.xfm');
+    files_out_tmp.transformation_nl_grid = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereonl_grid.mnc');
+    files_out_tmp.anat_nuc = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_nativet1.mnc');
+    files_out_tmp.anat_nuc_stereo_lin = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereolin.mnc');
+    files_out_tmp.anat_nuc_stereo_nl = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereonl.mnc');
+    files_out_tmp.mask = cat(2,opt_tmp.folder_out,filesep,'mask_anat_',subject,'_nativet1.mnc');
+    files_out_tmp.mask_stereo = cat(2,opt_tmp.folder_out,filesep,'mask_anat_',subject,'_stereolin.mnc');
+    files_out_tmp.classify = cat(2,opt_tmp.folder_out,filesep,'classify_anat_',subject,'_stereolin.mnc');
+    files_out_tmp.pve_wm = cat(2,opt_tmp.folder_out,filesep,'pve_wm_anat_',subject,'_stereolin.mnc');
+    files_out_tmp.pve_gm = cat(2,opt_tmp.folder_out,filesep,'pve_gm_anat_',subject,'_stereolin.mnc');
+    files_out_tmp.pve_csf = cat(2,opt_tmp.folder_out,filesep,'pve_csf_anat_',subject,'_stereolin.mnc');
+    files_out_tmp.verify = cat(2,opt_tmp.folder_out,filesep,'verify_anat_',subject,'.png');
 
     %% set the default values
     opt_tmp.flag_test = 1;
@@ -326,7 +326,6 @@ end % subject
 
 name_process = 'motion_correction';
 opt_tmp = opt.bricks.motion_correction;
-opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep);
 
 for num_s = 1:nb_subject
     
@@ -351,7 +350,8 @@ for num_s = 1:nb_subject
             files_out_tmp.motion_corrected_data = '';
             files_out_tmp.motion_parameters = '';
             files_out_tmp.fig_motion = '';
-            files_out_tmp.mean_volume = '';
+            files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,'func_mean_nativefunc.mnc');
+            files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,'func_mask_nativefunc.mnc');
             
         case 'all'
             
@@ -360,8 +360,8 @@ for num_s = 1:nb_subject
             files_out_tmp.transf_between_session = '';
             files_out_tmp.fig_motion = '';
             files_out_tmp.motion_parameters = '';
-            files_out_tmp.mean_volume = '';
-            files_out_tmp.mask_volume = '';
+            files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'func_mean_nativefunc.mnc');
+            files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'func_mask_nativefunc.mnc');
             
     end
     
@@ -416,9 +416,9 @@ for num_s = 1:nb_subject
     files_in_tmp.mask = getfield(pipeline,name_stage_anat,'files_out','mask_stereo');
     
     %% Building outputs for NIAK_BRICK_TIME_FILTER
-    files_out_tmp.transformation = '';
-    files_out_tmp.anat_hires = '';
-    files_out_tmp.anat_lowres = '';
+    files_out_tmp.transformation = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_',subject,'_nativefunc_to_stereolin.xfm');
+    files_out_tmp.anat_hires = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'anat_',subject,'_nativefunc_hires.mnc');
+    files_out_tmp.anat_lowres = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'anat_',subject,'_nativefunc_lowres.mnc');
     
     %% Setting up options
     opt_tmp = getfield(opt.bricks,name_process);
@@ -751,12 +751,12 @@ for num_s = 1:nb_subject
     name_stage_coregister = cat(2,'coregister_',subject);
     name_stage_anat = cat(2,'anat_',subject);
 
-    %% Building inputs for NIAK_BRICK_TIME_FILTER
+    %% Building inputs for NIAK_BRICK_CONCAT_TRANSF
     files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
     files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
 
-    %% Building outputs for NIAK_BRICK_TIME_FILTER
-    files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_func_to_stereotaxic_nl.xfm');
+    %% Building outputs for NIAK_BRICK_CONCAT_TRANSF
+    files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_',subject,'_nativefunc_to_stereonl.xfm');
 
     %% Setting up options
     opt_tmp.flag_test = 0;

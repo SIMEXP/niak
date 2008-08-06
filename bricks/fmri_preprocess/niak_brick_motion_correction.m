@@ -9,7 +9,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % INPUTS:
 %   FILES_IN
 %       SESSIONS (structure)
-%           Each field of FILES_IN.SESSION is a cell of strings, where each string
+%           Each field of FILES_IN.SESSIONS is a cell of strings, where each string
 %           is the file name of a 3D+t dataset.
 %           The files attached to a single field are considered to be acquired in
 %           the same session (small displacement), and files from different fields are considered

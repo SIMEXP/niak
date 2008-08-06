@@ -234,6 +234,7 @@ files_in_res.target = files_in.anat;
 files_in_res.transformation = file_transf_init;
 files_out_res = file_func_init;
 opt_res.voxel_size = 0;
+opt_res.flag_tfm_space = 1;
 opt_res.flag_verbose = 0;
 opt_res.interpolation = 'sinc';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
@@ -247,20 +248,9 @@ end
 opt_mask.fwhm = 0;
 mask_func = niak_mask_brain(mean(abs(vol_func),4),opt_mask);
 mean_func = mean(vol_func(mask_func>0));
-file_mask_func_init = niak_file_tmp('_mask_func_init.mnc');
-hdr_func.file_name = file_mask_func_init;
-niak_write_vol(hdr_func,mask_func);
-nb_erode = ceil(6/min(hdr_func.info.voxel_size));
 file_mask_func = niak_file_tmp('_mask_func.mnc');
-instr_erode = cat(2,'mincmorph -clobber -successive CC',repmat('E',[1 nb_erode]),' ',file_mask_func_init,' ',file_mask_func);
-if flag_verbose
-    system(instr_erode)
-else
-    [succ,msg] = system(instr_erode);
-    if succ ~= 0
-        error(msg)
-    end
-end
+hdr_func.file_name = file_mask_func;
+niak_write_vol(hdr_func,mask_func);
 
 %% Generating anatomical mask
 if flag_verbose
@@ -268,14 +258,14 @@ if flag_verbose
 end
 
 [hdr_mask,mask_anat] = niak_read_vol(files_in.mask);
-nb_erode = ceil(6/min(hdr_mask.info.voxel_size));
+
 file_mask_anat = niak_file_tmp('_mask_anat.mnc');
 
-instr_erode = cat(2,'mincmorph -clobber -successive CC',repmat('E',[1 nb_erode]),' ',files_in.mask,' ',file_mask_anat);
+instr_cp = cat(2,'cp ',files_in.mask,' ',file_mask_anat);
 if flag_verbose
-    system(instr_erode)
+    system(instr_cp)
 else
-    [succ,msg] = system(instr_erode);
+    [succ,msg] = system(instr_cp);
     if succ ~= 0
         error(msg)
     end
@@ -301,22 +291,10 @@ for num_i = 1:length(list_fwhm)
         fprintf('Masking the brain in anatomical space ...\n');
     end    
     [hdr_anat,vol_anat] = niak_read_vol(files_in.csf);
-    [hdr_mask_anat,mask_anat] = niak_read_vol(file_mask_anat);    
-    if num_i == 1
-        %% this is the first iteration : big spline. 
-        %% Use a specic class tag for the part
-        %% of the volume outside the brain. This will prevent the
-        %% coregistration to go completely off the track
-        vol_anat(round(mask_anat)==0) = -1;
-    else
-        %% this is the second iteration : small spline. 
-        %% Use the same tag for the part
-        %% of the volume outside the brain as the WM and GM. 
-        %% This will reduce the weight of edges effect and let the
-        %% algorithm concentrate on what really matters (ventricles and
-        %% sulci).
-        vol_anat(round(mask_anat)==0) = 0;
-    end
+    [hdr_mask_anat,mask_anat] = niak_read_vol(file_mask_anat);
+    vol_anat(round(mask_anat)==0) = 0;
+    vol_anat(round(mask_anat)==1) = vol_anat(round(mask_anat)==1)+1;
+
     hdr_anat.file_name = file_anat_init;
     niak_write_vol(hdr_anat,vol_anat);
     
@@ -340,16 +318,8 @@ for num_i = 1:length(list_fwhm)
     end
     [hdr_func,vol_func] = niak_read_vol(file_func_init);
     [hdr_mask_func,mask_func] = niak_read_vol(file_mask_func);
-    if num_i == 1
-        %% this is the first iteration : big spline. 
-        %% Use a specic class tag for the part
-        %% of the volume outside the brain. This will prevent the
-        %% coregistration to go completely off the track
-        vol_func(mask_func==0) = -mean_func;
-    else
-        %% this is the second iteration : small spline.         
-        vol_func(mask_func==0) = 0;
-    end
+    vol_func(mask_func==0) = 0;
+    vol_func(mask_func==1) = (vol_func(mask_func==1)/mean(vol_func(mask_func==1))).^2;
     hdr_func.file_name = file_func_init;
     niak_write_vol(hdr_func,vol_func);
     
@@ -405,7 +375,7 @@ for num_i = 1:length(list_fwhm)
 
     %% applying minc tracc    
     if num_i == 1
-        instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
+        instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -xcorr -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
     else
         instr_minctracc = cat(2,'minctracc ',file_func_tmp,' ',file_anat_tmp,' ',file_transf_tmp,' -transform ',file_transf_tmp,' -xcorr -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
     end
@@ -489,7 +459,6 @@ end
 
 delete(file_mask_anat);
 delete(file_mask_func);
-delete(file_mask_func_init)
 delete(file_transf_init);
 delete(file_transf_tmp);
 delete(file_anat_tmp);

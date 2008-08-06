@@ -461,12 +461,14 @@ for num_r = list_run
 end
 
 %% If requested, save a figure of motion parameters
-if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
-    saveas(hfig,files_out.fig_motion,'epsc')
-    close(hfig)
-else
-    tmp = 'sorry, octave 2.9.9 do not allow to save the figure';
-    save(files_out.fig_motion,'tmp');        
+if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
+    if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
+        saveas(hfig,files_out.fig_motion,'epsc')
+        close(hfig)
+    else
+        tmp = 'sorry, octave 2.9.9 do not allow to save the figure';
+        save(files_out.fig_motion,'tmp');
+    end
 end
 
 %% If requested, write the target volume

@@ -23,11 +23,15 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %          interpolation method. Available options : 'trilinear', 'tricubic',
 %          'nearest_neighbour','sinc'.
 %
-%       FLAG_TFM_SPACE (boolean, default 1) if FLAG_TFM_SPACE is 0, the
+%       FLAG_TFM_SPACE (boolean, default 0) if FLAG_TFM_SPACE is 0, the
 %            transformation is applied and the volume is resampled in the 
 %            target space. If FLAG_TFM_SPACE is 1, the volume is resampled 
 %           in such a way that there is no rotations anymore between voxel 
-%           and world space.
+%           and world space. The field of view is adapted to fit the brain
+%           in the source space. In this case, the target space is only
+%           used to set the resolution, unless this parameter was
+%           additionally specified using OPT.VOXEL_SIZE, in which case the
+%           target space could be anything.
 %
 %       FLAG_INVERT_TRANSF (boolean, default 0) if FLAG_INVERT_TRANSF is 1,
 %           the specified transformation is inverted before being applied.
@@ -35,8 +39,10 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %       VOXEL_SIZE (vector 1*3, default same as target space) If
 %            voxel_size is set to 0, the resolution for resampling
 %            will be the same as the target space. If voxel_size is set to -1, 
-%            the resolution will be the same as source sapce. Otherwise, 
-%            the specified resolution will be used.
+%            the resolution will be the same as source space. Otherwise, 
+%            the specified resolution will be used. Note that a change in
+%            resolution will force the new space to have identity direction
+%            cosines.
 %
 %       FOLDER_OUT (string, default: path of FILES_IN) If present,
 %            all default outputs will be created in the folder FOLDER_OUT.
@@ -95,7 +101,7 @@ niak_set_defaults
 % Setting up options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf','flag_verbose'};
-gb_list_defaults = {'trilinear',1,0,'',0,0,1};
+gb_list_defaults = {'trilinear',0,0,'',0,0,1};
 niak_set_defaults
 
 %% Generating default ouputs
@@ -171,39 +177,49 @@ nz2 = hdr_target.info.dimensions(3);
 %% Resample the target if necessary %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if flag_tfm_space | (min(abs(voxel_size(:)) == abs(step2(:)))<1)
+if flag_tfm_space 
     
     if flag_verbose
         fprintf('\n Resampling target space to get rid of "voxel-to-world" transformation (except voxel size)...\n');
     end
-
-    nx3 = ceil(abs(step2(1)./voxel_size(1))*nx2);
-    ny3 = ceil(abs(step2(2)./voxel_size(2))*ny2);
-    nz3 = ceil(abs(step2(3)./voxel_size(3))*nz2);
     
-    if step2(1) < 0
-        start2(1) = start2(1) + step2(1)*nx2;
-        step2(1) = abs(step2(1));
-    end
-   
-    if step2(2) < 0
-        start2(2) = start2(2) + step2(2)*nx2;
-        step2(2) = abs(step2(2));
-    end
+    %% Extract the brain in native space 
     
-    if step2(3) < 0
-        start2(3) = start2(1) + step2(3)*nx2;
-        step2(3) = abs(step2(3));
-    end
+    [hdr_source,vol_source] = niak_read_vol(files_in.source);
+    mask_source = niak_mask_brain(mean(abs(vol_source),4));
+    clear vol_source
+    
+    %% Convert the brain voxel coordinates in source space into world
+    %% coordinates
 
-    if flag_tfm_space
-        dircos = [1 0 0 0 1 0 0 0 1];
+    ind_source = find(mask_source);
+    [xsource,ysource,zsource] = ind2sub(size(mask_source),ind_source);
+    vox_source = [xsource'-1 ; ysource'-1 ; zsource'-1 ; ones([1 length(xsource)])];
+    clear ind_source xsource ysource zsource
+    if ~isempty(files_in.transformation)
+        transf = niak_read_transf(files_in.transformation);        
+        if opt.flag_invert_transf
+            transf = transf^(-1);
+        end
+        coord_world = ceil(transf*hdr_source.info.mat*vox_source);            
     else
-        dircos = dircos2;
+        coord_world = ceil(hdr_source.info.mat*vox_source);
     end
+    min_coord = min(coord_world(1:3,:),[],2)-voxel_size(:);
+    max_coord = max(coord_world(1:3,:),[],2)+voxel_size(:);
+    
+    %% Setting up the new number of voxels
+    nx3 = ceil((max_coord(1)-min_coord(1))/voxel_size(1));
+    ny3 = ceil((max_coord(2)-min_coord(2))/voxel_size(2));
+    nz3 = ceil((max_coord(3)-min_coord(3))/voxel_size(3));
+    
+    %% Setting up new voxel to world coordinates
+    start3 = min_coord;
+    voxel_size = abs(voxel_size);
+    dircos = [1 0 0 0 1 0 0 0 1];
     
     file_target_tmp = niak_file_tmp('_target.mnc');
-    instr_target = cat(2,'mincresample ',files_in.target,' ',file_target_tmp,' -clobber -dircos ',num2str(dircos(:)'),' -step ',num2str(voxel_size),' -start ',num2str(start2'),' -trilinear -nelements ',num2str(nx3),' ',num2str(ny3),' ',num2str(nz3));
+    instr_target = cat(2,'mincresample ',files_in.target,' ',file_target_tmp,' -clobber -dircos ',num2str(dircos(:)'),' -step ',num2str(voxel_size),' -start ',num2str(start3'),' -trilinear -nelements ',num2str(nx3),' ',num2str(ny3),' ',num2str(nz3));
     [tmp,str_tmp] = system(instr_target);
 
     %% Update the target space information

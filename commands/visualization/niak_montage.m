@@ -26,7 +26,7 @@ function [] = niak_montage(vol,opt)
 %                       three subplots will be made, one for each slice
 %                       type.
 %
-%                   VOL_LIMITS (vector 2*1, default [min(vol(:)) max(vol(:))]) 
+%                   VOL_LIMITS (vector 1*2, default [min(vol(:)) max(vol(:))]) 
 %                       limits of the color scaling.
 %
 %                   TYPE_COLOR (string, default 'jet') colormap name.
