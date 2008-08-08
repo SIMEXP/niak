@@ -205,8 +205,8 @@ if flag_tfm_space
     else
         coord_world = ceil(hdr_source.info.mat*vox_source);
     end
-    min_coord = min(coord_world(1:3,:),[],2)-voxel_size(:);
-    max_coord = max(coord_world(1:3,:),[],2)+voxel_size(:);
+    min_coord = min(coord_world(1:3,:),[],2)-3*voxel_size(:);
+    max_coord = max(coord_world(1:3,:),[],2)+3*voxel_size(:);
     
     %% Setting up the new number of voxels
     nx3 = ceil((max_coord(1)-min_coord(1))/voxel_size(1));

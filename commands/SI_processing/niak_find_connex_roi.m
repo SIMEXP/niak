@@ -8,7 +8,7 @@ function [mask_c,list_size] = niak_find_connex_roi(mask,opt)
 % INPUTS :
 % MASK    (3D array) binary volume.
 % OPT     (structure) optional, with the following fields :
-%       TYPE_NEIG (integer, default 26) the spatial neighbourhood of a
+%       TYPE_NEIG (integer, default 6) the spatial neighbourhood of a
 %           voxel, values : 6 or 26.
 %       THRE_SIZE (integer, default 1) the minimal acceptable size of ROIs.
 %
@@ -47,7 +47,7 @@ function [mask_c,list_size] = niak_find_connex_roi(mask,opt)
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'type_neig','thre_size'};
-gb_list_defaults = {26,1};
+gb_list_defaults = {6,1};
 niak_set_defaults
 
 [neig,ind] = niak_build_neighbour(mask>0);

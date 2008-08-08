@@ -245,7 +245,7 @@ for num_v = 1:length(list_var)
             att = list_att{num_a};
             att_val = struct_var.attvalue{num_a};
             
-            if ~strcmp(att,'length')
+            if ~strcmp(att,'length')&~isempty(att_val)
                 if ischar(att_val)
                     att_val = niak_replace_str(att_val,'''','"');
                     str_hdr = [str_hdr ' -sinsert ' var ':' att '=''' att_val ''''];
