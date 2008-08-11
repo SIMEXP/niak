@@ -442,13 +442,11 @@ for num_r = list_run
         if strcmp(gb_niak_language,'matlab')            
             [path_f,name_f,ext_f] = fileparts(file_name);
             subplot(max(list_run),2,1+(num_r-1)*2)
-            par_t = tab_parameters(:,4:6);
-            par_t = niak_correct_mean_var(par_t,'mean');
+            par_t = tab_parameters(:,4:6);           
             plot(par_t);            
             title(sprintf('translation (mm, bgr/xyz) %s',name_f));
             subplot(max(list_run),2,2+(num_r-1)*2)
             par_rot = tab_parameters(:,1:3);
-            par_rot = niak_correct_mean_var(par_rot,'mean');
             plot(par_rot);            
             title(sprintf('rotation (deg, bgr/rpy) %s ',name_f));
         end
