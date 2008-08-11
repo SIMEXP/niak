@@ -360,10 +360,8 @@ for num_i = 1:length(list_fwhm)
     [succ,msg] = system(instr_res);
     instr_dilate = cat(2,'mincmorph -clobber -successive ',repmat('D',[1 nb_dilate]),' ',file_tmp,' ',file_tmp2);
     [succ,msg] = system(instr_dilate);
-    instr_dilate = cat(2,'mincmorph -clobber -successive ',repmat('D',[1 nb_dilate]),' ',file_mask_anat,' ',file_mask_anat_crop);
-    [succ,msg] = system(instr_dilate);
     [hdr_anat,mask_func_d] = niak_read_vol(file_tmp2);
-    [hdr_anat,mask_anat_d] = niak_read_vol(file_mask_anat_crop);
+    [hdr_anat,mask_anat_d] = niak_read_vol(file_mask_anat);
     hdr_anat.file_name = file_mask_anat_crop;
     niak_write_vol(hdr_anat,round(mask_anat_d) & round(mask_func_d));    
     
@@ -374,10 +372,8 @@ for num_i = 1:length(list_fwhm)
     [succ,msg] = system(instr_res);
     instr_dilate = cat(2,'mincmorph -clobber -successive ',repmat('D',[1 nb_dilate]),' ',file_tmp,' ',file_tmp2);
     [succ,msg] = system(instr_dilate);
-    instr_dilate = cat(2,'mincmorph -clobber -successive ',repmat('D',[1 nb_dilate]),' ',file_mask_func,' ',file_mask_func_crop);
-    [succ,msg] = system(instr_dilate);
     [hdr_func,mask_anat_d] = niak_read_vol(file_tmp2);
-    [hdr_func,mask_func_d] = niak_read_vol(file_mask_func_crop);
+    [hdr_func,mask_func_d] = niak_read_vol(file_mask_func);
     hdr_func.file_name = file_mask_func_crop;
     niak_write_vol(hdr_func,round(mask_anat_d)&round(mask_func_d));
         

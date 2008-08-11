@@ -50,14 +50,13 @@ gb_list_fields = {'type_neig','thre_size'};
 gb_list_defaults = {6,1};
 niak_set_defaults
 
-[neig,ind] = niak_build_neighbour(mask>0);
+[neig,ind] = niak_build_neighbour(mask>0,type_neig);
 
 is_neig = max(neig,[],2)>0;
 nb_roi = 0;
 mask_c = zeros(size(mask));
 
-while max(is_neig)>0
-    nb_roi = nb_roi + 1;
+while max(is_neig)>0    
     
     list_is_neig = find(is_neig);
     ind_roi = list_is_neig(1);    
@@ -81,8 +80,12 @@ while max(is_neig)>0
         
     end
     
-    mask_c(ind(ind_roi)) = nb_roi;
-    list_size(nb_roi) = length(ind_roi);
+    if length(ind_roi)>=thre_size;
+        nb_roi = nb_roi + 1;
+        mask_c(ind(ind_roi)) = nb_roi;
+        list_size(nb_roi) = length(ind_roi);
+    end
+    
     is_neig(ind_roi) = 0;
 end
 
