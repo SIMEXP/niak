@@ -34,7 +34,11 @@ gb_niak_viewerjpg = 'eog'; % program to display jpg files
 
 gb_niak_viewersvg = 'eog'; % program to display svg files
 
-gb_niak_zip = 'gzip'; % The command to zip files
+gb_niak_zip = 'gzip -f'; % The command to zip files
+
+gb_niak_unzip = 'gunzip -f'; % The command to unzip files
+
+gb_niak_zip_ext = '.gz'; % The extension of zipped files
 
 gb_niak_ps2pdf = 'ps2pdf'; % The command to convert ps or eps documents into the pdf file format
 
@@ -73,8 +77,12 @@ gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
 gb_niak_format_demo = 'minc2';
 if exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc'))
     gb_niak_format_demo = 'minc2';
+elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc.gz'))
+    gb_niak_format_demo = 'minc1';
 elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'))
     gb_niak_format_demo = 'nii';
+elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.img'))
+    gb_niak_format_demo = 'analyze';
 end
 
 %% What is the operating system ?

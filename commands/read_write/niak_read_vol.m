@@ -1,73 +1,117 @@
 function [hdr,vol] = niak_read_vol(file_name)
-
-% Read 3D or 3D+t data in various formats.
+% *************************************************************************
+% SUMMARY NIAK_READ_VOL
+% *************************************************************************
+% Read 3D or 3D+t data. Currently supported formats are minc1 and minc2
+% (.minc), nifti (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
+% The data can also be zipped (additional extension .gz, see the COMMENTS
+% section below).
 %
-% SYNTAX:
+% *************************************************************************
+% SYNTAX
+% *************************************************************************
+%
 % [HDR,VOL] = NIAK_READ_VOL(FILE_NAME)
 %
-% INPUT:
-% FILE_NAME     (string) a single 4D fMRI image file with multiple
-%               frames, or a matrix of image file names, each with a single 3D frame,
-%               either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC (.mnc) format.
-%               Extra blanks are ignored. File separator can be / or \ on Windows.
-%               Gzipped files are gunzipped on unix.
-%               Frames must be equally spaced in time.
-%               For single file names, wild cards are supported.
+% *************************************************************************
+% INPUT
+% *************************************************************************
 %
-% OUTPUT:
-% VOL           (3D+t or 3D array of double) the fMRI or MRI data
+% FILE_NAME
+%   (string) a single 3D or 3D+t image file, or a matrix of image file names, 
+%   each with a single 3D frame.
+%   Supported formats are either NIFIT (*.nii,*.img/hdr), 
+%   ANALYZE (.img/.hdr/.mat) or MINC1/MINC2 (.mnc).
+%   Extra blanks are ignored. File separator can be / or \ on Windows.
+%   Gzipped files (additional .gz) are supported.
+%   Frames must be equally spaced in time.
+%   For single file names, wild cards are supported (mutliple files are
+%   treated in the same way as a matrix of image files names).
 %
-% HDR           a structure containing a description of the data, with the
-%                   following fields :
+% *************************************************************************
+% OUTPUT
+% *************************************************************************
+% VOL           
+%   (3D+t or 3D array of double) the fMRI or MRI data
 %
-%               HDR.FILE_NAME   (empty string '') name of the file currently
-%                   associated with the header.
-%               HDR.TYPE   (string) the file format (either
-%                   'minc1', 'minc2','nii').
-%               HDR.FLAG_ZIP (boolean, default 0) if the file name ended by
-%                   '.gz', the file was unzipped and FLAG_ZIP is 1, and
-%                   FLAG_ZIP is 0 otherwise.
+% HDR
+%   a structure containing a description of the data, with the
+%   following fields :
 %
-%               HDR.INFO is a structure with the following subfields:
-%                   FILE_PARENT (string) name of the file that was read.
-%                   DIMENSIONS (vector 3*1) the number of elements in each
-%                       dimensions of the data array. Warning : the first
-%                       dimension is not necessarily the "x" axis. See the
-%                       DIMENSION_ORDER field below.
-%                   PRECISION (string, default 'float') the
-%                       precision of data ('int', 'float' or 'double').
-%                   VOXEL_SIZE  (vector 1*3, default [1 1 1]) the
-%                       size of voxels along each spatial dimension in the same
-%                       order as in vol.
-%                   TR  (double, default 1) the time between two
-%                       volumes (in second). This field is present only for
-%                       3D+t data.
-%                   MAT (2D array 4*4) an affine transform from voxel to
-%                       world space.
-%                   DIMENSION_ORDER (string) describes the dimensions of
-%                       vol. Letter 'x' is for 'left to right, 'y' for
-%                       'posterior to anterior', 'z' for 'ventral to dorsal' and
-%                       't' is time. Example : 'xzyt' means that dimension 1 of
-%                       vol is 'x', dimension 2 is 'z', etc.
-%                   HISTORY (string) the history of the file.
+%   FILE_NAME   
+%       (empty string '') name of the file currently associated with the 
+%       header.
 %
-%               Additional information, specific to the format of the data,
-%                   can be found in HDR.DETAILS. See NIAK_READ_HDR_MINC or
-%                   NIAK_READ_HDR_NIFTI for more information.
+%   TYPE   
+%       (string) the file format (either 'minc1', 'minc2','nii').
 %
-% COMMENTS:
+%   INFO 
+%       (structure) with the following subfields:
+%
+%       FILE_PARENT 
+%           (string) name of the file that was read.
+%
+%       DIMENSIONS 
+%           (vector 3*1) the number of elements in each dimensions of the 
+%           data array. Warning : the first dimension is not necessarily 
+%           the "x" axis. See the DIMENSION_ORDER field below.
+%   
+%       PRECISION 
+%           (string, default 'float') the precision of data 
+%           ('int', 'float' or 'double').
+%
+%       VOXEL_SIZE  
+%           (vector 1*3, default [1 1 1]) the size of voxels along each 
+%           spatial dimension in the same order as in VOL.
+%
+%       TR  
+%           (double, default 1) the time between two volumes (in second). 
+%           This field is present only for 3D+t data.
+%
+%       MAT 
+%           (2D array 4*4) an affine transform from voxel to world space.
+%
+%       DIMENSION_ORDER 
+%           (string) describes the dimensions of vol. Letter 'x' is for 
+%           'left to right, 'y' for 'posterior to anterior', 
+%           'z' for 'ventral to dorsal' and 't' is time. 
+%           Example : 'xzyt' means that dimension 1 of vol is 'x', 
+%           dimension 2 is 'z', etc.
+%
+%       HISTORY 
+%           (string) the history of the file.
+%
+%   Additional information, specific to the format of the data, can be 
+%   found in HDR.DETAILS. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
+%   for more information.
+%
+% *************************************************************************
+% SEE ALSO
+% *************************************************************************
+%
+% NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_WRITE_VOL, NIAK_READ_HDR_NIFTI,
+% NIAK_READ_NIFTI.
+%
+% *************************************************************************
+% COMMENTS
+% *************************************************************************
+%
+% NOTE 1:
 % If multiple files are specified, make sure all those files are in the
 % same space and are simple 3D volumes.
 % All data will be concatenated along the 4th dimension in the VOL array,
 % i.e. VOL(:,:,:,i) is the data of the ith file.
-% The HDR structure have multiple entry, each one corresponding to one
+% The HDR structure have multiple entries, each one corresponding to one
 % file.
 %
+% NOTE 2:
 % In order to read MINC files, a proper installation of minc tools is
 % required (see http://www.bic.mni.mcgill.ca/software/minc/).
 %
-% SEE ALSO:
-% NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_WRITE_VOL, NIAK_READ_HDR_NIFTI, NIAK_READ_NIFTI.
+% NOTE 3:
+% The extension of zipped file is assumed to be .gz. The tools used to
+% unzip files in 'gunzip'. This setting can be changed by changing the
+% variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -92,6 +136,8 @@ function [hdr,vol] = niak_read_vol(file_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars
+  
 if ~ischar(file_name)
     error('niak_read_vol: FILE_NAME should be a string or a matrix of strings')
 end
@@ -124,9 +170,10 @@ if nb_file > 1
 else
 
     %% Single file (either 3D or 3D+t)
+    file_name = deblank(file_name);
     
     if ~exist(file_name)
-        
+
         %% The file does not exist ... check for wild cards !
         cell_name = dir(file_name);
         file_name2 = {cell_name.name};
@@ -143,38 +190,37 @@ else
     else
 
         %% The file exists
-        [pat_f,name_f,type] = fileparts(file_name);
+        [path_f,name_f,type] = fileparts(file_name);
 
         switch type
 
-            case '.gz'
+            case gb_niak_zip_ext
 
-                %% The file is zipped... Unzip it first and restart reading
-                niak_gb_vars
+                %% The file is zipped... Unzip it first and restart reading              
 
-                file_tmp_gz = niak_file_tmp('.gz');
-
-                if strcmp(gb_niak_language,'matlab')
-                    flag = copyfile(file_name,file_tmp_gz);
-                else
-                    system(cat(2,'cp ',file_name,' ',file_tmp_gz))
+                file_tmp_gz = niak_file_tmp(gb_niak_zip_ext);
+                
+                [succ,msg] = system(cat(2,'cp ',file_name,' ',file_tmp_gz));
+                if succ~=0
+                    error(msg)
                 end
 
-                instr_unzip = cat(2,gb_niak_zip,' -df ',file_tmp_gz);
 
-                try
-                    system(instr_unzip);
-                catch
-                    error('niak:read: There was a problem unzipping the file. Please check that the program %s is properly installd, or change program using the variable gb_niak_zip in the file niak_g_vars',gb_niak_zip);
+                instr_unzip = cat(2,gb_niak_unzip,' ',file_tmp_gz);
+
+                [succ,msg] = system(instr_unzip);
+                if succ ~= 0
+                    error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',gb_niak_unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
                 end
 
                 if nargout == 2
-                    [hdr,vol] = niak_read_minc(file_tmp_gz(1:end-3));
+                    [hdr,vol] = niak_read_minc(file_tmp_gz(1:end-length(gb_niak_zip_ext)));
                 else
-                    hdr = niak_read_minc(file_tmp_gz(1:end-3));
+                    hdr = niak_read_minc(file_tmp_gz(1:end-length(gb_niak_zip_ext)));
                 end
 
-                delete(file_tmp_gz(1:end-3));
+                delete(file_tmp_gz(1:end-length(gb_niak_zip_ext)));               
+                hdr.info.file_parent = file_name;
 
             case {'.mnc'}
                 

@@ -19,7 +19,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %     names to 'gb_niak_omitted').
 %
 %       MOTION_CORRECTED_DATA (cell of strings, default base
-%           name <BASE_FILES_IN>_MC)
+%           name <BASE_FILES_IN>_MC.<EXT_FILES_IN>)
 %           File names for saving the motion corrected datasets.
 %           The images will be resampled at the resolution of the
 %           functional run of reference.
@@ -32,16 +32,15 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %           Each subsequent line I+1 is a representation
 %           of the motion parameters estimated for session I.
 %
-%       TARGET (string, default TARGET_<BASE_FILE_IN>) the target for
+%       TARGET (string, default TARGET_<BASE_FILE_IN>.<EXT_FILES_IN>) the target for
 %           coregistration (smoothed volume of reference of the run of
 %           reference).
 %
-%       MASK (string, default MASK_<BASE_FILE_IN>) the mask used for
+%       MASK (string, default MASK_<BASE_FILE_IN>.<EXT_FILES_IN>) the mask used for
 %          coregistration.
 %
 %       FIG_MOTION  (string, default base FIG_MOTION_<BASE_FILE_IN>.EPS) A figure
-%          representing the motion parameters. The motion parameters are
-%          corrected of the mean within-run value.
+%          representing the motion parameters. 
 %
 %   OPT   (structure) with the following fields:
 %
@@ -59,9 +58,6 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %       INTERPOLATION (string, default 'sinc') the spatial
 %          interpolation method. Available options : 'trilinear', 'tricubic',
 %          'nearest_neighbour','sinc'.
-%
-%       FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
-%           attempt will be made to zip the outputs.
 %
 %       FOLDER_OUT (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -128,7 +124,7 @@ niak_gb_vars
 
 %% SYNTAX
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION_WS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_time_filter'' for more info.')
+    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION_WS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_motion_correction_ws'' for more info.')
 end
 
 %% FILES_OUT
@@ -162,8 +158,9 @@ for num_d = 1:length(files_name)
         path_f = '.';
     end
 
-    if strcmp(ext_f,'.gz')
+    if strcmp(ext_f,gb_niak_zip_ext)
         [tmp,name_f,ext_f] = fileparts(name_f);
+        ext_f = cat(2,ext_f,gb_niak_zip_ext);
     end
 
     if isempty(opt.folder_out)
@@ -228,7 +225,6 @@ for num_r = list_run
 
     [hdr,data] = niak_read_vol(file_name);
     hdr.flag_zip = 0;
-    data_r = zeros(size(data));
 
     %% Generating brain mask
     vol_abs = mean(abs(data),4);
@@ -294,6 +290,9 @@ for num_r = list_run
         hdr.file_name = file_mask_target;
         niak_write_vol(hdr,mask);
 
+        %% Initiliazing the resampled data
+        hdr_target = niak_read_vol(file_target_native);
+        data_r = zeros(hdr_target.info.dimensions(1:3));
     end
 
 
@@ -440,7 +439,7 @@ for num_r = list_run
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         
         if strcmp(gb_niak_language,'matlab')            
-            [path_f,name_f,ext_f] = fileparts(file_name);
+
             subplot(max(list_run),2,1+(num_r-1)*2)
             par_t = tab_parameters(:,4:6);           
             plot(par_t);            
@@ -449,6 +448,7 @@ for num_r = list_run
             par_rot = tab_parameters(:,1:3);
             plot(par_rot);            
             title(sprintf('rotation (deg, bgr/rpy) %s ',name_f));
+            
         end
         
     end        
@@ -474,7 +474,17 @@ if ~strcmp(files_out.target,'gb_niak_omitted')
     [succ,msg] = system(cat(2,'cp ',file_target,' ',files_out.target));
     if succ~=0
         error(msg)
-    end    
+    end
+    
+    %% If necessary, zip outputs
+    if strcmp(files_out.target(end-length(gb_niak_zip_ext):end),gb_niak_zip_ext)
+        instr_zip = cat(2,gb_niak_zip,' ',files_out.target);
+        [succ,msg] = system(instr_zip);
+        if succ ~= 0
+            error(msg);
+        end
+    end
+           
 end
 
 %% If requested, write the mask
@@ -483,6 +493,16 @@ if ~strcmp(files_out.mask,'gb_niak_omitted')
     if succ~=0
         error(msg)
     end        
+    
+        %% If necessary, zip outputs
+    if strcmp(files_out.mask(end-length(gb_niak_zip_ext):end),gb_niak_zip_ext)
+        instr_zip = cat(2,gb_niak_zip,' ',files_out.mask);
+        [succ,msg] = system(instr_zip);
+        if succ ~= 0
+            error(msg);
+        end
+    end
+
 end
 
 % Cleaning temporary files

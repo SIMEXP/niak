@@ -1,14 +1,22 @@
-function [] = niak_write_minc(hdr,vol)
-
-% Write a 3D or 3D+t dataset into a NIFTI file (.NII or .IMG). 
-% The old Analyze 7.5 is also supported, and if a .MAT file is present, the
-% affine transformation information will be included.
-% http://nifti.nimh.nih.gov/nifti-1
+function [] = niak_write_nifti(hdr,vol)
+% *************************************************************************
+% SUMMARY
+% *************************************************************************
 %
-% SYNTAX:
+% Write a 3D or 3D+t dataset into a NIFTI file (.NII or .IMG/.HDR) or an
+% Analyze 7.5 file (.IMG/.HDR/.MAT).
+% See http://nifti.nimh.nih.gov/nifti-1
+%
+% *************************************************************************
+% SYNTAX
+% *************************************************************************
+%
 % [] = NIAK_WRITE_NIFTI(HDR,VOL)
 %
+% *************************************************************************
 % INPUTS:
+% *************************************************************************
+%
 % VOL           (3D or 4D array) a 3D or 3D+t dataset
 %
 % HDR           (structure) a header structure (usually modified from the
@@ -28,19 +36,24 @@ function [] = niak_write_minc(hdr,vol)
 %               HDR.DETAILS (structure) the fields are the standard list of
 %                   a NIFTI header.
 %
-% OUTPUTS:
+% *************************************************************************
+% OUTPUTS
+% *************************************************************************
+%
+% The data called VOL is stored into a file called FILENAME written in
+% nifti format.
 % In the case of ANALYZE 7.5 file format, a file '.MAT' will also be
 % created with the affin transform.
 % 
-% The data called VOL is stored into a file called FILENAME written in
-% nifti format. If the extension of FILE_NAME is '.nii.gz' or '.img.zip'
-% the file will be compressed (choose the zipper by setting the variable 
-% NIAK_GB_ZIP in the file NIAK_GB_VARS with the appropriate command line).
+% *************************************************************************
+% SEE ALSO
+% *************************************************************************
 %
-% SEE ALSO:
 % NIAK_READ_HDR_NIFTI, NIAK_READ_NIFTI, NIAK_WRITE_VOL, NIAK_READ_VOL
 %
-% COMMENTS:
+% *************************************************************************
+% COMMENTS
+% *************************************************************************
 %
 % Part of this file is copied and modified under GNU license from
 % MRI_TOOLBOX developed by CNSP in Flinders University, Australia

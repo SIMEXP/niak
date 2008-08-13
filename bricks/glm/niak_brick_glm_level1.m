@@ -1,73 +1,96 @@
 function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt)
-
+% *************************************************************************
+% SUMMARY NIAK_BRICK_GLM_LEVEL1
+% *************************************************************************
 % Fit a linear model to an individual run of fMRI time series data.
 %
 % The method is based on linear models with correlated AR(p) errors:
 % Y = hrf*X b + e, e_t=a_1 e_(t-1) + ... + a_p e_(t-p) + white noise_t.
 %
-% SYNTAX:
+% *************************************************************************
+% SYNTAX
+% *************************************************************************
+%
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_GLM_LEVEL1(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
+% *************************************************************************
+% INPUTS
+% *************************************************************************
 %
-% FILES_IN  (structure) with the following fields :
+% FILES_IN  
+%     (structure) with the following fields :
 %
-%     FMRI (string) an fMRI dataset. See NIAK_READ_VOL for supported
+%     FMRI 
+%           (string) an fMRI dataset. See NIAK_READ_VOL for supported
 %           formats.
 %     
-%     DESIGN (string) a MAT file containing a unique variable X_CACHE.
+%     DESIGN 
+%           (string) a MAT file containing a unique variable X_CACHE.
 %           This structure describes the covariates of the model.
 %           See the help of FMRIDESIGN in the fMRIstat toolbox.
-%           See http://www.math.mcgill.ca/keith/fmristat/#making for an
+%           See http://www.math.mcgill.ca/keith/fmristat/#making for an 
 %           example of contrast matrix.
-%           See http://www.math.mcgill.ca/keith/fmristat/#making for an
+%           See http://www.math.mcgill.ca/keith/fmristat/#making for an 
 %           example of design.
 %
-% FILES_OUT (structure) with the following fields. Note that if
+% *************************************************************************
+%
+% FILES_OUT 
+%     (structure) with the following fields. Note that if
 %     a field is an empty string, a default value will be used to
 %     name the outputs. If a field is omitted, the output won't be
 %     saved at all (this is equivalent to setting up the output file
 %     names to 'gb_niak_omitted').
 %
-%     DF    (string, default <BASE NAME>_df.mat)
+%     DF    
+%           (string, default <BASE NAME>_df.mat)
 %           a mat file containing a structure called DF:
 %           DF.t are the effective df's of the T statistics,
 %           DF.F are the numerator and effective denominator dfs of F statistic,
 %           DF.resid is the least-squares degrees of freedom of the residuals,
 %           DF.cor is the effective df of the temporal correlation model.
 %
-%     SPATIAL_AV (string, default <BASE NAME>_spatial_av.mat)
+%     SPATIAL_AV 
+%           (string, default <BASE NAME>_spatial_av.mat)
 %           column vector of the spatial average (SPATIAL_AV) 
 %           of the frames weighted by the first non-excluded frame.
 %
-%     MAG_T (cell of strings, default <BASE NAME>_<CONTRAST NAME>_mag_t<EXT>)
+%     MAG_T 
+%           (cell of strings, default <BASE NAME>_<CONTRAST NAME>_mag_t<EXT>)
 %           Each entry is a T statistic image =ef/sd for magnitudes associated 
 %           with a contrast. 
 %           If T > 100, T = 100.
 %     
-%     DEL_T (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_t<EXT>)
+%     DEL_T 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_t<EXT>)
 %           T statistic image =ef/sd for delays. Delays are shifts of the 
 %           time origin of the HRF, measured in seconds. Note that you 
 %           cannot estimate delays of the trends or confounds. 
 %
-%     MAG_EF (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_ef<EXT>)
+%     MAG_EF 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_ef<EXT>)
 %           effect (b) image for magnitudes.
 %     
-%     DEL_EF (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_ef<EXT>)
+%     DEL_EF 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_ef<EXT>)
 %           effect (b) image for delays.
 %
-%     MAG_SD (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_sd<EXT>)
+%     MAG_SD 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_sd<EXT>)
 %           standard deviation of the effect for magnitudes. 
 %
-%     DEL_SD (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_sd<EXT>)
+%     DEL_SD 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_sd<EXT>)
 %           standard deviation of the effect for delays.
 %
-%     MAG_F (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_F<EXT>)
+%     MAG_F 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_F<EXT>)
 %            F-statistic for test of magnitudes of all rows of OPT.CONTRAST 
 %            selected by _mag_F. The degrees of freedom are DF.F. If F > 
 %            1000, F = 1000. F statistics are not yet available for delays.
 %
-%     FWHM (cell of string, default <BASE NAME>_<CONTRAST NAME>_fwhm<EXT>)
+%     FWHM 
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_fwhm<EXT>)
 %         FWHM information:
 %         Frame 1: effective FWHM in mm of the whitened residuals,
 %         as if they were white noise smoothed with a Gaussian filter 
@@ -76,24 +99,30 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %         Frame 2: resels per voxel, again unbiased.
 %         Frames 3,4,5: correlation of adjacent resids in x,y,z directions.
 %
-%     COR  (cell of string, default <BASE NAME>_<CONTRAST NAME>_cor<EXT>)
+%     COR  
+%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_cor<EXT>)
 %           The temporal autocorrelation(s).
 %
-%     RESID  (string, default <BASE NAME>_resid<EXT>)
+%     RESID  
+%           (string, default <BASE NAME>_resid<EXT>)
 %           the residuals from the model, only for non-excluded frames.
 %
-%     WRESID (string, default <BASE NAME>_wresid<EXT>)
+%     WRESID 
+%           (string, default <BASE NAME>_wresid<EXT>)
 %           the whitened residuals from the model normalized by dividing
 %           by their root sum of squares, only for non-excluded frames.
 %
 %     AR (string, default <BASE NAME>_AR<EXT>)
 %           the AR parameter(s) a_1 ... a_p.
 %
-% OPT   (structure) with the following fields.
-%       Note that if a field is omitted, it will be set to a default
-%       value if possible, or will issue an error otherwise.
+% *************************************************************************
+% OPT   
+%     (structure) with the following fields.
+%     Note that if a field is omitted, it will be set to a default
+%     value if possible, or will issue an error otherwise.
 %
-%       CONTRAST (structure) where each field is a contrast in the design.
+%     CONTRAST 
+%           (structure) where each field is a contrast in the design.
 %           The field name of the contrast will be used as a label in
 %           default outputs.
 %           CONTRAST.<FIELD NAME> is a vector. The first elements of the
@@ -104,7 +133,8 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           (in that order - see OPT.N_TRENDS_SPATIAL, OPT.NB_TRENDS_TEMPORAL
 %           and OPT.CONFOUNDS below).                      
 %
-%       CONFOUNDS (matrix, default [] i.e. no confounds)
+%     CONFOUNDS 
+%           (matrix, default [] i.e. no confounds)
 %           A matrix or array of extra columns for the design matrix
 %           that are not convolved with the HRF, e.g. movement artifacts. 
 %           If a matrix, the same columns are used for every slice; if an array,
@@ -114,7 +144,8 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           times, or apply NIAK_BRICK_SLICE_TIMING to the fMRI data as a
 %           preprocessing.
 %
-%       FWHM_COR (vector 1*1 or 1*2, default -100)  
+%     FWHM_COR 
+%           (vector 1*1 or 1*2, default -100)  
 %           fwhm in mm of a 3D Gaussian kernel used to smooth the 
 %           autocorrelation of residuals. 
 %           Setting it to Inf smooths the autocorrelation to 0, i.e. it 
@@ -128,19 +159,22 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           data, otherwise this is estimated quickly from the least-squares 
 %           residuals.
 %
-%       EXCLUDE (vector, default []) 
+%     EXCLUDE 
+%           (vector, default []) 
 %           A list of frames that should be excluded from the
 %           analysis. This must be used with Siemens EPI scans to remove the
 %           first few frames, which do not represent steady-state images.
 %           If OPT.NUMLAGS=1, the excluded frames can be arbitrary, 
 %           otherwise they should be from the beginning and/or end.
 %
-%       NB_TRENDS_SPATIAL (scalar, default 0) 
+%     NB_TRENDS_SPATIAL 
+%           (scalar, default 0) 
 %           order of the polynomial in the spatial average (SPATIAL_AV)  
 %           weighted by first non-excluded frame; 0 will remove no spatial 
 %           trends.
 %
-%       NB_TRENDS_TEMPORAL (scalar, default 0)
+%     NB_TRENDS_TEMPORAL 
+%           (scalar, default 0)
 %           number of cubic spline temporal trends to be removed per 6 
 %           minutes of scanner time. 
 %           Temporal  trends are modeled by cubic splines, so for a 6 
@@ -152,20 +186,24 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           N_TEMPORAL=-1 will not remove anything, in which case the design matrix 
 %           is completely determined by X_CACHE.X.
 %
-%       NUMLAGS (integer, default 1)
+%     NUMLAGS 
+%           (integer, default 1)
 %           Order (p) of the autoregressive model.
 %
-%       PCNT (boolean, default 1)
+%     PCNT 
+%           (boolean, default 1)
 %           if PCNT=1, then the data is converted to percentages before
 %           analysis by dividing each frame by its spatial average, * 100%.
 %
-%       NUM_HRF_BASES (row vector; default [1; ... ;1]) 
+%     NUM_HRF_BASES 
+%           (row vector; default [1; ... ;1]) 
 %           number of basis functions for the hrf for each response, 
 %           either 1 or 2 at the moment. At least one basis functions is 
 %           needed to estimate the magnitude, but two basis functions are 
 %           needed to estimate the delay.
 %
-%       BASIS_TYPE (string, 'spectral') 
+%     BASIS_TYPE 
+%           (string, 'spectral') 
 %           basis functions for the hrf used for delay estimation, or 
 %           whenever NUM_HRF_BASES = 2. 
 %           These are convolved with the stimulus to give the responses in 
@@ -176,7 +214,8 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           Ignored if NUM_HRF_BASES = 1, in which case it always uses 
 %           component 1, i.e. the hrf is convolved with the stimulus.
 %
-%       DF_LIMIT (integer, default 4)
+%     DF_LIMIT 
+%           (integer, default 4)
 %           control which method is used for estimating FWHM. 
 %           If DF > DF_LIMIT, then the FWHM is calculated assuming the 
 %           Gaussian filter is arbitrary. 
@@ -185,24 +224,33 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           of the Gaussian filter are aligned with the x, y and z 
 %           axes of the data. 
 %
-%       FOLDER_OUT (string, default: path of FILES_IN) 
+%     FOLDER_OUT 
+%           (string, default: path of FILES_IN) 
 %           If present, all default outputs will be created in the folder 
 %           FOLDER_OUT. The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE (boolean, default 1) 
+%     FLAG_VERBOSE 
+%           (boolean, default 1) 
 %           if the flag is 1, then the function prints some infos during 
 %           the processing.
 %
-%       FLAG_TEST (boolean, default 0) 
+%     FLAG_TEST 
+%           (boolean, default 0) 
 %           if FLAG_TEST equals 1, the brick does not do anything but 
 %           update the default values in FILES_IN, FILES_OUT and OPT.
 %
 %
+% *************************************************************************
 % OUTPUTS
+% *************************************************************************
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% COMMENTS:
+% *************************************************************************
+% COMMENTS
+% *************************************************************************
+%
 % This brick is a "NIAKized" overlay of the FMRILM function from the
 % fMRIstat toolbox by Keith Worsley :
 % http://www.math.mcgill.ca/keith/fmristat/

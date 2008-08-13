@@ -50,6 +50,9 @@ switch gb_niak_format_demo
         
         files_in = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
         
+    case 'minc1' % If data are in minc1 format
+        files_in = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz')};
+        
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        

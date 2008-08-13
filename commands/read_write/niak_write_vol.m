@@ -17,16 +17,11 @@ function [] = niak_write_vol(hdr,vol)
 %                   either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC (.mnc) format. 
 %                   Extra blanks are ignored. Frames are assumed to be
 %                   equally spaced in time.
+%                   If the file name contains an additional extension
+%                   '.gz', the output will be zipped using 'gzip'.
 %
 %               HDR.TYPE   (string, default 'minc2') the output format (either
 %                   'minc1' or 'minc2').
-%
-%               HDR.FLAG_ZIP (boolean) if this field exists and is non-zero,
-%                   the function will attempt to zip the file after writting.
-%                   The extension depends on the zip program, which is
-%                   'gzip' by default. The choice of the zipper can be
-%                   changed using the GB_NIAK_ZIP variable in the NIAK_GB_VARS
-%                   file. A warning will be issued if zipping fails.
 %
 %               The following subfields are optional :
 %               HDR.INFO.PRECISION      (string, default 'float') the
@@ -77,6 +72,10 @@ function [] = niak_write_vol(hdr,vol)
 % If HDR.FLAG_ZIP is 1, the file is zipped and a .gz is appended at the end
 % of the file name. 
 %
+% The extension of zipped file is assumed to be .gz. The tools used to
+% zip files in 'gzip'. This setting can be changed by changing the
+% variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
+%
 % SEE ALSO:
 % niak_read_header_minc, niak_read_minc, niak_read_vol, niak_read_vol
 %
@@ -103,6 +102,8 @@ function [] = niak_write_vol(hdr,vol)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+niak_gb_vars
 
 if isempty(vol)
     warning('you are trying to write an empty dataset (I honestly do not know what is going to happen)!');
@@ -191,6 +192,11 @@ elseif ischar(file_name)
             error('niak:write: Please specify a file format in hdr.type.\n')
         end
 
+        [path_f,name_f,ext_f] = fileparts(hdr.file_name);
+        
+        if strcmp(ext_f,gb_niak_zip_ext)
+            hdr.file_name = cat(2,path_f,name_f);
+        end
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 niak_write_minc(hdr,vol);
@@ -200,18 +206,15 @@ elseif ischar(file_name)
                 error('niak:write: %s : unrecognized file format\n',type_f);
         end
 
-        if isfield(hdr,'flag_zip')
-            if ~(hdr.flag_zip==0)
-                niak_gb_vars;
-                instr_zip = cat(2,gb_niak_zip,' ',hdr.file_name);
-                try
-                    system(instr_zip);
-                catch
-                    warning('niak:write','There was a problem when attempting to zip the file. Please check that the program %s is properly installd, or change program using the variable gb_niak_zip in the file niak_g_vars',gb_niak_zip);
-                end
+        if strcmp(ext_f,gb_niak_zip_ext)
+            instr_zip = cat(2,gb_niak_zip,' ',hdr.file_name);
+            [succ,msg] = system(instr_zip);
+            if succ~=0
+                error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
             end
 
         end
+
     end
 else
     error('niak:write: hdr.filename has to be a string or a char array')

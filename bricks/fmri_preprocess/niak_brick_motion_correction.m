@@ -78,9 +78,8 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           of the session and the mean volume of the session of reference.
 %
 %       FIG_MOTION  (cell of strings, default base
-%       FIG_MOTION_<BASE_FILE_IN>.EPS) For each session, a figure
-%       representing the within-session motion parameters for all runs.  
-%       The motion parameters are corrected of the mean within-run value.
+%           FIG_MOTION_<BASE_FILE_IN>.EPS) For each session, a figure
+%          representing the within-session motion parameters for all runs.
 %
 %   OPT   (structure) with the following fields:
 %
@@ -183,7 +182,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 
 %% SYNTAX
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_time_filter'' for more info.')
+    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_motion_correction'' for more info.')
 end
 
 %% FILES_IN
@@ -578,12 +577,14 @@ else % if ~ischar(files_in.motion_parameter)
     
     %% Create a target file
     file_target = niak_file_tmp('_target.mnc');
+    
     file_target2 = niak_file_tmp('_target.mnc');
     list_runs = getfield(files_in.sessions,session_ref);
     hdr_target = niak_read_vol(list_runs{1});
     hdr_target.file_name = file_target2;
     dim_t = hdr_target.info.dimensions;
-    niak_write_vol(hdr_target,zeros([dim_t(1:3)]));    
+    niak_write_vol(hdr_target,zeros([dim_t(1:3)]));
+    
     files_in_r.source = file_target2;
     files_in_r.target = file_target2;
     opt_r.flag_tfm_space = 1;
