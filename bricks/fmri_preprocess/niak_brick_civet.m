@@ -375,7 +375,7 @@ if ~flag_civet
         end
         [succ,msg] = system(cat(2,gb_niak_unzip,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'));        
     else
-        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'))
+        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'));
     end
     if succ~=0
         error(msg);
