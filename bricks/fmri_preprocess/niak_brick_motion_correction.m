@@ -1,143 +1,170 @@
 function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_MOTION_CORRECTION
+%
 % Perfom within-subject motion correction of fMRI data via estimation of a
 % rigid-body transform and spatial resampling.
 %
-% SYNTAX:
-%   [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-%   FILES_IN
-%       SESSIONS (structure)
-%           Each field of FILES_IN.SESSIONS is a cell of strings, where each string
-%           is the file name of a 3D+t dataset.
-%           The files attached to a single field are considered to be acquired in
-%           the same session (small displacement), and files from different fields are considered
-%           to have been acquired in different sessions (potentially large displacement).
+% _________________________________________________________________________
+% INPUTS
+%
+% * FILES_IN 
+%       (structure) with the following fields : 
+%
+%       SESSIONS 
+%           (structure) Each field of FILES_IN.SESSIONS is a cell of 
+%           strings, where each string is the file name of a 3D+t dataset.
+%           The files attached to a single field are considered to be 
+%           acquired in the same session (small displacement), and files 
+%           from different fields are considered to have been acquired in 
+%           different sessions (potentially large displacement).
 %           All files should be fMRI data of ONE subject.
 %
-%       MOTION_PARAMETERS (structure of cells of strings)
+%       MOTION_PARAMETERS 
+%           (structure of cells of strings)
 %           Use this field to skip the estimation of motion parameters, and
 %           only perform spatial resampling of the data.
 %           MOTION_PARAMETERS.<NAME_SESSION>{NUM_D} is the file name for
 %           the estimated motion parameters of the dataset NUM_D in session
 %           NAME_SESSION. The first line describes the content
 %           of each column. Each subsequent line I+1 is a representation
-%           of the motion parameters estimated for session I (raw/pitch/yaw/
-%           translations in x, y and z).
+%           of the motion parameters estimated for session I 
+%           (roll/pitch/yaw/translations in x/y/z).
 %
-%   FILES_OUT  (structure) with the following fields. Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is ommited, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted').
+% * FILES_OUT  
+%       (structure) with the following fields. Note that if
+%       a field is an empty string, a default value will be used to
+%       name the outputs. If a field is ommited, the output won't be
+%       saved at all (this is equivalent to setting up the output file
+%       names to 'gb_niak_omitted').
 %
-%   If any of the following field is specified, the functional data will be
-%   resampled in the space of the volume of reference of the run of
-%   reference of the session of reference.
+%       If any of the following field is specified, the functional data will be
+%       resampled in the space of the volume of reference of the run of
+%       reference of the session of reference.
 %
-%       MOTION_CORRECTED_DATA (structure of cell of strings, default base
-%           name <BASE_FILES_IN>_MC)
+%       MOTION_CORRECTED_DATA 
+%           (structure of cell of strings, default <BASE FILES_IN>_MC.<EXT>)
 %           File names for saving the motion corrected datasets.
 %           The images will be resampled at the resolution of the
 %           between-run functional image of reference.
 %
-%       MEAN_VOLUME (string, default MEAN_<BASE_FILE_IN>) the mean volume
+%       MEAN_VOLUME 
+%           (string, default MEAN_<BASE_FILE_IN>) the mean volume
 %           of all coregistered runs of all sessions. This volume can be
 %           generated only if MOTION_CORRECTED_DATA is generated too.
 %
-%       MASK_VOLUME (string, default base MASK_<BASE_FILE_IN>) A mask of
-%           the brain common to all runs and all sessions (after motion correction).
+%       MASK_VOLUME 
+%           (string, default base MASK_<BASE_FILE_IN>) A mask of
+%           the brain common to all runs and all sessions (after motion 
+%           correction).
 %           This volume can be generated only if MOTION_CORRECTED_DATA is 
 %           generated too.
 %
 %   If a field FILES_IN.MOTION_PARAMETERS has been specified, the following
 %   fields of FILES_OUT will be ignored
 %
-%       MOTION_PARAMETERS (structure of cells of strings,
-%           default base MOTION_PARAMS_<BASE_FILE_IN>.DAT)
+%       MOTION_PARAMETERS 
+%           (structure of cells of strings, default <base MOTION_PARAMS>_<BASE_FILE_IN>.DAT)
 %           MOTION_PARAMETERS.<NAME_SESSION>{NUM_D} is the file name for
 %           the estimated motion parameters of the dataset NUM_D in session
 %           NAME_SESSION. The first line describes the content
 %           of each column. Each subsequent line I+1 is a representation
 %           of the motion parameters estimated for session I.
 %
-%       TRANSF_WITHIN_SESSION (structure of cells of strings,
-%           default base TRANS_WS_<FILE_IN>.DAT)
+%       TRANSF_WITHIN_SESSION 
+%           (structure of cells of strings, default TRANS_WS_<FILE_IN>.DAT)
 %           TRANSF_WITHIN_SESSION_DAT.<NAME_SESSION>{NUM_D} is the file name for
 %           the estimated within-session motion parameters of the dataset
 %           NUM_D in session NAME_SESSION. The first line describes the content
 %           of each column. Each subsequent line I+1 is a representation
 %           of the motion parameters estimated for session I.
 %
-%       TRANSF_BETWEEN_SESSION (string, default
-%           base TRANSF_BS_<name of the first dataset of the session of reference>.DAT)
+%       TRANSF_BETWEEN_SESSION 
+%           (string, defaulte TRANSF_BS_<name of the first dataset of the session of reference>.DAT)
 %           The first line describes the content of each column. Each subsequent
 %           line I+1 is a representation of the between-session parameters
 %           estimated for session I, i.e. the transformation between the mean volume
 %           of the session and the mean volume of the session of reference.
 %
-%       FIG_MOTION  (cell of strings, default base
-%           FIG_MOTION_<BASE_FILE_IN>.EPS) For each session, a figure
-%          representing the within-session motion parameters for all runs.
+%       FIG_MOTION  
+%           (cell of strings, default base FIG_MOTION_<BASE_FILE_IN>.EPS) 
+%           For each session, a figure representing the within-session 
+%           motion parameters for all runs.
 %
-%   OPT   (structure) with the following fields:
+% * OPT   
+%       (structure) with the following fields:
 %
-%       SUPPRESS_VOL (integer, default 0) the number of volumes
-%           that are suppressed at the begining of the time series.
+%       SUPPRESS_VOL 
+%           (integer, default 0) the number of volumes that are suppressed 
+%           at the begining of the time series.
 %           This is a good stage to get rid of "dummy scans"
 %           necessary to reach signal stabilization (that takes
 %           about 3 volumes).
 %
-%       VOL_REF (vector, default 1) VOL_REF(NUM) is
-%           the number of the volume that will be used as target for
-%           session NUM. If VOL_REF is a single integer, the same number will be
-%           used for all sessions.
+%       VOL_REF 
+%           (vector, default 1) VOL_REF(NUM) is the number of the volume 
+%           that will be used as target for session NUM. 
+%           If VOL_REF is a single integer, the same number will be used 
+%           for all sessions.
 %
-%       RUN_REF (vector, default 1) RUN_REF(NUM) is
-%           the number of the run that will be used as target for
-%           each session. Currently, the same number has to be used for
-%           all sessions.
+%       RUN_REF 
+%           (vector, default 1) RUN_REF(NUM) is the number of the run that 
+%           will be used as target for each session.
+%           If RUN_REF is a single integer, the same number will be used 
+%           for all sessions.
 %
-%       SESSION_REF (string, default first session) name of the session of
-%           reference. By default, it is the first field of
+%       SESSION_REF 
+%           (string, default first session) name of the session of
+%           reference. By default, it is the first field found in
 %           FILES_IN.SESSIONS.
 %
-%       INTERPOLATION (string, default 'sinc') the spatial
-%          interpolation method. Available options : 'trilinear', 'tricubic',
-%          'nearest_neighbour', 'sinc'.
+%       INTERPOLATION 
+%           (string, default 'sinc') the spatial interpolation method. 
+%           Available options : 'trilinear', 'tricubic', 
+%           'nearest_neighbour', 'sinc'.
 %
-%       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
+%       FWHM 
+%           (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
-%       FLAG_SESSION (boolean, default 0) if FLAG_SESSION == 0, the
-%          intra-session motion parameters are included in the final transformation.
-%          If FLAG_SESSION == 1, the intra-session motion parameters are still estimated
-%          for purpose of quality control, but the between-session transformation only are
-%          actually included in the resampling.
+%       FLAG_SESSION 
+%          (boolean, default 0) if FLAG_SESSION == 0, the intra-session 
+%          motion parameters are included in the final transformation.
+%          If FLAG_SESSION == 1, the intra-session motion parameters are 
+%          still estimated for quality control, but the between-session 
+%          transformation only is actually applied in the resampling.
 %
-%       FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
-%           attempt will be made to zip the outputs.
-%
-%       FOLDER_OUT (string, default: path of FILES_IN) If present,
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
-%       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
+%       FLAG_TEST 
+%           (boolean, default: 0) if FLAG_TEST equals 1, the
 %           brick does not do anything but update the default
-%           values in FILES_IN and FILES_OUT.
+%           values in FILES_IN, FILES_OUT and OPT.
 %
-%       FLAG_VERBOSE (boolean, default: 1) If FLAG_VERBOSE == 1, write
+%       FLAG_VERBOSE 
+%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
 %           messages indicating progress.
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
 %   The structures FILES_IN, FILES_OUT and OPT are updated with default
 %   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% SEE ALSO:
+% _________________________________________________________________________
+% SEE ALSO
+%
 %  NIAK_BRICK_MOTION_CORRECTION_WS, NIAK_DEMO_MOTION_CORRECTION
 %
+% _________________________________________________________________________
 % COMMENTS
+%
 % NOTE 1: The motion correction follows a hierachical strategy :
 % Rigid-body transforms are first estimated within each session
 % independently by registering all volumes to one single reference volume
@@ -153,10 +180,11 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % The within- and between-session transformations can be saved as
 % outputs for quality checking.
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, filtering, fMRI
+% Keywords : medical imaging, motion correction, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -175,6 +203,8 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -253,8 +283,9 @@ for num_s = 1:length(list_sessions)
             path_f = '.';
         end
 
-        if strcmp(ext_f,'.gz')
+        if strcmp(ext_f,gb_niak_zip_ext)
             [tmp,name_f,ext_f] = fileparts(name_f);
+            ext_f = cat(2,ext_f,gb_niak_zip_ext);
         end
 
         if isempty(opt.folder_out)
@@ -653,7 +684,7 @@ if ~ischar(files_out.motion_corrected_data)
             hdr_target.details.time = hdr.details.time;
             hdr_target.info.tr = hdr.info.tr;
             [nx,ny,nz,nt] = size(data);            
-            data_r = zeros([nx ny nz nt-suppress_vol]);
+            data_r = zeros([dim_t(1) dim_t(2) dim_t(3) nt-suppress_vol]);
             
             %% Resampling each volume
             for num_v = 1+suppress_vol:size(data,4)

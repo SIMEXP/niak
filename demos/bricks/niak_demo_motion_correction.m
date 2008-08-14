@@ -53,6 +53,14 @@ switch gb_niak_format_demo
         %% in general.
         files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc');
         files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc');        
+        
+    case 'minc1'
+        
+        %% The two datasets have actually been acquired in the same
+        %% session, but this is just to demonstrate how the procedure works
+        %% in general.
+        files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz');        
 
     otherwise 
         

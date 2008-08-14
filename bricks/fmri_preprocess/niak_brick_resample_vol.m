@@ -1,68 +1,95 @@
 function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,opt)
-
-% Apply MINCRESAMPLE to resample a volume with a transformation to a target
-% space. The function allows to use source or target resolution, and to
-% resample the data such that the direction cosines are x, y and z
 %
-% SYNTAX:
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_RESAMPLE_VOL
+%
+% Apply MINCRESAMPLE to resample a volume with a transformation to a target
+% space. The function allows to change the target resolution, and to
+% resample the data such that the direction cosines are exactly x, y and z.
+%
+% _________________________________________________________________________
+% SYNTAX
+%
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-% FILES_IN      (structure) with the following fields :
-%                 SOURCE (string) name of the file to resample (can be 3D+t).
-%                 TARGET (string) name of the file defining space (can be
-%                   the same as SOURCE)
-%                 TRANSFORMATION (string, default identity)  name of a xfm transformation file
-%                   to apply on SOURCE.
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_OUT     (string,default <BASE_SOURCE>_res) the name of the output resampled volume.
+% * FILES_IN      
+%       (structure) with the following fields :
 %
-% OPT           (structure, optional) has the following fields:
+%       SOURCE 
+%           (string) name of the file to resample (can be 3D+t).
 %
-%       INTERPOLATION (string, default 'trilinear') the spatial
-%          interpolation method. Available options : 'trilinear', 'tricubic',
-%          'nearest_neighbour','sinc'.
+%       TARGET 
+%           (string) name of the file defining space (can be the same as 
+%           SOURCE).
 %
-%       FLAG_TFM_SPACE (boolean, default 0) if FLAG_TFM_SPACE is 0, the
-%            transformation is applied and the volume is resampled in the 
-%            target space. If FLAG_TFM_SPACE is 1, the volume is resampled 
-%           in such a way that there is no rotations anymore between voxel 
-%           and world space. The field of view is adapted to fit the brain
+%       TRANSFORMATION 
+%           (string, default identity)  name of a xfm transformation file
+%           to apply on SOURCE.
+%
+% * FILES_OUT 
+%       (string,default <BASE_SOURCE>_res) the name of the output resampled volume.
+%
+% * OPT           
+%       (structure, optional) has the following fields:
+%
+%       INTERPOLATION 
+%          (string, default 'trilinear') the spatial interpolation method. 
+%          Available options : 'trilinear', 'tricubic', 'nearest_neighbour'
+%          ,'sinc'.
+%
+%       FLAG_TFM_SPACE 
+%           (boolean, default 0) if FLAG_TFM_SPACE is 0, the transformation 
+%           is applied and the volume is resampled in the target space. 
+%           If FLAG_TFM_SPACE is 1, the volume is resampled in such a way 
+%           that there is no rotations anymore between voxel and world 
+%           space. The field of view is adapted to fit the brain
 %           in the source space. In this case, the target space is only
 %           used to set the resolution, unless this parameter was
 %           additionally specified using OPT.VOXEL_SIZE, in which case the
-%           target space could be anything.
+%           target space is not used at all (e.g. use the source file).
 %
-%       FLAG_INVERT_TRANSF (boolean, default 0) if FLAG_INVERT_TRANSF is 1,
+%       FLAG_INVERT_TRANSF 
+%           (boolean, default 0) if FLAG_INVERT_TRANSF is 1,
 %           the specified transformation is inverted before being applied.
 %
-%       VOXEL_SIZE (vector 1*3, default same as target space) If
-%            voxel_size is set to 0, the resolution for resampling
-%            will be the same as the target space. If voxel_size is set to -1, 
-%            the resolution will be the same as source space. Otherwise, 
-%            the specified resolution will be used. Note that a change in
-%            resolution will force the new space to have identity direction
-%            cosines.
+%       VOXEL_SIZE 
+%           (vector 1*3, default same as target space) If VOXEL_SIZE is set 
+%           to 0, the resolution for resampling will be the same as the 
+%           target space. If VOXEL_SIZE is set to -1, the resolution will 
+%           be the same as source space. Otherwise, the specified 
+%           resolution will be used. Note that a change in resolution will 
+%           force the new space to have identity direction cosines.
 %
-%       FOLDER_OUT (string, default: path of FILES_IN) If present,
-%            all default outputs will be created in the folder FOLDER_OUT.
-%            The folder needs to be created beforehand.
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present, all default 
+%           outputs will be created in the folder FOLDER_OUT. The folder 
+%           needs to be created beforehand.
 %
-%       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
-%            brick does not do anything but update the default
-%            values in FILES_IN and FILES_OUT.
+%       FLAG_TEST 
+%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN and 
+%           FILES_OUT.
 %
-%       FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
-%            the function prints some infos during the processing.
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then the function prints 
+%           some infos during the processing.
 %
 %
-% OUTPUTS:
-% The resampled volume.
+% _________________________________________________________________________
+% OUTPUTS
 %
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% values. If OPT.FLAG_TEST == 0, the specified outputs are written.
+%
+% _________________________________________________________________________
 % COMMENTS:
-% This is a simple wrapper of MINCRESAMPLE.
-% This function will work only for images in axial convention. Apply
-% MINCRESHAPE to the images beforehand if it is not the case.
+%
+% This is a simple wrapper of MINCRESAMPLE, but is has a couple of
+% additional features (i.e. the possibility to change the resolution or to
+% get rid of the direction cosines).
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.

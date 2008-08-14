@@ -1,20 +1,36 @@
 function flag = niak_write_transf(transf,file_name)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_WRITE_TRANSF
+%
 % Save a lsq12 transformation matrix into an xfm file
 %
-% SYNTAX:
+% _________________________________________________________________________
+% SYNTAX
+%
 % [FLAG,MSG] = NIAK_WRITE_TRANSF(TRANSF,FILE_NAME)
-% 
-% INPUTS:
-% TRANSF        (matrix 4*4) a classical matrix representation of an lsq12
-%               transformation.
-% FILE_NAME     (string) the name of the xfm file (usually ends in .xfm)
-% 
-% OUTPUTS:
-% FLAG          (real number) if FLAG == -1, an error occured
 %
-% SEE ALSO:
+% _________________________________________________________________________
+% INPUTS
 %
+% TRANSF        
+%       (matrix 4*4) a classical matrix representation of an lsq12
+%       transformation.
+%
+% FILE_NAME     
+%       (string) the name of the xfm file (usually ends in .xfm)
+% 
+% _________________________________________________________________________
+% OUTPUTS
+%
+% FLAG          
+%       (real number) if FLAG == -1, an error occured
+%
+% _________________________________________________________________________
+% SEE ALSO
+% NIAK_PARAM2TRANSF, NIAK_TRANSF2PARAM, NIAK_READ_TRANSF
+%
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
