@@ -1,21 +1,31 @@
-% This is a script to demonstrate the usage of :
-% NIAK_BRICK_SMOOTH_VOL
 %
-% SYNTAX:
+% _________________________________________________________________________
+% SUMMARY NIAK_DEMO_SMOOTH_VOL
+%
+% This is a script to demonstrate the usage of NIAK_BRICK_SMOOTH_VOL
 % Just type in NIAK_DEMO_SMOOTH_VOL
 %
-% OUTPUT:
+% _________________________________________________________________________
+% OUTPUT
 %
-% This script will clear the workspace !!
 % It will apply a slice timing correction on the functional data of subject
 % 1 (motor condition) and use the default output name.
 %
+% _________________________________________________________________________
+% COMMENTS
+%
+% NOTE 1
+% This script will clear the workspace !!
+%
+% NOTE 2
 % Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
+% called GB_NIAK_PATH_DEMO defined in the script NIAK_GB_VARS.
 % 
-% The demo database exists in multiple file formats. By default, it is
-% using 'minc2' files. You can change that by changing the variable
-% GB_NIAK_FORMAT_DEMO in the file NIAK_GB_VARS.
+% NOTE 3
+% The demo database exists in multiple file formats.NIAK looks into the demo 
+% path and is supposed to figure out which format you are intending to use 
+% by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
+% in the script NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -50,7 +60,12 @@ switch gb_niak_format_demo
         
         files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
         files_out = ''; % The default output name will be used
-    
+        
+    case 'minc1' % If data are in minc1 format
+
+        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_out = ''; % The default output name will be used
+
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)

@@ -1,40 +1,54 @@
 function [files_in,files_out,opt] = niak_brick_4d_to_3d(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_4D_TO_3D
+%
 % Extract volumes from a 4D file and generates multiple 3D volume files
 %
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_4D_TO_3D(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-% FILES_IN  (string) a 4D dataset
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_OUT (cell of strings, default <BASE NAME INPUT>_<NUM COMP>.<EXT>)
+%  * FILES_IN  
+%       (string) a 4D dataset
+%
+%  * FILES_OUT 
+%       (cell of strings, default <BASE NAME INPUT>_<NUM COMP>.<EXT>)
 %       Each entry is the file name for a 3D dataset.
 %
-% OPT   (structure) with the following fields :
+%  * OPT   
+%       (structure) with the following fields :
 %
-%       LIST (vector, default all) the list of volume to extract from the 4D data.
-%       Volumes are numbered from 1 to the number of volumes.
+%       LIST 
+%           (vector, default all) the list of volume to extract from the 4D 
+%           data. Volumes are numbered from 1 to the number of volumes.
 %
-%       FLAG_CORRECT (boolean, default 0) If this flag is true (1), a mask
-%       will be extracted from the 4D dataset using NIAK_BRAIN_MASK, and
-%       the distribution for each volume within the mask will be asjusted
-%       to zero mean and unit variance using robust estimates (see
-%       NIAK_CORRECT_VOL).
+%       FLAG_CORRECT 
+%           (boolean, default 0) If this flag is true (1), a mask
+%           will be extracted from the 4D dataset using NIAK_BRAIN_MASK, and
+%           the distribution for each volume within the mask will be asjusted
+%           to zero mean and unit variance using robust estimates (see
+%           NIAK_CORRECT_VOL).
 %
-%       FOLDER_OUT (string, default: path of FILES_IN) If present,
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
-%       FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN, FILES_OUT and OPT.
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN, 
+%           FILES_OUT and OPT.
 %
-%
+% _________________________________________________________________________
 % OUTPUTS
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% COMMENTS:
+% _________________________________________________________________________
+% COMMENTS
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -60,6 +74,8 @@ function [files_in,files_out,opt] = niak_brick_4d_to_3d(files_in,files_out,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -79,8 +95,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if isempty(opt.folder_out)

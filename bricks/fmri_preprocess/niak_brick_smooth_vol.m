@@ -1,57 +1,68 @@
 function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_SMOOTH_VOL
+%
 % Spatial smoothing of 3D or 3D+t data, using a Gaussian separable kernel
 %
-% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SMOOTH_VOL(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-% FILES_IN        (string) a file name of a 3D+t dataset
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_OUT       (string) File name for outputs. NOTE that
-%                       if FILES_OUT is an empty string or cell, the name
-%                       of the outputs will be the same as the inputs,
-%                       with a '_s' suffix added at the end.
+%  * FILES_IN        
+%       (string) a file name of a 3D+t dataset
 %
-% OPT           (structure) with the following fields :
+%  * FILES_OUT       
+%       (string, default <BASE FILES_IN>.<EXT>) File name for outputs. 
+%       NOTE that if FILES_OUT is an empty string or cell, the name of the 
+%       outputs will be the same as the inputs, with a '_s' suffix added 
+%       at the end.
 %
-%               FWHM  (vector of size [3 1], default [4 4 4]) the full width at half maximum of
-%                      the Gaussian kernel, in each dimension. If fwhm has length 1,
-%                      an isotropic kernel is implemented.
+%  * OPT           
+%       (structure) with the following fields :
 %
-%               STEP  (vector of size [3 1] or [4 1], default resolution of
-%                      input files). This parameter usually does not need to be
-%                      manually specified, but is rather read from the input
-%                      file. Specification through this file will override
-%                      these values. STEP is the resolution
-%                      in the respective dimensions, i.e. the space in mmm
-%                      between two voxels in x, y, and z. Note that the unit is
-%                      irrelevant and just need to be consistent with
-%                      the filter width (fwhm)). The fourth element is
-%                      ignored.
+%       FWHM  
+%           (vector of size [1 3], default [4 4 4]) the full width at half 
+%           maximum of the Gaussian kernel, in each dimension. If fwhm has 
+%           length 1, an isotropic kernel is implemented.
 %
-%               FLAG_ZIP   (boolean, deafult 0) if FLAG_ZIP equals 1, an
-%                      attempt will be made to zip the outputs.
+%       STEP  
+%           (vector of size [1 3] or [1 4], default resolution of input 
+%           files). This parameter usually does not need to be manually 
+%           specified, but is rather read from the input file. 
+%           Specification through this field will override these values. 
+%           STEP is the resolution in the respective dimensions, i.e. the 
+%           space in mmm between two voxels in x, y, and z. Note that the 
+%           unit is irrelevant and just need to be consistent with the 
+%           filter width (fwhm)). The fourth element is ignored.
 %
-%               FOLDER_OUT (string, default: path of FILES_IN) If present,
-%                      all default outputs will be created in the folder FOLDER_OUT.
-%                      The folder needs to be created beforehand.
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present, all default 
+%           outputs will be created in the folder FOLDER_OUT. The folder 
+%           needs to be created beforehand.
 %
-%               FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
-%                      the function prints some infos during the
-%                      processing.
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then the function prints 
+%           some infos during the processing.
 %
-%               FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
-%                      brick does not do anything but update the default
-%                      values in FILES_IN and FILES_OUT.
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN and 
+%           FILES_OUT.
 %
-% OUTPUTS:
+% _________________________________________________________________________
+% OUTPUTS
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are generated.
 %
-% SEE ALSO:
+% _________________________________________________________________________
+% SEE ALSO
+%
 % NIAK_SMOOTH_VOL
 %
+% _________________________________________________________________________
 % COMMENTS
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -77,6 +88,8 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,6 +104,16 @@ gb_list_fields = {'fwhm','voxel_size','flag_verbose','flag_test','folder_out','f
 gb_list_defaults = {[4 4 4],[],1,0,'',0};
 niak_set_defaults
 
+if length(opt.fwhm) == 1
+    opt.fwhm = opt.fwhm * ones([1 3]);
+end
+
+if size(opt.fwhm,1)>size(opt.fwhm,2)
+    opt.fwhm = opt.fwhm';
+end
+
+fwhm = opt.fwhm;
+
 %% Output files
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));
@@ -98,8 +121,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if strcmp(opt.folder_out,'')
@@ -147,7 +171,7 @@ if opt.fwhm ~=0
 
     file_vol_tmp = niak_file_tmp('_vol.mnc');
     file_vol_tmp_s = niak_file_tmp('_blur.mnc');
-    instr_smooth = cat(2,'mincblur -fwhm ',num2str(opt.fwhm),' -no_apodize -clobber ',file_vol_tmp,' ',file_vol_tmp_s(1:end-9));
+    instr_smooth = cat(2,'mincblur -3dfwhm ',num2str(opt.fwhm),' -no_apodize -clobber ',file_vol_tmp,' ',file_vol_tmp_s(1:end-9));
 
     if flag_verbose
         fprintf('Smoothing volume :');
