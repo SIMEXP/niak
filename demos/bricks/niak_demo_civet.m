@@ -1,21 +1,33 @@
-% This is a script to demonstrate the usage of :
-% NIAK_BRICK_CIVET
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_DEMO_CIVET
+%
+% This script is to demonstrate the usage of NIAK_BRICK_CIVET.
 %
 % SYNTAX:
 % Just type in NIAK_DEMO_CIVET 
 %
-% OUTPUT:
+% _________________________________________________________________________
+% OUTPUT
 %
-% This script will clear the workspace !!
 % It will run the CIVET pipeline on the anatomical image of subject
 % 1 (motor condition) and use the default output names in a subfolder anat_subject1.
 %
+% _________________________________________________________________________
+% This script will clear the workspace !!
+%
+% NOTE 1
+% This script will clear the workspace !!
+%
+% NOTE 2
 % Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
+% called GB_NIAK_PATH_DEMO defined in the script NIAK_GB_VARS.
 % 
-% The demo database exists in multiple file formats. By default, it is
-% using 'minc2' files. You can change that by changing the variable
-% GB_NIAK_FORMAT_DEMO in the file NIAK_GB_VARS.
+% NOTE 3
+% The demo database exists in multiple file formats.NIAK looks into the demo 
+% path and is supposed to figure out which format you are intending to use 
+% by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
+% in the script NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -55,6 +67,15 @@ switch gb_niak_format_demo
             str = mkdir(opt.folder_out);
         end
     
+    case 'minc1' % If data are in minc1 format
+        
+        files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
+        opt.folder_out = cat(2,gb_niak_path_demo,filesep,'anat_subject1',filesep); 
+        
+        if ~exist(opt.folder_out)
+            str = mkdir(opt.folder_out);
+        end
+        
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
