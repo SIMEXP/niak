@@ -8,7 +8,7 @@
 % _________________________________________________________________________
 % OUTPUT
 %
-% It will apply a slice timing correction on the functional data of subject
+% It will apply a spatial smoothing on the functional data of subject
 % 1 (motor condition) and use the default output name.
 %
 % _________________________________________________________________________

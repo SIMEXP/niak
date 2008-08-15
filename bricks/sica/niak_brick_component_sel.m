@@ -1,65 +1,86 @@
 function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_COMPONENT_SEL
+%
 % Select independent components based on spatial priors.
 %
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SEL(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_IN  (structure) with the following fields :
+%  * FILES_IN  
+%       (structure) with the following fields :
 %
-%       FMRI (string) the original fMRI 3D+t data
+%       FMRI 
+%           (string) the original fMRI 3D+t data
 %
-%       COMPONENT (string) a 2D text array with the temporal distribution of
-%               sICA.
+%       COMPONENT 
+%           (string) a 2D text array with the temporal distribution of sICA.
 %
-%       MASK (string) a path to a binary mask (the spatial a priori).
+%       MASK 
+%           (string) a path to a binary mask (the spatial a priori).
 %
-%       TRANSFORMATION (string, default identity) a transformation from the
-%           functional space to the mask space.
+%       TRANSFORMATION 
+%           (string, default identity) a transformation from the functional 
+%           space to the mask space.
 %
-% FILES_OUT (string, default <base COMPONENT>_<base MASK>_compsel.dat)
-%           A text file. First column gives the numbers of the selected
-%           components in the order of selection, and the second column
-%           gives the score of selection.
+%  * FILES_OUT 
+%       (string, default <base COMPONENT>_<base MASK>_compsel.dat) A text 
+%       file. First column gives the numbers of the selected components in 
+%       the order of selection, and the second column gives the score of selection.
 %
-% OPT   (structure) with the following fields :
+%  * OPT   
+%       (structure) with the following fields :
 %
-%       NB_CLUSTER (default 0). The number of spatial clusters used in 
-%           stepwise regression. If NB_CLUSTER == 0, the number of clusters
-%           is set to (nb_vox/10), where nb_vox is the number of voxels in
-%           the region.
+%       NB_CLUSTER 
+%           (default 0). The number of spatial clusters used in stepwise 
+%           regression. If NB_CLUSTER == 0, the number of clusters is set 
+%           to (nb_vox/10), where nb_vox is the number of voxels in the 
+%           region.
 %
-%       P (real number, 0<P<1, default 0.001) the p-value of the stepwise
+%       P 
+%           (real number, 0<P<1, default 0.001) the p-value of the stepwise
 %           regression.
 %
-%       NB_SAMPS (default 10) the number of kmeans repetition.
+%       NB_SAMPS 
+%           (default 10) the number of kmeans repetition.
 %
-%       TYPE_SCORE (string, default 'freq') Score function. 'freq' for the
+%       TYPE_SCORE 
+%           (string, default 'freq') Score function. 'freq' for the
 %           frequency of selection of the regressor and 'inertia' for the
 %           relative part of inertia explained by the clusters "selecting"
 %           the regressor.
 %
-%       FOLDER_OUT (string, default: path of FILES_IN.SPACE) If present,
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN.SPACE) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE (boolean, default 1) gives progression infos
+%       FLAG_VERBOSE 
+%           (boolean, default 1) gives progression infos
 %
-%       FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the
 %           brick does not do anything but update the default
 %           values in FILES_IN, FILES_OUT and OPT.
 %
+% _________________________________________________________________________
 % OUTPUTS
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
+% _________________________________________________________________________
 % COMMENTS
+%
 % This brick is using multiple functions from the SICA toolbox, developped
 % by Vincent Perlbarg, LIF Inserm U678, Faculte de medecine
 % Pitie-Salpetriere, Universite Pierre et Marie Curie, France.
 % E-mail: Vincent.Perlbarg@imed.jussieu.fr
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -117,8 +138,9 @@ if isempty(path_s)
     path_s = '.';
 end
 
-if strcmp(ext_s,'.gz')
+if strcmp(ext_s,gb_niak_zip_ext)
     [tmp,name_s,ext_s] = fileparts(name_s);
+    ext_s = cat(2,ext_s,gb_niak_zip_ext);
 end
 
 [path_m,name_m,ext_m] = fileparts(files_in.mask(1,:));
@@ -126,8 +148,9 @@ if isempty(path_m)
     path_m = '.';
 end
 
-if strcmp(ext_m,'.gz')
+if strcmp(ext_m,gb_niak_zip_ext)
     [tmp,name_m,ext_m] = fileparts(name_m);
+    ext_m = cat(2,ext_m,gb_niak_zip_ext);
 end
 
 %% Setting up default output

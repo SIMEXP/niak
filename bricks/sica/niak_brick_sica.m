@@ -1,71 +1,93 @@
 function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_SICA
+%
 % Compute a decomposition of an (individual) fMRI dataset into spatially 
 % independent components.
 %
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SICA(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-% FILES_IN  (string) an fMRI dataset.
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_OUT (structure) with the following fields.  Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is ommited, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted').
+%  * FILES_IN  
+%       (string) an fMRI dataset.
 %
-%       SPACE (string, default <BASE_NAME>_sica_space.mat)
+%  * FILES_OUT 
+%       (structure) with the following fields.  Note that if a field is an 
+%       empty string, a default value will be used to name the outputs. 
+%       If a field is ommited, the output won't be saved at all (this is 
+%       equivalent to setting up the output file names to 
+%       'gb_niak_omitted').
+%
+%       SPACE 
+%           (string, default <BASE_NAME>_sica_space.<EXT>)
 %           a 3D+t dataset. Volume K is the spatial distribution of the Kth
 %           source estimaed through ICA.
 %
-%       TIME (string, default <BASE_NAME>_sica_time.dat)
+%       TIME 
+%           (string, default <BASE_NAME>_sica_time.dat)
 %           a text file. Column Kth is the temporal distribution of the Kth
 %           ica source.
 %
-%       FIGURE (string, default <BASE_NAME>_sica_fig.pdf )
+%       FIGURE 
+%           (string, default <BASE_NAME>_sica_fig.pdf )
 %           a pdf figure showing the spatial distribution of the
 %           components on axial slices after robust correction to normal
 %           distribution, as well as the time, spectral and time frequency
 %           representation of the time component.
 %
-% OPT   (structure) with the following fields :
+%  * OPT   
+%       (structure) with the following fields :
 %
-%       NORM (optional, default 'mean')
+%       NORM 
+%           (optional, default 'mean')
 %           Correction of the time series, possible values :
 %           'mean' (correction to zero mean), 'mean_var' (correction
 %           to zero mean and unit variance), 'mean_var2' (same
 %           as 'mean_var' but slower, yet does not use as much memory).
 %
-%       ALGO (optional, default 'Infomax')
+%       ALGO 
+%           (optional, default 'Infomax')
 %           the type of algorithm to be used for the sica decomposition.
 %           Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
-%       NB_COMP (optional, default min(60,foor(0.95*T)))
+%       NB_COMP 
+%           (optional, default min(60,foor(0.95*T)))
 %           number of components to compute (for default : T is the number
 %           of time samples.
 %
-%       FOLDER_OUT (string, default: path of FILES_IN) If present,
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then
 %           the function prints some infos during the processing.
 %
-%       FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the
 %           brick does not do anything but update the default
 %           values in FILES_IN, FILES_OUT and OPT.
 %
-%
+% _________________________________________________________________________
 % OUTPUTS
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% COMMENTS:
+% _________________________________________________________________________
+% COMMENTS
+%
 % This brick is using multiple functions from the SICA toolbox, developped
 % by Vincent Perlbarg, LIF Inserm U678, Faculte de medecine
 % Pitie-Salpetriere, Universite Pierre et Marie Curie, France.
 % E-mail: Vincent.Perlbarg@imed.jussieu.fr
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -120,8 +142,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if isempty(opt.folder_out)

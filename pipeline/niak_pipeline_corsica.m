@@ -1,59 +1,82 @@
 function pipeline = niak_pipeline_corsica(files_in,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_PIPELINE_CORSICA
+%
 % Build a pipeline structure to apply the CORSICA method for correction of
 % the physiological noise.
 %
-% INPUTS : 
-% FILES_IN  (structure) with the following fields : 
-%       FILES_IN.<SUBJECT>.FMRI (cell of strings) a list of fMRI 
-%           datasets. The field name <SUBJECT> can be any arbitrary string.
-%           All data in FILES_IN.<SUBJECT> should be from the same subject.
+% PIPELINE = NIAK_PIPELINE_CORSICA(FILES_IN,OPT)
 %
-%       FILES_IN.<SUBJECT>.TRANSFORMATION (string, default identity) a 
-%           transformation from the functional space to the "MNI152 non-linear" space.
+% _________________________________________________________________________
+% INPUTS
 %
-% OPT   (structure) with the following fields : 
+%  * FILES_IN  
+%       (structure) with the following fields : 
 %
-%       FOLDER_OUT (string)
-%           where to write the results of the pipeline. For the actual 
-%           content of folder_out, see the internet documentation (http://?.?)
+%       <SUBJECT>.FMRI 
+%           (cell of strings) a list of fMRI datasets. The field name 
+%           <SUBJECT> can be any arbitrary string. All data in 
+%           FILES_IN.<SUBJECT> should be from the same subject.
 %
-%       ENVIRONMENT (string, default current environment) 
-%           Available options : 'matlab', 'octave'. 
-%           The environment where the pipeline will run. 
+%       <SUBJECT>.TRANSFORMATION 
+%           (string, default identity) a transformation from the functional 
+%           space to the "MNI152 non-linear" space.
 %
-%       BRICKS (structure) The fields of OPT.BRICKS depend on the style of 
-%       pre-processing. 
-%       Note that the options will be common to all runs of
-%       all subjects. Subjects with different options need to be processed 
-%       in different pipelines. 
-%       Each field correspond to one brick, which is indicated. 
-%       Please refer to the help of the brick for details. Unless specified,
-%       the fields can be simply omitted, in which case the default options 
-%       are used.
+%  * OPT   
+%       (structure) with the following fields : 
+%
+%       FOLDER_OUT 
+%           (string) where to write the results of the pipeline. For the 
+%           actual content of FOLDER_OUT, see the internet documentation 
+%           (http://?.?)
+%
+%       ENVIRONMENT 
+%           (string, default current environment) Available options : 
+%           'matlab', 'octave'. The environment where the pipeline will run. 
+%
+%       BRICKS 
+%           (structure) The fields of OPT.BRICKS set the options for each
+%           brick used in the pipeline
+%           Note that the options will be common to all runs of all 
+%           subjects. Subjects with different options need to be processed 
+%           in different pipelines. 
+%           Each field correspond to one brick, which is indicated. 
+%           Please refer to the help of the brick for details. Unless 
+%           specified, the fields can be simply omitted, in which case the 
+%           default options are used.
 %   
-%       SICA (structure) options of NIAK_BRICK_SICA
+%           SICA 
+%               (structure) options of NIAK_BRICK_SICA
 %
-%          NB_COMP (integer) the number of components (default 60).
+%               NB_COMP 
+%                   (integer) the number of components (default 60).
 %
-%       COMPONENT_SEL (structure) options of NIAK_BRICK_COMPONENT_SEL.
+%           COMPONENT_SEL 
+%               (structure) options of NIAK_BRICK_COMPONENT_SEL.
 %
-%       COMPONENT_SUPP (structure) options of NIAK_BRICK_COMPONENT_SUPP.
+%           COMPONENT_SUPP 
+%               (structure) options of NIAK_BRICK_COMPONENT_SUPP.
 %
-%          THRESHOLD (scalar, default 0.15) a threshold to apply on the score for
-%              suppression (scores above the thresholds are selected). 
-%              If the threshold is -Inf, all components will be suppressed. If
-%              the threshold is Inf, an adaptative method based on the Otsu
-%              algorithm will be applied to select the threshold
-%              automatically.
+%               THRESHOLD 
+%                   (scalar, default 0.15) a threshold to apply on the 
+%                   score for suppression (scores above the thresholds are 
+%                   selected). If the threshold is -Inf, all components 
+%                   will be suppressed. If the threshold is Inf, an 
+%                   adaptative method based on the Otsu algorithm will be 
+%                   applied to select the threshold automatically.
 %
-%  OUTPUTS : 
+% _________________________________________________________________________
+% OUTPUTS
 %
-%  PIPELINE (structure) describe all jobs that need to be performed in the
-%           pipeline. This structure is meant to be use in the function
-%           NIAK_INIT_PIPELINE.
+%  * PIPELINE 
+%       (structure) describe all jobs that need to be performed in the
+%       pipeline. This structure is meant to be use in the function
+%       NIAK_INIT_PIPELINE.
 %
-%  NOTES :
+% _________________________________________________________________________
+% COMMENTS
+%
 %  The steps of the pipeline are the following :
 %  
 %       1.  Individual spatial independent component of each functional
@@ -67,6 +90,7 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %          each run, where the effect of the selected independent components
 %          has been removed. 
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

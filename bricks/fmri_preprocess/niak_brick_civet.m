@@ -159,6 +159,10 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 % _________________________________________________________________________
 % COMMENTS
 %
+% The outputs of the CIVET pipeline will never be zipped, even if the
+% inputs were zipped. That's a bit tough, but zipping the minc outputs is 
+% simply too much work. 
+%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -233,8 +237,7 @@ if ~flag_civet
     end
 
     if strcmp(ext_anat,gb_niak_zip_ext)
-        [tmp,name_anat,ext_anat] = fileparts(name_anat);
-        ext_anat = cat(2,ext_anat,gb_niak_zip_ext);
+        [tmp,name_anat,ext_anat] = fileparts(name_anat);        
         flag_zip = 1;
     else
         flag_zip = 0;
@@ -369,7 +372,7 @@ if ~flag_civet
     %% civet-compliant name.
     flag = niak_mkdir(civet_folder);
     if flag_zip
-        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc.gz'))
+        [succ,msg] = system(cat(2,'cp ',files_in.anat,gb_niak_zip_ext,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext))
         if succ~=0
             error(msg);
         end

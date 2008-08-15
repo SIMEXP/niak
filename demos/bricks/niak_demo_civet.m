@@ -11,7 +11,8 @@
 % OUTPUT
 %
 % It will run the CIVET pipeline on the anatomical image of subject
-% 1 (motor condition) and use the default output names in a subfolder anat_subject1.
+% 1 and use the default output names in a subfolder anat_subject1 created
+% in the path of the demo data.
 %
 % _________________________________________________________________________
 % This script will clear the workspace !!

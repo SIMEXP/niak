@@ -1,53 +1,76 @@
 function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_COMPONENT_SUPP
+%
 % Suppress some ica components from an fMRI dataset.
 %
-% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SUPP(FILES_IN,FILES_OUT,OPT)
 %
-% FILES_IN  (structure) with the following fields :
+% _________________________________________________________________________
+% INPUT
 %
-%       FMRI (string) 
+%  * FILES_IN  
+%       (structure) with the following fields :
+%
+%       FMRI 
+%           (string) 
 %           the original fMRI 3D+t data
 %
-%       SPACE (string)
+%       SPACE 
+%           (string)
 %           a 3D+t dataset. Volume K is the spatial distribution of the Kth
 %           source estimaed through ICA.
 %
-%       TIME (string)
+%       TIME 
+%           (string)
 %           a text file. Column Kth is the temporal distribution of the Kth
 %           ica source.
 %
-%       COMPSEL (cell of strings)
+%       COMPSEL 
+%           (cell of strings)
 %           Each entry of COMPSEL is a file of component selection 
 %           (see NIAK_BRICK_COMPONENT_SEL). It is a text file where the
 %           first column is the number of the component, and optionally the
 %           second column is a score.
 %
-% FILES_OUT (string, default <BASE FMRI>_p.<EXT FMRI>) file name for the fMRI data after component
-%           suppression.
+%  * FILES_OUT 
+%           (string, default <BASE FMRI>_p.<EXT FMRI>) 
+%           file name for the fMRI data after component suppression.
 %
-% OPT   (structure) with the following fields (any omitted field will be
-%           set to default value if possible, and will produce an error
-%           otherwise) :
+%  * OPT   
+%       (structure) with the following fields (any omitted field will be
+%       set to default value if possible, and will produce an error
+%       otherwise) :
 %
-%       THRESHOLD (scalar, default 0.15) a threshold to apply on the score for
-%          suppression (scores above the thresholds are selected). 
-%          If the threshold is -Inf, all components will be suppressed. If
-%          the threshold is Inf, an adaptative method based on the Otsu
-%          algorithm will be applied to select the threshold
-%          automatically.
+%       THRESHOLD 
+%           (scalar, default 0.15) 
+%           a threshold to apply on the score for suppression (scores 
+%           above the thresholds are selected). If the threshold is -Inf, 
+%           all components will be suppressed. If the threshold is Inf, an 
+%           adaptative method based on the Otsu algorithm will be applied 
+%           to select the threshold automatically.
 %
-%       FOLDER_OUT (string, default: path of FILES_IN.SPACE) If present,
-%           all default outputs will be created in the folder FOLDER_OUT.
-%           The folder needs to be created beforehand.
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN.SPACE) 
+%           If present, all default outputs will be created in the folder 
+%           FOLDER_OUT. The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE (boolean, default 1) gives progression infos
+%       FLAG_VERBOSE 
+%           (boolean, default 1) gives progression infos
 %
-%       FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the
 %           brick does not do anything but update the default
 %           values in FILES_IN, FILES_OUT and OPT.
 %
+% _________________________________________________________________________
+% OUTPUTS
+%
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
+%
+% _________________________________________________________________________
 % COMMENTS :
 %
 % This brick is using multiple functions from the SICA toolbox, developped
@@ -78,6 +101,8 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+niak_gb_vars % Importing important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -110,8 +135,9 @@ if isempty(path_s)
     path_s = '.';
 end
 
-if strcmp(ext_s,'.gz')
+if strcmp(ext_s,gb_niak_zip_ext)
     [tmp,name_s,ext_s] = fileparts(name_s);
+    ext_s = cat(2,ext_s,gb_niak_zip_ext);
 end
 
 %% Setting up default output
