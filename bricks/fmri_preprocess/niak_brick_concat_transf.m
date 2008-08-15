@@ -1,33 +1,49 @@
 function [files_in,files_out,opt] = niak_brick_concat_transf(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_CONCAT_TRANSF
+%
 % Concatenate multiple transformations in xfm format.
 %
 % SYNTAX:
 %   [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CONCAT_TRANSF(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-%   FILES_IN (cell of strings) FILES_IN{I} is the name of the Ith
-%     transformation file in xfm format.
+% _________________________________________________________________________
+% INPUTS
 %
-%   FILES_OUT  (string) the concatenated transformation.
+%  * FILES_IN 
+%       (cell of strings) FILES_IN{I} is the name of the Ith transformation 
+%       file in xfm format.
 %
-%   OPT   (structure) with the following fields:
+%  * FILES_OUT  
+%       (string) the concatenated transformation.
 %
-%       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN and FILES_OUT.
+%  * OPT   
+%       (structure) with the following fields:
 %
-% OUTPUTS:
+%       FLAG_TEST 
+%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN, 
+%           FILES_OUT and OPT.
+%
+% _________________________________________________________________________
+% OUTPUTS
+%
 %   The structures FILES_IN, FILES_OUT and OPT are updated with default
 %   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% SEE ALSO:
+% _________________________________________________________________________
+% SEE ALSO
 %
+% NIAK_TRANSF2PARAM, NIAK_PARAM2TRANSF
+%
+% _________________________________________________________________________
 % COMMENTS
 %
 % If f(I) is the Ith transformation, the concantenated transformation is
 % f(end)(...(f(1))...).
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
