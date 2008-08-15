@@ -115,6 +115,8 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -138,8 +140,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if isempty(opt.folder_out)
