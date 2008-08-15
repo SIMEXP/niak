@@ -1,29 +1,46 @@
 function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_PIPELINE_FMRI_PREPROCESS
+%
 % Build a pipeline structure to preprocess an fMRI
 % database. Mutliple preprocessing "styles" are available, depending on the
 % analysis planned afterwards, and the amount of generated outputs can be adjusted.
 %
-% INPUTS : 
-% FILES_IN  (structure) with the following fields : 
-%       FILES_IN.<SUBJECT>.FMRI.<SESSION>   (cell of strings) a list of fMRI 
-%           datasets, acquired in the same session (small displacements). 
-%           The field names <SUBJECT> and <SESSION> can be any arbitrary strings.
+% SYNTAX:
+% PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT)
+%
+% _________________________________________________________________________
+% INPUTS
+%
+%  * FILES_IN  
+%       (structure) with the following fields : 
+%
+%       <SUBJECT>.FMRI.<SESSION>   
+%           (cell of strings) a list of fMRI datasets, acquired in the same 
+%           session (small displacements). 
+%           The field names <SUBJECT> and <SESSION> can be any arbitrary 
+%           strings.
 %           All data in FILES_IN.<SUBJECT> should be from the same subject.
+%           See NIAK_READ_VOL for supported data formats.
 %
-%       FILES_IN.<SUBJECT>.ANAT (string) anatomical volume, from the same
-%           subject as in FILES_IN.<SUBJECT>.FMRI
+%       <SUBJECT>.ANAT 
+%           (string) anatomical volume, from the same subject as in 
+%           FILES_IN.<SUBJECT>.FMRI
 %
-% OPT   (structure) with the following fields : 
-%       STYLE (string) 
-%           possible values : ‘fmristat’, ‘standard-native’,
+%  * OPT   
+%       (structure) with the following fields : 
+%
+%       STYLE 
+%           (string) possible values : ‘fmristat’, ‘standard-native’,
 %           ‘standard-stereotaxic’.
 %           Select the "style" of preprocessing, i.e. the exact series of 
 %           processing steps that will be applied to the data. See the
 %           NOTES at the end of this documentation.
 %
-%       SIZE_OUTPUTS (string, default 'quality_control') 
-%           possible values : ‘minimum’, 'quality_control’, ‘all’.
+%       SIZE_OUTPUTS 
+%           (string, default 'quality_control') possible values : 
+%           ‘minimum’, 'quality_control’, ‘all’.
 %           The quantity of intermediate results that are generated. For a 
 %           detailed list of outputs in each mode, see the internet
 %           documentation (http://?.?)
@@ -35,80 +52,92 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           * With the option ‘all’, all possible outputs are generated at 
 %              each stage of the pipeline. 
 %       
-%       FOLDER_OUT (string)
-%           where to write the results of the pipeline. For the actual 
-%           content of folder_out, see the internet documentation (http://?.?)
+%       FOLDER_OUT 
+%           (string) where to write the results of the pipeline. For the 
+%           actual content of folder_out, see the internet 
+%           documentation (http://?.?)
 %
-%       ENVIRONMENT (string, default 'octave') 
-%           Available options : 'matlab', 'octave'. 
-%           The environment where the pipeline will run. 
+%       ENVIRONMENT 
+%           (string, default current environment) Available options : 
+%           'matlab', 'octave'. The environment where the pipeline will run. 
 %
-%       BRICKS (structure) The fields of OPT.BRICKS depend on the style of 
-%       pre-processing. 
-%       Note that the options will be common to all runs, all sessions and 
-%       all subjects. Subjects with different options need to be processed 
-%       in different pipelines. 
-%       The following fields are common to all styles. Each field
-%       correspond to one brick, which is indicated. Please refer to the
-%       help of the brick for detail. Unless specified, the fields can be
-%       simply omitted, in which case the default options are used.
+%       BRICKS 
+%           (structure) The fields of OPT.BRICKS depend on the style of 
+%           pre-processing. 
+%           Note that the options will be common to all runs, all sessions 
+%           and all subjects. Subjects with different options need to be 
+%           processed in different pipelines. 
+%
+%           The following fields are common to all styles. Each field
+%           correspond to one brick, which is indicated. Please refer to the
+%           help of the brick for detail. Unless specified, the fields can be
+%           simply omitted, in which case the default options are used.
 %       
-%          MOTION_CORRECTION (structure) options of
-%               NIAK_BRICK_MOTION_CORRECTION 
+%           MOTION_CORRECTION 
+%               (structure) options of NIAK_BRICK_MOTION_CORRECTION 
 %       
-%          CIVET (structure) Options of NIAK_BRICK_CIVET, the brick of 
+%          CIVET 
+%               (structure) Options of NIAK_BRICK_CIVET, the brick of 
 %               spatial normalization (non-linear transformation of T1 image 
 %               in the stereotaxic space). If OPT.CIVET.CIVET is used to 
 %               specify the use of previously generated data, there is no need 
 %               to fill the subfields OPT.CIVET.CIVET.ID. The subject ids will 
 %               be assumed to match the field names <SUBJECT> in FILES_IN. 
-%               It is still necessay to specify OPT.CIVET.CIVET.PREFIX and 
-%               OPT.CIVET.CIVET.FOLDER though.
+%               It would still necessay to specify OPT.CIVET.CIVET.PREFIX and 
+%               OPT.CIVET.CIVET.FOLDER though. 
 %
-%         COREGISTER (structure) options of NIAK_BRICK_COREGISTER 
+%         COREGISTER 
+%               (structure) options of NIAK_BRICK_COREGISTER 
 %               (coregistration between T1 and T2).
 %
-%         SMOOTH_VOL (structure) options of NIAK_BRICK_SMOOTH_VOL (spatial
+%         SMOOTH_VOL 
+%               (structure) options of NIAK_BRICK_SMOOTH_VOL (spatial
 %               smoothing).
 %
 %         The Following additional fields have (or can) be used if the
 %         preprocessing style is 'standard-native' or 'standard-stereotaxic':
 %
-%         SLICE_TIMING (structure) options of NIAK_BRICK_SLICE_TIMING
-%              (correction of slice timing effects). The following fields
-%              need to be specified :
+%         SLICE_TIMING 
+%               (structure) options of NIAK_BRICK_SLICE_TIMING
+%               (correction of slice timing effects). The following fields
+%               need to be specified :
 %
-%            SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
-%                that the kth slice was acquired in ith position. The
-%                order of the slices is assumed to be the same in all
-%                volumes.
-%                ex : slice_order = [1 3 5 2 4 6]
-%                    for 6 slices acquired in 'interleaved' mode,
-%                    starting by odd slices(slice 5 was acquired in 3rd 
-%                    position).
+%               SLICE_ORDER 
+%                   (vector of integer) SLICE_ORDER(i) = k means that the 
+%                   kth slice was acquired in ith position. The order of 
+%                   the slices is assumed to be the same in all volumes.
+%                   ex : slice_order = [1 3 5 2 4 6] for 6 slices acquired 
+%                   in 'interleaved' mode, starting by odd slices (slice 5 
+%                   was acquired in 3rd position).
 % 
-%            TIMING		(vector 2*1) 
-%                TIMING(1) : time between two slices
-%                TIMING(2) : time between last slice and next volume
+%               TIMING		
+%                   (vector 2*1) 
+%                   TIMING(1) : time between two slices
+%                   TIMING(2) : time between last slice and next volume
 %
-%         TIME_FILTER (structure) options of NIAK_BRICK_TIME_FILTER
-%           (temporal filtering).
+%         TIME_FILTER 
+%               (structure) options of NIAK_BRICK_TIME_FILTER (temporal 
+%               filtering).
 %
 %         The Following additional field can be used if the 
 %         preprocessing style is 'standard-stereotaxic':
 %
-%         RESAMPLE_VOL (structure) options of NIAK_BRICK_RESAMPLE_VOL
-%           (spatial resampling in the stereotaxic space).
+%         RESAMPLE_VOL 
+%               (structure) options of NIAK_BRICK_RESAMPLE_VOL
+%               (spatial resampling in the stereotaxic space).
 %
+% _________________________________________________________________________
+% OUTPUTS : 
 %
-%  OUTPUTS : 
+%  * PIPELINE 
+%       (structure) describe all jobs that need to be performed in the
+%       pipeline. This structure is meant to be use in the function
+%       NIAK_INIT_PIPELINE.
 %
-%  PIPELINE (structure) describe all jobs that need to be performed in the
-%           pipeline. This structure is meant to be use in the function
-%           NIAK_INIT_PIPELINE.
+% _________________________________________________________________________
+% NOTES
 %
-%  NOTES :
-%  The steps of the pipeline are the following :
+% The steps of the pipeline are the following :
 %  
 %  * style 'fmristat' :
 %       1.  Motion correction (within- and between-run for each subject).
@@ -143,6 +172,11 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           transformations.
 %       8.  Resampling of the functional data in the stereotaxic space.
 %
+% The exact list of outputs generated by the pipeline depend on the
+% pipeline style and the OPT.SIZE_OUTPUTS field. See the internet
+% documentation at http://?.? for details.
+%
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

@@ -1,30 +1,27 @@
 function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt)
-% *************************************************************************
+%
+% _________________________________________________________________________
 % SUMMARY NIAK_BRICK_GLM_LEVEL1
-% *************************************************************************
+%
 % Fit a linear model to an individual run of fMRI time series data.
 %
 % The method is based on linear models with correlated AR(p) errors:
 % Y = hrf*X b + e, e_t=a_1 e_(t-1) + ... + a_p e_(t-p) + white noise_t.
 %
-% *************************************************************************
-% SYNTAX
-% *************************************************************************
-%
+% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_GLM_LEVEL1(FILES_IN,FILES_OUT,OPT)
 %
-% *************************************************************************
+% _________________________________________________________________________
 % INPUTS
-% *************************************************************************
 %
-% FILES_IN  
-%     (structure) with the following fields :
+%  * FILES_IN  
+%       (structure) with the following fields :
 %
-%     FMRI 
+%       FMRI 
 %           (string) an fMRI dataset. See NIAK_READ_VOL for supported
 %           formats.
 %     
-%     DESIGN 
+%       DESIGN 
 %           (string) a MAT file containing a unique variable X_CACHE.
 %           This structure describes the covariates of the model.
 %           See the help of FMRIDESIGN in the fMRIstat toolbox.
@@ -33,16 +30,14 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           See http://www.math.mcgill.ca/keith/fmristat/#making for an 
 %           example of design.
 %
-% *************************************************************************
+%  * FILES_OUT 
+%       (structure) with the following fields. Note that if
+%       a field is an empty string, a default value will be used to
+%       name the outputs. If a field is omitted, the output won't be
+%       saved at all (this is equivalent to setting up the output file
+%       names to 'gb_niak_omitted').
 %
-% FILES_OUT 
-%     (structure) with the following fields. Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is omitted, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted').
-%
-%     DF    
+%       DF    
 %           (string, default <BASE NAME>_df.mat)
 %           a mat file containing a structure called DF:
 %           DF.t are the effective df's of the T statistics,
@@ -50,72 +45,73 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           DF.resid is the least-squares degrees of freedom of the residuals,
 %           DF.cor is the effective df of the temporal correlation model.
 %
-%     SPATIAL_AV 
+%       SPATIAL_AV 
 %           (string, default <BASE NAME>_spatial_av.mat)
 %           column vector of the spatial average (SPATIAL_AV) 
 %           of the frames weighted by the first non-excluded frame.
 %
-%     MAG_T 
+%       MAG_T 
 %           (cell of strings, default <BASE NAME>_<CONTRAST NAME>_mag_t<EXT>)
 %           Each entry is a T statistic image =ef/sd for magnitudes associated 
 %           with a contrast. 
 %           If T > 100, T = 100.
 %     
-%     DEL_T 
+%       DEL_T 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_t<EXT>)
 %           T statistic image =ef/sd for delays. Delays are shifts of the 
 %           time origin of the HRF, measured in seconds. Note that you 
 %           cannot estimate delays of the trends or confounds. 
 %
-%     MAG_EF 
+%       MAG_EF 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_ef<EXT>)
 %           effect (b) image for magnitudes.
 %     
-%     DEL_EF 
+%       DEL_EF 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_ef<EXT>)
 %           effect (b) image for delays.
 %
-%     MAG_SD 
+%       MAG_SD 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_sd<EXT>)
 %           standard deviation of the effect for magnitudes. 
 %
-%     DEL_SD 
+%       DEL_SD 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_sd<EXT>)
 %           standard deviation of the effect for delays.
 %
-%     MAG_F 
+%       MAG_F 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_F<EXT>)
 %            F-statistic for test of magnitudes of all rows of OPT.CONTRAST 
 %            selected by _mag_F. The degrees of freedom are DF.F. If F > 
 %            1000, F = 1000. F statistics are not yet available for delays.
 %
-%     FWHM 
+%       FWHM 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_fwhm<EXT>)
-%         FWHM information:
-%         Frame 1: effective FWHM in mm of the whitened residuals,
-%         as if they were white noise smoothed with a Gaussian filter 
-%         whose fwhm was FWHM. FWHM is unbiased so that if it is smoothed  
-%         spatially then it remains unbiased. If FWHM > 50, FWHM = 50.
-%         Frame 2: resels per voxel, again unbiased.
-%         Frames 3,4,5: correlation of adjacent resids in x,y,z directions.
+%           FWHM information:
+%           Frame 1: effective FWHM in mm of the whitened residuals,
+%           as if they were white noise smoothed with a Gaussian filter 
+%           whose fwhm was FWHM. FWHM is unbiased so that if it is smoothed  
+%           spatially then it remains unbiased. If FWHM > 50, FWHM = 50.
+%           Frame 2: resels per voxel, again unbiased.
+%           Frames 3,4,5: correlation of adjacent resids in x,y,z directions.
 %
-%     COR  
+%       COR  
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_cor<EXT>)
 %           The temporal autocorrelation(s).
 %
-%     RESID  
+%       RESID  
 %           (string, default <BASE NAME>_resid<EXT>)
 %           the residuals from the model, only for non-excluded frames.
 %
-%     WRESID 
+%       WRESID 
 %           (string, default <BASE NAME>_wresid<EXT>)
 %           the whitened residuals from the model normalized by dividing
 %           by their root sum of squares, only for non-excluded frames.
 %
-%     AR (string, default <BASE NAME>_AR<EXT>)
-%           the AR parameter(s) a_1 ... a_p.
+%       AR 
+%           (string, default <BASE NAME>_AR<EXT>) the AR parameter(s) 
+%           a_1 ... a_p.
 %
-% *************************************************************************
+% _________________________________________________________________________
 % OPT   
 %     (structure) with the following fields.
 %     Note that if a field is omitted, it will be set to a default
@@ -240,20 +236,24 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %           update the default values in FILES_IN, FILES_OUT and OPT.
 %
 %
-% *************************************************************************
+% _________________________________________________________________________
 % OUTPUTS
-% *************************************************************************
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% *************************************************************************
+% _________________________________________________________________________
 % COMMENTS
-% *************************************************************************
 %
+% NOTE 1:
 % This brick is a "NIAKized" overlay of the FMRILM function from the
 % fMRIstat toolbox by Keith Worsley :
 % http://www.math.mcgill.ca/keith/fmristat/
+%
+% NOTE 2: 
+% In its current version, this brick does not produce zipped outputs, even
+% if the inputs were zipped. This should not be a problem as the outputs of
+% FMRILM are not that big.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -278,6 +278,8 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -340,8 +342,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    flag_zip = 1;
 end
 
 if isempty(opt.folder_out)
@@ -370,6 +373,7 @@ which_stats = '';
 
 for num_l = 1:length(list_outputs)
 
+    %% Build the default output name for the NIAK and FMRILM outputs
     str_tmp = cell([nb_cont 1]);
     str_tmp2 = cell([nb_cont 1]);
     for num_c = 1:nb_cont
@@ -379,24 +383,19 @@ for num_l = 1:length(list_outputs)
 
     field_name = lower(list_outputs{num_l}(2:end));
     if strcmp(getfield(files_out,field_name),'')
-        files_out = setfield(files_out,field_name,str_tmp);
+        files_out = setfield(files_out,field_name,str_tmp);        
+    end
+    
+    %% If the output name is 'gb_niak_omitted' (or actully any string),
+    %% do not generate this output
+    if ~ischar(getfield(files_out,field_name))
         which_stats = cat(2,which_stats,' ',list_outputs{num_l});
     end
+    
     files_fmri = setfield(files_fmri,field_name,str_tmp2);
 
 end
 files_fmri = rmfield(files_fmri,'tmp');
-
-% %% Other outputs (do not depend on the contrast)
-% list_outputs = {'_resid','_wresid','_ar'};
-% for num_l = 1:length(list_outputs)
-%     field_name = lower(list_outputs{num_l}(2:end));
-%     if strcmp(getfield(files_out,field_name),'')
-%         files_out = setfield(files_out,field_name,cat(2,folder_f,name_f,'_resid',ext_f));
-%         which_stats = cat(2,which_stats,' ',list_outputs{num_l});
-%     end
-%     files_fmri = setfield(files_fmri,field_name,cat(2,folder_fmri,name_f,list_outputs{num_l},ext_f));
-% end
 
 if flag_test == 1
     rmdir(folder_fmri);
@@ -410,6 +409,19 @@ end
 flag_exist = exist('fmrilm');
 if ~(flag_exist==2)
     error('I could not find the FMRILM function of the fMRIstat package. Instructions for installation can be found at http://www.math.mcgill.ca/keith/fmristat/')
+end
+
+%% Input file
+
+if flag_zip
+    file_input = niak_file_tmp(cat(2,'_func.mnc',gb_niak_zip_ext));
+    instr_cp = cat(2,'cp ',files_in.fmri,' ',file_input);
+    system(instr_cp);
+    instr_unzip = cat(2,gb_niak_unzip,' ',file_input);
+    system(instr_unzip);
+    file_input = file_input(1:end-length(gb_niak_zip_ext));
+else
+    file_input = files_in.fmri;
 end
 
 %% output base name
@@ -442,7 +454,7 @@ for num_c = 1:nb_cont
 end
 
 %% Actual call to fmrilm   
-[df,spatial_av] = fmrilm(files_in.fmri,output_file_base,design.X_cache,mat_contrast,exclude,which_stats,fwhm_cor,[nb_trends_temporal nb_trends_spatial pcnt],confounds,[],num_hrf_bases,basis_type,numlags,df_limit);
+[df,spatial_av] = fmrilm(file_input,output_file_base,design.X_cache,mat_contrast,exclude,which_stats,fwhm_cor,[nb_trends_temporal nb_trends_spatial pcnt],confounds,[],num_hrf_bases,basis_type,numlags,df_limit);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Moving outputs to the right folder %%%
@@ -496,3 +508,6 @@ end
     
 %% Deleting temporary files
 system(cat(2,'rm -rf ',folder_fmri));
+if flag_zip
+    delete(file_input);
+end
