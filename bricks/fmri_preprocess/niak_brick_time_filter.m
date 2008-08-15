@@ -1,110 +1,121 @@
 function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt)
 
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_TIME_FILTER
+%
 % Perform time high-pass and low-pass filtering using linear fitting of
 % a discrete cosine basis. 
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-% FILES_IN        (string OR array of strings) a file name of a 3D+t dataset OR
-%                       an array of strings where each line is a file name
-%                       of 3D data, all in the same space.
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_OUT       (structure) with the following fields.  Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is ommited, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted'). 
+%  * FILES_IN        
+%       (string OR array of strings) a file name of a 3D+t dataset OR an 
+%       array of strings where each line is a file name of 3D data, all in 
+%       the same space.
+%
+%  * FILES_OUT
+%       (structure) with the following fields.  Note that if a field is an 
+%       empty string, a default value will be used to name the outputs. 
+%       If a field is ommited, the output won't be saved at all (this is 
+%       equivalent to setting up the output file names to 
+%       'gb_niak_omitted'). 
 %                       
-%                 FILTERED_DATA (string or array of strings, default <FILES_IN>_F) File names for outputs. NOTE that
-%                       if FILTERED_DATA does not exist, or if it is an empty string, the name 
-%                       of the outputs will be the same as the inputs, 
-%                       with a '_f' suffix added at the end.
+%       FILTERED_DATA 
+%           (string or array of strings, default <FILES_IN>_F.<EXT>) 
+%           File names for outputs. 
 %
-%                 BETA_HIGH (string or array of strings, default <FILES_IN>_BETA_HIGH) File name 
-%                       for the volumes of the regression coeffients in high
-%                       frequency. If this field is ommited, the
-%                       volumes will not be saved. If it is empty, the
-%                       default name will be applied.
-%                       Tip : In ANLYZE 7.5 format, a file name needs to be specified for each
-%                       DC. You can use the function NIAK_BUILD_DC to
-%                       determine how many high-frequency DC there will be,
-%                       OR you can specify one string ending by '_'. File
-%                       names with suffix '000<i>.ext' will be automatically
-%                       generated.
+%       BETA_HIGH 
+%           (string or array of strings, default <FILES_IN>_BETA_HIGH.<EXT>) 
+%           File name for the volumes of the regression coeffients in high
+%           frequency. 
+%           Tip : In ANLYZE 7.5 format, a file name needs to be specified 
+%           for each DC. You can use the function NIAK_BUILD_DC to 
+%           determine how many high-frequency DC there will be, OR you can 
+%           specify one string ending by '_'. File names with suffix 
+%           '000<i>.ext' will be automatically generated.
 %
-%                 BETA_LOW (string or array of strings, default <FILES_IN>_BETA_LOW) File name 
-%                       for the volumes of the regression coeffients in low
-%                       frequency. If this field is ommited, the
-%                       volumes will not be saved. If it is empty, the
-%                       default name will be applied.
-%                       Tip : In ANLYZE 7.5 format, a file name needs to be specified for each
-%                       DC. You can use the function NIAK_BUILD_DC to
-%                       determine how many low-frequency DC there will be,
-%                       OR you can specify one string ending by '_'. File
-%                       names with suffix '000<i>.ext' will be automatically
-%                       generated.
+%       BETA_LOW 
+%           (string or array of strings, default <FILES_IN>_BETA_LOW.<EXT>) 
+%           File name for the volumes of the regression coeffients in low
+%           frequency. Tip : In ANLYZE 7.5 format, a file name needs to be 
+%           specified for each DC. You can use the function NIAK_BUILD_DC 
+%           to determine how many low-frequency DC there will be, OR you 
+%           can specify one string ending by '_'. File names with suffix 
+%           '000<i>.ext' will be automatically generated.
 %
-%                 DC_HIGH (string, default <FILES_IN>_DC_HIGH.DAT) File name 
-%                       for the matrix of high frequency discrete cosine.
-%                       The matrix is saved in text format with 5 decimals.
-%                       The first line defines the frequency associated
-%                       with each cosine. If this field is ommited, the
-%                       volumes will not be saved. If it is empty, the
-%                       default name will be applied.
+%       DC_HIGH 
+%           (string, default <FILES_IN>_DC_HIGH.DAT) File name for the 
+%           matrix of high frequency discrete cosine. The matrix is saved 
+%           in text format with 5 decimals. The first line defines the 
+%           frequency associated with each cosine. 
 %
-%                 DC_LOW (string, default <FILES_IN>_DC_LOW.DAT) File name 
-%                       for the matrix of low frequency discrete cosine.
-%                       The matrix is saved in text format with 5 decimals.
-%                       The first line defines the frequency associated
-%                       with each cosine. If this field is ommited, the
-%                       volumes will not be saved. If it is empty, the
-%                       default name will be applied.
+%       DC_LOW 
+%           (string, default <FILES_IN>_DC_LOW.DAT) 
+%           File name for the matrix of low frequency discrete cosine. The 
+%           matrix is saved in text format with 5 decimals. The first line 
+%           defines the frequency associated with each cosine. 
 %                 
-%                 VAR_HIGH (string, default <FILES_IN>_VAR_HIGH) File name for the volume of percentage of variance in
-%                       high frequencies. If this field is ommited, the
-%                       volume will not be saved. If it is empty, the
-%                       default name will be applied.
+%       VAR_HIGH 
+%           (string, default <FILES_IN>_VAR_HIGH.<EXT>) 
+%           File name for the volume of percentage of variance in high 
+%           frequencies. If this field is ommited, the volume will not be 
+%           saved. If it is empty, the default name will be applied.
 %
-%                 VAR_LOW (string, default <FILES_IN>_VAR_LOW) File name for the volume of percentage of variance in
-%                       low frequencies. If this field is ommited, the
-%                       volume will not be saved. If it is empty, the
-%                       default name will be applied.
+%       VAR_LOW 
+%           (string, default <FILES_IN>_VAR_LOW.<EXT>) 
+%           File name for the volume of percentage of variance in low 
+%           frequencies. If this field is ommited, the volume will not be 
+%           saved. If it is empty, the default name will be applied.
 %
-% OPT           (structure) with the following fields:
+%  * OPT           
+%       (structure) with the following fields:
 %
-%                FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
-%                    brick does not do anything but update the default 
-%                    values in FILES_IN and FILES_OUT.
+%       FLAG_TEST 
+%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN, 
+%           FILES_OUT and OPT.
 %
-%                HP (real, default: 0.01) the cut-off frequency for high pass
-%                    filtering. opt.hp = -Inf means no high-pass filtering.
+%       HP 
+%           (real, default: 0.01) the cut-off frequency for high pass
+%           filtering. opt.hp = -Inf means no high-pass filtering.
 %
-%                LP (real, default: Inf) the cut-off frequency for low pass
-%                    filtering. opt.lp = Inf means no low-pass filtering.
+%       LP 
+%           (real, default: Inf) the cut-off frequency for low pass 
+%           filtering. opt.lp = Inf means no low-pass filtering.
 %
-%                FLAG_ZIP   (boolean, default: 0) if FLAG_ZIP equals 1, an
-%                   attempt will be made to zip the outputs.
+%       FLAG_ZIP   
+%           (boolean, default: 0) if FLAG_ZIP equals 1, an attempt will be 
+%           made to zip the outputs.
 %
-%                FOLDER_OUT (string, default: path of FILES_IN) If present,
-%                    all default outputs will be created in the folder FOLDER_OUT.
-%                    The folder needs to be created beforehand.
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present, all default 
+%           outputs will be created in the folder FOLDER_OUT. The folder 
+%           needs to be created beforehand.
 %
-%                TR (real, default : use image information) the repetition 
-%                    time of the time series (s) which is the inverse of the 
-%                    sampling frequency (Hz). Specify a value here only if
-%                    you want to override the information in the image, or
-%                    if you are using an image format where this
-%                    information is absent, i.e. analyze.
+%       TR 
+%           (real, default : use image information) the repetition time of 
+%           the time series (s) which is the inverse of the sampling 
+%           frequency (Hz). Specify a value here only if you want to 
+%           override the information in the image, or if you are using an 
+%           image format where this information is absent, i.e. analyze.
 %               
-% OUTPUTS:
+% _________________________________________________________________________
+% OUTPUTS
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%              
-% SEE ALSO:
+%
+% _________________________________________________________________________
+% SEE ALSO
+%
 % NIAK_FILTER_TSERIES, NIAK_DEMO_FILTER
 %
+% _________________________________________________________________________
 % COMMENTS
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
@@ -130,6 +141,8 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+niak_gb_vars; % load important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -157,8 +170,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if strcmp(opt.folder_out,'')

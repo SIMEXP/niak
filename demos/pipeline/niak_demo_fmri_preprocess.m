@@ -50,6 +50,16 @@ niak_gb_vars
 
 switch gb_niak_format_demo
     
+    case 'minc1' % If data are in minc1 format
+        
+        %% Subject 1
+        files_in.subject1.fmri.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz')};
+        files_in.subject1.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');       
+        
+        %% Subject 2
+        files_in.subject2.fmri.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc.gz')};
+        files_in.subject2.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject2.mnc.gz');   
+        
     case 'minc2' % If data are in minc2 format
         
         %% Subject 1

@@ -27,6 +27,7 @@
 % by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
 % in the script NIAK_GB_VARS.
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.

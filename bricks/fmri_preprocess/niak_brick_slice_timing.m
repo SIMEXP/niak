@@ -1,86 +1,96 @@
 function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_SLICE_TIMING
+%
 % Correct for differences in slice timing in a 4D fMRI acquisition via
 % temporal interpolation
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
 %
-% INPUTS:
-% FILES_IN        (string) a file name of a 3D+t dataset .
+% _________________________________________________________________________
+% INPUTS
 %
-% FILES_OUT       (string, default <BASE_NAME>_a.<EXT>) File name for outputs. 
-%                       If FILES_OUT is an empty string, the name 
-%                       of the outputs will be the same as the inputs, 
-%                       with a '_a' suffix added at the end.
+%  * FILES_IN        
+%       (string) a file name of a 3D+t dataset .
 %
-% OPT           (structure) with the following fields.  Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is ommited, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted'). 
+%  * FILES_OUT       
+%       (string, default <BASE_NAME>_a.<EXT>) File name for outputs. 
+%       If FILES_OUT is an empty string, the name of the outputs will be 
+%       the same as the inputs, with a '_a' suffix added at the end.
 %
-%               SUPPRESS_VOL (integer, default 1) the number of volumes
-%                   that are suppressed at the begining and the end of the time series.
-%                   This is done to limit the edges effects in the
-%                   sinc interpolation.
+%  * OPT           
+%       (structure) with the following fields.  
 %
-%               INTERPOLATON (string, default 'sinc') the method for
-%                   temporal interpolation, choices 'linear' or 'sinc'.
+%       SUPPRESS_VOL 
+%           (integer, default 1) the number of volumes that are suppressed 
+%           at the begining and the end of the time series. This is done 
+%           to limit the edges effects in the sinc interpolation.
 %
-%               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
-%                      that the kth slice was acquired in ith position. The
-%                      order of the slices is assumed to be the same in all
-%                      volumes.
-%                      ex : slice_order = [1 3 5 2 4 6]
-%                      for 6 slices acquired in 'interleaved' mode,
-%                      starting by odd slices(slice 5 was acquired in 3rd 
-%                      position). Note that the slices are assumed to be 
-%                      axial, i.e. slice z at time t is
-%                      vols(:,:,z,t).
+%       INTERPOLATON 
+%           (string, default 'sinc') the method for temporal interpolation, 
+%           choices 'linear' or 'sinc'.
 %
-%               REF_SLICE	(integer, default middle slice in acquisition time)
-%                      slice for time 0
+%       SLICE_ORDER 
+%           (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
+%           was acquired in ith position. The order of the slices is 
+%           assumed to be the same in all volumes.
+%           ex : slice_order = [1 3 5 2 4 6] for 6 slices acquired in 
+%           'interleaved' mode, starting by odd slices(slice 5 was acquired 
+%           in 3rd position). Note that the slices are assumed to be axial,
+%           i.e. slice z at time t is vol(:,:,z,t).
 %
-%               TIMING		(vector 2*1) TIMING(1) : time between two slices
-%                      TIMING(2) : time between last slice and next volume
+%       REF_SLICE	
+%           (integer, default middle slice in acquisition time) slice for 
+%           time 0
 %
-%               FLAG_ZIP   (boolean, deafult 0) if FLAG_ZIP equals 1, an
-%                      attempt will be made to zip the outputs.
+%       TIMING		
+%           (vector 2*1) TIMING(1) : time between two slices
+%           TIMING(2) : time between last slice and next volume
 %
-%               FOLDER_OUT (string, default: path of FILES_IN) If present,
-%                      all default outputs will be created in the folder FOLDER_OUT.
-%                      The folder needs to be created beforehand.
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present, all default 
+%           outputs will be created in the folder FOLDER_OUT. The folder 
+%           needs to be created beforehand.
 %
-%               FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
-%                      the function prints some infos during the
-%                      processing.
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then the function 
+%           prints some infos during the processing.
 %
-%               FLAG_TEST (boolean, default 0) if FLAG_TEST equals 1, the
-%                      brick does not do anything but update the default 
-%                      values in FILES_IN, FILES_OUT and OPT.
-%               
-% OUTPUTS:
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN, 
+%           FILES_OUT and OPT.
+%           
+% _________________________________________________________________________
+% OUTPUTS
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
-% SEE ALSO:
+% _________________________________________________________________________
+% SEE ALSO
+%
 % NIAK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
 %
+% _________________________________________________________________________
 % COMMENTS
 %
 % This stage changes the timing of your experiment ! Those changes are
-% twofold : 
-% 1. Some volumes are removed at the begining of the acquisition 
+% twofold :
+% 1. Some volumes are removed at the begining/end of the acquisition 
 %    (see OPT.SUPPRESS_VOL).
 % 2. The time of reference in a volume is now the time of the slice of
 %    reference.
 % It is important that these effects are taken into account if 
 % stimulus timing are considered in any further anaysis, 
-% typically in a general linear model. Packages like fMRIstat includes the
-% slice timing in the model, so this stage of analysis may not be
-% necessary.
+% typically in a general linear model. The influence may be negligible for 
+% some design, e.g. long blocks, and more important for other ones, e.g. 
+% event-related. Packages like fMRIstat include the slice timing in the 
+% model, so this stage of analysis may not be necessary.
 %
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -103,6 +113,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+niak_gb_vars % Load some important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -132,8 +144,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,'.gz')
+if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if strcmp(opt.folder_out,'')

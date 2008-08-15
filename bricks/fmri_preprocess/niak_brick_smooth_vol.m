@@ -88,7 +88,7 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-niak_gb_vars
+niak_gb_vars; % load important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%

@@ -3,9 +3,11 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_PIPELINE_FMRI_PREPROCESS
 %
-% Build a pipeline structure to preprocess an fMRI
-% database. Mutliple preprocessing "styles" are available, depending on the
-% analysis planned afterwards, and the amount of generated outputs can be adjusted.
+% Build a pipeline structure to preprocess an fMRI database. Mutliple 
+% preprocessing "styles" are available, depending on the analysis planned 
+% afterwards, and the amount of generated outputs can be adjusted.
+% Steps of the analysis can be further customized by changing virtually any
+% parameter of the bricks used in the pipeline.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT)
@@ -51,6 +53,14 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %              at each step of the analysis for purposes of quality control. 
 %           * With the option ‘all’, all possible outputs are generated at 
 %              each stage of the pipeline. 
+%
+%       FLAG_CORSICA
+%           (boolean, default 1) if FLAG_CORSICA == 1, the CORSICA method
+%           will be applied to correct for physiological & motion noise.
+%           That means that a spatial independent component analysis will
+%           be applied on each functional run, and the physiological noise
+%           components will be identified using spatial priors and
+%           suppressed of the linear mixture.
 %       
 %       FOLDER_OUT 
 %           (string) where to write the results of the pipeline. For the 
@@ -76,7 +86,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           MOTION_CORRECTION 
 %               (structure) options of NIAK_BRICK_MOTION_CORRECTION 
 %       
-%          CIVET 
+%           CIVET 
 %               (structure) Options of NIAK_BRICK_CIVET, the brick of 
 %               spatial normalization (non-linear transformation of T1 image 
 %               in the stereotaxic space). If OPT.CIVET.CIVET is used to 
@@ -86,18 +96,35 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %               It would still necessay to specify OPT.CIVET.CIVET.PREFIX and 
 %               OPT.CIVET.CIVET.FOLDER though. 
 %
-%         COREGISTER 
+%           COREGISTER 
 %               (structure) options of NIAK_BRICK_COREGISTER 
 %               (coregistration between T1 and T2).
 %
-%         SMOOTH_VOL 
+%           SMOOTH_VOL 
 %               (structure) options of NIAK_BRICK_SMOOTH_VOL (spatial
 %               smoothing).
 %
-%         The Following additional fields have (or can) be used if the
-%         preprocessing style is 'standard-native' or 'standard-stereotaxic':
+%           The following field is necessary if OPT.FLAG_CORSICA is set to 1
+%           (which means that an attempt will be made to correct for
+%           physiological noise) :
 %
-%         SLICE_TIMING 
+%           CORSICA
+%               (structure) options of the NIAK_PIPELINE_CORSICA template
+%               (correction of physiological noise). The options FOLDER_OUT
+%               and ENVIRONMENT can be ignored (those will be taken care of
+%               by the current template), but you can use the BRICKS field
+%               to customize the parameters of the bricks used in that
+%               pipeline. You will probably be interested in : 
+%               
+%               BRICKS.SICA.NB_COMP
+%                   (integer, default min(60,foor(0.95*T)))
+%                   number of components to compute (for default : T is the 
+%                   number of time samples.
+%
+%           The Following additional fields have (or can) be used if the
+%           preprocessing style is 'standard-native' or 'standard-stereotaxic':
+%
+%           SLICE_TIMING 
 %               (structure) options of NIAK_BRICK_SLICE_TIMING
 %               (correction of slice timing effects). The following fields
 %               need to be specified :
@@ -115,14 +142,14 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %                   TIMING(1) : time between two slices
 %                   TIMING(2) : time between last slice and next volume
 %
-%         TIME_FILTER 
+%           TIME_FILTER 
 %               (structure) options of NIAK_BRICK_TIME_FILTER (temporal 
 %               filtering).
 %
-%         The Following additional field can be used if the 
-%         preprocessing style is 'standard-stereotaxic':
+%           The Following additional field can be used if the 
+%           preprocessing style is 'standard-stereotaxic':
 %
-%         RESAMPLE_VOL 
+%           RESAMPLE_VOL 
 %               (structure) options of NIAK_BRICK_RESAMPLE_VOL
 %               (spatial resampling in the stereotaxic space).
 %
@@ -135,8 +162,9 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       NIAK_INIT_PIPELINE.
 %
 % _________________________________________________________________________
-% NOTES
+% COMMENTS
 %
+% NOTE 1:
 % The steps of the pipeline are the following :
 %  
 %  * style 'fmristat' :
@@ -145,8 +173,9 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           functional volume.
 %       3.  Spatial normalization of the anatomical image, after 
 %           coregistration with the functional.
-%       4.  Spatial smoothing.
-%       5.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%       4.  Correction of physiological noise (if OPT.FLAG_CORSICA == 1)
+%       5.  Spatial smoothing.
+%       6.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
 %
 %  * style 'standard-native'
@@ -155,9 +184,10 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       3.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
 %       4.  Correction of slow time drifts.
-%       5.  Spatial smoothing.
-%       6.  Spatial normalization of the anatomical image.
-%       7.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%       5.  Correction of physiological noise (if OPT.FLAG_CORSICA == 1)
+%       6.  Spatial smoothing.
+%       7.  Spatial normalization of the anatomical image.
+%       8.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
 %   
 %  * style 'standard-stereotaxic'
@@ -166,11 +196,20 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       3.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
 %       4.  Correction of slow time drifts.
-%       5.  Spatial smoothing.
-%       6.  Spatial normalization of the anatomical image.
-%       7.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%       5.  Correction of physiological noise (if OPT.FLAG_CORSICA == 1)
+%       6.  Spatial smoothing.
+%       7.  Spatial normalization of the anatomical image.
+%       8.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
-%       8.  Resampling of the functional data in the stereotaxic space.
+%       9.  Resampling of the functional data in the stereotaxic space.
+%
+% NOTE 2:
+% The physiological & motion noise correction CORSICA is changing the
+% degrees of freedom of the data. It is usullay negligeable for intra-subject
+% analysis, and will have no impact on the between-subject variance
+% estimate (expect those may be less noisy). However, the purist may
+% consider to take that into account in the linear model analysis. This
+% will be taken care of in the (yet to come) NIAK_PIPELINE_LM_ANALYSIS.
 %
 % The exact list of outputs generated by the pipeline depend on the
 % pipeline style and the OPT.SIZE_OUTPUTS field. See the internet
@@ -215,7 +254,7 @@ end
 
 %% Checking that FILES_IN is in the correct format
 if ~isstruct(files_in)
-    error('FILE_IN should be a struture!')
+    error('FILES_IN should be a struture!')
 else
    
     list_subject = fieldnames(files_in);
@@ -224,34 +263,34 @@ else
     for num_s = 1:nb_subject
         
         subject = list_subject{num_s};
-        data_subject = getfield(files_in,subject);
+        data_subject = files_in.(subject);
         
         if ~isstruct(data_subject)
-            error('FILE_IN.%s should be a structure!',upper(subject));
+            error('FILES_IN.%s should be a structure!',upper(subject));
         end
         
         if ~isfield(data_subject,'fmri')
-            error('I could not find the field FILE_IN.%s.FMRI!',upper(subject));
+            error('I could not find the field FILES_IN.%s.FMRI!',upper(subject));
         end
         
-        data_fmri = getfield(data_subject,'fmri');
+        data_fmri = data_subject.fmri;
         list_session{num_s} = fieldnames(data_fmri);
         
         for num_c = 1:length(list_session{num_s})
             session = list_session{num_s}{num_c};
-            data_session = getfield(data_fmri,session);
+            data_session = data_fmri.(session);
             if ~iscellstr(data_session)
-                error('FILE_IN.%s.fmri.%s is not a cell of strings!',upper(subject),upper(session));
+                error('FILES_IN.%s.fmri.%s is not a cell of strings!',upper(subject),upper(session));
             end
         end
         
         if ~isfield(data_subject,'anat')
-            error('I could not find the field FILE_IN.%s.ANAT!',upper(subject));
+            error('I could not find the field FILES_IN.%s.ANAT!',upper(subject));
         end
         
         data_anat = getfield(data_subject,'anat');
         if ~ischar(data_anat)
-             error('FILE_IN.%s.ANAT is not a string!',upper(subject));
+             error('FILES_IN.%s.ANAT is not a string!',upper(subject));
         end
         
     end
@@ -260,8 +299,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'style','size_output','folder_out','environment','bricks'};
-gb_list_defaults = {NaN,'quality_control',NaN,'octave',struct([])};
+gb_list_fields = {'flag_corsica','style','size_output','folder_out','environment','bricks'};
+gb_list_defaults = {1,NaN,'quality_control',NaN,'octave',struct([])};
 niak_set_defaults
 
 %% The options for the bricks
@@ -338,19 +377,12 @@ for num_s = 1:nb_subject
     opt_tmp.flag_test = 0;
 
     %% Adding the stage to the pipeline
-    clear stage
-    stage.label = 'Processing of the anatomical data (transformation to stereotaxic space)';
-    stage.command = 'niak_brick_civet(files_in,files_out,opt)';
-    stage.files_in = files_in_tmp;
-    stage.files_out = files_out_tmp;
-    stage.opt = opt_tmp;
-    stage.environment = opt.environment;
-
-    if isempty(pipeline)
-        eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-    else
-        pipeline = setfield(pipeline,name_stage,stage);
-    end
+    pipeline(1).(name_stage).label = 'Processing of the anatomical data (transformation to stereotaxic space)';
+    pipeline(1).(name_stage).command = 'niak_brick_civet(files_in,files_out,opt)';
+    pipeline(1).(name_stage).files_in = files_in_tmp;
+    pipeline(1).(name_stage).files_out = files_out_tmp;
+    pipeline(1).(name_stage).opt = opt_tmp;
+    pipeline(1).(name_stage).environment = opt.environment;
 
 end % subject
 
@@ -366,10 +398,10 @@ for num_s = 1:nb_subject
     subject = list_subject{num_s};
     clear opt_tmp files_in_tmp files_out_tmp
     name_stage = cat(2,'motion_correction_',subject);
-    data_subject = getfield(files_in,subject);    
+    data_subject = files_in.(subject);    
     
     %% Bulding inputs 
-    files_in_tmp.sessions = getfield(data_subject,'fmri');
+    files_in_tmp.sessions = files_in.(subject).fmri;
 
     %% Building outputs
     switch size_output
@@ -409,18 +441,12 @@ for num_s = 1:nb_subject
     opt_tmp.flag_test = 0;
     
     %% Adding the stage to the pipeline
-    stage.label = 'Correction of within- and between-sessions motion correction';
-    stage.command = 'niak_brick_motion_correction(files_in,files_out,opt)';
-    stage.files_in = files_in_tmp;
-    stage.files_out = files_out_tmp;
-    stage.opt = opt_tmp;
-    stage.environment = opt.environment;
-    
-    if isempty(pipeline)
-        eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-    else
-        pipeline = setfield(pipeline,name_stage,stage);
-    end
+    pipeline(1).(name_stage).label = 'Correction of within- and between-sessions motion correction';
+    pipeline(1).(name_stage).command = 'niak_brick_motion_correction(files_in,files_out,opt)';
+    pipeline(1).(name_stage).files_in = files_in_tmp;
+    pipeline(1).(name_stage).files_out = files_out_tmp;
+    pipeline(1).(name_stage).opt = opt_tmp;
+    pipeline(1).(name_stage).environment = opt.environment;    
         
 end
 

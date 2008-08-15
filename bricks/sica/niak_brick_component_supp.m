@@ -78,6 +78,19 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 % Pitie-Salpetriere, Universite Pierre et Marie Curie, France.
 % E-mail: Vincent.Perlbarg@imed.jussieu.fr
 %
+% _________________________________________________________________________
+% REFERENCES
+%
+% Perlbarg, V., Bellec, P., Anton, J.-L., Pelegrini-Issac, P., Doyon, J. and 
+% Benali, H.; CORSICA: correction of structured noise in fMRI by automatic
+% identification of ICA components. Magnetic Resonance Imaging, Vol. 25,
+% No. 1. (January 2007), pp. 35-46.
+%
+% MJ Mckeown, S Makeig, GG Brown, TP Jung, SS Kindermann, AJ Bell, TJ
+% Sejnowski; Analysis of fMRI data by blind separation into independent
+% spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
+%
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

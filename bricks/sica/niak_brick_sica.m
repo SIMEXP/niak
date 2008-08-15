@@ -43,19 +43,19 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %       (structure) with the following fields :
 %
 %       NORM 
-%           (optional, default 'mean')
+%           (string, default 'mean')
 %           Correction of the time series, possible values :
 %           'mean' (correction to zero mean), 'mean_var' (correction
 %           to zero mean and unit variance), 'mean_var2' (same
 %           as 'mean_var' but slower, yet does not use as much memory).
 %
 %       ALGO 
-%           (optional, default 'Infomax')
+%           (string, default 'Infomax')
 %           the type of algorithm to be used for the sica decomposition.
 %           Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
 %       NB_COMP 
-%           (optional, default min(60,foor(0.95*T)))
+%           (integer, default min(60,foor(0.95*T)))
 %           number of components to compute (for default : T is the number
 %           of time samples.
 %
@@ -86,6 +86,18 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % by Vincent Perlbarg, LIF Inserm U678, Faculte de medecine
 % Pitie-Salpetriere, Universite Pierre et Marie Curie, France.
 % E-mail: Vincent.Perlbarg@imed.jussieu.fr
+%
+% _________________________________________________________________________
+% REFERENCES
+%
+% Perlbarg, V., Bellec, P., Anton, J.-L., Pelegrini-Issac, P., Doyon, J. and 
+% Benali, H.; CORSICA: correction of structured noise in fMRI by automatic
+% identification of ICA components. Magnetic Resonance Imaging, Vol. 25,
+% No. 1. (January 2007), pp. 35-46.
+%
+% MJ Mckeown, S Makeig, GG Brown, TP Jung, SS Kindermann, AJ Bell, TJ
+% Sejnowski; Analysis of fMRI data by blind separation into independent
+% spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,

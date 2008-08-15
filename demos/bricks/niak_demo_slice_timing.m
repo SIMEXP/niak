@@ -1,22 +1,35 @@
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_DEMO_SLICE_TIMING
+%
 % This is a script to demonstrate the usage of :
 % NIAK_BRICK_SLICE_TIMING
 %
 % SYNTAX:
 % Just type in NIAK_DEMO_SLICE_TIMING. 
 %
-% OUTPUT:
+% _________________________________________________________________________
+% OUTPUT
 %
-% This script will clear the workspace !!
 % It will apply a slice timing correction on the functional data of subject
 % 1 (motor condition) and use the default output name.
 %
-% Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
-% 
-% The demo database exists in multiple file formats. By default, it is
-% using 'minc2' files. You can change that by changing the variable
-% GB_NIAK_FORMAT_DEMO in the file NIAK_GB_VARS.
+% _________________________________________________________________________
+% COMMENTS
 %
+% NOTE 1
+% This script will clear the workspace !!
+%
+% NOTE 2
+% Note that the path to access the demo data is stored in a variable
+% called GB_NIAK_PATH_DEMO defined in the script NIAK_GB_VARS.
+% 
+% NOTE 3
+% The demo database exists in multiple file formats.NIAK looks into the demo 
+% path and is supposed to figure out which format you are intending to use 
+% by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
+% in the script NIAK_GB_VARS.
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -46,6 +59,11 @@ niak_gb_vars
 %% Setting input/output files
 switch gb_niak_format_demo
     
+     case 'minc1' % If data are in minc1 format
+        
+        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_out = ''; % The default output name will be used
+    
     case 'minc2' % If data are in minc2 format
         
         files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
@@ -64,7 +82,7 @@ opt.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of sl
 opt.timing(1)=TR/nb_slices; % Time beetween slices
 opt.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
 opt.flag_zip = 0; % Do not attempt to zip the outputs
-opt.flag_test = 1; % This is not a test, the slice timing is actually performed
+opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 
 [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt);
 
