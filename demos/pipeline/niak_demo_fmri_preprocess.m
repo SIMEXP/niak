@@ -81,7 +81,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%
 opt.style = 'standard-stereotaxic';
 %opt.style = 'fmristat';
-opt.size_output = 'quality_control';
+opt.size_output = 'minimum';
+%opt.size_output = 'quality_control';
 %opt.size_output = 'all';
 opt.folder_out = cat(2,gb_niak_path_demo,filesep,'fmri_preprocess',filesep);
 opt.environment = gb_niak_language;

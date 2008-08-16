@@ -328,12 +328,12 @@ switch style
     case 'fmristat'
     
         gb_list_fields = {'motion_correction','coregister','civet','corsica','smooth_vol'};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp_pipeline,opt_tmp};
+        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp_pipeline,opt_tmp};
     
     case 'standard-native'
         
         gb_list_fields = {'motion_correction','slice_timing','coregister','time_filter','civet','corsica','smooth_vol'};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp_pipeline,opt_tmp};
+        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp_pipeline,opt_tmp};
         
     case 'standard-stereotaxic'
         
@@ -1001,7 +1001,7 @@ if strcmp(style,'standard-stereotaxic')
             %% In 'quality-control mode' we keep these images as there are
             %% the only one left in native space.
             
-            if strcmp(size_output,'minimum')
+            if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
                 
                 clear files_in_tmp
                 files_in_tmp = pipeline(1).(name_stage).files_out;
