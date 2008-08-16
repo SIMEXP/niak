@@ -398,19 +398,16 @@ for num_s = 1:nb_subject
         name_stage = cat(2,name_process,'_',subject,'_',run);
                
         %% Names of previous stages
-        name_stage_in0 = cat(2,'sica_',subject,'_',run);
-        name_stage_in1 = cat(2,'component_sel_ventricle_',subject,'_',run);
-        name_stage_in2 = cat(2,'component_sel_stem_',subject,'_',run);
-        stage_in0 = getfield(pipeline,name_stage_in);
-        stage_in1 = getfield(pipeline,name_stage_in1);
-        stage_in2 = getfield(pipeline,name_stage_in2);        
+        name_stage_sica = cat(2,'sica_',subject,'_',run);
+        name_stage_comp_vent = cat(2,'component_sel_ventricle_',subject,'_',run);
+        name_stage_comp_stem = cat(2,'component_sel_stem_',subject,'_',run);      
         
         %% Inputs 
         files_in_tmp.fmri = data_subj.fmri{num_r};        
-        files_in_tmp.space = stage_in0.files_out.space;
-        files_in_tmp.time = stage_in0.files_out.time;
-        files_in_tmp.compsel{1} = stage_in1.files_out;
-        files_in_tmp.compsel{2} = stage_in2.files_out;
+        files_in_tmp.space = pipeline.(name_stage_sica).files_out.space;
+        files_in_tmp.time = pipeline.(name_stage_sica).files_out.time;
+        files_in_tmp.compsel{1} = pipeline.(name_stage_comp_vent).files_out;
+        files_in_tmp.compsel{2} = pipeline.(name_stage_comp_stem).files_out;
 
         %% Options
         opt_tmp = opt.bricks.component_supp;
