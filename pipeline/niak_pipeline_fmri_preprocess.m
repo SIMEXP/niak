@@ -363,7 +363,7 @@ for num_s = 1:nb_subject
     %% Inputs and options
     clear files_in_tmp files_out_tmp opt_tmp
     opt_tmp = opt.bricks.civet;
-    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
 
     if isfield(opt_tmp,'civet')
         opt_tmp.civet.id = subject;
@@ -427,8 +427,8 @@ for num_s = 1:nb_subject
             files_out_tmp.motion_corrected_data = '';
             files_out_tmp.motion_parameters = '';
             files_out_tmp.fig_motion = '';
-            files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,'func_mean_nativefunc.mnc');
-            files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,'func_mask_nativefunc.mnc');
+            files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
+            files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
             
         case 'all'
             
@@ -437,14 +437,14 @@ for num_s = 1:nb_subject
             files_out_tmp.transf_between_session = '';
             files_out_tmp.fig_motion = '';
             files_out_tmp.motion_parameters = '';
-            files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'func_mean_nativefunc.mnc');
-            files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'func_mask_nativefunc.mnc');
+            files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
+            files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
             
     end
     
     %% Setting up default options
     opt_tmp = getfield(opt,'bricks',name_process);
-    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
     
     %% Setting up defaults of the motion correction
     opt_tmp.flag_test = 1;    
@@ -487,13 +487,13 @@ for num_s = 1:nb_subject
     files_in_tmp.mask = getfield(pipeline,name_stage_anat,'files_out','mask_stereo');
     
     %% Building outputs for NIAK_BRICK_TIME_FILTER
-    files_out_tmp.transformation = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_',subject,'_nativefunc_to_stereolin.xfm');
-    files_out_tmp.anat_hires = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'anat_',subject,'_nativefunc_hires.mnc');
-    files_out_tmp.anat_lowres = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'anat_',subject,'_nativefunc_lowres.mnc');
+    files_out_tmp.transformation = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'transf_',subject,'_nativefunc_to_stereolin.xfm');
+    files_out_tmp.anat_hires = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_hires.mnc');
+    files_out_tmp.anat_lowres = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_lowres.mnc');
     
     %% Setting up options
     opt_tmp = getfield(opt.bricks,name_process);
-    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep);
+    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep);
 
     %% Setting up defaults of the motion correction
     opt_tmp.flag_test = 1;
@@ -532,7 +532,7 @@ for num_s = 1:nb_subject
     files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
 
     %% Building outputs for NIAK_BRICK_CONCAT_TRANSF
-    files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'anat',filesep,'transf_',subject,'_nativefunc_to_stereonl.xfm');
+    files_out_tmp = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'transf_',subject,'_nativefunc_to_stereonl.xfm');
 
     %% Setting up options
     opt_tmp.flag_test = 0;
@@ -573,7 +573,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
             
             %% Setting up options
             opt_tmp = opt.bricks.slice_timing;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
 
             %% Setting up defaults of the motion correction
             opt_tmp.flag_test = 1;
@@ -670,7 +670,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
             
             %% Setting up options
             opt_tmp = opt.bricks.time_filter;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
 
             %% Setting up defaults of the motion correction
             opt_tmp.flag_test = 1;
@@ -980,7 +980,7 @@ if strcmp(style,'standard-stereotaxic')
             
             %% Setting up options
             opt_tmp = opt.bricks.resample_vol;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
 
             %% Setting up defaults 
             opt_tmp.flag_test = 1;
@@ -1066,7 +1066,7 @@ if strcmp(style,'standard-stereotaxic')
 
             %% Setting up options
             opt_tmp = opt.bricks.smooth_vol;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
 
             %% Setting up defaults of the motion correction
             opt_tmp.flag_test = 1;
