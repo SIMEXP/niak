@@ -26,6 +26,22 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %  * OPT   
 %       (structure) with the following fields : 
 %
+%       SIZE_OUTPUT
+%           (string, default 'quality_control') possible values : 
+%            ‘minimum’, 'quality_control’, ‘all’.
+%           The quantity of intermediate results that are generated. For a 
+%           detailed list of outputs in each mode, see the internet
+%           documentation (http://?.?)
+%           * With the option ‘minimum’, only the physiological-noise
+%           corrected data is written. 
+%           * With the option ‘quality_control’, in addition to the outputs 
+%           of the 'minimum' option, a pdf document recapitulating 
+%           the ICA components and the score of components in the stepwise 
+%           regression are generated.
+%           * With the option ‘all’, in addition to the outputs of the 
+%           'minimum' option, the space and time distributions of the ICA 
+%           are generated.
+%
 %       FOLDER_OUT 
 %           (string) where to write the results of the pipeline. For the 
 %           actual content of FOLDER_OUT, see the internet documentation 
@@ -179,8 +195,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'folder_out','environment','bricks'};
-gb_list_defaults = {NaN,gb_niak_language,struct([])};
+gb_list_fields = {'size_output','folder_out','environment','bricks'};
+gb_list_defaults = {'quality_control',NaN,gb_niak_language,struct([])};
 niak_set_defaults
 
 %% The options for the bricks
@@ -211,7 +227,8 @@ for num_s = 1:nb_subject
     for num_r = 1:nb_run
         
         clear files_in_tmp files_out_tmp opt_tmp
-        name_stage = cat(2,name_process,'_',subject,'_',num2str(num_r));
+        run = cat(2,'run',num2str(num_r));
+        name_stage = cat(2,name_process,'_',subject,'_',run);
         files_in_tmp = data_subj.fmri{num_r};
 
         %% Options
@@ -264,10 +281,10 @@ for num_s = 1:nb_subject
     for num_r = 1:nb_run
         
         clear files_in_tmp files_out_tmp opt_tmp
-        
-        name_stage = cat(2,name_process,'_',subject,'_',num2str(num_r));
+        run = cat(2,'run',num2str(num_r));
+        name_stage = cat(2,name_process,'_',subject,'_',run);
                
-        name_stage_in = cat(2,'sica_',subject,'_',num2str(num_r));
+        name_stage_in = cat(2,'sica_',subject,'_',run);
         stage_in = getfield(pipeline,name_stage_in);
         
         %% Inputs 
@@ -319,9 +336,10 @@ for num_s = 1:nb_subject
         
         clear files_in_tmp files_out_tmp opt_tmp
         
-        name_stage = cat(2,name_process,'_',subject,'_',num2str(num_r));
+        run = cat(2,'run',num2str(num_r));
+        name_stage = cat(2,name_process,'_',subject,'_',run);
                
-        name_stage_in = cat(2,'sica_',subject,'_',num2str(num_r));
+        name_stage_in = cat(2,'sica_',subject,'_',run);
         stage_in = getfield(pipeline,name_stage_in);
         
         %% Inputs 
@@ -376,13 +394,13 @@ for num_s = 1:nb_subject
     for num_r = 1:nb_run
         
         clear files_in_tmp files_out_tmp opt_tmp
-        
-        name_stage = cat(2,name_process,'_',subject,'_',num2str(num_r));
+        run = cat(2,'run',num2str(num_r));
+        name_stage = cat(2,name_process,'_',subject,'_',run);
                
         %% Names of previous stages
-        name_stage_in0 = cat(2,'sica_',subject,'_',num2str(num_r));
-        name_stage_in1 = cat(2,'component_sel_ventricle_',subject,'_',num2str(num_r));
-        name_stage_in2 = cat(2,'component_sel_stem_',subject,'_',num2str(num_r));
+        name_stage_in0 = cat(2,'sica_',subject,'_',run);
+        name_stage_in1 = cat(2,'component_sel_ventricle_',subject,'_',run);
+        name_stage_in2 = cat(2,'component_sel_stem_',subject,'_',run);
         stage_in0 = getfield(pipeline,name_stage_in);
         stage_in1 = getfield(pipeline,name_stage_in1);
         stage_in2 = getfield(pipeline,name_stage_in2);        
@@ -424,4 +442,76 @@ for num_s = 1:nb_subject
     end % run
 
 end % subject
+
+%%%%%%%%%%%%%%
+%% CLEANING %%
+%%%%%%%%%%%%%%
+
+name_process = 'clean_corsica_intermediate';
+
+if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
+
+    for num_s = 1:nb_subject
+
+        subject = list_subject{num_s};
+        data_subj = getfield(files_in,subject);
+        nb_run = length(data_subj.fmri);
+
+        for num_r = 1:nb_run
+
+            clear files_in_tmp files_out_tmp opt_tmp
+            run = cat(2,'run',num2str(num_r));
+            name_stage = cat(2,name_process,'_',subject,'_',run);
+
+            %% Names of previous stages
+            name_stage_in0 = cat(2,'sica_',subject,'_',run);
+            name_stage_in1 = cat(2,'component_sel_ventricle_',subject,'_',run);
+            name_stage_in2 = cat(2,'component_sel_stem_',subject,'_',run);
+            name_stage_in3 = cat(2,'component_supp_',subject,'_',run);
+
+            %% Inputs
+            files_in_tmp = pipeline.(name_stage_in3).files_out;
+
+            %% Cleaning options
+            switch opt.size_output
+
+                case 'minimum'
+
+                    opt_tmp.clean.space = pipeline.(name_stage_in0).files_out.space;
+                    opt_tmp.clean.time = pipeline.(name_stage_in0).files_out.time;
+                    opt_tmp.clean.figure = pipeline.(name_stage_in0).files_out.figure;
+                    opt_tmp.clean.compsel{1} = pipeline.(name_stage_in1).files_out;
+                    opt_tmp.clean.compsel{2} = pipeline.(name_stage_in2).files_out;
+
+                case 'quality_control'
+
+                    opt_tmp.clean.space = pipeline.(name_stage_in0).files_out.space;
+                    opt_tmp.clean.time = pipeline.(name_stage_in0).files_out.time;
+                    
+            end
+
+            %% Options
+            opt_tmp.flag_verbose = 1;
+
+            %% Outputs
+            files_out_tmp = '';
+
+            %% set the default values
+            opt_tmp.flag_test = 1;
+            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
+            opt_tmp.flag_test = 0;
+
+            %% Adding the stage to the pipeline            
+            pipeline(1).(name_stage).label = 'Suppression of noise-related ICA components from individual fMRI data';
+            pipeline(1).(name_stage).command = 'niak_brick_component_supp(files_in,files_out,opt)';
+            pipeline(1).(name_stage).files_in = files_in_tmp;
+            pipeline(1).(name_stage).files_out = files_out_tmp;
+            pipeline(1).(name_stage).opt = opt_tmp;
+            pipeline(1).(name_stage).environment = opt.environment;           
+
+        end % run
+
+    end % subject
+
+end % size_output
 

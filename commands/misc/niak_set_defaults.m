@@ -67,14 +67,8 @@ for num_f = 1:nb_fields
             if isnan(val)
                 error(cat(2,'niak:defaults: Please specify field ',field,' in structure ',gb_name_structure,' !\n'))                
             end
-        end
-        
-        if isempty(gb_niak_struct)
-            eval(cat(2,'gb_niak_struct(1).',field,' = val;'));
-        else
-            gb_niak_struct = setfield(gb_niak_struct,field,val);
-        end
-        
+        end        
+        gb_niak_struct(1).(field) = val;        
     end    
                     
     % Upload the field as a variable
