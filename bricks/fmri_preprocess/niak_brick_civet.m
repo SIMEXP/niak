@@ -372,11 +372,11 @@ if ~flag_civet
     %% civet-compliant name.
     flag = niak_mkdir(civet_folder);
     if flag_zip
-        [succ,msg] = system(cat(2,'cp ',files_in.anat,gb_niak_zip_ext,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext))
+        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext))
         if succ~=0
             error(msg);
         end
-        [succ,msg] = system(cat(2,gb_niak_unzip,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'));        
+        [succ,msg] = system(cat(2,gb_niak_unzip,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext));        
     else
         [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'));
     end
