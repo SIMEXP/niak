@@ -312,7 +312,7 @@ niak_write_vol(hdr_func,mask_func);
 instr_res = cat(2,'mincresample -clobber ',file_tmp,' ',file_mask_func,' -like ',file_func_init,' -transform ',file_transf_init,' -nearest_neighbour');
 [succ,msg] = system(instr_res);
 
-if ~succ
+if succ~=0
     error(cat(2,'There was a problem in the resampling of the mask... COMMAND :',instr_res,' ; ERROR :',msg));
 end
 
