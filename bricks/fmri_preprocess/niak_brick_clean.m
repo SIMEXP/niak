@@ -47,6 +47,11 @@ function [files_in,files_out,opt] = niak_brick_clean(files_in,files_out,opt)
 % _________________________________________________________________________
 % OUTPUTS
 %
+% If the files in FILES_IN do not exist, the function simply issues a
+% warning and quit.
+%
+% If the files in FILES_IN exist, the files in OPT.CLEAN are deleted.
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified files in OPT.CLEAN are
 % deleted.
@@ -102,14 +107,29 @@ if flag_test
     return
 end
 
-nb_files = length(opt.clean);
+%% Test if all the input files exist
+nb_files_in = length(files_in);
+flag_clean = 1;
 
-for num_f = 1:nb_files
-    file_name = opt.clean{num_f};
-    
-    if flag_verbose
-        fprintf('Deleting file ''%s'' \n',file_name);
+for num_fi = 1:length(files_in);
+    if ~ exist (files_in{num_fi},'file')
+        warning(cat(2,'I could not find the file ',files_in{num_fi},'. No cleaning for now !'));
     end
-    
-    delete(file_name)
+    flag_clean = flag_clean & exist(files_in{num_fi},'file');
+end
+
+%% If all the input files exist, remove the files in OPT.CLEAN
+if flag_clean
+
+    nb_files = length(opt.clean);
+
+    for num_f = 1:nb_files
+        file_name = opt.clean{num_f};
+
+        if flag_verbose
+            fprintf('Deleting file ''%s'' \n',file_name);
+        end
+
+        delete(file_name)
+    end
 end
