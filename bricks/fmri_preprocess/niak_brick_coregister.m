@@ -313,7 +313,7 @@ instr_res = cat(2,'mincresample -clobber ',file_tmp,' ',file_mask_func,' -like '
 [succ,msg] = system(instr_res);
 
 if ~succ
-    error(cat(2,'There was a problem in the resampling of the mask... COMMAND :',inst_res,' ; ERROR :',msg));
+    error(cat(2,'There was a problem in the resampling of the mask... COMMAND :',instr_res,' ; ERROR :',msg));
 end
 
 %% Generating anatomical mask & image
