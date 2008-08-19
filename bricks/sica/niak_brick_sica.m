@@ -282,6 +282,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         close(hf);
         
         hf = figure;
+        
         nt = size(A,1);
 
         %% temporal distribution
@@ -332,8 +333,6 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         close(hf)
 
     end
-
-    close(hf);
     
     instr_ps2pdf = cat(2,gb_niak_ps2pdf,' ',file_fig_eps,' ',files_out.figure);
     [succ,msg] = system(instr_ps2pdf);
