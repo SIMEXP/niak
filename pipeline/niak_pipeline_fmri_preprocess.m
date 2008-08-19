@@ -871,7 +871,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
 
             %% Setting up options
             opt_tmp = opt.bricks.smooth_vol;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep,name_process,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
 
             %% Setting up defaults of the motion correction
             opt_tmp.flag_test = 1;
