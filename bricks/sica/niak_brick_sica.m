@@ -264,10 +264,12 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     opt_visu.type_slice = 'axial';
     opt_visu.type_color = 'jet';
     
-    hf = figure;
+
 
     for num_c = 1:size(vol_space,4)
-
+        
+        hf = figure;
+        
         vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
         niak_montage(abs(vol_c),opt_visu);
         title(sprintf('Spatial component %i, file %s',num_c,name_f));
@@ -277,12 +279,14 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
             print(hf,'-dpsc','-r300','-append',file_fig_eps);
         end
 
-        clf
-
+        close(hf);
+        
+        hf = figure;
         nt = size(A,1);
 
         %% temporal distribution
         subplot(3,1,1)
+        
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
                 plot(hdr.info.tr*(1:nt),A(:,num_c));
@@ -299,6 +303,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
 
         %% Frequency distribution
         subplot(3,1,2)
+        
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
                 niak_visu_spectrum(A(:,num_c),hdr.info.tr);
@@ -311,6 +316,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
 
         %% Time-frequency distribution
         subplot(3,1,3)
+        
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
                 niak_visu_wft(A(:,num_c),hdr.info.tr);
@@ -323,7 +329,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
 
         print(hf,'-dpsc','-r300','-append',file_fig_eps);
 
-        clf
+        close(hf)
 
     end
 
