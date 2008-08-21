@@ -195,7 +195,7 @@ elseif ischar(file_name)
         [path_f,name_f,ext_f] = fileparts(hdr.file_name);
         
         if strcmp(ext_f,gb_niak_zip_ext)
-            hdr.file_name = cat(2,path_f,name_f);
+            hdr.file_name = cat(2,path_f,filesep,name_f);
         end
         switch type_f
             case {'minc1','minc2'} % That's a minc file

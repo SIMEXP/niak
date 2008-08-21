@@ -304,13 +304,6 @@ if ~ischar(files_in.design)
     error('niak_brick_glm_level1: FILES_IN.DESIGN should be a string');
 end
 
-if ~exist(files_in.fmri,'file')
-    error(cat(2,'niak_brick_glm_level1: FILES_IN.FMRI does not exist (',files_in.fmri,')'));
-end
-
-if ~exist(files_in.design,'file')
-    error(cat(2,'niak_brick_glm_level1: FILES_IN.DESIGN does not exist (',files_in.design,')'));
-end
     
 %% OPTIONS
 gb_name_structure = 'opt';
@@ -320,13 +313,17 @@ niak_set_defaults
 
 if isempty(num_hrf_bases)    
     
-    design = load(files_in.design);
-    if  ~isfield(design,'X_cache')
-        error('The file FMRI.DESIGN should be a matrix containing a matlab variable called X_cache')
+    if ~exist(files_in.design,'file')
+        warning(cat(2,'niak_brick_glm_level1: FILES_IN.DESIGN does not exist (',files_in.design,'), I could not set up default values for OPT.NUM_HRF_BASES.'));        
+    else
+
+        design = load(files_in.design);
+        if  ~isfield(design,'X_cache')
+            error('The file FMRI.DESIGN should be a matrix containing a matlab variable called X_cache')
+        end
+        nb_response = size(design.X_cache.X,2);
+        opt.num_hrf_bases = ones([nb_response 1]);
     end
-    nb_response = size(design.X_cache.X,2);
-    opt.num_hrf_bases = ones([nb_response 1]);
-    
 end
 
 %% FILES_OUT

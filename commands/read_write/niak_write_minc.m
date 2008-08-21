@@ -197,7 +197,7 @@ if length(size(vol))==4
         hdr_minc.time.varatts{1} = 'step';
         hdr_minc.time.attvalue{1} = hdr.info.tr;
     else
-        hdr_minc.time = sub_set_att(hdr_minc.time,'step',tr);
+        hdr_minc.time = sub_set_att(hdr_minc.time,'step',hdr.info.tr);
     end
 end
 
