@@ -63,6 +63,11 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
+%       FLAG_TFM_SPACE (boolean, default: 0) if FLAG_TFM_SPACE equals 1,
+%           the functional target space will be resampled to get rid of the
+%           voxel-to-world coordinates transformation. This means that a
+%           new field of view fitting the brain will have to be derived.
+%
 %       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
 %           brick does not do anything but update the default
 %           values in FILES_IN and FILES_OUT.
@@ -135,8 +140,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'vol_ref','run_ref','flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm'};
-gb_list_defaults = {1,1,0,0,'','sinc',1,8};
+gb_list_fields = {'vol_ref','run_ref','flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm','flag_tfm_space'};
+gb_list_defaults = {1,1,0,0,'','sinc',1,8,0};
 niak_set_defaults
 
 %% Building default output names
@@ -282,7 +287,7 @@ for num_r = list_run
         files_in_res.source = file_target;
         files_in_res.target = file_target;        
         files_out_res = file_target_native;
-        opt_res.flag_tfm_space = 1;                 
+        opt_res.flag_tfm_space = opt.flag_tfm_space;                 
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
         %% Writting the mask of the target
@@ -292,7 +297,9 @@ for num_r = list_run
 
         %% Initiliazing the resampled data
         hdr_target = niak_read_vol(file_target_native);
-        data_r = zeros(hdr_target.info.dimensions(1:3));
+        if ~ischar(files_out.motion_corrected_data)
+            data_r = zeros(hdr_target.info.dimensions(1:3));
+        end
     end
 
 
@@ -475,7 +482,7 @@ if ~strcmp(files_out.target,'gb_niak_omitted')
     if succ~=0
         error(msg)
     end
-    
+
     %% If necessary, zip outputs
     if strcmp(files_out.target(end-length(gb_niak_zip_ext):end),gb_niak_zip_ext)
         instr_zip = cat(2,gb_niak_zip,' ',files_out.target);
@@ -484,7 +491,7 @@ if ~strcmp(files_out.target,'gb_niak_omitted')
             error(msg);
         end
     end
-           
+
 end
 
 %% If requested, write the mask
@@ -492,9 +499,9 @@ if ~strcmp(files_out.mask,'gb_niak_omitted')
     [succ,msg] = system(cat(2,'cp ',file_mask_target,' ',files_out.mask));
     if succ~=0
         error(msg)
-    end        
-    
-        %% If necessary, zip outputs
+    end
+
+    %% If necessary, zip outputs
     if strcmp(files_out.mask(end-length(gb_niak_zip_ext):end),gb_niak_zip_ext)
         instr_zip = cat(2,gb_niak_zip,' ',files_out.mask);
         [succ,msg] = system(instr_zip);

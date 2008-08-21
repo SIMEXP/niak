@@ -137,6 +137,11 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %          still estimated for quality control, but the between-session 
 %          transformation only is actually applied in the resampling.
 %
+%       FLAG_TFM_SPACE (boolean, default: 0) if FLAG_TFM_SPACE equals 1,
+%           the functional target space will be resampled to get rid of the
+%           voxel-to-world coordinates transformation. This means that a
+%           new field of view fitting the brain will have to be derived.
+%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -229,8 +234,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_zip','flag_test','folder_out','interpolation','fwhm','flag_verbose'};
-gb_list_defaults = {0,1,1,'',0,0,0,'','sinc',8,1};
+gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_zip','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space'};
+gb_list_defaults = {0,1,1,'',0,0,0,'','sinc',8,1,0};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);
@@ -408,6 +413,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         opt_session.interpolation = interpolation;
         opt_session.fwhm = fwhm;
         opt_session.flag_zip = 0;
+        opt_session.flag_tfm_space = opt.flag_tfm_space;
 
         %% Perform estimation of within-session motion parameters estimation
         [files_session_in,files_session_out,opt_session] = niak_brick_motion_correction_ws(files_session_in,files_session_out,opt_session);
@@ -618,7 +624,7 @@ else % if ~ischar(files_in.motion_parameter)
     
     files_in_r.source = file_target2;
     files_in_r.target = file_target2;
-    opt_r.flag_tfm_space = 1;
+    opt_r.flag_tfm_space = opt.flag_tfm_space;
     files_out_r = file_target;
     niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
     delete(file_target2);
@@ -646,7 +652,9 @@ if ~ischar(files_out.motion_corrected_data)
     files_in_r.transformation = niak_file_tmp('_transf.xfm');
     files_out_r = niak_file_tmp('_vol2.mnc');
 
-    niak_resample_to_self(file_target);
+    if opt.flag_tfm_space == 1
+        niak_resample_to_self(file_target);
+    end
     hdr_target = niak_read_vol(file_target);
     dim_t = hdr_target.info.dimensions;
     if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
