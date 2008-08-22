@@ -451,7 +451,12 @@ for num_c = 1:nb_cont
 end
 
 %% Actual call to fmrilm   
-[df,spatial_av] = fmrilm(file_input,output_file_base,design.X_cache,mat_contrast,exclude,which_stats,fwhm_cor,[nb_trends_temporal nb_trends_spatial pcnt],confounds,[],num_hrf_bases,basis_type,numlags,df_limit);
+if (nb_trends_spatial == 0)&(pcnt == 0)
+    df = fmrilm(file_input,output_file_base,design.X_cache,mat_contrast,exclude,which_stats,fwhm_cor,[nb_trends_temporal nb_trends_spatial pcnt],confounds,[],num_hrf_bases,basis_type,numlags,df_limit);
+    spatial_av = [];
+else
+    [df,spatial_av] = fmrilm(file_input,output_file_base,design.X_cache,mat_contrast,exclude,which_stats,fwhm_cor,[nb_trends_temporal nb_trends_spatial pcnt],confounds,[],num_hrf_bases,basis_type,numlags,df_limit);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Moving outputs to the right folder %%%
