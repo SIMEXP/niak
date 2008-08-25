@@ -142,6 +142,12 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           voxel-to-world coordinates transformation. This means that a
 %           new field of view fitting the brain will have to be derived.
 %
+%       FLAG_PERCENTAGE (boolean, default: 0) if FLAG_PERCENTAGE equals 1,
+%           the value of each voxel in every volume will be divided by the
+%           mean value at this voxel for all runs and sessions, and then
+%           mutliplied by 100, i.e. the unit of the motion-corrected data
+%           is now a percentage of the baseline.
+%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -234,8 +240,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_zip','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space'};
-gb_list_defaults = {0,1,1,'',0,0,0,'','sinc',8,1,0};
+gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','flag_percentage'};
+gb_list_defaults = {0,1,1,'',0,0,'','sinc',8,1,0,1};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);
@@ -412,7 +418,6 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         opt_session.flag_verbose = flag_verbose;
         opt_session.interpolation = interpolation;
         opt_session.fwhm = fwhm;
-        opt_session.flag_zip = 0;
         opt_session.flag_tfm_space = opt.flag_tfm_space;
 
         %% Perform estimation of within-session motion parameters estimation
@@ -657,12 +662,8 @@ if ~ischar(files_out.motion_corrected_data)
     end
     hdr_target = niak_read_vol(file_target);
     dim_t = hdr_target.info.dimensions;
-    if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
-        mask_all = ones(dim_t(1:3));
-    end
-    if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
-        mean_all = zeros(dim_t(1:3));
-    end
+    mask_all = ones(dim_t(1:3));
+    mean_all = zeros(dim_t(1:3));
     nb_runs = 0;
     
     for num_s = 1:length(list_sessions)
@@ -688,7 +689,6 @@ if ~ischar(files_out.motion_corrected_data)
             [hdr,data] = niak_read_vol(files_session{num_r});
             [nx,ny,nz,nt] = size(data);
             hdr.file_name = files_in_r.source;
-            hdr.flag_zip = 0;
             hdr_target.details.time = hdr.details.time;
             hdr_target.info.tr = hdr.info.tr;
             [nx,ny,nz,nt] = size(data);            
@@ -712,24 +712,37 @@ if ~ischar(files_out.motion_corrected_data)
                 
             end
             
+            %% Building the mean volume of all runs
+            mean_run = mean(data_r,4);
+            mean_all = mean_all + mean_run;
+            nb_runs = nb_runs+1;
+            
+            %% Building a mask common to all runs
+            mask_run = niak_mask_brain(mean(abs(data_r),4));
+            mask_all = mask_all & mask_run;
+            
+            %% Writting resampled data
             if ~ischar(files_out.motion_corrected_data)
+                
+                %% If OPT.FLAG_PERCENTAGE == 1, convert the units of the fMRI volume
+                %% into percentage of the baseline
+                if (opt.flag_percentage == 1)
+                    [nx,ny,nz,nt] = size(data_r);
+                    data_r = reshape(data_r,[nx*ny*nz nt]);
+                    for num_t = 1:nt                      
+                        data_r(mask_run>0,num_t) = data_r(mask_run>0,num_t)./mean_run(mask_run>0);
+                        data_r(mask_run==0,num_t) = 0;
+                    end
+                    data_r = reshape(data_r,[nx ny nz nt]);
+                end % flag_percentage
+                
                 hdr_target.file_name = motion_corrected_data_session{num_r};
-                hdr_target.flag_zip = flag_zip;
                 niak_write_vol(hdr_target,data_r);
             end
             
-            if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
-                mean_all = mean_all + mean(data_r,4);
-                nb_runs = nb_runs+1;
-            end
-            
-            if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
-                mask_tmp = niak_mask_brain(mean(abs(data_r),4));
-                mask_all = mask_all & mask_tmp;                
-            end
-            
-        end
-    end
+        end %% Runs       
+        
+    end %% Sessions
     
     if flag_verbose
         fprintf('\n')
@@ -739,14 +752,12 @@ if ~ischar(files_out.motion_corrected_data)
     if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
         mean_all = mean_all/nb_runs;
         hdr_target.file_name = files_out.mean_volume;
-        hdr_target.flag_zip = flag_zip;
         niak_write_vol(hdr_target,mean_all);
     end
 
     %% Write the mask of all runs
     if ~strcmp(files_out.mask_volume,'gb_niak_omitted')                
         hdr_target.file_name = files_out.mask_volume;
-        hdr_target.flag_zip = flag_zip;
         niak_write_vol(hdr_target,mask_all);
     end
 
