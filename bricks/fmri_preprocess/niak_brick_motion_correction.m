@@ -730,7 +730,7 @@ if ~ischar(files_out.motion_corrected_data)
                     [nx,ny,nz,nt] = size(data_r);
                     data_r = reshape(data_r,[nx*ny*nz nt]);
                     for num_t = 1:nt                      
-                        data_r(mask_run>0,num_t) = data_r(mask_run>0,num_t)./mean_run(mask_run>0);
+                        data_r(mask_run>0,num_t) = 100*data_r(mask_run>0,num_t)./mean_run(mask_run>0);
                         data_r(mask_run==0,num_t) = 0;
                     end
                     data_r = reshape(data_r,[nx ny nz nt]);
