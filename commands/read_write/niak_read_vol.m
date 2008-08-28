@@ -1,52 +1,49 @@
 function [hdr,vol] = niak_read_vol(file_name)
-% *************************************************************************
+%
+% _________________________________________________________________________
 % SUMMARY NIAK_READ_VOL
-% *************************************************************************
+%
 % Read 3D or 3D+t data. Currently supported formats are minc1 and minc2
 % (.minc), nifti (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
 % The data can also be zipped (additional extension .gz, see the COMMENTS
 % section below).
 %
-% *************************************************************************
-% SYNTAX
-% *************************************************************************
-%
+% SYNTAX :
 % [HDR,VOL] = NIAK_READ_VOL(FILE_NAME)
 %
-% *************************************************************************
-% INPUT
-% *************************************************************************
+% _________________________________________________________________________
+% INPUTS :
 %
-% FILE_NAME
-%   (string) a single 3D or 3D+t image file, or a matrix of image file names, 
-%   each with a single 3D frame.
-%   Supported formats are either NIFIT (*.nii,*.img/hdr), 
-%   ANALYZE (.img/.hdr/.mat) or MINC1/MINC2 (.mnc).
-%   Extra blanks are ignored. File separator can be / or \ on Windows.
-%   Gzipped files (additional .gz) are supported.
-%   Frames must be equally spaced in time.
-%   For single file names, wild cards are supported (mutliple files are
-%   treated in the same way as a matrix of image files names).
+% *  FILE_NAME
+%       (string) a single 3D or 3D+t image file, or a matrix of image file names, 
+%       each with a single 3D frame.
+%       Supported formats are either NIFIT (*.nii,*.img/hdr), 
+%       ANALYZE (.img/.hdr/.mat) or MINC1/MINC2 (.mnc).
+%       Extra blanks are ignored. File separator can be / or \ on Windows.
+%       Gzipped files (additional .gz) are supported.
+%       Frames must be equally spaced in time.
+%       For single file names, wild cards are supported (mutliple files are
+%       treated in the same way as a matrix of image files names).
 %
-% *************************************************************************
-% OUTPUT
-% *************************************************************************
-% VOL           
-%   (3D+t or 3D array of double) the fMRI or MRI data
+% _________________________________________________________________________
+% OUTPUTS :
 %
-% HDR
-%   a structure containing a description of the data, with the
-%   following fields :
+% * VOL           
+%       (3D+t or 3D array of double) the fMRI or MRI data
 %
-%   FILE_NAME   
-%       (empty string '') name of the file currently associated with the 
-%       header.
+% * HDR
+%       a structure containing a description of the data, with the
+%       following fields :
 %
-%   TYPE   
-%       (string) the file format (either 'minc1', 'minc2','nii').
+%       FILE_NAME   
+%           (empty string '') name of the file currently associated with the 
+%           header.
 %
-%   INFO 
-%       (structure) with the following subfields:
+%       TYPE   
+%           (string) the file format (either 'minc1', 'minc2','nii').
+%
+%       INFO 
+%           (structure) with the following subfields:
 %
 %       FILE_PARENT 
 %           (string) name of the file that was read.
@@ -85,16 +82,14 @@ function [hdr,vol] = niak_read_vol(file_name)
 %   found in HDR.DETAILS. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
 %   for more information.
 %
-% *************************************************************************
-% SEE ALSO
-% *************************************************************************
+% _________________________________________________________________________
+% SEE ALSO :
 %
 % NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_WRITE_VOL, NIAK_READ_HDR_NIFTI,
 % NIAK_READ_NIFTI.
 %
-% *************************************************************************
+% _________________________________________________________________________
 % COMMENTS
-% *************************************************************************
 %
 % NOTE 1:
 % If multiple files are specified, make sure all those files are in the

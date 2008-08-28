@@ -1,83 +1,108 @@
 function [] = niak_write_vol(hdr,vol)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_WRITE_VOL
+%
 % Write a 3D or 3D+t dataset into a file
 %
 % SYNTAX:
 % [] = NIAK_WRITE_VOL(HDR,VOL)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL          (3D or 4D array) a 3D or 3D+t dataset
 %
-% HDR           (structure) a header structure (usually modified from the
-%               output of niak_read_vol). The following fields are of
-%               particular importance :
+% * VOL          
+%       (3D or 4D array) a 3D or 3D+t dataset
 %
-%               HDR.FILE_NAME   (string) a single 4D fMRI image file with multiple  
-%                  frames, or a matrix of image file names, each with a single 3D frame,
-%                   either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC (.mnc) format. 
-%                   Extra blanks are ignored. Frames are assumed to be
-%                   equally spaced in time.
-%                   If the file name contains an additional extension
-%                   '.gz', the output will be zipped using 'gzip'.
+% * HDR           
+%       (structure) a header structure (usually modified from the
+%       output of NIAK_READ_VOL). The following fields are of
+%       particular importance :
 %
-%               HDR.TYPE   (string, default 'minc2') the output format (either
-%                   'minc1' or 'minc2').
+%       FILE_NAME   
+%           (string) a single 4D fMRI image file with multiple frames, or 
+%           a matrix of image file names, each with a single 3D frame,
+%           either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC 
+%           (.mnc) format. 
+%           Extra blanks are ignored. Frames are assumed to be equally 
+%           spaced in time.
+%           If the file name contains an additional extension '.gz', the 
+%           output will be zipped using 'gzip'.
 %
-%               The following subfields are optional :
-%               HDR.INFO.PRECISION      (string, default 'float') the
+%       TYPE   
+%           (string, default 'minc2') the output format (either
+%           'minc1' or 'minc2').
+%
+%       INFO 
+%           (structure) with the following (optional) fields :
+%           
+%               PRECISION      
+%                   (string, default 'float') the
 %                   precision for writting data ('int', 'float' or
 %                   'double').
 %
-%               HDR.INFO.VOXEL_SIZE     (vector 1*3, default [1 1 1]) the
+%               VOXEL_SIZE     
+%                   (vector 1*3, default [1 1 1]) the
 %                   size of voxels along each spatial dimension in the same
 %                   order as in vol.
 %
-%               HDR.INFO.TR     (double, default 1) the time between two
+%               TR     
+%                   (double, default 1) the time between two
 %                   volumes (in second)
 %
-%               HDR.MAT (2D array 4*4, default identity) an affine transform from voxel to
+%               MAT 
+%                   (2D array 4*4, default identity) an affine transform from voxel to
 %                   world space.
 %
-%               HDR.DIMENSION_ORDER (string, default 'xyz') describes the dimensions of
-%                  vol. Letter 'x' is for 'left to right, 'y' for
-%                  'posterior to anterior', 'z' for 'ventral to dorsal' and
-%                  't' is time. Example : 'xzyt' means that dimension 1 of
-%                   vol is 'x', dimension 2 is 'z', etc.
+%               DIMENSION_ORDER 
+%                   (string, default 'xyz') describes the dimensions of
+%                   VOL. Letter 'x' is for 'left to right, 'y' for
+%                   'posterior to anterior', 'z' for 'ventral to dorsal' and
+%                   't' is time. Example : 'xzyt' means that dimension 1 of
+%                   VOL is 'x', dimension 2 is 'z', etc.
 %
-%               HDR.HISTORY (string, default '') history of the operations applied to
+%               HISTORY 
+%                   (string, default '') history of the operations applied to
 %                  the data.
 %
-%               HDR.DETAILS (structure, default struct()) This field
-%                  contains some format specific information, but is not
-%                  necessary to write a file. If present, the information
-%                  will be inserted in the new file. Note that the fields
-%                  of HDR.INFO override HDR.DETAILS. See NIAK_WRITE_MINC
-%                  for more information under the minc format.
+%       DETAILS 
+%           (structure, default struct()) This field contains some format 
+%           specific information, but is not necessary to write a file. 
+%           If present, the information will be inserted in the new file. 
+%           Note that the fields of HDR.INFO override HDR.DETAILS. 
+%           See NIAK_WRITE_MINC for more information under the minc format.
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % Case 1: HDR.FILE_NAME is a string.
-% The data is written in a file called HDR.FILE_NAME in HDR.TYPE format.
+%
+%   The data is written in a file called HDR.FILE_NAME in HDR.TYPE format.
 %
 % Case 2: HDR.FILE_NAME is a matrix of strings
-% Each row of file names has to correspond to the one element in the fourth 
-% dimension of VOL. One file will be written for each volume VOL(:,:,:,i) in the file
-% HDR.FILE_NAME(i,:) after blanks have been removed.
 %
-% Case 3: HDR.FILE_NAME is a string, ending by '_'.
-% One file will be written for each volume VOL(:,:,:,i) in the file
-% [HDR.FILE_NAME 000i]. The '000i' part meaning that i is converted to a
-% string and padded with '0' to reach at least four digits.
+%   Each row of file names has to correspond to the one element in the fourth 
+%   dimension of VOL. One file will be written for each volume VOL(:,:,:,i) in the file
+%   HDR.FILE_NAME(i,:) after blanks have been removed.
 %
-% COMMENTS:
-% If HDR.FLAG_ZIP is 1, the file is zipped and a .gz is appended at the end
-% of the file name. 
+% Case 3: HDR.FILE_NAME is a string, ending by '_'
 %
-% The extension of zipped file is assumed to be .gz. The tools used to
-% zip files in 'gzip'. This setting can be changed by changing the
-% variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
+%   One file will be written for each volume VOL(:,:,:,i) in the file
+%   [HDR.FILE_NAME 000i]. The '000i' part meaning that i is converted to a
+%   string and padded with '0' to reach at least four digits.
 %
+% _________________________________________________________________________
 % SEE ALSO:
-% niak_read_header_minc, niak_read_minc, niak_read_vol, niak_read_vol
+% NIAK_READ_HDR_MINC, NIAK_READ_HDR_NIFTI, NIAK_READ_MINC, NIAK_READ_VOL, 
+% NIAK_READ_NIFTI, NIAK_WRITE_MINC, NIAK_WRITE_NIFTI
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
+% As mentioned in the description of HDR.FILE_NAME, the extension of zipped 
+% file is assumed to be .gz. The tools used to zip files in 'gzip'. This 
+% setting can be changed by changing the variables GB_NIAK_ZIP_EXT and 
+% GB_NIAK_UNZIP in the file NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
