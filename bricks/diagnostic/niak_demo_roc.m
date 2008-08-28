@@ -1,18 +1,18 @@
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_DEMO_SLICE_TIMING
+% SUMMARY NIAK_DEMO_ROC
 %
 % This is a script to demonstrate the usage of :
-% NIAK_BRICK_SLICE_TIMING
+% NIAK_BRICK_ROC
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_SLICE_TIMING. 
+% Just type in NIAK_DEMO_ROC
 %
 % _________________________________________________________________________
 % OUTPUT
 %
-% It will apply a slice timing correction on the functional data of subject
-% 1 (motor condition) and use the default output name.
+% It will apply a ROC analysis on a t-stat map, using the thresholded
+% t-stat as ground truth, after a gaussian nosie with std 0.5 was added.
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -59,16 +59,17 @@ niak_gb_vars
 %% Setting input/output files
 switch gb_niak_format_demo
     
-     case 'minc1' % If data are in minc1 format
+     case {'minc1','minc2'} % If data are in minc1 or minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_in.spm = cat(2,gb_niak_path_demo,filesep,'glm_motor',filesep,'func_motor_subject1_motor_mag_t.mnc'); 
+        [hdr,vol] = niak_read_vol(files_in.spm);
+        hdr.file_name = cat(2,gb_niak_path_demo,filesep,'glm_motor',filesep,'func_motor_subject1_motor_mag_t_thresh.mnc'); 
+        mask = niak_mask_brain(abs(vol));
+        vol(mask) = vol(mask) + 0.5 * randn([sum(mask(:)>0) 1]);
+        niak_write_vol(hdr,abs(vol)>3);
+        files_in.ground_truth = hdr.file_name;
         files_out = ''; % The default output name will be used
-    
-    case 'minc2' % If data are in minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
-        files_out = ''; % The default output name will be used
-    
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
@@ -76,14 +77,8 @@ switch gb_niak_format_demo
 end
 
 %% Options
-TR = 2.33; % Repetition time in seconds
-nb_slices = 42; % Number of slices in a volume
-opt.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
-opt.timing(1)=TR/nb_slices; % Time beetween slices
-opt.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
 opt.flag_test = 0; % This is not a test, the slice timing is actually performed
-
-[files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt);
+[files_in,files_out,opt] = niak_brick_roc(files_in,files_out,opt);
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
 
