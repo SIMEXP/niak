@@ -1,121 +1,144 @@
 function file_pipeline = niak_init_pipeline(pipeline,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_INIT_PIPELINE
+%  
 % Convert a matlab-based pipeline structure into a set of PERL and BASH 
 % scripts ready to run using the poor man's pipeline (PMP) PERL library.
 %
 % SYNTAX:
 % FILE_PIPELINE = NIAK_INIT_PIPELINE(PIPELINE,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% PIPELINE      (structure) a matlab structure which defines a pipeline.
-%                       Each field <STAGE_NAME> is a structure. Note that 
-%                       <STAGE_NAME> will be used to name jobs in PMP and 
-%                       set dependencies. <STAGE_NAME> has the
-%                       following fields : 
+%
+% * PIPELINE      
+%       (structure) a matlab structure which defines a pipeline.
+%       Each field name <STAGE_NAME> will be used to name jobs in PMP and set 
+%       dependencies. The fields <STAGE_NAME> are themselves structure, with 
+%       the following fields : 
 %               
-%               LABEL (string, default '') any string you want. This will only be used
-%                       in the flag_verbose mode, and in the dot graph
-%                       recapitulating all the jobs and dependencies.
+%       LABEL 
+%           (string, default '') any string you want. This will only be used
+%           in the flag_verbose mode, and in the dot graph recapitulating all 
+%           the jobs and dependencies.
 %
-%               COMMAND (string) the name of the command you want to apply at 
-%                       this stage. This command can use the variables 
-%                       FILES_IN, FILES_OUT and OPT. Example :
-%                       'niak_brick_something(files_in,files_out,opt);'
-%                       'my_function(opt)'
+%       COMMAND 
+%           (string) the name of the command you want to apply at this stage. 
+%           This command can use the variables FILES_IN, FILES_OUT and OPT. 
+%           Examples :
+%               'niak_brick_something(files_in,files_out,opt);'
+%               'my_function(opt)'
 %
-%               FILES_IN (string, cell of strings, structure) the argument
-%                      FILES_IN of the BRICK. Note that for properly
-%                      handling dependencies, this field needs to contain
-%                      the exact name of the file (no wildcards, no '' for
-%                      default values). 
+%       FILES_IN 
+%           (string, cell of strings, structure) the argument FILES_IN of the 
+%           BRICK. Note that for properly handling dependencies, this field 
+%           needs to contain the exact name of the file (no wildcards, 
+%           no '' for default values). 
 %
-%               FILES_OUT (string, cell of strings, structure) the argument
-%                      FILES_OUT of the BRICK. Note that for properly
-%                      handling dependencies, this field needs to contain
-%                      the exact name of the file (no wildcards, no '' for
-%                      default values). 
+%       FILES_OUT 
+%           (string, cell of strings, structure) the argument FILES_OUT of 
+%           the BRICK. Note that for properly handling dependencies, this 
+%           field needs to contain the exact name of the file 
+%           (no wildcards, no '' for default values). 
 %
-%               OPT (any matlab variable) options of the BRICK. 
+%       OPT 
+%           (any matlab variable) options of the BRICK. 
 %
-%               ENVIRONMENT (string, default current environment) the environment 
-%                      where the BRICK should run. Available options : 
-%                       'matlab', 'octave'. 
+%       ENVIRONMENT 
+%           (string, default current environment) the environment where the 
+%           BRICK should run. Available options : 'matlab', 'octave'. 
 %
 %
-% OPT           (structure) with the following fields :
+% * OPT           
+%       (structure) with the following fields :
 %
-%               PATH_LOGS (string) The folder where the PERL 
-%                      and BASH scripts will be stored.
+%       PATH_LOGS 
+%           (string) The folder where the PERL and BASH scripts will be 
+%           stored.
 %
-%               NAME_PIPELINE (string, default 'NIAK_pipeline') the name of
-%                      the pipeline. No space, no weird characters please.
+%       NAME_PIPELINE 
+%           (string, default 'NIAK_pipeline') the name of the pipeline. 
+%           No space, no weird characters please.
 %
-%               CLOBBER (boolean, default 0) if clobber == 1, the PATH_LOGS
-%                      will be cleared and all files written again from
-%                      scratch. If CLOBBER ~=1, any file already present in
-%                      PATH_LOGS will be left as it was, including
-%                      PATH_DEF_MAT and all the SH scripts. The PERL script
-%                      will be updated no matter what.
+%       CLOBBER 
+%           (boolean, default 0) if clobber == 1, the PATH_LOGS will be 
+%           cleared and all files written again from scratch. If 
+%           CLOBBER ~=1, any file already present in PATH_LOGS will be 
+%           left as it was, including PATH_DEF_MAT and all the SH scripts. 
+%           The PERL script will be updated no matter what.
 %
-%               FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
-%                      the function prints some infos during the
-%                      processing.
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then the function prints 
+%           some infos during the processing.
 %
-%               INIT_SH (string, default GB_NIAK_PATH_CIVET/INIT-SGE.SH) 
-%                      a file name of a script to init the SH
-%                      environment if you are using any BRICK using the 
-%                      'bash' environement. The default value will work if
-%                      you want to use tools from the quarantine. The
-%                      variable GB_NIAK_PATH_CIVET can be manually
-%                      specified in the file NIAK_GB_VARS.
+%       INIT_SH 
+%           (string, default GB_NIAK_PATH_CIVET/INIT-SGE.SH) 
+%           a file name of a script to init the SH environment if you are 
+%           using any BRICK using the 'bash' environement. The default value 
+%           will work if you want to use tools from the quarantine. The
+%           variable GB_NIAK_PATH_CIVET can be manually specified in the 
+%           file NIAK_GB_VARS.
 %
-%               COMMAND_MATLAB (string, default GB_NIAK_COMMAND_MATLAB) 
-%                      how to invoke matlab. You may want to update that 
-%                      to add the full path of the command. The defaut for
-%                      this field can be set using the variable
-%                      GB_NIAK_COMMAND_MATLAB in the file NIAK_GB_VARS.
+%       COMMAND_MATLAB 
+%           (string, default GB_NIAK_COMMAND_MATLAB) how to invoke matlab. 
+%           You may want to update that to add the full path of the command. 
+%           The defaut for this field can be set using the variable
+%           GB_NIAK_COMMAND_MATLAB in the file NIAK_GB_VARS.
 %
-%               COMMAND_OCTAVE (string, default GB_NIAK_COMMAND_MATLAB) 
-%                      how to invoke matlab. You may want to update that 
-%                      to add the full path of the command. The defaut for
-%                      this field can be set using the variable
-%                      GB_NIAK_COMMAND_MATLAB in the file NIAK_GB_VARS.
+%       COMMAND_OCTAVE 
+%           (string, default GB_NIAK_COMMAND_MATLAB) how to invoke octave. 
+%           You may want to update that to add the full path of the command. 
+%           The defaut for this field can be set using the variable
+%           GB_NIAK_COMMAND_OCTAVE in the file NIAK_GB_VARS.
 %
-%               FILE_PATH_MAT (string, default PATH_LOGS/NAME_PIPELINE.path_def.mat) 
-%                      If a non-empty string is provided, PATH_DEF_MAT should be 
-%                      a '.MAT' file (in actual matlab format, not octave) that will be
-%                      loaded and set as search path in the matlab/octave sessions.
-%                      If omitted or if the file does not exist, the current 
-%                      search path will be saved in PATH_LOGS under the 
-%                       name NAME_PIPELINE.path_def.mat .
-%                      If CLOBBER == 0 and the file already exists, nothing 
-%                       will be done.
+%       FILE_PATH_MAT 
+%           (string, default PATH_LOGS/NAME_PIPELINE.path_def.mat) 
+%           If a non-empty string is provided, PATH_DEF_MAT should be a 
+%           '.MAT' file (in actual matlab format, not octave) that will be
+%           loaded and set as search path in the matlab/octave sessions.
+%           If omitted or if the file does not exist, the current search 
+%           path will be saved in PATH_LOGS under the name 
+%           NAME_PIPELINE.path_def.mat . If CLOBBER == 0 and the file 
+%           already exists, nothing will be done.
 %
-%               SGE_OPTIONS (string, default GB_NIAK_SGE_OPTIONS) A string which is directly 
-%                       passed to qsub when using the SGE execution mode 
-%                       (and is ignored otherwise). The following string 
-%                       "-l vf=2G" would, for example, reserve 2 gigabytes 
-%                       of memory, and "-q aces.q@node0,aces.q@node1" would 
-%                       specify to run the jobs through the aces queue, 
-%                       and specifically on node0 or node1. The defaut for
-%                      this field can be set using the variable
-%                      GB_NIAK_SGE_OPTIONS in the file NIAK_GB_VARS.
+%       SGE_OPTIONS 
+%           (string, default GB_NIAK_SGE_OPTIONS) A string which is directly 
+%           passed to qsub when using the SGE execution mode (and is 
+%           ignored otherwise). The following string "-l vf=2G" would, 
+%           for example, reserve 2 gigabytes of memory, and 
+%           "-q aces.q@node0,aces.q@node1" would specify to run the jobs 
+%           through the aces queue, and specifically on node0 or node1. 
+%           The defaut for this field can be set using the variable
+%           GB_NIAK_SGE_OPTIONS in the file NIAK_GB_VARS.
 %
-%               
+%           
+% _________________________________________________________________________
 % OUTPUTS:
 %
-% FILE_PIPELINE     (string) the name of a PERL script implementing the
-%                   pipeline through PMP.
+% FILE_PIPELINE     
+%       (string) the file name of a PERL script implementing the pipeline 
+%       through PMP.
 %
-% All output directories for output files are created here.
+% _________________________________________________________________________
+% SEE ALSO:
 %
-% The directory PATH_LOGS is created. It contains the following files :
+% NIAK_MANAGE_PIPELINE, NIAK_VISU_PIPELINE, NIAK_DEMO_PIPELINE*,
+% NIAK_DEMO_FMRI_PREPROCESS, NIAK_DEMO_CORSICA
 %
-% PATH_LOGS/NAME_PIPELINE.pl : A PERL script which implements the pipeline in PMP.
+% _________________________________________________________________________
+% COMMENTS:
+%
+% NOTE 1:
+%   All output directories for output files are created by NIAK_INIT_PIPELINE.
+%
+%   The directory PATH_LOGS is created. It contains the following files :
+%
+%   PATH_LOGS/NAME_PIPELINE.pl : A PERL script which implements the pipeline in PMP.
 %       This script is overwritten every time NIAK_INIT_PIPELINE is executed in
 %       the folder PATH_LOGS.
 %
-% PATH_LOGS/NAME_PIPELINE.mat : The first time NIAK_INIT_PIPELINE is used, the 
+%   PATH_LOGS/NAME_PIPELINE.mat : The first time NIAK_INIT_PIPELINE is used, the 
 %       structures PIPELINE and OPT are saved here in matlab format, along 
 %       with a string called HISTORY which describes the date, user name 
 %       and system. Subsequent use of NIAK_INIT_PIPELINE will update these 
@@ -124,39 +147,39 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %       will result into nested structures
 %       PREVIOUS_PIPELINE.PREVIOUS_PIPELINE.
 %
-% PATH_LOGS/NAME_PIPELINE.path_def.mat : The c
+%   PATH_LOGS/NAME_PIPELINE.path_def.mat : The matlab search path for the
+%       pipeline.
 %
-% PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.SH : This script is the one executed at the given stage.
+%   PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.SH : This script is the one executed at the given stage.
 % 
-% PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.MAT : If the stage lives in matlab and octave 
+%   PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.MAT : If the stage lives in matlab and octave 
 %       environment, this file contains the variables BRICK, FILES_IN, 
 %       FILES_OUT and OPT of the current stage.
 %
-% PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.M : If the stage lives in octave, this is an
+%   PATH_LOGS/NAME_PIPELINE.<STAGE_NAME>.M : If the stage lives in octave, this is an
 %       octave script which is run at the current stage.
 %
-% If CLOBBER == 0, the files won't be written : if a stage has been
+%   If CLOBBER == 0, the files won't be written : if a stage has been
 %       completed (file PATH_LOGS/FOLDER_LOGS/<STAGE_NAME>.LOCK exists), nothing
 %       is done ; otherwise, previous content is saved in a PREVIOUS_PIPELINE
 %       structure, and variables are updated.
 %
-% SEE ALSO:
-% NIAK_MANAGE_PIPELINE, NIAK_VISU_PIPELINE, NIAK_DEMO_PIPELINE*
+% NOTE 2:
+%   Other files will be created in PATH_LOGS when running the pipeline. 
+%   See NIAK_RUN_PIPELINE for more information.
 %
-% COMMENTS
-% A description of the Poor Man's Pipeline system written in PERL can be
-% found on the BIC wiki :
-% http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
+% NOTE 3:
+%   A description of the Poor Man's Pipeline system written in PERL can be
+%   found on the BIC wiki :
+%   http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
 %
-% Note that other files will be created in PATH_LOGS when
-% running the pipeline. See NIAK_RUN_PIPELINE for more information.
-%
-% This function needs a CIVET quarantine to run, see :
-% http://wiki.bic.mni.mcgill.ca/index.php/CIVET
-% The path to the quarantine can be manually specified in the variable
-% GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
-% The initialization script of the quarantine can be specified through the
-% variable GB_NIAK_INIT_CIVET.
+% NOTE 4:
+%   This function currently needs a CIVET quarantine to run, see :
+%   http://wiki.bic.mni.mcgill.ca/index.php/CIVET
+%   The path to the quarantine can be manually specified in the variable
+%   GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
+%   The initialization script of the quarantine can be specified through the
+%   variable GB_NIAK_INIT_CIVET.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
