@@ -4,7 +4,7 @@ function [hdr,vol] = niak_read_vol(file_name)
 % SUMMARY NIAK_READ_VOL
 %
 % Read 3D or 3D+t data. Currently supported formats are minc1 and minc2
-% (.minc), nifti (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
+% (.mnc), nifti (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
 % The data can also be zipped (additional extension .gz, see the COMMENTS
 % section below).
 %
