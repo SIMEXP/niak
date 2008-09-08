@@ -1,25 +1,40 @@
-function transf = niak_read_transf(file_name)
+function  [err,msg] = niak_read_tab(file_name,tab,labels_line,labels_col)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_READ_TRANSF
+% SUMMARY NIAK_WRITE_TAB
 %
-% Read a lsq12 transformation matrix from an xfm file
+% Write a table into a text file. 
+% The first line and first columns are string labels, while
+% the rest of the table is a numerical array. 
+% Columns and line labels are optional 
 %
 % SYNTAX:
-% TRANSF = NIAK_READ_TRANSF(FILE_NAME)
-% 
+% [ERR,MSG] = NIAK_WRITE_TAB(FILE_NAME,TAB,LABELS_LINE,LABELS_COL)
+%
 % _________________________________________________________________________
 % INPUTS:
 %
 % FILE_NAME     
-%       (string) the name of the xfm file (usually ends in .xfm)
-% 
+%       (string) the name of the text file (usually ends in .dat)
+%
+% TAB   (matrix M*N) the numerical data array. 
+%
+% LABELS_LINE        
+%       (cell of strings 1*M) LABELS_LINE{NUM_L} is the label of line NUM_L in
+%       TAB.
+%
+% LABELS_COL
+%       (cell of strings 1*N) LABELS_COL{NUM_C} is the label of column 
+%       NUM_C in TAB.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% TRANSF        
-%       (matrix 4*4) a classical matrix representation of an lsq12
-%       transformation.
+% ERR
+%       (boolean) if ERR == 1 an error occured, ERR = 0 otherwise.
+%
+% MSG 
+%       (string) the error message (empty if ERR==0).
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -51,11 +66,52 @@ function transf = niak_read_transf(file_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-hf = fopen(file_name);
-xfm_info = fread(hf,Inf,'uint8=>char')';
-cell_info = niak_string2lines(xfm_info);
-transf = eye(4);
-transf(1,:) = str2num(cell_info{end-2});
-transf(2,:) = str2num(cell_info{end-1});
-transf(3,:) = str2num(cell_info{end}(1:end-1));
+%% Default inputs
+if ~exist('tab','var')|~exist('file_name','var')
+    error('Please specify FILE_NAME and TAB as inputs');
+end
+
+[nx,ny] = size(tab);
+
+if ~exist('labels_line','var')
+    labels_line = [];   
+end
+
+if isempty(labels_line)
+    for ix = 1:nx
+        labels_line{ix} = cat(2,'col',num2str(ix));
+    end
+end
+
+if ~exist('labels_col','var')
+    labels_col = [];    
+end
+
+if isempty(labels_col)    
+    for iy = 1:ny
+        labels_col{iy} = cat(2,'line',num2str(iy));
+    end
+end
+
+%% Writting the table
+
+%% column labels
+[hf,msg] = fopen(file_name,'w');
+if hf == -1
+    err = 1;
+else 
+    err = 0;
+end
+fprintf(hf,'      ');
+for num_c = 1:length(labels_col)
+    fprintf(hf,'  %s',labels_col{num_c});
+end
+fprintf(hf,'\n')
+
+%% lines
+for num_l = 1:size(tab,1)
+    fprintf(hf,'%s  ',labels_line{num_l});
+    fprintf(hf,'%s\n',num2str(tab(num_l,:),12));
+end
+
 fclose(hf);

@@ -1,25 +1,34 @@
-function transf = niak_read_transf(file_name)
+function [tab,labels_line,labels_col] = niak_read_tab(file_name)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_READ_TRANSF
+% SUMMARY NIAK_READ_TAB
 %
-% Read a lsq12 transformation matrix from an xfm file
+% Read a table from a text file. 
+% The first line and first columns are assumed to be string labels, while
+% the rest of the table is assumed to be a numerical array. 
+% The "line" labels are optional.
 %
 % SYNTAX:
-% TRANSF = NIAK_READ_TRANSF(FILE_NAME)
-% 
+% [TAB,LABELS_LINE,LABELS_COL] = NIAK_READ_TAB(FILE_NAME)
+%
 % _________________________________________________________________________
 % INPUTS:
 %
 % FILE_NAME     
-%       (string) the name of the xfm file (usually ends in .xfm)
+%       (string) the name of the text file (usually ends in .dat)
 % 
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% TRANSF        
-%       (matrix 4*4) a classical matrix representation of an lsq12
-%       transformation.
+% TAB   (matrix M*N) the numerical data array. 
+%
+% LABELS_LINE        
+%       (cell of strings 1*?) LABELS_LINE{NUM_L} is the label of line NUM_L in
+%       TAB.
+%
+% LABELS_COL
+%       (cell of strings 1*N) LABELS_COL{NUM_C} is the label of column 
+%       NUM_C in TAB.
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -51,11 +60,36 @@ function transf = niak_read_transf(file_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if ~exist(file_name,'file')
+    error(cat(2,'Could not find any file matching the description ',file_name));
+end
+
+%% Reading the table
 hf = fopen(file_name);
-xfm_info = fread(hf,Inf,'uint8=>char')';
-cell_info = niak_string2lines(xfm_info);
-transf = eye(4);
-transf(1,:) = str2num(cell_info{end-2});
-transf(2,:) = str2num(cell_info{end-1});
-transf(3,:) = str2num(cell_info{end}(1:end-1));
+str_tab = fread(hf,Inf,'uint8=>char')';
+cell_tab = niak_string2lines(str_tab);
 fclose(hf);
+
+%% Extracting the labels
+labels_col = niak_string2words(cell_tab{1});
+
+%% Extracting the numerical data
+nb_col = length(labels_col);
+tab = zeros([length(cell_tab)-1 nb_col]);
+
+for num_v = 2:length(cell_tab)
+    line_tmp = niak_string2words(cell_tab{num_v});
+    if length(line_tmp) ~= nb_col
+        if length(line_tmp) == nb_col + 1
+         
+            labels_line{num_v-1} = line_tmp{1};
+            tab(num_v-1,:) = str2num(char(line_tmp(2:end)));
+        else
+            error(cat(2,'all the lines of ',file_name,'should have the same number of columns! (separator is space)'));
+        end
+
+    else
+        labels_line{num_v-1} = '';
+        tab(num_v-1,:) = str2num(char(line_tmp));
+    end
+end
