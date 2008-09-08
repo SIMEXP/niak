@@ -128,7 +128,9 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %
 %       FWHM 
 %           (real number, default 8 mm) the fwhm of the blurring kernel
-%           applied to all volumes.
+%           applied to all volumes during the coregistration. WARNING : no
+%           spatial smoothing will be applied to the resampled data. Please
+%           use NIAK_SMOOTH_VOL for this purpose.
 %
 %       FLAG_SESSION 
 %          (boolean, default 0) if FLAG_SESSION == 0, the intra-session 

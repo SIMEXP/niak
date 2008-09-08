@@ -76,14 +76,6 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %           only if you have very big misrealignement between the two
 %           images (say, > 2 cm).
 %
-%       FWHM
-%           (real number, default 8 mm) the fwhm of the blurring kernel
-%           applied to all volumes.
-%
-%       INTERPOLATION
-%           (string, default 'trilinear') the spatial interpolation method.
-%           Available options : 'trilinear', 'tricubic', 'nearest','sinc'.
-%
 %       FOLDER_OUT
 %           (string, default: path of FILES_IN) If present, all default
 %           outputs will be created in the folder FOLDER_OUT. The folder
@@ -182,8 +174,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_zip','flag_test','folder_out','interpolation','flag_verbose','fwhm','init'};
-gb_list_defaults = {0,0,'','trilinear',1,8,'center'};
+gb_list_fields = {'flag_zip','flag_test','folder_out','flag_verbose','init'};
+gb_list_defaults = {0,0,'',1,'center'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')

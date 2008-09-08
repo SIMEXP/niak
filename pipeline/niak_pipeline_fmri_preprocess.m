@@ -46,7 +46,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           The quantity of intermediate results that are generated. For a 
 %           detailed list of outputs in each mode, see the internet
 %           documentation (http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing)
-%           * With the option ‘minimum’, only the raw data and preprocessed 
+%           * With the option ‘minimum’, only the preprocessed 
 %              data at the final stage are generated. All intermediate 
 %              outputs are cleaned as soon as possible. 
 %           * With the option ‘quality_control’ some outputs are generated 

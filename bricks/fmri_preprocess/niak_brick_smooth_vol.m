@@ -27,16 +27,6 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %           maximum of the Gaussian kernel, in each dimension. If fwhm has 
 %           length 1, an isotropic kernel is implemented.
 %
-%       STEP  
-%           (vector of size [1 3] or [1 4], default resolution of input 
-%           files). This parameter usually does not need to be manually 
-%           specified, but is rather read from the input file. 
-%           Specification through this field will override these values. 
-%           STEP is the resolution in the respective dimensions, i.e. the 
-%           space in mmm between two voxels in x, y, and z. Note that the 
-%           unit is irrelevant and just need to be consistent with the 
-%           filter width (fwhm)). The fourth element is ignored.
-%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
 %           outputs will be created in the folder FOLDER_OUT. The folder 
@@ -100,8 +90,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','voxel_size','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {[4 4 4],[],1,0,'',0};
+gb_list_fields = {'fwhm','flag_verbose','flag_test','folder_out','flag_zip'};
+gb_list_defaults = {[4 4 4],1,0,'',0};
 niak_set_defaults
 
 if length(opt.fwhm) == 1
