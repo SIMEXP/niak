@@ -1,69 +1,86 @@
 function [succ] = niak_manage_pipeline(file_pipeline,action,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY OF NIAK_MANAGE_PIPELINE
+%
 % Run or reset a PMP pipeline.
 %
 % SYNTAX:
 % [] = NIAK_MANAGE_PIPELINE(FILE_PIPELINE,ACTION,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% FILE_PIPELINE      (string) The file name of a PMP script generated using
-%                           NIAK_INIT_PIPELINE.
+%
+% FILE_PIPELINE      
+%       (string) The file name of a PMP script generated using 
+%       NIAK_INIT_PIPELINE.
 %               
-% ACTION             (string) either 'run', 'restart' or 'reset'.
+% ACTION             
+%       (string) either 'run', 'restart' or 'reset'.
 %
-% OPT                (string) how to execute the pipeline :
-%                    'spawn' : local execution
-%                    'sge' : sge qsub system
+% OPT                
+%       (string) how to execute the pipeline :
+%           'spawn' : local execution
+%           'sge' : sge qsub system
+%           'pbs' : portable batch system
 %
-%
+% _________________________________________________________________________
 % OUTPUTS:
 % 
-% What the function does depends on the argument ACTION :
+% What the function does depends on the arguments ACTION and OPT:
 %
 % ACTION = 'run'
-% Start the pipeline.
+%   Start the pipeline.
 %
 % ACTION = 'restart'
-% Delete all '.running', '.failed' and '.lock' files and re-runs the
-% pipeline. OPT specifies the mode to run the pipeline :
-%       'spawn' (default) : sequential execution on the local machine.
-%       'sge' : parallel execution, using the sge qsub system.
-%       'pbs' : parallel execution, using pbs.
+%   Delete all '.running', '.failed' and '.lock' files and re-runs the
+%   pipeline. 
 %
 % ACTION = 'reset' 
-% Clean all '.running', '.failed', '.lock' and '.finished' files, then 
-% restarts the pipeline from scratch.
+%   Clean all '.running', '.failed', '.lock' and '.finished' files, then 
+%   restarts the pipeline from scratch.
+%
+% OPT specifies the mode to run the pipeline :
+%   'spawn' (default) : sequential execution on the local machine.
+%               'sge' : parallel execution, using the sge qsub system.
+%               'pbs' : parallel execution, using pbs.
 %
 % When running, the pipeline is going to produce the following files:
 %
-% PIPELINE_NAME.lock : means that the pipeline is currently running.
+%   PIPELINE_NAME.lock : means that the pipeline is currently running.
 %
-% PIPELINE_NAME.STAGE_NAME.running : means that this stage is currently
+%   PIPELINE_NAME.STAGE_NAME.running : means that this stage is currently
 %       running.
 %
-% PIPELINE_NAME.STAGE_NAME.log : all messages sent to the terminal during
+%   PIPELINE_NAME.STAGE_NAME.log : all messages sent to the terminal during
 %       the execution of the stage.
 %
-% PIPELINE_NAME.STAGE_NAME.failed : means that an attempt to run this stage
+%   PIPELINE_NAME.STAGE_NAME.failed : means that an attempt to run this stage
 %       was made, and that it failed (meaning that some outputs are reported
 %       missing). 
 %
-% PIPELINE_NAME.STAGE_NAME.finished : means this stage has been completed,
+%   PIPELINE_NAME.STAGE_NAME.finished : means this stage has been completed,
 %       meaning that all output files have been created (no guarantee is that
 %       these outputs are correct in any sense though).
 %
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_INIT_PIPELINE, NIAK_VISU_PIPELINE, NIAK_DEMO_PIPELINE*
 %
-% COMMENTS
-% A description of the Poor Man's Pipeline system written in PERL can be
-% found on the BIC wiki :
-% http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
+% _________________________________________________________________________
+% COMMENTS:
 %
-% This function needs a CIVET quarantine to run, see :
-% http://wiki.bic.mni.mcgill.ca/index.php/CIVET
-% The path to the quarantine can be manually specified in the variable
-% GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
+% Note 1:
+%   A description of the Poor Man's Pipeline system written in PERL can be
+%   found on the BIC wiki :
+%   http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
+%
+% Note 2:
+%   This function needs a CIVET quarantine to run, see :
+%   http://wiki.bic.mni.mcgill.ca/index.php/CIVET
+%   The path to the quarantine can be manually specified in the variable
+%   GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

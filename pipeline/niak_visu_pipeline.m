@@ -1,71 +1,89 @@
 function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
-
-% Run or reset a PMP pipeline.
+%
+% _________________________________________________________________________
+% SUMMARY OF NIAK_VISU_PIPELINE
+%
+% Monitor the execution of a pipeline
 %
 % SYNTAX:
 % [] = NIAK_VISU_PIPELINE(FILE_PIPELINE,ACTION,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% FILE_PIPELINE  (string) The file name of a PMP script generated using
-%                  NIAK_INIT_PIPELINE.
-%               
-% ACTION         (string) Possible values :
-%                  'graph_stages', 'graph_filenames', 'log', 'status', 'running',
-%                  'failed', 'finished' or 'unfinished'
 %
-% OPT           (string) see action 'log'.
+% FILE_PIPELINE  
+%       (string) The file name of a PMP script generated using 
+%       NIAK_INIT_PIPELINE.
+%               
+% ACTION         
+%       (string) Possible values :
+%           'graph_stages', 'graph_filenames', 'log', 'status', 'running',
+%           'failed', 'finished' or 'unfinished'
+%
+% OPT           
+%       (string) see action 'log'.
+%
+% _________________________________________________________________________
 % OUTPUTS:
 % 
 % What the function does depends on the argument ACTION :
 %
 % ACTION = 'graph_stages'
-% Create a file PATH_LOGS/NAME_PIPELINE.graph_stages.dot
-% This is a graph representation of the stages of the pipeline in dot format (see
-% graphviz package on internet). It also attempts to convert this dot file
-% into a svg file using dot, and displays it using the program specified in
-% the variable GB_NIAK_VIEWER_SVG in the file NIAK_GB_VARS.
+%       Create a file PATH_LOGS/NAME_PIPELINE.graph_stages.dot
+%       This is a graph representation of the stages of the pipeline in 
+%       dot format (see graphviz package on internet). It also attempts to 
+%       convert this dot file into a svg file using dot, and displays it 
+%       using the program specified in the variable GB_NIAK_VIEWER_SVG in 
+%       the file NIAK_GB_VARS.
 %
 % ACTION = 'graph_filenames'
-% Create a file PATH_LOGS/NAME_PIPELINE.graph_filenames.dot
-% This is a graph representation of the stages of the pipeline in dot format (see
-% graphviz package on internet), along with a list of all files that will be
-% generated. It also attempts to convert this dot file
-% into a svg file using dot, and displays it using the program specified in
-% the variable GB_NIAK_VIEWER_SVG in the file NIAK_GB_VARS.
+%       Create a file PATH_LOGS/NAME_PIPELINE.graph_filenames.dot
+%       This is a graph representation of the stages of the pipeline in dot 
+%       format (see graphviz package on internet), along with a list of all 
+%       files that will be generated. It also attempts to convert this dot 
+%       file into a svg file using dot, and displays it using the program 
+%       specified in the variable GB_NIAK_VIEWER_SVG in the 
+%       file NIAK_GB_VARS.
 %
 % ACTION = 'log'
-% Print the log files for all jobs whose name include the string OPT.
+%       Print the log files for all jobs whose name include the string OPT.
 %
 % ACTION = 'status'
-% Print the current status of the pipeline (running or not), and displays
-% the log file of the initialization and execution of the pipeline, if they
-% exist.
+%       Print the current status of the pipeline (running or not), and 
+%       displays the log file of the initialization and execution of the 
+%       pipeline, if they exist.
 %
 % ACTION = 'running'
-% Display a list of the stages of the pipeline that are currently running
-% and that are scheduled in the queue.
+%       Display a list of the stages of the pipeline that are currently 
+%       running and that are scheduled in the queue.
 %
 % ACTION = 'failed'
-% Display a list of the stages of the pipeline that have failed.
+%       Display a list of the stages of the pipeline that have failed.
 %
 % ACTION = 'finished'
-% Display a list of finished stages of the pipeline.
+%       Display a list of finished stages of the pipeline.
 %
 % ACTION = 'unfinished'
-% Display a list of unfinished stages.
+%       Display a list of unfinished stages.
 %
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_INIT_PIPELINE, NIAK_MANAGE_PIPELINE, NIAK_DEMO_PIPELINE*
 %
-% COMMENTS
-% A description of the Poor Man's Pipeline system written in PERL can be
-% found on the BIC wiki :
-% http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
+% _________________________________________________________________________
+% COMMENTS:
 %
-% This function needs a CIVET quarantine to run, see :
-% http://wiki.bic.mni.mcgill.ca/index.php/CIVET
-% The path to the quarantine can be manually specified in the variable
-% GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
+% NOTE 1:
+%   A description of the Poor Man's Pipeline system written in PERL can be
+%   found on the BIC wiki :
+%   http://wiki.bic.mni.mcgill.ca/index.php/PoorMansPipeline
+%
+% NOTE 2:
+%   This function needs a CIVET quarantine to run, see :
+%   http://wiki.bic.mni.mcgill.ca/index.php/CIVET
+%   The path to the quarantine can be manually specified in the variable
+%   GB_NIAK_PATH_CIVET of the file NIAK_GB_VARS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
