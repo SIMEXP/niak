@@ -193,13 +193,4 @@ if flag_verbose
     fprintf('\nSaving the ROC ...\n')
 end
 
-[hf,mesg] = fopen(files_out,'w');
-if hf == -1
-    error(mesg);
-end
-
-for  num_l = 1:length(roc_curve)
-    fprintf(hf,'%1.15f %1.15f %1.15f ',bins(num_l),bins(num_l+1),roc_curve(num_l));
-    fprintf(hf,'\n');
-end
-fclose(hf);
+niak_write_tab(files_out,[(bins(1:end-1)'+bins(2:end)')/2 roc_curve(:)],[],{'spec','sens'});

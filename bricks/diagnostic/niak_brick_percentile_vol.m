@@ -165,8 +165,4 @@ for num_e = 1:length(opt.percentiles);
 end
 
 %% Saving output
-hf = fopen(files_out,'w');
-fprintf(hf,'%s\n',num2str(opt.percentiles,2));
-fprintf(hf,'%s\n',num2str(perc,12));
-fclose(hf);
-
+niak_write_tab(files_out,[opt.percentiles(:) perc(:)],[],{'percentiles','values'});
