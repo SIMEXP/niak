@@ -89,7 +89,7 @@ end
 
 if isempty(labels_col)    
     for iy = 1:ny
-        labels_col{iy} = cat(2,'line',num2str(iy));
+        labels_col{iy} = '';
     end
 end
 
