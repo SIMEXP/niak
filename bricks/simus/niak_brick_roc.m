@@ -193,4 +193,4 @@ if flag_verbose
     fprintf('\nSaving the ROC ...\n')
 end
 
-niak_write_tab(files_out,[(bins(1:end-1)'+bins(2:end)')/2 roc_curve(:)],[],{'spec','sens'});
+niak_write_tab(files_out,[(bins(1:end-1)'+bins(2:end)')/2 roc_curve(:)],[],{'1-spec','sens'});
