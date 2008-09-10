@@ -144,7 +144,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    fprintf('\n_______________________________________\n\nComputing mean/std volumes of %s\n_______________________________________\n',char(files_in{:})');
+    fprintf('\n_______________________________________\n\nComputing mean/std, std of the mean and confidence intervals of the following curves %s\n_______________________________________\n',char(files_in{:})');
 end
 
 %% Reading all curves
@@ -174,11 +174,18 @@ for num_f = 1:nb_files
     end
 end
 
-%% Computing mean/std volume
+%% Computing mean/std curves
+if flag_verbose
+    fprintf('\nComputing mean/std curves ...\n');
+end
 mean_curve = mean(all_curves,2)';
 std_curve = std(all_curves,0,2)';
 
-%% Deriving bootstrap cdf & std of the mean
+%% Deriving bootstrap ci & std of the mean
+if flag_verbose
+    fprintf('\nDeriving bootstrap ci & std of the mean ...\n');
+end
+
 samps = zeros([nb_samps size(all_curves,1)]);
 
 for num_s = 1:nb_samps
@@ -194,6 +201,10 @@ for num_e = 1:length(opt.percentiles);
 end
 
 %% Saving results
+if flag_verbose
+    fprintf('\nSaving results ...\n');
+end
+
 laby = cell([1 length(absc)]);
 for num_y = 1:length(absc)
     laby{num_y} = num2str(absc(num_y),2);

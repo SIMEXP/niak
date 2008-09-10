@@ -41,7 +41,7 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %           region.
 %
 %       P 
-%           (real number, 0<P<1, default 0.001) the p-value of the stepwise
+%           (real number, 0<P<1, default 0.0001) the p-value of the stepwise
 %           regression.
 %
 %       NB_SAMPS 
@@ -141,7 +141,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'ww','nb_cluster','p','nb_samps','type_score','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0,0,0.001,10,'freq',1,0,''};
+gb_list_defaults = {0,0,0.0001,10,'freq',1,0,''};
 niak_set_defaults
 
 %% Parsing the input names

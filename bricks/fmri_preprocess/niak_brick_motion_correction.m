@@ -146,9 +146,9 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %
 %       FLAG_PERCENTAGE (boolean, default: 0) if FLAG_PERCENTAGE equals 1,
 %           the value of each voxel in every volume will be divided by the
-%           mean value at this voxel for all runs and sessions, and then
+%           mean value at this voxel for the current run and then
 %           mutliplied by 100, i.e. the unit of the motion-corrected data
-%           is now a percentage of the baseline.
+%           is now a percentage of the baseline for each run.
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present,
