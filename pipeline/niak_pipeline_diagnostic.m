@@ -1,44 +1,22 @@
-function pipeline = niak_pipeline_corsica(files_in,opt)
+function pipeline = niak_pipeline_diagnostic(pipeline_in,opt)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_PIPELINE_CORSICA
+% SUMMARY NIAK_PIPELINE_DIAGNOSTIC
 %
-% Build a pipeline structure to apply the CORSICA method for correction of
-% the physiological noise.
+% Build diagnostic measures from an individual GLM pipeline
+% ('standard-native' preprocessing style with " opt.size_output = 'all' "/
 %
-% PIPELINE = NIAK_PIPELINE_CORSICA(FILES_IN,OPT)
+% PIPELINE = NIAK_PIPELINE_DIAGNOSTIC(PIPELINE_IN,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN  
-%       (structure) with the following fields : 
-%
-%       <SUBJECT>.FMRI 
-%           (cell of strings) a list of fMRI datasets. The field name 
-%           <SUBJECT> can be any arbitrary string. All data in 
-%           FILES_IN.<SUBJECT> should come from the same subject.
-%
-%       <SUBJECT>.TRANSFORMATION 
-%           (string, default identity) a transformation from the functional 
-%           space to the "MNI152 non-linear" space.
+%  * PIPELINE_IN
+%       (structure) generated through NIAK_PIPELINE_GLM (not available at
+%       this point 09/2008).
 %
 %  * OPT   
 %       (structure) with the following fields : 
-%
-%       SIZE_OUTPUT
-%           (string, default 'quality_control') possible values : 
-%            ‘minimum’, 'quality_control’, ‘all’.
-%           The quantity of intermediate results that are generated. 
-%           * With the option ‘minimum’, only the physiological-noise
-%           corrected data is written. 
-%           * With the option ‘quality_control’, in addition to the outputs 
-%           of the 'minimum' option, a pdf document recapitulating 
-%           the ICA components and the score of components in the stepwise 
-%           regression are generated.
-%           * With the option ‘all’, in addition to the outputs of the 
-%           'minimum' option, the space and time distributions of the ICA 
-%           are generated.
 %
 %       FOLDER_OUT 
 %           (string) where to write the results of the pipeline.
@@ -58,25 +36,42 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %           specified, the fields can be simply omitted, in which case the 
 %           default options are used.
 %   
-%           SICA 
-%               (structure) options of NIAK_BRICK_SICA
+%           DIFF_VARIANCE
+%               (structure) options of NIAK_BRICK_DIFF_VARIANCE
+%
+%           AUTOCORRELATION
+%               (structure) options of NIAK_BRICK_AUTOCORRELATION
+%
+%           SPCA 
+%               (structure) options of NIAK_BRICK_SPCA
 %
 %               NB_COMP 
 %                   (integer) the number of components (default 60).
 %
-%           COMPONENT_SEL 
-%               (structure) options of NIAK_BRICK_COMPONENT_SEL.
+%           BOOT_MEAN_VOLS
+%               (structure) options of NIAK_BRICK_BOOT_MEAN_VOLS
+%               
+%               FLAG_MASK 
+%                   (boolean, default 1) if FLAG_MASK equals one, the
+%                   standard deviation will only be evaluated in a mask of 
+%                   the brain (that's speeding up bootstrap calculations).
+% 
+%               NB_SAMPS
+%                   (integer, default 1000) the number of bootstrap samples 
+%                   used to compute the standard-deviation-of-the-mean map.
 %
-%           COMPONENT_SUPP 
-%               (structure) options of NIAK_BRICK_COMPONENT_SUPP.
+%           BOOT_CURVES
+%               (structure) options of NIAK_BRICK_BOOT_CURVES.
+%               
+%              PERCENTILES
+%                   (vector, default [0.0005 0.025 0.975 0.9995])
+%                   the (unilateral) confidence level of bootstrap
+%                   confidence intervals.
 %
-%               THRESHOLD 
-%                   (scalar, default 0.15) a threshold to apply on the 
-%                   score for suppression (scores above the thresholds are 
-%                   selected). If the threshold is -Inf, all components 
-%                   will be suppressed. If the threshold is Inf, an 
-%                   adaptative method based on the Otsu algorithm will be 
-%                   applied to select the threshold automatically.
+%              NB_SAMPS
+%                   (integer, default 10000) the number of bootstrap samples
+%                   used to compute the standard-deviation-of-the-mean 
+%                   and the bootstrap confidence interval on the mean.
 %
 % _________________________________________________________________________
 % OUTPUTS
@@ -84,35 +79,55 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %  * PIPELINE 
 %       (structure) describe all jobs that need to be performed in the
 %       pipeline. This structure is meant to be use in the function
-%       NIAK_INIT_PIPELINE.
+%       NIAK_INIT_PIPELINE. It includes PIPELINE_IN.
 %
 % _________________________________________________________________________
 % COMMENTS
 %
-%  The steps of the pipeline are the following :
+%  The steps of the diagnostic pipeline are the following : 
 %  
-%       1.  Individual spatial independent component of each functional
-%       run.
+%  1. A temporal and spatial autocorrelation map is derived for all
+%  motion-corrected data. A mean map is derived over all subjects & runs 
+%  along with bootstrap statistics.
 %
-%       2. Selection of independent component related to physiological
-%          noise, using spatial priors (masks of the ventricle and a part of
-%          the brain stem).
+%  2. A curve of relative variance in a PCA basis is derived for all
+%  motion-corrected data. A mean curve is derived over all subjects & runs 
+%  along with bootstrap statistics. 
 %
-%       3. Generation of a "physiological noise corrected" fMRI dataset for
-%          each run, where the effect of the selected independent components
-%          has been removed. 
+%  3. A standard deviation map of slow time drifts is derived for all runs 
+%  of all subjects. A mean map is derived over all subjects & runs along with 
+%  bootstrap statistics.
+%
+%  4. A standard deviation map of physiological noise is derived for all 
+%  runs of all subjects. A mean map is derived over all subjects & runs 
+%  along with bootstrap statistics.
+%
+%  5. A map of the absolute value of the effect of each contrast is derived.
+%  Maps for all subjects that have this contrast are combined into a 
+%  group-level average along with bootstrap statistics.
+%
+%  6. For each contrast, a map of standard deviation of the residuals is 
+%  derived. Maps for all subjects that have this contrast are combined into
+%  a group-level average along with bootstrap statistics.
+%
+%  7. For each contrast, a temporal and spatial autocorrelation map of the 
+%  residuals is derived. Maps for all subjects that have this contrast 
+%  are combined into a group-level average along with bootstrap statistics.
+%  
+%  8. For each contrast, curve of relative variance in a PCA basis is 
+%  derived on the residuals. Maps for all subjects that have this contrast 
+%  are combined into a group-level average along with bootstrap statistics.
 %
 % _________________________________________________________________________
 % REFERENCES
+% 
+% P. Bellec;V. Perlbarg;H. Benali;K. Worsley;A. Evans, Realistic fMRI
+% simulations using parametric model estimation over a large database (ICBM 
+% FRB). Proceedings of the 13th International Conference on Functional 
+% Mapping of the Human Brain, 2007.
 %
-% Perlbarg, V., Bellec, P., Anton, J.-L., Pelegrini-Issac, P., Doyon, J. and 
-% Benali, H.; CORSICA: correction of structured noise in fMRI by automatic
-% identification of ICA components. Magnetic Resonance Imaging, Vol. 25,
-% No. 1. (January 2007), pp. 35-46.
-%
-% MJ Mckeown, S Makeig, GG Brown, TP Jung, SS Kindermann, AJ Bell, TJ
-% Sejnowski; Analysis of fMRI data by blind separation into independent
-% spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
+% Hopefully a regular article will come soon.
+% 
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008.

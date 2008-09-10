@@ -66,16 +66,18 @@ function [files_in,files_out,opt] = niak_brick_spca(files_in,files_out,opt)
 %           FILES_OUT and OPT.
 %           
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % _________________________________________________________________________
-% SEE ALSO
+% SEE ALSO:
+%
 % NIAK_BUILD_AUTOCORRELATION
+%
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % The PCA is applied on the spatial euclidian product matrix in a mask of the
 % brain after correction of the fMRI time series to a zero temporal mean 

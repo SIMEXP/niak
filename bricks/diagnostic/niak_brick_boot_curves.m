@@ -32,12 +32,12 @@ function [files_in,files_out,opt] = niak_brick_boot_curves(files_in,files_out,op
 %
 %       PERCENTILES
 %           (vector, default [0.0005 0.025 0.975 0.9995])
-%           the (unilateral) confidence level to compute on the cumulative
-%           distribution function.
+%           the (unilateral) confidence level of the bootstrap confidence
+%           intervals.
 %
 %       NB_SAMPS
 %           (integer, default 10000) the number of bootstrap samples used to
-%           compute the standard-deviation-of-the-mean map and the
+%           compute the standard-deviation-of-the-mean and the
 %           bootstrap confidence interval on the mean.
 %
 %       FOLDER_OUT 

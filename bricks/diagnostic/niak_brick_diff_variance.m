@@ -15,12 +15,17 @@ function [files_in,files_out,opt] = niak_brick_diff_variance(files_in,files_out,
 %       (cell of strings 2*1) file names of two 3D+t dataset. 
 %
 %  * FILES_OUT       
-%       (string, default <BASE_NAME FILE 2>_diff_var.<EXT>) 
-%       File name for output difference of variance map (variance of file 2
-%       minus variance of file 1).
+%       (string, default <BASE_NAME FILE 1>_diff_var.<EXT>) 
+%       File name for output difference of variance map (variance of file 1
+%       minus variance of file 2).
 %
 %  * OPT           
 %       (structure) with the following fields.  
+%
+%       FLAG_STD
+%           (boolean, default 0) if FLAG_STD == 1, the difference of
+%           variance is converted in a standard deviation (i.e. a square
+%           root of the absolute value is applied).
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
@@ -48,9 +53,9 @@ function [files_in,files_out,opt] = niak_brick_diff_variance(files_in,files_out,
 % _________________________________________________________________________
 % COMMENTS
 %
-% If the first file name is left empty, the variance of the first dataset
+% If the second file name is left empty, the variance of the second dataset
 % is assumed to be zero, i.e. the output variance is exactly the variance
-% of the second dataset.
+% of the first dataset.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -88,8 +93,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_test','folder_out','flag_zip'};
-gb_list_defaults = {0,'',0};
+gb_list_fields = {'flag_std','flag_test','folder_out','flag_zip'};
+gb_list_defaults = {0,0,'',0};
 niak_set_defaults
 
 %% Output files
@@ -98,7 +103,7 @@ if ~iscellstr(files_in)
     error('FILES_IN should be a cell of strings');
 end
 
-[path_f,name_f,ext_f] = fileparts(files_in{2});
+[path_f,name_f,ext_f] = fileparts(files_in{1});
 if isempty(path_f)
     path_f = '.';
 end
@@ -122,21 +127,30 @@ if flag_test == 1
 end
 
 %% Performing slice timing correction 
-if ~isempty(files_in{1})
-    [hdr1,vol1] = niak_read_vol(files_in{1});
+if ~isempty(files_in{2})
+    [hdr2,vol2] = niak_read_vol(files_in{2});
 end
-[hdr2,vol2] = niak_read_vol(files_in{2});
+[hdr1,vol1] = niak_read_vol(files_in{1});
 
-if ~isempty(files_in{1})
-    var1 = var(vol1,1,4);
+
+var1 = var(vol1,1,4);
+if ~isempty(files_in{2})
+    var2 = var(vol2,1,4);
 end
-var2 = var(vol2,1,4);
 
-if ~isempty(files_in{1})
-    diff = var2 - var1;
+if ~isempty(files_in{2})
+    if flag_std
+        diff = sqrt(abs(var1 - var2));
+    else
+        diff = var1 - var2;
+    end
 else
-    diff = var2;
+    if flag_std
+        diff = sqrt(var1);
+    else
+        diff = var1;
+    end
 end
 
-hdr2.file_name = files_out;
-niak_write_vol(hdr2,diff);
+hdr1.file_name = files_out;
+niak_write_vol(hdr1,diff);
