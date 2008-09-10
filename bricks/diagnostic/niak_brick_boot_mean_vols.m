@@ -102,7 +102,7 @@ niak_gb_vars % Load some important NIAK variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MEAN_VOLS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_mean_vols'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_BOOT_MEAN_VOLS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_boot_mean_vols'' for more info.')
 end
 
 %% Options
