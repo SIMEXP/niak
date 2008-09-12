@@ -1,22 +1,38 @@
 function mask_f = niak_find_str_cell(cell_str,cell_str2)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_FIND_STR_CELL
+%
 % Test if one of many strings are substrings of another list of strings
 %
 % SYNTAX:
 % MASK_F = NIAK_FIND_STR_CELL(CELL_STR,CELL_STR2)
 % 
+% _________________________________________________________________________
 % INPUTS:
-% CELL_STR      (string or cell of strings)
-% CELL_STR2     (string or cell of strings)
+%
+% CELL_STR      
+%       (string or cell of strings)
+%
+% CELL_STR2     
+%       (string or cell of strings)
 % 
+% _________________________________________________________________________
 % OUTPUTS:
-% MASK_F        (vector) MASK_F(i) equals 1 if CELL_STR2{j} contains 
-%               CELL_STR{i} for any j, 0 otherwise. If one argument is a
-%               simple string, it is converted into a cell of string with
-%               one element.
+%
+% MASK_F        
+%       (vector) MASK_F(i) equals 1 if CELL_STR{i} contains CELL_STR2{j} 
+%       for any j, 0 otherwise. If one argument is a simple string, it is 
+%       converted into a cell of string with one element.
+%
+% _________________________________________________________________________
 %
 % SEE ALSO:
+%
 % NIAK_CMP_STR_CELL
+%
+% _________________________________________________________________________
+% COMMENTS : 
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

@@ -102,7 +102,7 @@ function pipeline = niak_pipeline_diagnostic(pipeline_in,opt)
 %  runs of all subjects. A mean map is derived over all subjects & runs 
 %  along with bootstrap statistics.
 %
-%  5. A map of the absolute value of the effect of each contrast is derived.
+%  5. For each contrast, a map of the absolute value of the effect is derived.
 %  Maps for all subjects that have this contrast are combined into a 
 %  group-level average along with bootstrap statistics.
 %
@@ -161,150 +161,334 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Input files
-if ~exist('files_in','var')|~exist('opt','var')
-    error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_CORSICA(FILES_IN,OPT).\n Type ''help niak_pipeline_corsica'' for more info.')
+if ~exist('pipeline_in','var')|~exist('opt','var')
+    error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_DIAGNOSTIC(FILES_IN,OPT).\n Type ''help niak_pipeline_diagnostic'' for more info.')
 end
 
-%% Checking that FILES_IN is in the correct format
-if ~isstruct(files_in)
-    error('FILE_IN should be a struture!')
-else
-   
-    list_subject = fieldnames(files_in);
-    nb_subject = length(list_subject);
-    
-    for num_s = 1:nb_subject
-        
-        subject = list_subject{num_s};
-        data_subject = getfield(files_in,subject);
-        
-        if ~isstruct(data_subject)
-            error('FILE_IN.%s should be a structure!',upper(subject));
-        end
-        
-        if ~isfield(data_subject,'fmri')
-            error('I could not find the field FILE_IN.%s.FMRI!',upper(subject));
-        end
-        
-        data_fmri = getfield(data_subject,'fmri');
-        if ~iscellstr(data_fmri)
-            error('FILE_IN.%s.fmri is not a cell of strings!',upper(subject));
-        end        
-        
-        if ~isfield(data_subject,'transformation')
-            eval(cat(2,'files_in.',subject,'.transformation = ''gb_niak_omitted'';'));
-        end
-        
-        data_transf = getfield(data_subject,'transformation');
-        if ~ischar(data_transf)
-             error('FILE_IN.%s.TRANSFORMATION is not a string!',upper(subject));
-        end
-        
-    end
-    
+%% Checking that PIPELINE_IN is in the correct format
+if ~isstruct(pipeline_in)
+    error('PIPELINE_IN should be a struture!')
 end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'size_output','folder_out','environment','bricks'};
-gb_list_defaults = {'quality_control',NaN,gb_niak_language,struct([])};
+gb_list_fields = {'folder_out','environment','bricks'};
+gb_list_defaults = {NaN,gb_niak_language,struct([])};
 niak_set_defaults
 
 %% The options for the bricks
 gb_name_structure = 'opt.bricks';
 opt_tmp.flag_test = 1;
-gb_list_fields = {'sica','component_sel','component_supp'};
-gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp};
+gb_list_fields = {'diff_variance','autocorrelation','spca','boot_mean_vols','boot_curves'};
+gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
 
 niak_set_defaults
+
+%% Getting the subjects labels
+
+name_jobs = fieldnames(pipeline_in);
+
+mask_anat = niak_find_str_cell(name_jobs,'anat');
+
+num_s = 1;
+
+list_subject = cell([sum(mask_anat) 1]);
+for num_e = find(mask_anat)'
+    
+    list_subject{num_s} = name_jobs{num_e}(6:end);
+    num_s = num_s + 1;
+    
+end
+
+nb_subject = length(list_subject);
+
+%% Getting the contrast labels
+
+for num_s = 1:nb_subject
+    subject = list_subject{num_s};
+    pref_glm = cat(2,'glm_level1_',subject);
+    glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
+    glm_jobs = glm_jobs(niak_find_str_cell(glm_jobs,subject));
+    
+    list_contrast_tmp = cell([length(glm_jobs) 1]);
+    for num_j = 1:length(glm_jobs)
+        list_contrast_tmp{num_j} = glm_jobs{num_j}(length(pref_glm)+2:end);
+    end
+    if num_s == 1
+        list_contrast = list_contrast_tmp;
+    else
+        list_contrast = union(list_contrast,list_contrast_tmp);
+    end
+end
+
+nb_contrast = length(list_contrast);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pipeline = struct([]);
+pipeline = pipeline_in;
 
-%%%%%%%%%%
-%% SICA %%
-%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 1a. autocorrelation maps of motion-corrected data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-name_process = 'sica';
+name_process = 'autocorrelation_mc';
+
+%% Individual maps
 
 for num_s = 1:nb_subject
 
-    subject = list_subject{num_s};           
-    data_subj = getfield(files_in,subject);        
-    nb_run = length(data_subj.fmri);
+    subject = list_subject{num_s};
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));
+    
+    data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_in);
+    nb_run = length(data_subj);  
     
     for num_r = 1:nb_run
         
         clear files_in_tmp files_out_tmp opt_tmp
         run = cat(2,'run',num2str(num_r));
         name_stage = cat(2,name_process,'_',subject,'_',run);
-        files_in_tmp = data_subj.fmri{num_r};
+        files_in_tmp = data_subj{num_r};
 
         %% Options
-        opt_tmp = opt.bricks.sica;
+        opt_tmp = opt.bricks.autocorrelation;
         opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
 
         %% Outputs
-        files_out_tmp.space = '';
-        files_out_tmp.time = '';
-        files_out_tmp.figure = '';
+        files_out_tmp.spatial = '';
+        files_out_tmp.temporal = '';
 
         %% set the default values
         opt_tmp.flag_test = 1;
-        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_sica(files_in_tmp,files_out_tmp,opt_tmp);
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_autocorrelation(files_in_tmp,files_out_tmp,opt_tmp);
         opt_tmp.flag_test = 0;
 
         %% Adding the stage to the pipeline
         clear stage
-        stage.label = 'Individual spatial independent component analysis';
-        stage.command = 'niak_brick_sica(files_in,files_out,opt)';
+        stage.label = 'Autocorrelation maps of motion-corrected data';
+        stage.command = 'niak_brick_autocorrelation(files_in,files_out,opt)';
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
         stage.environment = opt.environment;
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        pipeline.(name_stage) = stage;        
 
     end % run
 
 end % subject
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 1b. Group-level mean and bootstrap statistics %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%% COMPONENT SELECTION %%
-%%%%%%%%%%%%%%%%%%%%%%%%%
+%% TEMPORAL
 
-%% with the ventricles
-name_process = 'component_sel_ventricle';
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_autocorr_mc = name_jobs(niak_find_str_cell(name_jobs,'autocorrelation_mc'));
+nb_jobs = length(jobs_autocorr_mc);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_autocorr_mc{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.temporal;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'autocorrelation_mc_temporal_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_mc_temporal_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_mc_temporal_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.autocorrelation;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_mean_autocorr_mc_temporal';
+stage.label = 'Group-level mean of temporal autocorrelation maps of motion-corrected data';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%% SPATIAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_autocorr_mc = name_jobs(niak_find_str_cell(name_jobs,'autocorrelation_mc'));
+nb_jobs = length(jobs_autocorr_mc);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_autocorr_mc{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.spatial;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'autocorrelation_mc_spatial_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_mc_spatial_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_mc_spatial_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.autocorrelation;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_mean_autocorr_mc_spatial';
+stage.label = 'Group-level mean of spatial autocorrelation maps of motion-corrected data';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 2a. Individual curves of PCA variance of motion-corrected data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'var_PCA_mc_ind';
+name_jobs = fieldnames(pipeline);
 
 for num_s = 1:nb_subject
 
     subject = list_subject{num_s};
-    data_subj = getfield(files_in,subject);        
-    nb_run = length(data_subj.fmri);
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));
+    
+    data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_in);
+    nb_run = length(data_subj);  
     
     for num_r = 1:nb_run
         
         clear files_in_tmp files_out_tmp opt_tmp
         run = cat(2,'run',num2str(num_r));
         name_stage = cat(2,name_process,'_',subject,'_',run);
-               
-        name_stage_in = cat(2,'sica_',subject,'_',run);
-        stage_in = getfield(pipeline,name_stage_in);
-        
-        %% Inputs 
-        files_in_tmp.fmri = data_subj.fmri{num_r};        
-        files_in_tmp.component = stage_in.files_out.time;
-        files_in_tmp.mask = cat(2,gb_niak_path_niak,'template',filesep,'roi_ventricle.mnc');
+        files_in_tmp = data_subj{num_r};
 
         %% Options
-        opt_tmp = opt.bricks.component_sel;
+        opt_tmp = opt.bricks.spca;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp.variance = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_spca(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Individual curves of PCA variance for motion-corrected data';
+        stage.command = 'niak_brick_spca(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+
+        pipeline.(name_stage) = stage;        
+
+    end % run
+
+end % subject
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 2b. Group curves of PCA variance of motion-corrected data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_var_PCA_mc = name_jobs(niak_find_str_cell(name_jobs,'var_PCA_mc_ind'));
+nb_jobs = length(jobs_autocorr_mc);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_var_PCA_mc{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.variance;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'var_PCA_mc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'var_PCA_mc_group';
+stage.label = 'Group-level mean of PCA variance of motion-corrected data';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 3a. Individual standard-deviation maps of slow-time drifts %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'std_drifts_ind';
+name_jobs = fieldnames(pipeline);
+
+for num_s = 1:nb_subject
+
+    subject = list_subject{num_s};
+    SliceTiming_jobs = name_jobs(niak_find_str_cell(name_jobs,'slice_timing'));
+
+    clear jobs_in jobs_in2
+    
+    jobs_in = SliceTiming_jobs(niak_find_str_cell(SliceTiming_jobs,subject));
+    nb_run = length(jobs_in);
+    
+    jobs_in2 = cell([length(jobs_in) 1]);
+    for num_j = 1:length(jobs_in)
+        jobs_in2{num_j} = cat(2,'time_filter',jobs_in{num_j}(length('slice_timing')+1:end));
+    end                    
+    
+    for num_r = 1:nb_run
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        run = cat(2,'run',num2str(num_r));
+        name_stage = cat(2,name_process,'_',subject,'_',run);
+        files_in_tmp{1} = pipeline.(jobs_in{num_r}).files_out;
+        files_in_tmp{2} = pipeline.(jobs_in2{num_r}).files_out.filtered_data;
+
+        %% Options
+        opt_tmp = opt.bricks.diff_variance;
         opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
 
         %% Outputs
@@ -312,54 +496,98 @@ for num_s = 1:nb_subject
 
         %% set the default values
         opt_tmp.flag_test = 1;
-        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_component_sel(files_in_tmp,files_out_tmp,opt_tmp);
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_diff_variance(files_in_tmp,files_out_tmp,opt_tmp);
         opt_tmp.flag_test = 0;
 
         %% Adding the stage to the pipeline
         clear stage
-        stage.label = 'Selection of ICA components using a mask of the ventricles';
-        stage.command = 'niak_brick_component_sel(files_in,files_out,opt)';
+        stage.label = 'Individual maps of standard deviation of slow time drifts';
+        stage.command = 'niak_brick_diff_variance(files_in,files_out,opt)';
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
         stage.environment = opt.environment;
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        pipeline.(name_stage) = stage;        
 
     end % run
 
 end % subject
 
-%% with the brain stem
-name_process = 'component_sel_stem';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 3b. Group standard-deviation maps of slow-time drifts %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_std_drifts = name_jobs(niak_find_str_cell(name_jobs,'std_drifts_ind'));
+nb_jobs = length(jobs_std_drifts);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_std_drifts{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_drifts_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_drifts_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_drifts_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'std_drifts_group';
+stage.label = 'Group maps of standard deviation of slow time drifts';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 4a. Individual standard-deviation maps of physiological noise %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'std_physio_ind';
+name_jobs = fieldnames(pipeline);
 
 for num_s = 1:nb_subject
 
     subject = list_subject{num_s};
-    data_subj = getfield(files_in,subject);        
-    nb_run = length(data_subj.fmri);
+    TimeFilter_jobs = name_jobs(niak_find_str_cell(name_jobs,'time_filter'));
+
+    clear jobs_in jobs_in2
+    
+    jobs_in = TimeFilter_jobs(niak_find_str_cell(TimeFilter_jobs,subject));
+    nb_run = length(jobs_in);
+    
+    for num_j = 1:length(jobs_in)
+        jobs_in2{num_j} = cat(2,'component_supp',jobs_in{num_j}(length('time_filter')+1:end));
+    end                
     
     for num_r = 1:nb_run
         
         clear files_in_tmp files_out_tmp opt_tmp
-        
         run = cat(2,'run',num2str(num_r));
         name_stage = cat(2,name_process,'_',subject,'_',run);
-               
-        name_stage_in = cat(2,'sica_',subject,'_',run);
-        stage_in = getfield(pipeline,name_stage_in);
-        
-        %% Inputs 
-        files_in_tmp.fmri = data_subj.fmri{num_r};        
-        files_in_tmp.component = stage_in.files_out.time;
-        files_in_tmp.mask = cat(2,gb_niak_path_niak,'template',filesep,'roi_stem.mnc');
+        files_in_tmp{1} = pipeline.(jobs_in{num_r}).files_out.filtered_data;
+        files_in_tmp{2} = pipeline.(jobs_in2{num_r}).files_out;
 
         %% Options
-        opt_tmp = opt.bricks.component_sel;
+        opt_tmp = opt.bricks.diff_variance;
         opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
 
         %% Outputs
@@ -367,159 +595,536 @@ for num_s = 1:nb_subject
 
         %% set the default values
         opt_tmp.flag_test = 1;
-        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_component_sel(files_in_tmp,files_out_tmp,opt_tmp);
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_diff_variance(files_in_tmp,files_out_tmp,opt_tmp);
         opt_tmp.flag_test = 0;
 
         %% Adding the stage to the pipeline
         clear stage
-        stage.label = 'Selection of ICA components using a mask of the ventricles';
-        stage.command = 'niak_brick_component_sel(files_in,files_out,opt)';
+        stage.label = 'Individual maps of standard deviation of physiological noise';
+        stage.command = 'niak_brick_diff_variance(files_in,files_out,opt)';
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
         stage.environment = opt.environment;
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        pipeline.(name_stage) = stage;        
 
     end % run
 
 end % subject
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 4b. Group standard-deviation maps of physiological noise %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% COMPONENT SUPPRESSION %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
 
-name_process = 'component_supp';
+name_jobs = fieldnames(pipeline);
+jobs_std_physio = name_jobs(niak_find_str_cell(name_jobs,'std_physio_ind'));
+nb_jobs = length(jobs_std_physio);
 
-for num_s = 1:nb_subject
+nb_files = 1;
 
-    subject = list_subject{num_s};
-    data_subj = getfield(files_in,subject);        
-    nb_run = length(data_subj.fmri);
-    
-    for num_r = 1:nb_run
-        
-        clear files_in_tmp files_out_tmp opt_tmp
-        run = cat(2,'run',num2str(num_r));
-        name_stage = cat(2,name_process,'_',subject,'_',run);
-               
-        %% Names of previous stages
-        name_stage_sica = cat(2,'sica_',subject,'_',run);
-        name_stage_comp_vent = cat(2,'component_sel_ventricle_',subject,'_',run);
-        name_stage_comp_stem = cat(2,'component_sel_stem_',subject,'_',run);      
-        
-        %% Inputs 
-        files_in_tmp.fmri = data_subj.fmri{num_r};        
-        files_in_tmp.space = pipeline.(name_stage_sica).files_out.space;
-        files_in_tmp.time = pipeline.(name_stage_sica).files_out.time;
-        files_in_tmp.compsel{1} = pipeline.(name_stage_comp_vent).files_out;
-        files_in_tmp.compsel{2} = pipeline.(name_stage_comp_stem).files_out;
+for num_j = 1:nb_jobs
+    name_job_in = jobs_std_physio{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
 
-        %% Options
-        opt_tmp = opt.bricks.component_supp;
-        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_physio_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_physio_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_physio_meanstd.mnc');
 
-        %% Outputs
-        files_out_tmp = '';
+%% Options
+opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp.flag_test = 1;
 
-        %% set the default values
-        opt_tmp.flag_test = 1;
-        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_component_supp(files_in_tmp,files_out_tmp,opt_tmp);
-        opt_tmp.flag_test = 0;
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
 
-        %% Adding the stage to the pipeline
-        clear stage
-        stage.label = 'Suppression of noise-related ICA components from individual fMRI data';
-        stage.command = 'niak_brick_component_supp(files_in,files_out,opt)';
-        stage.files_in = files_in_tmp;
-        stage.files_out = files_out_tmp;
-        stage.opt = opt_tmp;
-        stage.environment = opt.environment;
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'std_physio_group';
+stage.label = 'Group maps of standard deviation of physiological noise';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 3b. Group standard-deviation maps of slow-time drifts %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    end % run
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
 
-end % subject
+name_jobs = fieldnames(pipeline);
+jobs_std_drifts = name_jobs(niak_find_str_cell(name_jobs,'std_drifts_ind'));
+nb_jobs = length(jobs_std_drifts);
 
-%%%%%%%%%%%%%%
-%% CLEANING %%
-%%%%%%%%%%%%%%
+nb_files = 1;
 
-name_process = 'clean_corsica_intermediate';
+for num_j = 1:nb_jobs
+    name_job_in = jobs_std_drifts{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
 
-if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_drifts_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_drifts_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_drifts_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'std_drifts_group';
+stage.label = 'Group maps of standard deviation of slow time drifts';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 5a. Contrast-specific individual maps of absolute effect %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'std_activation_ind';
+name_jobs = fieldnames(pipeline);
+
+for num_c = 1:nb_contrast
+
+    contrast = list_contrast{num_c};
 
     for num_s = 1:nb_subject
 
         subject = list_subject{num_s};
-        data_subj = getfield(files_in,subject);
-        nb_run = length(data_subj.fmri);
+        clear jobs_in
 
-        for num_r = 1:nb_run
+        %% The linear model jobs
+        glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
+        jobs_in = glm_jobs(niak_find_str_cell(glm_jobs,subject));
+        jobs_in = jobs_in(niak_find_str_cell(jobs_in,contrast));
 
-            clear files_in_tmp files_out_tmp opt_tmp
-            run = cat(2,'run',num2str(num_r));
-            name_stage = cat(2,name_process,'_',subject,'_',run);
+        clear files_in_tmp files_out_tmp opt_tmp
 
-            %% Names of previous stages
-            name_stage_in0 = cat(2,'sica_',subject,'_',run);
-            name_stage_in1 = cat(2,'component_sel_ventricle_',subject,'_',run);
-            name_stage_in2 = cat(2,'component_sel_stem_',subject,'_',run);
-            name_stage_in3 = cat(2,'component_supp_',subject,'_',run);
-
-            %% Inputs
-            files_in_tmp = pipeline.(name_stage_in3).files_out;
-
-            %% Cleaning options
-            switch opt.size_output
-
-                case 'minimum'
-
-                    opt_tmp.clean.space = pipeline.(name_stage_in0).files_out.space;
-                    opt_tmp.clean.time = pipeline.(name_stage_in0).files_out.time;
-                    opt_tmp.clean.figure = pipeline.(name_stage_in0).files_out.figure;
-                    opt_tmp.clean.compsel{1} = pipeline.(name_stage_in1).files_out;
-                    opt_tmp.clean.compsel{2} = pipeline.(name_stage_in2).files_out;
-
-                case 'quality_control'
-
-                    opt_tmp.clean.space = pipeline.(name_stage_in0).files_out.space;
-                    opt_tmp.clean.time = pipeline.(name_stage_in0).files_out.time;
-                    
-            end
+        if ~isempty(jobs_in)
+            
+            files_in_tmp{1} = pipeline.(jobs_in{1}).files_in.fmri;
+            files_in_tmp{2} = pipeline.(jobs_in{1}).files_out.resid{1};
 
             %% Options
-            opt_tmp.flag_verbose = 1;
+            opt_tmp = opt.bricks.diff_variance;
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
 
             %% Outputs
             files_out_tmp = '';
 
             %% set the default values
             opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
+            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_diff_variance(files_in_tmp,files_out_tmp,opt_tmp);
             opt_tmp.flag_test = 0;
 
-            %% Adding the stage to the pipeline            
-            pipeline(1).(name_stage).label = 'Suppression of noise-related ICA components from individual fMRI data';
-            pipeline(1).(name_stage).command = 'niak_brick_component_supp(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            pipeline(1).(name_stage).environment = opt.environment;           
+            %% Adding the stage to the pipeline
+            clear stage
+            name_stage = cat(2,name_process,'_',contrast,'_',subject);
+            stage.label = 'Individual maps of standard deviation explained by the activation model';
+            stage.command = 'niak_brick_diff_variance(files_in,files_out,opt)';
+            stage.files_in = files_in_tmp;
+            stage.files_out = files_out_tmp;
+            stage.opt = opt_tmp;
+            stage.environment = opt.environment;
 
-        end % run
+            pipeline.(name_stage) = stage;
+
+        end % if the contrast exist for this subject
+    end % subject
+end % contrast
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 5b. Contrast-specific group map of absolute effect %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+name_jobs = fieldnames(pipeline);
+
+for num_c = 1:nb_contrast
+    contrast = list_contrast{num_c};
+    jobs_std_activation = name_jobs(niak_find_str_cell(name_jobs,cat(2,'std_activation_ind_',contrast)));
+    
+    nb_jobs = length(jobs_std_activation);
+
+    nb_files = 1;
+    
+    clear files_in_tmp files_out_tmp opt_tmp
+    for num_j = 1:nb_jobs
+        name_job_in = jobs_std_activation{num_j};
+        files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+        nb_files = nb_files + 1;
+    end
+
+    %% Files out
+    files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_activation_',contrast,'_mean.mnc');
+    files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_activation_',contrast,'_std.mnc');
+    files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_activation_',contrast,'_meanstd.mnc');
+
+    %% Options
+    opt_tmp = opt.bricks.boot_mean_vols;
+    opt_tmp.flag_test = 1;
+
+    %% Defaults
+    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+    opt_tmp.flag_test = 0;
+
+    %% Adding the stage to the pipeline
+    clear stage
+    name_stage = cat(2,'std_activation_group_',contrast);
+    stage.label = cat(2,'Group maps of standard deviation explained by the activation model ',contrast);
+    stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+    stage.files_in = files_in_tmp;
+    stage.files_out = files_out_tmp;
+    stage.opt = opt_tmp;
+    stage.environment = opt.environment;
+    pipeline.(name_stage) = stage;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 6a. Contrast-specific individual maps of residuals %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'std_residuals_ind';
+name_jobs = fieldnames(pipeline);
+
+for num_c = 1:nb_contrast
+
+    contrast = list_contrast{num_c};
+
+    for num_s = 1:nb_subject
+
+        subject = list_subject{num_s};
+        clear jobs_in
+
+        %% The linear model jobs
+        glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
+        jobs_in = glm_jobs(niak_find_str_cell(glm_jobs,subject));
+        jobs_in = jobs_in(niak_find_str_cell(jobs_in,contrast));
+
+        clear files_in_tmp files_out_tmp opt_tmp
+
+        if ~isempty(jobs_in)
+            
+            files_in_tmp{1} = pipeline.(jobs_in{1}).files_out.resid{1};
+            files_in_tmp{2} = '';            
+            
+            %% Options
+            opt_tmp = opt.bricks.diff_variance;
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+            %% Outputs
+            files_out_tmp = '';
+
+            %% set the default values
+            opt_tmp.flag_test = 1;
+            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_diff_variance(files_in_tmp,files_out_tmp,opt_tmp);
+            opt_tmp.flag_test = 0;
+
+            %% Adding the stage to the pipeline
+            clear stage
+            name_stage = cat(2,name_process,'_',contrast,'_',subject);
+            stage.label = 'Individual maps of standard deviation of the residuals';
+            stage.command = 'niak_brick_diff_variance(files_in,files_out,opt)';
+            stage.files_in = files_in_tmp;
+            stage.files_out = files_out_tmp;
+            stage.opt = opt_tmp;
+            stage.environment = opt.environment;
+
+            pipeline.(name_stage) = stage;
+
+        end % if the contrast exist for this subject
+    end % subject
+end % contrast
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 6b. Contrast-specific group maps of residuals %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+name_jobs = fieldnames(pipeline);
+
+jobs_std_residuals = name_jobs(niak_find_str_cell(name_jobs,'std_residuals_ind'));
+
+nb_jobs = length(jobs_std_residuals);
+
+nb_files = 1;
+
+clear files_in_tmp files_out_tmp opt_tmp
+for num_j = 1:nb_jobs
+    name_job_in = jobs_std_residuals{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_residuals_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_residuals_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_residuals_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = cat(2,'std_residuals_group');
+stage.label = 'Group maps of standard deviation of the residuals';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 7a. Individual autocorrelation maps of residual data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'autocorrelation_residuals_ind';
+glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
+
+%% Individual maps
+for num_c = 1:nb_contrast
+
+    contrast = list_contrast{num_c};
+
+    for num_s = 1:nb_subject
+
+        subject = list_subject{num_s};
+        subject_jobs = glm_jobs(niak_find_str_cell(glm_jobs,subject));
+        subject_jobs = subject_jobs(niak_find_str_cell(subject_jobs,contrast));
+
+        clear files_in_tmp files_out_tmp opt_tmp
+        files_in_tmp = pipeline.(subject_jobs{1}).files_out.resid{1};
+
+        %% Options
+        opt_tmp = opt.bricks.autocorrelation;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp.spatial = '';
+        files_out_tmp.temporal = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_autocorrelation(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        name_stage = cat(2,name_process,'_',contrast,'_',subject);
+        stage.label = 'Autocorrelation maps of residual data';
+        stage.command = 'niak_brick_autocorrelation(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+
+        pipeline.(name_stage) = stage;
 
     end % subject
+end % contrast
 
-end % size_output
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 7b. Group autocorrelation maps of residual data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% TEMPORAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_autocorr_res = name_jobs(niak_find_str_cell(name_jobs,'autocorrelation_residuals_ind'));
+nb_jobs = length(jobs_autocorr_res);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_autocorr_res{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.temporal;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'autocorrelation_res_temporal_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_res_temporal_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_res_temporal_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.autocorrelation;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_mean_autocorr_res_temporal';
+stage.label = 'Group-level mean of temporal autocorrelation maps of residual data';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%% SPATIAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_autocorr_res = name_jobs(niak_find_str_cell(name_jobs,'autocorrelation_residuals_ind'));
+nb_jobs = length(jobs_autocorr_res);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_autocorr_res{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.spatial;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'autocorrelation_res_spatial_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_res_spatial_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_res_spatial_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.autocorrelation;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_mean_autocorr_res_spatial';
+stage.label = 'Group-level mean of spatial autocorrelation maps of residual data';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 8a. Individual curves of PCA variance of residual data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'var_PCA_residuals_ind';
+name_jobs = fieldnames(pipeline);
+glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
+
+%% Individual curves
+for num_c = 1:nb_contrast
+
+    contrast = list_contrast{num_c};
+    
+    for num_s = 1:nb_subject
+
+       subject = list_subject{num_s};
+        subject_jobs = glm_jobs(niak_find_str_cell(glm_jobs,subject));
+        subject_jobs = subject_jobs(niak_find_str_cell(subject_jobs,contrast));
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        
+        %% Files in
+        files_in_tmp = pipeline.(subject_jobs{1}).files_out.resid{1};
+       
+        %% Options
+        opt_tmp = opt.bricks.spca;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp.variance = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_spca(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        name_stage = cat(2,name_process,'_',contrast,'_',subject);
+        stage.label = 'Individual curves of PCA variance for residual data';
+        stage.command = 'niak_brick_spca(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+
+        pipeline.(name_stage) = stage;
+
+    end % subject
+end % contrast
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 8b. Group curves of PCA variance of residual data %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_var_PCA_res = name_jobs(niak_find_str_cell(name_jobs,'var_PCA_residuals_ind'));
+nb_jobs = length(jobs_autocorr_res);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_var_PCA_res{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.variance;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'var_PCA_res.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'var_PCA_res_group';
+stage.label = 'Group-level mean of PCA variance of residual data';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;

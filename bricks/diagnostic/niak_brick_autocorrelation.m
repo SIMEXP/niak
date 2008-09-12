@@ -92,13 +92,13 @@ niak_gb_vars % Load some important NIAK variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_DIFF_VARIANCE(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_diff_variance'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_AUTOCORRELATION(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_autocorrelation'' for more info.')
 end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_test','folder_out','flag_zip'};
-gb_list_defaults = {0,'',0};
+gb_list_fields = {'flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {0,'',1};
 niak_set_defaults
 
 %% Output files
