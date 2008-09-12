@@ -320,6 +320,13 @@ gb_list_fields = {'flag_corsica','style','size_output','folder_out','environment
 gb_list_defaults = {1,NaN,'quality_control',NaN,'octave',struct([])};
 niak_set_defaults
 
+switch opt.size_output % check that the size of outputs is a valid option
+    case {'minimum','quality_control','all'}
+        
+    otherwise
+        error(cat(2,opt.size_output,': is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all'''))
+end
+
 %% The options for the bricks
 gb_name_structure = 'opt.bricks';
 opt_tmp.flag_test = 1;
@@ -1000,7 +1007,7 @@ if strcmp(style,'standard-stereotaxic')
             %% If the amount of outputs is 'minimum' 
             %% clean the slice-timing-corrected data when temporally
             %% filtered images have been successfully generated.
-            %% In 'quality-control mode' we keep these images as there are
+            %% In 'quality_control mode' we keep these images as there are
             %% the only one left in native space.
             
             if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
