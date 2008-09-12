@@ -242,7 +242,7 @@ for num_s = 1:nb_subject
     motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
     subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));
     
-    data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_in);
+    data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_out.motion_corrected_data);
     nb_run = length(data_subj);  
     
     for num_r = 1:nb_run
@@ -379,7 +379,7 @@ for num_s = 1:nb_subject
     motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
     subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));
     
-    data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_in);
+    data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_out.motion_corrected_data);
     nb_run = length(data_subj);  
     
     for num_r = 1:nb_run
