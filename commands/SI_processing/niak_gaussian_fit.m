@@ -1,29 +1,10 @@
-function vol_c = niak_correct_vol(vol,mask)
+function [y,Ybis] = niak_gaussian_fit(par)
 %
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_CORRECT_VOL
-%
-% Correct the distribution of a 3D random field to zero mean and unit
-% variance using robust statistics (fitted Gaussian distribution, initialized
-% the median and the median absolute deviation to the median).
-%
-% SYNTAX:
-% VOL_C = NIAK_CORRECT_VOL(VOL,MASK)
-%
-% _________________________________________________________________________
-% INPUTS:
-%
-% VOL       
-%       (3D array)
-%
-% MASK      
-%       (binary 3D array)
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% VOL_C     
-%       (3D array) same as VOL, with corrected distribution.
+%_________________________________________________________________________
+% SUMMARY NIAK_GAUSSIAN_FIT(PAR)
+% 
+% This function is used by NIAK_CORRECT_VOL, and is not supposed to be used
+% independently.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -51,31 +32,23 @@ function vol_c = niak_correct_vol(vol,mask)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
-flag_visu = 0;
+ 
+% INPUT
+% par               par(1) is the mean of the gaussian function
+%                   par(2) is the variance of the gaussian function
+%
+% OUTPUTS
+% Ybis              value of the gaussian function with parameters par at X (global) 
+% y                 quadratic error between Ybis and Y (global)
+%                   
+% COMMENTS
+% Vincent Perlbarg 11/04/06
 
 global niak_gb_X niak_gb_Y
+mu = par(1);
+sig = par(2);
 
-if nargin < 3
-    p = 0.05;
-end
+Ybis = 1/(sqrt(2*pi)*sig)*exp(-0.5*((niak_gb_X-mu)/sig).^2);
 
-% Histogram computation and normalization
-M = vol(mask);
-M = M(:);
-[niak_gb_Y,niak_gb_X] = hist(M,length(M)/100);
-niak_gb_Y = niak_gb_Y/(length(M)*(max(niak_gb_X)-min(niak_gb_X)))*length(niak_gb_X);
-
-% Gaussian parameters fitting.
-par = fminsearch('niak_gaussian_fit',[median(M);1.4826*median(abs(M-median(M)))]);
-
-if flag_visu
-    [err,val] = sub_gaussian_fit(par);
-    figure
-    bar(niak_gb_X,niak_gb_Y); hold on; plot(niak_gb_X,val,'r');
-    title('Empirical distribution and fitted gaussian function');
-end
-
-% Volume correction
-vol_c = zeros(size(vol));
-vol_c(mask) = (vol(mask) - par(1))/par(2);
+y = sum((niak_gb_Y-Ybis).^2);
+return

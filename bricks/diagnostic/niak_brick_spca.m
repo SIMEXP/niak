@@ -242,16 +242,9 @@ if ~strcmp(files_out.variance,'gb_niak_omitted')
         fprintf('\n Saving the relative variance explained by components ...\n')
     end
 
-    [hf,mesg] = fopen(files_out.variance,'w');
-    if hf == -1
-        error(mesg);
-    end
     var_pca = eig_val/sum(eig_val);
-    for  num_l = 1:length(var_pca)
-        fprintf(hf,'%1.15f ',var_pca(num_l));
-        fprintf(hf,'\n');
-    end
-    fclose(hf);
+    laby = {'num_comp','perc_variance'};
+    niak_write_tab(files_out.variance,[(1:length(var_pca))' var_pca],'',laby);
 end
 
 if ~strcmp(files_out.figure,'gb_niak_omitted')
