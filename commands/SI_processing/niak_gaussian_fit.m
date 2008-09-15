@@ -35,7 +35,7 @@ function [y,Ybis] = niak_gaussian_fit(par)
  
 % INPUT
 % par               par(1) is the mean of the gaussian function
-%                   par(2) is the variance of the gaussian function
+%                   par(2) is the standard deviation of the gaussian function
 %
 % OUTPUTS
 % Ybis              value of the gaussian function with parameters par at X (global) 

@@ -59,8 +59,8 @@ switch gb_niak_format_demo
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2_mc.mnc.gz');
-        files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject2_mc.mnc.gz');        
+        files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1_mc.mnc.gz');
+        files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1_mc.mnc.gz');        
 
     otherwise 
         
@@ -73,6 +73,7 @@ files_out.motion_parameters = ''; % use default names
 files_out.transf_within_session = ''; % use default names
 files_out.transf_between_session  = ''; % use default names
 files_out.mean_volume = ''; % use default names
+files_out.std_volume = ''; % use default names
 files_out.mask_volume = ''; % use default names
 files_out.fig_motion  = ''; % use default names
 

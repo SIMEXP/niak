@@ -70,10 +70,10 @@ niak_gb_Y = niak_gb_Y/(length(M)*(max(niak_gb_X)-min(niak_gb_X)))*length(niak_gb
 par = fminsearch('niak_gaussian_fit',[median(M);1.4826*median(abs(M-median(M)))]);
 
 if flag_visu
-    [err,val] = sub_gaussian_fit(par);
+    [err,val] = niak_gaussian_fit(par);
     figure
     bar(niak_gb_X,niak_gb_Y); hold on; plot(niak_gb_X,val,'r');
-    title('Empirical distribution and fitted gaussian function');
+    title(sprintf('Empirical distribution and fitted gaussian function mean %1.3s std %1.3s',par(1),par(2)));
 end
 
 % Volume correction

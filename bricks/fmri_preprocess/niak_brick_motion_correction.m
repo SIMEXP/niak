@@ -56,6 +56,10 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           of all coregistered runs of all sessions. This volume can be
 %           generated only if MOTION_CORRECTED_DATA is generated too.
 %
+%       STD_VOLUME 
+%           (string, default STD_<BASE_FILE_IN>) the standard deviation 
+%           volume averaged over all runs and sessions.
+%
 %       MASK_VOLUME 
 %           (string, default base MASK_<BASE_FILE_IN>) A mask of
 %           the brain common to all runs and all sessions (after motion 
@@ -131,6 +135,21 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           applied to all volumes during the coregistration. WARNING : no
 %           spatial smoothing will be applied to the resampled data. Please
 %           use NIAK_SMOOTH_VOL for this purpose.
+%
+%       CORRECTION
+%           (string, default 'none') a correction to the fMRI time series.
+%           Available options are 'none', 'perc_mean', 'perc_std'.
+%           * 'none' : no correction
+%           * 'perc_mean' : the value of each voxel in every volume will be 
+%             divided by the mean value at this voxel for the current run 
+%             and then mutliplied by 100, i.e. the unit of the 
+%             motion-corrected data is now a percentage of the baseline 
+%             for each run.
+%           * 'perc_std' : the time series at each voxel will be corrected 
+%             to a zero mean and unit variance and then mutliplied by 100, 
+%             i.e. the unit of the motion-corrected data is now a 
+%             percentage of the standard deviation of the time series for 
+%             each run.
 %
 %       FLAG_SESSION 
 %          (boolean, default 0) if FLAG_SESSION == 0, the intra-session 
@@ -236,14 +255,14 @@ niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'motion_corrected_data','motion_parameters','transf_within_session','transf_between_session','mask_volume','mean_volume','fig_motion'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'motion_corrected_data','motion_parameters','transf_within_session','transf_between_session','mask_volume','mean_volume','fig_motion','std_volume'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','flag_percentage'};
-gb_list_defaults = {0,1,1,'',0,0,'','sinc',8,1,0,1};
+gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
+gb_list_defaults = {0,1,1,'',0,0,'','sinc',8,1,0,'none'};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);
@@ -281,13 +300,13 @@ end
 for num_s = 1:length(list_sessions)
 
     name_session = list_sessions{num_s};
-    files_name = getfield(files_in.sessions,name_session);
+    files_name = files_in.sessions.(name_session);
     nb_files = length(files_name);
 
     motion_corrected_data = cell([nb_files 1]);
-    motion_parameters = cell([nb_files 1]);
-    transf_within_session = cell([nb_files 1]);
-
+    motion_parameters = cell([nb_files 1]);   
+    transf_ws = cell([nb_files 1]);
+    
     for num_d = 1:length(files_name)
 
         [path_f,name_f,ext_f] = fileparts(files_name{num_d});
@@ -331,30 +350,22 @@ for num_s = 1:length(list_sessions)
             files_out.mean_volume = cat(2,folder_write,filesep,'mean_',name_f,ext_f);
         end
 
+        if isempty(files_out.std_volume)& strcmp(name_session,opt.session_ref)&(num_d==1)
+            files_out.std_volume = cat(2,folder_write,filesep,'std_',name_f,ext_f);
+        end
+        
     end %loop over datasets
 
     if flag_def_data
-        if num_s == 1
-            eval(cat(2,'files_out.motion_corrected_data(1).',name_session,' = motion_corrected_data;'));
-        else
-            files_out.motion_corrected_data = setfield(files_out.motion_corrected_data,name_session,motion_corrected_data);
-        end
+        files_out.motion_corrected_data(1).(name_session) = motion_corrected_data;
     end
 
     if flag_def_mp
-        if num_s == 1
-            eval(cat(2,'files_out.motion_parameters(1).',name_session,' = motion_parameters;'));
-        else
-            files_out.motion_parameters = setfield(files_out.motion_parameters,name_session,motion_parameters);
-        end
+        files_out.motion_parameters(1).(name_session) = motion_parameters;
     end
 
     if flag_def_trans_ws
-        if num_s == 1
-            eval(cat(2,'files_out.transf_within_session(1).',name_session,' = transf_ws;'));
-        else
-            files_out.transf_within_session = setfield(files_out.transf_within_session,name_session,transf_ws);
-        end
+        files_out.transf_within_session(1).(name_session) = transf_ws;
     end
 
     if flag_def_fig_mp
@@ -384,7 +395,8 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     end
 
     files_transf_ws = files_in.sessions;
-    
+    mask_session = cell([length(list_sessions) 1]);
+    target_session = cell([length(list_sessions) 1]);
     for num_s = 1:length(list_sessions)
 
         name_session = list_sessions{num_s};
@@ -396,12 +408,12 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         end
 
         %% Generate temporary names for within-session motion correction
-        files_session_in = getfield(files_in.sessions,name_session);        
+        files_session_in = files_in.sessions.(name_session);        
         mask_session{num_s} = niak_file_tmp(cat(2,'_',name_session,'_mask.mnc'));
         target_session{num_s} = niak_file_tmp(cat(2,'_',name_session,'_target.mnc'));
 
         if ~ischar(files_out.transf_within_session)
-            files_session_out.motion_parameters = getfield(files_out.transf_within_session,name_session);
+            files_session_out.motion_parameters = files_out.transf_within_session.(name_session);
         else
             for num_f = 1:length(files_session_in)
                 files_session_out.motion_parameters{num_f} = niak_file_tmp(cat(2,'_mp_run',num2str(num_f),'.dat'));
@@ -425,7 +437,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         %% Perform estimation of within-session motion parameters estimation
         [files_session_in,files_session_out,opt_session] = niak_brick_motion_correction_ws(files_session_in,files_session_out,opt_session);
         mp_session = files_out.motion_parameters;
-        files_transf_ws = setfield(files_transf_ws,name_session,files_session_out.motion_parameters);
+        files_transf_ws.(name_session) = files_session_out.motion_parameters;
 
     end
 
@@ -506,16 +518,15 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
     for num_s = 1:length(list_sessions)
 
         name_session = list_sessions{num_s};
-        list_runs = getfield(mp_session,name_session);
-        list_ws = getfield(files_transf_ws,name_session);
+        list_ws = files_transf_ws.(name_session);
         transf_bs = niak_param2transf(tab_mp_bs(num_s,1:3)',tab_mp_bs(num_s,4:6)');
 
         %% Get the file names to save the motion parameters
         if ~ischar(files_out.motion_parameters)
-            files_mp = getfield(files_out.motion_parameters,name_session);
+            files_mp = files_out.motion_parameters.(name_session);
         end
 
-        for num_r = 1:length(list_runs)
+        for num_r = 1:length(list_ws)
 
             %% Reading the within-run motion parameters file
             hf_ws = fopen(list_ws{num_r});
@@ -594,7 +605,7 @@ else % if ~ischar(files_in.motion_parameter)
     for num_s = 1:length(list_sessions)
 
         name_session = list_sessions{num_s};
-        list_mp_runs = getfield(files_in.motion_parameters,name_session);        
+        list_mp_runs = files_in.motion_parameters.(name_session);        
 
         for num_r = 1:length(list_mp_runs)
 
@@ -623,11 +634,11 @@ else % if ~ischar(files_in.motion_parameter)
     file_target = niak_file_tmp('_target.mnc');
     
     file_target2 = niak_file_tmp('_target.mnc');
-    list_runs = getfield(files_in.sessions,session_ref);
+    list_runs = files_in.sessions.(session_ref);
     hdr_target = niak_read_vol(list_runs{1});
     hdr_target.file_name = file_target2;
     dim_t = hdr_target.info.dimensions;
-    niak_write_vol(hdr_target,zeros([dim_t(1:3)]));
+    niak_write_vol(hdr_target,zeros(dim_t(1:3)));
     
     files_in_r.source = file_target2;
     files_in_r.target = file_target2;
@@ -666,6 +677,7 @@ if ~ischar(files_out.motion_corrected_data)
     dim_t = hdr_target.info.dimensions;
     mask_all = ones(dim_t(1:3));
     mean_all = zeros(dim_t(1:3));
+    std_all = zeros(dim_t(1:3));
     nb_runs = 0;
     
     for num_s = 1:length(list_sessions)
@@ -675,10 +687,10 @@ if ~ischar(files_out.motion_corrected_data)
             fprintf('\n%s...\n',name_session)
         end
 
-        files_session = getfield(files_in.sessions,name_session);
-        mp_session = getfield(tab_mp,name_session);
+        files_session = files_in.sessions.(name_session);
+        mp_session = tab_mp.(name_session);
         if ~ischar(files_out.motion_corrected_data)
-            motion_corrected_data_session = getfield(files_out.motion_corrected_data,name_session);
+            motion_corrected_data_session = files_out.motion_corrected_data.(name_session);
         end
         
         for num_r = 1:length(files_session);
@@ -689,7 +701,6 @@ if ~ischar(files_out.motion_corrected_data)
 
             %% Reading data
             [hdr,data] = niak_read_vol(files_session{num_r});
-            [nx,ny,nz,nt] = size(data);
             hdr.file_name = files_in_r.source;
             hdr_target.details.time = hdr.details.time;
             hdr_target.info.tr = hdr.info.tr;
@@ -716,7 +727,10 @@ if ~ischar(files_out.motion_corrected_data)
             
             %% Building the mean volume of all runs
             mean_run = mean(data_r,4);
+            std_run = std(data_r,0,4);
+        
             mean_all = mean_all + mean_run;
+            std_all = std_all + std_run;
             nb_runs = nb_runs+1;
             
             %% Building a mask common to all runs
@@ -728,16 +742,40 @@ if ~ischar(files_out.motion_corrected_data)
                 
                 %% If OPT.FLAG_PERCENTAGE == 1, convert the units of the fMRI volume
                 %% into percentage of the baseline
-                if (opt.flag_percentage == 1)
-                    [nx,ny,nz,nt] = size(data_r);
-                    data_r = reshape(data_r,[nx*ny*nz nt]);
-                    for num_t = 1:nt                      
-                        data_r(mask_run>0,num_t) = 100*data_r(mask_run>0,num_t)./mean_run(mask_run>0);
-                        data_r(mask_run==0,num_t) = 0;
-                    end
-                    data_r = reshape(data_r,[nx ny nz nt]);
-                end % flag_percentage
-                
+                switch opt.correction
+
+                    case 'none'
+                    
+                    case 'perc_mean'
+                    
+                        %% Express the time series as a percentage of the
+                        %% baseline at each voxel
+                        [nx,ny,nz,nt] = size(data_r);
+                        data_r = reshape(data_r,[nx*ny*nz nt]);
+                        for num_t = 1:nt
+                            data_r(mask_run>0,num_t) = 100*data_r(mask_run>0,num_t)./mean_run(mask_run>0);
+                            data_r(mask_run==0,num_t) = 0;
+                        end
+                        data_r = reshape(data_r,[nx ny nz nt]);
+                        
+                    case 'perc_std'
+                        
+                        %% Express the time series as a percentage of the
+                        %% standard-deviation at each voxel
+                        [nx,ny,nz,nt] = size(data_r);
+                        data_r = reshape(data_r,[nx*ny*nz nt]);
+                        for num_t = 1:nt
+                            data_r(mask_run>0,num_t) = 100*(data_r(mask_run>0,num_t)-mean_run(mask_run>0))./std_run(mask_run>0);
+                            data_r(mask_run==0,num_t) = 0;
+                        end
+                        data_r = reshape(data_r,[nx ny nz nt]);
+                        
+                    otherwise
+                        
+                        error('The option in OPT.CORRECTION was not recognized. Available options : ''none'', ''perc_var'', ''perc_std''');
+                        
+                end % Correction of time series
+
                 hdr_target.file_name = motion_corrected_data_session{num_r};
                 niak_write_vol(hdr_target,data_r);
             end
@@ -757,6 +795,13 @@ if ~ischar(files_out.motion_corrected_data)
         niak_write_vol(hdr_target,mean_all);
     end
 
+    %% Write the mean of all volumes
+    if ~strcmp(files_out.std_volume,'gb_niak_omitted')
+        std_all = std_all/nb_runs;
+        hdr_target.file_name = files_out.std_volume;
+        niak_write_vol(hdr_target,std_all);
+    end
+    
     %% Write the mask of all runs
     if ~strcmp(files_out.mask_volume,'gb_niak_omitted')                
         hdr_target.file_name = files_out.mask_volume;
@@ -771,6 +816,6 @@ if ~ischar(files_out.motion_corrected_data)
 end
 
 %% Clean up temporary files
-if exist(file_target)
+if exist(file_target,'file')
     delete(file_target);
 end

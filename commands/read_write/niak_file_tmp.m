@@ -40,6 +40,8 @@ function file_name = niak_file_tmp(ext)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = 1; %% the initialization of global variables will be as fast as possible
+
 niak_gb_vars
 c_clock = clock;
 rand('state',100000*c_clock(end));

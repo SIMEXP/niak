@@ -326,18 +326,19 @@ for num_r = list_run
         fprintf(hf_mp,'pitch roll yaw tx ty tz XCORR_init XCORR_final\n');
     end
 
-    list_vols = 1:nb_vol(num_r);    
+    list_vols = 1:nb_vol(num_r);
+
+    %% Generating file names
+    file_vol = niak_file_tmp(cat(2,'_func_run',num2str(num_r),'_dxyz.mnc'));
+    file_vol_tmp = niak_file_tmp(cat(2,'_func_run',num2str(num_r),'_tmp.mnc'));
+    xfm_tmp = niak_file_tmp(cat(2,'_func_run',num2str(num_r),'.xfm'));
+    hdr.file_name = file_vol;
+
     for num_v = list_vols
         
         if flag_verbose
             fprintf('%i ',num_v);
         end
-
-        %% Generating file names
-        file_vol = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'_dxyz.mnc'));
-        file_vol_tmp = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'_tmp.mnc'));
-        xfm_tmp = niak_file_tmp(cat(2,'_func',num2str(num_v),'_run',num2str(num_r),'.xfm'));
-        hdr.file_name = file_vol;
         
         vol_source = data(:,:,:,num_v);
 
@@ -347,6 +348,7 @@ for num_r = list_run
         %% writting the source                
         hdr.file_name = file_vol_tmp;
         niak_write_vol(hdr,vol_source);
+
         [succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' -gradient ',file_vol_tmp,' ',file_vol(1:end-9)));
         if succ ~= 0
             error(mesg);
@@ -363,9 +365,9 @@ for num_r = list_run
         else
 
             if num_v == list_vols(1)               
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 20 -model_lattice -step 7 7 7'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 10 -model_lattice -step 6 6 6'));
             else                                
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp_old,' -clobber -debug -lsq6 -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 20 -model_lattice -step 7 7 7'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp,' -clobber -debug -lsq6 -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 10 -model_lattice -step 6 6 6'));
             end
 
             %% Reading the transformation
@@ -414,13 +416,7 @@ for num_r = list_run
             fprintf(hf_mp,'%s\n',num2str(tab_parameters(num_v,:),12));
         end
         
-        % Cleaning temporary files
-        if num_v > list_vols(1)
-            delete(xfm_tmp_old);
-        end
-
-        delete(file_vol);
-        xfm_tmp_old = xfm_tmp;
+        delete(file_vol);       
         
     end
     

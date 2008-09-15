@@ -86,33 +86,39 @@ function pipeline = niak_pipeline_diagnostic(pipeline_in,opt)
 %
 %  The steps of the diagnostic pipeline are the following : 
 %  
-%  1. A temporal and spatial autocorrelation map is derived for all
-%  motion-corrected data. A mean map is derived over all subjects & runs 
-%  along with bootstrap statistics.
+%  1. A temporal and spatial autocorrelation map is derived for all runs 
+%  of all subjects, along with a table of percentiles.
+%  A mean map and percentile distribution is derived over all subjects & 
+%  runs along with bootstrap statistics.
 %
 %  2. A curve of relative variance in a PCA basis is derived for all
 %  motion-corrected data. A mean curve is derived over all subjects & runs 
 %  along with bootstrap statistics. 
 %
 %  3. A standard deviation map of slow time drifts is derived for all runs 
-%  of all subjects. A mean map is derived over all subjects & runs along with 
-%  bootstrap statistics.
+%  of all subjects, along with a table of percentiles.
+%  A mean map and percentile distribution is derived over all subjects & 
+%  runs along with bootstrap statistics.
 %
 %  4. A standard deviation map of physiological noise is derived for all 
-%  runs of all subjects. A mean map is derived over all subjects & runs 
-%  along with bootstrap statistics.
+%  runs of all subjects, along with a table of percentiles.
+%  A mean map and percentile distribution is derived over all subjects & 
+%  runs along with bootstrap statistics.
 %
-%  5. For each contrast, a map of the absolute value of the effect is derived.
-%  Maps for all subjects that have this contrast are combined into a 
-%  group-level average along with bootstrap statistics.
+%  5. For each contrast, a map of the absolute value of the effect is 
+%  derived, along with a table of percentiles.
+%  Maps and curves for all subjects that have this contrast are combined 
+%  into a group-level average along with bootstrap statistics.
 %
 %  6. For each contrast, a map of standard deviation of the residuals is 
-%  derived. Maps for all subjects that have this contrast are combined into
-%  a group-level average along with bootstrap statistics.
+%  derived, along with a table of percentiles.
+%  Maps and curves for all subjects that have this contrast are combined 
+%  into a group-level average along with bootstrap statistics.
 %
 %  7. For each contrast, a temporal and spatial autocorrelation map of the 
-%  residuals is derived. Maps for all subjects that have this contrast 
-%  are combined into a group-level average along with bootstrap statistics.
+%  residuals is derived, along with a table of percentiles.
+%  Maps and curves for all subjects that have this contrast are combined 
+%  into a group-level average along with bootstrap statistics.
 %  
 %  8. For each contrast, curve of relative variance in a PCA basis is 
 %  derived on the residuals. Maps for all subjects that have this contrast 

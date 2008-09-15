@@ -3,6 +3,22 @@
 %% this script to initialize the variables. If NIAK does not behave the way
 %% you want, this might be the place to fix that.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The following variables need very fast initialization %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+gb_niak_tmp = cat(2,filesep,'tmp',filesep); % where to store temporary files
+
+gb_niak_zip = 'gzip -f'; % The command to zip files
+
+gb_niak_unzip = 'gunzip -f'; % The command to unzip files
+
+gb_niak_zip_ext = '.gz'; % The extension of zipped files
+
+if exist('flag_gb_niak_fast_gb','var')
+    return
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables need to be changed to configure the pipeline %%
 %% system                                                               %%
@@ -26,19 +42,11 @@ gb_niak_sge_options = ''; % Options for the sge qsub system, example : '-q all.q
 %% The following variables describe the folders and external tools NIAK is using for various tasks %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_tmp = cat(2,filesep,'tmp',filesep); % where to store temporary files
-
 gb_niak_viewerps = 'evince'; % program to display ps files
 
 gb_niak_viewerjpg = 'eog'; % program to display jpg files
 
 gb_niak_viewersvg = 'eog'; % program to display svg files
-
-gb_niak_zip = 'gzip -f'; % The command to zip files
-
-gb_niak_unzip = 'gunzip -f'; % The command to unzip files
-
-gb_niak_zip_ext = '.gz'; % The extension of zipped files
 
 gb_niak_ps2pdf = 'ps2pdf'; % The command to convert ps or eps documents into the pdf file format
 
@@ -47,7 +55,7 @@ gb_niak_ps2pdf = 'ps2pdf'; % The command to convert ps or eps documents into the
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-gb_niak_version = '0.3.7'; % 
+gb_niak_version = '0.4'; % 
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION')    
@@ -55,6 +63,13 @@ if exist('OCTAVE_VERSION')
 else
     gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab
 end
+
+%% Get langage version
+if strcmp(gb_niak_language,'octave');
+    gb_niak_language_version = OCTAVE_VERSION;
+else
+    gb_niak_language_version = version;
+end 
 
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');
