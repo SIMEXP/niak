@@ -443,9 +443,9 @@ stage.opt = opt_tmp;
 stage.environment = opt.environment;
 pipeline.(name_stage) = stage;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 1c. Group-level percentile statistics %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% TEMPORAL
 
@@ -621,13 +621,15 @@ pipeline.(name_stage) = stage;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'std_drifts_ind';
+name_process2 = 'perc_drifts_ind';
 name_jobs = fieldnames(pipeline);
 
 for num_s = 1:nb_subject
 
     subject = list_subject{num_s};
     SliceTiming_jobs = name_jobs(niak_find_str_cell(name_jobs,'slice_timing'));
-
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    motion_jobs = motion_jobs(niak_find_str_cell(motion_jobs,subject));
     clear jobs_in jobs_in2
     
     jobs_in = SliceTiming_jobs(niak_find_str_cell(SliceTiming_jobs,subject));
@@ -668,7 +670,38 @@ for num_s = 1:nb_subject
         stage.environment = opt.environment;
 
         pipeline.(name_stage) = stage;        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Extracting percentages %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%       
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_stage = cat(2,name_process2,'_',subject,'_',run);
+        files_in_tmp.vol = stage.files_out;
+        files_in_tmp.mask = pipeline_in.(motion_jobs{1}).files_out.mask_volume;
 
+        %% Options
+        opt_tmp = opt.bricks.percentile_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Individual percentile of the standard deviation of slow time drifts';
+        stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;    
+        
     end % run
 
 end % subject
@@ -716,17 +749,62 @@ stage.opt = opt_tmp;
 stage.environment = opt.environment;
 pipeline.(name_stage) = stage;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 3c. Group-level percentile statistics of drifts %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_perc_drifts = name_jobs(niak_find_str_cell(name_jobs,'perc_drifts_ind'));
+nb_jobs = length(jobs_perc_drifts);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_perc_drifts{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'drifts_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_drifts';
+stage.label = 'Group-level statistics on the percentiles of the slow time drifts';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 4a. Individual standard-deviation maps of physiological noise %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'std_physio_ind';
+name_process2 = 'perc_physio_ind';
 name_jobs = fieldnames(pipeline);
 
 for num_s = 1:nb_subject
 
     subject = list_subject{num_s};
     TimeFilter_jobs = name_jobs(niak_find_str_cell(name_jobs,'time_filter'));
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    motion_jobs = motion_jobs(niak_find_str_cell(motion_jobs,subject));
 
     clear jobs_in jobs_in2
     
@@ -767,7 +845,38 @@ for num_s = 1:nb_subject
         stage.environment = opt.environment;
 
         pipeline.(name_stage) = stage;        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Extracting percentages %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%       
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_stage = cat(2,name_process2,'_',subject,'_',run);
+        files_in_tmp.vol = stage.files_out;
+        files_in_tmp.mask = pipeline_in.(motion_jobs{1}).files_out.mask_volume;
 
+        %% Options
+        opt_tmp = opt.bricks.percentile_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Individual percentile of the physiological noise';
+        stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;    
+        
     end % run
 
 end % subject
@@ -815,54 +924,54 @@ stage.opt = opt_tmp;
 stage.environment = opt.environment;
 pipeline.(name_stage) = stage;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% 3b. Group standard-deviation maps of slow-time drifts %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 4c. Group-level percentile statistics of physiological noise %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Files in
 clear files_in_tmp files_out_tmp opt_tmp
 
 name_jobs = fieldnames(pipeline);
-jobs_std_drifts = name_jobs(niak_find_str_cell(name_jobs,'std_drifts_ind'));
-nb_jobs = length(jobs_std_drifts);
+jobs_physio_drifts = name_jobs(niak_find_str_cell(name_jobs,'perc_physio_ind'));
+nb_jobs = length(jobs_physio_drifts);
 
 nb_files = 1;
 
 for num_j = 1:nb_jobs
-    name_job_in = jobs_std_drifts{num_j};
+    name_job_in = jobs_physio_drifts{num_j};
     files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
     nb_files = nb_files + 1;
 end
 
 %% Files out
-files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_drifts_mean.mnc');
-files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_drifts_std.mnc');
-files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_drifts_meanstd.mnc');
+files_out_tmp = cat(2,opt.folder_out,filesep,'physio_perc.dat');
 
 %% Options
-opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp = opt.bricks.boot_curves;
 opt_tmp.flag_test = 1;
 
 %% Defaults
-[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
 opt_tmp.flag_test = 0;
 
 %% Adding the stage to the pipeline
 clear stage
-name_stage = 'std_drifts_group';
-stage.label = 'Group maps of standard deviation of slow time drifts';
-stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+name_stage = 'boot_perc_physio';
+stage.label = 'Group-level statistics on the percentiles of the physiological noise';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
 stage.files_in = files_in_tmp;
 stage.files_out = files_out_tmp;
 stage.opt = opt_tmp;
 stage.environment = opt.environment;
 pipeline.(name_stage) = stage;
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 5a. Contrast-specific individual maps of absolute effect %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'std_activation_ind';
+name_process2 = 'perc_activation_ind';
 name_jobs = fieldnames(pipeline);
 
 for num_c = 1:nb_contrast
@@ -878,7 +987,8 @@ for num_c = 1:nb_contrast
         glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
         jobs_in = glm_jobs(niak_find_str_cell(glm_jobs,subject));
         jobs_in = jobs_in(niak_find_str_cell(jobs_in,contrast));
-
+        motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+        motion_jobs = motion_jobs(niak_find_str_cell(motion_jobs,subject));
         clear files_in_tmp files_out_tmp opt_tmp
 
         if ~isempty(jobs_in)
@@ -908,6 +1018,37 @@ for num_c = 1:nb_contrast
             stage.opt = opt_tmp;
             stage.environment = opt.environment;
 
+            pipeline.(name_stage) = stage;
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Extracting percentages %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            clear files_in_tmp files_out_tmp opt_tmp
+            name_stage = cat(2,name_process2,'_',contrast,'_',subject);
+            files_in_tmp.vol = stage.files_out;
+            files_in_tmp.mask = pipeline_in.(motion_jobs{1}).files_out.mask_volume;
+
+            %% Options
+            opt_tmp = opt.bricks.percentile_vol;
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+            %% Outputs
+            files_out_tmp = '';
+
+            %% set the default values
+            opt_tmp.flag_test = 1;
+            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+            opt_tmp.flag_test = 0;
+
+            %% Adding the stage to the pipeline
+            clear stage
+            stage.label = sprintf('Individual percentile of the activation (contrast %s)',contrast);
+            stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+            stage.files_in = files_in_tmp;
+            stage.files_out = files_out_tmp;
+            stage.opt = opt_tmp;
+            stage.environment = opt.environment;
             pipeline.(name_stage) = stage;
 
         end % if the contrast exist for this subject
@@ -961,11 +1102,55 @@ for num_c = 1:nb_contrast
     pipeline.(name_stage) = stage;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 5c. Group-level percentile statistics of activation %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_jobs = fieldnames(pipeline);
+for num_c = 1:nb_contrast
+    clear files_in_tmp files_out_tmp opt_tmp
+    
+    %% Files in
+    contrast = list_contrast{num_c};
+    jobs_perc_activation = name_jobs(niak_find_str_cell(name_jobs,cat(2,'perc_activation_ind_',contrast)));
+    nb_jobs = length(jobs_perc_activation);
+
+    nb_files = 1;
+    for num_j = 1:nb_jobs
+        name_job_in = jobs_perc_activation{num_j};
+        files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+        nb_files = nb_files + 1;
+    end
+
+    %% Files out
+    files_out_tmp = cat(2,opt.folder_out,filesep,'activation_',contrast,'_perc.dat');
+
+    %% Options
+    opt_tmp = opt.bricks.boot_curves;
+    opt_tmp.flag_test = 1;
+
+    %% Defaults
+    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+    opt_tmp.flag_test = 0;
+
+    %% Adding the stage to the pipeline
+    clear stage
+    name_stage = cat(2,'boot_perc_activation_',contrast);
+    stage.label = sprintf('Group-level statistics on the activation (contrast %s)',contrast);
+    stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+    stage.files_in = files_in_tmp;
+    stage.files_out = files_out_tmp;
+    stage.opt = opt_tmp;
+    stage.environment = opt.environment;
+    pipeline.(name_stage) = stage;
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 6a. Contrast-specific individual maps of residuals %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'std_residuals_ind';
+name_process2 = 'perc_residuals_ind';
 name_jobs = fieldnames(pipeline);
 
 for num_c = 1:nb_contrast
@@ -981,7 +1166,8 @@ for num_c = 1:nb_contrast
         glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
         jobs_in = glm_jobs(niak_find_str_cell(glm_jobs,subject));
         jobs_in = jobs_in(niak_find_str_cell(jobs_in,contrast));
-
+        motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+        motion_jobs = motion_jobs(niak_find_str_cell(motion_jobs,subject));
         clear files_in_tmp files_out_tmp opt_tmp
 
         if ~isempty(jobs_in)
@@ -1011,6 +1197,37 @@ for num_c = 1:nb_contrast
             stage.opt = opt_tmp;
             stage.environment = opt.environment;
 
+            pipeline.(name_stage) = stage;
+            
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Extracting percentages %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            clear files_in_tmp files_out_tmp opt_tmp
+            name_stage = cat(2,name_process2,'_',contrast,'_',subject);
+            files_in_tmp.vol = stage.files_out;
+            files_in_tmp.mask = pipeline_in.(motion_jobs{1}).files_out.mask_volume;
+
+            %% Options
+            opt_tmp = opt.bricks.percentile_vol;
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+            %% Outputs
+            files_out_tmp = '';
+
+            %% set the default values
+            opt_tmp.flag_test = 1;
+            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+            opt_tmp.flag_test = 0;
+
+            %% Adding the stage to the pipeline
+            clear stage
+            stage.label = sprintf('Individual percentile of the residuals (contrast %s)',contrast);
+            stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+            stage.files_in = files_in_tmp;
+            stage.files_out = files_out_tmp;
+            stage.opt = opt_tmp;
+            stage.environment = opt.environment;
             pipeline.(name_stage) = stage;
 
         end % if the contrast exist for this subject
@@ -1061,11 +1278,55 @@ stage.opt = opt_tmp;
 stage.environment = opt.environment;
 pipeline.(name_stage) = stage;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 6c. Group-level percentile statistics of physiological noise %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_perc_res = name_jobs(niak_find_str_cell(name_jobs,'perc_residuals_ind'));
+nb_jobs = length(jobs_perc_res);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_perc_res{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'residuals_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_residuals';
+stage.label = 'Group-level statistics on the percentiles of the residuals';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 7a. Individual autocorrelation maps of residual data %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'autocorrelation_residuals_ind';
+name_process2 = 'perc_autocorrspat_res_ind';
+name_process3 = 'perc_autocorrtemp_res_ind';
 glm_jobs = name_jobs(niak_find_str_cell(name_jobs,'glm_level1'));
 
 %% Individual maps
@@ -1078,7 +1339,8 @@ for num_c = 1:nb_contrast
         subject = list_subject{num_s};
         subject_jobs = glm_jobs(niak_find_str_cell(glm_jobs,subject));
         subject_jobs = subject_jobs(niak_find_str_cell(subject_jobs,contrast));
-
+        motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+        motion_jobs = motion_jobs(niak_find_str_cell(motion_jobs,subject));
         clear files_in_tmp files_out_tmp opt_tmp
         files_in_tmp = pipeline.(subject_jobs{1}).files_out.resid{1};
 
@@ -1104,8 +1366,73 @@ for num_c = 1:nb_contrast
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
         stage.environment = opt.environment;
-
+        
         pipeline.(name_stage) = stage;
+
+        stage_autocorr = stage;
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Extracting percentages %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        %% Spatial
+
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_stage = cat(2,name_process2,'_',contrast,'_',subject);
+        files_in_tmp.vol = stage_autocorr.files_out.spatial;
+        files_in_tmp.mask = pipeline_in.(motion_jobs{1}).files_out.mask_volume;
+
+        %% Options
+        opt_tmp = opt.bricks.percentile_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Percentile of spatial autocorrelation map of residuals';
+        stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;    
+        
+         %% Temporal
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_stage = cat(2,name_process3,'_',contrast,'_',subject);
+        files_in_tmp.vol = stage_autocorr.files_out.temporal;
+        files_in_tmp.mask = pipeline_in.(subject_job{1}).files_out.mask_volume;
+
+        %% Options
+        opt_tmp = opt.bricks.percentile_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Percentile of temporal autocorrelation map of residuals';
+        stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;   
+
 
     end % subject
 end % contrast
@@ -1190,6 +1517,88 @@ clear stage
 name_stage = 'boot_mean_autocorr_res_spatial';
 stage.label = 'Group-level mean of spatial autocorrelation maps of residual data';
 stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 7c. Group-level percentile statistics of autocorrelation maps of the residuals %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% TEMPORAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_perc_autocorrtemp_res = name_jobs(niak_find_str_cell(name_jobs,'perc_autocorrtemp_res_ind'));
+nb_jobs = length(jobs_perc_autocorrtemp_res);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_perc_autocorrtemp_res{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'autocorrelation_res_temporal_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_autocorr_res_temporal';
+stage.label = 'Group-level statistics on the percentiles of the temporal autocorrelation maps of residuals';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%% TEMPORAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_perc_autocorrspat_res = name_jobs(niak_find_str_cell(name_jobs,'perc_autocorrspat_res_ind'));
+nb_jobs = length(jobs_perc_autocorrspat_res);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_perc_autocorrspat_res{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'autocorrelation_res_spatial_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_autocorr_res_spatial';
+stage.label = 'Group-level statistics on the percentiles of the spatial autocorrelation maps of residuals';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
 stage.files_in = files_in_tmp;
 stage.files_out = files_out_tmp;
 stage.opt = opt_tmp;
