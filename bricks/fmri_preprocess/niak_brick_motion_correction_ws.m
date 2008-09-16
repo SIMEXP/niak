@@ -44,7 +44,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %
 %   OPT   (structure) with the following fields:
 %
-%       VOL_REF (vector, default 1) VOL_REF is the number of the volume
+%       VOL_REF (vector, default 'median') VOL_REF is the number of the volume
 %           that will be used as reference. If VOL_REF is a string, the
 %           median volume of the run of reference will be used rather than
 %           an arbitrary volume.
@@ -259,6 +259,7 @@ for num_r = list_run
 
         if ischar(vol_ref)
             vol_target = median(data,4);
+            vol_ref = 0;
         else
             vol_target = data(:,:,:,vol_ref); % Extracting median volume
         end
@@ -365,9 +366,9 @@ for num_r = list_run
         else
 
             if num_v == list_vols(1)               
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 10 -model_lattice -step 6 6 6'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 10 -model_lattice -step 7 7 7'));
             else                                
-                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp,' -clobber -debug -lsq6 -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 10 -model_lattice -step 6 6 6'));
+                [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp,' -clobber -debug -lsq6 -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 10 -model_lattice -step 7 7 7'));
             end
 
             %% Reading the transformation

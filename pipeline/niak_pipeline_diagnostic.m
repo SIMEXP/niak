@@ -42,6 +42,9 @@ function pipeline = niak_pipeline_diagnostic(pipeline_in,opt)
 %           AUTOCORRELATION
 %               (structure) options of NIAK_BRICK_AUTOCORRELATION
 %
+%           PERCENTILE_VOL
+%               (structure) options of NIAK_BRICK_PERCENTILE_VOL
+%
 %           SPCA 
 %               (structure) options of NIAK_BRICK_SPCA
 %
@@ -185,8 +188,8 @@ niak_set_defaults
 %% The options for the bricks
 gb_name_structure = 'opt.bricks';
 opt_tmp.flag_test = 1;
-gb_list_fields = {'diff_variance','autocorrelation','spca','boot_mean_vols','boot_curves'};
-gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
+gb_list_fields = {'percentile_vol','diff_variance','autocorrelation','spca','boot_mean_vols','boot_curves'};
+gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
 
 niak_set_defaults
 
@@ -239,6 +242,8 @@ pipeline = pipeline_in;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'autocorrelation_mc';
+name_process2 = 'percentile_autocorrspat_mc';
+name_process3 = 'percentile_autocorrtemp_mc';
 
 %% Individual maps
 
@@ -247,12 +252,15 @@ for num_s = 1:nb_subject
     subject = list_subject{num_s};
     motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
     subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));
-    
+
     data_subj = niak_files2cell(pipeline_in.(subject_job{1}).files_out.motion_corrected_data);
     nb_run = length(data_subj);  
     
     for num_r = 1:nb_run
         
+        %%%%%%%%%%%%%%%%%%%
+        %% Building maps %%
+        %%%%%%%%%%%%%%%%%%%
         clear files_in_tmp files_out_tmp opt_tmp
         run = cat(2,'run',num2str(num_r));
         name_stage = cat(2,name_process,'_',subject,'_',run);
@@ -279,8 +287,71 @@ for num_s = 1:nb_subject
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
         stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;      
+        
+        stage_autocorr = stage;
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Extracting percentages %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        %% Spatial
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_stage = cat(2,name_process2,'_',subject,'_',run);
+        files_in_tmp.vol = stage_autocorr.files_out.spatial;
+        files_in_tmp.mask = pipeline_in.(subject_job{1}).files_out.mask_volume;
 
-        pipeline.(name_stage) = stage;        
+        %% Options
+        opt_tmp = opt.bricks.percentile_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Percentile of spatial autocorrelation map of motion-corrected data';
+        stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;    
+        
+         %% Temporal
+        
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_stage = cat(2,name_process3,'_',subject,'_',run);
+        files_in_tmp.vol = stage_autocorr.files_out.temporal;
+        files_in_tmp.mask = pipeline_in.(subject_job{1}).files_out.mask_volume;
+
+        %% Options
+        opt_tmp = opt.bricks.percentile_vol;
+        opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+        %% Outputs
+        files_out_tmp = '';
+
+        %% set the default values
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        clear stage
+        stage.label = 'Percentile of temporal autocorrelation map of motion-corrected data';
+        stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+        stage.files_in = files_in_tmp;
+        stage.files_out = files_out_tmp;
+        stage.opt = opt_tmp;
+        stage.environment = opt.environment;
+        pipeline.(name_stage) = stage;   
 
     end % run
 
@@ -366,6 +437,88 @@ clear stage
 name_stage = 'boot_mean_autocorr_mc_spatial';
 stage.label = 'Group-level mean of spatial autocorrelation maps of motion-corrected data';
 stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 1c. Group-level percentile statistics %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% TEMPORAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_perc_autocorrtemp_mc = name_jobs(niak_find_str_cell(name_jobs,'percentile_autocorrtemp_mc'));
+nb_jobs = length(jobs_perc_autocorrtemp_mc);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_perc_autocorrtemp_mc{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'autocorrelation_mc_temporal_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_autocorr_mc_temporal';
+stage.label = 'Group-level statistics on the percentiles of the temporal autocorrelation maps of motion-corrected data';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%% SPATIAL
+
+%% Files in
+clear files_in_tmp files_out_tmp opt_tmp
+
+name_jobs = fieldnames(pipeline);
+jobs_perc_autocorrspat_mc = name_jobs(niak_find_str_cell(name_jobs,'percentile_autocorrspat_mc'));
+nb_jobs = length(jobs_perc_autocorrspat_mc);
+
+nb_files = 1;
+
+for num_j = 1:nb_jobs
+    name_job_in = jobs_perc_autocorrspat_mc{num_j};
+    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    nb_files = nb_files + 1;
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'autocorrelation_mc_spatial_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_autocorr_mc_spatial';
+stage.label = 'Group-level statistics on the percentiles of the spatial autocorrelation maps of motion-corrected data';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
 stage.files_in = files_in_tmp;
 stage.files_out = files_out_tmp;
 stage.opt = opt_tmp;

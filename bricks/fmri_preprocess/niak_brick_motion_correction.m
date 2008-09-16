@@ -109,10 +109,12 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           about 3 volumes).
 %
 %       VOL_REF 
-%           (vector, default 1) VOL_REF(NUM) is the number of the volume 
+%           (vector, default 'median') VOL_REF(NUM) is the number of the volume 
 %           that will be used as target for session NUM. 
 %           If VOL_REF is a single integer, the same number will be used 
-%           for all sessions.
+%           for all sessions.  If VOL_REF is a string, the
+%           median volume of the run of reference in each session will be 
+%           used rather than an arbitrary volume.
 %
 %       RUN_REF 
 %           (vector, default 1) RUN_REF(NUM) is the number of the run that 
@@ -150,6 +152,13 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %             i.e. the unit of the motion-corrected data is now a 
 %             percentage of the standard deviation of the time series for 
 %             each run.
+%
+%       FLAG_RUN
+%          (boolean, default 1) if FLAG_RUN == 1, each different run is
+%          considered as a different session of its own, i.e. first each
+%          volume of each run is coregistered with a volume of reference in
+%          that run, then all volumes of reference are coregistered to one
+%          single volume (the coregistration process is iterated twice).
 %
 %       FLAG_SESSION 
 %          (boolean, default 0) if FLAG_SESSION == 0, the intra-session 
@@ -207,6 +216,9 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % The within-session transformation is combined with that
 % between-session transformation for each volume.
 %
+% Note that if OPT.FLAG_RUN == 1, the strategy is the same as before, yet
+% each run is considered as a session of its own.
+%
 % NOTE 2: The final motion correction parameters are volume-specific and points to
 % the volume of reference of the run of reference of the session of reference.
 % The within- and between-session transformations can be saved as
@@ -261,8 +273,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
-gb_list_defaults = {0,1,1,'',0,0,'','sinc',8,1,0,'none'};
+gb_list_fields = {'flag_run','suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
+gb_list_defaults = {1,0,'median',1,'',0,0,'','sinc',8,1,0,'none'};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);
@@ -273,6 +285,30 @@ if isempty(opt.session_ref)
     session_ref = opt.session_ref;
 end
 
+if flag_run == 1
+    nb_run_tot = 1;
+    for num_s = 1:nb_sessions
+        name_session = list_sessions{num_s};
+        list_run = files_in.sessions.(name_session);
+        nb_run = length(list_run);
+        
+        for num_r = 1:nb_run
+            name_session_new = cat(2,name_session,'_run',num2str(num_r));
+            sessions_tmp(1).(name_session_new) = list_run(num_r);
+            
+            if strcmp(name_session,session_ref)&(num_r==run_ref)
+                opt.session_ref = name_session_new;
+                session_ref = name_session_new;
+                run_ref = 1;
+            end
+        end
+    end
+    files_in.sessions = sessions_tmp;
+    sessions = sessions_tmp;
+    clear sessions_tmp;    
+    list_sessions = fieldnames(files_in.sessions);
+    nb_sessions = length(list_sessions);
+end
 %% Building default output names
 
 flag_def_data = isempty(files_out.motion_corrected_data);
@@ -427,7 +463,11 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         end
 
         %% Setting up options of the within-run motion correction
-        opt_session.vol_ref = vol_ref;
+        if ~ischar(opt.vol_ref)&(length(opt.vol_ref)>1)
+            opt_session.vol_ref = vol_ref(num_s);
+        else
+            opt_session.vol_ref = vol_ref;
+        end
         opt_session.run_ref = run_ref;
         opt_session.flag_verbose = flag_verbose;
         opt_session.interpolation = interpolation;
@@ -467,8 +507,16 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         name_session = list_sessions{num_s};
         if num_s~=num_session_ref
             xfm_tmp = niak_file_tmp(cat(2,name_session,'_mp.xfm'));
+            xfm_tmp2 = niak_file_tmp(cat(2,name_session,'_mp2.xfm'));
+            file_source_tmp = niak_file_tmp(cat(2,name_session,'_ref.mnc'));
+            
             [flag,str_log] = system(cat(2,'minctracc ',target_session{num_s},' ',target_session{num_session_ref},' ',xfm_tmp,' -xcorr -source_mask ',mask_session{num_s},' -model_mask ',mask_session{num_session_ref},' -forward -clobber -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 20 -source_lattice -step 3 3 3'));
-
+            [flag,log] = system(cat(2,'mincresample ',target_session{num_s},' ',file_source_tmp,' -like ',target_session{num_session_ref},' -',opt.interpolation,' -clobber -transform ',xfm_tmp));
+            [flag,str_log] = system(cat(2,'minctracc ',file_source_tmp,' ',target_session{num_session_ref},' ',xfm_tmp2,' -xcorr -source_mask ',mask_session{num_s},' -model_mask ',mask_session{num_session_ref},' -forward -clobber -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 20 -source_lattice -step 3 3 3'));
+            system(cat(2,'xfmconcat ',xfm_tmp,' ',xfm_tmp2,' ',xfm_tmp));
+            delete(file_source_tmp);
+            delete(xfm_tmp2);
+            
             %% Read the rigid-body transformation (lsq6)
             transf = niak_read_transf(xfm_tmp);
             delete(xfm_tmp);
@@ -657,7 +705,9 @@ end
 if ~ischar(files_out.motion_corrected_data)
 
     if flag_verbose
-        fprintf('\nResampling data...\n')
+        mes = 'Resampling data...';
+        stars = repmat('*',[1 length(mes)]);
+        fprintf('\n%s\n%s\n%s\n',stars,mes,stars);
     end
 
     %% Building the options for resampling

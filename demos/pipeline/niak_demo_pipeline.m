@@ -86,35 +86,39 @@ folder_logs = 'logs'; % subfolder for the logs
 %% Creation of the pipeline stages for slice timing %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-opt_a.folder_out = cat(2,path_data,filesep,folder_a,filesep); % The outputs will be written in this folder
 TR = 2.33; % Repetition time in seconds
 nb_slices = 42; % Number of slices in a volume
-opt_a.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
-opt_a.timing(1)=TR/nb_slices; % Time beetween slices
-opt_a.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
 
 for num_s = list_num_subject
     for num_c = list_num_condition
         
         subject = list_subject{num_s};
         condition = list_condition{num_c};
-
+        
+        %% Set up inputs, outputs and options
+        clear files_in files_out opt
         files_in = cat(2,gb_niak_path_demo,filesep,'func_',condition,'_subject',subject,ext_f); 
         files_out = '';
-        
+        opt.folder_out = cat(2,path_data,filesep,folder_a,filesep); % The outputs will be written in this folder
+        opt.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
+        opt.timing(1)=TR/nb_slices; % Time beetween slices
+        opt.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
+
         %% Getting the default values of options and output files
-        opt_a.flag_test = 1;
-        [files_in,files_out,opt_a] = niak_brick_slice_timing(files_in,files_out,opt_a);
-        opt_a.flag_test = 0;
+        opt.flag_test = 1;
+        [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt);
+        opt.flag_test = 0;
         
         %% Adding stage to the pipeline
+        name_stage = cat(2,'slice_timing_',subject,'_',condition);
         stage.label = 'Correction of difference in slice timing via temporal interpolation';
         stage.command = 'niak_brick_slice_timing(files_in,files_out,opt)';        
         stage.files_in = files_in;
         stage.files_out = files_out;
-        stage.opt = opt_a;
+        stage.opt = opt;
         stage.environment = 'octave';
-        pipeline = setfield(pipeline,cat(2,'slice_timing_',subject,'_',condition),stage);
+        
+        pipeline(1).(name_stage) = stage;
 
     end
 end
@@ -123,36 +127,38 @@ end
 %% Creation of the pipeline stages for temporal filtering %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-opt_f.folder_out = cat(2,path_data,filesep,folder_f,filesep); % The outputs will be written in this folder
-opt_f.tr = 2.33; % Repetition time in seconds
-opt_f.lp = 0.1; % Exclude frequencies above 0.1 Hz
-opt_f.hp = 0.01; % Exclude frequencies below 0.01 Hz
-
 for num_s = list_num_subject
     for num_c = list_num_condition
         
         subject = list_subject{num_s};
         condition = list_condition{num_c};
-
+               
+        %% Set up inputs, outputs and options
+        clear files_in files_out opt
         stage_in = getfield(pipeline,cat(2,'slice_timing_',subject,'_',condition));
         files_in = stage_in.files_out; % We use the outputs of the slice timing as inputs, whatever these may be
         files_out.filtered_data = ''; % Create the data after temporal filtering
         files_out.var_high = ''; % Create the volume of the relative variance suppressed in high frequencies
         files_out.var_low = ''; % Create the volume of the relative variance suppressed in low frequencies
-        
+        opt.folder_out = cat(2,path_data,filesep,folder_f,filesep); % The outputs will be written in this folder
+        opt.tr = 2.33; % Repetition time in seconds
+        opt.lp = 0.1; % Exclude frequencies above 0.1 Hz
+        opt.hp = 0.01; % Exclude frequencies below 0.01 Hz
+
         %% Getting the default values of options and output files
-        opt_f.flag_test = 1;
-        [files_in,files_out,opt_f] = niak_brick_time_filter(files_in,files_out,opt_f);
-        opt_f.flag_test = 0;
+        opt.flag_test = 1;
+        [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt);
+        opt.flag_test = 0;
         
         %% Adding stage to the pipeline
+        name_stage = cat(2,'time_filter_',subject,'_',condition);
         stage.label = 'Temporal filtering of fMRI data';
         stage.command = 'niak_brick_time_filter(files_in,files_out,opt)';       
         stage.files_in = files_in;
         stage.files_out = files_out;
-        stage.opt = opt_f;
+        stage.opt = opt;
         stage.environment = 'octave';
-        pipeline = setfield(pipeline,cat(2,'time_filter_',subject,'_',condition),stage);
+        pipeline(1).(name_stage) = stage;
 
     end
 end
@@ -161,32 +167,34 @@ end
 %% Creation of the pipeline stages for spatial smoothing  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-opt_s.folder_out = cat(2,path_data,filesep,folder_s,filesep); % The outputs will be written in this folder
-opt_s.fwhm = 4;
-
 for num_s = list_num_subject
     for num_c = list_num_condition
         
         subject = list_subject{num_s};
         condition = list_condition{num_c};
 
+        %% Set up inputs, outputs and options
+        clear files_in files_out opt
         stage_in = getfield(pipeline,cat(2,'time_filter_',subject,'_',condition));
         files_in = stage_in.files_out.filtered_data; % We use the outputs of the slice timing as inputs, whatever these may be
-        files_out = ''; % Create the smoothed data with default name        
-        
+        files_out = ''; % Create the smoothed data with default name               
+        opt.folder_out = cat(2,path_data,filesep,folder_s,filesep); % The outputs will be written in this folder
+        opt.fwhm = 4;
+
         %% Getting the default values of options and output files
-        opt_s.flag_test = 1;
-        [files_in,files_out,opt_s] = niak_brick_smooth_vol(files_in,files_out,opt_s);
-        opt_s.flag_test = 0;
+        opt.flag_test = 1;
+        [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt);
+        opt.flag_test = 0;        
         
         %% Adding stage to the pipeline
+        name_stage = cat(2,'smooth_',subject,'_',condition);
         stage.label = 'Spatial smoothing of fMRI data';
         stage.command = 'niak_brick_smooth_vol(files_in,files_out,opt)';        
         stage.files_in = files_in;
         stage.files_out = files_out;
-        stage.opt = opt_s;
+        stage.opt = opt;
         stage.environment = 'octave';
-        pipeline = setfield(pipeline,cat(2,'smooth_',subject,'_',condition),stage);
+        pipeline(1).(name_stage) = stage;
 
     end
 end
