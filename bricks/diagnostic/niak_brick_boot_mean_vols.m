@@ -255,7 +255,7 @@ if ~strcmp(files_out.meanstd,'gb_niak_omitted')
         if flag_mask == 1
             meanstd_vol(mask) = meanstd_vol(mask) + (vol_tmp-mean_vol).^2;
         else
-            meanstd_vol(:) = meanstd_vol(:) + (vol_tmp-mean_vol).^2
+            meanstd_vol(:) = meanstd_vol(:) + (vol_tmp-mean_vol).^2;
         end
     end
     meanstd_vol = sqrt(meanstd_vol/nb_samps);

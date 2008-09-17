@@ -94,8 +94,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'percentiles','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {[0 0.01 0.05 0.1 0.25 0.5 0.75 0.9 0.95 0.99 1],0,'',0};
+gb_list_fields = {'percentiles','flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {[0 0.01 0.05 0.1 0.25 0.5 0.75 0.9 0.95 0.99 1],0,'',1};
 niak_set_defaults
 
 %% Output files
