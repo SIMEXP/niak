@@ -287,6 +287,7 @@ for num_s = 1:nb_subject
         files_in_tmp.fmri = data_subj.fmri{num_r};        
         files_in_tmp.component = stage_in.files_out.time;
         files_in_tmp.mask = cat(2,gb_niak_path_niak,'template',filesep,'roi_ventricle.mnc');
+        files_in_tmp.transformation = data_subj.transformation;
 
         %% Options
         opt_tmp = opt.bricks.component_sel;
@@ -342,6 +343,7 @@ for num_s = 1:nb_subject
         files_in_tmp.fmri = data_subj.fmri{num_r};        
         files_in_tmp.component = stage_in.files_out.time;
         files_in_tmp.mask = cat(2,gb_niak_path_niak,'template',filesep,'roi_stem.mnc');
+        files_in_tmp.transformation = data_subj.transformation;
 
         %% Options
         opt_tmp = opt.bricks.component_sel;

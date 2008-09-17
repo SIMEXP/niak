@@ -285,8 +285,10 @@ if isempty(opt.session_ref)
     session_ref = opt.session_ref;
 end
 
+files_in_orig = files_in;
+
 if flag_run == 1
-    files_in_orig = files_in;
+    
     nb_run_tot = 1;
     for num_s = 1:nb_sessions
         name_session = list_sessions{num_s};
@@ -871,3 +873,5 @@ end
 if exist(file_target,'file')
     delete(file_target);
 end
+
+files_in = files_in_orig; %% Restore the initial organization of files_in.

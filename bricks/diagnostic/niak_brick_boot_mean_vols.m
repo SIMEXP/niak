@@ -13,7 +13,16 @@ function [files_in,files_out,opt] = niak_brick_boot_mean_vols(files_in,files_out
 % INPUTS :
 %
 %  * FILES_IN
-%       (cell of strings) Each entry is a 3D of a 3D+t dataset.
+%       (structure) with the following fields :
+%
+%       VOL
+%           (cell of strings) Each entry is a 3D of a 3D+t dataset.
+%      
+%       TRANSFORMATION
+%           (cell of strings, default identity) Each entry is a spatial
+%           transformation to apply on the corresponding entry of VOL. The
+%           target space is the MNI152 space, with a 2 mm isotropic
+%           resolution.
 %
 %  * FILES_OUT 
 %       (structure) with the following fields.  Note that if a field is an 
@@ -96,6 +105,7 @@ function [files_in,files_out,opt] = niak_brick_boot_mean_vols(files_in,files_out
 % THE SOFTWARE.
 
 niak_gb_vars % Load some important NIAK variables
+file_mni152 = cat(2,gb_niak_path_niak,'template',filesep,'roi_aal.mnc');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -104,6 +114,12 @@ niak_gb_vars % Load some important NIAK variables
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_BOOT_MEAN_VOLS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_boot_mean_vols'' for more info.')
 end
+
+%% Output files
+gb_name_structure = 'files_in';
+gb_list_fields = {'vol','transformation'};
+gb_list_defaults = {NaN,'gb_niak_omitted'};
+niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
@@ -118,12 +134,12 @@ gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% Input files
-if ~iscellstr(files_in)
+if ~iscellstr(files_in.vol)
     error('FILES_IN should be a cell of strings');
 end
 
 %% Building default output names
-[path_f,name_f,ext_f] = fileparts(files_in{1});
+[path_f,name_f,ext_f] = fileparts(files_in.vol{1});
 if isempty(path_f)
     path_f = '.';
 end
@@ -158,19 +174,53 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    fprintf('\n_______________________________________\n\nComputing mean/std volumes of %s\n_______________________________________\n',char(files_in{:})');
+    fprintf('\n_______________________________________\n\nComputing mean/std volumes of %s\n_______________________________________\n',char(files_in.vol{:})');
 end
 
+nb_files = length(files_in.vol);
+
+%% If necessary, resample the images in the MNI152 space
+files_in_orig = files_in;
+
+if ~ischar(files_in.transformation)
+    
+    if flag_verbose
+        fprintf('\nResampling the individual volumes in the MNI152 space...');
+    end
+    
+    if length(files_in.transformation)~=nb_files
+        error('Please specify one transformation per volume !');
+    end
+    
+    files_in_tmp = cell(size(files_in.transformation));
+    for num_f = 1:nb_files
+        if flag_verbose
+            fprintf(' %i',num_f)
+        end
+        files_in_tmp{num_f} = niak_file_tmp(sprintf('_vol_%i.mnc',num_f));
+        files_in_r.source = files_in.vol{num_f};
+        files_in_r.target = file_mni152;
+        files_in_r.transformation = files_in.transformation{num_f};
+        files_out_r = files_in_tmp{num_f};
+        opt_r.interpolation = 'trilinear';
+        opt_r.flag_verbose = 0;
+        [flag,mes] = niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
+    end
+    if flag_verbose
+        fprintf('\n')
+    end
+    files_in.vol = files_in_tmp;
+    
+end
 %% Checking the size of input volumes
 if flag_verbose
     fprintf('\nChecking the size of input volumes ...\n');
 end
 
-nb_files = length(files_in);
 nb_vols = 0;
 
 for num_f = 1:nb_files
-    hdr = niak_read_vol(files_in{num_f});
+    hdr = niak_read_vol(files_in.vol{num_f});
     if length(hdr.info.dimensions)==4
         nb_vols = nb_vols + hdr.info.dimensions(4);
     else
@@ -196,7 +246,8 @@ vol_all = zeros([nx ny nz nb_vols]);
 num_vol = 0;
 
 for num_f = 1:nb_files
-    [hdr,vol] = niak_read_vol(files_in{num_f});
+    
+    [hdr,vol] = niak_read_vol(files_in.vol{num_f});
     if length(hdr.info.dimensions)==4
         vol_all(:,:,:,num_vol+1:num_vol+hdr.info.dimensions(4)) = vol;
         num_vol = num_vol + hdr.info.dimensions(4);
@@ -262,3 +313,10 @@ if ~strcmp(files_out.meanstd,'gb_niak_omitted')
     hdr_ref.file_name = files_out.meanstd;
     niak_write_vol(hdr_ref,meanstd_vol);
 end
+
+if ~ischar(files_in.transformation)
+    for num_f = 1:nb_files
+        delete(files_in.vol{num_f});
+    end
+end
+files_in = files_in_orig; %% Restore the initial organization of files_in

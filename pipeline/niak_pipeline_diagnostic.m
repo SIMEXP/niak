@@ -232,6 +232,12 @@ end
 
 nb_contrast = length(list_contrast);
 
+%% Getting the func2stereonl transformations
+for num_s = 1:nb_subject
+    name_concat = cat(2,'concat_transf_nl_',list_subject{num_s});
+    list_transformation{num_s} = pipeline_in.(name_concat).files_out;
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -374,7 +380,8 @@ nb_files = 1;
 
 for num_j = 1:nb_jobs
     name_job_in = jobs_autocorr_mc{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.temporal;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out.temporal;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
@@ -415,7 +422,8 @@ nb_files = 1;
 
 for num_j = 1:nb_jobs
     name_job_in = jobs_autocorr_mc{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.spatial;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out.spatial;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
@@ -721,7 +729,8 @@ nb_files = 1;
 
 for num_j = 1:nb_jobs
     name_job_in = jobs_std_drifts{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
@@ -896,7 +905,8 @@ nb_files = 1;
 
 for num_j = 1:nb_jobs
     name_job_in = jobs_std_physio{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
@@ -1073,7 +1083,8 @@ for num_c = 1:nb_contrast
     clear files_in_tmp files_out_tmp opt_tmp
     for num_j = 1:nb_jobs
         name_job_in = jobs_std_activation{num_j};
-        files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+        files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
+        files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
         nb_files = nb_files + 1;
     end
 
@@ -1250,7 +1261,8 @@ nb_files = 1;
 clear files_in_tmp files_out_tmp opt_tmp
 for num_j = 1:nb_jobs
     name_job_in = jobs_std_residuals{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
@@ -1454,7 +1466,8 @@ nb_files = 1;
 
 for num_j = 1:nb_jobs
     name_job_in = jobs_autocorr_res{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.temporal;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out.temporal;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
@@ -1495,7 +1508,8 @@ nb_files = 1;
 
 for num_j = 1:nb_jobs
     name_job_in = jobs_autocorr_res{num_j};
-    files_in_tmp{nb_files} = pipeline.(name_job_in).files_out.spatial;
+    files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out.spatial;
+    files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
