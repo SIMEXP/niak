@@ -286,6 +286,7 @@ if isempty(opt.session_ref)
 end
 
 if flag_run == 1
+    files_in_orig = files_in;
     nb_run_tot = 1;
     for num_s = 1:nb_sessions
         name_session = list_sessions{num_s};
@@ -412,6 +413,7 @@ for num_s = 1:length(list_sessions)
 end % loop over sessions
 
 if flag_test == 1
+    files_in = files_in_orig;
     return
 end
 
