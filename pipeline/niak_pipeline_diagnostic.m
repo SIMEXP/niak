@@ -778,7 +778,7 @@ for num_j = 1:nb_jobs
 end
 
 %% Files out
-files_out_tmp = cat(2,opt.folder_out,filesep,'drifts_perc.dat');
+files_out_tmp = cat(2,opt.folder_out,filesep,'var_drifts_perc.dat');
 
 %% Options
 opt_tmp = opt.bricks.boot_curves;
@@ -954,7 +954,7 @@ for num_j = 1:nb_jobs
 end
 
 %% Files out
-files_out_tmp = cat(2,opt.folder_out,filesep,'physio_perc.dat');
+files_out_tmp = cat(2,opt.folder_out,filesep,'var_physio_perc.dat');
 
 %% Options
 opt_tmp = opt.bricks.boot_curves;
@@ -1134,7 +1134,7 @@ for num_c = 1:nb_contrast
     end
 
     %% Files out
-    files_out_tmp = cat(2,opt.folder_out,filesep,'activation_',contrast,'_perc.dat');
+    files_out_tmp = cat(2,opt.folder_out,filesep,'var_activation_',contrast,'_perc.dat');
 
     %% Options
     opt_tmp = opt.bricks.boot_curves;
@@ -1310,7 +1310,7 @@ for num_j = 1:nb_jobs
 end
 
 %% Files out
-files_out_tmp = cat(2,opt.folder_out,filesep,'residuals_perc.dat');
+files_out_tmp = cat(2,opt.folder_out,filesep,'var_residuals_perc.dat');
 
 %% Options
 opt_tmp = opt.bricks.boot_curves;

@@ -147,11 +147,10 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %             and then mutliplied by 100, i.e. the unit of the 
 %             motion-corrected data is now a percentage of the baseline 
 %             for each run.
-%           * 'perc_std' : the time series at each voxel will be corrected 
-%             to a zero mean and unit variance and then mutliplied by 100, 
-%             i.e. the unit of the motion-corrected data is now a 
-%             percentage of the standard deviation of the time series for 
-%             each run.
+%           * 'mean_var' : the time series at each voxel will be corrected 
+%             to a zero mean and unit variance i.e. the unit of the 
+%             motion-corrected data is now a fraction of the standard 
+%             deviation of the time series for each run.
 %
 %       FLAG_RUN
 %          (boolean, default 1) if FLAG_RUN == 1, each different run is
@@ -812,14 +811,14 @@ if ~ischar(files_out.motion_corrected_data)
                         end
                         data_r = reshape(data_r,[nx ny nz nt]);
                         
-                    case 'perc_std'
+                    case 'mean_var'
                         
-                        %% Express the time series as a percentage of the
-                        %% standard-deviation at each voxel
+                        %% correct the time series to a zero mean and unit
+                        %% variance
                         [nx,ny,nz,nt] = size(data_r);
                         data_r = reshape(data_r,[nx*ny*nz nt]);
                         for num_t = 1:nt
-                            data_r(mask_run>0,num_t) = 100*(data_r(mask_run>0,num_t)-mean_run(mask_run>0))./std_run(mask_run>0);
+                            data_r(mask_run>0,num_t) = (data_r(mask_run>0,num_t)-mean_run(mask_run>0))./std_run(mask_run>0);
                             data_r(mask_run==0,num_t) = 0;
                         end
                         data_r = reshape(data_r,[nx ny nz nt]);
