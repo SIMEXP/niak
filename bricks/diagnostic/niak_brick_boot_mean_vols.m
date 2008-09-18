@@ -127,8 +127,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'nb_samps','flag_mask','flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {1000,1,0,'',1};
+gb_list_fields = {'fwhm','nb_samps','flag_mask','flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {0,1000,1,0,'',1};
 niak_set_defaults
 
 %% Output files
