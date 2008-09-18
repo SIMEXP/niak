@@ -391,7 +391,7 @@ files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_mc_temporal_st
 files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_mc_temporal_meanstd.mnc');
 
 %% Options
-opt_tmp = opt.bricks.autocorrelation;
+opt_tmp = opt.bricks.boot_mean_vols;
 opt_tmp.flag_test = 1;
 
 %% Defaults
@@ -433,7 +433,7 @@ files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_mc_spatial_std
 files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_mc_spatial_meanstd.mnc');
 
 %% Options
-opt_tmp = opt.bricks.autocorrelation;
+opt_tmp = opt.bricks.boot_mean_vols;
 opt_tmp.flag_test = 1;
 
 %% Defaults
@@ -1477,7 +1477,7 @@ files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_res_temporal_s
 files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_res_temporal_meanstd.mnc');
 
 %% Options
-opt_tmp = opt.bricks.autocorrelation;
+opt_tmp = opt.bricks.boot_mean_vols;
 opt_tmp.flag_test = 1;
 
 %% Defaults
@@ -1519,7 +1519,7 @@ files_out_tmp.std = cat(2,opt.folder_out,filesep,'autocorrelation_res_spatial_st
 files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'autocorrelation_res_spatial_meanstd.mnc');
 
 %% Options
-opt_tmp = opt.bricks.autocorrelation;
+opt_tmp = opt.bricks.boot_mean_vols;
 opt_tmp.flag_test = 1;
 
 %% Defaults
