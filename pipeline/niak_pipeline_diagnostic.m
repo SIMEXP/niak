@@ -628,7 +628,7 @@ pipeline.(name_stage) = stage;
 %% 3a. Individual standard-deviation maps of slow-time drifts %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-name_process = 'std_drifts_ind';
+name_process = 'var_drifts_ind';
 name_process2 = 'perc_drifts_ind';
 name_jobs = fieldnames(pipeline);
 
@@ -722,22 +722,22 @@ end % subject
 clear files_in_tmp files_out_tmp opt_tmp
 
 name_jobs = fieldnames(pipeline);
-jobs_std_drifts = name_jobs(niak_find_str_cell(name_jobs,'std_drifts_ind'));
-nb_jobs = length(jobs_std_drifts);
+jobs_var_drifts = name_jobs(niak_find_str_cell(name_jobs,'var_drifts_ind'));
+nb_jobs = length(jobs_var_drifts);
 
 nb_files = 1;
 
 for num_j = 1:nb_jobs
-    name_job_in = jobs_std_drifts{num_j};
+    name_job_in = jobs_var_drifts{num_j};
     files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
     files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
 %% Files out
-files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_drifts_mean.mnc');
-files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_drifts_std.mnc');
-files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_drifts_meanstd.mnc');
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'var_drifts_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'var_drifts_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'var_drifts_meanstd.mnc');
 
 %% Options
 opt_tmp = opt.bricks.boot_mean_vols;
@@ -749,7 +749,7 @@ opt_tmp.flag_test = 0;
 
 %% Adding the stage to the pipeline
 clear stage
-name_stage = 'std_drifts_group';
+name_stage = 'var_drifts_group';
 stage.label = 'Group maps of standard deviation of slow time drifts';
 stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
 stage.files_in = files_in_tmp;
@@ -804,7 +804,7 @@ pipeline.(name_stage) = stage;
 %% 4a. Individual standard-deviation maps of physiological noise %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-name_process = 'std_physio_ind';
+name_process = 'var_physio_ind';
 name_process2 = 'perc_physio_ind';
 name_jobs = fieldnames(pipeline);
 
@@ -898,22 +898,22 @@ end % subject
 clear files_in_tmp files_out_tmp opt_tmp
 
 name_jobs = fieldnames(pipeline);
-jobs_std_physio = name_jobs(niak_find_str_cell(name_jobs,'std_physio_ind'));
-nb_jobs = length(jobs_std_physio);
+jobs_var_physio = name_jobs(niak_find_str_cell(name_jobs,'var_physio_ind'));
+nb_jobs = length(jobs_var_physio);
 
 nb_files = 1;
 
 for num_j = 1:nb_jobs
-    name_job_in = jobs_std_physio{num_j};
+    name_job_in = jobs_var_physio{num_j};
     files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
     files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
 %% Files out
-files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_physio_mean.mnc');
-files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_physio_std.mnc');
-files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_physio_meanstd.mnc');
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'var_physio_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'var_physio_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'var_physio_meanstd.mnc');
 
 %% Options
 opt_tmp = opt.bricks.boot_mean_vols;
@@ -925,7 +925,7 @@ opt_tmp.flag_test = 0;
 
 %% Adding the stage to the pipeline
 clear stage
-name_stage = 'std_physio_group';
+name_stage = 'var_physio_group';
 stage.label = 'Group maps of standard deviation of physiological noise';
 stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
 stage.files_in = files_in_tmp;
@@ -980,7 +980,7 @@ pipeline.(name_stage) = stage;
 %% 5a. Contrast-specific individual maps of absolute effect %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-name_process = 'std_activation_ind';
+name_process = 'var_activation_ind';
 name_process2 = 'perc_activation_ind';
 name_jobs = fieldnames(pipeline);
 
@@ -1074,24 +1074,24 @@ name_jobs = fieldnames(pipeline);
 
 for num_c = 1:nb_contrast
     contrast = list_contrast{num_c};
-    jobs_std_activation = name_jobs(niak_find_str_cell(name_jobs,cat(2,'std_activation_ind_',contrast)));
+    jobs_var_activation = name_jobs(niak_find_str_cell(name_jobs,cat(2,'var_activation_ind_',contrast)));
     
-    nb_jobs = length(jobs_std_activation);
+    nb_jobs = length(jobs_var_activation);
 
     nb_files = 1;
     
     clear files_in_tmp files_out_tmp opt_tmp
     for num_j = 1:nb_jobs
-        name_job_in = jobs_std_activation{num_j};
+        name_job_in = jobs_var_activation{num_j};
         files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
         files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
         nb_files = nb_files + 1;
     end
 
     %% Files out
-    files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_activation_',contrast,'_mean.mnc');
-    files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_activation_',contrast,'_std.mnc');
-    files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_activation_',contrast,'_meanstd.mnc');
+    files_out_tmp.mean = cat(2,opt.folder_out,filesep,'var_activation_',contrast,'_mean.mnc');
+    files_out_tmp.std = cat(2,opt.folder_out,filesep,'var_activation_',contrast,'_std.mnc');
+    files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'var_activation_',contrast,'_meanstd.mnc');
 
     %% Options
     opt_tmp = opt.bricks.boot_mean_vols;
@@ -1103,7 +1103,7 @@ for num_c = 1:nb_contrast
 
     %% Adding the stage to the pipeline
     clear stage
-    name_stage = cat(2,'std_activation_group_',contrast);
+    name_stage = cat(2,'var_activation_group_',contrast);
     stage.label = cat(2,'Group maps of standard deviation explained by the activation model ',contrast);
     stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
     stage.files_in = files_in_tmp;
@@ -1160,7 +1160,7 @@ end
 %% 6a. Contrast-specific individual maps of residuals %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-name_process = 'std_residuals_ind';
+name_process = 'var_residuals_ind';
 name_process2 = 'perc_residuals_ind';
 name_jobs = fieldnames(pipeline);
 
@@ -1252,24 +1252,24 @@ end % contrast
 %% Files in
 name_jobs = fieldnames(pipeline);
 
-jobs_std_residuals = name_jobs(niak_find_str_cell(name_jobs,'std_residuals_ind'));
+jobs_var_residuals = name_jobs(niak_find_str_cell(name_jobs,'var_residuals_ind'));
 
-nb_jobs = length(jobs_std_residuals);
+nb_jobs = length(jobs_var_residuals);
 
 nb_files = 1;
 
 clear files_in_tmp files_out_tmp opt_tmp
 for num_j = 1:nb_jobs
-    name_job_in = jobs_std_residuals{num_j};
+    name_job_in = jobs_var_residuals{num_j};
     files_in_tmp.vol{nb_files} = pipeline.(name_job_in).files_out;
     files_in_tmp.transformation{nb_files} = list_transformation{niak_find_str_cell(list_subject,name_job_in)};
     nb_files = nb_files + 1;
 end
 
 %% Files out
-files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_residuals_mean.mnc');
-files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_residuals_std.mnc');
-files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_residuals_meanstd.mnc');
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'var_residuals_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'var_residuals_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'var_residuals_meanstd.mnc');
 
 %% Options
 opt_tmp = opt.bricks.boot_mean_vols;
@@ -1281,7 +1281,7 @@ opt_tmp.flag_test = 0;
 
 %% Adding the stage to the pipeline
 clear stage
-name_stage = cat(2,'std_residuals_group');
+name_stage = cat(2,'var_residuals_group');
 stage.label = 'Group maps of standard deviation of the residuals';
 stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
 stage.files_in = files_in_tmp;

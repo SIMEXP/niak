@@ -45,6 +45,10 @@ function [files_in,files_out,opt] = niak_brick_boot_mean_vols(files_in,files_out
 %  * OPT           
 %       (structure) with the following fields.  
 %
+%       FWHM
+%           (real number, default 0) a smoothing applied to each map before
+%           averaging. 
+%       
 %       FLAG_MASK 
 %           (boolean, default 1) if FLAG_MASK equals one, the
 %           standard deviation will only be evaluated in a mask of the 
@@ -212,6 +216,7 @@ if ~ischar(files_in.transformation)
     files_in.vol = files_in_tmp;
     
 end
+
 %% Checking the size of input volumes
 if flag_verbose
     fprintf('\nChecking the size of input volumes ...\n');
@@ -245,9 +250,23 @@ end
 vol_all = zeros([nx ny nz nb_vols]);
 num_vol = 0;
 
+if opt.fwhm>0
+    file_vol_tmp = niak_file_tmp('_vol_smooth.mnc');
+end
+
 for num_f = 1:nb_files
     
-    [hdr,vol] = niak_read_vol(files_in.vol{num_f});
+    if opt.fwhm>0
+        files_in_s = files_in.vol{num_f};
+        files_out_s = file_vol_tmp;
+        opt_s.fwhm = opt.fwhm;
+        opt_s.flag_verbose = 0;
+        niak_brick_smooth_vol(files_in_s,files_out_s,opt_s);
+        [hdr,vol] = niak_read_vol(file_vol_tmp);
+    else
+        [hdr,vol] = niak_read_vol(files_in.vol{num_f});
+    end
+    
     if length(hdr.info.dimensions)==4
         vol_all(:,:,:,num_vol+1:num_vol+hdr.info.dimensions(4)) = vol;
         num_vol = num_vol + hdr.info.dimensions(4);
@@ -256,6 +275,11 @@ for num_f = 1:nb_files
         num_vol = num_vol + 1;
     end
     clear vol
+end
+
+
+if opt.fwhm>0
+    delete(file_vol_tmp);
 end
 
 %% Computing mean volume
