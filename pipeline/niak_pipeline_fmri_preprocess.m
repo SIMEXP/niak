@@ -437,6 +437,7 @@ for num_s = 1:nb_subject
             files_out_tmp.motion_parameters = '';
             files_out_tmp.fig_motion = '';
             files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
+            files_out_tmp.std_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_std_nativefunc.mnc');
             files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
             
         case 'all'
@@ -447,6 +448,7 @@ for num_s = 1:nb_subject
             files_out_tmp.fig_motion = '';
             files_out_tmp.motion_parameters = '';
             files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
+            files_out_tmp.std_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_std_nativefunc.mnc');
             files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
             
     end
