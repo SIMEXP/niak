@@ -49,6 +49,10 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           (vector 2*1) TIMING(1) : time between two slices
 %           TIMING(2) : time between last slice and next volume
 %
+%       FLAG_VARIANCE
+%           (boolean, default 1) : if FLAG_VARIANCE == 1, the variance of
+%           the time series at each voxel is preserved.
+%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
 %           outputs will be created in the folder FOLDER_OUT. The folder 
@@ -126,8 +130,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'suppress_vol','interpolation','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {1,'sinc',NaN,[],NaN,1,0,'',0};
+gb_list_fields = {'flag_variance','suppress_vol','interpolation','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out'};
+gb_list_defaults = {1,1,'sinc',NaN,[],NaN,1,0,''};
 niak_set_defaults
 
 nb_slices = length(opt.slice_order);
@@ -182,23 +186,65 @@ if flag_test == 1
     return
 end
 
-%% Performing slice timing correction 
+if flag_verbose
+    msg = sprintf('Performing slice timing correction on volume %s',files_in);
+    stars = repmat('*',[length(msg) 1]);
+    fprintf('\n%s\n%s\n%s\n',stars,msg,stars);
+end
+
+%% Reading data
+if flag_verbose
+    msg = sprintf('Reading data...');
+    fprintf('\n%s\n',msg);
+end
+
 [hdr,vol] = niak_read_vol(files_in);
 
+if flag_variance
+    std_vol = std(vol,0,4);
+end
+
+%% Performing slice timing correction 
+if flag_verbose
+    msg = sprintf('Applying slice timing correction...');
+    fprintf('\n%s\n',msg);
+end
 opt_a.slice_order = opt.slice_order;
 opt_a.timing = opt.timing;
 opt_a.ref_slice = opt.ref_slice;
 opt_a.interpolation = opt.interpolation;
 [vol_a,opt] = niak_slice_timing(vol,opt_a);
 
+if suppress_vol > 0;
+    vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
+end
+
+if flag_variance
+    if flag_verbose
+        msg = sprintf('Preserving the variance of the time series...');
+        fprintf('\n%s\n',msg);
+    end
+
+    [nx,ny,nz,nt] = size(vol_a);
+    vol_a = reshape(vol_a,[nx*ny*nz nt]);
+    std_a = std(vol_a,0,2);
+    mask_a = std_a>0;
+    for num_v = 1:nt
+        vol_a(:,num_v) = (vol_a(mask_a,num_v)./std_a(mask_a)).*std_vol(mask_a);
+    end
+    vol_a = reshape(vol_a,[nx ny nz nt]);
+end
+    
 %% Updating the history and saving output
+if flag_verbose
+    msg = sprintf('Writting results...');
+    fprintf('\n%s\n',msg);
+end
 hdr = hdr(1);
-hdr.flag_zip = flag_zip;
 hdr.file_name = files_out;
 opt_hist.command = 'niak_slice_timing';
 opt_hist.files_in = files_in;
 opt_hist.files_out = files_out;
 hdr = niak_set_history(hdr,opt_hist);
-niak_write_vol(hdr,vol_a(:,:,:,1+suppress_vol:end-suppress_vol));
-
+niak_write_vol(hdr,vol_a);
 
