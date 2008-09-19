@@ -131,9 +131,17 @@ if length(size(vol))==4
         dim_order(4) = 4;
     end
 end
+
+%% Build the dimension order argument for minc to raw
 dim_names = {'xspace,','yspace,','zspace,','time,'};
 dim_order = dim_order(dim_order);
 arg_dim_order = [dim_names{dim_order(end:-1:1)}]; % the order notations in NetCDF/HDF5 is reversed compared to matlab
+
+%% While we're at it, build a list of order field names for spatial
+%% dimensions
+dim_names = {'xspace','yspace','zspace','time'};
+list_dim = dim_names(dim_order);
+list_dim = list_dim(~ismember(list_dim,{'time'}));
 
 str_raw = [str_raw '-dimorder ' arg_dim_order(1:end-1),' '];
 
@@ -184,14 +192,11 @@ if size(vol,4) == 1;
     end
 end
 hdr_minc.image = sub_set_att(hdr_minc.image,'dimorder',arg_dim_order);
-dim_order = dim_order(dim_order);
+arg_dim_order = arg_dim_order(end:-1:1); %% minc and matlac have different conventions on dimension ordering
 
 [cosines_v,step_v,start_v] = niak_hdr_mat2minc(hdr.info.mat);
 
-%% step values
-hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'step',step_v(1));
-hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'step',step_v(2));
-hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'step',step_v(3));
+%% Time 
 if length(size(vol))==4
     if ~isfield(hdr_minc,'time')
         hdr_minc.time.varatts{1} = 'step';
@@ -199,20 +204,17 @@ if length(size(vol))==4
     else
         hdr_minc.time = sub_set_att(hdr_minc.time,'step',hdr.info.tr);
     end
-end
-
-%% start values
-hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'start',start_v(1));
-hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'start',start_v(2));
-hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'start',start_v(3));
-if length(size(vol))==4
     hdr_minc.time = sub_set_att(hdr_minc.time,'start',0);
 end
 
-%% cosines values
-hdr_minc.xspace = sub_set_att(hdr_minc.xspace,'direction_cosines',cosines_v(:,1)');
-hdr_minc.yspace = sub_set_att(hdr_minc.yspace,'direction_cosines',cosines_v(:,2)');
-hdr_minc.zspace = sub_set_att(hdr_minc.zspace,'direction_cosines',cosines_v(:,3)');
+for num_d = 1:length(list_dim);
+    dim = list_dim{num_d};
+    
+    hdr_minc.(dim) = sub_set_att(hdr_minc.(dim),'step',step_v(num_d)); % step values
+    hdr_minc.(dim) = sub_set_att(hdr_minc.(dim),'start',start_v(num_d)); % start values
+    hdr_minc.(dim) = sub_set_att(hdr_minc.(dim),'direction_cosines',cosines_v(:,num_d)'); % cosines values
+    
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Updating the variables of the minc file %%%
