@@ -89,6 +89,9 @@ function pipeline = niak_pipeline_diagnostic(pipeline_in,opt)
 %
 %  The steps of the diagnostic pipeline are the following : 
 %  
+%  0. A mean and percentile distribution for the mean volume and std volume
+%  for all subjects & runs with bootstrap statistics.
+%
 %  1. A temporal and spatial autocorrelation map is derived for all runs 
 %  of all subjects, along with a table of percentiles.
 %  A mean map and percentile distribution is derived over all subjects & 
@@ -242,6 +245,246 @@ end
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pipeline = pipeline_in;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 0a. Group-level mean and bootstrap statistics for the mean volume %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear files_in_tmp files_out_tmp opt_tmp
+
+for num_s = 1:nb_subject
+    
+    subject = list_subject{num_s};
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));    
+
+    files_in_tmp(1).vol{num_s} = pipeline_in.(subject_job{1}).files_out.mean_volume;
+    files_in_tmp(1).transformation{num_s} = list_transformation{niak_find_str_cell(list_subject,subject)};
+end
+    
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'mean_func_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'mean_func_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'mean_func_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_mean_mean_func';
+stage.label = 'Group-level mean of the mean volume of motion-corrected data';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 0b. Individual percentiles for the mean volume %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+for num_s = 1:nb_subject
+    
+    subject = list_subject{num_s};
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));    
+
+    clear files_in_tmp files_out_tmp opt_tmp
+    
+    %% Files in
+    files_in_tmp(1).vol = pipeline_in.(subject_job{1}).files_out.mean_volume;
+    files_in_tmp(1).mask = pipeline_in.(subject_job{1}).files_out.mask_volume;
+
+    %% Options
+    opt_tmp = opt.bricks.percentile_vol;
+    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+    %% Outputs
+    files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'func_mean_perc_',subject,'.dat');
+
+    %% set the default values
+    opt_tmp.flag_test = 1;
+    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+    opt_tmp.flag_test = 0;
+
+    %% Adding the stage to the pipeline
+    clear stage
+    name_stage = cat(2,'percentile_mean_func_ind_',subject);
+    stage.label = 'Percentile of the mean volume motion-corrected data';
+    stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+    stage.files_in = files_in_tmp;
+    stage.files_out = files_out_tmp;
+    stage.opt = opt_tmp;
+    stage.environment = opt.environment;
+    pipeline.(name_stage) = stage;
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 0c. Group-level statistics on the percentile of the mean volume %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear files_in_tmp files_out_tmp opt_tmp
+
+%% Files in 
+files_in = cell([nb_subject 1]);
+
+for num_s = 1:nb_subject
+    
+    subject = list_subject{num_s};
+    name_stage_in = cat(2,'percentile_mean_func_ind_',subject);
+    files_in_tmp{num_s} = pipeline.(name_stage_in).files_out;
+    
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'mean_func_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_func_mean';
+stage.label = 'Group-level statistics on the percentiles of the mean volume of motion-corrected data';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 0d. Group-level mean and bootstrap statistics for the std volume %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear files_in_tmp files_out_tmp opt_tmp
+
+for num_s = 1:nb_subject
+    
+    subject = list_subject{num_s};
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));    
+
+    files_in_tmp(1).vol{num_s} = pipeline_in.(subject_job{1}).files_out.std_volume;
+    files_in_tmp(1).transformation{num_s} = list_transformation{niak_find_str_cell(list_subject,subject)};
+end
+    
+%% Files out
+files_out_tmp.mean = cat(2,opt.folder_out,filesep,'std_func_mean.mnc');
+files_out_tmp.std = cat(2,opt.folder_out,filesep,'std_func_std.mnc');
+files_out_tmp.meanstd = cat(2,opt.folder_out,filesep,'std_func_meanstd.mnc');
+
+%% Options
+opt_tmp = opt.bricks.boot_mean_vols;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_mean_vols(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_mean_std_func';
+stage.label = 'Group-level mean of the std volume of motion-corrected data';
+stage.command = 'niak_brick_boot_mean_vols(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 0b. Individual percentiles for the mean volume %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+for num_s = 1:nb_subject
+    
+    subject = list_subject{num_s};
+    motion_jobs = name_jobs(niak_find_str_cell(name_jobs,'motion_correction'));
+    subject_job = motion_jobs(niak_find_str_cell(motion_jobs,subject));    
+
+    clear files_in_tmp files_out_tmp opt_tmp
+    
+    %% Files in
+    files_in_tmp(1).vol = pipeline_in.(subject_job{1}).files_out.std_volume;
+    files_in_tmp(1).mask = pipeline_in.(subject_job{1}).files_out.mask_volume;
+
+    %% Options
+    opt_tmp = opt.bricks.percentile_vol;
+    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,subject,filesep);
+
+    %% Outputs
+    files_out_tmp = cat(2,opt.folder_out,filesep,subject,filesep,'std_func_perc_',subject,'.dat');
+
+    %% set the default values
+    opt_tmp.flag_test = 1;
+    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_percentile_vol(files_in_tmp,files_out_tmp,opt_tmp);
+    opt_tmp.flag_test = 0;
+
+    %% Adding the stage to the pipeline
+    clear stage
+    name_stage = cat(2,'percentile_std_func_ind_',subject);
+    stage.label = 'Percentile of the std volume motion-corrected data';
+    stage.command = 'niak_brick_percentile_vol(files_in,files_out,opt)';
+    stage.files_in = files_in_tmp;
+    stage.files_out = files_out_tmp;
+    stage.opt = opt_tmp;
+    stage.environment = opt.environment;
+    pipeline.(name_stage) = stage;
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 0c. Group-level statistics on the percentile of the mean volume %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear files_in_tmp files_out_tmp opt_tmp
+
+%% Files in 
+files_in = cell([nb_subject 1]);
+
+for num_s = 1:nb_subject
+    
+    subject = list_subject{num_s};
+    name_stage_in = cat(2,'percentile_std_func_ind_',subject);
+    files_in_tmp{num_s} = pipeline.(name_stage_in).files_out;
+    
+end
+
+%% Files out
+files_out_tmp = cat(2,opt.folder_out,filesep,'std_func_perc.dat');
+
+%% Options
+opt_tmp = opt.bricks.boot_curves;
+opt_tmp.flag_test = 1;
+
+%% Defaults
+[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_boot_curves(files_in_tmp,files_out_tmp,opt_tmp);
+opt_tmp.flag_test = 0;
+
+%% Adding the stage to the pipeline
+clear stage
+name_stage = 'boot_perc_func_std';
+stage.label = 'Group-level statistics on the percentiles of the std volume of motion-corrected data';
+stage.command = 'niak_brick_boot_curves(files_in,files_out,opt)';
+stage.files_in = files_in_tmp;
+stage.files_out = files_out_tmp;
+stage.opt = opt_tmp;
+stage.environment = opt.environment;
+pipeline.(name_stage) = stage;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 1a. autocorrelation maps of motion-corrected data %%
