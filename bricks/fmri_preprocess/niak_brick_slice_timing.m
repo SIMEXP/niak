@@ -230,7 +230,7 @@ if flag_variance
     std_a = std(vol_a,0,2);
     mask_a = std_a>0;
     for num_v = 1:nt
-        vol_a(:,num_v) = (vol_a(mask_a,num_v)./std_a(mask_a)).*std_vol(mask_a);
+        vol_a(mask_a,num_v) = (vol_a(mask_a,num_v)./std_a(mask_a)).*std_vol(mask_a);
     end
     vol_a = reshape(vol_a,[nx ny nz nt]);
 end
