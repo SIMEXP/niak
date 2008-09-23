@@ -85,8 +85,13 @@ for num_v = 2:length(cell_tab)
             labels_line{num_v-1} = line_tmp{1};
             tab(num_v-1,:) = str2num(char(line_tmp(2:end)));
         else
-            error(cat(2,'all the lines of ',file_name,'should have the same number of columns! (separator is space)'));
-        end
+            line = str2num(char(line_tmp));
+            if num_v == 2
+                warning(cat(2,'all the lines of ',file_name,' should have the same number of columns! (separator is space)'));
+                tab = zeros([length(cell_tab)-1 length(line)]);                                
+            end
+            tab(num_v-1,:) = str2num(char(line_tmp));
+        end 
 
     else
         labels_line{num_v-1} = '';
