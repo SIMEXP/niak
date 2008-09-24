@@ -50,8 +50,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           TIMING(2) : time between last slice and next volume
 %
 %       FLAG_VARIANCE
-%           (boolean, default 1) : if FLAG_VARIANCE == 1, the variance of
-%           the time series at each voxel is preserved.
+%           (boolean, default 1) : if FLAG_VARIANCE == 1, the mean and 
+%           variance of the time series at each voxel is preserved.
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
@@ -202,6 +202,7 @@ end
 
 if flag_variance
     std_vol = std(vol,0,4);
+    moy_vol = mean(vol,4);
 end
 
 %% Performing slice timing correction 
@@ -221,16 +222,17 @@ end
 
 if flag_variance
     if flag_verbose
-        msg = sprintf('Preserving the variance of the time series...');
+        msg = sprintf('Preserving the mean and variance of the time series...');
         fprintf('\n%s\n',msg);
     end
 
     [nx,ny,nz,nt] = size(vol_a);
     vol_a = reshape(vol_a,[nx*ny*nz nt]);
     std_a = std(vol_a,0,2);
+    moy_a = mean(vol_a,2);
     mask_a = std_a>0;
     for num_v = 1:nt
-        vol_a(mask_a,num_v) = (vol_a(mask_a,num_v)./std_a(mask_a)).*std_vol(mask_a);
+        vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a)./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
     end
     vol_a = reshape(vol_a,[nx ny nz nt]);
 end
