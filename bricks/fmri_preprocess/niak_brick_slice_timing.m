@@ -226,13 +226,14 @@ if flag_variance
         fprintf('\n%s\n',msg);
     end
 
-    [nx,ny,nz,nt] = size(vol_a);
+    [nx,ny,nz,nt] = size(vol_a);    
     vol_a = reshape(vol_a,[nx*ny*nz nt]);
     std_a = std(vol_a,0,2);
     moy_a = mean(vol_a,2);
     mask_a = std_a>0;
+
     for num_v = 1:nt
-        vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a)./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
+        vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a(mask_a))./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
     end
     vol_a = reshape(vol_a,[nx ny nz nt]);
 end

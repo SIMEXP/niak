@@ -1,30 +1,49 @@
 function mask = niak_mask_brain(vol,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_MASK_BRAIN
+%
 % Create a binary mask of the inside of the brain in an MRI/fMRI dataset
 %
 % SYNTAX:
-% MASK = NIAK_MASK_BRAIN(VOL,FWHM_KERNEL)
+% MASK = NIAK_MASK_BRAIN(VOL,OPT)
 % 
-% INPUT: 
-% VOL       (4D array) a 3D or 3D+t dataset
-% OPT       (structure, optional) with the following fields:   
-%       FWHM (real value, default 3) the FWHM of the blurring kernel in 
+% _________________________________________________________________________
+% INPUTS: 
+%
+% VOL       
+%       (4D array) a 3D or 3D+t dataset
+%
+% OPT       
+%       (structure, optional) with the following fields:   
+%       
+%       FWHM 
+%           (real value, default 3) the FWHM of the blurring kernel in 
 %           voxel size unit. A value of 0 for FWHM will skip the smoothing step.
-%       VOXEL_SIZE (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%       
+%       VOXEL_SIZE 
+%           (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
 %           in the respective dimensions, i.e. the space in mmm
 %           between two voxels in x, y, and z (yet the unit is
 %           irrelevant and just need to be consistent with
 %           the filter width (fwhm)). The fourth element is ignored.
-%       FLAG_REMOVE_EYES (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
+%
+%       FLAG_REMOVE_EYES 
+%           (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
 %           attempt is done to remove the eyes from the mask.
 %
-% OUTPUT:
-% MASK          (3D array) binary mask of the inside of the brain
+% _________________________________________________________________________
+% OUTPUTS:
 %
-% COMMENTS
-% Port from the FORTRAN "spider" library, by Joachim Frank. Use the "Otsu" algorithm to
-% separate two Gaussian distributions in an histogram of the mean of the
-% absolute values of all volumes.
+% MASK          
+%       (3D array) binary mask of the inside of the brain
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
+% Use the "Otsu" algorithm to separate two Gaussian distributions in an 
+% histogram of the mean of the absolute values of all volumes. This is a 
+% port from the FORTRAN "spider" library, by Joachim Frank.
 %
 % To optimize memory use with 3D+t data, it is better to derive the mean
 % of the absolute values and perform the smoothing in the workspace, and to
