@@ -3,7 +3,8 @@ function [cdfs,bins] = niak_build_cdf(samps,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_BUILD_CDF
 %
-% Build a cumulative distribution function (cdf) from samples.
+% Build an empirical cumulative distribution function (cdf) from samples of
+% a distribution.
 %
 % SYNTAX:
 % [CDFS,BINS] = NIAK_BUILD_CDF(SAMPS,OPT)
@@ -40,10 +41,14 @@ function [cdfs,bins] = niak_build_cdf(samps,opt)
 %       The values described in (VALX,VALY) are added as constraints in
 %       the interpolation.
 %
+% * BINS (matrix) the bins used to build the estimated cdf.
+%
 % _________________________________________________________________________
 % COMMENTS:
+%
 % For a bounded statistics, e.g. correlation coefficient, VALX and VALY are 
-% typically the bound, e.g. VALX = [-1 1] and VALY = [0 1].
+% typically the bounds and [0 1] respectively, example :
+% VALX = [-1 1] and VALY = [0 1].
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
 %               Neurological Institute, McGill University, 2008.

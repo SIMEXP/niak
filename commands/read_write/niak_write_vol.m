@@ -219,6 +219,11 @@ elseif ischar(file_name)
 
         [path_f,name_f,ext_f] = fileparts(hdr.file_name);
         
+        %% check if the path exist
+        if ~exist(path_f,'dir')
+            error(sprintf('Could not write %s, the folder %s does not exist !',hdr.file_name,path_f));
+        end
+        
         if strcmp(ext_f,gb_niak_zip_ext)
             hdr.file_name = cat(2,path_f,filesep,name_f);
         end
