@@ -18,6 +18,14 @@ function [cdfs,bins] = niak_build_cdf(samps,opt)
 % * OPT       
 %       (structure) with the following fields:
 %           
+%           SIDE
+%               (string, default 'left') the side of the cdf, options :
+%               'left' or 'right'. Left-side cdf is cdf_l(x) = Pr(y<=x), and
+%               right-side is cdf_r(x) = Pr(y>=x). If Pr(x) = 0 for all x,
+%               there is an easy realtionship : cdf_l(x) = 1-cdf_r(x).
+%               Unfortunately, for empirical pdf, Pr(y_i) ~= 0 for all
+%               observation y_i.
+%
 %           BINS   
 %               (vector, default [min(SAMPS) max(SAMPS)] with 100 points)
 %               Points were the cdf is estimated through linear
@@ -76,8 +84,8 @@ function [cdfs,bins] = niak_build_cdf(samps,opt)
 
 %%% Connectivity measure options
 gb_name_structure = 'opt';
-gb_list_fields = {'bins','valx','valy'};
-gb_list_defaults = {[],[],[]};
+gb_list_fields = {'side','bins','valx','valy'};
+gb_list_defaults = {'left',[],[],[]};
 niak_set_defaults
 
 [nb_samps M] = size(samps);
@@ -94,7 +102,15 @@ cdfs = zeros([length(bins) M]);
 
 for num_m = 1:M    
     [val,order] = sort(samps(:,num_m));
-    probas = (1:length(order))/(length(order)+1);    
+    switch side
+        case 'left'
+            probas = (1:length(order))/(length(order)+1);    
+        case 'right'
+            probas = (length(order):-1:1)/(length(order)+1);    
+        otherwise
+            error(sprintf('%s is an unkown type of cdf !',opt.side));
+    end
+    end
     [val,I] = unique(val);
     probas = probas(I)';
     
