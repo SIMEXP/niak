@@ -82,6 +82,8 @@ niak_set_defaults
 
 %% Getting the mean of absolute values for all volumes
 abs_vol_mean = mean(abs(vol),4);
+mask_nan = isnan(vol);
+abs_vol_mean(mask_nan) = 0;
 
 %% Smoothing the mean
 if max(opt.fwhm) ~=0
@@ -96,6 +98,7 @@ ind_seuil = min(max(otsu(Y),1),length(X));
 
 %% Building the mask
 mask = (abs_vol_mean>X(ind_seuil));
+mask = mask & ~mask_nan;
 
 %% Removing the eyes
 if flag_remove_eyes
