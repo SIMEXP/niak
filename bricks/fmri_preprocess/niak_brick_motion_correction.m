@@ -166,6 +166,14 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %          still estimated for quality control, but the between-session 
 %          transformation only is actually applied in the resampling.
 %
+%       FLAG_SKIP
+%          (boolean, default 0) if FLAG_SKIP == 0, the flag does not do
+%          anything. If FLAG_SKIP == 1, the motion parameters are 
+%          still estimated for quality control, but no 
+%          transformation only is actually applied in the resampling 
+%          (simple copy from source to target). This flag is usefull to get
+%          rid of motion correction in pipeline mode.
+%
 %       FLAG_TFM_SPACE (boolean, default: 0) if FLAG_TFM_SPACE equals 1,
 %           the functional target space will be resampled to get rid of the
 %           voxel-to-world coordinates transformation. This means that a
@@ -272,8 +280,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_run','suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
-gb_list_defaults = {1,0,'median',1,'',0,0,'','sinc',8,1,0,'none'};
+gb_list_fields = {'flag_skip','flag_run','suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
+gb_list_defaults = {0,1,0,'median',1,'',0,0,'','sinc',8,1,0,'none'};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);
@@ -732,7 +740,7 @@ if ~ischar(files_out.motion_corrected_data)
     mean_all = zeros(dim_t(1:3));
     std_all = zeros(dim_t(1:3));
     nb_runs = 0;
-    
+
     for num_s = 1:length(list_sessions)
 
         name_session = list_sessions{num_s};
@@ -745,7 +753,7 @@ if ~ischar(files_out.motion_corrected_data)
         if ~ischar(files_out.motion_corrected_data)
             motion_corrected_data_session = files_out.motion_corrected_data.(name_session);
         end
-        
+
         for num_r = 1:length(files_session);
 
             if flag_verbose
@@ -757,9 +765,9 @@ if ~ischar(files_out.motion_corrected_data)
             hdr.file_name = files_in_r.source;
             hdr_target.details.time = hdr.details.time;
             hdr_target.info.tr = hdr.info.tr;
-            [nx,ny,nz,nt] = size(data);            
+            [nx,ny,nz,nt] = size(data);
             data_r = zeros([dim_t(1) dim_t(2) dim_t(3) nt-suppress_vol]);
-            
+
             %% Resampling each volume
             for num_v = 1+suppress_vol:size(data,4)
 
@@ -771,36 +779,41 @@ if ~ischar(files_out.motion_corrected_data)
                 niak_write_transf(transf,files_in_r.transformation);
                 niak_write_vol(hdr,data(:,:,:,num_v));
 
-                niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
-                
+                if flag_skip
+                    instr_cp = ['cp ',files_in_r.source,' ',files_out_r];
+                    system(instr_cp);
+                else
+                    niak_brick_resample_vol(files_in_r,files_out_r,opt_r);
+                end
+
                 [hdr2,vol2] = niak_read_vol(files_out_r);
                 data_r(:,:,:,num_v-suppress_vol) = vol2;
-                
+
             end
-            
+
             %% Building the mean volume of all runs
             mean_run = mean(data_r,4);
             std_run = std(data_r,0,4);
-        
+
             mean_all = mean_all + mean_run;
             std_all = std_all + std_run;
             nb_runs = nb_runs+1;
-            
+
             %% Building a mask common to all runs
             mask_run = niak_mask_brain(mean(abs(data_r),4));
             mask_all = mask_all & mask_run;
-            
+
             %% Writting resampled data
             if ~ischar(files_out.motion_corrected_data)
-                
+
                 %% If OPT.FLAG_PERCENTAGE == 1, convert the units of the fMRI volume
                 %% into percentage of the baseline
                 switch opt.correction
 
                     case 'none'
-                    
+
                     case 'perc_mean'
-                    
+
                         %% Express the time series as a percentage of the
                         %% baseline at each voxel
                         [nx,ny,nz,nt] = size(data_r);
@@ -810,9 +823,9 @@ if ~ischar(files_out.motion_corrected_data)
                             data_r(mask_run==0,num_t) = 0;
                         end
                         data_r = reshape(data_r,[nx ny nz nt]);
-                        
+
                     case 'mean_var'
-                        
+
                         %% correct the time series to a zero mean and unit
                         %% variance
                         [nx,ny,nz,nt] = size(data_r);
@@ -822,25 +835,25 @@ if ~ischar(files_out.motion_corrected_data)
                             data_r(mask_run==0,num_t) = 0;
                         end
                         data_r = reshape(data_r,[nx ny nz nt]);
-                        
+
                     otherwise
-                        
+
                         error('The option in OPT.CORRECTION was not recognized. Available options : ''none'', ''perc_var'', ''perc_std''');
-                        
+
                 end % Correction of time series
 
                 hdr_target.file_name = motion_corrected_data_session{num_r};
                 niak_write_vol(hdr_target,data_r);
             end
-            
-        end %% Runs       
-        
+
+        end %% Runs
+
     end %% Sessions
-    
+
     if flag_verbose
         fprintf('\n')
     end
-    
+
     %% Write the mean of all volumes
     if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
         mean_all = mean_all/nb_runs;
@@ -854,9 +867,9 @@ if ~ischar(files_out.motion_corrected_data)
         hdr_target.file_name = files_out.std_volume;
         niak_write_vol(hdr_target,std_all);
     end
-    
+
     %% Write the mask of all runs
-    if ~strcmp(files_out.mask_volume,'gb_niak_omitted')                
+    if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
         hdr_target.file_name = files_out.mask_volume;
         niak_write_vol(hdr_target,mask_all);
     end
@@ -865,7 +878,6 @@ if ~ischar(files_out.motion_corrected_data)
     delete(files_in_r.source);
     delete(files_in_r.target);
     delete(files_in_r.transformation);
-
 end
 
 %% Clean up temporary files
