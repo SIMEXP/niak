@@ -520,12 +520,15 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
             xfm_tmp = niak_file_tmp(cat(2,name_session,'_mp.xfm'));
             xfm_tmp2 = niak_file_tmp(cat(2,name_session,'_mp2.xfm'));
             file_source_tmp = niak_file_tmp(cat(2,name_session,'_ref.mnc'));
+            mask_source_tmp = niak_file_tmp(cat(2,name_session,'_mask_ref.mnc'));
             
             [flag,str_log] = system(cat(2,'minctracc ',target_session{num_s},' ',target_session{num_session_ref},' ',xfm_tmp,' -xcorr -source_mask ',mask_session{num_s},' -model_mask ',mask_session{num_session_ref},' -forward -clobber -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 20 -source_lattice -step 3 3 3'));
             [flag,log] = system(cat(2,'mincresample ',target_session{num_s},' ',file_source_tmp,' -like ',target_session{num_session_ref},' -',opt.interpolation,' -clobber -transform ',xfm_tmp));
-            [flag,str_log] = system(cat(2,'minctracc ',file_source_tmp,' ',target_session{num_session_ref},' ',xfm_tmp2,' -xcorr -source_mask ',mask_session{num_s},' -model_mask ',mask_session{num_session_ref},' -forward -clobber -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 20 -source_lattice -step 3 3 3'));
+            [flag,log] = system(cat(2,'mincresample ',mask_session{num_s},' ',mask_source_tmp,' -like ',target_session{num_session_ref},' -nearest_neighbour -clobber -transform ',xfm_tmp));
+            [flag,str_log] = system(cat(2,'minctracc ',file_source_tmp,' ',target_session{num_session_ref},' ',xfm_tmp2,' -xcorr -source_mask ',mask_source_tmp,' -model_mask ',mask_session{num_session_ref},' -forward -clobber -lsq6 -identity -speckle 0 -est_center -tol 0.0001 -tricubic -simplex 20 -source_lattice -step 3 3 3'));
             system(cat(2,'xfmconcat ',xfm_tmp,' ',xfm_tmp2,' ',xfm_tmp));
             delete(file_source_tmp);
+            delete(mask_source_tmp);
             delete(xfm_tmp2);
             
             %% Read the rigid-body transformation (lsq6)
