@@ -15,7 +15,7 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %       (cell of strings) a list of file names
 %
 %  * FILES_OUT       
-%       (string, default OPT.FOLDER_OUT/<BASE FILES_IN>_copy.<EXT FILES_IN>) 
+%       (cell of strings, default OPT.FOLDER_OUT/<BASE FILES_IN>_copy.<EXT FILES_IN>) 
 %       File name for outputs. If FILES_OUT is an empty string, the default
 %       name is generated.
 %
