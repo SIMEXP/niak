@@ -60,8 +60,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           to 0, the resolution for resampling will be the same as the 
 %           target space. If VOXEL_SIZE is set to -1, the resolution will 
 %           be the same as source space. Otherwise, the specified 
-%           resolution will be used. Note that a change in resolution will 
-%           force the new space to have identity direction cosines.
+%           resolution will be used. 
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
@@ -203,9 +202,38 @@ nx2 = hdr_target.info.dimensions(1);
 ny2 = hdr_target.info.dimensions(2);
 nz2 = hdr_target.info.dimensions(3);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Resample the target if necessary %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if min(voxel_size(:)==abs(step2(:)))==0
+    
+    if ~flag_tfm_space % If a change of resolution occurs, but there is no resample-to-self
+         
+        %% Setting up the new number of voxels
+        nx3 = ceil((abs(step2(1))/voxel_size(1))*nx2);
+        ny3 = ceil((abs(step2(2))/voxel_size(2))*ny2);
+        nz3 = ceil((abs(step2(3))/voxel_size(3))*nz2);
+        
+        %% Creating new header
+        hdr_target2 = hdr_target;
+        hdr_target2.info.mat = niak_hdr_minc2mat(dircos2,(sign(step2(:)).*voxel_size(:))',start2);
+        hdr_target2.info.dimensions = [nx3,ny3,nz3];        
+
+        %% Creating a new target
+        file_target_tmp = niak_file_tmp('_target.mnc');
+        hdr_target2.file_name = file_target_tmp;
+        niak_write_vol(hdr_target2,zeros([nx3,ny3,nz3]));
+
+        %% Update the target space information
+        hdr_target = niak_read_vol(file_target_tmp);
+        nx2 = hdr_target.info.dimensions(1);
+        ny2 = hdr_target.info.dimensions(2);
+        nz2 = hdr_target.info.dimensions(3);
+
+    end
+end
 
 if flag_tfm_space 
     
@@ -259,7 +287,9 @@ if flag_tfm_space
     nz2 = hdr_target.info.dimensions(3);
 
 else
-    file_target_tmp = files_in.target;
+    if ~exist('file_target_tmp','var')
+        file_target_tmp = files_in.target;
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
