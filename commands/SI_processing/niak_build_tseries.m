@@ -1,37 +1,54 @@
 function [tseries,all_tseries] = niak_build_tseries(vol,mask,opt)
-
-% Extract time series from one or multiple ROI from a 3D+t dataset.
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BUILD_TSERIES
+%
+% Extract time series of one or multiple ROI from a 3D+t dataset.
 %
 % TSERIES = NIAK_BUILD_TSERIES(VOL,MASK,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL       (3D+t array) the fMRI data. 
-% MASK      (3D volume) binary mask. The second dimension of TSERIES
-%              corresponds to the voxel in FIND(MASK(:))
-% OPT       (structure, optional) each field of OPT is used to specify an option.
-%           If a field was not specified, then the default value is
-%           assumed.
-%       TYPE_CORRECTION (string, default 'none') the correction to apply on
-%           the time series. Available options : 'none' (do
-%           nothing),'mean', 'mean_var', 'mean_var2' (see
-%           NIAK_CORRECT_MEAN_VAR for details).
-%       TYPE_TSERIES (string, default 'all') the type of time series to
-%           build. 
-%           case 'mean' : the mean time series within each roi of MASK is
-%             extracted (voxels in roi i are defined by FIND(MASK==i)).
-%             TSERIES is a 2D array (time * space).
-%           case 'all' : all time series in MASK are extracted (voxels in
-%             MASK are defined by FIND(MASK>0). TSERIES is a 2D array (time
-%             * space).
-%           case 'cell' : one or multiple rois are define in MASK.
-%             TSERIES{i} is a 2D array of all time series of voxels in
-%             region i (defined by FIND(MASK==i)). TSERIES is a cell of
-%             arrays.
 %
+% VOL       
+%       (3D+t array) the fMRI data. 
+%
+% MASK      
+%       (3D volume) binary mask. The second dimension of TSERIES
+%       corresponds to the voxel in FIND(MASK(:))
+%
+% OPT       
+%       (structure, optional) each field of OPT is used to specify an 
+%       option. If a field was not specified, then the default value is
+%       assumed.
+%
+%       TYPE_CORRECTION 
+%           (string, default 'none') the correction to apply on the time 
+%           series. Available options : 'none' (do nothing),'mean', 
+%           'mean_var', 'mean_var2' (see NIAK_CORRECT_MEAN_VAR for details)
+%
+%       TYPE_TSERIES 
+%           (string, default 'all') the type of time series to build. 
+%           case 'mean' : 
+%               the mean time series within each roi of MASK is
+%               extracted (voxels in roi i are defined by FIND(MASK==i)).
+%               TSERIES is a 2D array (time * space).
+%           case 'all' : 
+%               all time series in MASK are extracted (voxels in
+%               MASK are defined by FIND(MASK>0). TSERIES is a 2D array 
+%               (time * space).
+%           case 'cell' : 
+%             one or multiple rois are define in MASK. TSERIES{i} is a 2D 
+%             array of all time series of voxels in region i (defined by 
+%             FIND(MASK==i)). TSERIES is a cell of arrays.
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% TSERIES   (array or cell of arrays) see the description of
-%             OPT.TYPE_TSERIES.
 %
+% TSERIES   
+%       (array or cell of arrays) see the description of OPT.TYPE_TSERIES.
+%
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal

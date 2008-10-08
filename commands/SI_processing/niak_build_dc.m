@@ -1,35 +1,53 @@
 function [tseries_dc,list_freq] = niak_build_dc(opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BUILD_DC
+%
 % Create a Discrete-Cosine (DC) basis of signals which cover a given
 % frequency window for a given sampling frequency and signal length.
 % 
 % SYNTAX:
-% TSERIES_DC = niak_build_dc(OPT)
+% TSERIES_DC = NIAK_BUILD_DC(OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% OPT           (structure) with the following fields :
 %
-%               TR   (real) the repetition time of the time series (s)
-%                      which is the inverse of the sampling frequency (Hz).
+% OPT           
+%       (structure) with the following fields :
 %
-%               NT   (integer) the length of the time series. 
+%       TR   
+%           (real) the repetition time of the time series (s) which is the 
+%           inverse of the sampling frequency (Hz).
 %
-%               TYPE_FW (string) the type of frequency window (either
-%                      'low' or 'high')
+%       NT   
+%           (integer) the length of the time series. 
 %
-%               CUTOFF (real value) the cut-off frequency. For low window,
-%               the window is [0,CUTOFF], and for a high window is is
-%               [CUTOFF,NF], where NF is the Nyquist frequency.
+%       TYPE_FW 
+%           (string) the type of frequency window (either 'low' or 'high')
 %
+%       CUTOFF 
+%           (real value) the cut-off frequency. For low window, the window 
+%           is [0,CUTOFF], and for a high window is is [CUTOFF,NF], where 
+%           NF is the Nyquist frequency.
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% TSERIES_DC   (2D array) each column is a discrete cosine.
-% LIST_FREQ    (VECTOR) LIST_FREQ(i) is the frequency associated to
-%                   TSERIES_DC(:,i).
 %
+% TSERIES_DC   
+%       (2D array) each column is a discrete cosine.
+%
+% LIST_FREQ    
+%       (VECTOR) LIST_FREQ(i) is the frequency associated to 
+%       TSERIES_DC(:,i).
+%
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_FILTER_TSERIES
 %
+% _________________________________________________________________________
 % COMMENTS:
+%
 % The discrete cosine are normalized in such a way that their empirical
 % mean is 0 and empirical variance is 1, except for the constant cosine which 
 % is always equal to sqrt(1-1/nt)^(-1).

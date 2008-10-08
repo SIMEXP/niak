@@ -1,19 +1,33 @@
-function mask2 = niak_dilate_mask(mask,type_neigh)
-
+function mask2 = niak_erode_mask(mask,type_neigh)
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_ERODE_MASK
+%
 % Apply an erosion operation to a binary mask.
 %
 % SYNTAX :
 % MASK2 = NIAK_ERODE_MASK(MASK,TYPE_NEIGH)
 %
+% _________________________________________________________________________
 % INPUTS :
-% MASK    (3D array) binary mask of one 3D-region of interest (1s inside,
-%           0s outside)
-% TYPE_NEIG    (integer value, default 26) definition of 3D-connexity (possible value 6,26)
 %
+% MASK    
+%       (3D array) 
+%       binary mask of one 3D-region of interest (1s inside, 0s outside)
+%
+% TYPE_NEIG    
+%       (integer value, default 26) 
+%       definition of 3D-connexity (possible value 6,26)
+%
+% _________________________________________________________________________
 % OUTPUTS :
-% MASK2 (3D array) binary mask, comprising all voxels of mask that do not
-%           have a neighbour outside of mask
 %
+% MASK2 
+%       (3D array) 
+%       binary mask, comprising all voxels of mask that do not have a 
+%       neighbour outside of mask
+%
+% _________________________________________________________________________
 % COMMENTS :
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal

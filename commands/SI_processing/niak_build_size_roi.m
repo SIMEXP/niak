@@ -1,21 +1,29 @@
 function [size_roi,labels_roi] = niak_build_size_roi(mask)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BUILD_SIZE_ROI
+%
 % Extract the labels and size of regions of interest in a 3D volume 
 %
 % [SIZE_ROI,LABELS_ROI] = NIAK_BUILD_SIZE_ROI(MASK)
 %
+% _________________________________________________________________________
 % INPUTS:
 %
-% MASK      (3D array) voxels belonging to no region are coded with 0,
-%           those belonging to region I are coded with I (I being a
-%           positive integer).
+% MASK      
+%       (3D array) voxels belonging to no region are coded with 0, those 
+%       belonging to region I are coded with I (I being a positive integer).
 %
+% _________________________________________________________________________
 % OUTPUTS:
 %
-% SIZE_ROI  (vector) SIZE_ROI(I) is the number of voxels in region number I.
+% SIZE_ROI  
+%       (vector) SIZE_ROI(I) is the number of voxels in region number I.
 %
-% LABELS_ROI (vector) LABELS_ROI(I) is the label of region I.
+% LABELS_ROI 
+%       (vector) LABELS_ROI(I) is the label of region I.
 %
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal

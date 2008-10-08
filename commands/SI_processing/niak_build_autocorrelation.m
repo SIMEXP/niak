@@ -1,5 +1,4 @@
 function [vol_s,vol_t] = niak_build_autocorrelation(vol,mask)
-
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_BUILD_AUTOCORRELATION
@@ -10,25 +9,28 @@ function [vol_s,vol_t] = niak_build_autocorrelation(vol,mask)
 % [VOL_S,VOL_T] = NIAK_BUILD_AUTOCORRELATION(VOL,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
 %  * VOL
 %       (cell of strings 2*1) file names of two 3D+t dataset. 
+%
 %  * MASK
 %       (volume, default all voxels) Binary mask. If specified, the
 %       computation will be restricted to the inside of the mask.
 %           
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % _________________________________________________________________________
-% SEE ALSO
+% SEE ALSO:
+%
 % NIAK_BRICK_HOMOGENEITY
+%
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % The spatial autocorrelation is derived as the mean temporal correlation
 % with the 6 spatial neighbours.

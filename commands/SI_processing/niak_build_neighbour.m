@@ -1,26 +1,39 @@
 function [neig,ind] = niak_build_neighbour(mask,type_neig)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BUILD_NEIGHBOUR
+%
 % Generate a list of linear indices of spatial neighbours of all voxels in
 % a 3D binary mask.
 %
 % SYNTAX :
 % NEIG = NIAK_BUILD_NEIG(MASK,TYPE_NEIGH)
 %
+% _________________________________________________________________________
 % INPUTS :
-% MASK    (3D array) binary mask of one 3D-region of interest (1s inside,
-%           0s outside)
 %
-% TYPE_NEIG    (integer value, default 26) 
-%           definition of 3D-connexity (possible value 6,26)
+% MASK    
+%       (3D array) binary mask of one 3D-region of interest (1s inside,
+%       0s outside)
 %
+% TYPE_NEIG    
+%       (integer value, default 26) 
+%       definition of 3D-connexity (possible value 6,26)
+%
+% _________________________________________________________________________
 % OUTPUTS :
-% NEIG     (2D array) NEIG(i,:) is the list of neiighbours of voxel i. All 
-%             numbers refer to a position in FIND(MASK(:)). Because all voxels
-%             do not necessarily have the same number of neighbours, 0 are
-%             used to pad each line.
-% IND      (vector) IND(i) is the linear index of the ith voxel in MASK.
-%             I = FIND(MASK(:))
 %
+% NEIG     
+%       (2D array) NEIG(i,:) is the list of neiighbours of voxel i. All 
+%       numbers refer to a position in FIND(MASK(:)). Because all voxels
+%       do not necessarily have the same number of neighbours, 0 are
+%       used to pad each line.
+%
+% IND      
+%       (vector) IND(i) is the linear index of the ith voxel in MASK.
+%       IND = FIND(MASK(:))
+%
+% _________________________________________________________________________
 % COMMENTS :
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal

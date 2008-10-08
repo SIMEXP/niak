@@ -1,20 +1,33 @@
 function adj = niak_build_adjacency(mask,neig)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BUILD_ADJACENCY
+%
 % Compute the adjacency matrix of voxels within a region of interest in a
 % 3D volume.
 %
 % SYNTAX :
 % ADJ = NIAK_BUILD_ADJACENCY(MASK,NEIGH)
 %
+% _________________________________________________________________________
 % INPUTS :
-% MASK    (3D array) binary mask of one 3D-region of interest (1s inside,
-%         0s outside)
-% NEIG    (integer value, default 26) definition of 3D-connexity (possible value 6,26)
 %
+% MASK    
+%       (3D array) binary mask of one 3D-region of interest (1s inside,
+%       0s outside)
+%
+% NEIG    
+%       (integer value, default 26) definition of 3D-connexity (possible 
+%       value 6,26)
+%
+% _________________________________________________________________________
 % OUTPUTS :
-% ADJ     (2D array) adjdjacency matrix of voxels inside the mask. Order of the voxels
-%           is given by FIND(MASK(:))
 %
+% ADJ     
+%       (2D array) adjacency matrix of voxels inside the mask. Order of the 
+%       voxels is given by FIND(MASK(:))
+%
+% _________________________________________________________________________
 % COMMENTS :
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal

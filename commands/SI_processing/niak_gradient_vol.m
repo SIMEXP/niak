@@ -1,31 +1,46 @@
 function vol_g = niak_gradient_vol(vol,opt)
-
-% Estimate finite-order gradient on a 3D volume
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_GRADIENT_VOL
+%
+% Estimate mean squared gradient on a 3D volume
 %
 % SYNTAX:
 %   VOL_G = NIAK_GRADIENT_VOL(VOL,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-%   VOL     (3D array) 
 %
-%   OPT     (structure) with the following fields :
+% VOL     
+%       (3D array) 
 %
-%       MASK    (3D array, same size as VOL, default ones(size(VOL))) 
-%          a binary mask of interest (0 outside the mask, 1 inside).
+% OPT     
+%       (structure) with the following fields :
 %
-%       NEIGH   (string, default '26-connexity') the type of neighborhood 
+%       MASK    
+%           (3D array, same size as VOL, default ones(size(VOL))) 
+%           a binary mask of interest (0 outside the mask, 1 inside).
+%
+%       NEIGH   
+%           (string, default '26-connexity') the type of neighborhood 
 %           to include in the gradient calculation. Possible values :
 %          '4-connexity','6-connexity','26-connexity'.
 %
+% _________________________________________________________________________
 % OUTPUTS:
-%   VOL_G   (3D array, same size as VOL) at each voxel, VOL_G is the mean 
-%           square gradient of VOL at this voxel and along all the
-%           specified directions.
 %
+% VOL_G   
+%       (3D array, same size as VOL) 
+%       at each voxel, VOL_G is the mean square gradient of VOL at this 
+%       voxel and along all the specified directions.
+%
+% _________________________________________________________________________
 % SEE ALSO:
+%
 %  NIAK_MOTION_CORRECTION_WS
 %
-% COMMENTS
+% _________________________________________________________________________
+% COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
