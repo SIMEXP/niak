@@ -1,39 +1,57 @@
 function [] = niak_visu_motion(vol,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_VISU_MOTION
+%
 % Visualization of a 3D+t series as a little movie
 %
 % SYNTAX:
-% []=niak_montage(vol,opt)
+% [] = NIAK_VISU_MOTION(VOL,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL           (3D array) a 3D volume
-% OPT           (structure, optional) has the following fields:
 %
-%                   SPEED (real number, default 0.2) pause between two
-%                       images (in sec)
-%                   TYPE_SLICE (string, default 'axial') the plane of slices
-%                       in the montage. Available options : 'axial', 'coronal',
-%                       'sagital'. This option assumes the volume is in
-%                       'xyz' convention (left to right, posterior to
-%                       anterior, ventral to dorsal).
+% VOL           
+%       (3D array) a 3D volume.
 %
-%                   TYPE_COLOR (string, default 'jet') colormap name.
+% OPT           
+%       (structure, optional) has the following fields:
 %
-%                   FWHM (double, default 0) smooth the image with a 
-%                       isotropic Gaussian kernel of SMOOTH fwhm (in voxels).
+%       SPEED 
+%           (real number, default 0.2) pause between two images (in sec)
 %
-%                   TYPE_FLIP (boolean, default 'rot90') make rotation and
-%                           flip of the slice representation. see
-%                           niak_flip_vol for options. 'rot90' will work
-%                           for images whose voxels is x/y/z respectively
-%                           oriented from left to right, from anterior to
-%                           posterior, and from ventral to dorsal. In this
-%                           case, left is left on the image.
+%       TYPE_SLICE 
+%           (string, default 'axial') the plane of slices in the montage. 
+%           Available options : 'axial', 'coronal', 'sagital'. This option 
+%           assumes the volume is in 'xyz' convention (left to right, 
+%           posterior to anterior, ventral to dorsal).
 %
+%       TYPE_COLOR 
+%           (string, default 'jet') colormap name.
+%
+%       FWHM 
+%           (double, default 0) smooth the image with an isotropic Gaussian 
+%           kernel of FWHM fwhm (in voxels).
+%
+%       TYPE_FLIP 
+%           (string, default 'rot90') make rotation and flip of the slice 
+%           representation. see NIAK_FLIP_VOL for options. 
+%           'rot90' will work for axial slices of a volume oriented
+%           from left to right, from anterior to posterior, and 
+%           from ventral to dorsal. In this case, left is left on the 
+%           image.
+%
+%       VOL_LIMITS 
+%           (vector 1*2, default [min(vol(:)) max(vol(:))]) limits of the 
+%           color scaling.
+%
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % Each time frame (volume) is displayed in a montage style for a brief
 % time, resulting in a little movie of the 3D+t dataset.
 %
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,

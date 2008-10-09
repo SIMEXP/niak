@@ -1,6 +1,7 @@
 function struct2 = niak_rm_field(struct,str_field)
 
-% Remove all fields from a structure that contain a string.
+% Remove all fields from a structure whose field name contains a given
+% string.
 %
 % SYNTAX:
 %   STRUCT2 = NIAK_RM_FIELD(STRUCT,STR_FIELD)

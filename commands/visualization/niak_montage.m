@@ -1,57 +1,76 @@
 function [] = niak_montage(vol,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_MONTAGE
+%
 % Visualization of a 3D volume in a montage style (all slices in one image)
 %
 % SYNTAX:
-% []=niak_montage(vol,opt)
+% [] = NIAK_MONTAGE(VOL,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL           (3D array) a 3D volume
-% OPT           (structure, optional) has the following fields:
 %
-%                   NB_ROWS (integer, default : optimized for a square
-%                      montage) the number of rows in the montage.
+% VOL           
+%       (3D array) a 3D volume
+%
+% OPT           
+%       (structure, optional) has the following fields:
+%
+%       NB_ROWS 
+%           (integer, default : optimized for a square montage) the number 
+%           of rows in the montage.
 %               
-%                   NB_COLUMNS (insteger, default : optimized for a square
-%                      montage) the number of columns in the montage.
+%       NB_COLUMNS 
+%           (integer, default : optimized for a square montage) the number 
+%           of columns in the montage.
 %
-%                   VOXEL_SIZE (vector 1*3, default [1 1 1]) resolution in
-%                      x, y and z dimensions.
+%       VOXEL_SIZE 
+%           (vector 1*3, default [1 1 1]) resolution in x, y and z 
+%           dimensions (used if smoothing the volume).
 %
-%                   TYPE_SLICE (string, default 'axial') the plane of slices
-%                       in the montage. Available options : 'axial', 'coronal',
-%                       'sagital', 'all'. This option assumes the volume is in
-%                       'xyz' convention (left to right, posterior to
-%                       anterior, ventral to dorsal). With 'all' option,
-%                       three subplots will be made, one for each slice
-%                       type.
+%       TYPE_SLICE 
+%           (string, default 'axial') the plane of slices in the montage. 
+%           Available options : 'axial', 'coronal', 'sagital', 'all'. 
+%           This option assumes the volume is in 'xyz' convention (left to 
+%           right, posterior to anterior, ventral to dorsal). With 'all' 
+%           option, three subplots will be made, one for each slice type.
 %
-%                   VOL_LIMITS (vector 1*2, default [min(vol(:)) max(vol(:))]) 
-%                       limits of the color scaling.
+%       VOL_LIMITS 
+%           (vector 1*2, default [min(vol(:)) max(vol(:))]) limits of the 
+%           color scaling.
 %
-%                   TYPE_COLOR (string, default 'jet') colormap name.
+%       TYPE_COLOR 
+%           (string, default 'jet') colormap name.
 %
-%                   FWHM (double, default 0) smooth the image with a 
-%                       isotropic Gaussian kernel of SMOOTH fwhm (in voxels).
+%       FWHM 
+%           (double, default 0) smooth the image with a isotropic Gaussian 
+%           kernel of SMOOTH fwhm (in voxels).
 %
-%                   TYPE_FLIP (string, default 'rot90') make rotation and
-%                           flip of the slice representation. see
-%                           niak_flip_vol for options. 'rot90' will work
-%                           for images whose voxels is x/y/z respectively
-%                           oriented from left to right, from anterior to
-%                           posterior, and from ventral to dorsal. In this
-%                           case, left is left on the image.
+%       TYPE_FLIP 
+%           (string, default 'rot90') make rotation and flip of the slice 
+%           representation. see NIAK_FLIP_VOL for options. 
+%           'rot90' will work for axial slices of a volume oriented
+%           from left to right, from anterior to posterior, and 
+%           from ventral to dorsal. In this case, left is left on the 
+%           image.
 %
-%                   FLAG_COLORBAR (boolean, default 1) if flag_colorbar is
-%                       true, a colorbar in included in the figure
+%       FLAG_COLORBAR 
+%           (boolean, default 1) if flag_colorbar is true, a colorbar is 
+%           included in the figure.
 %
-%                   COMMENT (string, default '') a string that will appear in all
-%                      figure titles.
+%       COMMENT 
+%           (string, default '') a string that will appear in all figure 
+%           titles.
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % a 'montage' style visualization of each slice of the volume
 %
+% _________________________________________________________________________
 % COMMENTS:
+%
 % If both the number of rows ans the number of columns are specified, the
 % number of slices are adapted to match the montage.
 %

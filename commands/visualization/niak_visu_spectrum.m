@@ -1,22 +1,30 @@
-function [] = niak_visu_wft(tseries,tr);
-
-% Visualization of the power spectrum of a 1D signal.
+function [] = niak_visu_spectrum(tseries,tr);
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_VISU_SPECTRUM
+%
+% Visualization of the power spectrum of one or multiple time series.
 %
 % SYNTAX:
-% [] = NIAK_VISU_WFT(TSERIES,TR)
+% [] = NIAK_VISU_SPECTRUM(TSERIES,TR)
 %
+% _________________________________________________________________________
 % INPUTS:
 %
-% TSERIES       (1D array T*N) one or multiple 1D signal (1st dimension is
-%                   samples)
+% TSERIES       
+%       (1D array T*N) one or multiple 1D signal (1st dimension is samples)
 %
-% TR            (real number, default 1) the repetition time of the time
-%                   series (this is of course assuming a regular sampling).
+% TR            
+%       (real number, default 1) the repetition time of the time series 
+%       (this is of course assuming a regular sampling).
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % Draws the power spectrum of the signal on the current figure.
 % Multiple time series lead to subplots.
 %
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
