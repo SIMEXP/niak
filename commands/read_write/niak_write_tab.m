@@ -106,7 +106,7 @@ fprintf(hf,'      ');
 for num_c = 1:length(labels_col)
     fprintf(hf,'  %s',labels_col{num_c});
 end
-fprintf(hf,'\n')
+fprintf(hf,'\n');
 
 %% lines
 for num_l = 1:size(tab,1)

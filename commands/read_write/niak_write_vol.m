@@ -219,6 +219,10 @@ elseif ischar(file_name)
 
         [path_f,name_f,ext_f] = fileparts(hdr.file_name);
         
+        if isempty(path_f)
+            path_f = '.';
+        end
+        
         %% check if the path exist
         if ~exist(path_f,'dir')
             error(sprintf('Could not write %s, the folder %s does not exist !',hdr.file_name,path_f));

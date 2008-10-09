@@ -71,7 +71,7 @@ if nargout == 2
 
     %% reading information
     hf = fopen(file_tmp,'r');
-    vol = fread(hf,prod(hdr.info.dimensions),precision_data);
+    vol = fread(hf,prod(hdr.info.dimensions),['*' precision_data]);
 
     %% Remonving temporary stuff
     fclose(hf);
