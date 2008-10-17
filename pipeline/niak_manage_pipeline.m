@@ -1,4 +1,4 @@
-function [succ] = niak_manage_pipeline(file_pipeline,action,opt)
+function [succ] = niak_manage_pipeline(file_pipeline,action,execution_mode,max_queued)
 %
 % _________________________________________________________________________
 % SUMMARY OF NIAK_MANAGE_PIPELINE
@@ -6,7 +6,7 @@ function [succ] = niak_manage_pipeline(file_pipeline,action,opt)
 % Run or reset a PMP pipeline.
 %
 % SYNTAX:
-% [] = NIAK_MANAGE_PIPELINE(FILE_PIPELINE,ACTION,OPT)
+% [] = NIAK_MANAGE_PIPELINE(FILE_PIPELINE,ACTION,EXECUTION_MODE,MAX_QUEUED)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -18,11 +18,15 @@ function [succ] = niak_manage_pipeline(file_pipeline,action,opt)
 % ACTION             
 %       (string) either 'run', 'restart' or 'reset'.
 %
-% OPT                
-%       (string) how to execute the pipeline :
+% EXECUTION_MODE                
+%       (string, default 'spawn') how to execute the pipeline :
 %           'spawn' : local execution
 %           'sge' : sge qsub system
 %           'pbs' : portable batch system
+%
+% MAX_QUEUED
+%       (integer, default 9999) the maximal number of jobs that can be
+%       submitted simultaneously.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -111,7 +115,9 @@ init_sh = cat(2,gb_niak_path_civet,gb_niak_init_civet_local);
 
 if ~exist('action','var'); error('niak:pipeline','please specify an action'); end
 
-if ~exist('opt','var'); opt = 'spawn'; end
+if ~exist('execution_mode','var'); execution_mode = 'spawn'; end
+
+if ~exist('max_queued','var'); max_queued = 9999; end
 
 [path_logs,name_pipeline,ext_pl] = fileparts(file_pipeline);
 
@@ -138,11 +144,11 @@ switch action
         
         fprintf(hs,'#!/bin/bash \n');
         fprintf(hs,'source %s \n',init_sh);        
-        fprintf(hs,'%s run %s > %s &',file_pipeline,opt,file_log);        
+        fprintf(hs,'%s run %s %i> %s &',file_pipeline,execution_mode,max_queued,file_log);        
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'sh ',file_tmp,' > ',file_start));
+        [succ,messg] = system(cat(2,'batch sh ',file_tmp,' > ',file_start));
         
         if succ == 0
             fprintf('The pipeline was started in the background\n');
@@ -172,7 +178,7 @@ switch action
             
         end                    
                 
-        s = niak_manage_pipeline(file_pipeline,'run',opt)
+        s = niak_manage_pipeline(file_pipeline,'run',execution_mode)
         
     case 'reset'
         
@@ -194,7 +200,7 @@ switch action
             
         end                    
                
-        s = niak_manage_pipeline(file_pipeline,'run',opt);        
+        s = niak_manage_pipeline(file_pipeline,'run',execution_mode);        
         
     otherwise
         error('niak:pipeline:%s : unknown action',action);

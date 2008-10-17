@@ -1,5 +1,8 @@
 function [hdr,vol] = niak_read_nifti(file_name)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_READ_NIFTI
+%
 % Read a NIFTI file (.NII or .IMG).
 % The old Analyze 7.5 is also supported, and if a .MAT file is present, the
 % affine transformation information will be included.
@@ -8,24 +11,36 @@ function [hdr,vol] = niak_read_nifti(file_name)
 % SYNTAX:
 % [HDR,VOL] = NIAK_READ_NIFTI(FILE_NAME)
 %
+% _________________________________________________________________________
 % INPUT:
-% FILE_NAME         (string) a 3D+t or 3D minc file.
 %
+% FILE_NAME         
+%       (string) a 3D+t or 3D minc file.
+%
+% _________________________________________________________________________
 % OUTPUT:
-% VOL           (3D+t or 3D array of double) the fMRI or MRI data.
 %
-% HDR           a structure containing a description of the data. See
-%               NIAK_READ_VOL and NIAK_READ_HDR_NIFTI for details.
+% VOL           
+%       (3D+t or 3D array of double) the fMRI or MRI data.
 %
+% HDR           
+%       a structure containing a description of the data. See NIAK_READ_VOL 
+%       and NIAK_READ_HDR_NIFTI for details.
+%
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_READ_HDR_NIFTI, NIAK_WRITE_NIFTI, NIAK_READ_VOL, NIAK_WRITE_VOL
 %
+% _________________________________________________________________________
 % COMMENTS:
+%
 % In case of multiple files data (e.g. .IMG + .HDR, or .IMG + .HDR + .MAT),
 % specify the name using the .IMG extension only.
 %
 % One may assume that the affine transformation brings the data into
-% (L-R, P-A, I-S) order (this is a NIFTI requirement).
+% (Left-Right, Posterior-Anterior, Inferior-Superior) order (this is a 
+% NIFTI requirement).
 %
 % Part of this file is copied and modified under GNU license from
 % MRI_TOOLBOX developed by CNSP in Flinders University, Australia

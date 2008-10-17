@@ -310,24 +310,26 @@ fprintf(hp,'#!/usr/bin/env perl\n\n'); % The script is written in PERL
 %% A small help for the script
 fprintf(hp,'if ($ARGV[0] eq help) {\n');
 fprintf(hp,'print '' \nThis PERL script has been generated on %s by %s on a %s system, using NIAK version %s. It is running a processing pipeline on neuroimaging data. While it can be used as a stand-alone command, it is meant to be used via the NIAK_RUN_PIPELINE and NIAK_VISU_PIPELINE commands in Matlab/Octave.\n',datestr(now),gb_niak_user,gb_niak_OS,gb_niak_version);
-fprintf(hp,'\n SYNTAX: \n %s%s%s ARG0 ARG1\n\n','./',name_pipeline,'.pl');
-fprintf(hp,'ARG0 is optional. A first set of commands gives control on the pipeline execution :\n');
+fprintf(hp,'\n SYNTAX: \n %s%s%s ACTION EXECUTION_MODE MAX_QUEUED\n\n','./',name_pipeline,'.pl');
+fprintf(hp,'ACTION is optional. What action the PERL script should perform :\n');
+fprintf(hp,'A first set of ACTION are dedicated to start/restart the pipeline :\n');
 fprintf(hp,'    help : Show this message and die \n');
 fprintf(hp,'    run : Run all the incomplete stages of the pipeline. \n');
 fprintf(hp,'    resetFailures : Reset all stages that have failed so that they can be run again.\n');
 fprintf(hp,'    resetAll : Reset all stages of the pipeline.\n');
 fprintf(hp,'    resetFromStage : Take a stage name as an argument and resets all stages from that stage onwards (including that stage itself).\n');
 fprintf(hp,'    resetRunning : Reset all stages thought to be running.\n');
-fprintf(hp,'\nA second set of commands in ARG0 allows to monitor the pipeline design and execution :\n');
+fprintf(hp,'\nA second set of ACTION allows to monitor the pipeline design and execution :\n');
 fprintf(hp,'    GetPipelineStatus : Get the pipeline’s status (not started, running, failed or finished).\n');
 fprintf(hp,'    printStages : Print all stages in the pipeline.\n');
 fprintf(hp,'    createDotGraph : Generate a graph representation of the stages of the pipeline in dot format (see graphviz package on internet).\n');
 fprintf(hp,'    createFilenameDotGraph : Generate a graph representation of the files of the pipeline in dot format (see graphviz package on internet).\n');
 fprintf(hp,'    printUnfinished : Print the unfinished stages of the pipeline.\n');
-fprintf(hp,'\nARG1 is optional. It specifies how the pipeline will run :\n');
+fprintf(hp,'\nEXECUTION_MODE is optional. It specifies in which mode the pipeline will run :\n');
 fprintf(hp,'    spawn (default) : sequential execution on the local machine \n');
 fprintf(hp,'    sge : parallel execution, using the sge qsub system \n');
-fprintf(hp,'    pbs : parallel execution, using pbs \n\n'';\nexit 0\n');
+fprintf(hp,'    pbs : parallel execution, using pbs \n\n'';\n');
+fprintf(hp,'\nMAX_QUEUED is optional (default 999999). It specifies the maximal number of jobs that can be submitted simultaneously.\nexit 0\n');
 fprintf(hp,'}\n\n');
 
 fprintf(hp,'use PMP::PMP; \nuse PMP::spawn; \nuse PMP::pbs; \nuse PMP::sge; \nuse PMP::Array;\nuse Env qw( PATH ) ; \nuse FindBin; \nuse lib "FindBin::Bin"; \n\n'); % Import the necessary PERL libraries, notably PMP
@@ -533,7 +535,9 @@ end
 fprintf(hp,'# compute the dependencies based on the filenames:\n$pipeline->computeDependenciesFromInputs(); \n\n');
 fprintf(hp,'# update the status of all stages based on previous pipeline runs\n$pipeline->updateStatus();\n\n');
 fprintf(hp,'# Add the pipeline to the pipeline array\n$pipes->addPipe($pipeline);\n\n'); % Add the pipeline to the pipeline array
-
+fprintf(hp,'# Set the maximal number of jobs that can be queued simultaneously \n}');
+fprintf(hp,'if ($#ARGV == 0 || $#ARGV == 1) { \n$pipes->maxQueued(999999); \n}');
+fprintf(hp,'\nelse { \n$pipes->maxQueued(ARGV[2]); \n}\n\n');
 fprintf(hp,'if ($ARGV[0] eq run) { \n# loop until all pipes are done\n$pipes->run(); \n}');
 fprintf(hp,'\nelsif ($ARGV[0] eq resetFailures) { \n$pipes->resetFailures(); \n}');
 fprintf(hp,'\nelsif ($ARGV[0] eq resetAll) {\n$pipes->resetAll(); \n}');
