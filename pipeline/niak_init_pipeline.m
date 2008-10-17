@@ -459,7 +459,7 @@ for num_s = 1:length(list_stage)
                         disp(sprintf('Creation of a shell script for the (unfinished) matlab stage %s in file %s. Old shell script have been saved in the PREVIOUS_PIPELINE structure of the file %s (no clobber mode).\n',stage_name,file_sh,file_var));
                         disp(sprintf('Creation of a matlab script for the octave stage %s in file %s. \n',stage_name,file_oct));
                     else
-                        disp(sprintf('Creation of a shell script for the matlab stage %s in file %s. Any old shell script will be lose (clobber mode).\n',stage_name,file_sh,file_var));
+                        disp(sprintf('Creation of a shell script for the matlab stage %s in file %s. Any old shell script will be lost (clobber mode).\n',stage_name,file_sh,file_var));
                         disp(sprintf('Creation of a matlab script for the (unfinished) octave stage %s in file %s. \n',stage_name,file_oct));
                     end
                 end
