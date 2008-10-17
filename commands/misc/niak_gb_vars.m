@@ -3,9 +3,9 @@
 %% this script to initialize the variables. If NIAK does not behave the way
 %% you want, this might be the place to fix that.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% The following variables need very fast initialization %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The following variables are needed for very fast initialization %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 gb_niak_tmp = cat(2,filesep,'tmp',filesep); % where to store temporary files
 
@@ -30,7 +30,7 @@ gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
 
 gb_niak_init_civet_local = 'init-sge.sh'; % Which CIVET configuration to use locally. Keep it sh !
 
-gb_niak_init_civet = 'init.sh'; % Which CIVET configuration to use for jobs on the cluster. Keep is csh !
+gb_niak_init_civet = 'init.sh'; % Which CIVET configuration to use for jobs on the cluster. Keep is sh !
 
 gb_niak_command_matlab = 'matlab -nojvm -nosplash'; % how to invoke matlab   
 

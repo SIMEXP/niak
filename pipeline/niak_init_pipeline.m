@@ -328,8 +328,8 @@ fprintf(hp,'    printUnfinished : Print the unfinished stages of the pipeline.\n
 fprintf(hp,'\nEXECUTION_MODE is optional. It specifies in which mode the pipeline will run :\n');
 fprintf(hp,'    spawn (default) : sequential execution on the local machine \n');
 fprintf(hp,'    sge : parallel execution, using the sge qsub system \n');
-fprintf(hp,'    pbs : parallel execution, using pbs \n\n'';\n');
-fprintf(hp,'\nMAX_QUEUED is optional (default 999999). It specifies the maximal number of jobs that can be submitted simultaneously.\nexit 0\n');
+fprintf(hp,'    pbs : parallel execution, using pbs \n');
+fprintf(hp,'\nMAX_QUEUED is optional (default 999999). It specifies the maximal number of jobs that can be submitted simultaneously.\n\n'';\nexit 0\n');
 fprintf(hp,'}\n\n');
 
 fprintf(hp,'use PMP::PMP; \nuse PMP::spawn; \nuse PMP::pbs; \nuse PMP::sge; \nuse PMP::Array;\nuse Env qw( PATH ) ; \nuse FindBin; \nuse lib "FindBin::Bin"; \n\n'); % Import the necessary PERL libraries, notably PMP
