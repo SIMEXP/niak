@@ -110,6 +110,11 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %           (real number, default 200 mm)  N3 spline distance in mm 
 %           (suggested values: 200 for 1.5T scan; 25 for 3T scan). 
 %
+%       CIVET_COMMAND
+%           (string, default
+%           GB_NIAK_PATH_CIVET/GB_NIAK_FOLDER_CIVET/CIVET_Processing_Pipeline)
+%           The command used to invoke CIVET.
+%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -211,10 +216,13 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_test','folder_out','flag_verbose','n3_distance','civet'};
-gb_list_defaults = {0,'',1,200,'gb_niak_omitted'};
+gb_list_fields = {'command_civet','flag_test','folder_out','flag_verbose','n3_distance','civet'};
+gb_list_defaults = {'',0,'',1,200,'gb_niak_omitted'};
 niak_set_defaults
         
+if isempty(command_civet)
+    command_civet = cat(2,gb_niak_path_civet,gb_niak_folder_civet,filesep,'CIVET_Processing_Pipeline');
+end
 if isstruct(opt.civet)
     if ~isfield(opt.civet,'folder')|~isfield(opt.civet,'id')|~isfield(opt.civet,'prefix')
         error('Please specify fields FOLDER, ID and PREFIX in OPT.CIVET');
@@ -386,7 +394,7 @@ if ~flag_civet
     
     %% Run CIVET in spawn mode
     niak_gb_vars
-    instr_civet = cat(2,gb_niak_path_civet,gb_niak_folder_civet,filesep,'CIVET_Processing_Pipeline -sourcedir ',civet_folder,' -targetdir ',civet_folder,' -prefix ',civet_prefix,' -run ',civet_id,' -spawn -no-surfaces -N3-distance ',num2str(n3_distance));
+    instr_civet = cat(2,civet_command,' -sourcedir ',civet_folder,' -targetdir ',civet_folder,' -prefix ',civet_prefix,' -run ',civet_id,' -spawn -no-surfaces -N3-distance ',num2str(n3_distance));
     [flag,str] = system(instr_civet);
     if flag
         error(str)
