@@ -149,9 +149,7 @@ switch action
             system(cat(2,'rm -f ',file_log));
         end
         
-        fprintf(hs,'#!/bin/bash \n');
-        fprintf(hs,'source %s \n',init_sh);        
-        fprintf(hs,'%s run %s %i> %s &',file_pipeline,execution_mode,max_queued,file_log);        
+        fprintf(hs,'#!/bin/bash -c ''source %s , %s run %s %i> %s''',init_sh,file_pipeline,execution_mode,max_queued,file_log);
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_run));

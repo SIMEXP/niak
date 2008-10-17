@@ -171,7 +171,7 @@ switch action
         
     case 'status'
         
-        fprintf('\n\n***********\n Status of th pipeline %s\n***********\n',name_pipeline);
+        fprintf('\n\n***********\n Status of the pipeline %s\n***********\n',name_pipeline);
         
         %% Running or not ...
         file_lock = cat(2,path_logs,filesep,name_pipeline,'.lock');
