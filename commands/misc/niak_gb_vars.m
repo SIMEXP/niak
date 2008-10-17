@@ -24,13 +24,23 @@ end
 %% system                                                               %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
+gb_niak_shell = '/bin/sh'; %% Shell type when running a pipeline
 
-gb_niak_folder_civet = 'CIVET-1.1.9'; % The folder of the CIVET pipeline
+gb_niak_path_quarantine = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
 
-gb_niak_init_civet_local = 'init-sge.sh'; % Which CIVET configuration to use locally. Keep it sh !
+gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9'; % The folder of the CIVET pipeline
 
-gb_niak_init_civet = 'init.sh'; % Which CIVET configuration to use for jobs on the cluster. Keep is sh !
+if length(findstr(gb_niak_shell,'csh'))>0
+    gb_niak_init_civet_local = 'init-sge.csh'; % Use the CSH shell initialization script
+else
+    gb_niak_init_civet_local = 'init-sge.sh'; % Use the SH shell initialization script
+end
+
+if length(findstr(gb_niak_shell,'csh'))>0
+    gb_niak_init_civet = 'init.csh'; % Use the CSH shell initialization script
+else
+    gb_niak_init_civet = 'init.sh'; % Use the CSH shell initialization script
+end
 
 gb_niak_command_matlab = 'matlab -nojvm -nosplash'; % how to invoke matlab   
 

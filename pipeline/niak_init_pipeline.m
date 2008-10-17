@@ -72,13 +72,16 @@ function file_pipeline = niak_init_pipeline(pipeline,opt)
 %           (boolean, default 1) if the flag is 1, then the function prints 
 %           some infos during the processing.
 %
-%       INIT_SH 
-%           (string, default GB_NIAK_PATH_CIVET/INIT-SGE.SH) 
-%           a file name of a script to init the SH environment if you are 
-%           using any BRICK using the 'bash' environement. The default value 
-%           will work if you want to use tools from the quarantine. The
-%           variable GB_NIAK_PATH_CIVET can be manually specified in the 
-%           file NIAK_GB_VARS.
+%       TYPE_SHELL
+%           (string, default GB_NIAK_SHELL)
+%           which shell to use (with full path, e.g. /bin/sh)
+%
+%       INIT_SHELL 
+%           (string, default GB_NIAK_PATH_QUARANTINE/GB_NIAK_INIT_CIVET) 
+%           a file name of a configuration file to init the shell 
+%           environment. The default value will work if you want to use 
+%           tools from the quarantine. The variable GB_NIAK_PATH_QUARANTINE
+%           can be manually specified in the file NIAK_GB_VARS.
 %
 %       COMMAND_MATLAB 
 %           (string, default GB_NIAK_COMMAND_MATLAB) how to invoke matlab. 
@@ -213,8 +216,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'path_logs','init_sh','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_options'};
-gb_list_defaults = {NaN,cat(2,gb_niak_path_civet,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',gb_niak_sge_options};
+gb_list_fields = {'type_shell','path_logs','init_shell','command_matlab','command_octave','file_path_mat','clobber','flag_verbose','name_pipeline','sge_options'};
+gb_list_defaults = {gb_niak_shell,NaN,cat(2,gb_niak_path_quarantine,gb_niak_init_civet),gb_niak_command_matlab,gb_niak_command_octave,'',0,1,'NIAK_pipeline',gb_niak_sge_options};
 niak_set_defaults
 
 %% Issue warning in clobber mode
@@ -438,8 +441,8 @@ for num_s = 1:length(list_stage)
         hs = fopen(file_sh,'w');
 
         % Initialization of the script
-        fprintf(hs,'#!/bin/bash \n');
-        fprintf(hs,'source %s \n',init_sh);
+        fprintf(hs,'#!%s \n',type_shell);
+        fprintf(hs,'source %s \n',init_shell);
         fprintf(hs,'export MINC_COMPRESS=0\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
         fprintf(hs,'unset MINC_FORCE_V2\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
        

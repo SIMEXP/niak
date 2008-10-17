@@ -119,7 +119,8 @@ function [succ] = niak_manage_pipeline(file_pipeline,action,execution_mode,max_q
 
 niak_gb_vars
 
-init_sh = cat(2,gb_niak_path_civet,gb_niak_init_civet_local);
+init_shell = cat(2,gb_niak_path_quarantine,gb_niak_init_civet);
+type_shell = gb_niak_shell;
 
 if ~exist('action','var'); error('niak:pipeline','please specify an action'); end
 
@@ -138,7 +139,7 @@ switch action
     
     case 'run'
         if exist(file_lock,'file')
-            error('niak:pipeline:A lock file has been found ! This means the pipeline is either running or crashed.\n If it is crashed, try a ''restart'' or ''reset'' action instead of ''run''')
+            error('niak:pipeline: A lock file has been found ! This means the pipeline is either running or crashed.\n If it is crashed, try a ''restart'' or ''reset'' action instead of ''run''')
         end
         
         fprintf('Starting the pipeline ... \n');        
@@ -149,7 +150,7 @@ switch action
             system(cat(2,'rm -f ',file_log));
         end
         
-        fprintf(hs,'/bin/bash -c ''source %s , %s run %s %i> %s''',init_sh,file_pipeline,execution_mode,max_queued,file_log);
+        fprintf(hs,'%s -c ''source %s , %s run %s %i> %s''',type_shell,init_shell,file_pipeline,execution_mode,max_queued,file_log);
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_run));

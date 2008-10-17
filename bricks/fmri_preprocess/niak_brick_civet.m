@@ -112,7 +112,7 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %
 %       CIVET_COMMAND
 %           (string, default
-%           GB_NIAK_PATH_CIVET/GB_NIAK_FOLDER_CIVET/CIVET_Processing_Pipeline)
+%           GB_NIAK_PATH_CIVET/CIVET_Processing_Pipeline)
 %           The command used to invoke CIVET.
 %
 %       FOLDER_OUT 
@@ -216,13 +216,14 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'command_civet','flag_test','folder_out','flag_verbose','n3_distance','civet'};
+gb_list_fields = {'civet_command','flag_test','folder_out','flag_verbose','n3_distance','civet'};
 gb_list_defaults = {'',0,'',1,200,'gb_niak_omitted'};
 niak_set_defaults
         
-if isempty(command_civet)
-    command_civet = cat(2,gb_niak_path_civet,gb_niak_folder_civet,filesep,'CIVET_Processing_Pipeline');
+if isempty(civet_command)
+    civet_command = cat(2,gb_niak_path_civet,filesep,'CIVET_Processing_Pipeline');
 end
+
 if isstruct(opt.civet)
     if ~isfield(opt.civet,'folder')|~isfield(opt.civet,'id')|~isfield(opt.civet,'prefix')
         error('Please specify fields FOLDER, ID and PREFIX in OPT.CIVET');
