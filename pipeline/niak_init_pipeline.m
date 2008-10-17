@@ -535,7 +535,7 @@ end
 fprintf(hp,'# compute the dependencies based on the filenames:\n$pipeline->computeDependenciesFromInputs(); \n\n');
 fprintf(hp,'# update the status of all stages based on previous pipeline runs\n$pipeline->updateStatus();\n\n');
 fprintf(hp,'# Add the pipeline to the pipeline array\n$pipes->addPipe($pipeline);\n\n'); % Add the pipeline to the pipeline array
-fprintf(hp,'# Set the maximal number of jobs that can be queued simultaneously \n}');
+fprintf(hp,'# Set the maximal number of jobs that can be queued simultaneously\n');
 fprintf(hp,'if ($#ARGV == 0 || $#ARGV == 1) { \n$pipes->maxQueued(999999); \n}');
 fprintf(hp,'\nelse { \n$pipes->maxQueued(ARGV[2]); \n}\n\n');
 fprintf(hp,'if ($ARGV[0] eq run) { \n# loop until all pipes are done\n$pipes->run(); \n}');
