@@ -521,7 +521,7 @@ for num_s = 1:length(list_stage)
     fprintf(hp,'$pipeline->addStage(\n');
     fprintf(hp,'{ name => ''%s'',\n',stage_name); % The name of the stage is used for the graph representation of the pipeline and to sort out dependencies
     [path_sh,name_sh,ext_sh] = fileparts(file_sh);
-    fprintf(hp,'  args => [''%s %s%s'', %s, %s],\n',type_sh,name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
+    fprintf(hp,'  args => [''%s %s%s'', %s, %s],\n',type_shell,name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
     fprintf(hp,'  sge_opts => ''%s''});\n\n',sge_options);
     if flag_verbose
         disp(sprintf('\nAdding a PERL (PMP) description of the stage %s in the file %s.\n',stage_name,file_pipeline));
