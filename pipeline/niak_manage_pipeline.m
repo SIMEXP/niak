@@ -148,7 +148,7 @@ switch action
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'batch sh ',file_tmp,' > ',file_start));
+        [succ,messg] = system(cat(2,'batch -f ',file_tmp,' > ',file_start));
         
         if succ == 0
             fprintf('The pipeline was started in the background\n');

@@ -311,7 +311,7 @@ fprintf(hp,'#!/usr/bin/env perl\n\n'); % The script is written in PERL
 fprintf(hp,'if ($ARGV[0] eq help) {\n');
 fprintf(hp,'print '' \nThis PERL script has been generated on %s by %s on a %s system, using NIAK version %s. It is running a processing pipeline on neuroimaging data. While it can be used as a stand-alone command, it is meant to be used via the NIAK_RUN_PIPELINE and NIAK_VISU_PIPELINE commands in Matlab/Octave.\n',datestr(now),gb_niak_user,gb_niak_OS,gb_niak_version);
 fprintf(hp,'\n SYNTAX: \n %s%s%s ACTION EXECUTION_MODE MAX_QUEUED\n\n','./',name_pipeline,'.pl');
-fprintf(hp,'ACTION is optional. What action the PERL script should perform :\n');
+fprintf(hp,'ACTION is optional. It specifies what action the PERL script should perform.\n');
 fprintf(hp,'A first set of ACTION are dedicated to start/restart the pipeline :\n');
 fprintf(hp,'    help : Show this message and die \n');
 fprintf(hp,'    run : Run all the incomplete stages of the pipeline. \n');
