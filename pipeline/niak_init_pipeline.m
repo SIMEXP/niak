@@ -441,7 +441,8 @@ for num_s = 1:length(list_stage)
         hs = fopen(file_sh,'w');
 
         % Initialization of the script
-        fprintf(hs,'#!%s \n',type_shell);
+        %fprintf(hs,'#!%s \n',type_shell); %% forget about specifying the
+        %shell type !! this is going to be sh, period
         fprintf(hs,'source %s \n',init_shell);
         fprintf(hs,'export MINC_COMPRESS=0\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
         fprintf(hs,'unset MINC_FORCE_V2\n'); %% TAG : this is temporary !! There is currently a bug in the internal MINC compression for 3D+t data
@@ -468,6 +469,7 @@ for num_s = 1:length(list_stage)
                 end
 
             case 'octave'
+                
                 %% Generation of the mat file
                 ho = fopen(file_oct,'w');
                 fprintf(ho,'tic,\nload(''-mat'',''%s''),\n path(path_work),\nload(''-mat'',''%s''),\nfiles_in,\nfiles_out,\nopt,\n%s;\n',file_path_mat,file_var,command);
@@ -486,7 +488,6 @@ for num_s = 1:length(list_stage)
                         disp(sprintf('Creation of a matlab script for the (unfinished) octave stage %s in file %s. \n',stage_name,file_oct));
                     end
                 end
-
 
             case 'bash'
 
@@ -520,7 +521,7 @@ for num_s = 1:length(list_stage)
     fprintf(hp,'$pipeline->addStage(\n');
     fprintf(hp,'{ name => ''%s'',\n',stage_name); % The name of the stage is used for the graph representation of the pipeline and to sort out dependencies
     [path_sh,name_sh,ext_sh] = fileparts(file_sh);
-    fprintf(hp,'  args => [''%s%s'', %s, %s],\n',name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
+    fprintf(hp,'  args => [''%s %s%s'', %s, %s],\n',type_sh,name_sh,ext_sh,niak_files2str(files_in,'in:'),niak_files2str(files_out,'out:'));
     fprintf(hp,'  sge_opts => ''%s''});\n\n',sge_options);
     if flag_verbose
         disp(sprintf('\nAdding a PERL (PMP) description of the stage %s in the file %s.\n',stage_name,file_pipeline));
