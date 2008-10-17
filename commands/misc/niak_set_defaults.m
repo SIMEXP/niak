@@ -1,28 +1,42 @@
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_SET_DEFAULTS
+%
 % Upload fields of a structure as variables of the workspace, with default
 % values.
 %
 % SYNTAX:
 % NIAK_SET_DEFAULTS
 %
-% INPUTS:
-% GB_NAME_STRUCTURE   a string with the name of the structure to test.
-% GB_LIST_FIELDS      a cell of strings with names of fields.
-% GB_LIST_DEFAULTS    a cell with default values. A Nan will produce an error
-%                       message and exit if no value is defined in the field.
-%
-% OUTPUTS
-% All fields listed in GB_LIST_FIELDS are checked in the structure GB_NAME_STRUCTURE, and
-% default values are applied if they don't exist. In addition, the listed fields
-% are uploaded as variables. A warning is issued if unlisted fields are found in GB_NAME_STRUCTURE.
-% Values of the structure are updated.
-%
-% COMMENTS:
 % This is a script !! Values of the workspace which calls the script will
 % be affected.
 %
-% TODO:
-% implement the zipping. Test the function with 3D+t data, minc1 & octave
+% _________________________________________________________________________
+% INPUTS : 
+% There is no input per say, as this is a script and not a function.
+% The following variables still need to exist in the workspace before 
+% calling the script : 
+%
+% GB_NAME_STRUCTURE   
+%       (string) the name of the structure to test.
+%
+% GB_LIST_FIELDS      
+%       (cell of strings) names of fields.
+%
+% GB_LIST_DEFAULTS    
+%       (cell) the default values. A Nan will produce an error message and 
+%       exit if no value is defined in the field.
+%
+% _________________________________________________________________________
+% OUTPUTS :
+%
+% All fields listed in GB_LIST_FIELDS are checked in the structure 
+% GB_NAME_STRUCTURE, and default values are applied if they don't exist. 
+% In addition, the listed fields are uploaded as variables. A warning is 
+% issued if unlisted fields are found in GB_NAME_STRUCTURE. Values of the 
+% structure are updated.
+%
+% COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
