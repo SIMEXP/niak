@@ -18,7 +18,7 @@ function [files_in,files_out,opt] = niak_brick_upsample_vol(files_in,files_out,o
 %       (string) name of the file to upsample (can be 3D+t).
 %
 % * FILES_OUT 
-%       (string,default <BASE_FILES_IN>_res.<EXT_FILES_IN>) 
+%       (string,default <BASE_FILES_IN>_up.<EXT_FILES_IN>) 
 %       the name of the output upsampled volume.
 %
 % * OPT           
@@ -127,7 +127,7 @@ else
 end
 
 if isempty(files_out)
-    files_out = cat(2,folder_write,filesep,name_f,'_res',ext_f);
+    files_out = cat(2,folder_write,filesep,name_f,'_up',ext_f);
 end
 
 if flag_test == 1
@@ -194,7 +194,7 @@ vol_up = zeros([nx2 ny2 nz2 nt1],'single');
 if flag_deconv
     filter_vox = zeros([nx2 ny2 nz2]);
     filter_vox(1:fr(1),1:fr(2),1:fr(3)) = 1;
-    filter_vox = filter_vox/sqrt(sum(filter_vox(:).^2));
+    %filter_vox = filter_vox/sqrt(sum(filter_vox(:).^2));
     filter_vox = fftn(filter_vox);
     mask_f = abs(filter_vox)<0.01;
     filter_vox = filter_vox.^(-1);
@@ -221,9 +221,12 @@ for num_t = 1:nt1
 
     if flag_deconv
         fvol_up = filter_vox.*fvol_up;
+        vol_up(:,:,:,num_t) = (double((nx2*ny2*nz2))/double((nx1*ny1*nz1)))^2*real(ifftn(fvol_up));
+    else
+        vol_up(:,:,:,num_t) = (double((nx2*ny2*nz2))/double((nx1*ny1*nz1)))*real(ifftn(fvol_up));
     end
 
-    vol_up(:,:,:,num_t) = (double((nx2*ny2*nz2))/double((nx1*ny1*nz1)))*real(ifftn(fvol_up));
+    
 
 end
 
