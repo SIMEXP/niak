@@ -1,18 +1,28 @@
 function path_name = niak_file_tmp(ext)
-
-% Suggest a name of temporary file 
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_PATH_TMP
+%
+% Suggest a name for a temporary folder.
 %
 % SYNTAX:
 % PATH_NAME = NIAK_PATH_TMP(EXT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% EXT             (string) An extension for the path name
 %
+% EXT             
+%       (string) An extension for the path name
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% 
-% A (full path) name for a temporary file.
 %
-% COMMENTS
+% PATH_NAME 
+%       (string) A (full path) name for a temporary file.
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
 % The directory is created.
 % 
 % The temporary paths live in the temporary directory. This directory is by 

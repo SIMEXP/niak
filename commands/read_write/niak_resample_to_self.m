@@ -1,18 +1,31 @@
-function [] = niak_brick_resample_to_self(file_name,opt)
-
+function [] = niak_resample_to_self(file_name,opt)
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_RESAMPLE_TO_SELF
+%
 % Apply MINCRESAMPLE to resample a volume in its own space, i.e. such that 
 % the direction cosines are x, y and z
 %
 % SYNTAX:
 % [] = NIAK_BRICK_RESAMPLE_TO_SELF(FILE_NAME)
 %
+% _________________________________________________________________________
 % INPUTS:
-% FILE_NAME      (string) name of the file to resample (can be 3D+t).
-% OPT            (structure) same as NIAK_BRICK_RESAMPLE_VOL
+%
+% FILE_NAME      
+%       (string) name of the file to resample (can be 3D+t).
+%
+% OPT            
+%       (structure) same as in NIAK_BRICK_RESAMPLE_VOL
+%
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % Overwrites the file with its resampled version.
 %
+% _________________________________________________________________________
 % COMMENTS:
+%
 % This is a simple wrapper of MINCRESAMPLE and NIAK_BRICK_RESAMPLE_VOL.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,

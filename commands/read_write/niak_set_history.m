@@ -1,25 +1,49 @@
 function hdr2 = niak_set_history(hdr,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_SET_HISTORY
+%
 % Write a new line of history in a header
 %
 % SYNTAX
 % HDR2 = NIAK_SET_HISTORY(HDR,OPT)
 % 
-% INPUTS
-% HDR           (structure) header of a 3D or 3D+t data file (see NIAK_READ_VOL).
-% OPT           (struture) with the following fields :
-%               COMMAND (string, default '') the name of the command applied.
-%               FILES_IN   (structure, cell of strings or strings, default
-%                      struct()) List of input files.
-%               FILES_OUT  (structure, cell of strings or strings, default
-%                      struct() ) List of output files.
-%               COMMENT (string, default struct()) user specified comment.
+% _________________________________________________________________________
+% INPUTS:
+%
+% HDR           
+%       (structure) header of a 3D or 3D+t data file (see NIAK_READ_VOL).
+%
+% OPT           
+%       (struture) with the following fields :
+%
+%       COMMAND 
+%           (string, default '') the name of the command applied.
+%
+%       FILES_IN   
+%           (structure, cell of strings or strings, default struct()) List 
+%           of input files.
+%
+%       FILES_OUT  
+%           (structure, cell of strings or strings, default struct() ) List 
+%           of output files.
+%
+%       COMMENT 
+%           (string, default struct()) user-specified comment.
 % 
-% OUTPUTS
-% HDR2          (structure) same as HDR, yet the HDR.INFO.HISTORY has a new line.
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% HDR2          
+%       (structure) same as HDR, yet the HDR.INFO.HISTORY has a new line.
 % 
-% COMMENTS
-% Copyright (c) Pierre Bellec 01/2008
+% _________________________________________________________________________
+% COMMENTS:
+%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : minc
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal

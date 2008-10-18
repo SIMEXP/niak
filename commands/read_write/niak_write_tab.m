@@ -17,7 +17,8 @@ function  [err,msg] = niak_read_tab(file_name,tab,labels_line,labels_col)
 % FILE_NAME     
 %       (string) the name of the text file (usually ends in .dat)
 %
-% TAB   (matrix M*N) the numerical data array. 
+% TAB   
+%       (matrix M*N) the numerical data array. 
 %
 % LABELS_LINE        
 %       (cell of strings 1*M) LABELS_LINE{NUM_L} is the label of line NUM_L in

@@ -1,5 +1,8 @@
 function hdr = niak_read_hdr_nifti(file_name)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_READ_HDR_NIFTI
+%
 % Read the header of a NIFTI file (.NII or .HDR). 
 % The old Analyze 7.5 is also supported, and if a .MAT file is present, the
 % affine transformation information will be included.
@@ -8,20 +11,29 @@ function hdr = niak_read_hdr_nifti(file_name)
 % SYNTAX:
 % HDR = NIAK_READ_HDR_NIFTI(FILE_NAME)
 %
+% _________________________________________________________________________
 % INPUT:
-% FILE_NAME     (string) name of a single 3D+t minc file 
-%               or a 3D minc file.
 %
+% FILE_NAME     
+%       (string) name of a single 3D+t minc file or a 3D minc file.
+%
+% _________________________________________________________________________
 % OUTPUT:
-% HDR           (structure) contain a description of the data. For a list
-%                   of fields common to all data types, see NIAK_READ_VOL.
 %
-%               HDR.DETAILS (structure) contains the standard fields
-%                   of a nifti file. See http://nifti.nimh.nih.gov/nifti-1.
+% HDR           
+%       (structure) contain a description of the data. For a list of fields 
+%       common to all data types, see NIAK_READ_VOL.
 %
+%       HDR.DETAILS 
+%           (structure) contains the standard fields of a nifti file. 
+%           See http://nifti.nimh.nih.gov/nifti-1.
+%
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_READ_NIFTI, NIAK_WRITE_NIFTI, NIAK_READ_VOL, NIAK_WRITE_VOL
 %
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Part of this file is copied and modified under GNU license from

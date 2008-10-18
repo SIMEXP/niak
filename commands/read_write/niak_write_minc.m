@@ -1,58 +1,77 @@
 function [] = niak_write_minc(hdr,vol)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_WRITE_MINC
+%
 % Write a 3D or 3D+t dataset into a MINC file
 % http://www.bic.mni.mcgill.ca/software/minc/
 %
 % SYNTAX:
-% [] = niak_write_minc(hdr,vol)
+% [] = NIAK_WRITE_MINC(HDR,VOL)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL           (3D or 4D array) a 3D or 3D+t dataset
 %
-% HDR           (structure) a header structure (usually modified from the 
-%               output of niak_read_vol). The relevant fields of HDR are :
+% VOL           
+%       (3D or 4D array) a 3D or 3D+t dataset
 %
-%               HDR.FILE_NAME   (string) the name of the file that will be
-%                   written.
-%               HDR.TYPE   (string, default 'minc2') the output format (either
-%                   'minc1' or 'minc2').
+% HDR
+%       (structure) a header structure (usually modified from the output of 
+%       NIAK_READ_VOL). The relevant fields of HDR are :
 %
-%               HDR.INFO (structure) The subfields are optional, yet they 
-%                   give control on critical space information. See
-%                   NIAK_WRITE_VOL for more info.
+%       FILE_NAME   
+%           (string) the name of the file that will be written.
+%
+%       TYPE   
+%           (string, default 'minc2') the output format (either 'minc1' or 
+%           'minc2').
+%
+%       INFO 
+%           (structure) The subfields are optional, yet they give control 
+%           on critical space information. See NIAK_WRITE_VOL for more 
+%           info.
 %                  
-%               HDR.DETAILS (structure) The subfields are also optional, 
-%                   and specific to the minc format. Note that a minc file 
-%                   with correct space information can be created without
-%                   it.
-%               HDR.DETAILS.<VAR_NAME> : where var_name is a string. Such 
-%                   field will define a new variable called <VAR_NAME> in 
-%                   the minc file.
-%               HDR.DETAILS.<VAR_NAME>.VARATTS : a cell of strings. Each
-%                   string will define a new attribute in variable
-%                   <VAR_NAME>.
-%               HDR.DETAILS.<VAR_NAME>.ATTVALUES : a cell (of double array
-%                   and/or strings). Each entry defines the value of the
-%                   corresponding attribute.          
-%               Note that the values of HDR.INFO override the values of
-%               HDR.DETAILS.
+%       DETAILS 
+%           (structure) The subfields are also optional, and specific to 
+%           the minc format. Note that a minc file with correct space 
+%           information can be created without it.
+%       
+%           <VAR_NAME>
+%               where VAR_NAME is a string. Such field will define a new
+%               variable called <VAR_NAME> in the minc file. <VAR_NAME> is
+%               a structure with the following fields : 
 %
+%               VARATTS 
+%                   (cell of strings) Each string will define a new 
+%                   attribute in variable <VAR_NAME>.
+%
+%               ATTVALUES 
+%                   (cell of double array and/or strings) Each entry 
+%                   defines the value of the corresponding attribute.
+%
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % The data called VOL is stored into a file called FILENAME written in
-% minc format. If the extension of FILE_NAME is '.mnc.gz' or '.mnc.zip' or '.mnc.Z', the file
-% will be compressed (choose the zipper by setting the variable NIAK_GB_ZIP in the
-% file NIAK_GB_VARS with the appropriate command line).
-% 
+% minc format. If the extension of FILE_NAME is '.mnc.gz' or '.mnc.zip' or 
+% '.mnc.Z', the file will be compressed (choose the zipper by setting the 
+% variable NIAK_GB_ZIP in the file NIAK_GB_VARS with the appropriate 
+% command line).
+%
+% _________________________________________________________________________
+% SEE ALSO:
+%
+% NIAK_READ_HDR_MINC, NIAK_READ_MINC, NIAK_READ_VOL, NIAK_WRITE_VOL
+%
+% _________________________________________________________________________
 % COMMENTS:
 %
-% SEE ALSO:
-% niak_read_header_minc, niak_read_minc, niak_read_vol, niak_write_vol
+% The values of HDR.INFO override the values of HDR.DETAILS.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, I/O, reader, minc
-
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -266,8 +285,6 @@ for num_v = 1:length(list_var)
     end
 end
             
-
-
 function struct_var2 = sub_set_att(struct_var,att_name,val_att)
 
 struct_var2 = struct_var;

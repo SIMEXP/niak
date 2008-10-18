@@ -1,59 +1,56 @@
 function [] = niak_write_nifti(hdr,vol)
-% *************************************************************************
-% SUMMARY
-% *************************************************************************
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_WRITE_NIFTI
 %
 % Write a 3D or 3D+t dataset into a NIFTI file (.NII or .IMG/.HDR) or an
 % Analyze 7.5 file (.IMG/.HDR/.MAT).
 % See http://nifti.nimh.nih.gov/nifti-1
 %
-% *************************************************************************
-% SYNTAX
-% *************************************************************************
-%
+% SYNTAX:
 % [] = NIAK_WRITE_NIFTI(HDR,VOL)
 %
-% *************************************************************************
+% _________________________________________________________________________
 % INPUTS:
-% *************************************************************************
 %
-% VOL           (3D or 4D array) a 3D or 3D+t dataset
+% VOL           
+%       (3D or 4D array) a 3D or 3D+t dataset
 %
-% HDR           (structure) a header structure (usually modified from the
-%               output of niak_read_vol). The relevant fields of HDR are :
+% HDR           
+%       (structure) a header structure (usually modified from the output 
+%       of NIAK_READ_VOL). The relevant fields of HDR are :
 %
-%               HDR.FILE_NAME   (string) the name of the file that will be
-%                   written.
-%               HDR.TYPE   (string, default 'nii') the output format (either
-%                   'nii' for NIFTI-1 one file data, 'img' for a couple
-%                   '*.img'/'*.hdr' in NIFTI-1 format or
-%                   'analyze' for a '*.img'/'*.hdr'/'*.mat')
+%       FILE_NAME   
+%           (string) the name of the file that will be written.
 %
-%               HDR.INFO (structure) The subfields are optional, yet they
-%                   give control on critical space information. See
-%                   NIAK_WRITE_VOL for more info.
+%       TYPE   
+%           (string, default 'nii') the output format (either 'nii' for 
+%           NIFTI-1 one file data, 'img' for a couple '*.img'/'*.hdr' in 
+%           NIFTI-1 format or 'analyze' for a '*.img'/'*.hdr'/'*.mat')
 %
-%               HDR.DETAILS (structure) the fields are the standard list of
-%                   a NIFTI header.
+%       INFO 
+%           (structure) The subfields are optional, yet they give control 
+%           on critical space information. See NIAK_WRITE_VOL for more 
+%           info.
 %
-% *************************************************************************
-% OUTPUTS
-% *************************************************************************
+%       DETAILS 
+%           (structure) the fields are the standard list of a NIFTI header.
+%
+% _________________________________________________________________________
+% OUTPUTS:
 %
 % The data called VOL is stored into a file called FILENAME written in
 % nifti format.
 % In the case of ANALYZE 7.5 file format, a file '.MAT' will also be
 % created with the affin transform.
 % 
-% *************************************************************************
-% SEE ALSO
-% *************************************************************************
+% _________________________________________________________________________
+% SEE ALSO:
 %
 % NIAK_READ_HDR_NIFTI, NIAK_READ_NIFTI, NIAK_WRITE_VOL, NIAK_READ_VOL
 %
-% *************************************************************************
-% COMMENTS
-% *************************************************************************
+% _________________________________________________________________________
+% COMMENTS:
 %
 % Part of this file is copied and modified under GNU license from
 % MRI_TOOLBOX developed by CNSP in Flinders University, Australia
