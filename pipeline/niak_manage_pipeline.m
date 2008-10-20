@@ -150,7 +150,7 @@ switch action
             system(cat(2,'rm -f ',file_log));
         end
         
-        fprintf(hs,'%s run %s > %s',file_pipeline,execution_mode,max_queued,file_log);
+        fprintf(hs,'%s run %s %i > %s',file_pipeline,execution_mode,max_queued,file_log);
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_run));
