@@ -338,7 +338,7 @@ fprintf(hp,'}\n\n');
 fprintf(hp,'use PMP::PMP; \nuse PMP::spawn; \nuse PMP::pbs; \nuse PMP::sge; \nuse PMP::Array;\nuse Env qw( PATH ) ; \nuse FindBin; \nuse lib "FindBin::Bin"; \n\n'); % Import the necessary PERL libraries, notably PMP
 fprintf(hp,'$PATH = "$FindBin::Bin:${PATH}" ;\n'); % Add the log path to the path search of PMP
 fprintf(hp,'my $pipeline = undef;\n\n'); % Initialization of a new pipeline
-fprintf(hp,'if ($ARGV[1] eq sge) { \n$pipeline = PMP::sge->new(); \n} \nelsif ($ARGV[1] eq pbs) { \n$pipeline = PMP::pbs->new(); \n}\nelse {\n$pipeline = PMP::spawn->new();\n}\n\n'); % Choose the execution mode : SPAWN is local, PBS is parallel using PBS, SGE is parallel using the SGE QSUB system
+fprintf(hp,'if ($ARGV[1] eq sge) { \n$pipeline = PMP::sge->new(); \n} \nelsif ($ARGV[1] eq pbs) { \n$pipeline = PMP::pbs->new(); \n$pipeline->setQueue(''brain'');\n}\nelse {\n$pipeline = PMP::spawn->new();\n}\n\n'); % Choose the execution mode : SPAWN is local, PBS is parallel using PBS, SGE is parallel using the SGE QSUB system
 
 fprintf(hp,'$pipeline->name(''NIAK_pipeline'');\n\n'); % The name of the pipeline
 fprintf(hp,'$pipeline->statusDir(''%s'');\n\n',path_logs); % Where to access logs
