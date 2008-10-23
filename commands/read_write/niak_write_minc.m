@@ -92,16 +92,31 @@ function [] = niak_write_minc(hdr,vol)
 % THE SOFTWARE.
 
 %% Setting up default values for the header
+
+info_default.voxel_size = [1 1 1];
+details_default.image.varatts = {};
+details_default.image.attvalue = {};
+details_default.xspace.varatts = {};
+details_default.xspace.attvalue = {};
+details_default.yspace.varatts = {};
+details_default.yspace.attvalue = {};
+details_default.zspace.varatts = {};
+details_default.zspace.attvalue = {};
+if length(size(vol))>3
+    details_default.time.varatts = {};
+    details_default.time.attvalue = {};
+end
+
 gb_name_structure = 'hdr';
 gb_list_fields = {'file_name','type','info','details','flag_zip'};
-gb_list_defaults = {NaN,'minc2',struct([]),struct([]),0};
+gb_list_defaults = {NaN,'minc2',info_default,details_default,0};
 niak_set_defaults
 
 %% Setting up default values for the 'info' part of the header
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
 gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','file_parent','dimensions'};
-gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt',0,1,'','',[]};
+gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt',1,'','',[]};
 niak_set_defaults
 
 %% Generating a temporary file with the data in float format

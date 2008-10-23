@@ -14,7 +14,7 @@ function [hdr,vol] = niak_read_vol(file_name)
 % _________________________________________________________________________
 % INPUTS :
 %
-% *  FILE_NAME
+% * FILE_NAME
 %       (string) a single 3D or 3D+t image file, or a matrix of image file names, 
 %       each with a single 3D frame.
 %       Supported formats are either NIFIT (*.nii,*.img/hdr), 
@@ -45,42 +45,43 @@ function [hdr,vol] = niak_read_vol(file_name)
 %       INFO 
 %           (structure) with the following subfields:
 %
-%       FILE_PARENT 
-%           (string) name of the file that was read.
+%           FILE_PARENT 
+%               (string) name of the file that was read.
 %
-%       DIMENSIONS 
-%           (vector 3*1) the number of elements in each dimensions of the 
-%           data array. Warning : the first dimension is not necessarily 
-%           the "x" axis. See the DIMENSION_ORDER field below.
+%           DIMENSIONS 
+%               (vector 3*1) the number of elements in each dimensions of the 
+%               data array. Warning : the first dimension is not necessarily 
+%               the "x" axis. See the DIMENSION_ORDER field below.
 %   
-%       PRECISION 
-%           (string, default 'float') the precision of data 
-%           ('int', 'float' or 'double').
+%           PRECISION 
+%               (string, default 'float') the precision of data 
+%               ('int', 'float' or 'double').
 %
-%       VOXEL_SIZE  
-%           (vector 1*3, default [1 1 1]) the size of voxels along each 
-%           spatial dimension in the same order as in VOL.
+%           VOXEL_SIZE  
+%               (vector 1*3, default [1 1 1]) the size of voxels along each 
+%               spatial dimension in the same order as in VOL.
 %
-%       TR  
-%           (double, default 1) the time between two volumes (in second). 
-%           This field is present only for 3D+t data.
+%           TR  
+%               (double, default 1) the time between two volumes (in second). 
+%               This field is present only for 3D+t data.
 %
-%       MAT 
-%           (2D array 4*4) an affine transform from voxel to world space.
+%           MAT 
+%               (2D array 4*4) an affine transform from voxel to world space.
 %
-%       DIMENSION_ORDER 
-%           (string) describes the dimensions of vol. Letter 'x' is for 
-%           'left to right, 'y' for 'posterior to anterior', 
-%           'z' for 'ventral to dorsal' and 't' is time. 
-%           Example : 'xzyt' means that dimension 1 of vol is 'x', 
-%           dimension 2 is 'z', etc.
+%           DIMENSION_ORDER 
+%               (string) describes the dimensions of vol. Letter 'x' is for 
+%               'left to right, 'y' for 'posterior to anterior', 
+%               'z' for 'ventral to dorsal' and 't' is time. 
+%               Example : 'xzyt' means that dimension 1 of vol is 'x', 
+%               dimension 2 is 'z', etc.
 %
-%       HISTORY 
-%           (string) the history of the file.
+%           HISTORY 
+%               (string) the history of the file.
 %
-%   Additional information, specific to the format of the data, can be 
-%   found in HDR.DETAILS. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
-%   for more information.
+%       DETAILS 
+%           (structure) Additional information, specific to the format 
+%           of the data. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
+%           for more information.
 %
 % _________________________________________________________________________
 % SEE ALSO :

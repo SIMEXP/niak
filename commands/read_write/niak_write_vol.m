@@ -30,11 +30,11 @@ function [] = niak_write_vol(hdr,vol)
 %           output will be zipped using 'gzip'.
 %
 %       TYPE   
-%           (string, default 'minc2') the output format (either
-%           'minc1' or 'minc2').
+%           (string) the output format (either 'minc1', 'minc2', 'nii', 
+%           'img' or 'analyze').
 %
 %       INFO 
-%           (structure) with the following (optional) fields :
+%           (structure, optional) with the following (optional) fields :
 %           
 %               PRECISION      
 %                   (string, default 'float') the
@@ -66,10 +66,10 @@ function [] = niak_write_vol(hdr,vol)
 %                  the data.
 %
 %       DETAILS 
-%           (structure, default struct()) This field contains some format 
-%           specific information, but is not necessary to write a file. 
-%           If present, the information will be inserted in the new file. 
-%           Note that the fields of HDR.INFO override HDR.DETAILS. 
+%           (structure, optional in minc format) This field contains some 
+%           format-specific information, but is not necessary to write a 
+%           file. If present, the information will be inserted in the new 
+%           file. Note that the fields of HDR.INFO override HDR.DETAILS. 
 %           See NIAK_WRITE_MINC for more information under the minc format.
 %
 % _________________________________________________________________________

@@ -1,21 +1,31 @@
 function transf = niak_param2transf(rpy,tsl)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_PARAM2TRANSF
+%
 % Convert roll/pitch/yaw and translation parameters to a standard
 % 4*4 matrix array (y=M*x+T).
 %
 % SYNTAX:
-% TRANSF = NIAK_TRANSF2PARAM(RPY,TSL)
+% TRANSF = NIAK_PARAM2TRANSF(RPY,TSL)
 % 
-% INPUT:
-% RPY (array 3*1) the roll, pitch and yawn parameters (rotation in x, y and
-%           z planes). Unit is degrees.
+% _________________________________________________________________________
+% INPUTS:
 %
-% TSL (array 3*1) the translation parameters.
+% RPY 
+%       (array 3*1) the roll, pitch and yawn parameters (rotation in x, y 
+%       and z planes). Unit is degrees.
 %
+% TSL 
+%       (array 3*1) the translation parameters.
+%
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % TRANSF   (4*4 array) An lsq6 transformation, usually seen as a
 %           "voxel-to-world" space transform.
 %
+% _________________________________________________________________________
 % COMMENTS:
 % 
 % This code was written by Giampiero Campa,  

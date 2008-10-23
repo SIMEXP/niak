@@ -45,8 +45,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           is applied and the volume is resampled in the target space. 
 %           If FLAG_TFM_SPACE is 1, the volume is resampled in such a way 
 %           that there is no rotations anymore between voxel and world 
-%           space. The field of view is adapted to fit the brain
-%           in the source space. In this case, the target space is only
+%           space.  In this case, the target space is only
 %           used to set the resolution, unless this parameter was
 %           additionally specified using OPT.VOXEL_SIZE, in which case the
 %           target space is not used at all (e.g. use the source file).
@@ -54,6 +53,12 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %       FLAG_INVERT_TRANSF 
 %           (boolean, default 0) if FLAG_INVERT_TRANSF is 1,
 %           the specified transformation is inverted before being applied.
+%
+%       FLAG_ADJUST_FOV
+%           (boolean, default 0) if FLAG_ADJUST_FOV is true and 
+%           FLAG_TFM_SPACE is true, The field of view is adapted to fit the 
+%           brain in the source space. Otherwise the new FOV will include
+%           every voxel of the initial FOV
 %
 %       VOXEL_SIZE 
 %           (vector 1*3, default same as target space) If VOXEL_SIZE is set 
@@ -128,8 +133,8 @@ niak_set_defaults
 
 % Setting up options
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf','flag_verbose'};
-gb_list_defaults = {'trilinear',0,0,'',0,0,1};
+gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf','flag_verbose','flag_adjust_fov'};
+gb_list_defaults = {'trilinear',0,0,'',0,0,1,0};
 niak_set_defaults
 
 %% Generating default ouputs
@@ -244,7 +249,12 @@ if flag_tfm_space
     %% Extract the brain in native space 
     
     [hdr_source,vol_source] = niak_read_vol(files_in.source);
-    mask_source = niak_mask_brain(mean(abs(vol_source),4));
+    if flag_adjust_fov
+        mask_source = niak_mask_brain(mean(abs(vol_source),4));
+    else
+        mask_source = true(size(vol_source));
+    end
+        
     clear vol_source
     
     %% Convert the brain voxel coordinates in source space into world

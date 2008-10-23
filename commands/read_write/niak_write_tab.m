@@ -90,7 +90,7 @@ end
 
 if isempty(labels_col)    
     for iy = 1:ny
-        labels_col{iy} = cat(2,'col',num2str(iy));
+        labels_col{iy} = sprintf('col%i',iy);
     end
 end
 
@@ -103,16 +103,32 @@ if hf == -1
 else 
     err = 0;
 end
-fprintf(hf,'      ');
+max_length_labx = 0;
+for num_x = 1:length(labels_line)
+    max_length_labx = max(max_length_labx,length(labels_line{num_x}));
+end
+
+fprintf(hf,repmat(' ',[1 max_length_labx]));
 for num_c = 1:length(labels_col)
-    fprintf(hf,'  %s',labels_col{num_c});
+    comp = repmat(' ',[1 max(17-length(labels_col{num_c}),3)]);
+    fprintf(hf,'%s%s',labels_col{num_c},comp);
 end
 fprintf(hf,'\n');
 
 %% lines
 for num_l = 1:size(tab,1)
-    fprintf(hf,'%s  ',labels_line{num_l});
-    fprintf(hf,'%s\n',num2str(tab(num_l,:),12));
+    if max_length_labx>0
+        comp = repmat(' ',[1 max_length_lab+3-length(labels_line{num_l})]);        
+        fprintf(hf,'%s%s',labels_line{num_l},comp);
+    end
+    for num_c = 1:size(tab,2)
+        if num_c < size(tab,2)
+            fprintf(hf,'%1.12f   ',tab(num_l,num_c));
+        else
+            fprintf(hf,'%1.12f',tab(num_l,num_c));
+        end
+    end
+    fprintf(hf,'\n');
 end
 
 fclose(hf);

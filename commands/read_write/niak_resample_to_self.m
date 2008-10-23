@@ -53,7 +53,7 @@ function [] = niak_resample_to_self(file_name,opt)
 % THE SOFTWARE.
 
 if ~exist(file_name,'file')
-    error(cat(2,'I can''t find file %s',file_name));
+    error(sprintf('I can''t find file %s',file_name));
 end
 
 file_tmp = niak_file_tmp('_res.mnc');

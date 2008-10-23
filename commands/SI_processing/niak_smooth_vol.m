@@ -1,4 +1,4 @@
-function [vol_s,extras] = niak_smooth_vol(vol,opt)
+function vol_s = niak_smooth_vol(vol,opt)
 
 % Spatial smoothing of 3D+t data with a Gaussian kernel
 %
@@ -57,7 +57,7 @@ function [vol_s,extras] = niak_smooth_vol(vol,opt)
 % Setting up default
 gb_name_structure = 'opt';
 gb_list_fields = {'voxel_size','fwhm'};
-gb_list_defaults = {[1 1 1],[2 2 2]};
+gb_list_defaults = {[1 1 1]',[2 2 2]'};
 niak_set_defaults
 
 if length(voxel_size)>3
@@ -77,30 +77,26 @@ end
 
 voxel_size = abs(voxel_size);
 
-% Deriving kernel parameters
-s  = fwhm(1:3)./voxel_size(1:3);      % fwhm relative to voxel size
-s  = s/sqrt(8*log(2));          % FWHM -> Gaussian parameter
+vol_s = zeros(size(vol),'single');
 
-% Building a spatial grid
-x  = round(6*s(1)); x = [0:x -x:-1];
-y  = round(6*s(2)); y = [0:y -y:-1];
-z  = round(6*s(3)); z = [0:z -z:-1];
-
-% Deriving the 1D kernel
-fx  = exp(-(x).^2/(2*(s(1)).^2));
-fy  = exp(-(y).^2/(2*(s(2)).^2));
-fz  = exp(-(z).^2/(2*(s(3)).^2));
-fx  = fx/sum(fx);
-fy  = fy/sum(fy);
-fz  = fz/sum(fz);
-
-% Performing convolution
-vol_s = zeros(size(vol));
+%% Loop over all volumes
 for num_t = 1:nt
-    vol_s(:,:,:,num_t) = niak_conv3_sep(vol(:,:,:,num_t),fx,fy,fz);
+    %% Write a temporary volume
+    files_in_sm = niak_file_tmp('_vol.mnc');
+    hdr.file_name = files_in_sm;
+    hdr.info.mat = niak_param2transf([0 0 0]',voxel_size(:));
+    hdr.type = 'minc1';
+    niak_write_vol(hdr,vol(:,:,:,num_t));
+
+    %% Apply smoothing
+    files_out_sm = '';
+    opt_sm.fwhm = opt.fwhm;
+    [files_in_sm,files_out_sm,opt_sm] = niak_brick_smooth_vol(files_in_sm,files_out_sm,opt_sm);
+
+    %% Read the smoothed volume
+    [hdr_tmp,vol_tmp] = niak_read_vol(files_out_sm);
+    vol_s(:,:,:,num_t) = vol_tmp;
 end
 
-if nargout == 2
-    extras.x = x; extras.y = y; extras.z = z;
-    extras.fx = fx; extras.fy = fy; extras.fz = fz;
-end
+delete(files_in_sm);
+delete(files_out_sm);
