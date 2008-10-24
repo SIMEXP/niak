@@ -233,11 +233,11 @@ switch action
         
         files_running = dir(cat(2,path_logs,filesep,name_pipeline,'*.running'));        
         
-        if length(files_running)==0
-            fprintf('\n\n***********\n There is currently no job running \n***********\n%s\n')
+        if isempty(files_running)
+            fprintf('\n\n***********\n There is currently no job running \n***********\n')
         else
 
-            fprintf('\n\n***********\n List of submitted job(s) \n***********\n%s\n')
+            fprintf('\n\n***********\n List of submitted job(s) \n***********\n')
             
             files_running = {files_running.name};            
             
@@ -258,10 +258,10 @@ switch action
 
         files_failed = dir(cat(2,path_logs,filesep,name_pipeline,'*.failed'));        
 
-        if length(files_failed)==0
-            fprintf('\n\n***********\n No jobs have failed (so far !)\n***********\n%s\n')
+        if isempty(files_failed)
+            fprintf('\n\n***********\n No jobs have failed (so far !)\n***********\n')
         else            
-            fprintf('\n\n***********\n List of failed job(s) \n***********\n%s\n')
+            fprintf('\n\n***********\n List of failed job(s) \n***********\n')
             files_failed = {files_failed.name};
             for num_j = 1:length(files_failed)
                 fprintf('%s\n',files_failed{num_j}(1:end-7));
@@ -272,11 +272,11 @@ switch action
 
         files_finished = dir(cat(2,path_logs,filesep,name_pipeline,'*.finished'));
 
-        if length(files_finished)==0
-            fprintf('\n\n***********\n No jobs have been completed\n***********\n%s\n')
+        if isempty(files_finished)
+            fprintf('\n\n***********\n No jobs have been completed\n***********\n')
         else
 
-            fprintf('\n\n***********\n List of finished job(s) \n***********\n%s\n')
+            fprintf('\n\n***********\n List of finished job(s) \n***********\n')
             files_finished = {files_finished.name};
             for num_j = 1:length(files_finished)
                 fprintf('%s\n',files_finished{num_j}(1:end-9));
@@ -291,7 +291,7 @@ switch action
         if ~exist(file_mat,'file')
             fprintf('\n\n***********\nCould not find the pipeline mat file %s\n***********\n%s\n',file_mat);
         else
-            fprintf('\n\n***********\nList of unfinished jobs\n***********\n%s\n');
+            fprintf('\n\n***********\nList of unfinished jobs\n***********\n');
             
             load(file_mat)
             list_jobs = fieldnames(pipeline);

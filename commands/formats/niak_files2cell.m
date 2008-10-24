@@ -1,24 +1,36 @@
 function cell_files = niak_files2cell(files)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_FILES2CELL
+%
 % Convert a string, cell of strings or a structure where each field is a
 % string into one single cell of strings.
 %
 % SYNTAX :
 % CELL_FILES = NIAK_FILES2CELL(FILES)
 %
+% _________________________________________________________________________
 % INPUTS :
-% FILES         (string, cell of strings or a structure where each field is a
-%               string or a cell of strings) All those strings are file
-%               names.
 %
+% FILES         
+%       (string, cell of strings or a structure where each terminal field 
+%       is a string or a cell of strings) All those strings are file names.
+%
+% _________________________________________________________________________
 % OUTPUTS :
 %
-% CELL_FILES    (cell of strings) all file names in FILES stored in a cell
-%               of strings (wheter it was initially string, cell of strings
-%               or structure does not matter).
+% CELL_FILES    
+%       (cell of strings) all file names in FILES stored in a cell of 
+%       strings (wheter it was initially string, cell of strings or 
+%       structure does not matter).
 %
+% _________________________________________________________________________
 % COMMENTS : 
-% Copyright (c) Pierre Bellec 01/2008
+%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : string
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -41,49 +53,45 @@ function cell_files = niak_files2cell(files)
 num_cell = 1;
 cell_files = cell(0);
 
-if isstruct(files)
+if isstruct(files)     % That's a structure
+    
     list_field = fieldnames(files);
 
-    if ~isempty(list_field);
+    for num_f = 1:length(list_field) %% Loop over the fields
 
-        for num_f = 1:length(list_field)
-            list_files_in = getfield(files,list_field{num_f});
+        list_files_in = files.(list_field{num_f});
+        cell_tmp = niak_files2cell(list_files_in); %% Ugly recursive call to fix that
+        cell_files(end+1:end+length(cell_tmp)) = cell_tmp;
+        num_cell = num_cell + length(cell_tmp);
 
-            if isstruct(list_files_in)
-                
-                cell_tmp = niak_files2cell(list_files_in);
-                cell_files(end+1:end+length(cell_tmp)) = cell_tmp;
-                num_cell = num_cell + length(cell_tmp);
-                
-            elseif iscell(list_files_in)
-                
-                for num_i = 1:length(list_files_in)
-
-                    if ~strcmp(list_files_in{num_i},'gb_niak_omitted')
-                        cell_files{num_cell} = list_files_in{num_i};
-                        num_cell = num_cell + 1;
-                    end
-                end
-                
-            else
-                
-                if ~strcmp(list_files_in,'gb_niak_omitted')
-                    cell_files{num_cell} = list_files_in;
-                    num_cell = num_cell + 1;
-                end
-                
-            end
-        end % loop over all fields
-    end % if ~isempty(list_field)
-
-elseif iscellstr(files)
-    cell_files = files;
-elseif ischar(files)
-
-    for num_f = 1:size(files)
-        if ~strcmp(deblank(files(num_f,:)),'gb_niak_omitted')
-            cell_files{num_cell} = deblank(files(num_f,:));
-        end
     end
 
+elseif iscellstr(files) %% That's a cell
+    
+    for num_i = 1:length(files)
+
+        if ~strcmp(files{num_i},'gb_niak_omitted')
+            cell_files{num_cell} = sub_suppress_doublon(files{num_i});
+            num_cell = num_cell + 1;
+        end
+
+    end
+    
+elseif ischar(files) % That's a string
+
+    for num_f = 1:size(files,1)
+        if ~strcmp(deblank(files(num_f,:)),'gb_niak_omitted')
+            cell_files{num_cell} = sub_suppress_doublon(files(num_f,:));
+        end
+    end
+    
+else    
+    error('FILES should be a string or a cell of strings, or a structure with arbitrary depths whos terminal fields are strings or cell of strings');
+end
+
+function str2 = sub_suppress_doublon(str)
+
+str2 = str;
+while ~isempty(findstr([filesep filesep],str2))
+    str2 = strrep(str2,[filesep filesep],filesep);
 end
