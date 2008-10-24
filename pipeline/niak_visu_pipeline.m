@@ -110,7 +110,7 @@ function [succ] = niak_visu_pipeline(file_pipeline,action,opt)
 
 niak_gb_vars
 
-init_sh = cat(2,gb_niak_path_civet,gb_niak_init_civet_local);
+init_sh = cat(2,gb_niak_path_quarantine,gb_niak_init_civet_local);
 
 if ~exist('action','var'); error('niak:pipeline: please specify an action'); end
 
@@ -128,15 +128,14 @@ switch action
         file_tmp = niak_file_tmp('.sh');
         
         hs = fopen(file_tmp,'w');
-
-        fprintf(hs,'#!/bin/bash \n');
+     
         fprintf(hs,'source %s \n',init_sh);
         fprintf(hs,'%s createDotGraph;',file_pipeline);
         
         fclose(hs);
         
         system(cat(2,'chmod u+x ',file_tmp));
-        [succ,messg] = system(cat(2,'sh ',file_tmp));
+        [succ,messg] = system(cat(2,gb_niak_shell,' ',file_tmp));
         
         fprintf(messg);
         
@@ -152,7 +151,6 @@ switch action
         
         hs = fopen(file_tmp,'w');
 
-        fprintf(hs,'#!/bin/bash \n');
         fprintf(hs,'source %s \n',init_sh);
         fprintf(hs,'%s createFilenameDotGraph',file_pipeline);
         

@@ -24,7 +24,7 @@ end
 %% system                                                               %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_shell = '/bin/sh'; %% Shell type when running a pipeline
+gb_niak_shell = '/bin/sh'; %% where to find the bash shell system
 
 gb_niak_path_quarantine = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
 
