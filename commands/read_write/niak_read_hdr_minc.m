@@ -158,22 +158,44 @@ while ~isempty(cell_header)&~flag_end
 
             else % If the line does not define a variable, then it defines the attribute of a variable
 
+                flag_pb = false;
+                
                 if flag_OK % The attribute is from a standard variable
 
                     %% Parse the attribute line
                     cell_words = niak_string2words(str_line,{' ',char(9),':',';','='});
 
                     nb_atts = nb_atts+1;
-                    eval(cat(2,'hdr.details.',var_name,'.varatts{nb_atts} = ''',cell_words{2},''';'));
+                    try
+                        hdr.details.(var_name).varatts{nb_atts} = cell_words{2};                        
+                    catch
+                        warning('There was a problem setting up the attribute %s in %s. It will be ignored',cell_words{2},var_name)
+                        flag_pb = true;
+                        nb_atts = nb_atts-1;
+                    end
 
-                    pos = findstr(str_line,'"');
-                    if ~isempty(pos)
-                        att_value = str_line(pos(1)+1:pos(2)-1);
-                        att_value = niak_replace_str(att_value,'\''','''');
-                        eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = att_value;')); % It's a string
-                    else
-                        str_val = niak_rm_blank([cell_words{3:end}],{'b','d','f'}); % we get rid of type marks
-                        eval(cat(2,'hdr.details.',var_name,'.attvalue{nb_atts} = [',str_val,'];')); % It's an array of numbers
+                    if ~flag_pb
+                        pos = findstr(str_line,'"');
+                        if ~isempty(pos)
+                            att_value = str_line(pos(1)+1:pos(2)-1);
+                            att_value = niak_replace_str(att_value,'\''','''');
+                            try
+                                hdr.details.(var_name).attvalue{nb_atts} = att_value;
+                            catch
+                                nb_atts = nb_atts-1;
+                                hdr.details.(var_name).varatts = hdr.details.(var_name).varatts(1:nb_atts);
+                                warning('There was a problem setting up the value %s to the attribute %s in %s. It will be ignored',att_value,cell_words{2},var_name)
+                            end
+                        else
+                            str_val = niak_rm_blank([cell_words{3:end}],{'b','d','f'}); % we get rid of type marks
+                            try
+                                hdr.details.(var_name).attvalue{nb_atts} = str2num(str_val);
+                            catch
+                                nb_atts = nb_atts-1;
+                                hdr.details.(var_name).varatts = hdr.details.(var_name).varatts(1:nb_atts);
+                                warning('There was a problem setting up the (numerical) value %s to the attribute %s in %s. It will be ignored',str_val,cell_words{2},var_name)
+                            end
+                        end
                     end
                 end
             end

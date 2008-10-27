@@ -146,6 +146,8 @@ end
 
 nb_file = size(file_name,1);
 
+vol(isnan(vol)) = 0; % replace NaNs with 0
+
 if nb_file > 1
 
     %% Case 1: multiple file names have been specified
