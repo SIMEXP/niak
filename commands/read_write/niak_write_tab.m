@@ -103,30 +103,50 @@ if hf == -1
 else 
     err = 0;
 end
-max_length_labx = 0;
-for num_x = 1:length(labels_line)
-    max_length_labx = max(max_length_labx,length(labels_line{num_x}));
-end
 
-fprintf(hf,repmat(' ',[1 max_length_labx]));
-for num_c = 1:length(labels_col)
-    comp = repmat(' ',[1 max(17-length(labels_col{num_c}),3)]);
-    fprintf(hf,'%s%s',labels_col{num_c},comp);
-end
-fprintf(hf,'\n');
-
-%% lines
-for num_l = 1:size(tab,1)
-    if max_length_labx>0
-        comp = repmat(' ',[1 max_length_lab+3-length(labels_line{num_l})]);        
-        fprintf(hf,'%s%s',labels_line{num_l},comp);
-    end
-    for num_c = 1:size(tab,2)
-        if num_c < size(tab,2)
-            fprintf(hf,'%1.12f   ',tab(num_l,num_c));
+%% Convert the table into string
+tab_str = cell([nx+1 ny+1]);
+for numx = 1:(nx+1)
+    for numy = 1:(ny+1)
+        if numy == 1
+            if numx == 1
+                tab_str{numx,numy} = '';
+            else
+                tab_str{numx,numy} = labels_line{numx-1};
+            end
         else
-            fprintf(hf,'%1.12f',tab(num_l,num_c));
+            if numx == 1
+                tab_str{numx,numy} = labels_col{numy-1};
+            else
+                tab_str{numx,numy} = sprintf('%1.15f',tab(numx-1,numy-1));                
+            end
         end
+    end
+end
+
+%% Get the size of each column 
+max_length_col = zeros([size(tab_str,2),1]);
+
+for numy = 1:size(tab_str,2)
+    for numx = 1:size(tab_str,1)        
+        max_length_col(numy) = max(max_length_col(numy),length(tab_str{numx,numy}));
+    end
+end
+
+%% Write the table
+
+for numx = 1:size(tab_str,1)
+    for numy = 1:size(tab_str,2)        
+        
+        if ~((numy == 1)&(max_length_col(numy)==0))            
+            comp = repmat(' ',[1 max_length_col(numy)+3-length(tab_str{numx,numy})]);
+            str_tab = [tab_str{numx,numy} comp];
+            if numy < size(tab_str,2)
+                fprintf(hf,'%s   ',str_tab);
+            else
+                fprintf(hf,'%s',str_tab);
+            end
+        end     
     end
     fprintf(hf,'\n');
 end
