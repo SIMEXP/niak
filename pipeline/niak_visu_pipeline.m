@@ -306,6 +306,6 @@ switch action
         
     otherwise
         
-        error('niak:pipeline: unknown action',action);
+        error('niak:pipeline: unknown action %s',action);
         
 end

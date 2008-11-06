@@ -91,7 +91,7 @@ end
 
 %% Test if some field were not used, and eventually issue a warning.
 gb_list_fields_init = fieldnames(gb_niak_struct);
-gb_mask_init = niak_cmp_str_cell(gb_list_fields_init,gb_list_fields);
+gb_mask_init = ismember(gb_list_fields_init,gb_list_fields);
 if min(gb_mask_init)==0
     gb_fields_warning = [];
     gb_ind_init = find(gb_mask_init==0);

@@ -257,7 +257,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     
     %% Options for the montage
     opt_visu.voxel_size = hdr.info.voxel_size;
-    opt_visu.fwhm = max(hdr.info.voxel_size)*1.5;
+    opt_visu.fwhm = 3;
     opt_visu.vol_limits = [0 3];
     opt_visu.type_slice = 'axial';
     opt_visu.type_color = 'jet';

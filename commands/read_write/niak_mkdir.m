@@ -1,5 +1,8 @@
 function [success,message,messageid] = niak_mkdir(path_name)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_MKDIR
+%
 % Create a new directory. The difference between the regular matlab MKDIR
 % command and NIAK_MKDIR is that NIAK_MKDIR will create all folders and
 % subfolders, while MKDIR will only let you create a subdirectory in an
@@ -8,28 +11,39 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % SYNTAX:
 % [SUCCESS,MESSAGE,MESSAGEID] = MKDIR(PATH_NAME)
 %
+% _________________________________________________________________________
 % INPUTS:
-% PATH_NAME      (string) the name of the path to create
-%               
+%
+% PATH_NAME      
+%       (string) the name of the path to create
+%       
+% _________________________________________________________________________
 % OUTPUTS:
 %
-% SUCCESS     (boolean) define the outcome of NIAK_MKDIR. 
-%                   1 : NIAK_MKDIR executed successfully.
-%                   0 : an error occurred.
+% SUCCESS     
+%       (boolean) define the outcome of NIAK_MKDIR. 
+%           1 : NIAK_MKDIR executed successfully.
+%           0 : an error occurred.
 %
-% MESSAGE     (string)  define the error or warning message. 
-%                  empty string : MKDIR executed successfully.
-%                  message : an error or warning message, as applicable.
+% MESSAGE     
+%       (string)  define the error or warning message. 
+%           empty string : MKDIR executed successfully.
+%           message : an error or warning message, as applicable.
 %
-% MESSAGEID   (string) defining the error or warning identifier.
-%                   empty string : MKDIR executed successfully.
-%                   message id: the MATLAB error or warning message
-%                   identifier
-%              
+% MESSAGEID   
+%       (string) defining the error or warning identifier.
+%           empty string : MKDIR executed successfully.
+%           message id: the MATLAB error or warning message
+%           identifier
+%           
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % ERROR, LASTERR, WARNING, LASTWARN
 %
-% COMMENTS
+% _________________________________________________________________________
+% COMMENTS:
+%
 % Under Linux, this command is equivalent to a system call to the real
 % shell command MKDIR. Unfortunately for windows system it is necessary to use this
 % workaround :-((. Moreover, the call to MKDIR is slightly different in

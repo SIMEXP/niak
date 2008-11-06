@@ -1,22 +1,36 @@
 function cell_words = niak_string2words(vec_string,list_blanks)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_STRING2WORDS
+%
 % Converts a strings into a cell of strings with individual words
 %
 % SYNTAX
-% cell_words = niak_string2words(vec_string,list_blanks)
+% cell_words = NIAK_STRING2WORDS(VEC_STRING,LIST_BLANKS)
 % 
+% _________________________________________________________________________
 % INPUT
-% vec_string    (vector of strings) containing words separated by blanks
-% list_blanks   (cell of string, default {}) a list of characters that
-%                will be considered as blanks in addition to ' '.
 %
+% VEC_STRING
+%       (vector of strings) containing words separated by blanks
+%
+% LIST_BLANKS   
+%       (cell of string, default {}) a list of characters that
+%       will be considered as blanks in addition to ' '.
+%
+% _________________________________________________________________________
 % OUTPUT
-% cell_words    (cell of string) cell_words{n} is the nth word in
-%                   vec_string
 %
+% CELL_WORDS
+%       (cell of string) cell_words{n} is the nth word in VEC_STRING
+%
+% _________________________________________________________________________
 % COMMENTS
 % 
-% Copyright (c) Pierre Bellec 01/2008
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% keywords : string
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
