@@ -151,11 +151,3 @@ opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
-
-%% Initialization of the pipeline
-opt_pipe.path_logs = cat(2,opt.folder_out,'logs',filesep);
-opt_pipe.clobber = 1;
-file_pipeline = niak_init_pipeline(pipeline,opt_pipe)
-
-%% Note that opt.interpolation_method has been updated, as well as files_out
-
