@@ -82,6 +82,7 @@ files_out.fig_motion  = ''; % use default names
 opt.flag_session = 0; % Correct for within-run motion
 opt.vol_ref = 5; % Use the 40th volume as a reference 
 opt.flag_test = 0; % Actually perform the motion correction
+opt.flag_skip = true;
 
 [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);
 

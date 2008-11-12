@@ -1,18 +1,25 @@
 function file_name = niak_file_tmp(ext)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_FILE_TMP
+%
 % Suggest a name of temporary file 
 %
 % SYNTAX:
 % FILE_NAME = NIAK_FILE_TMP(EXT)
 %
+% _________________________________________________________________________
 % INPUTS:
+%
 % EXT             (string) An extension for the file name
 %
 % OUTPUTS:
 % 
 % A (full path) name for a temporary file.
 %
-% COMMENTS
+% _________________________________________________________________________
+% COMMENTS:
+%
 % The temporary files live in the temporary directory. This directory is by 
 % default '/tmp/', but this can be changed using the variable GB_NIAK_TMP
 % in the file NIAK_GB_VARS.

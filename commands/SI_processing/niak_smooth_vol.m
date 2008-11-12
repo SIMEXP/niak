@@ -1,40 +1,55 @@
 function vol_s = niak_smooth_vol(vol,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_SMOOTH_VOL
+%
 % Spatial smoothing of 3D+t data with a Gaussian kernel
 %
 % SYNTAX:
 % VOL_S = NIAK_SMOOTH_VOL(VOL,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL         (4D array) a 3D+t dataset
-% OPT         (structure, optional) with the following fields :
 %
-%             VOXEL_SIZE  (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
-%                   in the respective dimensions, i.e. the space in mmm
-%                   between two voxels in x, y, and z (yet the unit is
-%                   irrelevant and just need to be consistent with
-%                   the filter width (fwhm)). The fourth element is ignored.
+% VOL         
+%       (4D array) a 3D+t dataset
 %
-%             FWHM  (vector of size [3 1], default [2 2 2]) the full width at half maximum of
-%                   the Gaussian kernel, in each dimension. If fwhm has length 1,
-%                   an isotropic kernel is implemented.
+% OPT         
+%       (structure, optional) with the following fields :
 %
+%       VOXEL_SIZE  
+%           (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%           in the respective dimensions, i.e. the space in mmm between 
+%           two voxels in x, y, and z (yet the unit is irrelevant and just 
+%           needs to be consistent with the filter width (fwhm)). The 
+%           fourth element is ignored.
+%
+%       FWHM  
+%           (vector of size [3 1], default [2 2 2]) the full width at half 
+%           maximum of the Gaussian kernel, in each dimension. If fwhm has 
+%           length 1, an isotropic kernel is implemented.
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% VOL_S       (4D array) same as VOL after each volume has been spatially
-%                   convolved with a 3D separable Gaussian kernel.
 %
+% VOL_S       
+%       (4D array) same as VOL after each volume has been spatially
+%       convolved with a 3D separable Gaussian kernel.
+%
+% _________________________________________________________________________
 % SEE ALSO:
-% NIAK_CONV3_SEP
 %
+% NIAK_BRICK_SMOOTH_VOL
+%
+% _________________________________________________________________________
 % COMMENTS:
-% A small part of the code (build of 1D Gaussian kernels) is copied from
-% SPM2, copyright (c) John Ashburner, Tom Nichols 08/02.
+%
+% This command is using temporary files on the disk to run MINCBLUR.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, smoothing, fMRI
-
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -84,13 +99,14 @@ for num_t = 1:nt
     %% Write a temporary volume
     files_in_sm = niak_file_tmp('_vol.mnc');
     hdr.file_name = files_in_sm;
-    hdr.info.mat = niak_param2transf([0 0 0]',voxel_size(:));
+    hdr.info.mat = [[diag(voxel_size) [0;0;0]];[0 0 0 1]];    
     hdr.type = 'minc1';
     niak_write_vol(hdr,vol(:,:,:,num_t));
 
     %% Apply smoothing
     files_out_sm = '';
     opt_sm.fwhm = opt.fwhm;
+    opt_sm.flag_verbose = false;
     [files_in_sm,files_out_sm,opt_sm] = niak_brick_smooth_vol(files_in_sm,files_out_sm,opt_sm);
 
     %% Read the smoothed volume

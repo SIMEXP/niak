@@ -26,6 +26,13 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %           (string, default identity) a transformation from the functional 
 %           space to the mask space.
 %
+%       COMPONENT_TO_KEEP
+%           (string, default none) a text file, whose first line is a
+%           a set of string labels, and each column is otherwise a temporal
+%           component of interest. The ICA component with higher
+%           correlation with each signal of interest will be automatically
+%           attributed a selection score of 0.
+%
 %  * FILES_OUT 
 %       (string, default <base COMPONENT>_<base MASK>_compsel.dat) A text 
 %       file. First column gives the numbers of the selected components in 
@@ -129,8 +136,8 @@ end
 
 %% Input files
 gb_name_structure = 'files_in';
-gb_list_fields = {'fmri','component','mask','transformation'};
-gb_list_defaults = {NaN,NaN,NaN,'gb_niak_omitted'};
+gb_list_fields = {'component_to_keep','fmri','component','mask','transformation'};
+gb_list_defaults = {'gb_niak_omitted',NaN,NaN,NaN,'gb_niak_omitted'};
 niak_set_defaults
 
 %% Output file
@@ -186,6 +193,11 @@ end
 %% Reading inputs %%
 %%%%%%%%%%%%%%%%%%%%
 
+%%
+if ~strcmp(files_in.component_to_keep,'gb_niak_omitted')
+    [XOI,labx,laby] = niak_read_tab(files_in.component_to_keep);
+end
+
 %% Mask of interest
 if flag_verbose
     fprintf('Reading (and eventually resampling) the mask of interest ...\n');
@@ -198,13 +210,14 @@ else
     instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour -transform %s -invert_transformation',files_in.mask,file_mask_tmp,files_in.fmri,files_in.transformation);
 end
 
+[succ,msg] = system(instr_res);
+if succ~=0
+    error(masg);
+end
 if flag_verbose
-    system(instr_res)
+    fprintf('%s\n',msg)
 else
-    [succ,msg] = system(instr_res);
-    if succ~=0
-        error(masg);
-    end
+    
 end
 [hdr_roi,mask_roi] = niak_read_vol(file_mask_tmp);
 mask_roi = mask_roi>0.9;
@@ -220,11 +233,33 @@ mask_roi = mask_roi & niak_mask_brain(mean(abs(vol_func),4));
 tseries_roi = niak_build_tseries(vol_func,mask_roi);
 [nt,nb_vox] = size(tseries_roi);
 clear vol_func
+sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
 
 %% Temporal sica components
 A = load(files_in.component);
 nb_comp = size(A,2);
+tseries_ica = niak_correct_mean_var(A,'mean_var');
 
+%% Identify the components of interest
+if ~strcmp(files_in.component_to_keep,'gb_niak_omitted')
+    if size(XOI,1)~=size(A,1)
+        error('The components of interest should have as many time frames as the fMRI data (%i vs %i)!',size(XOI,1),size(A,1))
+    end
+    num_xoi = zeros([size(XOI,2) 1]);
+    val_xoi = zeros([size(XOI,2) 1]);
+    XOI = niak_correct_mean_var(XOI,'mean_var');
+    coroi = (1/(size(A,1)-1))*XOI'*tseries_ica;
+    
+    for num_c = 1:size(XOI,2)
+       [val_tmp,ind_tmp] = max(coroi(num_c,:));
+       val_xoi(num_c) = val_tmp;
+       num_xoi(num_c) = ind_tmp;
+    end
+else
+    val_xoi = [];
+    num_xoi = [];
+end
+       
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Stepwise regression %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -247,12 +282,16 @@ else
         opt.nb_cluster = nb_cluster;
     end
 
-    %% Computing score and score significance
-    sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
-    tseries_ica = niak_correct_mean_var(A,'mean_var');
+    %% Computing score and score significance        
     [intersec,selecVector,selecInfo] = st_automatic_selection(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'off');
 
     %% Reordering scores
+    for num_c = 1:length(val_xoi)
+        if flag_verbose            
+            fprintf('temporal ICA component %i has the highest correlation with the component of interest number %i (%1.3f). His initial selection score %1.3f is now set to 0.\n',num_xoi(num_c),num_c,val_xoi(num_c),selecVector(num_xoi(num_c)));
+        end
+        selecVector(num_xoi(num_c)) = 0;
+    end
     [score,num_comp] = sort(selecVector',1,'descend');
 end
 
@@ -270,4 +309,4 @@ for num_l = 1:length(score)
     fprintf(hf,'%i %1.12f \n',num_comp(num_l),score(num_l));
 end
 
-fclose(hf)
+fclose(hf);

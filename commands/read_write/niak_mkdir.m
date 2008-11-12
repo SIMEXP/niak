@@ -79,7 +79,7 @@ niak_gb_vars
 
 list_path = niak_string2words(path_name,{filesep});
 
-path_curr = [];
+path_curr = filesep;
 
 success = 1;
 message = '';
@@ -105,8 +105,9 @@ for num_p = 1:length(list_path)
         
     end
     
-    path_curr = cat(2,path_curr,filesep,list_path{num_p});
+    path_curr = cat(2,path_curr,list_path{num_p},filesep);
     
 end
+
         
         

@@ -199,8 +199,6 @@ else
     set(gca,'DataAspectRatio',[size(vol2).*voxel_size([1 2]) 1]);
 end
 
-
-
 if flag_colorbar
     colorbar
 end

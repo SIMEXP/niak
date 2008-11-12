@@ -57,6 +57,11 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           number of components to compute (for default : T is the number
 %           of time samples.
 %
+%       FWHM
+%           (real number, default 5)
+%           The fwhm of the Gaussian kernel use to spatially smooth the ICA
+%           maps in the pdf summary.
+%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
@@ -134,8 +139,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'norm','algo','nb_comp','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {'mean','Infomax',60,1,0,''};
+gb_list_fields = {'fwhm','norm','algo','nb_comp','flag_verbose','flag_test','folder_out'};
+gb_list_defaults = {5,'mean','Infomax',60,1,0,''};
 niak_set_defaults
 
 %% Output files
@@ -257,13 +262,11 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     
     %% Options for the montage
     opt_visu.voxel_size = hdr.info.voxel_size;
-    opt_visu.fwhm = 3;
+    opt_visu.fwhm = opt.fwhm;
     opt_visu.vol_limits = [0 3];
     opt_visu.type_slice = 'axial';
     opt_visu.type_color = 'jet';
     
-
-
     for num_c = 1:size(vol_space,4)
         
         hf = figure;
