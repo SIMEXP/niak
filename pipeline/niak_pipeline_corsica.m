@@ -23,6 +23,12 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %           (string, default identity) a transformation from the functional 
 %           space to the "MNI152 non-linear" space.
 %
+%       <SUBJECT>.COMPONENT_TO_KEEP
+%           (string, default none) a text file, whose first line is a
+%           a set of string labels, and each column is otherwise a temporal
+%           component of interest. The ICA component with higher
+%           correlation with each signal of interest will be automatically
+%           attributed a selection score of 0.
 %  * OPT   
 %       (structure) with the following fields : 
 %
@@ -180,6 +186,10 @@ else
             eval(cat(2,'files_in.',subject,'.transformation = ''gb_niak_omitted'';'));
         end
         
+        if ~isfield(data_subject,'component_to_keep')
+            files_in.(subject).component_to_keep = 'gb_niak_omitted';            
+        end
+        
         data_transf = getfield(data_subject,'transformation');
         if ~ischar(data_transf)
              error('FILE_IN.%s.TRANSFORMATION is not a string!',upper(subject));
@@ -288,6 +298,7 @@ for num_s = 1:nb_subject
         files_in_tmp.component = stage_in.files_out.time;
         files_in_tmp.mask = cat(2,gb_niak_path_niak,'template',filesep,'roi_ventricle.mnc');
         files_in_tmp.transformation = data_subj.transformation;
+        files_in_tmp.component_to_keep = data_subj.component_to_keep;
 
         %% Options
         opt_tmp = opt.bricks.component_sel;
@@ -344,6 +355,7 @@ for num_s = 1:nb_subject
         files_in_tmp.component = stage_in.files_out.time;
         files_in_tmp.mask = cat(2,gb_niak_path_niak,'template',filesep,'roi_stem.mnc');
         files_in_tmp.transformation = data_subj.transformation;
+        files_in_tmp.component_to_keep = data_subj.component_to_keep;
 
         %% Options
         opt_tmp = opt.bricks.component_sel;

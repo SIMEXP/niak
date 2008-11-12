@@ -30,6 +30,13 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (string) anatomical volume, from the same subject as in 
 %           FILES_IN.<SUBJECT>.FMRI
 %
+%       <SUBJECT>.COMPONENT_TO_KEEP
+%           (string, default none) a text file, whose first line is a
+%           a set of string labels, and each column is otherwise a temporal
+%           component of interest. The ICA component with higher
+%           correlation with each signal of interest will be automatically
+%           attributed a selection score of 0.
+%
 %  * OPT   
 %       (structure) with the following fields : 
 %
@@ -308,6 +315,10 @@ else
         data_anat = getfield(data_subject,'anat');
         if ~ischar(data_anat)
              error('FILES_IN.%s.ANAT is not a string!',upper(subject));
+        end
+        
+        if ~isfield(data_subject,'component_to_keep')
+            files_in.(subject).component_to_keep = 'gb_niak_omitted';            
         end
         
     end
@@ -735,6 +746,7 @@ if flag_corsica % If the user requested a correction of physiological noise
     for num_s = 1:nb_subject
         
         subject = list_subject{num_s};
+        
         switch opt.style
             case 'fmristat'
                 
@@ -769,6 +781,7 @@ if flag_corsica % If the user requested a correction of physiological noise
                 
         end
 
+        files_in_tmp.(subject).component_to_keep = files_in.(subject).component_to_keep;
         files_in_tmp.(subject).transformation = pipeline.(name_stage_transf).files_out;
 
         %% Setting up options
