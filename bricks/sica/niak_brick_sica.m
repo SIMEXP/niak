@@ -266,7 +266,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     opt_visu.vol_limits = [0 3];
     opt_visu.type_slice = 'axial';
     opt_visu.type_color = 'jet';
-    
+
     for num_c = 1:size(vol_space,4)
         
         hf = figure;
@@ -337,7 +337,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     
     instr_ps2pdf = cat(2,gb_niak_ps2pdf,' ',file_fig_eps,' ',files_out.figure);
     [succ,msg] = system(instr_ps2pdf);
-    if succ~=0
+    if succ~=0      
         warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf : ',msg));
     end
     delete(file_fig_eps)
