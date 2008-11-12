@@ -70,7 +70,7 @@ elseif iscellstr(files) %% That's a cell
     
     for num_i = 1:length(files)
 
-        if ~strcmp(files{num_i},'gb_niak_omitted')
+        if ~strcmp(files{num_i},'gb_niak_omitted')&~isempty(files{num_i})
             cell_files{num_cell} = sub_suppress_doublon(files{num_i});
             num_cell = num_cell + 1;
         end
@@ -80,7 +80,7 @@ elseif iscellstr(files) %% That's a cell
 elseif ischar(files) % That's a string
 
     for num_f = 1:size(files,1)
-        if ~strcmp(deblank(files(num_f,:)),'gb_niak_omitted')
+        if ~strcmp(deblank(files(num_f,:)),'gb_niak_omitted')&~isempty(deblank(files(num_f,:)))
             cell_files{num_cell} = sub_suppress_doublon(files(num_f,:));
         end
     end

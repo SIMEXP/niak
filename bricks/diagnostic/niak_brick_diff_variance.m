@@ -103,6 +103,10 @@ if ~iscellstr(files_in)
     error('FILES_IN should be a cell of strings');
 end
 
+if isempty(files_in{2})
+    files_in{2} = 'gb_niak_omitted';
+end
+
 [path_f,name_f,ext_f] = fileparts(files_in{1});
 if isempty(path_f)
     path_f = '.';
@@ -138,7 +142,7 @@ if ~isempty(files_in{2})
     var2 = var(vol2,1,4);
 end
 
-if ~isempty(files_in{2})
+if ~strcmp(files_in{2},'gb_niak_omitted')
     if flag_std
         diff = sqrt(abs(var1 - var2));
     else
