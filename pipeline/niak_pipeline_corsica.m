@@ -510,7 +510,7 @@ if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
 
             %% Adding the stage to the pipeline            
             pipeline(1).(name_stage).label = 'Suppression of noise-related ICA components from individual fMRI data';
-            pipeline(1).(name_stage).command = 'niak_brick_component_supp(files_in,files_out,opt)';
+            pipeline(1).(name_stage).command = 'niak_brick_clean(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
             pipeline(1).(name_stage).opt = opt_tmp;
