@@ -130,6 +130,10 @@ if flag_clean
             fprintf('Deleting file ''%s'' \n',file_name);
         end
 
-        delete(file_name)
+        instr_delete = ['rm -rf ',file_name];
+        [err,msg] = system(instr_delete);
+        if err~=0
+            warning('There was a problem deleting file %s. Error message : %s',file_name,msg);
+        end
     end
 end
