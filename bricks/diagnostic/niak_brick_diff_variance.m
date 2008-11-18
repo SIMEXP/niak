@@ -138,11 +138,9 @@ end
 
 
 var1 = var(vol1,1,4);
-if ~isempty(files_in{2})
-    var2 = var(vol2,1,4);
-end
 
 if ~strcmp(files_in{2},'gb_niak_omitted')
+    var2 = var(vol2,1,4);
     if flag_std
         diff = sqrt(abs(var1 - var2));
     else
