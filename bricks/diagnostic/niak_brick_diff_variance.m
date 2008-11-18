@@ -131,7 +131,7 @@ if flag_test == 1
 end
 
 %% Performing slice timing correction 
-if ~isempty(files_in{2})
+if ~strcmp(files_in{2},'gb_niak_omitted')
     [hdr2,vol2] = niak_read_vol(files_in{2});
 end
 [hdr1,vol1] = niak_read_vol(files_in{1});
