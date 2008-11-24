@@ -1,22 +1,35 @@
 function tseries_n = niak_correct_mean_var(tseries,type_correction)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_CORRECT_MEAN_VAR
+%
 % Correction time series to zero mean and unit variance
 %
+% SYNTAX:
 % TSERIES_N = NIAK_CORRECT_MEAN_VAR(TSERIES,TYPE_CORRECTION)
 %
+% _________________________________________________________________________
 % INPUTS:
-% TSERIES_N             (2D array) each column of TSERIES is a time series.
 %
-% TYPE_CORRECTION       (string, default 'mean_var') possible values :
-%                       'mean' (correction to zero mean), 'mean_var' (correction
-%                       to zero mean and unit variance), 'mean_var2' (same
-%                       as 'mean_var' but slower, yet does not use as much
-%                       memory).
+% TSERIES_N             
+%       (2D array) each column of TSERIES is a time series.
 %
-% OUTPUTS
+% TYPE_CORRECTION       
+%       (string, default 'mean_var') possible values :
+%           'none' : no correction at all                       
+%           'mean' : correction to zero mean.
+%           'mean_var' : correction to zero mean and unit variance
+%           'mean_var2' : same as 'mean_var' but slower, yet does not use 
+%               as much memory).
+%
+% _________________________________________________________________________
+% OUTPUTS :
+%
 % TSERIES_N             (2D array) same as data after mean/variance correction.
 %
-% COMMENTS
+% _________________________________________________________________________
+% COMMENTS :
+%
 % time series with zero variance are left as constant zeros.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -55,6 +68,9 @@ end
 
 % Correction of mean and eventually variance
 switch type_correction
+    
+    case 'none'
+        tseries_n = tseries;
 
     case 'mean_var'
         

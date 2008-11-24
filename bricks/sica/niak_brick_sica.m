@@ -45,7 +45,9 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %       NORM 
 %           (string, default 'mean')
 %           Correction of the time series, possible values :
-%           'mean' (correction to zero mean).
+%           'none' : no correction at all
+%           'mean' : correction to zero mean
+%           'mean_var' : correction to zero mean and unit variance
 %
 %       ALGO 
 %           (string, default 'Infomax')
