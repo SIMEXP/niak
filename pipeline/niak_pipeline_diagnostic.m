@@ -80,9 +80,8 @@ function pipeline = niak_pipeline_diagnostic(pipeline_in,opt)
 % OUTPUTS
 %
 %  * PIPELINE 
-%       (structure) describe all jobs that need to be performed in the
-%       pipeline. This structure is meant to be use in the function
-%       NIAK_INIT_PIPELINE. It includes PIPELINE_IN.
+%       (structure) describe all jobs that need to be performed for
+%       evaluation.
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -1953,3 +1952,9 @@ stage.files_out = files_out_tmp;
 stage.opt = opt_tmp;
 stage.environment = opt.environment;
 pipeline.(name_stage) = stage;
+
+%% Get rid of the input pipeline
+list_jobs = fieldnames(pipeline_in);
+for num_j = 1:length(list_jobs);
+    pipeline = rmfield(pipeline,list_jobs{num_j});
+end
