@@ -82,6 +82,7 @@ function opt_out = niak_template_command(in_arg,opt)
 flag_gb_niak_fast_gb = true; % Only load the most important global variables for fast initialization
 niak_gb_vars % Load the niak global variables, just in case
   
+%% Syntax 
 if ~exist('in_arg','var')||~exist('opt','var')
     error('Syntax : OPT_OUT = NIAK_TEMPLATE_COMMAND(IN_ARG,OPT) ; for more infos, type ''help niak_template_command''.')
 end
