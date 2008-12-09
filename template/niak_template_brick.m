@@ -17,6 +17,7 @@ function [files_in,files_out,opt] = niak_template_brick(files_in,files_out,opt)
 %
 %
 %  * FILES_OUT
+%       (structure) with the following fields:
 %       
 %       CORRECTED_DATA
 %           (string, default <BASE NAME FMRI>_c.<EXT>) File name for 
@@ -109,8 +110,9 @@ function [files_in,files_out,opt] = niak_template_brick(files_in,files_out,opt)
 %% Initialization and syntax checks %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% global NIAK variables
 flag_gb_niak_fast_gb = true; % Only load the most important global variables for fast initialization
-niak_gb_vars % Load the niak global variables, just in case
+niak_gb_vars 
 
 %% Syntax
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
@@ -193,17 +195,6 @@ if flag_verbose
     msg = sprintf('Performing temporal correction of %s on the fMRI time series in file %s',type_correction,files_in);
     stars = repmat('*',[length(msg) 1]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);
-end
-
-%% Check the existence of input files
-if flag_verbose
-    fprintf('Check the existence of input files...\n');
-end
-
-for num_f = 1:size(files_in,1)
-    if ~exist(deblank(files_in(num_f,:)),'file')
-        error('I could ot find the file %s',deblank(files_in(num_f,:)));
-    end
 end
 
 %% Correct the time series 
