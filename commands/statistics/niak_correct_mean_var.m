@@ -102,6 +102,8 @@ switch type_correction
         mean_ts = mean(tseries,1);
         tseries_n = tseries - ones([nt 1])*mean_ts;
         
-    otherwise
-        error('niak:statistics','%s: unknown type of correction',type_correction)
+    otherwise        
+        
+        error('niak:statistics','%s: unknown type of correction',type_correction);
+
 end
