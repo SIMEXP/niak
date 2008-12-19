@@ -117,12 +117,12 @@ for num_f = 1:length(list_files)
         target_file = [files_out filesep file_name];
         instr_cp = ['cp -f ' source_file ' ' target_file];        
         msg = sprintf('Copy %s to %s\n',source_file,target_file);
-    end
-    if flag_verbose
-        fprintf('%s',msg)
-    end
+    end    
         
     if ~strcmp(source_file,target_file)
+        if flag_verbose
+            fprintf('%s',msg)
+        end
         [flag_err,err_msg] = system(instr_cp);
         if flag_err
             error(err_msg)
