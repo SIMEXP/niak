@@ -55,7 +55,7 @@ function opt_out = niak_template_command(in_arg,opt)
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : NIAK, command, template
+% Keywords : NIAK, documentation, template, command
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal

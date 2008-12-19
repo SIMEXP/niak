@@ -1,9 +1,10 @@
-function [tseries,all_tseries] = niak_build_tseries(vol,mask,opt)
+function [tseries,std_tseries] = niak_build_tseries(vol,mask,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_BUILD_TSERIES
 %
-% Extract time series of one or multiple ROI from a 3D+t dataset.
+% Extract the mean and std of time series of in multiple ROI 
+% from a 3D+t dataset.
 %
 % TSERIES = NIAK_BUILD_TSERIES(VOL,MASK,OPT)
 %
@@ -22,31 +23,20 @@ function [tseries,all_tseries] = niak_build_tseries(vol,mask,opt)
 %       option. If a field was not specified, then the default value is
 %       assumed.
 %
-%       TYPE_CORRECTION 
-%           (string, default 'none') the correction to apply on the time 
-%           series. Available options : 'none' (do nothing),'mean', 
-%           'mean_var', 'mean_var2' (see NIAK_CORRECT_MEAN_VAR for details)
-%
-%       TYPE_TSERIES 
-%           (string, default 'all') the type of time series to build. 
-%           case 'mean' : 
-%               the mean time series within each roi of MASK is
-%               extracted (voxels in roi i are defined by FIND(MASK==i)).
-%               TSERIES is a 2D array (time * space).
-%           case 'all' : 
-%               all time series in MASK are extracted (voxels in
-%               MASK are defined by FIND(MASK>0). TSERIES is a 2D array 
-%               (time * space).
-%           case 'cell' : 
-%             one or multiple rois are define in MASK. TSERIES{i} is a 2D 
-%             array of all time series of voxels in region i (defined by 
-%             FIND(MASK==i)). TSERIES is a cell of arrays.
+%       CORRECTION
+%           (structure, default CORRECTION.TYPE = 'none') the temporal 
+%           normalization to apply on the individual time series before 
+%           averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % TSERIES   
-%       (array or cell of arrays) see the description of OPT.TYPE_TSERIES.
+%       (array) TSERIES(:,I) is the mean time series in the ROI MASK==I.
+%
+% STD_TSERIES   
+%       (arrays) STD_TSERIES(:,I) is the standard deviation of the time 
+%       series in the ROI MASK==I.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -76,9 +66,10 @@ function [tseries,all_tseries] = niak_build_tseries(vol,mask,opt)
 % THE SOFTWARE.
 
 %% Setting up default inputs
+opt_norm.type = 'none';
 gb_name_structure = 'opt';
-gb_list_fields = {'type_correction','type_tseries'};
-gb_list_defaults = {'none','all'};
+gb_list_fields = {'correction'};
+gb_list_defaults = {opt_norm};
 niak_set_defaults
 
 %% Extracting the labels of regions and reorganizing the data 
@@ -86,31 +77,14 @@ niak_set_defaults
 labels_roi = unique(mask(:));
 labels_roi = labels_roi(labels_roi~=0);
 nb_rois = length(labels_roi);
-tseries_mask = reshape(vol,[nx*ny*nz nt])';
-tseries_mask = tseries_mask(:,mask>0);
+tseries_mask = niak_vol2tseries(vol,mask>0);
+tseries_mask = niak_normalize_tseries(tseries_mask,opt.correction);
 
-if ~strcmp(type_correction,'none')
-    tseries_mask = niak_correct_mean_var(tseries_mask,type_correction);
-end
-
-switch type_tseries
-
-    case 'mean'
-        tseries = zeros([size(tseries_mask,1) nb_rois]);
-        mask_v = mask(mask>00);
+tseries = zeros([size(tseries_mask,1) nb_rois]);
+std_tseries = zeros([size(tseries_mask,1) nb_rois]);
+mask_v = mask(mask>0);
         
-        for num_r = 1:nb_rois
-            tseries(:,num_r) = mean(tseries_mask(:,mask_v == labels_roi(num_r)),2);            
-        end
-        
-    case 'cell'        
-        mask_v = mask(mask~=0);
-        tseries = cell([nb_rois 1]);
-        for num_r = 1:nb_rois
-            tseries{num_r} = tseries_mask(:,mask_v == labels_roi(num_r));                        
-        end
-        
-    case 'all'
-        tseries = tseries_mask;
-        
+for num_r = 1:nb_rois
+    tseries(:,num_r) = mean(tseries_mask(:,mask_v == labels_roi(num_r)),2);
+    std_tseries(:,num_r) = std(tseries_mask(:,mask_v == labels_roi(num_r)),0,2);
 end
