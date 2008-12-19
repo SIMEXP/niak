@@ -1,20 +1,36 @@
 function struct12 = niak_merge_structs(struct1,struct2)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_MERGE_STRUCTS
+%
 % Merge two structures.
 %
 % SYNTAX:
 %   STRUCT12 = NIAK_MERGE_STRUCTS(STRUCT1,STRUCT2)
 %
+% _________________________________________________________________________
 % INPUTS:
-% STRUCT1   (structure)
-% STRUCT2   (structure)
 %
+% STRUCT1   
+%       (structure)
+%
+% STRUCT2   
+%       (structure)
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% STRUCT12  (structure) combines the fields of STRUCT1 and STRUCT2. 
 %
-% COMMENTS
+% STRUCT12  
+%       (structure) combines the fields of STRUCT1 and STRUCT2. 
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
 % If structures have fields in common, the fields of STRUCT2 override the
 % ones of STRUCT1.
+%
+% For speed optimization, the smallest structure should be passed as
+% STRUCT2.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
