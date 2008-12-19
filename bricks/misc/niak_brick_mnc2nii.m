@@ -124,11 +124,11 @@ for num_f = 1:length(list_files)
         
     if ~strcmp(source_file,target_file)
         [flag_err,err_msg] = system(instr_cp);
+        if flag_err
+            error(err_msg)
+        end
     end
-    
-    if flag_err
-        error(err_msg)
-    end
+
 end
 
 if flag_recursive
