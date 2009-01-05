@@ -11,8 +11,7 @@
 % _________________________________________________________________________
 % OUTPUT
 %
-% It will create individual masks for the functional runs of subject 1 of
-% the demo data, and combine these two masks.
+% It will create a mask for the 'rest' run of subject 1 with the demo data.
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -61,19 +60,13 @@ switch gb_niak_format_demo
     
      case 'minc1' % If data are in minc1 format
         
-        files_in{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
-        files_in{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz'); 
-        files_out.mask_group = cat(2,gb_niak_path_demo,filesep,'func_mask_subject1.mnc.gz'); 
-        files_out.mask_mean = cat(2,gb_niak_path_demo,filesep,'func_mask_mean_subject1.mnc.gz'); 
-        files_out.mask_individual = '';
+        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_out = '';
         
     case 'minc2' % If data are in minc2 format
         
-        files_in{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
-        files_in{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc'); 
-        files_out.mask_group = cat(2,gb_niak_path_demo,filesep,'func_mask_subject1.mnc'); 
-        files_out.mask_mean = cat(2,gb_niak_path_demo,filesep,'func_mask_mean_subject1.mnc'); 
-        files_out.mask_individual = '';
+        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
+        files_out = '';
         
     otherwise 
         
