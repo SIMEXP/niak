@@ -87,7 +87,7 @@ if ~exist('in_arg','var')||~exist('opt','var')
     error('Syntax : OPT_OUT = NIAK_TEMPLATE_COMMAND(IN_ARG,OPT) ; for more infos, type ''help niak_template_command''.')
 end
 
-%% Setting up default values for the 'info' part of the header
+%% Setting up default values for the OPT structure
 gb_name_structure = 'opt';
 gb_list_fields = {'arg1','arg2','arg3'};
 gb_list_defaults = {NaN,'','tata'};
