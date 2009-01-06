@@ -88,9 +88,11 @@ if ~exist('files_in','var')|~exist('opt','var')
 end
 
 %% Options
+default_mask.folder_out = '';
+default_psom.path_logs = '';
 gb_name_structure = 'opt';
 gb_list_fields = {'thresh_mean','psom','mask_brain','flag_test','folder_out'};
-gb_list_defaults = {1,struct([]),struct([]),false,NaN};
+gb_list_defaults = {1,default_psom,default_mask,false,NaN};
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 

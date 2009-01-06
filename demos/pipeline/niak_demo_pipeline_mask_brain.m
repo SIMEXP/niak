@@ -1,6 +1,6 @@
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_DEMO_MASK_BRAIN
+% SUMMARY NIAK_DEMO_PIPELINE_MASK_BRAIN
 %
 % This is a script to demonstrate the usage of :
 % NIAK_PIPELINE_MASK_BRAIN
