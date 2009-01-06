@@ -45,11 +45,6 @@ function mask = niak_mask_brain(vol,opt)
 % histogram of the mean of the absolute values of all volumes. This is a 
 % port from the FORTRAN "spider" library, by Joachim Frank.
 %
-% To optimize memory use with 3D+t data, it is better to derive the mean
-% of the absolute values and perform the smoothing in the workspace, and to
-% run the mask extraction directly on the resulting volume. This prevents
-% duplication of the data in the memory.
-%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -82,7 +77,7 @@ niak_set_defaults
 
 %% Getting the mean of absolute values for all volumes
 abs_vol_mean = mean(abs(vol),4);
-mask_nan = isnan(vol);
+mask_nan = isnan(abs_vol_mean);
 abs_vol_mean(mask_nan) = 0;
 
 %% Smoothing the mean

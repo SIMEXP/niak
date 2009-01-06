@@ -101,6 +101,13 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % * OPT   
 %       (structure) with the following fields:
 %
+%       SUPPRESS_SLICE
+%           (boolean, default 1) the number of slices that will be set to
+%           zero to reduce the edges effects in the interpolation. Note
+%           that slices are set to zero both on top and on the bottom of
+%           the brain, thus the actual number of lost slice is
+%           2*SUPPRESS_SLICE.
+%
 %       SUPPRESS_VOL 
 %           (integer, default 0) the number of volumes that are suppressed 
 %           at the begining of the time series.
@@ -280,8 +287,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_skip','flag_run','suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
-gb_list_defaults = {0,1,0,'median',1,'',0,0,'','sinc',8,1,0,'none'};
+gb_list_fields = {'suppress_slice','flag_skip','flag_run','suppress_vol','vol_ref','run_ref','session_ref','flag_session','flag_test','folder_out','interpolation','fwhm','flag_verbose','flag_tfm_space','correction'};
+gb_list_defaults = {1,0,1,0,'median',1,'',0,0,'','sinc',8,1,0,'none'};
 niak_set_defaults
 
 list_sessions = fieldnames(files_in.sessions);
@@ -845,6 +852,12 @@ if ~ischar(files_out.motion_corrected_data)
 
                 end % Correction of time series
 
+                %% Correction of slice-edges effect
+                if opt.suppress_slice > 0
+                    data_r(:,:,1:opt.suppress_slice,:) = 0;
+                    data_r(:,:,nz-opt.suppress_slice +1:nz,:) = 0;
+                end
+                
                 hdr_target.file_name = motion_corrected_data_session{num_r};
                 niak_write_vol(hdr_target,data_r);
             end
