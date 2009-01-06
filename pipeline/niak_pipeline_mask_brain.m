@@ -25,6 +25,11 @@ function pipeline = niak_pipeline_mask_brain(files_in,opt)
 %           that the default value of OPT.VOXEL_SIZE is the one in the
 %           header of the fmri volume.
 %           
+%       LABELS
+%           (cell of strings, default {'file1','files2',...}) LABELS{I}
+%           will be used as part of the name of the job for masking the
+%           brain of dataset FILES_IN{I}.
+%
 %       THRESH_MEAN
 %           (scalar, default 1) the threshold that is applied on the
 %           average mask to define the group mask.
@@ -91,8 +96,8 @@ end
 default_mask.folder_out = '';
 default_psom.path_logs = '';
 gb_name_structure = 'opt';
-gb_list_fields = {'thresh_mean','psom','mask_brain','flag_test','folder_out'};
-gb_list_defaults = {1,default_psom,default_mask,false,NaN};
+gb_list_fields = {'labels','thresh_mean','psom','mask_brain','flag_test','folder_out'};
+gb_list_defaults = {{},1,default_psom,default_mask,false,NaN};
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
@@ -104,12 +109,20 @@ end
 %% Individual masks %%
 %%%%%%%%%%%%%%%%%%%%%%
 
-name_brick = 'mask_brain';
+name_brick = 'mask';
 nb_files = length(files_in);
 files_mask = cell(size(files_in));
 
+%% Generating default labels for the jobs
+if isempty(labels)
+    labels = cell([nb_files 1]);
+    for num_f = 1:nb_files
+        labels{num_f} = sprintf('files%i',num_f);
+    end
+end
+
 for num_f = 1:nb_files
-    name_job = sprintf('%s_file%i',name_brick,num_f);
+    name_job = sprintf('%s_%s',name_brick,labels{num_f});
     clear files_in_tmp files_out_tmp opt_tmp
     
     files_in_tmp = files_in{num_f};

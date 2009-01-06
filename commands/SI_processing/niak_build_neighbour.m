@@ -7,7 +7,7 @@ function [neig,ind] = niak_build_neighbour(mask,type_neig)
 % a 3D binary mask.
 %
 % SYNTAX :
-% NEIG = NIAK_BUILD_NEIG(MASK,TYPE_NEIGH)
+% NEIG = NIAK_BUILD_NEIGHBOUR(MASK,TYPE_NEIGH)
 %
 % _________________________________________________________________________
 % INPUTS :
@@ -76,6 +76,7 @@ coord = [coordx,coordy,coordz];
 if type_neig == 26
     dec = [0,1,-1];
     num = 1;
+    decxyz = zeros([27 3]);
     for i = 1:3
         for j = 1:3
             for k = 1:3
