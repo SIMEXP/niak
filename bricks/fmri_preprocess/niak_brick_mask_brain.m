@@ -37,10 +37,6 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %           (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
 %           attempt is done to remove the eyes from the mask.
 %           
-%       THRESH_MEAN
-%           (scalar, default 1) the threshold that is applied on the
-%           average mask to define the group mask.
-%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) 
 %           If present, the output will be created in the folder 
@@ -93,6 +89,7 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = true;
 niak_gb_vars % Load some important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

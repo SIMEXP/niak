@@ -1,18 +1,19 @@
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_DEMO_MATH_VOL
+% SUMMARY NIAK_DEMO_MASK_BRAIN
 %
 % This is a script to demonstrate the usage of :
-% NIAK_BRICK_MATH_VOL
+% NIAK_PIPELINE_MASK_BRAIN
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_MATH_VOL
+% Just type in NIAK_DEMO_PIPELINE_MASK_BRAIN
 %
 % _________________________________________________________________________
 % OUTPUT
 %
-% It will generate a absolute value of the mean of the motor and rest runs 
-% of subject 1.
+% It will create a mask for the 'rest' and 'motor' run of subject 1 
+% with the demo data, and combine these masks into a mean and group masks.
+% The results will be saved in ~/data_demo/masks
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -61,15 +62,13 @@ switch gb_niak_format_demo
     
      case 'minc1' % If data are in minc1 format
         
-        files_in{1} = cat(2,gb_niak_path_demo,'func_motor_subject1.mnc.gz'); 
-        files_in{2} = cat(2,gb_niak_path_demo,'func_rest_subject1.mnc.gz'); 
-        files_out = cat(2,gb_niak_path_demo,'func_abs_mean_subject1.mnc.gz'); 
+        files_in{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_in{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz'); 
         
     case 'minc2' % If data are in minc2 format
         
-        files_in{1} = cat(2,gb_niak_path_demo,'func_motor_subject1.mnc'); 
-        files_in{2} = cat(2,gb_niak_path_demo,'func_rest_subject1.mnc'); 
-        files_out = cat(2,gb_niak_path_demo,'func_abs_mean_subject1.mnc'); 
+        files_in{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
+        files_in{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc'); 
         
     otherwise 
         
@@ -78,6 +77,16 @@ switch gb_niak_format_demo
 end
 
 %% Options
-opt.operation = 'vol = abs(mean(vol_in{1},4)+mean(vol_in{2},4));';
+opt.thresh_mean = 0.3;
+opt.mask_brain.fwhm = 5;
+opt.mask_brain.flag_remove_eyes = true;
+opt.psom.mode = 'session';
+opt.psom.max_queued = 1;
+opt.psom.mode_pipeline_manager = 'session';
+opt.flag_test = false; 
+opt.folder_out = [gb_niak_path_demo,filesep,'masks',filesep];
 
-[files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt);
+pipeline = niak_pipeline_mask_brain(files_in,opt);
+
+%% Note that opt.interpolation_method has been updated, as well as files_out
+

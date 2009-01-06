@@ -30,9 +30,9 @@ function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
 %       OPERATION
 %           (string) An operation that will be submitted to EVAL in order
 %           to generate the resulting volume. Note that the data in
-%           FILES_IN{I} is accessible in a variable VOLI. The final result
-%           should be stored in a variable called VOL. The variable
-%           OPT_OPERATION is also available in memory.
+%           FILES_IN{I} is accessible in a variable VOL_IN{I}. 
+%           The final result should be stored in a variable called VOL. 
+%           The variable OPT_OPERATION is also available in memory.
 %
 %       FLAG_VERBOSE 
 %           (boolean, default 1) if the flag is 1, then the function 
@@ -110,8 +110,8 @@ for num_f = 1:nb_files
         fprintf('Reading vol%i from file %s ...\n',num_f,files_in{num_f});
     end
     
-    instr_read = sprintf('[hdr,vol%i] = niak_read_vol(files_in{num_f});',num_f);
-    eval(instr_read);
+    [hdr,vol_tmp] = niak_read_vol(files_in{num_f});
+    vol_in{num_f} = vol_tmp;
 
     if num_f == 1
         hdr_func = hdr;
