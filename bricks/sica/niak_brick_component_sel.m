@@ -230,7 +230,8 @@ if flag_verbose
 end
 [hdr_func,vol_func] = niak_read_vol(files_in.fmri);
 mask_roi = mask_roi & niak_mask_brain(mean(abs(vol_func),4));
-tseries_roi = niak_build_tseries(vol_func,mask_roi);
+opt_tseries.flag_all = true;
+tseries_roi = niak_build_tseries(vol_func,mask_roi,opt_tseries);
 [nt,nb_vox] = size(tseries_roi);
 clear vol_func
 sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
