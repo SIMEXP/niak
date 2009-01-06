@@ -269,8 +269,11 @@ if flag_verbose
     fprintf('\n*********\nPerforming stepwise regression\n*********\n\n');
 end
 
-if nb_vox == 0
+if nb_vox <= 20
     
+    if flag_verbose
+        fprintf('There is hardly any data falling in the mask of interest (%i voxels). No component is selected.\n',nb_vox);
+    end
     %% There is no functional data in the mask, no component is selected...
     num_comp = 1:nb_comp;
     score = zeros(size(num_comp));
