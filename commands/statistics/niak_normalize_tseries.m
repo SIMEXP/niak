@@ -114,7 +114,7 @@ switch opt.type
     case 'none'
         tseries_n = tseries;
 
-    case {'mean_var','mean_var2','mean_var'}
+    case {'mean','mean_var2','mean_var'}
         
         tseries_n = niak_correct_mean_var(tseries,opt.type);
         
