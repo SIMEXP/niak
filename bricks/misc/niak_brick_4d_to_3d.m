@@ -80,8 +80,12 @@ niak_gb_vars
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_4D_TO_3D(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_3d_to_4d'' for more info.')
+end
+
+if ~exist('files_out','var')
+    files_out = '';
 end
 
 %% Options

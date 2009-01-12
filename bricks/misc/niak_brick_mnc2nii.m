@@ -72,10 +72,10 @@ niak_gb_vars
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MNC2NII(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_MNC2NII'' for more info.')
 end
-if isempty(files_out)
+if ~exist('files_out','var')||isempty(files_out)
     files_out = files_in;
 end
 
