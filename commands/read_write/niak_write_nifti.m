@@ -98,8 +98,8 @@ niak_set_defaults
 %% Setting up default values for the 'info' part of the header
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
-gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','machine','dimensions'};
-gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','native',size(vol)};
+gb_list_fields = {'file_parent','precision','voxel_size','mat','dimension_order','tr','history','machine','dimensions'};
+gb_list_defaults = {'','float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','native',size(vol)};
 niak_set_defaults
 
 %% Seting up the name of the header
