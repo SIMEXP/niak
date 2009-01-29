@@ -49,10 +49,6 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %       FOLDER_OUT 
 %           (string) where to write the results of the pipeline.
 %
-%       ENVIRONMENT 
-%           (string, default current environment) Available options : 
-%           'matlab', 'octave'. The environment where the pipeline will run. 
-%
 %       BRICKS 
 %           (structure) The fields of OPT.BRICKS set the options for each
 %           brick used in the pipeline
@@ -145,6 +141,7 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 % THE SOFTWARE.
 
 %% import NIAK global variables
+
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -201,8 +198,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'size_output','folder_out','environment','bricks'};
-gb_list_defaults = {'quality_control',NaN,gb_niak_language,struct([])};
+gb_list_fields = {'size_output','folder_out','bricks'};
+gb_list_defaults = {'quality_control',NaN,struct([])};
 niak_set_defaults
 
 %% The options for the bricks
@@ -253,18 +250,12 @@ for num_s = 1:nb_subject
 
         %% Adding the stage to the pipeline
         clear stage
-        stage.label = 'Individual spatial independent component analysis';
         stage.command = 'niak_brick_sica(files_in,files_out,opt)';
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
-        stage.environment = opt.environment;
-
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        
+        pipeline(1).(name_stage) = stage;
 
     end % run
 
@@ -319,13 +310,8 @@ for num_s = 1:nb_subject
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
-        stage.environment = opt.environment;
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        pipeline.(name_stage) = stage;
 
     end % run
 
@@ -375,14 +361,9 @@ for num_s = 1:nb_subject
         stage.command = 'niak_brick_component_sel(files_in,files_out,opt)';
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
-        stage.opt = opt_tmp;
-        stage.environment = opt.environment;
+        stage.opt = opt_tmp;        
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        pipeline.(name_stage) = stage;
 
     end % run
 
@@ -438,13 +419,8 @@ for num_s = 1:nb_subject
         stage.files_in = files_in_tmp;
         stage.files_out = files_out_tmp;
         stage.opt = opt_tmp;
-        stage.environment = opt.environment;
 
-        if isempty(pipeline)
-            eval(cat(2,'pipeline(1).',name_stage,' = stage;'));
-        else
-            pipeline = setfield(pipeline,name_stage,stage);
-        end
+        pipeline.(name_stage) = stage;
 
     end % run
 
@@ -513,8 +489,7 @@ if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
             pipeline(1).(name_stage).command = 'niak_brick_clean(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            pipeline(1).(name_stage).environment = opt.environment;           
+            pipeline(1).(name_stage).opt = opt_tmp;                       
 
         end % run
 

@@ -74,10 +74,6 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           actual content of folder_out, see the internet 
 %           documentation (http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing)
 %
-%       ENVIRONMENT 
-%           (string, default current environment) Available options : 
-%           'matlab', 'octave'. The environment where the pipeline will run. 
-%
 %       BRICKS 
 %           (structure) The fields of OPT.BRICKS depend on the style of 
 %           pre-processing. 
@@ -327,8 +323,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_corsica','style','size_output','folder_out','environment','bricks'};
-gb_list_defaults = {1,NaN,'quality_control',NaN,'octave',struct([])};
+gb_list_fields = {'flag_corsica','style','size_output','folder_out','bricks'};
+gb_list_defaults = {1,NaN,'quality_control',NaN,struct([])};
 niak_set_defaults
 
 switch opt.size_output % check that the size of outputs is a valid option
@@ -417,8 +413,7 @@ for num_s = 1:nb_subject
     pipeline(1).(name_stage).command = 'niak_brick_civet(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;
-    pipeline(1).(name_stage).environment = opt.environment;
+    pipeline(1).(name_stage).opt = opt_tmp;    
 
 end % subject
 
@@ -478,8 +473,7 @@ for num_s = 1:nb_subject
     pipeline(1).(name_stage).command = 'niak_brick_motion_correction(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;
-    environment = opt.environment;    
+    pipeline(1).(name_stage).opt = opt_tmp;    
         
 end
 
@@ -527,8 +521,7 @@ for num_s = 1:nb_subject
     pipeline(1).(name_stage).command = 'niak_brick_coregister(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;
-    pipeline(1).(name_stage).environment = opt.environment;
+    pipeline(1).(name_stage).opt = opt_tmp;   
 
 end % subject
 
@@ -564,8 +557,7 @@ for num_s = 1:nb_subject
     pipeline(1).(name_stage).command = 'niak_brick_concat_transf(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;
-    pipeline(1).(name_stage).environment = opt.environment;
+    pipeline(1).(name_stage).opt = opt_tmp;    
 
 end % subject
 
@@ -607,8 +599,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
             pipeline(1).(name_stage).command = 'niak_brick_slice_timing(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            pipeline(1).(name_stage).environment = opt.environment;
+            pipeline(1).(name_stage).opt = opt_tmp;           
             
             %% If the amount of outputs is 'minimum' or 'quality_control',
             %% clean the motion-corrected data when the slice-timing corrected
@@ -630,8 +621,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;
-                pipeline(1).(name_stage_new).environment = opt.environment;
+                pipeline(1).(name_stage_new).opt = opt_tmp;                
                 
             end
             
@@ -704,8 +694,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
             pipeline(1).(name_stage).command = 'niak_brick_time_filter(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            pipeline(1).(name_stage).environment = opt.environment;
+            pipeline(1).(name_stage).opt = opt_tmp;            
             
             %% If the amount of outputs is 'minimum' or 'quality_control',
             %% clean the slice-timing-corrected data when temporally
@@ -727,8 +716,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;
-                pipeline(1).(name_stage_new).environment = opt.environment;                
+                pipeline(1).(name_stage_new).opt = opt_tmp;                             
             end
             
         end % run
@@ -786,8 +774,8 @@ if flag_corsica % If the user requested a correction of physiological noise
 
         %% Setting up options
         gb_name_structure = 'opt.bricks.corsica';
-        gb_list_fields = {'size_output','folder_out','environment','bricks'};
-        gb_list_defaults = {opt.size_output,cat(2,opt.folder_out,filesep,'sica',filesep),opt.environment,struct([])};
+        gb_list_fields = {'size_output','folder_out','bricks'};
+        gb_list_defaults = {opt.size_output,cat(2,opt.folder_out,filesep,'sica',filesep),struct([])};
         niak_set_defaults;
         opt_tmp = opt.bricks.corsica;
         
@@ -832,8 +820,7 @@ if flag_corsica % If the user requested a correction of physiological noise
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;
-                pipeline(1).(name_stage_new).environment = opt.environment;                
+                pipeline(1).(name_stage_new).opt = opt_tmp;                               
             end % run
         end % Cleaning ('minimum' or 'quality_control')
 
@@ -907,8 +894,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
             pipeline(1).(name_stage).command = 'niak_brick_smooth_vol(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            pipeline(1).(name_stage).environment = opt.environment;
+            pipeline(1).(name_stage).opt = opt_tmp;            
 
             %% If the amount of outputs is 'minimum' or 'quality_control',
             %% clean the inputs when the outpus have been successfully
@@ -953,8 +939,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;
-                pipeline(1).(name_stage_new).environment = opt.environment;
+                pipeline(1).(name_stage_new).opt = opt_tmp;                
 
             end
 
@@ -1016,8 +1001,7 @@ if strcmp(style,'standard-stereotaxic')
             pipeline(1).(name_stage).command        =   'niak_brick_resample_vol(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in       =   files_in_tmp;
             pipeline(1).(name_stage).files_out      =   files_out_tmp;
-            pipeline(1).(name_stage).opt            =   opt_tmp;
-            pipeline(1).(name_stage).environment    =   opt.environment;
+            pipeline(1).(name_stage).opt            =   opt_tmp;            
             
             %% If the amount of outputs is 'minimum' 
             %% clean the slice-timing-corrected data when temporally
@@ -1049,8 +1033,7 @@ if strcmp(style,'standard-stereotaxic')
                 pipeline(1).(name_stage_new).command     =  'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in    =  files_in_tmp;
                 pipeline(1).(name_stage_new).files_out   =  files_out_tmp;
-                pipeline(1).(name_stage_new).opt         =  opt_tmp;
-                pipeline(1).(name_stage_new).environment =  opt.environment;
+                pipeline(1).(name_stage_new).opt         =  opt_tmp;                
 
             end
             
@@ -1102,8 +1085,7 @@ if strcmp(style,'standard-stereotaxic')
             pipeline(1).(name_stage).command = 'niak_brick_smooth_vol(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            pipeline(1).(name_stage).environment = opt.environment;
+            pipeline(1).(name_stage).opt = opt_tmp;            
 
             %% If the amount of outputs is 'minimum' or 'quality_control',
             %% clean the inputs when the outpus have been successfully
@@ -1128,8 +1110,7 @@ if strcmp(style,'standard-stereotaxic')
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;
-                pipeline(1).(name_stage_new).environment = opt.environment;
+                pipeline(1).(name_stage_new).opt = opt_tmp;                
 
             end
 

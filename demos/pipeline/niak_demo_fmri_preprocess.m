@@ -1,23 +1,35 @@
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_DEMO_FMRI_PREPROCESS
+%
 % This is a script to demonstrate the usage of :
 % NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % SYNTAX:
 % Just type in NIAK_DEMO_FMRI_PREPROCESS
 %
+% _________________________________________________________________________
 % OUTPUT:
 %
 % This script will clear the workspace !!
+%
 % It will apply a 'standard-native' preprocessing pipeline on the functional 
 % data of subjects 1 and 2 (rest and motor conditions) as well as their
 % anatomical image. This will take about 2 hours on a single machine.
 %
+% _________________________________________________________________________
+% COMMENT:
+%
+% NOTE 1:
 % A more detailed description of NIAK_PIPELINE_FMRI_PREPROCESS can be found
 % on : 
 % http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing
 %
+% NOTE 2:
 % Note that the path to access the demo data is stored in a variable
 % called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
 % 
+% NOTE 3:
 % The demo database exists in multiple file formats. By default, it is
 % using 'minc2' files. You can change that by changing the variable
 % GB_NIAK_FORMAT_DEMO in the file NIAK_GB_VARS.
@@ -83,14 +95,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
-opt.style = 'standard-native';
-%opt.style = 'standard-stereotaxic';
+%opt.style = 'standard-native';
+opt.style = 'standard-stereotaxic';
 %opt.style = 'fmristat';
 %opt.size_output = 'minimum';
 %opt.size_output = 'quality_control';
 opt.size_output = 'all';
 opt.folder_out = cat(2,gb_niak_path_demo,filesep,'fmri_preprocess',filesep);
-opt.environment = gb_niak_language;
 opt.flag_corsica = 1; % Apply a correction of physiological noise
 
 %%%%%%%%%%%%%%%%%%%%

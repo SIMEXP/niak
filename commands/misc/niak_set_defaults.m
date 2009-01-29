@@ -91,14 +91,16 @@ end
 
 %% Test if some field were not used, and eventually issue a warning.
 gb_list_fields_init = fieldnames(gb_niak_struct);
-gb_mask_init = ismember(gb_list_fields_init,gb_list_fields);
-if min(gb_mask_init)==0
-    gb_fields_warning = [];
-    gb_ind_init = find(gb_mask_init==0);
-    for num_i = 1:length(gb_ind_init)
-        gb_fields_warning = [gb_fields_warning ' ' gb_list_fields_init{gb_ind_init(num_i)}];
+if length(gb_list_fields_init)~=length(gb_list_fields);
+    gb_mask_init = ismember(gb_list_fields_init,gb_list_fields);
+    if min(gb_mask_init)==0
+        gb_fields_warning = [];
+        gb_ind_init = find(gb_mask_init==0);
+        for num_i = 1:length(gb_ind_init)
+            gb_fields_warning = [gb_fields_warning ' ' gb_list_fields_init{gb_ind_init(num_i)}];
+        end
+        warning(cat(2,'niak:default: The following field(s) were ignored in the structure ',gb_name_structure,' : ',gb_fields_warning));
     end
-    warning(cat(2,'niak:default: The following field(s) were ignored in the structure ',gb_name_structure,' : ',gb_fields_warning));
 end
 
 %% Export the structure

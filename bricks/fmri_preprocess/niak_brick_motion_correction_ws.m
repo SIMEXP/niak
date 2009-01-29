@@ -1,107 +1,133 @@
 function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,files_out,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_MOTION_CORRECTION_WS
+%
 % Perfom within-session and within-subject motion correction of fMRI data
 % via estimation of a rigid-body transform and spatial resampling.
 %
 % SYNTAX:
 %   [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION_WS(FILES_IN,FILES_OUT,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-%   FILES_IN (cell of strings, where each string is the file name of a
-%           3D+t dataset)
-%           All files should be fMRI data of ONE subject acquired in a
-%           single session (small movements).
 %
-%   FILES_OUT  (structure) with the following fields. Note that if
-%     a field is an empty string, a default value will be used to
-%     name the outputs. If a field is ommited, the output won't be
-%     saved at all (this is equivalent to setting up the output file
-%     names to 'gb_niak_omitted').
+%   FILES_IN 
+%       (cell of strings, where each string is the file name of a 3D+t 
+%       dataset) All files should be fMRI data of ONE subject acquired in a
+%       single session (small movements).
 %
-%       MOTION_CORRECTED_DATA (cell of strings, default base
-%           name <BASE_FILES_IN>_MC.<EXT_FILES_IN>)
-%           File names for saving the motion corrected datasets.
-%           The images will be resampled at the resolution of the
-%           functional run of reference.
+%   FILES_OUT  
+%       (structure) with the following fields. Note that if a field is an 
+%       empty string, a default value will be used to name the outputs. If 
+%       a field is ommited, the output won't be saved at all (this is 
+%       equivalent to setting up the output file names to 
+%       'gb_niak_omitted').
 %
-%       MOTION_PARAMETERS (cells of string,
-%           default base MOTION_PARAMS_WS_<BASE_FILE_IN>.DAT)
-%           MOTION_PARAMETERS.{NUM_R} is the file name for
-%           the estimated motion parameters of the functional run NUM_R.
-%           The first line describes the content of each column.
-%           Each subsequent line I+1 is a representation
-%           of the motion parameters estimated for session I.
+%       MOTION_CORRECTED_DATA 
+%           (cell of strings, default base  name <BASE_FILES_IN>_MC.<EXT_FILES_IN>)
+%           File names for saving the motion corrected datasets. The images 
+%           will be resampled at the resolution of the functional run of 
+%           reference.
 %
-%       TARGET (string, default TARGET_<BASE_FILE_IN>.<EXT_FILES_IN>) the target for
-%           coregistration (smoothed volume of reference of the run of
-%           reference).
+%       MOTION_PARAMETERS 
+%           (cells of string, default base MOTION_PARAMS_WS_<BASE_FILE_IN>.DAT)
+%           MOTION_PARAMETERS.{NUM_R} is the file name for the estimated 
+%           motion parameters of the functional run NUM_R. The first line 
+%           describes the content of each column. Each subsequent line I+1 
+%           is a representation of the motion parameters estimated for 
+%           session I.
 %
-%       MASK (string, default MASK_<BASE_FILE_IN>.<EXT_FILES_IN>) the mask used for
-%          coregistration.
+%       TARGET 
+%           (string, default TARGET_<BASE_FILE_IN>.<EXT_FILES_IN>) the 
+%           target for coregistration (smoothed volume of reference of the 
+%           run of reference).
 %
-%       FIG_MOTION  (string, default base FIG_MOTION_<BASE_FILE_IN>.EPS) A figure
-%          representing the motion parameters. 
+%       MASK 
+%           (string, default MASK_<BASE_FILE_IN>.<EXT_FILES_IN>) the mask 
+%           used for coregistration.
 %
-%   OPT   (structure) with the following fields:
+%       FIG_MOTION  
+%           (string, default base FIG_MOTION_<BASE_FILE_IN>.EPS) A figure
+%           representing the motion parameters. 
 %
-%       VOL_REF (vector, default 'median') VOL_REF is the number of the volume
+%   OPT   
+%       (structure) with the following fields:
+%
+%       VOL_REF 
+%           (vector, default 'median') VOL_REF is the number of the volume
 %           that will be used as reference. If VOL_REF is a string, the
 %           median volume of the run of reference will be used rather than
 %           an arbitrary volume.
 %
-%       RUN_REF (vector, default 1) RUN_REF is
+%       RUN_REF 
+%           (vector, default 1) RUN_REF is
 %           the number of the run that will be used as target.
 %
-%       FWHM (real number, default 8 mm) the fwhm of the blurring kernel
+%       FWHM 
+%           (real number, default 8 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
-%       INTERPOLATION (string, default 'sinc') the spatial
-%          interpolation method. Available options : 'trilinear', 'tricubic',
-%          'nearest_neighbour','sinc'.
+%       INTERPOLATION 
+%           (string, default 'sinc') the spatial interpolation method. 
+%           Available options : 'trilinear', 'tricubic', 
+%           'nearest_neighbour','sinc'.
 %
-%       FOLDER_OUT (string, default: path of FILES_IN) If present,
-%           all default outputs will be created in the folder FOLDER_OUT.
-%           The folder needs to be created beforehand.
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present, all default 
+%           outputs will be created in the folder FOLDER_OUT. The folder 
+%           needs to be created beforehand.
 %
-%       FLAG_TFM_SPACE (boolean, default: 0) if FLAG_TFM_SPACE equals 1,
-%           the functional target space will be resampled to get rid of the
+%       FLAG_TFM_SPACE 
+%           (boolean, default: 0) if FLAG_TFM_SPACE equals 1, the 
+%           functional target space will be resampled to get rid of the
 %           voxel-to-world coordinates transformation. This means that a
 %           new field of view fitting the brain will have to be derived.
 %
-%       FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN and FILES_OUT.
+%       FLAG_TEST 
+%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN and 
+%           FILES_OUT.
 %
-%       FLAG_VERBOSE (boolean, default: 1) If FLAG_VERBOSE == 1, write
-%           messages indicating progress.
+%       FLAG_VERBOSE 
+%           (boolean, default: 1) If FLAG_VERBOSE == 1, write messages 
+%           indicating progress.
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
 %   The structures FILES_IN, FILES_OUT and OPT are updated with default
 %   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
+% _________________________________________________________________________
 % SEE ALSO:
+%
 %  NIAK_BRICK_MOTION_CORRECTION, NIAK_DEMO_MOTION_CORRECTION
 %
+% _________________________________________________________________________
 % COMMENTS
+%
+% NOTE 1:
 % All images of all datasets are coregistered with one volume of the
 % run of reference. The motion parameters are actually estimated on the
 % basis of smoothed oversampled gradient volumes.
 %
+% NOTE 2:
 % The core of the function is a MINC tool called MINCTRACC which performs
 % rigid-body coregistration.
 %
+% NOTE 3:
 % This function was based on a PERL script written by Richard D. Hoge,
 % McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill
 % University, 1996.
-% A gradient image of each volume is extracted after applying a
-% Kuwahara filter (smoothing and edge preserving filter). The gradient
-% images are coregistered to one volume of reference using MINCTRACC (xcorr
-% similarity function).
+% A gradient image of each volume is extracted after applying a Gaussian 
+% isotropic smoothing. The gradient images are coregistered to the one of 
+% a volume of reference using MINCTRACC (xcorr similarity function).
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, filtering, fMRI
+% Keywords : medical imaging, motion, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -121,6 +147,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = true;
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

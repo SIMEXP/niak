@@ -259,7 +259,11 @@ if ~flag_civet
     end
     
     %% Generate temporary names to run the CIVET pipeline.   
-    civet_folder = niak_path_tmp('_civet');   
+    if ~flag_test
+        civet_folder = niak_path_tmp('_civet');   
+    else
+        civet_folder = [filesep 'tmp' filesep];
+    end
     civet_id = 'coco';
     civet_prefix = 'anat';        
     
@@ -357,10 +361,7 @@ if flag_civet
     files_in.civet = files_civet;
 end
 
-if flag_test == 1
-    if ~flag_civet
-        rmdir(civet_folder);
-    end
+if flag_test == 1    
     return
 end
 
