@@ -12,7 +12,7 @@ function [] = niak_visu_motion(vol,opt)
 % INPUTS:
 %
 % VOL           
-%       (3D array) a 3D volume.
+%       (4D array) a 3D+t dataset.
 %
 % OPT           
 %       (structure, optional) has the following fields:
@@ -52,7 +52,24 @@ function [] = niak_visu_motion(vol,opt)
 % time, resulting in a little movie of the 3D+t dataset.
 %
 % _________________________________________________________________________
+% SEE ALSO:
+%
+% NIAK_MONTAGE
+%
+% _________________________________________________________________________
 % COMMENTS:
+%
+% To make a movie of a MINC or NIFTI dataset, you will first need to read
+% that dataset using NIAK_READ_VOL :
+%
+% >> [hdr,vol] = niak_read_vol('my_data.mnc');
+%
+% Then you may want to use matlab syntax to extract a subpart of the
+% volume, because a movie of a full volume with tens of slices is a bit
+% too much. For example, the following command will make a motion of the 
+% 20th and 21st axial slices of the 4D data. :
+%
+% >> niak_visu_motion(vol(:,:,20:21,:));
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.

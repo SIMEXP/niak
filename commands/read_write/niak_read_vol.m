@@ -15,25 +15,25 @@ function [hdr,vol] = niak_read_vol(file_name)
 % INPUTS :
 %
 % * FILE_NAME
-%       (string) a single 3D or 3D+t image file, or a matrix of image file names, 
-%       each with a single 3D frame.
-%       Supported formats are either NIFIT (*.nii,*.img/hdr), 
-%       ANALYZE (.img/.hdr/.mat) or MINC1/MINC2 (.mnc).
-%       Extra blanks are ignored. File separator can be / or \ on Windows.
-%       Gzipped files (additional .gz) are supported.
-%       Frames must be equally spaced in time.
-%       For single file names, wild cards are supported (mutliple files are
-%       treated in the same way as a matrix of image files names).
+%       (string) a single 3D or 3D+t image file, or a matrix of image file 
+%       names, each with a single 3D frame.
+%       Supported formats are either NIFIT (*.nii,*.img/hdr), ANALYZE 
+%       (.img/.hdr/.mat) or MINC1/MINC2 (.mnc). Extra blanks are ignored. 
+%       File separator can be / or \ on Windows. Gzipped files (with an 
+%       additional .gz) are supported. Frames must be equally spaced in 
+%       time. For single file names, wild cards are supported (mutliple 
+%       files are treated in the same way as a matrix of image files 
+%       names).
 %
 % _________________________________________________________________________
 % OUTPUTS :
 %
 % * VOL           
-%       (3D+t or 3D array of double) the fMRI or MRI data
+%       (3D+t or 3D array of double) the 3d or 3d+t raw data.
 %
 % * HDR
-%       a structure containing a description of the data, with the
-%       following fields :
+%       a structure containing a description of meta-information on the 
+%       data, with the following fields :
 %
 %       FILE_NAME   
 %           (empty string '') name of the file currently associated with the 

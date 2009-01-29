@@ -7,7 +7,7 @@
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_tmp = cat(2,filesep,'tmp',filesep); % where to store temporary files
+gb_niak_tmp = [filesep 'tmp' filesep]; % where to store temporary files
 
 gb_niak_zip = 'gzip -f'; % The command to zip files
 

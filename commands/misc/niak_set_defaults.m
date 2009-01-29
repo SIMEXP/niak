@@ -62,13 +62,14 @@
 
 %% Test if the structure exist, otherwise initialize an empty one
 try
-    eval(cat(2,'gb_niak_struct = ',gb_name_structure,';'));    
+    gb_niak_struct = evalin('caller',gb_name_structure);
 catch
     gb_niak_struct = struct([]);
 end
    
 %% Loop on every field
 nb_fields = length(gb_list_fields);
+
 for num_f = 1:nb_fields
     
     field = gb_list_fields{num_f};
@@ -85,8 +86,8 @@ for num_f = 1:nb_fields
         gb_niak_struct(1).(field) = val;        
     end    
                     
-    % Upload the field as a variable
-    eval(cat(2,field,' = gb_niak_struct.',field,';')); % 
+    % Upload the field as a variable   
+    assignin('caller',field,gb_niak_struct.(field));
 end
 
 %% Test if some field were not used, and eventually issue a warning.
