@@ -798,10 +798,9 @@ if flag_corsica % If the user requested a correction of physiological noise
 
         %% Setting up options
         gb_name_structure = 'opt_tmp';
-        gb_list_fields = {'flag_test','size_output','folder_out','bricks'};
-        gb_list_defaults = {true,opt.size_output,cat(2,opt.folder_out,filesep,'sica',filesep),struct([])};
+        gb_list_fields = {'flag_test','size_output','folder_out'};
+        gb_list_defaults = {true,opt.size_output,cat(2,opt.folder_out,filesep,'sica',filesep)};
         niak_set_defaults;
-        opt_tmp = opt.bricks.corsica;
         opt_tmp.bricks.sica = opt.bricks.sica;
         opt_tmp.bricks.component_sel = opt.bricks.component_sel;
         opt_tmp.bricks.component_supp = opt.bricks.component_supp;

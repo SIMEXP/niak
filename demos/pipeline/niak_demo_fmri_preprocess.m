@@ -108,7 +108,7 @@ opt.size_output = 'all';
 opt.folder_out = cat(2,gb_niak_path_demo,filesep,'fmri_preprocess',filesep); 
 
 % Flag to turn on and off the physiological noise correction
-opt.flag_corsica = turn;              
+opt.flag_corsica = true;              
 
 %%%%%%%%%%%%%%%%%%%%
 %% Bricks options %%
@@ -144,8 +144,8 @@ opt.bricks.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequenc
 opt.bricks.time_filter.lp = Inf; % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
 
 % Correction of physiological noise (niak_pipeline_corsica)
-opt.bricks.corsica.bricks.sica.nb_comp = 20;
-opt.bricks.corsica.bricks.component_supp.threshold = 0.15;
+opt.bricks.sica.nb_comp = 20;
+opt.bricks.component_supp.threshold = 0.15;
 
 % Spatial smoothing (niak_brick_smooth_vol)
 opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
