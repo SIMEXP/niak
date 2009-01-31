@@ -49,6 +49,18 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %       FOLDER_OUT 
 %           (string) where to write the results of the pipeline.
 %
+%       PSOM
+%           (structure) the options of the pipeline manager. See the OPT
+%           argument of PSOM_RUN_PIPELINE. Default values can be used here.
+%           Note that the field PSOM.PATH_LOGS will be set up by the
+%           pipeline.
+%
+%       FLAG_TEST
+%           (boolean, default false) If FLAG_TEST is true, the pipeline
+%           will just produce a pipeline structure, and will not actually
+%           process the data. Otherwise, PSOM_RUN_PIPELINE will be used to
+%           process the data.
+%
 %       BRICKS 
 %           (structure) The fields of OPT.BRICKS set the options for each
 %           brick used in the pipeline
@@ -85,8 +97,7 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %
 %  * PIPELINE 
 %       (structure) describe all jobs that need to be performed in the
-%       pipeline. This structure is meant to be use in the function
-%       NIAK_INIT_PIPELINE.
+%       pipeline. 
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -103,6 +114,12 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 %       3. Generation of a "physiological noise corrected" fMRI dataset for
 %          each run, where the effect of the selected independent components
 %          has been removed. 
+%
+% The PSOM pipeline manager is used to process the pipeline if
+% OPT.FLAG_TEST is false. PSOM has a number of interesting features to deal
+% with job failures or pipeline updates. You can read the following
+% tutorial for a review of its capabilities : 
+% http://code.google.com/p/psom/wiki/HowToUsePsom
 %
 % _________________________________________________________________________
 % REFERENCES
@@ -198,8 +215,9 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'size_output','folder_out','bricks'};
-gb_list_defaults = {'quality_control',NaN,struct([])};
+default_psom.path_logs = '';
+gb_list_fields = {'size_output','psom','flag_test','folder_out','bricks'};
+gb_list_defaults = {'quality_control',default_psom,false,NaN,struct([])};
 niak_set_defaults
 
 %% The options for the bricks
@@ -497,3 +515,10 @@ if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
 
 end % size_output
 
+%%%%%%%%%%%%%%%%%%%%%%
+%% Run the pipeline %%
+%%%%%%%%%%%%%%%%%%%%%%
+
+if ~opt.flag_test
+    psom_run_pipeline(pipeline,opt.psom);
+end
