@@ -74,6 +74,18 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           actual content of folder_out, see the internet 
 %           documentation (http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing)
 %
+%       FLAG_TEST
+%           (boolean, default false) If FLAG_TEST is true, the pipeline
+%           will just produce a pipeline structure, and will not actually
+%           process the data. Otherwise, PSOM_RUN_PIPELINE will be used to
+%           process the data.
+%
+%       PSOM
+%           (structure) the options of the pipeline manager. See the OPT
+%           argument of PSOM_RUN_PIPELINE. Default values can be used here.
+%           Note that the field PSOM.PATH_LOGS will be set up by the
+%           pipeline.
+%
 %       BRICKS 
 %           (structure) The fields of OPT.BRICKS depend on the style of 
 %           pre-processing. 
@@ -274,7 +286,9 @@ end
 
 %% Checking that FILES_IN is in the correct format
 if ~isstruct(files_in)
+
     error('FILES_IN should be a struture!')
+    
 else
    
     list_subject = fieldnames(files_in);
@@ -323,9 +337,12 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_corsica','style','size_output','folder_out','bricks'};
-gb_list_defaults = {1,NaN,'quality_control',NaN,struct([])};
+default_psom.path_logs = '';
+gb_list_fields = {'flag_corsica','style','size_output','folder_out','flag_test','psom','bricks'};
+gb_list_defaults = {1,NaN,'quality_control',NaN,false,default_psom,struct([])};
 niak_set_defaults
+
+opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
 switch opt.size_output % check that the size of outputs is a valid option
     case {'minimum','quality_control','all'}
@@ -828,9 +845,9 @@ if flag_corsica % If the user requested a correction of physiological noise
 
 end % if flag_corsica
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% spatial smoothing (native space %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% spatial smoothing (native space) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'smooth_vol';
 
@@ -1117,3 +1134,11 @@ if strcmp(style,'standard-stereotaxic')
         end % run
     end % subject
 end % Styles 'fmristat' or 'standard_native'
+
+%%%%%%%%%%%%%%%%%%%%%%
+%% Run the pipeline %%
+%%%%%%%%%%%%%%%%%%%%%%
+
+if ~opt.flag_test
+    psom_run_pipeline(pipeline,opt.psom);
+end
