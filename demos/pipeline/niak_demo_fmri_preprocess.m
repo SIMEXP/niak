@@ -67,8 +67,8 @@ function pipeline = niak_demo_frmi_preprocess(path_demo)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
 niak_gb_vars
+
 if isempty(path_demo)
     path_demo = gb_niak_path_demo;
 end
