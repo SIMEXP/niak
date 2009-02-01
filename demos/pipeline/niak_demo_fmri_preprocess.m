@@ -149,8 +149,8 @@ end
 % 'standard-native', 'standard-stereotaxic'.
 opt.style = 'standard-native';        
 
-% The quantity of outputs. Available options : 'minimum', 'quality
-% control', 'all'
+% The quantity of outputs. 
+% Available options : 'minimum', 'quality_control', 'all'
 opt.size_output = 'all';
 
 % Where to store the results

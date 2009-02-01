@@ -1,19 +1,53 @@
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_GB_VARS
+%
+% This is a script to define important NIAK variables. Whenever needed, 
+% NIAK commands will call this script to initialize the variables. If NIAK 
+% does not behave the way you want, this might be the place to fix that.
+%
+% _________________________________________________________________________
+% COMMENT:
+%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Maintainer : pbellec@bic.mni.mcgill.ca
+% See licensing information in the code.
+% Keywords : medical imaging, slice timing, fMRI
 
-%% Here are important NIAK variables. Whenever needed, NIAK commands will call
-%% this script to initialize the variables. If NIAK does not behave the way
-%% you want, this might be the place to fix that.
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_tmp = [filesep 'tmp' filesep]; % where to store temporary files
+% where to store temporary files
+gb_niak_tmp = [filesep 'tmp' filesep]; 
 
-gb_niak_zip = 'gzip -f'; % The command to zip files
+% The command to zip files
+gb_niak_zip = 'gzip -f'; 
 
-gb_niak_unzip = 'gunzip -f'; % The command to unzip files
+% The command to unzip files
+gb_niak_unzip = 'gunzip -f'; 
 
-gb_niak_zip_ext = '.gz'; % The extension of zipped files
+% The extension of zipped files
+gb_niak_zip_ext = '.gz'; 
 
 if exist('flag_gb_niak_fast_gb','var')
     return
@@ -24,21 +58,27 @@ end
 %% system                                                               %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_shell = '/bin/sh'; %% where to find the bash shell system
+% where to find the bash shell system
+gb_niak_shell = '/bin/sh'; 
 
-gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9'; % The folder of the CIVET pipeline
+% The folder of the CIVET pipeline
+gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9'; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables describe the folders and external tools NIAK is using for various tasks %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-gb_niak_viewerps = 'evince'; % program to display ps files
+% program to display ps files
+gb_niak_viewerps = 'evince'; 
 
-gb_niak_viewerjpg = 'eog'; % program to display jpg files
+% program to display jpg files
+gb_niak_viewerjpg = 'eog'; 
 
-gb_niak_viewersvg = 'eog'; % program to display svg files
+% program to display svg files
+gb_niak_viewersvg = 'eog'; 
 
-gb_niak_ps2pdf = 'ps2pdf'; % The command to convert ps or eps documents into the pdf file format
+% The command to convert ps or eps documents into the pdf file format
+gb_niak_ps2pdf = 'ps2pdf'; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%
