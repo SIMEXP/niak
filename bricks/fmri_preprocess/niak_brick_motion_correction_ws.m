@@ -469,7 +469,7 @@ for num_r = list_run
     %% If requested, create a figure of motion parameters
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         
-        if strcmp(gb_niak_language,'matlab')            
+        if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...          
 
             subplot(max(list_run),2,1+(num_r-1)*2)
             par_t = tab_parameters(:,4:6);           
@@ -495,7 +495,7 @@ if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         saveas(hfig,files_out.fig_motion,'epsc')
         close(hfig)
     else
-        tmp = 'sorry, octave 2.9.9 do not allow to save the figure';
+        tmp = 'sorry, octave 3.x do not allow to save the figure';
         save(files_out.fig_motion,'tmp');
     end
 end
