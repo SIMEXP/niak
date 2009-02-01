@@ -432,8 +432,7 @@ for num_s = 1:nb_subject
     [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_civet(files_in_tmp,files_out_tmp,opt_tmp);
     opt_tmp.flag_test = 0;
 
-    %% Adding the stage to the pipeline
-    pipeline(1).(name_stage).label = 'Processing of the anatomical data (transformation to stereotaxic space)';
+    %% Adding the stage to the pipeline   
     pipeline(1).(name_stage).command = 'niak_brick_civet(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -492,8 +491,7 @@ for num_s = 1:nb_subject
     [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_motion_correction(files_in_tmp,files_out_tmp,opt_tmp);
     opt_tmp.flag_test = 0;
     
-    %% Adding the stage to the pipeline
-    pipeline(1).(name_stage).label = 'Correction of within- and between-sessions motion correction';
+    %% Adding the stage to the pipeline    
     pipeline(1).(name_stage).command = 'niak_brick_motion_correction(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -540,8 +538,7 @@ for num_s = 1:nb_subject
     [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_coregister(files_in_tmp,files_out_tmp,opt_tmp);
     opt_tmp.flag_test = 0;
 
-    %% Adding the stage to the pipeline    
-    pipeline(1).(name_stage).label = 'T1-T2 coregistration';
+    %% Adding the stage to the pipeline        
     pipeline(1).(name_stage).command = 'niak_brick_coregister(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -576,8 +573,7 @@ for num_s = 1:nb_subject
     %% Setting up options
     opt_tmp.flag_test = 0;
 
-    %% Adding the stage to the pipeline    
-    pipeline(1).(name_stage).label = 'concat spatial transformations (non-linear)';
+    %% Adding the stage to the pipeline        
     pipeline(1).(name_stage).command = 'niak_brick_concat_transf(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -618,8 +614,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
             [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_slice_timing(files_in_tmp,files_out_tmp,opt_tmp);
             opt_tmp.flag_test = 0;
                         
-            %% Adding the stage to the pipeline
-            pipeline(1).(name_stage).label = 'Correction of slice-timing';
+            %% Adding the stage to the pipeline            
             pipeline(1).(name_stage).command = 'niak_brick_slice_timing(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -640,8 +635,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
                 opt_tmp.flag_test = 0;
                 
                 %% Adding the stage to the pipeline
-                name_stage_new = cat(2,'clean_motion_',subject,'_run',num2str(num_r));                
-                pipeline(1).(name_stage_new).label = 'Cleaning motion-corrected data';
+                name_stage_new = cat(2,'clean_motion_',subject,'_run',num2str(num_r));                                
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
@@ -713,8 +707,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
             [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_time_filter(files_in_tmp,files_out_tmp,opt_tmp);
             opt_tmp.flag_test = 0;
                         
-            %% Adding the stage to the pipeline            
-            pipeline(1).(name_stage).label = 'temporal filtering';
+            %% Adding the stage to the pipeline                        
             pipeline(1).(name_stage).command = 'niak_brick_time_filter(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -735,8 +728,7 @@ if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
                 opt_tmp.flag_test = 0;
                 
                 %% Adding the stage to the pipeline
-                name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));                
-                pipeline(1).(name_stage_new).label = 'Cleaning slice-timing-corrected data';
+                name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));                                
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
@@ -835,14 +827,7 @@ if flag_corsica % If the user requested a correction of physiological noise
                     case {'standard-native'}
                         name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));
                 end
-
-                switch style
-                    case 'fmristat'
-                        pipeline(1).(name_stage_new).label = 'Cleaning motion-corrected data';
-                    case {'standard-native'}
-                        pipeline(1).(name_stage_new).label = 'Cleaning temporally filtered data';
-                end
-
+                
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
                 pipeline(1).(name_stage_new).files_out = files_out_tmp;
@@ -915,8 +900,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
             [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_tmp);
             opt_tmp.flag_test = 0;
 
-            %% Adding the stage to the pipeline
-            pipeline(1).(name_stage).label = 'spatial smoothing';
+            %% Adding the stage to the pipeline           
             pipeline(1).(name_stage).command = 'niak_brick_smooth_vol(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -941,8 +925,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
                 %% Adding the stage to the pipeline
                 if flag_corsica
                     
-                    name_stage_new = cat(2,'clean_corsica_',subject,'_run',num2str(num_r));                    
-                    pipeline(1).(name_stage_new).label = 'Cleaning physiological-noise corrected data';
+                    name_stage_new = cat(2,'clean_corsica_',subject,'_run',num2str(num_r));                                        
                     
                 else
 
@@ -951,14 +934,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
                             name_stage_new = cat(2,'clean_motion_correction_',subject,'_run',num2str(num_r));
                         case {'standard-native'}
                             name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));
-                    end
-
-                    switch style
-                        case 'fmristat'
-                            pipeline(1).(name_stage_new).label = 'Cleaning motion-corrected data';
-                        case {'standard-native'}
-                            pipeline(1).(name_stage_new).label = 'Cleaning temporelly filtered data';
-                    end
+                    end                    
                     
                 end
 
@@ -1022,8 +998,7 @@ if strcmp(style,'standard-stereotaxic')
             [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_resample_vol(files_in_tmp,files_out_tmp,opt_tmp);
             opt_tmp.flag_test = 0;
                         
-            %% Adding the stage to the pipeline            
-            pipeline(1).(name_stage).label          =   'resampling in stereotaxic space';
+            %% Adding the stage to the pipeline                        
             pipeline(1).(name_stage).command        =   'niak_brick_resample_vol(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in       =   files_in_tmp;
             pipeline(1).(name_stage).files_out      =   files_out_tmp;
@@ -1049,11 +1024,9 @@ if strcmp(style,'standard-stereotaxic')
                 %% Adding the stage to the pipeline
                 
                 if flag_corsica
-                    name_stage_new = cat(2,'clean_corsica_',subject,'_run',num2str(num_r));
-                    pipeline(1).(name_stage_new).label = 'Cleaning physiological-noise corrected data in native space';
+                    name_stage_new = cat(2,'clean_corsica_',subject,'_run',num2str(num_r));                    
                 else
-                    name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));
-                    pipeline(1).(name_stage_new).label       =  'Cleaning time filtered data in native space';
+                    name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));                    
                 end
                                 
                 pipeline(1).(name_stage_new).command     =  'niak_brick_clean(files_in,files_out,opt)';
@@ -1106,8 +1079,7 @@ if strcmp(style,'standard-stereotaxic')
             [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_tmp);
             opt_tmp.flag_test = 0;
 
-            %% Adding the stage to the pipeline
-            pipeline(1).(name_stage).label = 'spatial smoothing';
+            %% Adding the stage to the pipeline            
             pipeline(1).(name_stage).command = 'niak_brick_smooth_vol(files_in,files_out,opt)';
             pipeline(1).(name_stage).files_in = files_in_tmp;
             pipeline(1).(name_stage).files_out = files_out_tmp;
@@ -1130,8 +1102,7 @@ if strcmp(style,'standard-stereotaxic')
                 opt_tmp.flag_test = 0;
 
                 %% Adding the stage to the pipeline
-                name_stage_new = cat(2,'clean_resample_vol_',subject,'_run',num2str(num_r));
-                pipeline(1).(name_stage_new).label = 'Cleaning resampled data';
+                name_stage_new = cat(2,'clean_resample_vol_',subject,'_run',num2str(num_r));                
 
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
