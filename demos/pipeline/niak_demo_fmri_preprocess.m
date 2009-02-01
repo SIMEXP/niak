@@ -1,21 +1,31 @@
+function pipeline = niak_demo_frmi_preprocess(path_demo)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_FMRI_PREPROCESS
 %
-% This is a script to demonstrate the usage of :
-% NIAK_PIPELINE_FMRI_PREPROCESS
+% This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS.
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_FMRI_PREPROCESS
+% NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO)
+%
+% _________________________________________________________________________
+% INPUT:
+%
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
 % _________________________________________________________________________
 % OUTPUT:
 %
-% This script will clear the workspace !!
-%
-% It will apply a 'standard-native' preprocessing pipeline on the functional 
-% data of subjects 1 and 2 (rest and motor conditions) as well as their
-% anatomical image. This will take about 2 hours on a single machine.
+% The demo will apply a 'standard-native' preprocessing pipeline on the 
+% functional data of subjects 1 and 2 (rest and motor conditions) as well 
+% as their anatomical image. This will take about 2 hours on a single 
+% machine. It is possible to configure the pipeline manager to use parallel
+% computing, see : 
+% http://code.google.com/p/psom/wiki/HowToUsePsom#PSOM_configuration
 %
 % _________________________________________________________________________
 % COMMENT:
@@ -59,6 +69,9 @@
 
 clear
 niak_gb_vars
+if isempty(path_demo)
+    path_demo = gb_niak_path_demo);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Setting input/output files %%
@@ -69,22 +82,42 @@ switch gb_niak_format_demo
     case 'minc1' % If data are in minc1 format
         
         %% Subject 1
-        files_in.subject1.fmri.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz')};
-        files_in.subject1.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');       
-        
+
+        % Structural scan
+        files_in.subject1.anat = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');
+
+        % fMRI runs
+        files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz')};
+
         %% Subject 2
-        files_in.subject2.fmri.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc.gz')};
-        files_in.subject2.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject2.mnc.gz');   
-        
+
+        % Structural scan
+        files_in.subject2.anat = cat(2,path_demo,filesep,'anat_subject2.mnc.gz');
+
+        % fMRI runs
+        files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc.gz');
+        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc.gz')};
+
     case 'minc2' % If data are in minc2 format
         
         %% Subject 1
-        files_in.subject1.fmri.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
-        files_in.subject1.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');       
         
+        % Structural scan 
+        files_in.subject1.anat = cat(2,path_demo,filesep,'anat_subject1.mnc');       
+        
+        % fMRI runs
+        files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
+        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc')};
+                
         %% Subject 2
-        files_in.subject2.fmri.session1 = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc')};
-        files_in.subject2.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject2.mnc');                       
+        
+        % Structural scan 
+        files_in.subject2.anat = cat(2,path_demo,filesep,'anat_subject2.mnc');       
+        
+        % fMRI runs
+        files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
+        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc')};
         
     otherwise 
         
@@ -105,7 +138,7 @@ opt.style = 'standard-native';
 opt.size_output = 'all';
 
 % Where to store the results
-opt.folder_out = cat(2,gb_niak_path_demo,filesep,'fmri_preprocess',filesep); 
+opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep); 
 
 % Flag to turn on and off the physiological noise correction
 opt.flag_corsica = true;              
