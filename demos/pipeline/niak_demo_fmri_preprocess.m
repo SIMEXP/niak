@@ -92,7 +92,7 @@ switch gb_niak_format_demo
 
         % fMRI runs
         files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
-        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz')};
+        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz');
 
         %% Subject 2
 
@@ -101,7 +101,7 @@ switch gb_niak_format_demo
 
         % fMRI runs
         files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc.gz');
-        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc.gz')};
+        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc.gz');
 
     case 'minc2' % If data are in minc2 format
         
@@ -112,7 +112,7 @@ switch gb_niak_format_demo
         
         % fMRI runs
         files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
-        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc')};
+        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc');
                 
         %% Subject 2
         
@@ -121,7 +121,7 @@ switch gb_niak_format_demo
         
         % fMRI runs
         files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
-        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc')};
+        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc');
         
     otherwise 
         
