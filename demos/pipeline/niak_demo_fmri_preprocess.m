@@ -81,7 +81,19 @@ end
 %% Setting input/output files %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-switch gb_niak_format_demo
+%% In which format is the niak demo ?
+format_demo = 'minc2';
+if exist(cat(2,path_demo,'anat_subject1.mnc'))
+    format_demo = 'minc2';
+elseif exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
+    format_demo = 'minc1';
+elseif exist(cat(2,path_demo,'anat_subject1.nii'))
+    format_demo = 'nii';
+elseif exist(cat(2,path_demo,'anat_subject1.img'))
+    format_demo = 'analyze';
+end
+
+switch format_demo
     
     case 'minc1' % If data are in minc1 format
         
@@ -125,12 +137,12 @@ switch gb_niak_format_demo
         
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',format_demo)
         
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%
-%% Pipeline options  %%
+%% Pipeline options  %%gb_niak_format_demo
 %%%%%%%%%%%%%%%%%%%%%%%
 
 % The style of the pipeline. Available options : 'fmristat',
