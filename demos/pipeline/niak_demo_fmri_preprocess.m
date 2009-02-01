@@ -70,7 +70,11 @@ function pipeline = niak_demo_frmi_preprocess(path_demo)
 clear
 niak_gb_vars
 if isempty(path_demo)
-    path_demo = gb_niak_path_demo);
+    path_demo = gb_niak_path_demo;
+end
+
+if ~strcmp(path_demo(end),filesep)
+    path_demo = [path_demo filesep];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
