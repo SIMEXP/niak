@@ -26,27 +26,7 @@ end
 
 gb_niak_shell = '/bin/sh'; %% where to find the bash shell system
 
-gb_niak_path_quarantine = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/'; % Where to find the CIVET quarantine
-
 gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9'; % The folder of the CIVET pipeline
-
-if length(findstr(gb_niak_shell,'csh'))>0
-    gb_niak_init_civet_local = 'init-sge.csh'; % Use the CSH shell initialization script
-else
-    gb_niak_init_civet_local = 'init-sge.sh'; % Use the SH shell initialization script
-end
-
-if length(findstr(gb_niak_shell,'csh'))>0
-    gb_niak_init_civet = 'init.csh'; % Use the CSH shell initialization script
-else
-    gb_niak_init_civet = 'init.sh'; % Use the CSH shell initialization script
-end
-
-gb_niak_command_matlab = 'matlab -nojvm -nosplash'; % how to invoke matlab   
-
-gb_niak_command_octave = 'octave-2.9.9'; % how to invoke octave
-
-gb_niak_sge_options = ''; % Options for the sge qsub system, example : '-q all.q@yeatman,all.q@zeus' will force qsub to only use the yeatman workstation;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables describe the folders and external tools NIAK is using for various tasks %%

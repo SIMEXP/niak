@@ -338,7 +338,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
 
     end
     
-    instr_ps2pdf = cat(2,gb_niak_ps2pdf,' ',file_fig_eps,' ',files_out.figure);
+    instr_ps2pdf = cat(2,'ps2pdf ',file_fig_eps,' ',files_out.figure);
     [succ,msg] = system(instr_ps2pdf);
     if succ~=0      
         warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf : ',msg));
