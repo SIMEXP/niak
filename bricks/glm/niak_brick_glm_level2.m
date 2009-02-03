@@ -1,15 +1,17 @@
-function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_glm_level2(files_in,files_out,opt)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_BRICK_GLM_LEVEL1
+% SUMMARY NIAK_BRICK_GLM_LEVEL2
 %
-% Fit a linear model to an individual run of fMRI time series data.
-%
-% The method is based on linear models with correlated AR(p) errors:
-% Y = hrf*X b + e, e_t=a_1 e_(t-1) + ... + a_p e_(t-p) + white noise_t.
+% The method is based on linear mixed effect model :
+% E = X b + e_fixed + e_random,     
+% where b is a vector of unknown coefficients,
+%       e_fixed  is normal with mean zero, standard deviation S,
+%       e_random is normal with mean zero, standard deviation sigma (unknown).
+% The model is fitted by REML using the EM algorithm 
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_GLM_LEVEL1(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_GLM_LEVEL2(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
@@ -17,15 +19,11 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %  * FILES_IN  
 %       (structure) with the following fields :
 %
-%       FMRI 
-%           (string) the name of a file containing an fMRI dataset. 
+%       EFFECT
+%           (cell of strings) 
 %     
-%       DESIGN 
-%           (string) a MAT file containing a unique variable X_CACHE.
-%           This structure describes the covariates of the model.
-%           See the help of FMRIDESIGN in the fMRIstat toolbox and
-%           http://www.math.mcgill.ca/keith/fmristat/#making for an 
-%           example.
+%       STANDARD_ERROR
+%           (cell of strings) 
 %
 %  * FILES_OUT 
 %       (structure) with the following fields. Note that if
@@ -34,46 +32,19 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 %       saved at all (this is equivalent to setting up the output file
 %       names to 'gb_niak_omitted').
 %
-%       DF    
-%           (string, default <BASE NAME>_df.mat)
-%           a mat file containing a structure called DF:
-%           DF.t are the effective df's of the T statistics,
-%           DF.F are the numerator and effective denominator dfs of F statistic,
-%           DF.resid is the least-squares degrees of freedom of the residuals,
-%           DF.cor is the effective df of the temporal correlation model.
-%
-%       SPATIAL_AV 
-%           (string, default <BASE NAME>_spatial_av.mat)
-%           column vector of the spatial average (SPATIAL_AV) 
-%           of the frames weighted by the first non-excluded frame.
-%
 %       MAG_T 
 %           (cell of strings, default <BASE NAME>_<CONTRAST NAME>_mag_t<EXT>)
 %           Each entry is a T statistic image =ef/sd for magnitudes associated 
 %           with a contrast. 
 %           If T > 100, T = 100.
 %     
-%       DEL_T 
-%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_t<EXT>)
-%           T statistic image =ef/sd for delays. Delays are shifts of the 
-%           time origin of the HRF, measured in seconds. Note that you 
-%           cannot estimate delays of the trends or confounds. 
-%
 %       MAG_EF 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_ef<EXT>)
 %           effect (b) image for magnitudes.
 %     
-%       DEL_EF 
-%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_ef<EXT>)
-%           effect (b) image for delays.
-%
 %       MAG_SD 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_sd<EXT>)
 %           standard deviation of the effect for magnitudes. 
-%
-%       DEL_SD 
-%           (cell of string, default <BASE NAME>_<CONTRAST NAME>_del_sd<EXT>)
-%           standard deviation of the effect for delays.
 %
 %       MAG_F 
 %           (cell of string, default <BASE NAME>_<CONTRAST NAME>_mag_F<EXT>)
@@ -243,7 +214,7 @@ function [files_in,files_out,opt] = niak_brick_glm_level1(files_in,files_out,opt
 % COMMENTS
 %
 % NOTE 1:
-% This brick is a "NIAKized" overlay of the FMRILM function from the
+% This brick is a "NIAKized" overlay of the MULTISTAT function from the
 % fMRIstat toolbox by Keith Worsley :
 % http://www.math.mcgill.ca/keith/fmristat/
 %
