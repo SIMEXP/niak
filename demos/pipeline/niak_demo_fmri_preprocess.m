@@ -163,6 +163,8 @@ opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep);
 % Flag to turn on and off the physiological noise correction
 opt.flag_corsica = true; 
 
+opt.flag_test = 1;
+
 %%%%%%%%%%%%%%%%%%%%
 %% Bricks options %%
 %%%%%%%%%%%%%%%%%%%%
