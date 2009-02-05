@@ -144,7 +144,7 @@ while ~isempty(cell_header)&~flag_end
                     var_name = '';
                 end
 
-                if max(niak_find_str_cell(list_vars,var_name))>0 % The name of the variable is a classic one. Let's parse the attributes (flag_OK=1).
+                if ismember(var_name,list_vars) % The name of the variable is a classic one. Let's parse the attributes (flag_OK=1).
                     flag_OK = 1;
                     if strcmp(var_name,'image-min')
                         var_name = 'image_min';
