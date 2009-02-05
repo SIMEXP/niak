@@ -69,6 +69,10 @@ function pipeline = niak_demo_frmi_preprocess(path_demo)
 
 niak_gb_vars
 
+if ~exist('path_demo','var')
+    path_demo = '';
+end
+
 if isempty(path_demo)
     path_demo = gb_niak_path_demo;
 end
@@ -142,22 +146,22 @@ switch format_demo
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%
-%% Pipeline options  %%gb_niak_format_demo
+%% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
 
 % The style of the pipeline. Available options : 'fmristat',
 % 'standard-native', 'standard-stereotaxic'.
-opt.style = 'standard-native';        
+opt.style = 'fmristat';
 
 % The quantity of outputs. 
 % Available options : 'minimum', 'quality_control', 'all'
-opt.size_output = 'all';
+opt.size_output = 'minimum';
 
 % Where to store the results
 opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep); 
 
 % Flag to turn on and off the physiological noise correction
-opt.flag_corsica = true;              
+opt.flag_corsica = true; 
 
 %%%%%%%%%%%%%%%%%%%%
 %% Bricks options %%

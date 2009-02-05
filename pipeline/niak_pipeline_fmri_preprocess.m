@@ -774,9 +774,9 @@ if flag_corsica % If the user requested a correction of physiological noise
         switch opt.style
             
             case 'fmristat'
-                
-                files_in_tmp.(subject).fmri = pipeline.(name_stage_in).files_out.motion_corrected_data;
-                
+                                
+                files_in_tmp.(subject).fmri = niak_files2cell(pipeline.(name_stage_in).files_out.motion_corrected_data);
+
             case {'standard-native','standard-stereotaxic'}
                 
                 for num_r = 1:nb_run
@@ -851,8 +851,9 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
 
         subject = list_subject{num_s};
         job_pipeline = fieldnames(pipeline);
-        files_raw = niak_files2cell(getfield(files_in,subject,'fmri'));
-        nb_run = length(files_raw);
+        stage_motion = cat(2,'motion_correction_',subject);
+        files_motion = niak_files2cell(pipeline.(stage_motion).files_out.motion_corrected_data);        
+        nb_run = length(files_motion);
 
         for num_r = 1:nb_run
 
@@ -878,7 +879,7 @@ if strcmp(style,'fmristat')|strcmp(style,'standard-native')
                     case 'fmristat'                     
                         
                         %% For fMRIstat
-                        files_in_tmp = files_raw{num_r};
+                        files_in_tmp = files_motion{num_r};
                         
                     case {'standard-native'}
                         
