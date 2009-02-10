@@ -761,7 +761,7 @@ if flag_corsica % If the user requested a correction of physiological noise
                 
                 name_stage_in = cat(2,'time_filter_',subject);
                 job_pipeline = fieldnames(pipeline);
-                list_stage_in = job_pipeline(find(niak_find_str_cell(job_pipeline,name_stage_in)));
+                list_stage_in = job_pipeline(find(niak_find_str_cell(job_pipeline,[name_stage_in '_'])));
                 nb_run = length(list_stage_in);
                 
         end
