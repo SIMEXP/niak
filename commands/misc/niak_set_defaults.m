@@ -87,7 +87,10 @@ for num_f = 1:nb_fields
     end    
                     
     % Upload the field as a variable   
-    assignin('caller',field,gb_niak_struct.(field));
+
+    %assignin('caller',field,gb_niak_struct.(field));
+    instr_upload = sprintf('%s = gb_niak_struct.%s;',field,field);
+    eval(instr_upload);
 end
 
 %% Test if some field were not used, and eventually issue a warning.

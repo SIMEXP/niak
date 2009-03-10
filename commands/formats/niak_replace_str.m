@@ -1,25 +1,39 @@
 function str2 = niak_replace_str(str1,str_find,str_replace)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_REPLACE_STR
+%
 % Replace all occurences of one string by another in a string.
 %
 % SYNTAX:
 % STR = NIAK_REPLACE_STR(STR1,STR2)
 % 
+% _________________________________________________________________________
 % INPUTS:
-% STR1      (string)
-% STR_FIND      (string)
-% STR_REPLACE   (string)
-% OUTPUTS:
-% STR2       (string) same as str1, except all occurences of STR_FIND have
-%           been replaced by STR_REPLACE.
 %
-% SEE ALSO:
+% STR1      
+%       (string) an arbitrary string.
+%
+% STR_FIND      
+%       (string) the string that needs to be replaced
+%
+% STR_REPLACE   
+%       (string) the "replace by" string
+%
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% STR2       
+%       (string) same as STR1, except all occurences of STR_FIND have
+%       been replaced by STR_REPLACE.
+%
+% _________________________________________________________________________
+% COMMENTS
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : string
-
+% Keywords : niak, string
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -40,16 +54,22 @@ function str2 = niak_replace_str(str1,str_find,str_replace)
 % THE SOFTWARE.
 
 pos = findstr(str1,str_find);
-str2 = [];
-
-num_p = 1;
-while num_p <= length(str1)
+if isempty(pos)
     
-    if ismember(num_p,pos)
-        str2 = [str2 str_replace];
-        num_p = num_p + length(str_find);
-    else
-        str2 = [str2 str1(num_p)];
-        num_p = num_p+1;
+    str2 = str1;
+    
+else
+    str2 = [];
+
+    num_p = 1;
+    while num_p <= length(str1)
+
+        if ismember(num_p,pos)
+            str2 = [str2 str_replace];
+            num_p = num_p + length(str_find);
+        else
+            str2 = [str2 str1(num_p)];
+            num_p = num_p+1;
+        end
     end
 end

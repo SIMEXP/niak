@@ -80,7 +80,7 @@ gb_niak_ps2pdf = 'ps2pdf';
 gb_niak_version = '0.6.1'; % 
 
 %% Is the environment Octave or Matlab ?
-if exist('OCTAVE_VERSION')    
+if exist('OCTAVE_VERSION','var')    
     gb_niak_language = 'octave'; %% this is octave !
 else
     gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab

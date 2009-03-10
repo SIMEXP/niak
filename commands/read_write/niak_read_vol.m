@@ -200,8 +200,7 @@ else
                 if succ~=0
                     error(msg)
                 end
-
-
+                
                 instr_unzip = cat(2,gb_niak_unzip,' ',file_tmp_gz);
 
                 [succ,msg] = system(instr_unzip);

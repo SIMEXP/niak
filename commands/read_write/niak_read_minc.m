@@ -82,12 +82,16 @@ if nargout == 2
     if flag>0
         error(sprintf('niak:read : %s',str_info))
     end
-
+    
     %% reading information
     hf = fopen(file_tmp,'r');
-    vol = fread(hf,prod(hdr.info.dimensions),['*' precision_data]);
+    try
+        vol = fread(hf,prod(hdr.info.dimensions),['*' precision_data]);
+    catch
+        vol = fread(hf,prod(hdr.info.dimensions),precision_data);
+    end
 
-    %% Remonving temporary stuff
+    %% Removing temporary stuff
     fclose(hf);
     system(cat(2,'rm -f ',file_tmp));
 
