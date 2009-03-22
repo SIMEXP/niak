@@ -1,4 +1,4 @@
-function pipeline = niak_demo_frmi_preprocess(path_demo)
+function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_FMRI_PREPROCESS

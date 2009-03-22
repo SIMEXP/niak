@@ -160,8 +160,8 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %             deviation of the time series for each run.
 %
 %       FLAG_RUN
-%          (boolean, default 1) if FLAG_RUN == 1, each different run is
-%          considered as a different session of its own, i.e. first each
+%          (boolean, default 1) if FLAG_RUN == 1, each run is
+%          considered as a session of its own, i.e. first each
 %          volume of each run is coregistered with a volume of reference in
 %          that run, then all volumes of reference are coregistered to one
 %          single volume (the coregistration process is iterated twice).
@@ -185,12 +185,6 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           the functional target space will be resampled to get rid of the
 %           voxel-to-world coordinates transformation. This means that a
 %           new field of view fitting the brain will have to be derived.
-%
-%       FLAG_PERCENTAGE (boolean, default: 0) if FLAG_PERCENTAGE equals 1,
-%           the value of each voxel in every volume will be divided by the
-%           mean value at this voxel for the current run and then
-%           mutliplied by 100, i.e. the unit of the motion-corrected data
-%           is now a percentage of the baseline for each run.
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present,
@@ -327,6 +321,7 @@ if flag_run == 1
     list_sessions = fieldnames(files_in.sessions);
     nb_sessions = length(list_sessions);
 end
+
 %% Building default output names
 
 flag_def_data = isempty(files_out.motion_corrected_data);
@@ -437,9 +432,7 @@ end
 if ischar(files_in.motion_parameters) % that means that we need to estimate the motion parameters
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Estimation of motion parameters        %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

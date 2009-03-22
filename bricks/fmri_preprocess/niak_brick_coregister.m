@@ -68,14 +68,6 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 %  * OPT
 %       (structure) with the following fields:
 %
-%       INIT
-%           (string, default 'identity') how to set the initial guess
-%           of the transformation. 'center': translation to align the
-%           center of mass. 'identity' : identity transformation.
-%           The 'center' option usually does more harm than good. Use it
-%           only if you have very big misrealignement between the two
-%           images (say, > 2 cm).
-%
 %       FOLDER_OUT
 %           (string, default: path of FILES_IN) If present, all default
 %           outputs will be created in the folder FOLDER_OUT. The folder
@@ -175,13 +167,9 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_zip','flag_test','folder_out','flag_verbose','init'};
-gb_list_defaults = {0,0,'',1,'center'};
+gb_list_fields = {'flag_zip','flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {0,0,'',1};
 niak_set_defaults
-
-if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
-    error('OPT.INIT should be either ''center'' or ''identity''');
-end
 
 %% Building default output names
 [path_anat,name_anat,ext_anat] = fileparts(files_in.anat);
@@ -243,25 +231,33 @@ if flag_verbose
 end
 
 %% Generating temporary file names
-file_func_init = niak_file_tmp('_func_init.mnc'); % Functional stuff ...
-file_func_crop = niak_file_tmp('_func_crop.mnc');
-file_func_blur = niak_file_tmp('_func_blur.mnc');
 
-file_anat_init = niak_file_tmp('_anat_init.mnc'); % Anatomical stuff ...
-file_anat_crop = niak_file_tmp('_anat_crop.mnc');
-file_anat_blur = niak_file_tmp('_anat_blur.mnc');
+% Generate a temporary folder
+path_tmp = niak_path_tmp('_coregister'); 
 
-file_mask_func = niak_file_tmp('_mask_func.mnc'); % Masks ...
-file_mask_func_crop = niak_file_tmp('_mask_func_crop.mnc');
-file_mask_anat = niak_file_tmp('_mask_anat.mnc');
-file_mask_anat_crop = niak_file_tmp('_mask_anat_crop.mnc');
+% Functional stuff ...
+file_func_init = [path_tmp 'func_init.mnc']; 
+file_func_blur = [path_tmp 'func_blur.mnc'];
 
-file_transf_init = niak_file_tmp('_transf_init.xfm'); % transformations ...
-file_transf_guess = niak_file_tmp('_transf_guess.xfm');
-file_transf_est = niak_file_tmp('_transf_est.xfm');
+% Anatomical stuff ...
+file_anat_init = [path_tmp 'anat_init.mnc']; 
+file_anat_crop = [path_tmp 'anat_crop.mnc'];
+file_anat_blur = [path_tmp 'anat_blur.mnc'];
 
-file_tmp = niak_file_tmp('_tmp.mnc'); % Scratch files for dirty jobs ...
-file_tmp2 = niak_file_tmp('_tmp2.mnc');
+% Masks ...
+file_mask_func      = [path_tmp 'mask_func.mnc']; 
+file_mask_func_crop = [path_tmp 'mask_func_crop.mnc'];
+file_mask_anat      = [path_tmp 'mask_anat.mnc'];
+file_mask_anat_crop = [path_tmp 'mask_anat_crop.mnc'];
+
+% transformations ...
+file_transf_init  = [path_tmp 'transf_init.xfm']; 
+file_transf_guess = [path_tmp 'transf_guess.xfm'];
+file_transf_est   = [path_tmp 'transf_est.xfm'];
+
+% Scratch files for dirty jobs ...
+file_tmp  = [path_tmp 'vol_tmp.mnc']; 
+file_tmp2 = [path_tmp 'vol_tmp2.mnc'];
 
 %% Initial transformation
 if strcmp(files_in.transformation,'gb_niak_omitted')
@@ -297,17 +293,25 @@ niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 if flag_verbose
     fprintf('Building a mask of the functional space...\n');
 end
-opt_mask.fwhm = 0;
+opt_mask.fwhm = 6;
 opt_mask.flag_remove_eyes = 1;
 mask_func = niak_mask_brain(mean(abs(vol_func),4),opt_mask);
 hdr_func.file_name = file_tmp;
 niak_write_vol(hdr_func,mask_func);
-instr_res = cat(2,'mincresample -clobber ',file_tmp,' ',file_mask_func,' -like ',file_func_init,' -transform ',file_transf_init,' -nearest_neighbour');
+instr_res = cat(2,'mincresample -clobber ',file_tmp,' ',file_mask_func,' -like ',file_func_init,' -transform ',file_transf_init,' -trilinear');
 [succ,msg] = system(instr_res);
 
 if succ~=0
     error(cat(2,'There was a problem in the resampling of the mask... COMMAND :',instr_res,' ; ERROR :',msg));
 end
+
+%% Correct the mean functional
+[hdr_func_init,vol_func_init] = niak_read_vol(file_func_init);
+[hdr_mask_func,mask_func] = niak_read_vol(file_mask_func);
+vol_func_init(mask_func>0) = vol_func_init(mask_func>0)/median(vol_func_init(mask_func>0));
+vol_func_init(mask_func==0) = 0;
+hdr_func_init.file_name = file_func_init;
+niak_write_vol(hdr_func_init,vol_func_init);
 
 %% Generating anatomical mask & image
 if flag_verbose
@@ -320,53 +324,26 @@ mask_anat = round(mask_anat)>0;
 niak_write_vol(hdr_anat,mask_anat);
 
 [hdr_anat,vol_anat] = niak_read_vol(files_in.csf); % CSF segmentation ...
-vol_anat(mask_anat) = ((vol_anat(mask_anat)>0.1)*1.5)+1;
+vol_anat(mask_anat) = ((vol_anat(mask_anat)>0)*1.5)+1;
 hdr_anat.file_name = file_anat_init;
 niak_write_vol(hdr_anat,vol_anat);
 
-%% For large displacement, make a first guess of the transformation by
-%% matching the centers of mass
+%% Initial transformation
 
-switch opt.init
-
-    case 'center'
-
-        if flag_verbose
-            fprintf('Deriving a reasonable guess of the transformation by matching the brain masks ...\n');
-        end
-        [hdr_func,mask_func] = niak_read_vol(file_mask_func);
-        [hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);
-        transf_init = niak_read_transf(file_transf_init);
-        ind = find(mask_func>0);
-        [x,y,z] = ind2sub(size(mask_func),ind);
-        coord = (hdr_func.info.mat*[x';y';z';ones([1 length(x)])])';
-        center_func = mean(coord,1);
-        ind = find(mask_anat>0);
-        [x,y,z] = ind2sub(size(mask_anat),ind);
-        coord = (hdr_anat.info.mat*[x';y';z';ones([1 length(x)])])';
-        center_anat = mean(coord,1);
-        transf_guess = eye(4);
-        transf_guess(1:3,4) = (center_anat(1:3)-center_func(1:3))';
-        transf_guess(1:3,4) = (center_anat(1:3)-center_func(1:3))';
-        niak_write_transf(transf_guess,file_transf_guess);
-
-    case 'identity'
-
-        if flag_verbose
-            fprintf('Initial transformation is the identity...\n');
-        end
-        transf_guess = eye(4);
-        niak_write_transf(transf_guess,file_transf_guess);
-
+if flag_verbose
+    fprintf('Initial transformation is the identity...\n');
 end
+transf_guess = eye(4);
+niak_write_transf(transf_guess,file_transf_guess);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Iterative coregistration %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% hard-coded parameters for the iterations
-list_fwhm = {8,4};
-list_fwhm_func = {4,1};
+%% Blurring parameters
+list_fwhm = {hdr_func.info.voxel_size*2,hdr_func.info.voxel_size};
+list_fwhm_func = {[2 2 2],[1 1 1]};
 list_step = {3,3};
 list_spline = {10,3};
 list_crop = {20,20};
@@ -381,7 +358,7 @@ for num_i = 1:length(list_fwhm)
     crop_val = list_crop{num_i};
 
     if flag_verbose
-        fprintf('\n*************\nIteration %i, smoothing anatomical %1.2f, smoothing functional %1.2f, step %1.2f\n*************\n',num_i,fwhm_val,fwhm_val_func,step_val);
+        fprintf('\n*************\nIteration %i, smoothing anatomical %1.2f,%1.2f,%1.2f, smoothing functional %1.2f,%1.2f,%1.2f, step %1.2f, spline %1.2f\n*************\n',num_i,fwhm_val(1),fwhm_val(2),fwhm_val(3),fwhm_val_func(1),fwhm_val_func(2),fwhm_val_func(3),step_val,spline_val);
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -392,46 +369,72 @@ for num_i = 1:length(list_fwhm)
         fprintf('\nCropping the images to a common field of view ... \n');
     end
 
-    %% Dilate functional mask in the anatomical space & interesect with the
-    %% dilated anatomical mask
+    %% Cropping anatomical mask
+    
+    % resample functional mask in the anatomical space
     nb_dilate = ceil(crop_val/min(hdr_anat.info.voxel_size));
-    instr_res = cat(2,'mincresample ',file_mask_func,' ',file_tmp,' -like ',file_mask_anat,' -transform ',file_transf_guess,' -nearest_neighbour -clobber');
+    instr_res = cat(2,'mincresample ',file_mask_func,' ',file_tmp,' -like ',file_mask_anat,' -transform ',file_transf_guess,' -trilinear -clobber');
     [succ,msg] = system(instr_res);
+    
+    % Threshold the functional mask
+    [hdr_tmp,vol_tmp] = niak_read_vol(file_tmp);
+    vol_tmp = vol_tmp>0;
+    hdr_tmp.file_name = file_tmp;
+    niak_write_vol(hdr_tmp,vol_tmp);
+    
+    % Dilate the functional mask
     instr_dilate = cat(2,'mincmorph -clobber -successive ',repmat('D',[1 nb_dilate]),' ',file_tmp,' ',file_tmp2);
     [succ,msg] = system(instr_dilate);
+    
+    %% Interesect the anatomical mask with the dilated functional mask
     [hdr_anat,mask_func_d] = niak_read_vol(file_tmp2);
     [hdr_anat,mask_anat_d] = niak_read_vol(file_mask_anat);
     hdr_anat.file_name = file_mask_anat_crop;
     niak_write_vol(hdr_anat,round(mask_anat_d) & round(mask_func_d));
 
-    %% Dilate anatomical mask in the functional space & interesect with the
-    %% dilated anatomical mask
-    nb_dilate = ceil(crop_val/min(hdr_func.info.voxel_size));
+    %% Dilate anatomical mask in the functional space
+    
+    % resample anatomical mask in functional space
     instr_res = cat(2,'mincresample ',file_mask_anat,' ',file_tmp,' -like ',file_mask_func,' -invert_transform -transform ',file_transf_guess,' -nearest_neighbour -clobber');
     [succ,msg] = system(instr_res);
+    
+    % dilate the anatomical mask
+    nb_dilate = ceil(crop_val/min(hdr_func.info.voxel_size));
     instr_dilate = cat(2,'mincmorph -clobber -successive ',repmat('D',[1 nb_dilate]),' ',file_tmp,' ',file_tmp2);
     [succ,msg] = system(instr_dilate);
+    
+    %% intersect the functional mask with the dilated anatomical mask
     [hdr_func,mask_anat_d] = niak_read_vol(file_tmp2);
     [hdr_func,mask_func_d] = niak_read_vol(file_mask_func);
     hdr_func.file_name = file_mask_func_crop;
-    niak_write_vol(hdr_func,round(mask_anat_d)&round(mask_func_d));
-
-    %% adjusting the csf segmentation
+    niak_write_vol(hdr_func,round(mask_anat_d)&(mask_func_d>0));
+    
+    %% Smoothing the functional image
     if flag_verbose
-        fprintf('Masking the brain in anatomical space ...\n');
+        fprintf('Smoothing the functional image ...\n');
     end
-    [hdr_anat,vol_anat] = niak_read_vol(file_anat_init);
-    [hdr_anat,mask_anat] = niak_read_vol(file_mask_anat_crop);
-    mask_anat = round(mask_anat)>0;
-    vol_anat(~mask_anat) = 0;
-    hdr_anat.file_name = file_anat_crop;
-    niak_write_vol(hdr_anat,vol_anat);
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -3dfwhm ',num2str(fwhm_val_func),' ',file_func_init,' ',file_func_blur(1:end-9));
+    if flag_verbose
+        system(instr_smooth)
+    else
+        [succ,msg] = system(instr_smooth);
+        if succ ~= 0
+            error(msg)
+        end
+    end
+    
+    %% Cropping the smoothed functional
+    [hdr_tmp,vol_func_smooth] = niak_read_vol(file_func_blur);
+    [hdr_func,mask_func] = niak_read_vol(file_mask_func_crop);
+    vol_func_smooth(mask_func==0) = 0;
+    hdr_tmp.file_name = file_func_blur;
+    niak_write_vol(hdr_tmp,vol_func_smooth);
 
     %% smoothing anat
     if flag_verbose
         fprintf('Smoothing the anatomical image ...\n');
     end
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val),' ',file_anat_crop,' ',file_anat_blur(1:end-9));
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -3dfwhm ',num2str(fwhm_val),' ',file_anat_init,' ',file_anat_blur(1:end-9));
     if flag_verbose
         system(instr_smooth)
     else
@@ -441,32 +444,14 @@ for num_i = 1:length(list_fwhm)
         end
     end
 
-    %% Masking the brain in functional space
-    if flag_verbose
-        fprintf('Masking the brain in functional space ...\n');
-    end
-    [hdr_func,vol_func] = niak_read_vol(file_func_init);
-    [hdr_func,mask_func] = niak_read_vol(file_mask_func_crop);
-    vol_func(mask_func==0) = 0;
-    vol_func(mask_func==1) = (vol_func(mask_func==1)/median(vol_func(mask_func==1)));
-    hdr_func.file_name = file_func_crop;
-    niak_write_vol(hdr_func,vol_func);
-
-    %% Smoothing the functional image
-    if flag_verbose
-        fprintf('Smoothing the functional image ...\n');
-    end
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val_func),' ',file_func_crop,' ',file_func_blur(1:end-9));
-    if flag_verbose
-        system(instr_smooth)
-    else
-        [succ,msg] = system(instr_smooth);
-        if succ ~= 0
-            error(msg)
-        end
-    end
-
-
+    %% Cropping the smoothed anat
+    [hdr_tmp,vol_anat_smooth] = niak_read_vol(file_anat_blur);
+    [hdr_func,mask_anat] = niak_read_vol(file_mask_anat_crop);
+    vol_anat_smooth(mask_anat==0) = 0;
+    vol_anat_smooth = (vol_anat_smooth/max(vol_anat_smooth(:)))*max(vol_func_smooth(:));
+    hdr_tmp.file_name = file_anat_blur;
+    niak_write_vol(hdr_tmp,vol_anat_smooth);
+    
     %% applying MINCTRACC
     if num_i == 1
         instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
@@ -504,7 +489,7 @@ if ~strcmp(files_out.transformation,'gb_niak_omitted')
         error(msg)
     end
 else
-    file_transf_guess2 = niak_file_tmp('_transf_tmp2.xfm');
+    file_transf_guess2 = [path_tmp 'transf_tmp2.xfm'];
     [succ,msg] = system(cat(2,'xfmconcat ',file_transf_init,' ',file_transf_est,' ',file_transf_guess2));
     if succ~=0
         error(msg)
@@ -557,25 +542,7 @@ if ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres
 end
 
 %% Get rid of the temporary file
-if strcmp(files_out.transformation,'gb_niak_omitted')
-    delete(file_transf_guess2);
-end
-
-delete(file_mask_anat);
-delete(file_mask_anat_crop);
-delete(file_mask_func);
-delete(file_mask_func_crop);
-delete(file_transf_init);
-delete(file_transf_guess);
-delete(file_transf_est);
-delete(file_anat_init);
-delete(file_anat_crop);
-delete(file_anat_blur);
-delete(file_func_init);
-delete(file_func_crop);
-delete(file_func_blur);
-delete(file_tmp);
-delete(file_tmp2);
+rmdir(path_tmp,'s');
 
 if flag_verbose
     fprintf('\nDone !\n');
