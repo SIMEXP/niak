@@ -1,49 +1,66 @@
 function [vol_a,opt] = niak_slice_timing(vol,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_SLICE_TIMING
+%
 % Correct for differences in slice timing in a 4D fMRI acquisition via
 % temporal interpolation
 %
 % SYNTAX:
 % [VOL_A,OPT] = NIAK_SLICE_TIMING(VOL,OPT)
 %
+% _________________________________________________________________________
 % INPUTS:
-% VOL           (4D array) a 3D+t dataset
-% OPT           (structure) with the following fields :
 %
-%               INTERPOLATION   (string, default 'sinc') the method for
-%                       temporal interpolation, choices 'linear' or 'sinc'.
+% VOL           
+%       (4D array) a 3D+t dataset
+% OPT           
+%       (structure) with the following fields :
 %
-%               SLICE_ORDER (vector of integer) SLICE_ORDER(i) = k means
-%                      that the kth slice was acquired in ith position. The
-%                      order of the slices is assumed to be the same in all
-%                      volumes.
-%                      ex : slice_order = [1 3 5 2 4 6]
-%                      for 6 slices acquired in 'interleaved' mode,
-%                      starting by odd slices(slice 5 was acquired in 3rd 
-%                      position). Note that the slices are assumed to be 
-%                      axial, i.e. slice z at time t is
-%                      vols(:,:,z,t).
+%       INTERPOLATION   
+%           (string, default 'sinc') the method for temporal interpolation, 
+%           choices 'linear' or 'sinc'.
 %
-%               REF_SLICE	(integer, default midle slice in acquisition time)
-%                       slice for time 0
+%       SLICE_ORDER 
+%           (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
+%           was acquired in ith position. The order of the slices is 
+%           assumed to be the same in all volumes.
+%           ex : slice_order = [1 3 5 2 4 6] for 6 slices acquired in 
+%           'interleaved' mode, starting by odd slices(slice 5 was acquired 
+%           in 3rd position). Note that the slices are assumed to be axial, 
+%           i.e. slice z at time t is vols(:,:,z,t).
 %
-%               TIMING		(vector 2*1) TIMING(1) : time between two slices
-%                           TIMING(2) : time between last slice and next volume
+%       REF_SLICE	
+%           (integer, default midle slice in acquisition time) slice for 
+%           time 0
 %
-%               FLAG_VERBOSE (boolean, default 1) if the flag is 1, then
-%                       the function prints some infos during the
-%                       processing.
+%       TIMING		
+%           (vector 2*1) TIMING(1) : time between two slices
+%           TIMING(2) : time between last slice and next volume
 %
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then the function prints 
+%           some infos during the processing.
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% VOL_A        (4D array) same as VOL after slice timing correction has
-%                       been applied through temporal interpolation
-% OPT          (structure) same as the input, but fields have been updated
-%                       with default values.
 %
+% VOL_A        
+%       (4D array) same as VOL after slice timing correction has
+%       been applied through temporal interpolation
+%
+% OPT          
+%       (structure) same as the input, but fields have been updated
+%       with default values.
+%
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_BRICK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
 %
+% _________________________________________________________________________
 % COMMENTS:
+%
 % The linear interpolation was coded by P Bellec, MNI 2008
 %
 % The sinc interpolation is a port from SPM5, under the GNU license.
@@ -51,7 +68,7 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 % Based (in large part) on ACQCORRECT.PRO from Geoff Aguirre and
 % Eric Zarahn at U. Penn.
 % Subsequently modified by R Henson, C Buechel, J Ashburner and M Erb.
-% adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
+% Adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
 %
 % Copyright (C) Wellcome Department of Imaging Neuroscience 2005
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -137,6 +154,7 @@ elseif strcmp(interpolation,'sinc')
     for num_z = 1:nb_slices
 
         rslice = find(slice_order==ref_slice);
+        
         % Set up time acquired within slice order
         shiftamount  = (find(slice_order == num_z) - rslice) * factor;
 
@@ -144,6 +162,7 @@ elseif strcmp(interpolation,'sinc')
         slices_z = zeros([nt2 nx*ny]);
         slices_tmp = squeeze(vol(:,:,num_z,:));
         slices_z(1:nt,:) = reshape(slices_tmp,[nx*ny nt])';
+        
         % linear interpolation to avoid edge effect
         vals1 = slices_z(nt,:);
         vals2 = slices_z(1,:);
@@ -155,7 +174,6 @@ elseif strcmp(interpolation,'sinc')
         phi = zeros(1,nt2);
         list_f = 1:nt2/2;
         phi(list_f+1) = -1*shiftamount*2*pi./(nt2./list_f);
-
 
         % Mirror phi about the center
         % 1 is added on both sides to reflect Matlab's 1 based indices
