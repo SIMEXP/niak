@@ -1,4 +1,4 @@
-function [] = niak_visu_wft(tseries,tr);
+function [specgm,specgmShow,T,F] = niak_visu_wft(tseries,tr)
 
 % Visualization of the window Fourier transform of a 1D signal.
 %
@@ -50,13 +50,20 @@ function [] = niak_visu_wft(tseries,tr);
 if nargin<2
     tr = 1;
 end
+
+[specgm,specgmShow,T,F]=WFT(tseries,floor(nt*tr/(8)),1,'Gaussian',tr);
+
 M = ceil(sqrt(n));
 N = ceil(n/M);
 for i = 1:n
     if n>1
         subplot(M,N,i);
     end
-    WFT(tseries(:,i),floor(nt*tr/(8)),1,'Gaussian',tr);
+    colormap(1-gray(256))
+    imagesc(T,F,squeeze(specgmShow(:,:,i)));
+    axis('xy')
+    xlabel('')
+    ylabel('Frequency')
 end
 
 colormap('jet')
@@ -122,7 +129,7 @@ end;
 % Comments? e-mail wavelab@stat.stanford.edu
 %
 
-function [specgm,specgmShow,T,F] = WFT(sig,w,m,Name,tr,trace)
+function [specgm,specgmShow,T,F] = WFT(sig,w,m,Name,tr)
 % WindowFT -- Window Fourier Transform
 %  Usage
 %    specgm = WindowFT(sig,w,m,Name,tr)
@@ -149,54 +156,38 @@ function [specgm,specgmShow,T,F] = WFT(sig,w,m,Name,tr,trace)
 %    Mallat, "A Wavelet Tour in Signal Processing";
 %            4.2.3 Discrete Windowed Fourier Transform.
 %
-sig = sig(:);
-n = length(sig);
-f = [zeros(n,1); sig; zeros(n,1)];
 
-% Default parameters,
-if nargin<6
-    trace=1;
-end
+[n,nsig] = size(sig);
+f = [zeros(n,nsig); sig; zeros(n,nsig)];
+
 % Initialize output matrix,
 nw     = floor(n ./ m);
-specgm = zeros(n,nw);
+specgm = zeros(n,nw,nsig);
 ix     = ((-w):w);
 win    = MakeWindow(Name,w);
-win    = win(:);
+win    = repmat(win(:),1,nsig);
 
 % Computing Window Fourier Transform
 for l=1:nw,
-    totseg = zeros(1,3*n);
+    totseg = zeros(3*n,nsig);%totseg = zeros(1,3*n);
     t = 1+ (l-1)*m;
     tim = n + t + ix;
-    seg = f(tim);
+    seg = f(tim,:);
     seg = seg.*win;
 
-    totseg(tim) = seg;
-
-    localspec = fft(totseg(n+1:2*n));
-    specgm(:,l)  = localspec(1:n)';
+    totseg(tim,:) = seg;
+    temp = totseg(n+1:2*n,:);
+    localspec = fft(temp);
+    specgm(:,l,:)  = localspec(1:n,:);
 end
 
 % Make Window Fourier Transform Display
 
-specgmShow = abs(specgm((1:(n/2+1))',:));
-spmax = max(max(specgmShow));
-spmin = min(min(specgmShow));
+specgmShow = abs(specgm(1:(n/2+1),:,:));
+%spmax = max(max(specgmShow));
+%spmin = min(min(specgmShow));
 T = linspace(0,tr*n,n);
 F = linspace(0,1/(2*tr),n/2+1);
-
-if trace
-    colormap(1-gray(256))
-
-    imagesc(linspace(0,tr*n,n),linspace(0,1/(2*tr),n/2+1),specgmShow);
-    %hold on
-    %contour(linspace(0,tr*n,n),linspace(0,1/(2*tr),n/2+1),specgmShow,'k-');
-
-    axis('xy')
-    xlabel('')
-    ylabel('Frequency')
-end
 
 if nargout==0,
     specgm = [];
