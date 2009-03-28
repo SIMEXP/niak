@@ -24,13 +24,13 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %       (structure) with the following fields.  
 %
 %       SUPPRESS_VOL 
-%           (integer, default 1) the number of volumes that are suppressed 
-%           at the begining and the end of the time series. This is done 
-%           to limit the edges effects in the sinc interpolation.
+%           (integer, default 0) the number of volumes that are suppressed 
+%           at the begining and the end of the time series. This can be 
+%           usefull to limit the edges effects in the sinc interpolation.
 %
-%       INTERPOLATON 
-%           (string, default 'sinc') the method for temporal interpolation, 
-%           choices 'linear' or 'sinc'.
+%       INTERPOLATION
+%           (string, default 'spline') the method for temporal interpolation,
+%           Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
 %
 %       SLICE_ORDER 
 %           (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
@@ -87,18 +87,33 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % _________________________________________________________________________
 % COMMENTS
 %
-% This stage changes the timing of your experiment ! Those changes are
+% Note 1:
+% This process changes the timing of your data ! Those changes are
 % twofold :
 % 1. Some volumes are removed at the begining/end of the acquisition 
 %    (see OPT.SUPPRESS_VOL).
-% 2. The time of reference in a volume is now the time of the slice of
+% 2. The time of all slices in a volume is now the time of the slice of
 %    reference.
-% It is important that these effects are taken into account if 
-% stimulus timing are considered in any further anaysis, 
-% typically in a general linear model. The influence may be negligible for 
-% some design, e.g. long blocks, and more important for other ones, e.g. 
-% event-related. Packages like fMRIstat include the slice timing in the 
-% model, so this stage of analysis may not be necessary.
+% It is important that these effects are taken into account if stimulus 
+% timing are considered in any further anaysis, typically in a general 
+% linear model. The influence may be negligible for some design, e.g. long 
+% blocks, and more important for other ones, e.g. event-related. Packages 
+% like fMRIstat include the slice timing in the model, so slice timing 
+% correction may not be necessary in the preprocessing.
+%
+% NOTE 2:
+% The linear/cubic/spline interpolations were coded by P Bellec, MNI 2008.
+% They are all based on the INTERP1 matlab function, please refer to the
+% associated documentation for more details regarding the interpolation
+% schemes.
+%
+% NOTE 3:
+% The sinc interpolation is a port from SPM5, under the GNU license.
+% First code : Darren Gitelman at Northwestern U., 1998
+% Based (in large part) on ACQCORRECT.PRO from Geoff Aguirre and
+% Eric Zarahn at U. Penn.
+% Subsequently modified by R Henson, C Buechel, J Ashburner and M Erb.
+% Adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -138,7 +153,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'flag_skip','flag_variance','suppress_vol','interpolation','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0,1,1,'sinc',NaN,[],NaN,1,0,''};
+gb_list_defaults = {0,1,0,'spline',NaN,[],NaN,1,0,''};
 niak_set_defaults
 
 nb_slices = length(opt.slice_order);
