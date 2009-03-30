@@ -21,19 +21,6 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 % OPT         
 %       (structure, optional) with the following fields :
 %
-%       FWHM_COR
-%           (real number, default -100) The fwhm in mm of a 3D Gaussian 
-%           kernel used to smooth the autocorrelation of residuals. Setting 
-%           it to Inf smooths the auto-correlation to 0, i.e. it assumes 
-%           the frames are uncorrelated (useful for TR>10 seconds). Setting 
-%           it to 0 does no smoothing.
-%           If FWHM_COR is negative, it is taken as the desired df, and the 
-%           fwhm is chosen to achive this df, or 90% of the residual df, 
-%           whichever is smaller, for every contrast, up to 50mm. 
-%           If a second component is supplied, it is the fwhm in mm of the 
-%           data, otherwise this is estimated quickly from the 
-%           least-squares residuals. 
-%
 %       NUMLAGS
 %           (integer, default 1) The order (p) of the autoregressive model.
 %        
@@ -94,8 +81,8 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm_cor','numlags','vox'};
-gb_list_defaults = {-100,1,[1 1 1]};
+gb_list_fields = {'numlags','vox'};
+gb_list_defaults = {1,[1 1 1]};
 niak_set_defaults
 
 Steps = opt.vox;
@@ -122,12 +109,7 @@ wresid_vol = reshape(wresid_vol,[nx,ny,nz,n]);
 
 % Quick fwhm of data
 for slice=1:nz
-    if length(fwhm_cor)==2
-         if slice==numslices
-            fwhm = fwhm_cor(2);
-         end
-    else
-         wresid_slice = squeeze(wresid_vol(:,:,slice,:));
+    wresid_slice = squeeze(wresid_vol(:,:,slice,:));
          if slice==1
             D=2+(nz>1);
             sumr=0;
@@ -172,6 +154,5 @@ for slice=1:nz
             sumr=sumr+sum(sum(r.*mask_slice));
             fwhm = sqrt(4*log(2))*(prod(abs(Steps(1:D)))*tot/sumr)^(1/3);
          end
-    end
 end
       

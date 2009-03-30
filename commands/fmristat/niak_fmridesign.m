@@ -1,4 +1,4 @@
-function X_cache = niak_fmridesign(opt)
+function x_cache = niak_fmridesign(opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_FMRIDESGIN
@@ -38,7 +38,7 @@ function X_cache = niak_fmridesign(opt)
 %           correspond to the event id number. EVENT_TIMES=[] will ignore event 
 %           times and just use the stimulus design matrix S (see next). 
 %
-%       S 
+%       s 
 %           (matrix, default []) Events can also be supplied by a stimulus 
 %           design matrix, whose rows are the frames, and column are the 
 %           event types. Events are created for each column, beginning at 
@@ -123,7 +123,7 @@ function X_cache = niak_fmridesign(opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'frametimes','slicetimes','events','S'};
+gb_list_fields = {'frametimes','slicetimes','events','s'};
 gb_list_defaults = {NaN,0,[1 0],[]};
 niak_set_defaults
 
@@ -160,8 +160,8 @@ else
    maxeventime=-Inf;
 end
 
-if ~isempty(S)
-   numcolS=size(S,2);
+if ~isempty(s)
+   numcolS=size(s,2);
 else
    numcolS=0;
 end
@@ -187,9 +187,9 @@ if ~isempty(events)
    end
 end
 
-if ~isempty(S)
+if ~isempty(s)
    for j=1:numcolS
-      for i=find(S(:,j)')
+      for i=find(s(:,j)')
          n1=ceil((frametimes(i)-startime)/dt)+1;
          if i<n
             n2=ceil((frametimes(i+1)-startime)/dt);
@@ -210,7 +210,7 @@ shift = repmat(shift,numresponses,1);
 
 eventmatrix=zeros(numtimes,numresponses,4);
 nd=41;
-X_cache.W=zeros(nd,numresponses,5);
+x_cache.w=zeros(nd,numresponses,5);
 
 for k=1:numresponses
    Delta1=shift(k,1);
@@ -283,12 +283,12 @@ for k=1:numresponses
    origin=-round(Delta1/dt);
    HS0=[zeros(origin,2); HS(1:(numlags-origin),:)];
    WS=pinv(HS0)*H;
-   X_cache.W(:,k,1:2)=WS';
-   prcnt_var_taylor=sum(sum(H.*(HS0*WS)))/sum(sum(H.*H))*100;
+   x_cache.w(:,k,1:2)=WS';
+   %prcnt_var_taylor=sum(sum(H.*(HS0*WS)))/sum(sum(H.*H))*100;
 
    % svd:
    [U,SS,V]=svd(H,0);
-   prcnt_var_spectral=(SS(1,1)^2+SS(2,2)^2)/sum(diag(SS).^2)*100;
+   %prcnt_var_spectral=(SS(1,1)^2+SS(2,2)^2)/sum(diag(SS).^2)*100;
    sumU=sum(U(:,1));
    US=U(:,1:2)/sumU;
    WS=V(:,1:2)*SS(1:2,1:2)*sumU;
@@ -298,8 +298,8 @@ for k=1:numresponses
    end
    temp=conv2(response(:,k),US);
    eventmatrix(:,k,3:4)=temp((1:numtimes)-round(Delta1/dt),:);
-   X_cache.W(:,k,3:4)=WS;
-   X_cache.W(:,k,5)=delta';
+   x_cache.w(:,k,3:4)=WS;
+   x_cache.w(:,k,5)=delta';
    
    if ~all(WS(:,1)>0)
       fprintf(['Warning: use only for magnitudes, not delays \n first coef not positive for stimulus ' num2str(k)]);
@@ -310,13 +310,13 @@ for k=1:numresponses
    end
 end 
 
-X_cache.X=zeros(n,numresponses,4,numslices);
+x_cache.x=zeros(n,numresponses,4,numslices);
 
 for slice = 1:numslices
    subtime=ceil((frametimes+slicetimes(slice)-startime)/dt)+1;
-   X_cache.X(:,:,:,slice)=eventmatrix(subtime,:,:);
+   x_cache.x(:,:,:,slice)=eventmatrix(subtime,:,:);
 end
 
-X_cache.TR=(max(frametimes)-min(frametimes))/(length(frametimes)-1);
+x_cache.tr=(max(frametimes)-min(frametimes))/(length(frametimes)-1);
 
 

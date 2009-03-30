@@ -110,12 +110,12 @@ function [rho_vol,df] = niak_autoregressive(vol,opt)
 % THE SOFTWARE.
 
 gb_name_structure = 'opt';
-gb_list_fields = {'X_cache','Trend','spatial_av','percent','exclude','numlags','num_hrf_bases','basis_type'};
+gb_list_fields = {'x_cache','trend','spatial_av','percent','exclude','numlags','num_hrf_bases','basis_type'};
 gb_list_defaults = {NaN,NaN,NaN,1,[],1,[],'spectral'};
 niak_set_defaults
 
-X_cache = opt.X_cache;
-Trend = opt.Trend;
+X_cache = opt.x_cache;
+Trend = opt.trend;
 spatial_av = opt.spatial_av;
 num_hrf_bases = opt.num_hrf_bases;
 numlags = opt.numlags;

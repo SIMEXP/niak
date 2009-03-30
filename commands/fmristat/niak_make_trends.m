@@ -1,4 +1,4 @@
-function [Trend,spatial_av] = niak_make_trends(vol,mask,opt)
+function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_MAKE_TRENDS
@@ -6,7 +6,7 @@ function [Trend,spatial_av] = niak_make_trends(vol,mask,opt)
 % Create temporal an spatial trends to be include in the design matrix.
 % 
 % SYNTAX:
-% TREND = NIAK_MAKE_TRENDS(VOL,MASK,OPT)
+% [TREND,SPATIAL_AV] = NIAK_MAKE_TRENDS(VOL,MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -111,7 +111,7 @@ function [Trend,spatial_av] = niak_make_trends(vol,mask,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'N_temporal','N_spatial','percent','exclude','TR','confounds'};
+gb_list_fields = {'n_temporal','n_spatial','percent','exclude','tr','confounds'};
 gb_list_defaults = {3,1,1,[],1,[]};
 niak_set_defaults
 
@@ -123,9 +123,9 @@ allpts(exclude) = zeros(1,length(exclude));
 keep = allpts( ( allpts >0 ) );
 n = length(keep);
 
-n_temporal = opt.N_temporal;
-n_spatial = opt.N_spatial;
-TR = opt.TR;
+n_temporal = opt.n_temporal;
+n_spatial = opt.n_spatial;
+tr = opt.tr;
 ispcnt = opt.percent;
 
 if (n_spatial>=1)|(ispcnt)
@@ -139,7 +139,7 @@ end
 
 % Create temporal trends:
 
-n_spline = round(n_temporal*TR*n/360);
+n_spline = round(n_temporal*tr*n/360);
 if n_spline>=0 
    trend=((2*keep-(max(keep)+min(keep)))./(max(keep)-min(keep)))';
    if n_spline<=3
@@ -182,3 +182,4 @@ for slice=1:nz
       end
    end
 end
+trend = Trend;
