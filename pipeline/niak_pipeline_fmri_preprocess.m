@@ -613,6 +613,7 @@ for num_s = 1:nb_subject
     %% Setting up options
     opt_tmp = opt.bricks.resample_vol;
     opt_tmp.interpolation = 'nearest_neighbour';
+    opt_tmp.flag_test = false;
 
      %% Adding the stage to the pipeline        
     pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in,files_out,opt)';
@@ -650,7 +651,8 @@ for num_s = 1:nb_subject
     %% Setting up options
     opt_tmp = opt.bricks.resample_vol;
     opt_tmp.interpolation = 'nearest_neighbour';
-
+    opt_tmp.flag_test = false;
+    
      %% Adding the stage to the pipeline        
     pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
