@@ -6,7 +6,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 % k-means clustering.
 %
 % SYNTAX :
-% [PART,GI,I_INTER,I_INTRA] = NIAK_KMEANS_CLUSTERING(data,opt);
+% [PART,GI,I_INTRA,I_INTER] = NIAK_KMEANS_CLUSTERING(DATA,OPT);
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -59,11 +59,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 % GI
 %       (2D array) gi(:,i) is the center of gravity of cluster i.
 %
-% I_INTER
-%       (double) Inter-clusters inertia for the proposed partition.
-%
 % I_INTRA
 %       (double) Intra-clusters inertia for the proposed partition.
+%
+% I_INTER
+%       (double) Inter-clusters inertia for the proposed partition.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -241,12 +241,12 @@ else
     i_inter = zeros([nb_classes 1]);
     
     g = (1/sum(p_classe_OK))*sum(gi_OK.*(p_classe_OK*ones([1,T])),1);
-    i_inter(mask_OK) = sum(sum(p_classe_OK.*sum((gi_OK-(ones([sum(mask_OK) 1])*g)).^2,2)))/sum(p_classe_OK);
+    i_inter = sum(sum(p_classe_OK.*sum((gi_OK-(ones([sum(mask_OK) 1])*g)).^2,2)))/sum(p_classe_OK);
 
     % Final intra-class inertia
     i_intra = zeros([nb_classes 1]);
-    for i = 1:nb_classes
-        i_intra(i) = sum(p(part==i).*sum((data(part==i,:)-(ones([sum((part==i)) 1])*gi(i,:))).^2,2));
+    for num_c = 1:nb_classes
+        i_intra(num_c) = sum(p(part==num_c).*sum((data(part==num_c,:)-(ones([sum((part==num_c)) 1])*gi(num_c,:))).^2,2));
     end
     i_intra = i_intra/sum(p_classe);
 
@@ -298,7 +298,7 @@ i_inter = sum(sum(p_classe.*sum((gi-(ones([nb_classes 1])*g)).^2,2)))/sum(p_clas
 
 % Final intra-class inertia
 i_intra = zeros([nb_classes 1]);
-for i = 1:nb_classes
-    i_intra(i) = sum(p(part==i).*sum((data(part==i,:)-(ones([sum((part==i)) 1])*gi(i,:))).^2,2));
+for num_c = 1:nb_classes
+    i_intra(num_c) = sum(p(part==num_c).*sum((data(part==num_c,:)-(ones([sum((part==num_c)) 1])*gi(num_c,:))).^2,2));
 end
 i_intra = i_intra/sum(p_classe);

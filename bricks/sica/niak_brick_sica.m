@@ -105,6 +105,11 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
 %
 % _________________________________________________________________________
+% SEE ALSO : 
+% 
+% NIAK_BRICK_SICA, NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA
+%
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -225,7 +230,7 @@ opt_sica.algo = opt.algo;
 opt_sica.param_nb_comp = min(nb_comp,floor(0.95*nt));
 opt_sica.type_nb_comp = 0;
 opt_sica.verbose = 'off';
-res_ica = st_do_sica(vol,opt_sica);
+res_ica = niak_sica(vol,opt_sica);
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Generating outputs %%

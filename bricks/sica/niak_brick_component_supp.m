@@ -91,6 +91,11 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 % spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
 %
 % _________________________________________________________________________
+% SEE ALSO : 
+% 
+% NIAK_BRICK_SICA, NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA
+%
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

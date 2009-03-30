@@ -102,7 +102,7 @@ opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 files_in_comp_sel.fmri = files_in;
 files_in_comp_sel.component = files_out.time;
 files_in_comp_sel.mask = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_ventricle.mnc');
-files_in_comp_sel.component_to_keep = cat(2,gb_niak_path_demo,filesep,'motor_design.dat');
+%files_in_comp_sel.component_to_keep = cat(2,gb_niak_path_demo,filesep,'motor_design.dat');
 files_out_comp_sel = '';
 
 %% Options

@@ -100,11 +100,16 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 % spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
 %
 % _________________________________________________________________________
+% SEE ALSO : 
+% 
+% NIAK_BRICK_SICA, NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA
+%
+% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : pipeline, niak, preprocessing, fMRI
+% Keywords : NIAK, ICA, CORSICA
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -288,7 +293,7 @@ else
     end
 
     %% Computing score and score significance        
-    [intersec,selecVector,selecInfo] = st_automatic_selection(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'off');
+    [intersec,selecVector,selecInfo] = niak_component_sel(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'on');
 
     %% Reordering scores
     for num_c = 1:length(val_xoi)
