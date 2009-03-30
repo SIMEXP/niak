@@ -1,4 +1,4 @@
-function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo)
+function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo,flag_test)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_FMRI_PREPROCESS
@@ -6,10 +6,10 @@ function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo)
 % This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS.
 %
 % SYNTAX:
-% NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO)
+% [PIPELINE,OPT] = NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO,FLAG_TEST)
 %
 % _________________________________________________________________________
-% INPUT:
+% INPUTS:
 %
 % PATH_DEMO
 %       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
@@ -17,8 +17,22 @@ function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo)
 %       multiple file formats at the following address : 
 %       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
+% FLAG_TEST
+%       (boolean, default false) if FLAG_TEST == true, the demo will just
+%       generate the PIPELINE and OPT structure, otherwise it will process
+%       the pipeline.
 % _________________________________________________________________________
-% OUTPUT:
+% OUTPUTS:
+%
+% PIPELINE
+%       (structure) a formal description of the pipeline. See
+%       PSOM_RUN_PIPELINE.
+%
+% OPT
+%       (structure) the option to call NIAK_PIPELINE_FMRI_PREPROCESS.
+%
+% _________________________________________________________________________
+% COMMENTS:
 %
 % The demo will apply a 'standard-native' preprocessing pipeline on the 
 % functional data of subjects 1 and 2 (rest and motor conditions) as well 
@@ -79,6 +93,10 @@ end
 
 if ~strcmp(path_demo(end),filesep)
     path_demo = [path_demo filesep];
+end
+
+if nargin < 2
+    flag_test = false;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,7 +169,7 @@ end
 
 % The style of the pipeline. Available options : 'fmristat',
 % 'standard-native', 'standard-stereotaxic'.
-opt.style = 'fmristat';
+opt.style = 'standard-native';
 
 % The quantity of outputs. 
 % Available options : 'minimum', 'quality_control', 'all'
@@ -164,7 +182,7 @@ opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep);
 opt.flag_corsica = true; 
 
 % Flag to actually run the pipeline or simply get the pipeline structure
-opt.flag_test = false;
+opt.flag_test = flag_test;
 
 %%%%%%%%%%%%%%%%%%%%
 %% Bricks options %%

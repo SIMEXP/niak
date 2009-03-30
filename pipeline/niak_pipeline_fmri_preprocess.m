@@ -115,6 +115,10 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %               (structure) options of NIAK_BRICK_COREGISTER 
 %               (coregistration between T1 and T2).
 %
+%           MASK_GROUP
+%               (real number, default 0.9) the threshold used to define a 
+%               group mask based on the average of all individual masks. 
+%
 %           SMOOTH_VOL 
 %               (structure) options of NIAK_BRICK_SMOOTH_VOL (spatial
 %               smoothing).
@@ -367,18 +371,18 @@ switch style
     
     case 'fmristat'
     
-        gb_list_fields = {'motion_correction','coregister','civet','sica','component_sel','component_supp','smooth_vol'};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
+        gb_list_fields = {'mask_group','resample_vol','motion_correction','coregister','civet','sica','component_sel','component_supp','smooth_vol'};
+        gb_list_defaults = {0.9,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
     
     case 'standard-native'
         
-        gb_list_fields = {'motion_correction','slice_timing','coregister','time_filter','civet','sica','component_sel','component_supp','smooth_vol'};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
+        gb_list_fields = {'mask_group','resample_vol','motion_correction','slice_timing','coregister','time_filter','civet','sica','component_sel','component_supp','smooth_vol'};
+        gb_list_defaults = {0.9,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
         
     case 'standard-stereotaxic'
         
-        gb_list_fields = {'motion_correction','slice_timing','coregister','time_filter','civet','smooth_vol','resample_vol','sica','component_sel','component_supp',};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
+        gb_list_fields = {'mask_group','motion_correction','slice_timing','coregister','time_filter','civet','smooth_vol','resample_vol','sica','component_sel','component_supp',};
+        gb_list_defaults = {0.9,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
         
 end
 niak_set_defaults
@@ -414,18 +418,18 @@ for num_s = 1:nb_subject
 
     %% Outputs
     files_out_tmp.transformation_lin = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereolin.xfm');
-    files_out_tmp.transformation_nl = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereonl.xfm');
-    files_out_tmp.transformation_nl_grid = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereonl_grid.mnc');
+    files_out_tmp.transformation_nl = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_stereolin_to_stereonl.xfm');
+    files_out_tmp.transformation_nl_grid = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_stereolin_to_stereonl_grid.mnc');
     files_out_tmp.anat_nuc = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_nativet1.mnc');
     files_out_tmp.anat_nuc_stereo_lin = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereolin.mnc');
     files_out_tmp.anat_nuc_stereo_nl = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereonl.mnc');
-    files_out_tmp.mask = cat(2,opt_tmp.folder_out,filesep,'mask_anat_',subject,'_nativet1.mnc');
-    files_out_tmp.mask_stereo = cat(2,opt_tmp.folder_out,filesep,'mask_anat_',subject,'_stereolin.mnc');
-    files_out_tmp.classify = cat(2,opt_tmp.folder_out,filesep,'classify_anat_',subject,'_stereolin.mnc');
-    files_out_tmp.pve_wm = cat(2,opt_tmp.folder_out,filesep,'pve_wm_anat_',subject,'_stereolin.mnc');
-    files_out_tmp.pve_gm = cat(2,opt_tmp.folder_out,filesep,'pve_gm_anat_',subject,'_stereolin.mnc');
-    files_out_tmp.pve_csf = cat(2,opt_tmp.folder_out,filesep,'pve_csf_anat_',subject,'_stereolin.mnc');
-    files_out_tmp.verify = cat(2,opt_tmp.folder_out,filesep,'verify_anat_',subject,'.png');
+    files_out_tmp.mask = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_mask_nativet1.mnc');
+    files_out_tmp.mask_stereo = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_mask_stereolin.mnc');
+    files_out_tmp.classify = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_classify_stereolin.mnc');
+    files_out_tmp.pve_wm = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_wm_stereolin.mnc');
+    files_out_tmp.pve_gm = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_gm_stereolin.mnc');
+    files_out_tmp.pve_csf = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_csf_stereolin.mnc');
+    files_out_tmp.verify = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_verify.png');
 
     %% set the default values
     opt_tmp.flag_test = 1;
@@ -517,14 +521,14 @@ for num_s = 1:nb_subject
     name_stage_motion = cat(2,'motion_correction_',subject);
     name_stage_anat = cat(2,'anat_',subject);
 
-    %% Building inputs for NIAK_BRICK_TIME_FILTER
+    %% Building inputs for NIAK_BRICK_COREGISTER
     files_in_tmp.functional = getfield(pipeline,name_stage_motion,'files_out','mean_volume');
     files_in_tmp.anat = getfield(pipeline,name_stage_anat,'files_out','anat_nuc_stereo_lin');
     files_in_tmp.csf = getfield(pipeline,name_stage_anat,'files_out','pve_csf');
     files_in_tmp.transformation = getfield(pipeline,name_stage_anat,'files_out','transformation_lin');
     files_in_tmp.mask = getfield(pipeline,name_stage_anat,'files_out','mask_stereo');
     
-    %% Building outputs for NIAK_BRICK_TIME_FILTER
+    %% Building outputs for NIAK_BRICK_COREGISTER
     files_out_tmp.transformation = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'transf_',subject,'_nativefunc_to_stereolin.xfm');
     files_out_tmp.anat_hires = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_hires.mnc');
     files_out_tmp.anat_lowres = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_lowres.mnc');
@@ -533,7 +537,7 @@ for num_s = 1:nb_subject
     opt_tmp = getfield(opt.bricks,name_process);
     opt_tmp.folder_out = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep);
 
-    %% Setting up defaults of the motion correction
+    %% Setting up defaults of the coregistration
     opt_tmp.flag_test = 1;
     [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_coregister(files_in_tmp,files_out_tmp,opt_tmp);
     opt_tmp.flag_test = 0;
@@ -580,6 +584,163 @@ for num_s = 1:nb_subject
     pipeline(1).(name_stage).opt = opt_tmp;    
 
 end % subject
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate masks in the stereotaxic (non-linear) space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%MMMM%%%%%%%%
+
+name_process = 'mask_ind_stereonl';
+
+for num_s = 1:nb_subject
+
+    subject = list_subject{num_s};
+    clear opt_tmp files_in_tmp files_out_tmp
+
+    %% Names of input/output stages
+    name_stage = cat(2,name_process,'_',subject);
+    name_stage_concat = cat(2,'concat_transf_nl_',subject);
+    name_stage_motion = cat(2,'motion_correction_',subject);
+    
+    %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
+    files_in_tmp.transformation = getfield(pipeline,name_stage_concat,'files_out');
+    files_in_tmp.source = getfield(pipeline,name_stage_motion,'files_out','mask_volume');
+    files_in_tmp.target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+
+    %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
+    files_out_tmp = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereonl.mnc');
+    files_mask_nl{num_s} = files_out_tmp;
+    
+    %% Setting up options
+    opt_tmp = opt.bricks.resample_vol;
+    opt_tmp.interpolation = 'nearest_neighbour';
+
+     %% Adding the stage to the pipeline        
+    pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in,files_out,opt)';
+    pipeline(1).(name_stage).files_in = files_in_tmp;
+    pipeline(1).(name_stage).files_out = files_out_tmp;
+    pipeline(1).(name_stage).opt = opt_tmp;   
+    
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate masks in the stereotaxic (linear) space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_process = 'mask_ind_stereolin';
+
+for num_s = 1:nb_subject
+
+    subject = list_subject{num_s};
+    clear opt_tmp files_in_tmp files_out_tmp
+
+    %% Names of input/output stages
+    name_stage = cat(2,name_process,'_',subject);
+    name_stage_coregister = cat(2,'coregister_',subject);
+    name_stage_motion = cat(2,'motion_correction_',subject);
+    
+    %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
+    files_in_tmp.transformation = getfield(pipeline,name_stage_coregister,'files_out','transformation');
+    files_in_tmp.source = getfield(pipeline,name_stage_motion,'files_out','mask_volume');
+    files_in_tmp.target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+
+    %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
+    files_out_tmp = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereolin.mnc');
+    files_mask_lin{num_s} = files_out_tmp;
+    
+    %% Setting up options
+    opt_tmp = opt.bricks.resample_vol;
+    opt_tmp.interpolation = 'nearest_neighbour';
+
+     %% Adding the stage to the pipeline        
+    pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in,files_out,opt)';
+    pipeline(1).(name_stage).files_in = files_in_tmp;
+    pipeline(1).(name_stage).files_out = files_out_tmp;
+    pipeline(1).(name_stage).opt = opt_tmp;   
+    
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% average mask (stereolin) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_job = 'average_mask_stereolin';
+
+clear opt_tmp files_in_tmp files_out_tmp
+files_in_tmp = files_mask_lin;
+[path_f,name_f,ext_f] = fileparts(files_in_tmp{1});
+
+if strcmp(ext_f,gb_niak_zip_ext)
+    [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+end
+
+files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
+
+opt_tmp.operation = 'vol = zeros(size(vol_in{1})); for num_f = 1:length(vol_in); vol = vol + vol_in{num_f}; end; vol = vol/length(vol_in);';
+
+pipeline.(name_job).command = 'niak_brick_math_vol(files_in,files_out,opt);';
+pipeline.(name_job).files_in = files_in_tmp;
+pipeline.(name_job).files_out = files_out_tmp;
+pipeline.(name_job).opt = opt_tmp;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% average mask (stereolin) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_job = 'average_mask_stereonl';
+
+clear opt_tmp files_in_tmp files_out_tmp
+files_in_tmp = files_mask_nl;
+[path_f,name_f,ext_f] = fileparts(files_in_tmp{1});
+
+if strcmp(ext_f,gb_niak_zip_ext)
+    [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+end
+
+files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
+
+opt_tmp.operation = 'vol = zeros(size(vol_in{1})); for num_f = 1:length(vol_in); vol = vol + vol_in{num_f}; end; vol = vol/length(vol_in);';
+
+pipeline.(name_job).command = 'niak_brick_math_vol(files_in,files_out,opt);';
+pipeline.(name_job).files_in = files_in_tmp;
+pipeline.(name_job).files_out = files_out_tmp;
+pipeline.(name_job).opt = opt_tmp;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% group mask (stereolin) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_job = 'group_mask_stereolin';
+
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp{1} = pipeline.average_mask_stereolin.files_out;
+files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
+opt_tmp.operation = 'vol = vol_in{1} >= opt_operation;';
+opt_tmp.opt_operation = opt.bricks.mask_group;
+
+pipeline.(name_job).command = 'niak_brick_math_vol(files_in,files_out,opt);';
+pipeline.(name_job).files_in = files_in_tmp;
+pipeline.(name_job).files_out = files_out_tmp;
+pipeline.(name_job).opt = opt_tmp;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% group mask (stereonl) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+name_job = 'group_mask_stereonl';
+
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp{1} = pipeline.average_mask_stereonl.files_out;
+files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
+opt_tmp.operation = 'vol = vol_in{1} >= opt_operation;';
+opt_tmp.opt_operation = opt.bricks.mask_group;
+
+pipeline.(name_job).command = 'niak_brick_math_vol(files_in,files_out,opt);';
+pipeline.(name_job).files_in = files_in_tmp;
+pipeline.(name_job).files_out = files_out_tmp;
+pipeline.(name_job).opt = opt_tmp;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% slice-timing correction %%
