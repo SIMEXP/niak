@@ -1,4 +1,4 @@
-function trend = niak_make_trends(vol,mask,opt)
+function [Trend,spatial_av] = niak_make_trends(vol,mask,opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_MAKE_TRENDS
@@ -34,7 +34,11 @@ function trend = niak_make_trends(vol,mask,opt)
 %           (integer, default 1) order of the polynomial in the spatial 
 %           average (SPATIAL_AV)  weighted by first non-excluded frame; 
 %           0 will remove no spatial trends.
-%       
+%
+%       PERCENT: 
+%           if PERCENT=1(Default), then the data is converted to percentages 
+%           before analysis by dividing each frame by its spatial average,* 100%.       
+%
 %       EXCLUDE
 %           (vector, default []) a list of frames that should be excluded 
 %           from the analysis. 
@@ -55,6 +59,9 @@ function trend = niak_make_trends(vol,mask,opt)
 % TREND       
 %       (3D array) temporal, spatial trends and additional 
 %       confounds for every slice.
+%
+% SPATIAL_AV
+%       colum vector of the spatial average time courses.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -104,8 +111,8 @@ function trend = niak_make_trends(vol,mask,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'N_temporal','N_spatial','exclude','TR','confounds'};
-gb_list_defaults = {3,1,[],1,[]};
+gb_list_fields = {'N_temporal','N_spatial','percent','exclude','TR','confounds'};
+gb_list_defaults = {3,1,1,[],1,[]};
 niak_set_defaults
 
 % Keep time points that are not excluded:
@@ -119,8 +126,9 @@ n = length(keep);
 n_temporal = opt.N_temporal;
 n_spatial = opt.N_spatial;
 TR = opt.TR;
+ispcnt = opt.percent;
 
-if n_spatial>=1
+if (n_spatial>=1)|(ispcnt)
    mask = mask > 0;
    tseries = reshape(vol,[nx*ny*nz nt]);
    tseries = tseries(mask(:),:);
@@ -151,7 +159,7 @@ end
 % Create spatial trends:
 
 if n_spatial>=1 
-   trend=spatial_av(keep)-mean(spatial_av(keep));
+   trend=spatial_av(keep);
    spatial_trend=(trend*ones(1,n_spatial)).^(ones(n,1)*(1:n_spatial));
 else
    spatial_trend=[];
@@ -162,15 +170,15 @@ trend = [temporal_trend spatial_trend];
 % Add confounds:
 
 numtrends = size(trend,2)+size(confounds,2);
-trend = zeros(n,numtrends,nz);
+Trend = zeros(n,numtrends,nz);
 for slice=1:nz
    if isempty(confounds)
       trend(:,:,slice)=trend;
    else  
       if length(size(confounds))==2
-         trend(:,:,slice)=[trend confounds(keep,:)];
+         Trend(:,:,slice)=[trend confounds(keep,:)];
       else
-         trend(:,:,slice)=[trend confounds(keep,:,slice)];
+         Trend(:,:,slice)=[trend confounds(keep,:,slice)];
       end
    end
 end
