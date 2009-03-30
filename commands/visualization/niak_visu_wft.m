@@ -1,26 +1,40 @@
-function [specgm,specgmShow,T,F] = niak_visu_wft(tseries,tr)
-
-% Visualization of the window Fourier transform of a 1D signal.
+function [specgm,specgm_show,T,F] = niak_visu_wft(tseries,tr)
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_VISU_WFT
+%
+% Visualize the window Fourier transform of a 1D signal.
 %
 % SYNTAX:
-% [] = NIAK_VISU_WFT(TSERIES,TR)
+% SPECGM = NIAK_VISU_WFT(TSERIES,TR)
 %
+% _________________________________________________________________________
 % INPUTS:
 %
-% TSERIES       (1D array T*1) one or multiple 1D signal (1st dimension is
-%                   samples)
+% TSERIES       
+%       (1D array T*N) one or multiple 1D signal (1st dimension is samples, 
+%       second the different signals)
 %
-% TR            (real number, default 1) the repetition time of the time
-%                   series (this is of course assuming a regular sampling).
+% TR            
+%       (real number, default 1) the repetition time of the time series 
+%       (this is assuming a regular sampling).
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
+% SPECGM
+%       (T+1*T*N complex matrix) Window Fourier Transform of TSERIES.
+% _________________________________________________________________________
+% COMMENTS:
+%
 % Draws the Fourier Window transform of the signal on the current figure.
 % Multiple time series lead to subplots.
 %
-% COMMENTS:
 % The core of this function is part of the Wavelab toolbox :
 % http://www-stat.stanford.edu/~wavelab/
 % See the code of subfunctions for licensing information.
+%
+% The code was optimized by Felix Carbonell.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -51,7 +65,7 @@ if nargin<2
     tr = 1;
 end
 
-[specgm,specgmShow,T,F]=WFT(tseries,floor(nt*tr/(8)),1,'Gaussian',tr);
+[specgm,specgm_show,T,F]=WFT(tseries,floor(nt*tr/(8)),1,'Gaussian',tr);
 
 M = ceil(sqrt(n));
 N = ceil(n/M);
@@ -60,7 +74,7 @@ for i = 1:n
         subplot(M,N,i);
     end
     colormap(1-gray(256))
-    imagesc(T,F,squeeze(specgmShow(:,:,i)));
+    imagesc(T,F,squeeze(specgm_show(:,:,i)));
     axis('xy')
     xlabel('')
     ylabel('Frequency')
@@ -129,7 +143,7 @@ end;
 % Comments? e-mail wavelab@stat.stanford.edu
 %
 
-function [specgm,specgmShow,T,F] = WFT(sig,w,m,Name,tr)
+function [specgm,specgm_show,T,F] = WFT(sig,w,m,Name,tr)
 % WindowFT -- Window Fourier Transform
 %  Usage
 %    specgm = WindowFT(sig,w,m,Name,tr)
@@ -183,9 +197,9 @@ end
 
 % Make Window Fourier Transform Display
 
-specgmShow = abs(specgm(1:(n/2+1),:,:));
-%spmax = max(max(specgmShow));
-%spmin = min(min(specgmShow));
+specgm_show = abs(specgm(1:(n/2+1),:,:));
+%spmax = max(max(specgm_show));
+%spmin = min(min(specgm_show));
 T = linspace(0,tr*n,n);
 F = linspace(0,1/(2*tr),n/2+1);
 

@@ -1,73 +1,86 @@
 function X_cache = niak_fmridesign(opt)
 
 % _________________________________________________________________________
-% SUMMARY NIAK_MAKE_TRENDS
+% SUMMARY NIAK_FMRIDESGIN
 %
 % Create temporal an spatial trends to be include in the design matrix.
 % 
 % SYNTAX:
-% Trend = NIAK_FMRIDESIGN(OPT)
+% X_CACHE = NIAK_FMRIDESIGN(OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
 % OPT         
-%       structure with the following fields :
+%       (structure) with the following fields :
 %
-%       FRAME_TIMES is a row vector of frame acquisition times in seconds. 
-%       With just the frametimes, it gives the hemodynamic response function.
+%       FRAME_TIMES 
+%           (row vector) frame acquisition times in seconds. With just the 
+%           frametimes, it gives the hemodynamic response function.
 %
-%       SLICE_TIMES is a row vector of relative slice acquisition times,
-%       i.e. absolute acquisition time of a slice is FRAME_TIMES+SLICE_TIMES.
-%       Default is 0.
+%       SLICE_TIMES 
+%           (row vector, default 0) relative slice acquisition times i.e. 
+%           absolute acquisition time of a slice is FRAME_TIMES+SLICE_TIMES
 %       
-%       EVENTS is a matrix whose rows are events and whose columns are:
-%       1. id - an integer from 1:(number of events) to identify event type;
-%       2. times - start of event, synchronised with frame and slice times;
-%       3. durations (optional - default is 0) - duration of event;
-%       4. heights (optional - default is 1) - height of response for event.
-%       For each event type, the response is a box function starting at the 
-%       event times, with the specified durations and heights, convolved with 
-%       the hemodynamic response function (see below). If the duration is zero, 
-%       the response is the hemodynamic response function whose integral is 
-%       the specified height - useful for `instantaneous' stimuli such as visual 
-%       stimuli. The response is then subsampled at the appropriate frame and 
-%       slice times to create a design matrix for each slice, whose columns 
-%       correspond to the event id number. EVENT_TIMES=[] will ignore event 
-%       times and just use the stimulus design matrix S (see next). 
-%       Default is [1 0].
+%       EVENTS 
+%           (matrix, default [1 0]) rows are events and columns are:
+%           1. id - an integer from 1:(number of events) to identify event type;
+%           2. times - start of event, synchronised with frame and slice times;
+%           3. durations (optional - default is 0) - duration of event;
+%           4. heights (optional - default is 1) - height of response for event.
+%           For each event type, the response is a box function starting at the 
+%           event times, with the specified durations and heights, convolved with 
+%           the hemodynamic response function (see below). If the duration is zero, 
+%           the response is the hemodynamic response function whose integral is 
+%           the specified height - useful for `instantaneous' stimuli such as visual 
+%           stimuli. The response is then subsampled at the appropriate frame and 
+%           slice times to create a design matrix for each slice, whose columns 
+%           correspond to the event id number. EVENT_TIMES=[] will ignore event 
+%           times and just use the stimulus design matrix S (see next). 
 %
-%       S: 
-%       Events can also be supplied by a stimulus design matrix, hose rows 
-%       are the frames, and column are the event types. Events are created 
-%       for each column, beginning at the frame time for each row of S, 
-%       with a duration equal to the time to the next frame, and a height
-%       equal to the value of S for that row and column. Note that a
-%       constant term is not usually required, since it is removed by the
-%       polynomial temporal trend terms. Default is [].
+%       S 
+%           (matrix, default []) Events can also be supplied by a stimulus 
+%           design matrix, whose rows are the frames, and column are the 
+%           event types. Events are created for each column, beginning at 
+%           the frame time for each row of S, with a duration equal to the 
+%           time to the next frame, and a height equal to the value of S 
+%           for that row and column. Note that a constant term is not 
+%           usually required, since it is removed by the polynomial 
+%           temporal trend terms. 
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % X_CACHE 
-%         structure with the following fields :
-
-%         TR:
-%         average time between frames (secs). 
-% 
-%         X: 
-%         A cache of the design matrices stored as a 4D array. 
-%         Dim 1: frames; Dim 2: response variables; Dim 3: 4 values, 
-%         corresponding to the stimuli convolved with: hrf, derivative of 
-%         hrf, first and second spectral basis functions over the range in 
-%         SHIFT; Dim 4: slices. 
+%       (structure) with the following fields :
 %
-%         W: 
-%         A 3D array of coefficients of the basis functions in X_CACHE.X.
-%         Dim 1: frames; Dim 2: response variables; Dim 3: 5 values: 
-%         coefficients of the hrf and its derivative, coefficients of the 
-%         first and second spectral basis functions, shift values.
-%############################################################################
+%       TR
+%           (real number) average time between frames (secs). 
+% 
+%       X
+%           (4D array) A cache of the design matrices.
+%           Dim 1: frames; 
+%           Dim 2: response variables; 
+%           Dim 3: 4 values, corresponding to the stimuli convolved with: 
+%           hrf, derivative of hrf, first and second spectral basis 
+%           functions over the range n SHIFT; 
+%           Dim 4: slices. 
+%
+%       W 
+%           (3D array) coefficients of the basis functions in X_CACHE.X.
+%           Dim 1: frames; 
+%           Dim 2: response variables; 
+%           Dim 3: 5 values: coefficients of the hrf and its derivative, 
+%           coefficients of the first and second spectral basis functions, 
+%           shift values.
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
+% This function is a NIAKIFIED port of the FMRIDESIGN function of the
+% fMRIstat project. The original license of fMRIstat was : 
+%
+%##########################################################################
 % COPYRIGHT:   Copyright 2002 K.J. Worsley
 %              Department of Mathematics and Statistics,
 %              McConnell Brain Imaging Center, 
@@ -83,6 +96,29 @@ function X_cache = niak_fmridesign(opt)
 %              software for any purpose.  It is provided "as is" without
 %              express or implied warranty.
 %##########################################################################
+%
+% Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
+% Maintainer : felix.carbonell@mail.mcgill.ca
+% See licensing information in the code.
+% Keywords : fMRIstat, linear model
+
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
 
 
 % Setting up default

@@ -1,4 +1,4 @@
-function Trend = niak_make_trends(vol,mask,opt)
+function trend = niak_make_trends(vol,mask,opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_MAKE_TRENDS
@@ -6,7 +6,7 @@ function Trend = niak_make_trends(vol,mask,opt)
 % Create temporal an spatial trends to be include in the design matrix.
 % 
 % SYNTAX:
-% Trend = NIAK_MAKE_TRENDS(VOL,MASK,OPT)
+% TREND = NIAK_MAKE_TRENDS(VOL,MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -21,41 +21,46 @@ function Trend = niak_make_trends(vol,mask,opt)
 % OPT         
 %       (structure, optional) with the following fields :
 %
-%       N_TEMPORAL:  
-%           number of cubic spline temporal trends to be removed per 6 
-%           minutes of scanner time (default = 3). Temporal trends are 
+%       N_TEMPORAL
+%           (integer, default 3) number of cubic spline temporal trends to 
+%           be removed per 6 minutes of scanner time. Temporal trends are 
 %           modeled by cubic splines, so for a 6 minute run.
 %           N_TEMPORAL<=3 will model a polynomial trend of degree N_TEMPORAL 
 %           in frame times, and N_TEMPORAL>3 will add (N_TEMPORAL-3) equally 
 %           spaced knots. N_TEMPORAL=0 will model just the constant level 
 %           and no temporal trends. N_TEMPORAL=-1 will not remove anything.
 %
-%       N_SPATIAL: 
-%           order of the polynomial in the spatial average (SPATIAL_AV)  
-%           weighted by first non-excluded frame; 0 will remove no spatial 
-%           trends.
+%       N_SPATIAL 
+%           (integer, default 1) order of the polynomial in the spatial 
+%           average (SPATIAL_AV)  weighted by first non-excluded frame; 
+%           0 will remove no spatial trends.
 %       
-%       EXCLUDE: 
-%           is a list of frames that should be excluded from the analysis. 
-%           Default is [].
+%       EXCLUDE
+%           (vector, default []) a list of frames that should be excluded 
+%           from the analysis. 
 %
 %       TR
-%           real number the repetition time of the time series. Default is
-%           1.
+%           (real number, default 1) the repetition time of the time series
 %
-%       CONFOUNDS: 
-%           A matrix or array of extra columns for the design matrix
-%           that are not convolved with the HRF, e.g. movement artifacts. 
+%       CONFOUNDS
+%           (matrix, default []) extra columns for the design matrix that 
+%           are not convolved with the HRF, e.g. movement artifacts. 
 %           If a matrix, the same columns are used for every slice; 
 %           if a 3D array, the first two dimensions are the matrix, 
-%           the third is the slice. Default is [], i.e. no confounds.
+%           the third is the slice. 
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % TREND       
-%       (3D array) of the temporal,spatial trends and additional 
+%       (3D array) temporal, spatial trends and additional 
 %       confounds for every slice.
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
+% This function is a NIAKIFIED port of a part of the FMRILM function of the
+% fMRIstat project. The original license of fMRIstat was : 
 %
 %############################################################################
 % COPYRIGHT:   Copyright 2002 K.J. Worsley
@@ -73,6 +78,29 @@ function Trend = niak_make_trends(vol,mask,opt)
 %              software for any purpose.  It is provided "as is" without
 %              express or implied warranty.
 %##########################################################################
+%
+% Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
+% Maintainer : felix.carbonell@mail.mcgill.ca
+% See licensing information in the code.
+% Keywords : fMRIstat, linear model
+
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
 
 % Setting up default
 gb_name_structure = 'opt';
@@ -134,15 +162,15 @@ trend = [temporal_trend spatial_trend];
 % Add confounds:
 
 numtrends = size(trend,2)+size(confounds,2);
-Trend = zeros(n,numtrends,nz);
+trend = zeros(n,numtrends,nz);
 for slice=1:nz
    if isempty(confounds)
-      Trend(:,:,slice)=trend;
+      trend(:,:,slice)=trend;
    else  
       if length(size(confounds))==2
-         Trend(:,:,slice)=[trend confounds(keep,:)];
+         trend(:,:,slice)=[trend confounds(keep,:)];
       else
-         Trend(:,:,slice)=[trend confounds(keep,:,slice)];
+         trend(:,:,slice)=[trend confounds(keep,:,slice)];
       end
    end
 end

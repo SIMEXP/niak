@@ -3,7 +3,7 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_MAKE_TRENDS
 %
-% Estimates the FWHM from the a 4D data
+% Estimate the FWHM from a 4D data
 % 
 % SYNTAX:
 % Trend = NIAK_QUICK_FWHM(RESID_VOL,MASK,OPT)
@@ -21,28 +21,36 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 % OPT         
 %       (structure, optional) with the following fields :
 %
-%       FWHM_COR:
-%       The fwhm in mm of a 3D Gaussian kernel used to smooth the
-%       autocorrelation of residuals. Setting it to Inf smooths the auto-
-%       correlation to 0, i.e. it assumes the frames are uncorrelated 
-%       (useful for TR>10 seconds). Setting it to 0 does no smoothing.
-%       If FWHM_COR is negative, it is taken as the desired df, and the 
-%       fwhm is chosen to achive this df, or 90% of the residual df, 
-%       whichever is smaller, for every contrast, up to 50mm. 
-%       If a second component is supplied, it is the fwhm in mm of the data, 
-%       otherwise this is estimated quickly from the least-squares residuals. 
-%       Default is -100, i.e. the fwhm is chosen to achieve 100 df.
+%       FWHM_COR
+%           (real number, default -100) The fwhm in mm of a 3D Gaussian 
+%           kernel used to smooth the autocorrelation of residuals. Setting 
+%           it to Inf smooths the auto-correlation to 0, i.e. it assumes 
+%           the frames are uncorrelated (useful for TR>10 seconds). Setting 
+%           it to 0 does no smoothing.
+%           If FWHM_COR is negative, it is taken as the desired df, and the 
+%           fwhm is chosen to achive this df, or 90% of the residual df, 
+%           whichever is smaller, for every contrast, up to 50mm. 
+%           If a second component is supplied, it is the fwhm in mm of the 
+%           data, otherwise this is estimated quickly from the 
+%           least-squares residuals. 
 %
-%       NUMLAGS:
-%       The order (p) of the autoregressive model. Default is 1.
-
-%       VOX:
-%       Voxel size in mm. Default is [1 1 1].
+%       NUMLAGS
+%           (integer, default 1) The order (p) of the autoregressive model.
+%        
+%       VOX
+%           (vector 1*3, default [1 1 1]) Voxel size in mm.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % FWHM       
-%       Estimated value of the FWHM. 
+%       (real number) Estimated value of the FWHM. 
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
+% This function is a NIAKIFIED port of a part of the FMRILM function of the
+% fMRIstat project. The original license of fMRIstat was : 
 %
 %############################################################################
 % COPYRIGHT:   Copyright 2002 K.J. Worsley
@@ -60,6 +68,29 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 %              software for any purpose.  It is provided "as is" without
 %              express or implied warranty.
 %##########################################################################
+%
+% Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
+% Maintainer : felix.carbonell@mail.mcgill.ca
+% See licensing information in the code.
+% Keywords : fMRIstat, linear model
+
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
 
 % Setting up default
 gb_name_structure = 'opt';
@@ -69,6 +100,11 @@ niak_set_defaults
 
 Steps = opt.vox;
 [nx,ny,nz,n] = size(resid_vol);
+
+if nargin < 2
+    mask = true([nx ny nz]);
+end
+
 resid_vol = reshape(resid_vol,[nx*ny*nz n]);
 
 if opt.numlags==1
