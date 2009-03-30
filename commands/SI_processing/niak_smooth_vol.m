@@ -29,6 +29,10 @@ function vol_s = niak_smooth_vol(vol,opt)
 %           maximum of the Gaussian kernel, in each dimension. If fwhm has 
 %           length 1, an isotropic kernel is implemented.
 %
+%       FLAG_VERBOSE
+%           (boolean, default true) if the flag is 1, then the function prints 
+%           some infos during the processing.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -71,8 +75,8 @@ function vol_s = niak_smooth_vol(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'voxel_size','fwhm'};
-gb_list_defaults = {[1 1 1]',[2 2 2]'};
+gb_list_fields = {'flag_verbose','voxel_size','fwhm'};
+gb_list_defaults = {true,[1 1 1]',[2 2 2]'};
 niak_set_defaults
 
 if length(voxel_size)>3
@@ -95,24 +99,42 @@ voxel_size = abs(voxel_size);
 vol_s = zeros(size(vol),'single');
 
 %% Loop over all volumes
-for num_t = 1:nt
-    %% Write a temporary volume
-    files_in_sm = niak_file_tmp('_vol.mnc');
-    hdr.file_name = files_in_sm;
-    hdr.info.mat = [[diag(voxel_size) [0;0;0]];[0 0 0 1]];    
-    hdr.type = 'minc1';
+file_in_sm = niak_file_tmp('_vol.mnc');
+file_out_sm = niak_file_tmp('_blur.mnc');
+
+if flag_verbose
+    fprintf('Smoothing volume :');
+end
+
+hdr.file_name = file_in_sm;
+hdr.type = 'minc1';
+hdr.info.voxel_size = voxel_size;
+
+for num_t = 1:nt    
+
+    if flag_verbose
+        fprintf('%i ',num_t);
+    end
+
+    %% Write a temporary volume    
     niak_write_vol(hdr,vol(:,:,:,num_t));
 
     %% Apply smoothing
-    files_out_sm = '';
-    opt_sm.fwhm = opt.fwhm;
-    opt_sm.flag_verbose = false;
-    [files_in_sm,files_out_sm,opt_sm] = niak_brick_smooth_vol(files_in_sm,files_out_sm,opt_sm);
-
+    instr_smooth = cat(2,'mincblur -3dfwhm ',num2str(fwhm),' -no_apodize -clobber ',file_in_sm,' ',file_out_sm(1:end-9));
+    [succ,msg] = system(instr_smooth);
+    if succ~=0
+        error(msg)
+    end
+    
     %% Read the smoothed volume
-    [hdr_tmp,vol_tmp] = niak_read_vol(files_out_sm);
+    [hdr_tmp,vol_tmp] = niak_read_vol(file_out_sm);
     vol_s(:,:,:,num_t) = vol_tmp;
+    
 end
 
-delete(files_in_sm);
-delete(files_out_sm);
+if flag_verbose
+    fprintf('\n');
+end
+
+delete(file_in_sm);
+delete(file_out_sm);

@@ -74,7 +74,7 @@ switch gb_niak_format_demo
 end
 
 %% Options
-opt.fwhm=[5 5 5]; % A 5 mm isotropic smoothing
+opt.fwhm=[8 8 8]; % A 5 mm isotropic smoothing
 opt.flag_zip = 0; % Do not attempt to zip the outputs
 opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 

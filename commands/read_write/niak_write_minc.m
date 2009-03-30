@@ -116,8 +116,12 @@ niak_set_defaults
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
 gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','file_parent','dimensions'};
-gb_list_defaults = {'float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt',1,'','',[]};
+gb_list_defaults = {'float',[1 1 1],[],'xyzt',1,'','',[]};
 niak_set_defaults
+
+if isempty(hdr.info.mat)
+    hdr.info.mat = [diag(hdr.info.voxel_size) ones([3 1]) ; zeros([1 3]) 1];
+end
 
 %% Generating a temporary file with the data in float format
 [path_tmp,name_tmp,ext_tmp] = fileparts(file_name);
@@ -299,7 +303,6 @@ for num_v = 1:length(list_var)
         system(str_hdr);
     end
 end
-            
 function struct_var2 = sub_set_att(struct_var,att_name,val_att)
 
 struct_var2 = struct_var;
@@ -311,6 +314,7 @@ mask_att = niak_find_str_cell(list_att,att_name);
 pos = find(mask_att);
 
 if ~isempty(pos)
+            
     struct_var2.attvalue{pos} = val_att;
 else
     struct_var2.varatts{end+1} = att_name;

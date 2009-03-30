@@ -1,12 +1,12 @@
 function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 
 % _________________________________________________________________________
-% SUMMARY NIAK_MAKE_TRENDS
+% SUMMARY NIAK_QUICK_FWHM
 %
 % Estimate the FWHM from a 4D data
 % 
 % SYNTAX:
-% Trend = NIAK_QUICK_FWHM(RESID_VOL,MASK,OPT)
+% FWHM = NIAK_QUICK_FWHM(RESID_VOL,MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -52,7 +52,7 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 % This function is a NIAKIFIED port of a part of the FMRILM function of the
 % fMRIstat project. The original license of fMRIstat was : 
 %
-%############################################################################
+%##########################################################################
 % COPYRIGHT:   Copyright 2002 K.J. Worsley
 %              Department of Mathematics and Statistics,
 %              McConnell Brain Imaging Center, 
@@ -94,7 +94,7 @@ function fwhm = niak_quick_fwhm(resid_vol,mask,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'FWHM_COR','numlags','vox'};
+gb_list_fields = {'fwhm_cor','numlags','vox'};
 gb_list_defaults = {-100,1,[1 1 1]};
 niak_set_defaults
 
@@ -122,9 +122,9 @@ wresid_vol = reshape(wresid_vol,[nx,ny,nz,n]);
 
 % Quick fwhm of data
 for slice=1:nz
-    if length(FWHM_COR)==2
+    if length(fwhm_cor)==2
          if slice==numslices
-            fwhm = FWHM_COR(2);
+            fwhm = fwhm_cor(2);
          end
     else
          wresid_slice = squeeze(wresid_vol(:,:,slice,:));

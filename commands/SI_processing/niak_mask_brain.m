@@ -84,6 +84,7 @@ abs_vol_mean(mask_nan) = 0;
 if max(opt.fwhm) ~=0
     opt_smooth.fwhm = fwhm;
     opt_smooth.voxel_size = voxel_size;
+    opt_smooth.flag_verbose = false;
     abs_vol_mean = niak_smooth_vol(abs_vol_mean,opt_smooth);
 end
 

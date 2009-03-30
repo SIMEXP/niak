@@ -160,34 +160,10 @@ if opt.fwhm ~=0
 
     [hdr,vol] = niak_read_vol(files_in);
 
-    file_vol_tmp = niak_file_tmp('_vol.mnc');
-    file_vol_tmp_s = niak_file_tmp('_blur.mnc');
-    instr_smooth = cat(2,'mincblur -3dfwhm ',num2str(opt.fwhm),' -no_apodize -clobber ',file_vol_tmp,' ',file_vol_tmp_s(1:end-9));
-
-    if flag_verbose
-        fprintf('Smoothing volume :');
-    end
-
-    for num_v = 1:size(vol,4)
-        if flag_verbose
-            fprintf('%i ',num_v);
-        end
-        hdr.file_name = file_vol_tmp;
-        niak_write_vol(hdr,vol(:,:,:,num_v));
-        [succ,msg] = system(instr_smooth);
-        if succ~=0
-            error(msg)
-        end
-        [hdr_tmp,tmp] = niak_read_vol(file_vol_tmp_s);
-        vol(:,:,:,num_v) = tmp;
-    end
-
-    if flag_verbose
-        fprintf('\n');
-    end
-
-    delete(file_vol_tmp);
-    delete(file_vol_tmp_s);
+    opt_smooth.voxel_size = hdr.info.voxel_size;
+    opt_smooth.fwhm = opt.fwhm;
+    opt_smooth.flag_verbose = opt.flag_verbose;
+    vol_s = niak_smooth_vol(vol,opt_smooth);    
 
     %% Updating the history and saving output
     hdr = hdr(1);
@@ -197,7 +173,7 @@ if opt.fwhm ~=0
     opt_hist.files_in = files_in;
     opt_hist.files_out = files_out;
     hdr = niak_set_history(hdr,opt_hist);
-    niak_write_vol(hdr,vol);
+    niak_write_vol(hdr,vol_s);
 
 else
 
