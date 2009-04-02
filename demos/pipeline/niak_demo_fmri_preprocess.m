@@ -1,4 +1,4 @@
-function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo,flag_test)
+function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_FMRI_PREPROCESS
@@ -16,11 +16,33 @@ function [pipeline,opt] = niak_demo_frmi_preprocess(path_demo,flag_test)
 %       the full path to the NIAK demo dataset. The dataset can be found in 
 %       multiple file formats at the following address : 
 %       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+% OPT
+%       (structure, optional) with the following fields : 
 %
-% FLAG_TEST
-%       (boolean, default false) if FLAG_TEST == true, the demo will just
-%       generate the PIPELINE and OPT structure, otherwise it will process
-%       the pipeline.
+%       FLAG_TEST
+%           (boolean, default false) if FLAG_TEST == true, the demo will 
+%           just generate the PIPELINE and OPT structure, otherwise it will 
+%           process the pipeline.
+%
+%       STYLE
+%           (string, default 'fmristat') the style of the pipeline. 
+%           Available choices : 'fmristat', 'standard-native',
+%           'standard-stereotaxic'.
+%
+%       SIZE_OUTPUT 
+%           (string, default 'quality_control') possible values : 
+%           ‘minimum’, 'quality_control’, ‘all’.
+%
+%       FLAG_CORSICA
+%           (boolean, default 1) if FLAG_CORSICA == 1, the CORSICA method
+%           will be applied to correct for physiological & motion noise.
+%
+%       PSOM
+%           (structure) the options of the pipeline manager. See the OPT
+%           argument of PSOM_RUN_PIPELINE. Default values can be used here.
+%           Note that the field PSOM.PATH_LOGS will be set up by the
+%           pipeline.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -95,9 +117,12 @@ if ~strcmp(path_demo(end),filesep)
     path_demo = [path_demo filesep];
 end
 
-if nargin < 2
-    flag_test = false;
-end
+%% Set up defaults
+gb_name_structure = 'opt';
+default_psom.path_logs = '';
+gb_list_fields = {'flag_corsica','style','size_output','flag_test','psom'};
+gb_list_defaults = {1,'fmristat','quality_control',false,default_psom};
+niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Setting input/output files %%
@@ -167,22 +192,8 @@ end
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
 
-% The style of the pipeline. Available options : 'fmristat',
-% 'standard-native', 'standard-stereotaxic'.
-opt.style = 'standard-native';
-
-% The quantity of outputs. 
-% Available options : 'minimum', 'quality_control', 'all'
-opt.size_output = 'minimum';
-
 % Where to store the results
 opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep); 
-
-% Flag to turn on and off the physiological noise correction
-opt.flag_corsica = true; 
-
-% Flag to actually run the pipeline or simply get the pipeline structure
-opt.flag_test = flag_test;
 
 %%%%%%%%%%%%%%%%%%%%
 %% Bricks options %%
@@ -205,21 +216,28 @@ opt.bricks.motion_correction.run_ref = 1; % The first run of each session is use
 opt.bricks.motion_correction.session_ref = 'session1'; % The first session is used as a reference.
 opt.bricks.motion_correction.flag_session = 0; % Correct for both within and between sessions motion
 
-% Slice timing correction (niak_brick_slice_timing)
-TR = 2.33; % Repetition time in seconds
-nb_slices = 42; % Number of slices in a volume
-opt.bricks.slice_timing.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
-opt.bricks.slice_timing.timing(1)=TR/nb_slices; % Time beetween slices
-opt.bricks.slice_timing.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
-opt.bricks.slice_timing.suppress_vol = 1; % Remove the first and last volume after slice-timing correction to prevent edges effects.
+if ~strcmp(opt.style,'fmristat')
 
-% Temporal filetring (niak_brick_time_filter)
-opt.bricks.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
-opt.bricks.time_filter.lp = Inf; % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
+    % Slice timing correction (niak_brick_slice_timing)
+    TR = 2.33; % Repetition time in seconds
+    nb_slices = 42; % Number of slices in a volume
+    opt.bricks.slice_timing.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
+    opt.bricks.slice_timing.timing(1)=TR/nb_slices; % Time beetween slices
+    opt.bricks.slice_timing.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
+    opt.bricks.slice_timing.suppress_vol = 1; % Remove the first and last volume after slice-timing correction to prevent edges effects.
+    
+    % Temporal filetring (niak_brick_time_filter)
+    opt.bricks.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
+    opt.bricks.time_filter.lp = Inf; % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
+
+end
+
 
 % Correction of physiological noise (niak_pipeline_corsica)
-opt.bricks.sica.nb_comp = 20;
-opt.bricks.component_supp.threshold = 0.15;
+if opt.flag_corsica
+    opt.bricks.sica.nb_comp = 20;
+    opt.bricks.component_supp.threshold = 0.15;
+end
 
 % Spatial smoothing (niak_brick_smooth_vol)
 opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.

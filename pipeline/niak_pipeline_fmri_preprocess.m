@@ -214,12 +214,12 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       1.  Linear and non-linear spatial normalization of the anatomical 
 %           image (and many more anatomical stuff such as brain masking and
 %           CSF/GM/WM classification)
-%       2.  Motion correction (within- and between-run for each subject).
-%       3.  Coregistration of the anatomical volume with the mean 
+%       2.  Slice timing correction
+%       3.  Motion correction (within- and between-run for each subject).
+%       4.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
-%       4.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
+%       5.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
-%       5.  Slice timing correction
 %       6.  Correction of slow time drifts.
 %       7.  Correction of physiological noise (if OPT.FLAG_CORSICA == 1)
 %       8.  Spatial smoothing.
@@ -228,16 +228,16 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       1.  Linear and non-linear spatial normalization of the anatomical 
 %           image (and many more anatomical stuff such as brain masking and
 %           CSF/GM/WM classification)
+%       2.  Slice timing correction
 %       2.  Motion correction (within- and between-run for each subject).
 %       3.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
 %       4.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
-%       5.  Slice timing correction
-%       6.  Correction of slow time drifts.
-%       7.  Correction of physiological noise (if OPT.FLAG_CORSICA == 1)
-%       8.  Resampling of the functional data in the stereotaxic space.
-%       9.  Spatial smoothing.
+%       5.  Correction of slow time drifts.
+%       6.  Correction of physiological noise (if OPT.FLAG_CORSICA == 1)
+%       7.  Resampling of the functional data in the stereotaxic space.
+%       8.  Spatial smoothing.
 %
 % NOTE 2:
 % The physiological & motion noise correction CORSICA is changing the
@@ -444,6 +444,58 @@ for num_s = 1:nb_subject
 
 end % subject
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% slice-timing correction %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
+    
+    name_process = 'slice_timing';    
+
+    for num_s = 1:nb_subject
+
+        subject = list_subject{num_s};    
+        list_session = fieldnames(files_in.(subject).fmri);
+        nb_session = length(list_session);
+        
+        for num_sess = 1:nb_session
+            
+            session = list_session{num_sess};
+            files_session = files_in.(subject).fmri.(session);
+            nb_run = length(files_session);
+
+            for num_r = 1:nb_run
+
+                run = cat(2,'run',num2str(num_r));
+                name_stage = cat(2,'slice_timing_',subject,'_',session,'_',run);
+
+                %% Bulding inputs for NIAK_BRICK_SLICE_TIMING
+                files_in_tmp = files_session{num_r};
+                files_out_tmp = '';
+
+                %% Setting up options
+                opt_tmp = opt.bricks.slice_timing;
+                opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
+
+                %% Setting up defaults of the motion correction
+                opt_tmp.flag_test = 1;
+                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_slice_timing(files_in_tmp,files_out_tmp,opt_tmp);
+                opt_tmp.flag_test = 0;
+
+                %% Keeping track of the file names
+                files_a.(subject).(session){num_r} = files_out_tmp;
+                
+                %% Adding the stage to the pipeline
+                pipeline(1).(name_stage).command = 'niak_brick_slice_timing(files_in,files_out,opt)';
+                pipeline(1).(name_stage).files_in = files_in_tmp;
+                pipeline(1).(name_stage).files_out = files_out_tmp;
+                pipeline(1).(name_stage).opt = opt_tmp;
+
+            end % run
+        end % session
+    end % subject
+end % style of pipeline
+
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Motion correction %%
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -459,7 +511,12 @@ for num_s = 1:nb_subject
     data_subject = files_in.(subject);    
     
     %% Bulding inputs 
-    files_in_tmp.sessions = files_in.(subject).fmri;
+    switch style
+        case 'fmristat'
+            files_in_tmp.sessions = files_in.(subject).fmri;
+        otherwise
+            files_in_tmp.sessions = files_a.(subject);
+    end    
 
     %% Building outputs
     switch size_output
@@ -483,23 +540,47 @@ for num_s = 1:nb_subject
             files_out_tmp.mean_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
             files_out_tmp.std_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_std_nativefunc.mnc');
             files_out_tmp.mask_volume = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
-            
+
     end
-    
+
     %% Setting up default options
     opt_tmp = getfield(opt,'bricks',name_process);
     opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-    
+
     %% Setting up defaults of the motion correction
-    opt_tmp.flag_test = 1;    
+    opt_tmp.flag_test = 1;
     [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_motion_correction(files_in_tmp,files_out_tmp,opt_tmp);
     opt_tmp.flag_test = 0;
-    
-    %% Adding the stage to the pipeline    
+
+    %% Adding the stage to the pipeline
     pipeline(1).(name_stage).command = 'niak_brick_motion_correction(files_in,files_out,opt)';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;    
+    pipeline(1).(name_stage).opt = opt_tmp;
+
+    %% If the amount of outputs is 'minimum' or 'quality_control',
+    %% clean the motion-corrected data when the slice-timing corrected
+    %% images have been successfully generated.
+
+    if (strcmp(size_output,'minimum')||strcmp(size_output,'quality_control'))&&~strcmp(style,'fmristat')
+        
+        clear files_in_tmp
+        files_in_tmp = pipeline(1).(name_stage).files_out.motion_corrected_data;
+        clear opt_tmp
+        opt_tmp.clean = pipeline(1).(name_stage).files_in.sessions;
+        files_out_tmp = {};
+        opt_tmp.flag_test = 1;
+        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
+        opt_tmp.flag_test = 0;
+
+        %% Adding the stage to the pipeline
+        name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));
+        pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
+        pipeline(1).(name_stage_new).files_in = files_in_tmp;
+        pipeline(1).(name_stage_new).files_out = files_out_tmp;
+        pipeline(1).(name_stage_new).opt = opt_tmp;
+
+    end
         
 end
 
@@ -743,162 +824,107 @@ pipeline.(name_job).files_in = files_in_tmp;
 pipeline.(name_job).files_out = files_out_tmp;
 pipeline.(name_job).opt = opt_tmp;
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% slice-timing correction %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
-    
-    name_process = 'slice_timing';    
-
-    for num_s = 1:nb_subject
-
-        subject = list_subject{num_s};        
-        name_stage_in = cat(2,'motion_correction_',subject);
-        files_run = niak_files2cell(getfield(pipeline,name_stage_in,'files_out','motion_corrected_data'));
-        nb_run = length(files_run);
-        
-        for num_r = 1:nb_run
-
-            run = cat(2,'run',num2str(num_r));            
-            name_stage = cat(2,'slice_timing_',subject,'_',run);
-
-            %% Bulding inputs for NIAK_BRICK_SLICE_TIMING
-            files_in_tmp = files_run{num_r};
-            files_out_tmp = '';
-            
-            %% Setting up options
-            opt_tmp = opt.bricks.slice_timing;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-
-            %% Setting up defaults of the motion correction
-            opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_slice_timing(files_in_tmp,files_out_tmp,opt_tmp);
-            opt_tmp.flag_test = 0;
-                        
-            %% Adding the stage to the pipeline            
-            pipeline(1).(name_stage).command = 'niak_brick_slice_timing(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;           
-            
-            %% If the amount of outputs is 'minimum' or 'quality_control',
-            %% clean the motion-corrected data when the slice-timing corrected
-            %% images have been successfully generated.
-            
-            if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
-                clear files_in_tmp
-                files_in_tmp = {pipeline(1).(name_stage).files_out};
-                clear opt_tmp
-                opt_tmp.clean = {pipeline(1).(name_stage).files_in};
-                files_out_tmp = {};
-                opt_tmp.flag_test = 1;
-                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
-                opt_tmp.flag_test = 0;
-                
-                %% Adding the stage to the pipeline
-                name_stage_new = cat(2,'clean_motion_',subject,'_run',num2str(num_r));                                
-                pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
-                pipeline(1).(name_stage_new).files_in = files_in_tmp;
-                pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;                
-                
-            end
-            
-        end % run
-    end % subject
-end % style of pipeline
-
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% temporal filtering %%
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
     
-    name_process = 'time_filter';    
+    name_process = 'time_filter';
 
     for num_s = 1:nb_subject
 
-        subject = list_subject{num_s};               
-        job_pipeline = fieldnames(pipeline);
-        files_raw = niak_files2cell(getfield(files_in,subject,'fmri'));
-        nb_run = length(files_raw);
+        subject = list_subject{num_s};
+        name_stage_motion = cat(2,'motion_correction_',subject);
+        files_motion = pipeline.(name_stage_motion).files_out.motion_corrected_data;
+        list_session = fieldnames(files_motion);
+        nb_session = length(list_session);
+        nb_run_tot = 0;
         
-        for num_r = 1:nb_run
+        for num_sess = 1:nb_session
 
-            clear opt_tmp files_in_tmp files_out_tmp
-            
-            run = cat(2,'run',num2str(num_r));            
-            name_stage = cat(2,name_process,'_',subject,'_',run);
-            name_stage_in = cat(2,'slice_timing_',subject,'_',run);
+            session = list_session{num_sess};
 
-            %% Building inputs for NIAK_BRICK_TIME_FILTER
-            files_in_tmp = getfield(pipeline,name_stage_in,'files_out');
-            
-            %% Building outputs for NIAK_BRICK_TIME_FILTER
-            switch size_output
+            list_files = files_motion.(session);
+            nb_run = length(list_files);
+
+            for num_r = 1:nb_run
+
+                nb_run_tot = nb_run_tot + 1;
                 
-                case 'minimum'
-                
-                    files_out_tmp.filtered_data = '';
-                    
-                case 'quality_control'
-                    
-                    files_out_tmp.filtered_data = '';
-                    files_out_tmp.var_high = '';
-                    files_out_tmp.var_low = '';
-                    
-                case 'all'
-                    
-                    files_out_tmp.filtered_data = '';
-                    files_out_tmp.var_high = '';
-                    files_out_tmp.var_low = '';
-                    files_out_tmp.beta_high = '';
-                    files_out_tmp.beta_low = '';
-                    files_out_tmp.dc_high = '';
-                    files_out_tmp.dc_low = '';
-                    
-            end
-            
-            %% Setting up options
-            opt_tmp = opt.bricks.time_filter;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
+                clear opt_tmp files_in_tmp files_out_tmp
 
-            %% Setting up defaults of the motion correction
-            opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_time_filter(files_in_tmp,files_out_tmp,opt_tmp);
-            opt_tmp.flag_test = 0;
-                        
-            %% Adding the stage to the pipeline                        
-            pipeline(1).(name_stage).command = 'niak_brick_time_filter(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;            
-            
-            %% If the amount of outputs is 'minimum' or 'quality_control',
-            %% clean the slice-timing-corrected data when temporally
-            %% filtered images have been successfully generated.
-            
-            if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
-                clear files_in_tmp
-                files_in_tmp = pipeline(1).(name_stage).files_out.filtered_data;
-                clear opt_tmp
-                opt_tmp.clean = pipeline(1).(name_stage).files_in;
-                files_out_tmp = {};
+                run = cat(2,'run',num2str(nb_run_tot));
+                name_stage = cat(2,name_process,'_',subject,'_',run);
+                
+
+                %% Building inputs for NIAK_BRICK_TIME_FILTER
+                files_in_tmp = list_files{num_r};
+
+                %% Building outputs for NIAK_BRICK_TIME_FILTER
+                switch size_output
+
+                    case 'minimum'
+
+                        files_out_tmp.filtered_data = '';
+
+                    case 'quality_control'
+
+                        files_out_tmp.filtered_data = '';
+                        files_out_tmp.var_high = '';
+                        files_out_tmp.var_low = '';
+
+                    case 'all'
+
+                        files_out_tmp.filtered_data = '';
+                        files_out_tmp.var_high = '';
+                        files_out_tmp.var_low = '';
+                        files_out_tmp.beta_high = '';
+                        files_out_tmp.beta_low = '';
+                        files_out_tmp.dc_high = '';
+                        files_out_tmp.dc_low = '';
+
+                end
+
+                %% Setting up options
+                opt_tmp = opt.bricks.time_filter;
+                opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
+
+                %% Setting up defaults of the motion correction
                 opt_tmp.flag_test = 1;
-                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
+                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_time_filter(files_in_tmp,files_out_tmp,opt_tmp);
                 opt_tmp.flag_test = 0;
-                
+
                 %% Adding the stage to the pipeline
-                name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));                                
-                pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
-                pipeline(1).(name_stage_new).files_in = files_in_tmp;
-                pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;                             
-            end
-            
-        end % run
+                pipeline(1).(name_stage).command = 'niak_brick_time_filter(files_in,files_out,opt)';
+                pipeline(1).(name_stage).files_in = files_in_tmp;
+                pipeline(1).(name_stage).files_out = files_out_tmp;
+                pipeline(1).(name_stage).opt = opt_tmp;
+
+                %% If the amount of outputs is 'minimum' or 'quality_control',
+                %% clean the slice-timing-corrected data when temporally
+                %% filtered images have been successfully generated.
+
+                if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
+                    clear files_in_tmp
+                    files_in_tmp = pipeline(1).(name_stage).files_out.filtered_data;
+                    clear opt_tmp
+                    opt_tmp.clean = pipeline(1).(name_stage).files_in;
+                    files_out_tmp = {};
+                    opt_tmp.flag_test = 1;
+                    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
+                    opt_tmp.flag_test = 0;
+
+                    %% Adding the stage to the pipeline
+                    name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));
+                    pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
+                    pipeline(1).(name_stage_new).files_in = files_in_tmp;
+                    pipeline(1).(name_stage_new).files_out = files_out_tmp;
+                    pipeline(1).(name_stage_new).opt = opt_tmp;
+                end
+
+            end % run
+        end % session
     end % subject
 end % style of pipeline
 
