@@ -757,7 +757,7 @@ if strcmp(ext_f,gb_niak_zip_ext)
     ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
-files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
+files_out_tmp = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
 
 opt_tmp.operation = 'vol = zeros(size(vol_in{1})); for num_f = 1:length(vol_in); vol = vol + vol_in{num_f}; end; vol = vol/length(vol_in);';
 
@@ -781,7 +781,7 @@ if strcmp(ext_f,gb_niak_zip_ext)
     ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
-files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
+files_out_tmp = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
 
 opt_tmp.operation = 'vol = zeros(size(vol_in{1})); for num_f = 1:length(vol_in); vol = vol + vol_in{num_f}; end; vol = vol/length(vol_in);';
 
@@ -798,7 +798,7 @@ name_job = 'group_mask_stereolin';
 
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp{1} = pipeline.average_mask_stereolin.files_out;
-files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
+files_out_tmp = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
 opt_tmp.operation = 'vol = vol_in{1} >= opt_operation;';
 opt_tmp.opt_operation = opt.bricks.mask_group;
 
@@ -815,7 +815,7 @@ name_job = 'group_mask_stereonl';
 
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp{1} = pipeline.average_mask_stereonl.files_out;
-files_out_tmp = [opt.folder_out filesep 'anat', filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
+files_out_tmp = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
 opt_tmp.operation = 'vol = vol_in{1} >= opt_operation;';
 opt_tmp.opt_operation = opt.bricks.mask_group;
 
