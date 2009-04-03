@@ -128,12 +128,6 @@ for numRoi=1:length(tc_cell)
                 curr_perc = new_perc;
             end
         end
-%         nb_b = ceil(T/ww);
-%         tp = floor(rand([1,nb_b])*T);
-%         tp = ((0:(ww-1))')*ones([1,length(tp)]) + ones([ww 1])*tp;
-%         tp = mod(tp(:),T)+1;
-%         tp = tp(1:T);
-%         [P,Y,I_intra,I_inter,I_total] = st_kmeans(X(tp,:),nbclass);
         [P,Y,I_intra,I_inter] = niak_kmeans_clustering(X,opt_kmeans);
 
         I_total = sum(I_intra)+I_inter;
@@ -149,10 +143,7 @@ for numRoi=1:length(tc_cell)
             [val_max,i_max] = max(siz_p);
             OK(i_max) = 1;
         end
-
-        %fprintf('Number of classes : %i - ',sum(OK))
-        %fprintf('bornes de tp : %i, %i \n',min(tp),max(tp))
-        %[selection,num_comp_cell,Freq_tmp,nbRegions,Inert_tmp]=st_get_stepwise_comp(Y(OK,:)',regressors(tp,:),thr_p_s,inertia);
+        
         [selection,num_comp_cell,Freq_tmp,nbRegions,Inert_tmp]=niak_sub_get_stepwise_comp(Y(OK,:)',regressors,thr_p_s,inertia);
         FreqSel(s,:) =  Freq_tmp/nbRegions;
         nbClust = nbClust + nbRegions;
@@ -288,7 +279,7 @@ while test == 0
         Ychap(:,liste_unselect(k)) = reg_c*((reg_c'*reg_c)^(-1))*(reg_c'*Y);
         R2(liste_unselect(k)) = (1/(nt-1))*Ychap(:,liste_unselect(k))'*Ychap(:,liste_unselect(k));
         F(liste_unselect(k)) = (nt-taille-1)*(R2(liste_unselect(k)) - R1)/(1-R2(liste_unselect(k)));
-        p(liste_unselect(k)) = 1-spm_Fcdf(F(liste_unselect(k)),1,nt-taille-1);
+        p(liste_unselect(k)) = 1-sub_spm_Fcdf(F(liste_unselect(k)),1,nt-taille-1);
         p(isnan(p))=Inf;
     end
     out=out+1;
@@ -331,7 +322,7 @@ while test == 0
             Ychap(:,liste_select(k)) = reg_c*((reg_c'*reg_c)^(-1))*(reg_c'*Y);
             R1(liste_select(k)) = (1/(nt-1))*Ychap(:,liste_select(k))'*Ychap(:,liste_select(k));
             F(liste_select(k)) = (nt-taille-1)*(R2 - R1(liste_select(k)))/(1-R2);
-            p(liste_select(k)) = 1-spm_Fcdf(F(liste_select(k)),1,nt-taille-1);
+            p(liste_select(k)) = 1-sub_spm_Fcdf(F(liste_select(k)),1,nt-taille-1);
             p(isnan(p))=Inf;
         end
         score_b = min(p(liste_select));
@@ -378,3 +369,117 @@ while test == 0
 end
 M = reg;
 num_X = liste_select;
+
+function F = sub_spm_Fcdf(x,v,w)
+% Cumulative Distribution Function (CDF) of F (Fisher-Snedecor) distribution
+% FORMAT F = spm_Fpdf(x,df)
+% FORMAT F = spm_Fpdf(x,v,w)
+%
+% x  - F-variate   (F has range [0,Inf) )
+% df - Degrees of freedom, concatenated along last dimension
+%      Eg. Scalar (or column vector) v & w. Then df=[v,w];
+% v  - Shape parameter 1 /   numerator degrees of freedom (v>0)
+% w  - Shape parameter 2 / denominator degrees of freedom (w>0)
+% F  - CDF of F-distribution with [v,w] degrees of freedom at points x
+%_______________________________________________________________________
+%
+% spm_Fcdf implements the Cumulative Distribution Function of the F-distribution.
+%
+% Definition:
+%-----------------------------------------------------------------------
+% The CDF F(x) of the F distribution with degrees of freedom v & w,
+% defined for positive integer degrees of freedom v & w, is the
+% probability that a realisation of an F random variable X has value
+% less than x F(x)=Pr{X<x} for X~F(v,w). The F-distribution is defined
+% for v>0 & w>0, and for x in [0,Inf) (See Evans et al., Ch16).
+%
+% Variate relationships: (Evans et al., Ch16 & 37)
+%-----------------------------------------------------------------------
+% The square of a Student's t variate with w degrees of freedom is
+% distributed as an F-distribution with [1,w] degrees of freedom.
+%
+% For X an F-variate with v,w degrees of freedom, w/(w+v*X^2) has
+% distributed related to a Beta random variable with shape parameters
+% w/2 & v/2.
+%
+% Algorithm:
+%-----------------------------------------------------------------------
+% Using the relationship with the Beta distribution: The CDF of the
+% F-distribution with v,w degrees of freedom is related to the
+% incomplete beta function by:
+%       Pr(X<x) = 1 - betainc(w/(w+v*x^2),w/2,v/2)
+% See Abramowitz & Stegun, 26.6.2; Press et al., Sec6.4 for
+% definitions of the incomplete beta function. The relationship is
+% easily verified by substituting for w/(w+v*x^2) in the integral of the
+% incomplete beta function.
+%
+% MatLab's implementation of the incomplete beta function is used.
+%
+%
+% References:
+%-----------------------------------------------------------------------
+% Evans M, Hastings N, Peacock B (1993)
+%       "Statistical Distributions"
+%        2nd Ed. Wiley, New York
+%
+% Abramowitz M, Stegun IA, (1964)
+%       "Handbook of Mathematical Functions"
+%        US Government Printing Office
+%
+% Press WH, Teukolsky SA, Vetterling AT, Flannery BP (1992)
+%       "Numerical Recipes in C"
+%        Cambridge
+%
+%__________________________________________________________________________
+% @(#)spm_Fcdf.m	2.2 Andrew Holmes 99/04/26
+
+%-Format arguments, note & check sizes
+%-----------------------------------------------------------------------
+if nargin<2, error('Insufficient arguments'), end
+
+%-Unpack degrees of freedom v & w from single df parameter (v)
+if nargin<3
+	vs = size(v);
+	if prod(vs)==2
+		%-DF is a 2-vector
+		w = v(2); v = v(1);
+	elseif vs(end)==2
+		%-DF has last dimension 2 - unpack v & w
+		nv = prod(vs);
+		w  = reshape(v(nv/2+1:nv),vs(1:end-1));
+		v  = reshape(v(1:nv/2)   ,vs(1:end-1));
+	else
+		error('Can''t unpack both df components from single argument')
+	end
+end
+
+%-Check argument sizes
+ad = [ndims(x);ndims(v);ndims(w)];
+rd = max(ad);
+as = [	[size(x),ones(1,rd-ad(1))];...
+	[size(v),ones(1,rd-ad(2))];...
+	[size(w),ones(1,rd-ad(3))]     ];
+rs = max(as);
+xa = prod(as,2)>1;
+if sum(xa)>1 & any(any(diff(as(xa,:)),1))
+	error('non-scalar args must match in size'), end
+
+%-Computation
+%-----------------------------------------------------------------------
+%-Initialise result to zeros
+F = zeros(rs);
+
+%-Only defined for strictly positive v & w. Return NaN if undefined.
+md = ( ones(size(x))  &  v>0  &  w>0 );
+if any(~md(:)), F(~md) = NaN;
+	warning('Returning NaN for out of range arguments'), end
+
+%-Non-zero where defined and x>0
+Q  = find( md  &  x>0 );
+if isempty(Q), return, end
+if xa(1), Qx=Q; else Qx=1; end
+if xa(2), Qv=Q; else Qv=1; end
+if xa(3), Qw=Q; else Qw=1; end
+
+%-Compute
+F(Q) = 1 - betainc(w(Qw)./(w(Qw) + v(Qv).*x(Qx)),w(Qw)/2,v(Qv)/2);
