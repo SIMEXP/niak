@@ -48,7 +48,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %           used for coregistration.
 %
 %       FIG_MOTION  
-%           (string, default base FIG_MOTION_<BASE_FILE_IN>.EPS) A figure
+%           (string, default base FIG_MOTION_<BASE_FILE_IN>.PDF) A figure
 %           representing the motion parameters. 
 %
 %   OPT   
@@ -210,7 +210,7 @@ for num_d = 1:length(files_name)
     end
     
     if (flag_def_fm)&(num_d==run_ref)
-        files_out.fig_motion = cat(2,folder_write,filesep,'fig_motion_',name_f,'.eps');
+        files_out.fig_motion = cat(2,folder_write,filesep,'fig_motion_',name_f,'.pdf');
     end
 
 end %loop over datasets
@@ -474,11 +474,11 @@ for num_r = list_run
             subplot(max(list_run),2,1+(num_r-1)*2)
             par_t = tab_parameters(:,4:6);           
             plot(par_t);            
-            title(sprintf('translation (mm, bgr/xyz) %s',name_f));
+            title(sprintf('translation (mm, bgr/xyz) %s',name_f),'interpreter','none');
             subplot(max(list_run),2,2+(num_r-1)*2)
             par_rot = tab_parameters(:,1:3);
             plot(par_rot);            
-            title(sprintf('rotation (deg, bgr/rpy) %s ',name_f));
+            title(sprintf('rotation (deg, bgr/rpy) %s ',name_f),'interpreter','none');
             
         end
         
@@ -491,13 +491,17 @@ end
 
 %% If requested, save a figure of motion parameters
 if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
-    if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...
-        saveas(hfig,files_out.fig_motion,'epsc')
+        figure(hfig)
+        if exist('OCTAVE_VERSION','var')
+            %% In octave 3.0.4 the pdf distiller does not work
+            file_tmp_eps = niak_file_tmp('_fig.eps');
+            print(file_tmp_eps,'-deps');
+            system(['ps2pdf ',file_tmp_eps,' ',files_out.fig_motion]);
+            delete(file_tmp_eps)
+        else
+            print(files_out.fig_motion,'-dpdf');
+        end
         close(hfig)
-    else
-        tmp = 'sorry, octave 3.x do not allow to save the figure';
-        save(files_out.fig_motion,'tmp');
-    end
 end
 
 %% If requested, write the target volume

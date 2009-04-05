@@ -94,7 +94,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 %           of the session and the mean volume of the session of reference.
 %
 %       FIG_MOTION  
-%           (cell of strings, default base FIG_MOTION_<BASE_FILE_IN>.EPS) 
+%           (cell of strings, default base FIG_MOTION_<BASE_FILE_IN>.PDF) 
 %           For each session, a figure representing the within-session 
 %           motion parameters for all runs.
 %
@@ -418,7 +418,7 @@ for num_s = 1:length(list_sessions)
     end
 
     if flag_def_fig_mp
-        files_out.fig_motion{num_s} = cat(2,folder_write,filesep,'fig_motion_',name_f,'_',name_session,'.eps');
+        files_out.fig_motion{num_s} = cat(2,folder_write,filesep,'fig_motion_',name_f,'_',name_session,'.pdf');
     end
 
 

@@ -103,7 +103,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 % NOTE 2:
 % The linear/cubic/spline interpolations were coded by P Bellec, MNI 2008.
-% They are all based on the INTERP1 matlab function, please refer to the
+% They were all based on the INTERP1 matlab function, please refer to the
 % associated documentation for more details regarding the interpolation
 % schemes.
 %
