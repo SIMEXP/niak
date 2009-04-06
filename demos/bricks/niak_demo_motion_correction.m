@@ -51,40 +51,42 @@ switch gb_niak_format_demo
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc');
-        files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc');        
-        
+        files_in.fmri = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc');
+        files_in.target = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2_mean.mnc');
     case 'minc1'
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.sessions.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz');
-        files_in.sessions.session1{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz');        
-
+        files_in.fmri = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc.gz');
+        files_in.target = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2_mean.mnc.gz');
+        
     otherwise 
         
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
 end
 
 %% Setting output files
-files_out.motion_corrected_data = ''; % use default names
-files_out.motion_parameters = ''; % use default names
-files_out.transf_within_session = ''; % use default names
-files_out.transf_between_session  = ''; % use default names
-files_out.mean_volume = ''; % use default names
-files_out.std_volume = ''; % use default names
-files_out.mask_volume = ''; % use default names
-files_out.fig_motion  = ''; % use default names
+files_out = ''; % use default names
 
 %% Options
 
-opt.flag_session = 0; % Correct for within-run motion
-opt.vol_ref = 5; % Use the 40th volume as a reference 
 opt.flag_test = 0; % Actually perform the motion correction
-opt.flag_skip = true;
+opt.tol = 0.0005;
+opt.fwhm = 5;
 
-[files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt);
+%% Generate the target volume
+[hdr,vol] = niak_read_vol(files_in.fmri);
+hdr.file_name = files_in.target;
+niak_write_vol(hdr,vol(:,:,:,1));
+
+[files_in,files_out,opt] = niak_brick_motion_correction_dev(files_in,files_out,opt);
+
+tab = niak_read_tab(files_out);
+subplot(1,2,2)
+plot(tab(:,1:3));
+subplot(1,2,1)
+plot(tab(:,4:6));
 
 %% Note that opt.interpolation_method has been updated, as well as files_out
 

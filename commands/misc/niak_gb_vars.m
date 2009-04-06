@@ -131,6 +131,8 @@ if max(niak_find_str_cell(comp,tag_unix))>0
     gb_niak_OS = 'unix';
 elseif max(niak_find_str_cell(comp,tag_windaub))>0
     gb_niak_OS = 'windows';
+elseif ~isempty(findstr('linux',comp))
+    gb_niak_OS = 'unix';
 else
     warning('System %s unknown!\n',comp);
     gb_niak_OS = 'unkown';

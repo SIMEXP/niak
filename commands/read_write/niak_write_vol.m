@@ -104,6 +104,9 @@ function [] = niak_write_vol(hdr,vol)
 % setting can be changed by changing the variables GB_NIAK_ZIP_EXT and 
 % GB_NIAK_UNZIP in the file NIAK_GB_VARS.
 %
+% Other fields of HDR can be used in MINC format to speed up writting. 
+% See the help of NIAK_WRITE_MINC.
+%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -128,6 +131,7 @@ function [] = niak_write_vol(hdr,vol)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = 1;
 niak_gb_vars
 
 if isempty(vol)

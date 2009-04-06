@@ -74,7 +74,7 @@ hdr.info.precision = precision_data;
 
 if nargout == 2
     %% Generating a name for a temporary file
-    file_tmp = niak_file_tmp(name_tmp);
+    file_tmp = niak_file_tmp('.dat');
 
     %% extracting the data in float precision in the temporary file
     [flag,str_info] = system(cat(2,'minctoraw -',precision_data,' -normalize ',file_name,' > ',file_tmp));
@@ -93,7 +93,7 @@ if nargout == 2
 
     %% Removing temporary stuff
     fclose(hf);
-    system(cat(2,'rm -f ',file_tmp));
+    delete(file_tmp);
 
     %% Shapping vol as 3D+t array
     vol = reshape(vol,hdr.info.dimensions);

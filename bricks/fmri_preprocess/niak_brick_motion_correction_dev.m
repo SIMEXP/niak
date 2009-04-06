@@ -1,4 +1,4 @@
-function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_BRICK_MOTION_CORRECTION
@@ -11,7 +11,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 % _________________________________________________________________________
 % INPUTS:
 %
-%   FILES_IN 
+%   FILES_IN
 %       (structure) with the following fields :
 %
 %       RUN
@@ -19,37 +19,44 @@ function [files_in,files_out,opt] = niak_brick_motion_correction_ws(files_in,fil
 %
 %       TARGET
 %           (string) one fMRI volume.
-%       
-%   FILES_OUT  
-%       (string, default same as FILES_IN.RUN but without extension and 
-%       with a '_mp.dat' suffix) the file name for the estimated motion 
-%       parameters. The first line describes the content of each column. 
-%       Each subsequent line I+1 is a representation of the motion 
+%
+%   FILES_OUT
+%       (string, default same as FILES_IN.RUN but without extension and
+%       with a '_mp.dat' suffix) the file name for the estimated motion
+%       parameters. The first line describes the content of each column.
+%       Each subsequent line I+1 is a representation of the motion
 %       parameters estimated for session I.
 %
-%   OPT   
+%   OPT
 %       (structure) with the following fields:
 %
 %       IGNORE_SLICE
 %           (integer, default 1) ignore the first and last IGNORE_SLICE
 %           slices of the volume in the coregistration process.
 %
-%       FWHM 
-%           (real number, default 8 mm) the fwhm of the blurring kernel
+%       FWHM
+%           (real number, default 4 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
-%       FOLDER_OUT 
+%       STEP
+%           (real number, default 10) The step argument for MINCTRACC.
+%
+%       TOL
+%           (real number, default 0.0005) The tolerance level for
+%           convergence in MINCTRACC.
+%
+%       FOLDER_OUT
 %           (string, default: path of FILES_IN) If present,
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN and 
+%       FLAG_TEST
+%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not
+%           do anything but update the default values in FILES_IN and
 %           FILES_OUT.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write messages 
+%       FLAG_VERBOSE
+%           (boolean, default: 1) If FLAG_VERBOSE == 1, write messages
 %           indicating progress.
 %
 % _________________________________________________________________________
@@ -108,7 +115,7 @@ if ~exist('files_in','var')
     error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_motion_correction_ws'' for more info.')
 end
 
-%% OPTIONS
+%% FILES IN
 gb_name_structure = 'files_in';
 gb_list_fields = {'fmri','target'};
 gb_list_defaults = {NaN,NaN};
@@ -116,35 +123,37 @@ niak_set_defaults
 
 %% FILES_OUT
 if ~exist('files_out','var')
-    files_out = '';    
+    files_out = '';
 end
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'ignore_slice','folder_out','flag_test','flag_verbose','fwhm'};
-gb_list_defaults = {1,'',false,true,8};
+gb_list_fields = {'ignore_slice','folder_out','flag_test','flag_verbose','fwhm','step','tol'};
+gb_list_defaults = {1,'',false,true,5,10,0.0005};
 niak_set_defaults
 
 %% Building default output names
 
-[path_f,name_f,ext_f] = fileparts(files_in.fmri);
+if isempty(files_out)
+    [path_f,name_f,ext_f] = fileparts(files_in.fmri);
 
-if isempty(path_f)
-    path_f = '.';
+    if isempty(path_f)
+        path_f = '.';
+    end
+
+    if strcmp(ext_f,gb_niak_zip_ext)
+        [tmp,name_f,ext_f] = fileparts(name_f);
+        ext_f = cat(2,ext_f,gb_niak_zip_ext);
+    end
+
+    if isempty(opt.folder_out)
+        folder_write = path_f;
+    else
+        folder_write = opt.folder_out;
+    end
+
+    files_out = cat(2,folder_write,filesep,name_f,'_mp.dat');
 end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
-
-if isempty(opt.folder_out)
-    folder_write = path_f;
-else
-    folder_write = opt.folder_out;
-end
-
-files_out = cat(2,folder_write,filesep,name_f,'_mp.dat');
 
 if flag_test == 1
     return
@@ -154,14 +163,16 @@ end
 %% Estimation of motion parameters %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-msg = sprint('Rigid-body motion estimation.\nSource file: %s\nTarget file: %s\n',files_in.fmri,files_out);
-stars = repmat('*',size(msg));
+msg1 = sprintf('Rigid-body motion estimation.');
+msg2 = sprintf('Source file: %s',files_in.fmri);
+msg3 = sprintf('Target file: %s',files_in.target);
+stars = repmat('*',[1 max([length(msg1),length(msg2),length(msg3)])]);
 if flag_verbose
-    fprintf('\n%s\n%s\n%s\n',stars,msg,stars);
+    fprintf('\n%s\n%s\n%s\n%s\n%s\n',stars,msg1,msg2,msg3,stars);
 end
 
 %% Generating temporary folder
-path_tmp = niak_folder_tmp('_motion_correction');
+path_tmp = niak_path_tmp('_motion_correction');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generating the target volume %%
@@ -179,26 +190,23 @@ if ignore_slice > 0
     mask_target(:,:,1:ignore_slice) = 0;
     mask_target(:,:,end-ignore_slice+1:end) = 0;
 end
-file_mask_source = [path_tmp 'mask_target.mnc'];
-hdr.file_name = file_mask_source;
+file_mask_target = [path_tmp 'mask_target.mnc'];
+hdr_target.file_name = file_mask_target;
 niak_write_vol(hdr_target,mask_target);
 
 %% writting the target
-file_target = [path_tmp 'target_dxyz.mnc'];
+file_target = [path_tmp 'target_blur.mnc'];
 file_target_tmp = [path_tmp 'target_tmp.mnc'];
-hdr.file_name = file_target_tmp;
-niak_write_vol(hdr,vol_target);
-[succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' -gradient ',file_target_tmp,' ',file_target(1:end-9)));
+hdr_target.file_name = file_target_tmp;
+niak_write_vol(hdr_target,vol_target);
+[succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' ',file_target_tmp,' ',file_target(1:end-9)));
 if succ ~= 0
     error(mesg);
-end                   
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Looping over every volume to perform motion parameters estimation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flag_verbose
-    fprintf('Performing motion correction estimation on volume :');
-end
 
 %% read volumes
 [hdr,data] = niak_read_vol(files_in.fmri);
@@ -209,103 +217,74 @@ else
     nb_vol = 1;
 end
 
-%% Set up options for smoothing
-opt_s.voxel_size = hdr.info.voxel_size;
-opt_s.fwhm = opt.fwhm;
-
 %% Initialize the array for motion parameters
-tab_parameters = zeros([nb_vol(num_r) 8]);
+tab_parameters = zeros([nb_vol 8]);
 hf_mp = fopen(files_out,'w');
 fprintf(hf_mp,'pitch roll yaw tx ty tz XCORR_init XCORR_final\n');
 
 
 %% Generating file names
-file_vol = [path_tmp 'vol_source_dxyz.mnc'];
+file_vol = [path_tmp 'vol_source_blur.mnc'];
+file_vol_model = [path_tmp 'vol_source_model.mnc'];
 file_vol_tmp = [path_tmp 'vol_source_tmp.mnc'];
+file_raw_tmp = [path_tmp 'vol_source_raw.dat'];
 file_xfm_tmp = [path_tmp 'vol_source_dxyz.xfm'];
 hdr.file_name = file_vol;
+hdr.raw = file_raw_tmp;
 
 for num_v = 1:nb_vol
+
+    vol_source = data(:,:,:,num_v);
+
+    %% writting the source
+    if num_v == 1
+        hdr.file_name = file_vol_model;
+        niak_write_vol(hdr,vol_source);
+        hdr.like = file_vol_model;
+    end
+
+    hdr.file_name = file_vol_tmp;
+    niak_write_vol(hdr,vol_source);
+
+    %% Blur & extract gradient
+    [succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' ',file_vol_tmp,' ',file_vol(1:end-9)));
+    if succ ~= 0
+        error(mesg);
+    end
+
+    %% Perform rigid-body coregistration
+    instr_minctracc = cat(2,'minctracc ',file_vol,' ',file_target,' ',file_xfm_tmp,' -xcorr  -source_mask ',file_mask_target,' -model_mask ',file_mask_target,' -forward -transformation ',file_xfm_tmp,' -clobber -lsq6 -speckle 0 -est_center -tol ',num2str(opt.tol,7),' -tricubic -simplex 10 -model_lattice -step ',num2str(opt.step),' ',num2str(opt.step),' ',num2str(opt.step));
+    if (num_v == 1)
+        [fail,msg] = system(cat(2,'param2xfm ',file_xfm_tmp,' -translation 0 0 0 -rotations 0 0 0 -clobber'));
+
+        if fail
+            error('There was a problem with PARAM2XFM : %s',msg)
+        end
+
+        if flag_verbose
+            fprintf('MINCTRACC call : %s\n',instr_minctracc);
+            fprintf('Performing motion correction estimation on volume : ');
+        end
+    end
 
     if flag_verbose
         fprintf('%i ',num_v);
     end
 
-    vol_source = data(:,:,:,num_v);
-
-    %% writting the source
-    hdr.file_name = file_vol_tmp;
-    niak_write_vol(hdr,vol_source);
-
-    [succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' -gradient ',file_vol_tmp,' ',file_vol(1:end-9)));
-    if succ ~= 0
-        error(mesg);
+    [fail,str_log] = system(instr_minctracc);
+    if fail~=0
+        error('There was a problem with MINCTRACC : %s',str_log)
     end
 
-    delete(cat(2,file_vol(1:end-9),'_blur.mnc'));
-    delete(file_vol_tmp);
-
-    if (num_v == vol_ref) & (num_r == run_ref)
-
-        transf = eye(4);
-        [flag,str_log] = system(cat(2,'param2xfm ',xfm_tmp,' -translation 0 0 0 -rotations 0 0 0 -clobber'));
-
-    else
-
-        if num_v == list_vols(1)
-            [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -clobber -debug -lsq6 -identity -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 10 -model_lattice -step 7 7 7'));
-        else
-            [flag,str_log] = system(cat(2,'minctracc ',file_vol,' ',file_target,' ',xfm_tmp,' -xcorr  -source_mask ',file_mask_source,' -model_mask ',file_mask_target,' -forward -transformation ',xfm_tmp,' -clobber -debug -lsq6 -speckle 0 -est_center -tol 0.0005 -tricubic -simplex 10 -model_lattice -step 7 7 7'));
-        end
-
-        %% Reading the transformation
-        transf = niak_read_transf(xfm_tmp);
-
-        %% Keeping record of the objective function values before and after
-        %% optimization
-        cell_log = niak_string2lines(str_log);
-        line_log = niak_string2words(cell_log{end-1});
-        tab_parameters(num_v,7) = str2num(line_log{end});
-        line_log = niak_string2words(cell_log{end});
-        tab_parameters(num_v,8) = str2num(line_log{end});
-
-    end
+    %% Reading the transformation
+    transf = niak_read_transf(file_xfm_tmp);
 
     %% Converting the xfm transformation into a roll/pitch/yaw and
     %% translation format
     [pry,tsl] = niak_transf2param(transf);
-
     tab_parameters(num_v,1:3) = pry';
     tab_parameters(num_v,4:6) = tsl';
-
-    %% If resampling data has been requested (or deriving the resampled
-    %% mean or mask), perform spatial interpolation
-    if ~ischar(files_out.motion_corrected_data)
-
-        files_in_res.source = niak_file_tmp('_vol_orig.mnc');
-        files_in_res.target = file_target_native;
-        files_in_res.transformation = xfm_tmp;
-        files_out_res = niak_file_tmp('_vol_r.mnc');
-        opt_res.flag_tfm_space = 0;
-        opt_res.voxel_size = [];
-        opt_res.flag_verbose = 0;
-        hdr.file_name = files_in_res.source;
-        niak_write_vol(hdr,data(:,:,:,num_v));
-        niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
-        [hdr_r,vol_r] = niak_read_vol(files_out_res);
-        delete(files_out_res);
-        delete(files_in_res.source);
-        data_r(:,:,:,num_v) = vol_r;
-
-    end
-
-    %% If requested, write the motion parameters in a log file
-    if ~strcmp(files_out.motion_parameters,'gb_niak_omitted')
-        fprintf(hf_mp,'%s\n',num2str(tab_parameters(num_v,:),12));
-    end
-
-    delete(file_vol);
-
+    fprintf(hf_mp,'%s\n',num2str(tab_parameters(num_v,:),12));
 end
 
 if flag_verbose
@@ -314,6 +293,9 @@ end
 fclose(hf_mp);
 
 % Cleaning temporary files
-delete(file_mask_target);
-delete(file_target);
-delete(file_target_native);
+if exist('OCTAVE_VERSION','var')
+    instr_rm = ['rm -rf ' path_tmp];
+    [succ,msg] = system(instr_rm);
+else
+    [succ,msg] = rmdir(path_tmp,'s');
+end

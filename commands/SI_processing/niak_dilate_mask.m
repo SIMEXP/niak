@@ -61,9 +61,9 @@ end
 
 neig = sub_build_neighbour(mask,type_neig);
 mask2 = zeros(size(mask));
-list_vox = unique(neig);
-list_vox = list_vox(list_vox~=0);
-mask2(list_vox) = 1;
+neig = neig(neig~=0);
+neig = neig(:);
+mask2(neig) = 1;
 mask2 = mask2 > 0;
 
 %%%%%%%%%%%%%%%%%%%

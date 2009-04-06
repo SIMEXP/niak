@@ -48,7 +48,6 @@ function file_name = niak_file_tmp(ext)
 % THE SOFTWARE.
 
 flag_gb_niak_fast_gb = 1; %% the initialization of global variables will be as fast as possible
-
 niak_gb_vars
 c_clock = clock;
 rand('state',100000*c_clock(end));
@@ -56,7 +55,8 @@ flag_tmp = 1;
 
 while flag_tmp == 1;
     file_name = sprintf('%sniak_tmp_%i%s',gb_niak_tmp,floor(1000000000*rand(1)),ext);
-    flag_tmp = exist(file_name)>0;
+    flag_tmp = exist(file_name,'file')>0;
 end
-
-system(cat(2,'echo > ',file_name));
+save(file_name,'flag_tmp')
+%hft = fopen(file_name,'w');
+%fclose(hft);
