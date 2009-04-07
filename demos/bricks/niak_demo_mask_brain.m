@@ -60,13 +60,13 @@ switch gb_niak_format_demo
     
      case 'minc1' % If data are in minc1 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
-        files_out = '';
+        files_in{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_in{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz');        
         
     case 'minc2' % If data are in minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
-        files_out = '';
+        files_in{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
+        files_in{2} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc');
         
     otherwise 
         
@@ -74,8 +74,15 @@ switch gb_niak_format_demo
         
 end
 
+%% FILES_OUT
+files_out.mask = '';
+files_out.mask_average = '';
+files_out.tab_fit = '';
+files_out.mean_average = '';
+files_out.std_average = '';
+
 %% Options
-opt.thresh_mean = 0.8;
+opt.thresh = 0.8;
 opt.fwhm = 5;
 opt.flag_remove_eyes = true;
 opt.flag_test = false; 

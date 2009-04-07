@@ -220,7 +220,7 @@ end
 %% Initialize the array for motion parameters
 tab_parameters = zeros([nb_vol 8]);
 hf_mp = fopen(files_out,'w');
-fprintf(hf_mp,'pitch roll yaw tx ty tz XCORR_init XCORR_final\n');
+fprintf(hf_mp,'roll pitch yaw tx ty tz XCORR_init XCORR_final\n');
 
 
 %% Generating file names
@@ -281,8 +281,8 @@ for num_v = 1:nb_vol
 
     %% Converting the xfm transformation into a roll/pitch/yaw and
     %% translation format
-    [pry,tsl] = niak_transf2param(transf);
-    tab_parameters(num_v,1:3) = pry';
+    [rpy,tsl] = niak_transf2param(transf);
+    tab_parameters(num_v,1:3) = rpy';
     tab_parameters(num_v,4:6) = tsl';
     fprintf(hf_mp,'%s\n',num2str(tab_parameters(num_v,:),12));
 end

@@ -13,7 +13,7 @@ function transf = niak_param2transf(rpy,tsl)
 % INPUTS:
 %
 % RPY 
-%       (array 3*1) the roll, pitch and yawn parameters (rotation in x, y 
+%       (array 3*1) the roll, pitch and yaw parameters (rotation in x, y 
 %       and z planes). Unit is degrees.
 %
 % TSL 
@@ -69,7 +69,7 @@ y=(rpy(3)/180)*pi;
 
 R=expm(vp([0 0 1]',y))*expm(vp([0 1 0]',p))*expm(vp([1 0 0]',r));
 
-transf=[ R, O; 0 0 0 1 ];
+transf=[ R, O(:); 0 0 0 1 ];
 
 function z=vp(x,y)
 
