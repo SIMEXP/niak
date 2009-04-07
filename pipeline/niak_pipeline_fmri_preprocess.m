@@ -366,7 +366,7 @@ end
 
 %% The options for the bricks
 gb_name_structure = 'opt.bricks';
-opt_tmp.flag_test = 1;
+opt_tmp.flag_test = false;
 
 switch style
     
