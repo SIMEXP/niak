@@ -722,9 +722,9 @@ for num_s = 1:nb_subject
     files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mean_average;
     files_in_tmp(1).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
 
-    files_in_tmp(1).transformation = pipeline.(name_stage_concat).files_out;
-    files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mask;
-    files_in_tmp(1).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+    files_in_tmp(2).transformation = pipeline.(name_stage_concat).files_out;
+    files_in_tmp(2).source = pipeline.(name_stage_mask).files_out.mask;
+    files_in_tmp(2).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
 
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
     files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereonl.mnc');
@@ -738,7 +738,7 @@ for num_s = 1:nb_subject
     opt_tmp(2).interpolation = 'nearest_neighbour';
 
     %% Adding the stage to the pipeline
-    pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in,files_out,opt)';
+    pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
     pipeline(1).(name_stage).files_in = files_in_tmp;
     pipeline(1).(name_stage).files_out = files_out_tmp;
     pipeline(1).(name_stage).opt = opt_tmp;   
@@ -767,9 +767,9 @@ for num_s = 1:nb_subject
     files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mean_average;
     files_in_tmp(1).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
     
-    files_in_tmp(1).transformation = pipeline.(name_stage_coregister).files_out.transformation;
-    files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mask;
-    files_in_tmp(1).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+    files_in_tmp(2).transformation = pipeline.(name_stage_coregister).files_out.transformation;
+    files_in_tmp(2).source = pipeline.(name_stage_mask).files_out.mask;
+    files_in_tmp(2).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
 
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
     files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereolin.mnc');
