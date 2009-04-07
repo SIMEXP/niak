@@ -844,10 +844,10 @@ if strcmp(ext_f,gb_niak_zip_ext)
     ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
-files_out_tmp.mean_average = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereolin' ext_f];
-files_out_tmp.mask_average = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
-files_out_tmp.mask = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
-files_out_tmp.tab_fit = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereolin.dat'];
+files_out_tmp.mean_average = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereonl' ext_f];
+files_out_tmp.mask_average = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
+files_out_tmp.mask = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
+files_out_tmp.tab_fit = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereonl.dat'];
 
 %% OPT
 opt_tmp = opt.bricks.mask_brain;
