@@ -246,16 +246,18 @@ mask_all = mask_avg>=opt.thresh;
 
 %% Compute score of fit
 if ~strcmp(files_out.tab_fit,'gb_niak_omitted')
-    tab_fit = zeros([length(files_in) 2]);
+    tab_fit = zeros([length(files_in) 3]);
     mask_v = mask_all(:);
     mean_v = mean_avg(mask_all);
+    size_g = sum(mask_v);
     for num_f = 1:length(files_in)
         mask_f = mask_list(:,:,:,num_f);
         mean_f = mean_list(:,:,:,num_f);
         mean_f = mean_f(mask_all);
         tab_fit(num_f,1) = sum(mask_v&mask_f(:))/sum(mask_f(:));
+        tab_fit(num_f,2) = sum(mask_v&mask_f(:))/size_g;
         rmean = corrcoef(mean_v,mean_f);
-        tab_fit(num_f,2) = rmean(1,2);
+        tab_fit(num_f,3) = rmean(1,2);
     end
 end
 
@@ -296,5 +298,5 @@ if ~strcmp(files_out.tab_fit,'gb_niak_omitted')
     if flag_verbose
         fprintf('Saving the scores of fit in the file %s ...\n',files_out.tab_fit);
     end    
-    niak_write_tab(files_out.tab_fit,tab_fit,{},{'fit_to_mask','fit_mean_in_mask'});
+    niak_write_tab(files_out.tab_fit,tab_fit,files_in,{'fit_mask_ind_to_group','fit_mask_group_to_ind','fit_mean_in_mask'});
 end
