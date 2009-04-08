@@ -1,4 +1,4 @@
-function mask2 = niak_dilate_mask(mask,type_neigh)
+function mask2 = niak_dilate_mask(mask,type_neig,nb_iter,mask_old)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DILATE_MASK
@@ -18,6 +18,10 @@ function mask2 = niak_dilate_mask(mask,type_neigh)
 % TYPE_NEIG    
 %       (integer value, default 26) 
 %       definition of 3D-connexity (possible value 6,26)
+%
+% NB_ITER
+%       (integer, default 1)
+%       Number of times to iterate the dilatation.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -55,17 +59,33 @@ function mask2 = niak_dilate_mask(mask,type_neigh)
 % THE SOFTWARE.
 
 %% Default inputs
-if nargin < 2
+if (nargin < 2)||isempty(type_neig)
     type_neig = 26;
 end
 
+if nargin < 3
+    nb_iter = 1;
+end
+
 neig = sub_build_neighbour(mask,type_neig);
-mask2 = zeros(size(mask));
+mask2 = false(size(mask));
 neig = neig(neig~=0);
 neig = neig(:);
-mask2(neig) = 1;
-mask2 = mask2 > 0;
+mask2(neig) = true;
 
+if nargin > 3
+    mask2 = mask2 | mask_old;
+end
+
+if nb_iter > 1
+    mask_edge = mask2;    
+    mask_edge(mask) = false;
+    if nargin > 3
+        mask_edge(mask_old) = false;
+    end
+    mask2 = niak_dilate_mask(mask_edge,type_neig,nb_iter-1,mask2);
+end
+    
 %%%%%%%%%%%%%%%%%%%
 %% Subfunctions %%%
 %%%%%%%%%%%%%%%%%%%
