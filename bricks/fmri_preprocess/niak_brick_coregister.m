@@ -379,11 +379,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {3*siz_func,1.5*siz_func};
-list_fwhm_func = {[3 3 3],[1.5 1.5 1.5]};
-list_step = {3,3};
-list_spline = {10,3};
-list_crop = {20,20};
+list_fwhm = {3*siz_func,1.5*siz_func,siz_func};
+list_fwhm_func = {[4 4 4],[2 2 2],[0 0 0]};
+list_step = {3,3,2};
+list_spline = {10,3,3};
+list_crop = {20,10,5};
 
 for num_i = 1:length(list_fwhm)
 
@@ -440,14 +440,18 @@ for num_i = 1:length(list_fwhm)
     if flag_verbose
         fprintf('Smoothing the functional image ...\n');
     end
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -3dfwhm ',num2str(fwhm_val_func),' ',file_func_init,' ',file_func_blur(1:end-9));
-    if flag_verbose
-        system(instr_smooth)
-    else
-        [succ,msg] = system(instr_smooth);
-        if succ ~= 0
-            error(msg)
+    if max(fwhm_val_func)>0
+        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -3dfwhm ',num2str(fwhm_val_func),' ',file_func_init,' ',file_func_blur(1:end-9));
+        if flag_verbose
+            system(instr_smooth)
+        else
+            [succ,msg] = system(instr_smooth);
         end
+    else
+        [succ,msg] = copyfile(file_func_init,file_func_blur,'f');
+    end
+    if succ ~= 0
+        error(msg)
     end
     
     %% Cropping the smoothed functional
@@ -480,11 +484,7 @@ for num_i = 1:length(list_fwhm)
     niak_write_vol(hdr_tmp,vol_anat_smooth);
     
     %% applying MINCTRACC
-    if num_i == 1
-        instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
-    else
-        instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
-    end
+    instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
 
     if flag_verbose
         fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
