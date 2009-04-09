@@ -379,7 +379,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {hdr_func.info.voxel_size*3,1.5*siz_func};
+list_fwhm = {3*siz_func,1.5*siz_func};
 list_fwhm_func = {[3 3 3],[1.5 1.5 1.5]};
 list_step = {3,3};
 list_spline = {10,3};
