@@ -226,6 +226,10 @@ if isempty(files_out.anat_hires)
     files_out.anat_hires = cat(2,folder_anat,filesep,name_anat,'_nativefunc_hires',ext_anat);
 end
 
+if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
+    error('OPT.INIT should be either ''center'' or ''identity''');
+end
+
 if flag_test == 1
     return
 end
@@ -299,7 +303,7 @@ niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 if flag_verbose
     fprintf('Building a mask of the functional space...\n');
 end
-opt_mask.fwhm = 6;
+opt_mask.fwhm = 2;
 opt_mask.flag_remove_eyes = 1;
 mask_func = niak_mask_brain(mean(abs(vol_func),4),opt_mask);
 hdr_func.file_name = file_tmp;
@@ -374,8 +378,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {hdr_func.info.voxel_size*2,hdr_func.info.voxel_size};
-list_fwhm_func = {[2 2 2],[1 1 1]};
+list_fwhm = {hdr_func.info.voxel_size*3,1.5*hdr_func.info.voxel_size};
+list_fwhm_func = {[3 3 3],[1.5 1.5 1.5]};
 list_step = {3,3};
 list_spline = {10,3};
 list_crop = {20,20};
@@ -470,7 +474,7 @@ for num_i = 1:length(list_fwhm)
     [hdr_tmp,vol_anat_smooth] = niak_read_vol(file_anat_blur);
     [hdr_func,mask_anat] = niak_read_vol(file_mask_anat_crop);
     vol_anat_smooth(mask_anat==0) = 0;
-    vol_anat_smooth = (vol_anat_smooth/max(vol_anat_smooth(:)))*max(vol_func_smooth(:));
+    %vol_anat_smooth = (vol_anat_smooth/max(vol_anat_smooth(:)))*max(vol_func_smooth(:));
     hdr_tmp.file_name = file_anat_blur;
     niak_write_vol(hdr_tmp,vol_anat_smooth);
     
