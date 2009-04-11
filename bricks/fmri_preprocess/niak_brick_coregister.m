@@ -293,7 +293,6 @@ clear files_in_res files_out_res opt_res
 
 [hdr_func,vol_func] = niak_read_vol(files_in.functional);
 hdr_func.file_name = file_tmp;
-siz_func = hdr_func.info.voxel_size;
 niak_write_vol(hdr_func,vol_func);
 
 files_in_res.source = file_tmp;
@@ -390,8 +389,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {3*siz_func,1.5*siz_func,siz_func};
-list_fwhm_func = {[4 4 4],[2 2 2],[0 0 0]};
+list_fwhm = {[8 8 8],[5 5 5],[3 3 3]};
+list_fwhm_func = {[4 4 4],[3 3 3],[3 3 3]};
 list_step = {3,3,2};
 list_spline = {10,3,3};
 list_crop = {20,10,5};
