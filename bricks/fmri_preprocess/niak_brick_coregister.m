@@ -389,8 +389,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {[8 8 8],[8 8 8],[4 4 4]};
-list_fwhm_func = {[4 4 4],[4 4 4],[2 2 2]};
+list_fwhm = {[8 8 8],[4 4 4]};
+list_fwhm_func = {[4 4 4],[2 2 2]};
 list_step = {3,3,2};
 list_spline = {10,3,3};
 list_crop = {20,10,5};
@@ -497,11 +497,8 @@ for num_i = 1:length(list_fwhm)
     clear vol_anat_smooth mask_anat
     
     %% applying MINCTRACC
-    if num_i == 1
-        instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -xcorr -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
-    else
-        instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');    
-    end
+
+    instr_minctracc = cat(2,'minctracc ',file_func_blur,' ',file_anat_blur,' ',file_transf_est,' -transform ',file_transf_guess,' -mi -debug -simplex ',num2str(spline_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
 
     if flag_verbose
         fprintf('Spatial coregistration using mutual information : %s\n',instr_minctracc);
