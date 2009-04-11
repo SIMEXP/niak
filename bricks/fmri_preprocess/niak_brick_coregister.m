@@ -405,7 +405,7 @@ for num_i = 1:length(list_fwhm)
     crop_val = list_crop{num_i};
 
     if flag_verbose
-        fprintf('\n*************\nIteration %i, smoothing anatomical %1.2f,%1.2f,%1.2f, smoothing functional %1.2f,%1.2f,%1.2f, step %1.2f, spline %1.2f\n*************\n',num_i,fwhm_val(1),fwhm_val(2),fwhm_val(3),fwhm_val_func(1),fwhm_val_func(2),fwhm_val_func(3),step_val,spline_val);
+        fprintf('\n*************\nIteration %i, smoothing anatomical %1.2f, smoothing functional %1.2f step %1.2f, spline %1.2f\n*************\n',num_i,fwhm_val,fwhm_val_func,step_val,spline_val);
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
