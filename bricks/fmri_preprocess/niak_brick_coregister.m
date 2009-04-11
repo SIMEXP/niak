@@ -389,11 +389,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {[8 8 8],[4 4 4]};
-list_fwhm_func = {[4 4 4],[2 2 2]};
-list_step = {3,3,2};
-list_spline = {10,3,3};
-list_crop = {20,10,5};
+list_fwhm = {8,4};
+list_fwhm_func = {4,1};
+list_step = {3,3};
+list_spline = {10,3};
+list_crop = {40,20};
 
 for num_i = 1:length(list_fwhm)
 
@@ -453,7 +453,7 @@ for num_i = 1:length(list_fwhm)
         fprintf('Smoothing the functional image ...\n');
     end
     if max(fwhm_val_func)>0
-        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -3dfwhm ',num2str(fwhm_val_func),' ',file_func_init,' ',file_func_blur(1:end-9));
+        instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val_func),' ',file_func_init,' ',file_func_blur(1:end-9));
         if flag_verbose
             system(instr_smooth)
         else
@@ -478,7 +478,7 @@ for num_i = 1:length(list_fwhm)
     if flag_verbose
         fprintf('Smoothing the anatomical image ...\n');
     end
-    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -3dfwhm ',num2str(fwhm_val),' ',file_anat_init,' ',file_anat_blur(1:end-9));
+    instr_smooth = cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(fwhm_val),' ',file_anat_init,' ',file_anat_blur(1:end-9));
     if flag_verbose
         system(instr_smooth)
     else
