@@ -7,7 +7,7 @@ function adj = niak_build_adjacency(mask,neig)
 % 3D volume.
 %
 % SYNTAX :
-% ADJ = NIAK_BUILD_ADJACENCY(MASK,NEIGH)
+% ADJ = NIAK_BUILD_ADJACENCY(MASK,NEIG)
 %
 % _________________________________________________________________________
 % INPUTS :
