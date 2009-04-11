@@ -389,8 +389,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Blurring parameters
-list_fwhm = {[8 8 8],[5 5 5],[3 3 3]};
-list_fwhm_func = {[4 4 4],[3 3 3],[3 3 3]};
+list_fwhm = {[8 8 8],[8 8 8],[4 4 4]};
+list_fwhm_func = {[4 4 4],[4 4 4],[2 2 2]};
 list_step = {3,3,2};
 list_spline = {10,3,3};
 list_crop = {20,10,5};
