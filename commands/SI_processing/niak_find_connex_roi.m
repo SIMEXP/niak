@@ -1,22 +1,39 @@
 function [mask_c,list_size] = niak_find_connex_roi(mask,opt)
-
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_FIND_CONNEX_ROI
+%
 % Find spatially connected rois in a binary mask
 %
 % SYNTAX :
 % [MASK_C,LIST_SIZE] = NIAK_FIND_CONNEX_ROI(MASK,OPT)
 %
+% _________________________________________________________________________
 % INPUTS :
-% MASK    (3D array) binary volume.
-% OPT     (structure) optional, with the following fields :
-%       TYPE_NEIG (integer, default 6) the spatial neighbourhood of a
+%
+% MASK    
+%       (3D array) binary volume.
+% OPT     
+%       (structure) optional, with the following fields :
+%
+%       TYPE_NEIG 
+%           (integer, default 6) the spatial neighbourhood of a
 %           voxel, values : 6 or 26.
-%       THRE_SIZE (integer, default 1) the minimal acceptable size of ROIs.
 %
+%       THRE_SIZE 
+%           (integer, default 1) the minimal acceptable size of ROIs.
+%
+% _________________________________________________________________________
 % OUTPUTS :
-% MASK_C   (3D array) (MASK_C==i) is the ith 
-% IND      (vector) IND(i) is the linear index of the ith voxel in MASK.
-%             I = FIND(MASK(:))
 %
+% MASK_C   
+%       (3D array) (MASK_C==i) is the ith connex region
+%
+% IND      
+%       (vector) IND(i) is the linear index of the ith voxel in MASK.
+%       I = FIND(MASK(:))
+%
+% _________________________________________________________________________
 % COMMENTS :
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal

@@ -1,4 +1,4 @@
-function [neig,ind] = niak_build_neighbour(mask,par_neig,type_neig)
+function [neig,ind] = niak_build_neighbour(mask,par_neig)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_BUILD_NEIGHBOUR
@@ -7,7 +7,7 @@ function [neig,ind] = niak_build_neighbour(mask,par_neig,type_neig)
 % a 3D binary mask.
 %
 % SYNTAX :
-% NEIG = NIAK_BUILD_NEIGHBOUR(MASK,TYPE_NEIGH)
+% NEIG = NIAK_BUILD_NEIGHBOUR(MASK,PAR_NEIGH)
 %
 % _________________________________________________________________________
 % INPUTS :
@@ -18,18 +18,7 @@ function [neig,ind] = niak_build_neighbour(mask,par_neig,type_neig)
 %
 % PAR_NEIG    
 %       (integer value, default 26) 
-%       The parameter of neighbourhood (see TYPE_NEIG).
-%
-% TYPE_NEIG
-%       (string, default 'connex') the type of neighbourhood. Available
-%       options :
-%
-%       'connex' voxels that are spatially connex. PAR_NEIG is the type
-%           of connexity (6 or 26).
-%
-%       'ball' voxels that are in a ball. PAR_NEIG(1) is the diameter of the
-%           ball. PAR_NEIG(2:4) defines the size of voxels (if not 
-%           specified, it is assumed to be [1 1 1]).
+%       The parameter of neighbourhood. Available options : 6 or 26
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -46,8 +35,6 @@ function [neig,ind] = niak_build_neighbour(mask,par_neig,type_neig)
 %
 % _________________________________________________________________________
 % COMMENTS :
-%
-% The "ball" neighbourhood was coded by Benjamin D'hont during summer 2008.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
 %               Neurological Institute, McGill University, 2008.
@@ -78,10 +65,6 @@ if nargin < 2
     par_neig = 26;
 end
 
-if nargin < 3
-    type_neig = 'connex';
-end
-
 %% Find linear indices and 3D coordinates of voxels in the mask
 ind = find(mask(:));
 N = length(ind);
@@ -90,35 +73,26 @@ N = length(ind);
 coord = [coordx,coordy,coordz];
 
 %% Generation of the neighborhood matrix
-switch type_neig
 
-    case 'connex'
-        
-        if par_neig == 26
-            dec = [0,1,-1];
-            num = 1;
-            decxyz = zeros([27 3]);
-            for i = 1:3
-                for j = 1:3
-                    for k = 1:3
-                        decxyz(num,:) = [dec(i),dec(j),dec(k)];
-                        num = num + 1;
-                    end
-                end
+if par_neig == 26
+    dec = [0,1,-1];
+    num = 1;
+    decxyz = zeros([27 3]);
+    for i = 1:3
+        for j = 1:3
+            for k = 1:3
+                decxyz(num,:) = [dec(i),dec(j),dec(k)];
+                num = num + 1;
             end
-            decxyz = decxyz(2:27,:);
-        elseif par_neig == 6
-            decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
-        else
-            error('%i : unsupported parameter for a connex neighbourhood',par_neig)
         end
-        
-    case 'ball'
-        
-        
-    otherwise
-        error('%s : unsupported type of neighbourhood.',type_neig);
+    end
+    decxyz = decxyz(2:27,:);
+elseif par_neig == 6
+    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
+else
+    error('%i : unsupported parameter for a connex neighbourhood',par_neig)
 end
+
 long_neig = length(decxyz);
 
 %% Generating the matrix of neighbors
