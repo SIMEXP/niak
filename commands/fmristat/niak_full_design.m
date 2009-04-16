@@ -1,42 +1,56 @@
-function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
-
+function matrix_x = niak_full_design(x_cache,trend,opt)
 % _________________________________________________________________________
-% SUMMARY NIAK_QUICK_FWHM
+% SUMMARY NIAK_AUTOREGRESSIVE
 %
-% Estimate the FWHM from a 4D data
+% Contructs the full design matrix of the model (concatenates the information
+% in x_cache an trend)
 % 
 % SYNTAX:
-% FWHM = NIAK_QUICK_FWHM(WRESID_VOL,MASK,OPT)
+% [MATRIX_X] = NIAK_FULL_DESIGN(X_CACHE,TREND,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% WRESID_VOL         
-%       (4D array) a 3D+t dataset
-% 
-% MASK
-%       (3D volume, default all voxels) a binary mask of the voxels that 
-%       will be included in the analysis.
+% X_CACHE 
+% structure with the fields TR, X ,and W, obtained from niak_fmridesign 
 %
+% TREND       
+% 3D array) of the temporal,spatial trends and additional confounds for 
+% every slice, obtained from niak_make_trends.
+% 
 % OPT         
 %       (structure, optional) with the following fields :
 %
-%       VOX
-%           (vector 1*3, default [1 1 1]) Voxel size in mm.
+%       EXCLUDE: 
+%           is a list of frames that should be excluded from the analysis. 
+%           Default is [].
 %
+%       NUM_HRF_BASES
+%           row vector indicating the number of basis functions for the hrf 
+%           for each response, either 1 or 2 at the moment. At least one basis 
+%           functions is needed to estimate the magnitude, but two basis functions
+%           are needed to estimate the delay.
+%     
+%       BASIS_TYPE 
+%           selects the basis functions for the hrf used for delay
+%           estimation, or whenever NUM_HRF_BASES = 2. These are convolved 
+%           with the stimulus to give the responses in Dim 3 of X_CACHE.X:
+%           'taylor' - use hrf and its first derivative (components 1 and 2), or 
+%           'spectral' - use first two spectral bases (components 3 and 4 of Dim 3).
+%           Default is 'spectral'. 
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FWHM       
-%       (real number) Estimated value of the FWHM. 
-%
+% MATRIX_X      
+%       (3D array) of the full design matrix, a different matrix for each
+%       slice
 % _________________________________________________________________________
 % COMMENTS:
 %
 % This function is a NIAKIFIED port of a part of the FMRILM function of the
 % fMRIstat project. The original license of fMRIstat was : 
 %
-%##########################################################################
+%############################################################################
 % COPYRIGHT:   Copyright 2002 K.J. Worsley
 %              Department of Mathematics and Statistics,
 %              McConnell Brain Imaging Center, 
@@ -76,65 +90,43 @@ function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-% Setting up default
+
 gb_name_structure = 'opt';
-gb_list_fields = {'vox'};
-gb_list_defaults = {[1 1 1]};
+gb_list_fields = {'exclude','num_hrf_bases','basis_type'};
+gb_list_defaults = {[],[],'spectral'};
 niak_set_defaults
 
-Steps = opt.vox;
-[nx,ny,nz] = size(wresid_vol);
 
-if nargin < 2
-    mask = true([nx ny nz]);
+switch lower(basis_type)
+case 'taylor',    
+   basis1=1;
+   basis2=2;
+case 'spectral',    
+   basis1=3;
+   basis2=4;
+otherwise, 
+   disp('Unknown basis_type.'); 
+   return
 end
 
-% Quick fwhm of data
-for slice=1:nz
-    wresid_slice = squeeze(wresid_vol(:,:,slice,:));
-         if slice==1
-            D=2+(nz>1);
-            sumr=0;
-            i1=1:(nx-1);
-            j1=1:(ny-1);
-            nxy=conv2(ones(nx-1,ny-1),ones(2));
-            u = wresid_slice;
-            if D==2
-               ux=diff(u(:,j1,:),1,1);
-               uy=diff(u(i1,:,:),1,2);
-               axx=sum(ux.^2,3);
-               ayy=sum(uy.^2,3);
-               axy=sum(ux.*uy,3);
-               detlam=(axx.*ayy-axy.^2);
-               r=conv2((detlam>0).*sqrt(detlam+(detlam<=0)),ones(2))./nxy;
-            else
-               r=zeros(nx,ny);
-            end
-            mask_slice = mask(:,:,slice);
-            tot=sum(mask_slice(:));
-         else 
-            uz=wresid_slice-u;
-            ux=diff(u(:,j1,:),1,1);
-            uy=diff(u(i1,:,:),1,2);
-            uz=uz(i1,j1,:);
-            axx=sum(ux.^2,3);
-            ayy=sum(uy.^2,3);
-            azz=sum(uz.^2,3);
-            axy=sum(ux.*uy,3);
-            axz=sum(ux.*uz,3);
-            ayz=sum(uy.*uz,3);
-            detlam=(axx.*ayy-axy.^2).*azz-(axz.*ayy-2*axy.*ayz).*axz-axx.*ayz.^2;
-            mask1=mask_slice;
-            mask_slice = mask(:,:,slice);
-            tot=tot+sum(mask_slice(:));
-            r1=r;
-            r=conv2((detlam>0).*sqrt(detlam+(detlam<=0)),ones(2))./nxy;
-            sumr=sumr+sum(sum((r1+r)/(1+(slice>2)).*mask1));
-            u = wresid_slice;
-         end
-         if slice==nz
-            sumr=sumr+sum(sum(r.*mask_slice));
-            fwhm = sqrt(4*log(2))*(prod(abs(Steps(1:D)))*tot/sumr)^(1/3);
-         end
+if ~isempty(x_cache.x)
+   numresponses = size(x_cache.x,2);
+else
+   numresponses = 0;
 end
-      
+if isempty(opt.num_hrf_bases)
+   num_hrf_bases=ones(1,numresponses);
+end
+
+nt = size(x_cache.x,1);
+allpts = 1:nt;
+allpts(opt.exclude) = zeros(1,length(opt.exclude));
+keep = allpts( ( allpts >0 ) );
+
+if ~isempty(x_cache.x)
+    matrix_x = cat(2,squeeze(x_cache.x(keep,num_hrf_bases==1,1,:)),...
+        squeeze(x_cache.x(keep,num_hrf_bases==2,basis1,:)),...
+        squeeze(x_cache.x(keep,num_hrf_bases==2,basis2,:)),trend);
+else
+    matrix_x = trend;
+end

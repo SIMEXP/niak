@@ -1,28 +1,29 @@
-function [rho_vol,df] = niak_autoregressive(vol,opt)
+function [rho_vol,fwhm,df] = niak_autoregressive(vol,mask,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_AUTOREGRESSIVE
 %
-% Estimates an autoregressive model for each voxel time course.
+% Estimates an autoregressive model for each voxel time course and gives an
+% approximate value for the fwhm.
 % 
 % SYNTAX:
-% [RHO_VOL,DF] = NIAK_AUTOREGRESSIVE(VOL,OPT)
+% [RHO_VOL,FWHM,DF] = NIAK_AUTOREGRESSIVE(VOL,MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
 % VOL         
 %       (4D array) a 3D+t dataset
-% 
+%
+% MASK
+%       (3D volume, default all voxels) a binary mask of the voxels that 
+%       will be included in the analysis. 
+%
 % OPT         
-%       (structure, optional) with the following fields :
+%       structure with the following fields :
 %
-%       X_CACHE 
-%         structure with the fields TR, X ,and W, obtained from
-%         niak_fmridesign 
-%
-%       TREND       
-%           (3D array) of the temporal,spatial trends and additional 
-%            confounds for every slice, obtained from niak_make_trends.
+%       MATRIX_X
+%            Full design matrix of the model, obtained from
+%            nial_full_design
 %
 %       SPATIAL_AV
 %            colum vector of the spatial average time courses, obtained
@@ -38,21 +39,6 @@ function [rho_vol,df] = niak_autoregressive(vol,opt)
 %
 %       NUMLAGS
 %           (integer, default 1) The order (p) of the autoregressive model.
-%
-%       NUM_HRF_BASES
-%           row vector indicating the number of basis functions for the hrf 
-%           for each response, either 1 or 2 at the moment. At least one basis 
-%           functions is needed to estimate the magnitude, but two basis functions
-%           are needed to estimate the delay.
-%     
-%       BASIS_TYPE 
-%           selects the basis functions for the hrf used for delay
-%           estimation, or whenever NUM_HRF_BASES = 2. These are convolved 
-%           with the stimulus to give the responses in Dim 3 of X_CACHE.X:
-%           'taylor' - use hrf and its first derivative (components 1 and 2), or 
-%           'spectral' - use first two spectral bases (components 3 and 4 of Dim 3).
-%           Default is 'spectral'. 
-%
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -110,37 +96,15 @@ function [rho_vol,df] = niak_autoregressive(vol,opt)
 % THE SOFTWARE.
 
 gb_name_structure = 'opt';
-gb_list_fields = {'x_cache','trend','spatial_av','percent','exclude','numlags','num_hrf_bases','basis_type'};
-gb_list_defaults = {NaN,NaN,NaN,1,[],1,[],'spectral'};
+gb_list_fields = {'spatial_av','percent','exclude','numlags'};
+gb_list_defaults = {NaN,1,[],1};
 niak_set_defaults
 
-X_cache = opt.x_cache;
-Trend = opt.trend;
 spatial_av = opt.spatial_av;
-num_hrf_bases = opt.num_hrf_bases;
 numlags = opt.numlags;
 ispcnt = opt.percent;
+matrix_x = opt.matrix_x;
 
-switch lower(basis_type)
-case 'taylor',    
-   basis1=1;
-   basis2=2;
-case 'spectral',    
-   basis1=3;
-   basis2=4;
-otherwise, 
-   disp('Unknown basis_type.'); 
-   return
-end
-
-if ~isempty(X_cache.X)
-   numresponses = size(X_cache.X,2);
-else
-   numresponses = 0;
-end
-if isempty(num_hrf_bases)
-   num_hrf_bases=ones(1,numresponses);
-end
 
 [nx,ny,nz,nt] = size(vol);
 allpts = 1:nt;
@@ -151,13 +115,6 @@ n = length(keep);
 indk1=((keep(2:n)-keep(1:n-1))==1);
 k1=find(indk1)+1;
 Diag1=diag(indk1,1)+diag(indk1,-1);
-if ~isempty(X_cache.X)
-    X = cat(2,squeeze(X_cache.X(keep,num_hrf_bases==1,1,:)),...
-        squeeze(X_cache.X(keep,num_hrf_bases==2,basis1,:)),...
-        squeeze(X_cache.X(keep,num_hrf_bases==2,basis2,:)));
-else
-    X = [];
-end
   
 vol = reshape(vol,[nx*ny*nz nt]);
 vol = vol(:,keep);
@@ -170,9 +127,8 @@ if ispcnt
 end
 vol = reshape(vol,[nx ny nz n]);
 
-
 for k=1:nz
-    X_k = cat(2,squeeze(X(:,:,k)),squeeze(Trend(:,:,k)));
+    X_k = squeeze(matrix_x(:,:,k));
     dfs(k)=n-rank(X_k);
     pinvX = pinv(X_k);
     R = eye(n)-X_k*pinvX;
@@ -197,16 +153,19 @@ for k=1:nz
     betahat_ls = pinvX*Y;
     resid(:,k,:) = (Y - X_k*betahat_ls)';
 end
+clear vol
 
-resid = reshape(resid,nx*ny*nz,n);
+resid = reshape(resid,[nx*ny*nz,n]);
+
 if numlags==1
    Cov0 = sum(resid.^2,2);
    Cov1 = sum(resid(:,k1).*resid(:,k1-1),2);
    Cov = [Cov0, Cov1];
 else
    for lag=0:numlags
-       Cov(:,lag+1)=sum(resid_vol(:,1:n-lag).*resid_vol(:,(lag+1):n),2);
+       Cov(:,lag+1)=sum(resid(:,1:n-lag).*resid(:,(lag+1):n),2);
    end
+   Cov0 = Cov(:,1);
 end
 Cov = reshape(Cov',[numlags+1,nx*ny,nz]);
 for k=1:nz
@@ -222,6 +181,13 @@ else
             (Covadj(1,:)+(Covadj(1,:)<=0)))) )';
 end
 rho_vol = reshape(rho_vol,[nx ny nz numlags]);
+
+sdd=(Cov0>0)./sqrt(Cov0+(Cov0<=0));
+resid = resid.*repmat(sdd,1,n);
+resid = reshape(resid,[nx,ny,nz,n]);
+
+opt_fwhm.vox = opt.vox;
+fwhm = niak_quick_fwhm(resid,mask,opt_fwhm);
 
 df.resid = round(mean(dfs));
     

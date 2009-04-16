@@ -173,7 +173,7 @@ numtrends = size(trend,2)+size(confounds,2);
 Trend = zeros(n,numtrends,nz);
 for slice=1:nz
    if isempty(confounds)
-      trend(:,:,slice)=trend;
+      Trend(:,:,slice)=trend;
    else  
       if length(size(confounds))==2
          Trend(:,:,slice)=[trend confounds(keep,:)];
