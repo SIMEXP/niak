@@ -1,4 +1,4 @@
-function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
+function trend = niak_make_trends(opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_MAKE_TRENDS
@@ -6,20 +6,14 @@ function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
 % Create temporal an spatial trends to be include in the design matrix.
 % 
 % SYNTAX:
-% [TREND,SPATIAL_AV] = NIAK_MAKE_TRENDS(VOL,MASK,OPT)
+% TREND = NIAK_MAKE_TRENDS(OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% VOL         
-%       (4D array) a 3D+t dataset
 % 
-% MASK
-%       (3D volume, default all voxels) a binary mask of the voxels that 
-%       will be included in the analysis.
-%
 % OPT         
-%       (structure, optional) with the following fields :
+%       structure with the following fields :
 %
 %       N_TEMPORAL
 %           (integer, default 3) number of cubic spline temporal trends to 
@@ -35,10 +29,6 @@ function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
 %           average (SPATIAL_AV)  weighted by first non-excluded frame; 
 %           0 will remove no spatial trends.
 %
-%       PERCENT: 
-%           if PERCENT=1(Default), then the data is converted to percentages 
-%           before analysis by dividing each frame by its spatial average,* 100%.       
-%
 %       EXCLUDE
 %           (vector, default []) a list of frames that should be excluded 
 %           from the analysis. 
@@ -51,7 +41,10 @@ function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
 %           are not convolved with the HRF, e.g. movement artifacts. 
 %           If a matrix, the same columns are used for every slice; 
 %           if a 3D array, the first two dimensions are the matrix, 
-%           the third is the slice. 
+%           the third is the slice.
+%
+%       N_FRAMES
+%           number of frames in the volume
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -59,9 +52,6 @@ function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
 % TREND       
 %       (3D array) temporal, spatial trends and additional 
 %       confounds for every slice.
-%
-% SPATIAL_AV
-%       colum vector of the spatial average time courses.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -111,14 +101,14 @@ function [trend,spatial_av] = niak_make_trends(vol,mask,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'n_temporal','n_spatial','percent','exclude','tr','confounds'};
-gb_list_defaults = {3,1,1,[],1,[]};
+gb_list_fields = {'n_temporal','n_spatial','exclude','tr','confounds','n_frames'};
+gb_list_defaults = {3,1,[],1,[],NaN};
 niak_set_defaults
 
 % Keep time points that are not excluded:
 
-[nx,ny,nz,nt] = size(vol);
-allpts = 1:nt;
+n_frames = opt.n_frames;
+allpts = 1:n_frames;
 allpts(exclude) = zeros(1,length(exclude));
 keep = allpts( ( allpts >0 ) );
 n = length(keep);
@@ -126,16 +116,7 @@ n = length(keep);
 n_temporal = opt.n_temporal;
 n_spatial = opt.n_spatial;
 tr = opt.tr;
-ispcnt = opt.percent;
 
-if (n_spatial>=1)|(ispcnt)
-   mask = mask > 0;
-   tseries = reshape(vol,[nx*ny*nz nt]);
-   tseries = tseries(mask(:),:);
-   spatial_av = mean(tseries);
-   spatial_av = spatial_av(:);
-   clear mask
-end
 
 % Create temporal trends:
 

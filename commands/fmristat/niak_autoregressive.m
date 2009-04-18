@@ -3,7 +3,7 @@ function [rho_vol,fwhm,df] = niak_autoregressive(vol,mask,opt)
 % SUMMARY NIAK_AUTOREGRESSIVE
 %
 % Estimates an autoregressive model for each voxel time course and gives an
-% approximate value for the fwhm.
+% approximate value for the fwhm based on the model residuals (optional).
 % 
 % SYNTAX:
 % [RHO_VOL,FWHM,DF] = NIAK_AUTOREGRESSIVE(VOL,MASK,OPT)
@@ -40,12 +40,17 @@ function [rho_vol,fwhm,df] = niak_autoregressive(vol,mask,opt)
 %       NUMLAGS
 %           (integer, default 1) The order (p) of the autoregressive model.
 %
+%       VOXEL_SIZE
+%           (vector 1*3, default [1 1 1]) Voxel size in mm.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % RHO_VOL      
 %       (4D array) 3D + numlags dataset
 %       Estimated parameters of the autoregressive lineal model.
+% FWHM       
+%       (real number) Estimated value of the FWHM. 
 % DF
 %       Structure with the field RESID, degrees of freedom of the residuals. 
 %
@@ -96,8 +101,8 @@ function [rho_vol,fwhm,df] = niak_autoregressive(vol,mask,opt)
 % THE SOFTWARE.
 
 gb_name_structure = 'opt';
-gb_list_fields = {'spatial_av','percent','exclude','numlags'};
-gb_list_defaults = {NaN,1,[],1};
+gb_list_fields = {'matrix_x','spatial_av','percent','exclude','numlags','voxel_size'};
+gb_list_defaults = {NaN,NaN,1,[],1,[1 1 1]};
 niak_set_defaults
 
 spatial_av = opt.spatial_av;
@@ -182,12 +187,12 @@ else
 end
 rho_vol = reshape(rho_vol,[nx ny nz numlags]);
 
-sdd=(Cov0>0)./sqrt(Cov0+(Cov0<=0));
-resid = resid.*repmat(sdd,1,n);
-resid = reshape(resid,[nx,ny,nz,n]);
-
-opt_fwhm.vox = opt.vox;
-fwhm = niak_quick_fwhm(resid,mask,opt_fwhm);
-
-df.resid = round(mean(dfs));
+if nargout>=2
+    sdd=(Cov0>0)./sqrt(Cov0+(Cov0<=0));
+    resid = resid.*repmat(sdd,1,n);
+    resid = reshape(resid,[nx,ny,nz,n]);
+    opt_fwhm.voxel_size = opt.voxel_size;
+    fwhm = niak_quick_fwhm(resid,mask,opt_fwhm);
+    df.resid = round(mean(dfs));
+end
     

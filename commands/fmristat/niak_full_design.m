@@ -1,6 +1,6 @@
 function matrix_x = niak_full_design(x_cache,trend,opt)
 % _________________________________________________________________________
-% SUMMARY NIAK_AUTOREGRESSIVE
+% SUMMARY NIAK_FULL_DESIGN
 %
 % Contructs the full design matrix of the model (concatenates the information
 % in x_cache an trend)
@@ -93,7 +93,7 @@ function matrix_x = niak_full_design(x_cache,trend,opt)
 
 gb_name_structure = 'opt';
 gb_list_fields = {'exclude','num_hrf_bases','basis_type'};
-gb_list_defaults = {[],[],'spectral'};
+gb_list_defaults = {[],NaN,'spectral'};
 niak_set_defaults
 
 
@@ -109,14 +109,6 @@ otherwise,
    return
 end
 
-if ~isempty(x_cache.x)
-   numresponses = size(x_cache.x,2);
-else
-   numresponses = 0;
-end
-if isempty(opt.num_hrf_bases)
-   num_hrf_bases=ones(1,numresponses);
-end
 
 nt = size(x_cache.x,1);
 allpts = 1:nt;

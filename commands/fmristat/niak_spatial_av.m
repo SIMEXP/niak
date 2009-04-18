@@ -1,34 +1,28 @@
-function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
+function spatial_av = niak_spatial_av(vol,mask)
 
 % _________________________________________________________________________
-% SUMMARY NIAK_QUICK_FWHM
+% SUMMARY NIAK_SPATIAL_AV
 %
-% Estimate the FWHM from a 4D data
+% Create spatial average from a volume
 % 
 % SYNTAX:
-% FWHM = NIAK_QUICK_FWHM(WRESID_VOL,MASK,OPT)
+% SPATIAL_AV = NIAK_SPATIAL_AV(VOL,MASK)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% WRESID_VOL         
+% VOL         
 %       (4D array) a 3D+t dataset
 % 
 % MASK
 %       (3D volume, default all voxels) a binary mask of the voxels that 
 %       will be included in the analysis.
 %
-% OPT         
-%       (structure, optional) with the following fields :
-%
-%       VOXEL_SIZE
-%           (vector 1*3, default [1 1 1]) Voxel size in mm.
-%
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FWHM       
-%       (real number) Estimated value of the FWHM. 
+% SPATIAL_AV
+%       colum vector of the spatial average time courses.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -36,7 +30,7 @@ function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
 % This function is a NIAKIFIED port of a part of the FMRILM function of the
 % fMRIstat project. The original license of fMRIstat was : 
 %
-%##########################################################################
+%############################################################################
 % COPYRIGHT:   Copyright 2002 K.J. Worsley
 %              Department of Mathematics and Statistics,
 %              McConnell Brain Imaging Center, 
@@ -76,65 +70,8 @@ function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-% Setting up default
-gb_name_structure = 'opt';
-gb_list_fields = {'voxel_size'};
-gb_list_defaults = {[1 1 1]};
-niak_set_defaults
-
-Steps = opt.voxel_size;
-[nx,ny,nz,nt] = size(wresid_vol);
-
-if nargin < 2
-    mask = true([nx ny nz]);
-end
-
-% Quick fwhm of data
-for slice=1:nz
-    wresid_slice = squeeze(wresid_vol(:,:,slice,:));
-         if slice==1
-            D=2+(nz>1);
-            sumr=0;
-            i1=1:(nx-1);
-            j1=1:(ny-1);
-            nxy=conv2(ones(nx-1,ny-1),ones(2));
-            u = wresid_slice;
-            if D==2
-               ux=diff(u(:,j1,:),1,1);
-               uy=diff(u(i1,:,:),1,2);
-               axx=sum(ux.^2,3);
-               ayy=sum(uy.^2,3);
-               axy=sum(ux.*uy,3);
-               detlam=(axx.*ayy-axy.^2);
-               r=conv2((detlam>0).*sqrt(detlam+(detlam<=0)),ones(2))./nxy;
-            else
-               r=zeros(nx,ny);
-            end
-            mask_slice = mask(:,:,slice);
-            tot=sum(mask_slice(:));
-         else 
-            uz=wresid_slice-u;
-            ux=diff(u(:,j1,:),1,1);
-            uy=diff(u(i1,:,:),1,2);
-            uz=uz(i1,j1,:);
-            axx=sum(ux.^2,3);
-            ayy=sum(uy.^2,3);
-            azz=sum(uz.^2,3);
-            axy=sum(ux.*uy,3);
-            axz=sum(ux.*uz,3);
-            ayz=sum(uy.*uz,3);
-            detlam=(axx.*ayy-axy.^2).*azz-(axz.*ayy-2*axy.*ayz).*axz-axx.*ayz.^2;
-            mask1=mask_slice;
-            mask_slice = mask(:,:,slice);
-            tot=tot+sum(mask_slice(:));
-            r1=r;
-            r=conv2((detlam>0).*sqrt(detlam+(detlam<=0)),ones(2))./nxy;
-            sumr=sumr+sum(sum((r1+r)/(1+(slice>2)).*mask1));
-            u = wresid_slice;
-         end
-         if slice==nz
-            sumr=sumr+sum(sum(r.*mask_slice));
-            fwhm = sqrt(4*log(2))*(prod(abs(Steps(1:D)))*tot/sumr)^(1/3);
-         end
-end
-      
+[nx,ny,nz,nt] = size(vol);
+tseries = reshape(vol,[nx*ny*nz nt]);
+tseries = tseries(mask(:),:);
+spatial_av = mean(tseries);
+spatial_av = spatial_av(:);
