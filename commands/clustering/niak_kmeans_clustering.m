@@ -166,12 +166,11 @@ else
         fprintf('Number of displacements : ');
     end
 
-    while ( changement == 1 ) & ( N_iter < N_iter_max )
+    while ( changement == 1 ) && ( N_iter < N_iter_max )
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Build the partition matching the centers %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
         A = attraction(data,gi(:,:,N_iter),p);
 
         %% look for maximal attraction points
@@ -205,24 +204,30 @@ else
 
                 case 'singleton'
 
-                    ind_dead = find(~ismember(1:nb_classes,part(:,N_iter)));
-                    ind_dead = ind_dead(1);
-                    A = attraction(data,gi(:,:,N_iter),p);
-                    N_iter = N_iter+1;
-                    [A_max,part_bis] = max(A,[],2);
-                    [val_max,ind_max] = max(A_max);
-                    gi(ind_dead,:,N_iter) = data(ind_max(1),:);
-                    part(:,N_iter) = part_bis;
-                    changement = min(max(abs(part(:,1:N_iter) - part(:,N_iter+1)*ones([1 N_iter])),[],1))>0;
-
+                    if N_iter<N_iter_max
+                        ind_dead = find(~ismember(1:nb_classes,part(:,N_iter)));
+                        ind_dead = ind_dead(1);
+                        A = attraction(data,gi(:,:,N_iter),p);
+                        N_iter = N_iter+1;
+                        [A_max,part_bis] = max(A,[],2);
+                        [val_max,ind_max] = max(A_max);
+                        gi(ind_dead,:,N_iter) = data(ind_max(1),:);
+                        part(:,N_iter) = part_bis;
+                        changement = min(max(abs(part(:,1:N_iter) - part(:,N_iter+1)*ones([1 N_iter])),[],1))>0;
+                    end
                 otherwise
 
                     error('%s is an unknwon type of cluster death. Please check the value of OPT.TYPE_DEATH',type_death);
             end
         end
     end
+    
     if flag_verbose
-        fprintf('\n')
+        if N_iter < N_iter_max
+            fprintf('\n')
+        else
+            fprintf('The maximal number of iteration was reached.\n')
+        end
     end
     warning on
 

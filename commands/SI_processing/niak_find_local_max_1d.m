@@ -1,37 +1,47 @@
-function [Y,X] = niak_visu_spectrum(tseries,tr);
+function [val,ind] = niak_find_local_max_1d(sig,ww)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_VISU_SPECTRUM
+% SUMMARY NIAK_FIND_LOCAL_MAX_1D
 %
-% Visualization of the power spectrum of one or multiple time series.
+% Find local max in a 1D signal. Temporal neighbourhood is defined through
+% a symmetric time window.
 %
 % SYNTAX:
-% [] = NIAK_VISU_SPECTRUM(TSERIES,TR)
+% [VAL,IND] = NIAK_FIND_LOCAL_MAX_1D(SIG,WW)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% TSERIES       
-%       (1D array T*N) one or multiple 1D signal (1st dimension is samples)
+% SIG
+%       (vector, size T*1) a time series, or at least a series of
+%       observation where proximity in the order list makes sense to define
+%       a neighbourhood
 %
-% TR            
-%       (real number, default 1) the repetition time of the time series 
-%       (this is of course assuming a regular sampling).
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% Draws the power spectrum of the signal on the current figure.
-% Multiple time series lead to subplots.
+% WW
+%       (integer) window width. T will be a local max if SIG(T) is bigger
+%       or equal for all values SIG(U) where U varies from T-WW to T+WW.
+%       Edges of the signal are excluded from the analysis.
 %
 % _________________________________________________________________________
-% COMMENTS:
+% OUTPUTS :
 %
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
-% Montreal Neurological Institute, McGill University, 2008.
+% VAL  
+%       (vector) The values of the local max.
+%
+% IND
+%       (vector) the index of the local max in SIG.
+%
+% _________________________________________________________________________
+% SEE ALSO:
+%
+% _________________________________________________________________________
+% COMMENTS: 
+%
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal 
+%               Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, montage, visualization
+% Keywords : clustering, stability, bootstrap
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -51,24 +61,16 @@ function [Y,X] = niak_visu_spectrum(tseries,tr);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-[nt,n] = size(tseries);
-if nargin<2
-    tr = 1;
-end
-M = ceil(sqrt(n));
-N = ceil(n/M);
-T = linspace(0,tr*nt,nt);
-X = linspace(0,1/(2*tr),nt/2+1);
+nt = length(sig);
 
-for num_f = 1:n
-    if n>1
-        subplot(M,N,i);
+val = [];
+ind = [];
+
+for num_t = ww+1:length(sig)-ww
+
+    if min(sig(num_t) >= sig(num_t-ww:num_t+ww))>0
+        
+        val = [val ; sig(num_t)];
+        ind = [ind ; num_t];
     end
-    ftseries = abs(fft(tseries(:,num_f))).^2;
-    ftseries = ftseries(1:length(X));    
-    Y = ftseries/sum(ftseries);
-    plot(X,Y,'*-');        
-    xlabel('Relative power')
-    xlabel('Frequency')
-    axis([min(X),max(X),0,1]);    
 end
