@@ -176,7 +176,7 @@ niak_set_defaults
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'flag_zip','flag_test','folder_out','flag_verbose','init'};
-gb_list_defaults = {0,0,'',1,'center'};
+gb_list_defaults = {0,0,'',1,'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
