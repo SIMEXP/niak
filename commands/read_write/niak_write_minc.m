@@ -215,10 +215,7 @@ else
     str_raw = [str_raw '-clobber ']; % overwrites existing files
 
     if strcmp(hdr.type,'minc2')
-        %% TAG : by default NIAK is using MINC1, this will be changed when the
-        %% internal compression of MINC2 will deal correctly with big 4D
-        %% datasets (this is not the case now...).
-        %str_raw = [str_raw '-2 ']; % Creates a minc2 file. Otherwise it will produce minc1
+        str_raw = [str_raw '-2 ']; % Creates a minc2 file. Otherwise it will produce minc1
     end
 
     if ~isempty(file_name)
