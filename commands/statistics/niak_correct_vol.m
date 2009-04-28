@@ -63,6 +63,7 @@ end
 % Histogram computation and normalization
 M = vol(mask);
 M = M(:);
+M = double(M);
 [niak_gb_Y,niak_gb_X] = hist(M,length(M)/100);
 niak_gb_Y = niak_gb_Y/(length(M)*(max(niak_gb_X)-min(niak_gb_X)))*length(niak_gb_X);
 
