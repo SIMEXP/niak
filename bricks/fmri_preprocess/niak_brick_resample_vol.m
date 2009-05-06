@@ -176,7 +176,7 @@ hdr_source = niak_read_vol(files_in.source);
 [dircos1,step1,start1] = niak_hdr_mat2minc(hdr_source.info.mat);
 
 if min(voxel_size == -1) == 1
-    voxel_size = abs(step1(:))'; % By default, the voxel size is the voxel size of target space
+    voxel_size = abs(step1(:))'; % use the same voxel size as the source space
 end
 
 nx1 = hdr_source.info.dimensions(1);
@@ -199,6 +199,10 @@ end
 
 hdr_target = niak_read_vol(files_in.target);
 [dircos2,step2,start2] = niak_hdr_mat2minc(hdr_target.info.mat);
+
+if isempty(voxel_size)
+    voxel_size = 0;
+end
 
 if min(voxel_size == 0) == 1
     voxel_size = abs(step2(:))'; % By default, the voxel size is the voxel size of target space

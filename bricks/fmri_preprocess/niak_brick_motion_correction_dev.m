@@ -74,7 +74,7 @@ function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_
 % COMMENTS
 %
 % NOTE 1:
-% All volumes are converted to smoothed gradient volumes.
+% All volumes are converted to smoothed volumes.
 %
 % NOTE 2:
 % The rigid-body coregistration is performed using MINCTRACC and an xcorr
@@ -246,7 +246,7 @@ for num_v = 1:nb_vol
     hdr.file_name = file_vol_tmp;
     niak_write_vol(hdr,vol_source);
 
-    %% Blur & extract gradient
+    %% Blur
     [succ,mesg] = system(cat(2,'mincblur -clobber -no_apodize -quiet -fwhm ',num2str(opt.fwhm),' ',file_vol_tmp,' ',file_vol(1:end-9)));
     if succ ~= 0
         error(mesg);

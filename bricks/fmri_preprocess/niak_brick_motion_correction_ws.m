@@ -469,20 +469,16 @@ for num_r = list_run
     %% If requested, create a figure of motion parameters
     if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         
-        if exist('saveas') % octave do not have the saveas command, it won't be possible to generate the pretty graphic...          
-
-            subplot(max(list_run),2,1+(num_r-1)*2)
-            par_t = tab_parameters(:,4:6);           
-            plot(par_t);            
-            title(sprintf('translation (mm, bgr/xyz) %s',name_f),'interpreter','none');
-            subplot(max(list_run),2,2+(num_r-1)*2)
-            par_rot = tab_parameters(:,1:3);
-            plot(par_rot);            
-            title(sprintf('rotation (deg, bgr/rpy) %s ',name_f),'interpreter','none');
-            
-        end
+        subplot(max(list_run),2,1+(num_r-1)*2)
+        par_t = tab_parameters(:,4:6);
+        plot(par_t);
+        title(sprintf('translation (mm, bgr/xyz) %s',name_f),'interpreter','none');
+        subplot(max(list_run),2,2+(num_r-1)*2)
+        par_rot = tab_parameters(:,1:3);
+        plot(par_rot);
+        title(sprintf('rotation (deg, bgr/rpy) %s ',name_f),'interpreter','none');
         
-    end        
+    end
 
     % Cleaning temporary files
     delete(file_mask_source);
@@ -492,8 +488,9 @@ end
 %% If requested, save a figure of motion parameters
 if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
         figure(hfig)
-        if exist('OCTAVE_VERSION','var')
+        if exist('OCTAVE_VERSION','builtin')
             %% In octave 3.0.4 the pdf distiller does not work
+            %% Using ps2pdf instead
             file_tmp_eps = niak_file_tmp('_fig.eps');
             print(file_tmp_eps,'-deps');
             system(['ps2pdf ',file_tmp_eps,' ',files_out.fig_motion]);
