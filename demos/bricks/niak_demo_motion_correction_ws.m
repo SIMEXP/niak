@@ -7,7 +7,7 @@ function [] = niak_demo_motion_correction_ws(path_demo)
 % NIAK_BRICK_MOTION_CORRECTION_WS
 %
 % SYNTAX:
-% NIAK_DEMO_MOTION_CORRECTION_WS(PATH_DEMO)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_MOTION_CORRECTION_WS(PATH_DEMO)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -19,10 +19,16 @@ function [] = niak_demo_motion_correction_ws(path_demo)
 %       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
 % _________________________________________________________________________
-% OUTPUT:
+% OUTPUTS:
+%
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_MOTION_CORRECTION_WS (a 
+% description of input and output files with all options).
 %
 % _________________________________________________________________________
 % COMMENTS:
+%
+% This function applies a within-run motion estimation on the resting-state
+% data of subject 1 in the demo dataset.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

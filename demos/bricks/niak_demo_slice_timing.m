@@ -7,7 +7,7 @@ function [] = niak_demo_slice_timing(path_demo)
 % NIAK_BRICK_SLICE_TIMING
 %
 % SYNTAX:
-% NIAK_DEMO_SLICE_TIMING(PATH_DEMO)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_SLICE_TIMING(PATH_DEMO)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -19,10 +19,16 @@ function [] = niak_demo_slice_timing(path_demo)
 %       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
 % _________________________________________________________________________
+% OUTPUTS:
+%
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_SLICE_TIMING (a 
+% description of input and output files with all options).
+%
+% _________________________________________________________________________
 % OUTPUT
 %
-% It will apply a slice timing correction on the functional data of subject
-% 1 (motor condition) and use the default output name.
+% This function applies a slice timing correction on the functional data of 
+% subject 1 (motor condition) and use the default output name.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.

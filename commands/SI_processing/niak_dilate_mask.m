@@ -132,12 +132,7 @@ neigz = coord(:,3)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,3)');
 
 %% Get rid of the neighbors outside the volume
 in_vol = (neigx>0)&(neigx<=nx)&(neigy>0)&(neigy<=ny)&(neigz>0)&(neigz<=nz);
-neigx(in_vol==0) = NaN;
-neigy(in_vol==0) = NaN;
-neigz(in_vol==0) = NaN;
 
 %% Generation of the neighbour array
-neig = sub2ind(size(mask),neigx,neigy,neigz);
-neig2 = neig(~isnan(neig));
-neig(~isnan(neig)) = neig2; 
-neig(isnan(neig)) = 0;
+neig = zeros(size(in_vol));
+neig(in_vol) = sub2ind(size(mask),neigx(in_vol),neigy(in_vol),neigz(in_vol));

@@ -1,3 +1,4 @@
+function [files_in,files_out,opt] = niak_demo_time_filter(path_demo)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_TIME_FILTER
@@ -6,30 +7,29 @@
 % NIAK_BRICK_TIME_FILTER
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_TIME_FILTER
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_TIME_FILTER(PATH_DEMO)
 %
 % _________________________________________________________________________
-% OUTPUT
+% INPUTS:
+%
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+%
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_CIVET (a description of
+% input and output files with all options).
+%
+% _________________________________________________________________________
+% COMMENTS:
 %
 % This script will apply a temporal filtering on the functional data of subject
 % 1 (motor condition) and use the default output name. The frequencies
 % below 0.01 Hz and above 0.1 Hz will be suppressed.
-%
-% _________________________________________________________________________
-% COMMENTS
-%
-% NOTE 1
-% This script will clear the workspace !!
-%
-% NOTE 2
-% Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the script NIAK_GB_VARS.
-% 
-% NOTE 3
-% The demo database exists in multiple file formats.NIAK looks into the demo 
-% path and is supposed to figure out which format you are intending to use 
-% by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
-% in the script NIAK_GB_VARS.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
