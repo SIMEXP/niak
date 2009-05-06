@@ -1,26 +1,33 @@
+function [] = niak_demo_motion_correction_ws(path_demo)
+
+% _________________________________________________________________________
+% SUMMARY NIAK_DEMO_MOTION_CORRECTION_WS
+%
 % This is a script to demonstrate the usage of :
 % NIAK_BRICK_MOTION_CORRECTION_WS
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_MOTION_CORRECTION_WS
+% NIAK_DEMO_MOTION_CORRECTION_WS(PATH_DEMO)
 %
+% _________________________________________________________________________
+% INPUTS:
+%
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+%
+% _________________________________________________________________________
 % OUTPUT:
 %
-% This script will clear the workspace !!
-% It will apply a motion correction on the functional data of subject
-% 1 and use the default output name.
-%
-% Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
-% 
-% The demo database exists in multiple file formats. By default, it is
-% using 'minc2' files. You can change that by changing the variable
-% GB_NIAK_FORMAT_DEMO in the file NIAK_GB_VARS.
+% _________________________________________________________________________
+% COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, motion correction, demo
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +47,13 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
+if nargin>=1
+    gb_niak_path_demo = path_demo;
+end
+
 niak_gb_vars
+
+
 
 %% Setting input/output files
 switch gb_niak_format_demo
@@ -51,6 +63,7 @@ switch gb_niak_format_demo
         files_in = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
         
     case 'minc1' % If data are in minc1 format
+        
         files_in = {cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz')};
         
     otherwise 

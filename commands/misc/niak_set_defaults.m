@@ -62,7 +62,9 @@
 
 %% Test if the structure exist, otherwise initialize an empty one
 try
-    gb_niak_struct = evalin('caller',gb_name_structure);
+    %gb_niak_struct = evalin('caller',gb_name_structure); % for some reason it does not seem to work in octave     
+    
+    eval(sprintf('gb_niak_struct = %s;',gb_name_structure));
 catch
     gb_niak_struct = struct([]);
 end

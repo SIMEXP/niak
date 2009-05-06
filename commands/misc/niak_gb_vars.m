@@ -108,17 +108,19 @@ end
 gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
 
 %% In which path is the NIAK demo ?
-gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
+if ~exist('gb_niak_path_demo','var')
+    gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
+end
 
 %% In which format is the niak demo ?
 gb_niak_format_demo = 'minc2';
-if exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc'))
+if exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc'),'file')
     gb_niak_format_demo = 'minc2';
-elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc.gz'))
+elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.mnc.gz'),'file')
     gb_niak_format_demo = 'minc1';
-elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'))
+elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'),'file')
     gb_niak_format_demo = 'nii';
-elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.img'))
+elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.img'),'file')
     gb_niak_format_demo = 'analyze';
 end
 

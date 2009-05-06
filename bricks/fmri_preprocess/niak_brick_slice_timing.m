@@ -225,6 +225,7 @@ if flag_skip
     system(instr_copy);
 
 else
+    
     if flag_verbose
         msg = sprintf('Reading data...');
         fprintf('\n%s\n',msg);
@@ -236,7 +237,7 @@ else
         std_vol = std(vol,0,4);
         moy_vol = mean(vol,4);
     end
-
+    
     %% Performing slice timing correction
     if flag_verbose
         msg = sprintf('Applying slice timing correction...');
@@ -246,6 +247,7 @@ else
     opt_a.timing = opt.timing;
     opt_a.ref_slice = opt.ref_slice;
     opt_a.interpolation = opt.interpolation;
+    
     [vol_a,opt] = niak_slice_timing(vol,opt_a);
 
     if suppress_vol > 0;

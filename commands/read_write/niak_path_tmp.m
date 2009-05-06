@@ -1,4 +1,4 @@
-function path_name = niak_file_tmp(ext)
+function path_name = niak_path_tmp(ext)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_PATH_TMP
