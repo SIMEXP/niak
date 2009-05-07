@@ -492,8 +492,8 @@ if ~strcmp(files_out.fig_motion,'gb_niak_omitted')
             %% In octave 3.0.4 the pdf distiller does not work
             %% Using ps2pdf instead
             file_tmp_eps = niak_file_tmp('_fig.eps');
-            print(file_tmp_eps,'-deps');
-            system(['ps2pdf ',file_tmp_eps,' ',files_out.fig_motion]);
+            print(file_tmp_eps,'-depsc');
+            system(['ps2pdf -dEPSCrop ',file_tmp_eps,' ',files_out.fig_motion]);
             delete(file_tmp_eps)
         else
             print(files_out.fig_motion,'-dpdf');

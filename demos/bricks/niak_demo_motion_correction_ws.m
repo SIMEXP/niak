@@ -1,5 +1,4 @@
-function [] = niak_demo_motion_correction_ws(path_demo)
-
+function [files_in,files_out,opt] = niak_demo_motion_correction_ws(path_demo)
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_MOTION_CORRECTION_WS
 %
@@ -58,8 +57,6 @@ if nargin>=1
 end
 
 niak_gb_vars
-
-
 
 %% Setting input/output files
 switch gb_niak_format_demo

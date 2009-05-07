@@ -1,4 +1,4 @@
-function [files_in,files_out,opt] = niak_brick_motion_correction(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_motion_correction_dev(files_in,files_out,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_BRICK_MOTION_CORRECTION
@@ -163,12 +163,12 @@ end
 %% Estimation of motion parameters %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-msg1 = sprintf('Rigid-body motion estimation.');
+msg1 = sprintf('Within-run rigid-body motion estimation');
 msg2 = sprintf('Source file: %s',files_in.fmri);
 msg3 = sprintf('Target file: %s',files_in.target);
-stars = repmat('*',[1 max([length(msg1),length(msg2),length(msg3)])]);
+stars = repmat('*',[1 max([length(msg1)])]);
 if flag_verbose
-    fprintf('\n%s\n%s\n%s\n%s\n%s\n',stars,msg1,msg2,msg3,stars);
+    fprintf('\n%s\n%s\n%s\n%s\n%s\n',stars,msg1,stars,msg2,msg3);
 end
 
 %% Generating temporary folder
@@ -179,7 +179,7 @@ path_tmp = niak_path_tmp('_motion_correction');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    fprintf('Generating the target...\n');
+    fprintf('Generating a blurred target...\n');
 end
 
 %% Generating source mask
@@ -207,6 +207,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Looping over every volume to perform motion parameters estimation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if flag_verbose
+    fprintf('Reading volumes %s...\n',files_in.fmri);
+end
 
 %% read volumes
 [hdr,data] = niak_read_vol(files_in.fmri);
@@ -288,12 +292,13 @@ for num_v = 1:nb_vol
 end
 
 if flag_verbose
-    fprintf('\n')
+    fprintf('\nDone!\n')
 end
+
 fclose(hf_mp);
 
 % Cleaning temporary files
-if exist('OCTAVE_VERSION','var')
+if exist('OCTAVE_VERSION','builtin')
     instr_rm = ['rm -rf ' path_tmp];
     [succ,msg] = system(instr_rm);
 else

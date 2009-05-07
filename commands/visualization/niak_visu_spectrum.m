@@ -68,7 +68,7 @@ for num_f = 1:n
     ftseries = ftseries(1:length(X));    
     Y = ftseries/sum(ftseries);
     plot(X,Y,'*-');        
-    xlabel('Relative power')
+    xlabel('Relative energy')
     xlabel('Frequency')
     axis([min(X),max(X),0,1]);    
 end

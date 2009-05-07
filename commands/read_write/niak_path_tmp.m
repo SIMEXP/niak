@@ -57,8 +57,8 @@ c_clock = clock;
 rand('state',100000*c_clock(end));
 flag_tmp = 1;
 
-while flag_tmp == 1;
-    path_name = cat(2,gb_niak_tmp,'niak_tmp_',num2str(floor(1000000000*rand(1))),ext,filesep);
+while flag_tmp == 1
+    path_name = sprintf('%sniak_tmp_%i%s%s',gb_niak_tmp,floor(1000000000*rand(1)),ext,filesep);   
     flag_tmp = exist(path_name)>0;
 end
 

@@ -163,9 +163,10 @@ fclose(hf);
 %% Converting the raw data into a minc file
 if ~isempty(hdr.like)
     str_raw = ['rawtominc -float -clobber -like ' hdr.like,' -input ' file_tmp ' ' file_name];
-    [fail,msg] = system(str_raw);
-    if ~fail
-        error(msg)
+    [flag_fail,err_msg] = system(str_raw);
+    
+    if flag_fail
+        error(err_msg)
     end
     if flag_flush
         delete(file_tmp); % deleting temporary file

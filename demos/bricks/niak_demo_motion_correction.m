@@ -1,22 +1,32 @@
+function [files_in,files_out,opt] = niak_demo_motion_correction(path_demo)
+% _________________________________________________________________________
+% SUMMARY NIAK_DEMO_MOTION_CORRECTION
+%
 % This is a script to demonstrate the usage of :
 % NIAK_BRICK_MOTION_CORRECTION
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_MOTION_CORRECTION 
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_MOTION_CORRECTION(PATH_DEMO)
 %
-% OUTPUT:
+% _________________________________________________________________________
+% INPUTS:
 %
-% This script will clear the workspace !!
-% It will apply a motion correction on the functional data of subject
-% 1 and use the default output name.
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
-% Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the NIAK_GB_VARS script.
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_MOTION_CORRECTION_WS (a 
+% description of input and output files with all options).
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
 % 
-% The demo database exists in multiple file formats. By default, it is
-% using 'minc2' files. You can change that by changing the variable
-% GB_NIAK_FORMAT_DEMO in the file NIAK_GB_VARS.
-%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -40,7 +50,10 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
+if nargin>=1
+    gb_niak_path_demo = path_demo;
+end
+
 niak_gb_vars
 
 %% Setting input/output files
@@ -51,15 +64,15 @@ switch gb_niak_format_demo
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.fmri = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc');
-        files_in.target = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2_mean.mnc');
+        files_in.fmri = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc');
+        files_in.target = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1_target.mnc');
     case 'minc1'
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.fmri = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc.gz');
-        files_in.target = cat(2,gb_niak_path_demo,filesep,'func_motor_subject2_mean.mnc.gz');
+        files_in.fmri = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz');
+        files_in.target = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1_target.mnc.gz');
         
     otherwise 
         
