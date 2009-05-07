@@ -168,6 +168,7 @@ end
 if fwhm>0
     opt_smooth.fwhm = opt.fwhm;
     opt_smooth.voxel_size = opt.voxel_size;
+    opt_smooth.flag_verbose = false;
     vol = niak_smooth_vol(vol,opt_smooth);
 end
 

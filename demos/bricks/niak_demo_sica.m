@@ -1,4 +1,4 @@
-
+function [files_in,files_out,opt] = niak_demo_sica(path_demo)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_DEMO_SICA
@@ -7,10 +7,23 @@
 % NIAK_BRICK_SICA
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_SICA
+% NIAK_DEMO_SICA(PATH_DEMO)
 %
 % _________________________________________________________________________
-% OUTPUT
+% INPUTS:
+%
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+%
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% _________________________________________________________________________
+% COMMENTS:
+%
 % This script will run a spatial independent component analysis on the
 % functional data of subject 1 (motor condition), and use the default names
 % of the outputs.
@@ -20,21 +33,6 @@
 % the same space as the functional data, so the selection is pretty random,
 % but this is to demonstrate how to use the scripts).
 %
-% _________________________________________________________________________
-% COMMENTS
-%
-% NOTE 1
-% This script will clear the workspace !!
-%
-% NOTE 2
-% Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the script NIAK_GB_VARS.
-% 
-% NOTE 3
-% The demo database exists in multiple file formats.NIAK looks into the demo 
-% path and is supposed to figure out which format you are intending to use 
-% by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
-% in the script NIAK_GB_VARS.
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -59,7 +57,10 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
+if nargin>=1
+    gb_niak_path_demo = path_demo;
+end
+
 niak_gb_vars
 
 %%%%%%%%%%%
