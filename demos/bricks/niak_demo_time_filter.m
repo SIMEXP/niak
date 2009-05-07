@@ -55,7 +55,10 @@ function [files_in,files_out,opt] = niak_demo_time_filter(path_demo)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
+if nargin>=1
+    gb_niak_path_demo = path_demo;
+end
+
 niak_gb_vars
 
 %% Setting input files
