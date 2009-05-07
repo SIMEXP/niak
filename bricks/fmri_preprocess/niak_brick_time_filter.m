@@ -240,9 +240,13 @@ if flag_test == 1
     return
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Temporal filtering starts here %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if flag_verbose
     msg = 'Temporal filtering of fMRI data';
-    stars = repmat(msg,[1 length(msg)]);
+    stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);    
 end
 
@@ -307,7 +311,7 @@ vol_f = reshape(vol_f,[nx ny nz nt]);
 
 %% Writting the filtered data
 if flag_verbose
-    fprintf('Writting the filtered data %s ...\n',files_out.filtered_data);
+    fprintf('Writting the filtered data in %s ...\n',files_out.filtered_data);
 end
 hdr = hdr(1);
 hdr_out = hdr;
@@ -372,7 +376,7 @@ if ~strcmp(files_out.dc_low,'gb_niak_omitted')
         fprintf(fid,'%1.5f ',extras.tseries_dc_low(num_l,:));
         fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 %% Writting the discrete cosine basis for high frequencies
@@ -388,7 +392,7 @@ if ~strcmp(files_out.dc_high,'gb_niak_omitted')
         fprintf(fid,'%1.5f ',extras.tseries_dc_high(num_l,:));
         fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 %% Writting the relative variance for low frequencies

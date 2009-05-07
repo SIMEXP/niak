@@ -91,7 +91,6 @@ files_out.beta_low = '';
 opt.tr = 2.33; % Repetition time in seconds
 opt.lp = 0.1; % Exclude frequencies above 0.1 Hz
 opt.hp = 0.01; % Exclude frequencies below 0.01 Hz
-opt.flag_zip = 0; % Do not attempt to zip the outputs
 opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 
 [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt);
