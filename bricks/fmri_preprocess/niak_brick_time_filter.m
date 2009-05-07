@@ -74,6 +74,10 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %  * OPT           
 %       (structure) with the following fields:
 %
+%       FLAG_VERBOSE 
+%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
+%           messages indicating progress.
+%
 %       FLAG_TEST 
 %           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
 %           do anything but update the default values in FILES_IN, 
@@ -86,10 +90,6 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %       LP 
 %           (real, default: Inf) the cut-off frequency for low pass 
 %           filtering. opt.lp = Inf means no low-pass filtering.
-%
-%       FLAG_ZIP   
-%           (boolean, default: 0) if FLAG_ZIP equals 1, an attempt will be 
-%           made to zip the outputs.
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
@@ -161,8 +161,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'tr','hp','lp','folder_out','flag_test','flag_zip'};
-gb_list_defaults = {-Inf,0.01,Inf,'',0,0};
+gb_list_fields = {'flag_verbose','tr','hp','lp','folder_out','flag_test'};
+gb_list_defaults = {true,-Inf,0.01,Inf,'',0};
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));
@@ -240,7 +240,16 @@ if flag_test == 1
     return
 end
 
-%% Performing temporal filtering
+if flag_verbose
+    msg = 'Temporal filtering of fMRI data';
+    stars = repmat(msg,[1 length(msg)]);
+    fprintf('\n%s\n%s\n%s\n',stars,msg,stars);    
+end
+
+%% Reading data
+if flag_verbose
+    fprintf('Reading source data %s ...\n',files_in);
+end
 [hdr,vol] = niak_read_vol(files_in);
 
 if (opt.tr == -Inf)
@@ -259,6 +268,9 @@ opt_f.hp = opt.hp;
 
 %% We restrict the filtering in a mask of the brain to save time
 %% The data are converted into a array of time series
+if flag_verbose
+    fprintf('Masking the brain ...\n');
+end
 mask = mean(abs(vol),4);
 mask = niak_mask_brain(mask);
 
@@ -272,6 +284,9 @@ vol = reshape(vol,[nx*ny*nz nt])';
 vol = vol(:,mask>0);
 
 %% Filtering the data
+if flag_verbose
+    fprintf('Filtering the time series ...\n');
+end
 opt_f.tr = opt.tr;
 opt_f.hp = opt.hp;
 opt_f.lp = opt.lp;
@@ -291,9 +306,10 @@ clear tseries_f
 vol_f = reshape(vol_f,[nx ny nz nt]);
 
 %% Writting the filtered data
+if flag_verbose
+    fprintf('Writting the filtered data %s ...\n',files_out.filtered_data);
+end
 hdr = hdr(1);
-hdr.flag_zip = flag_zip;
-
 hdr_out = hdr;
 hdr_out.file_name = files_out.filtered_data;
 opt_hist.command = 'niak_brick_time_filter';
@@ -306,6 +322,10 @@ clear vol_f
 
 %% Writting the regression coefficients for high frequencies
 if ~strcmp(files_out.beta_high,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting high frequency coefficients in %s ...\n',files_out.beta_high);
+    end
+
     hdr_out = hdr;
     hdr_out.file_name = files_out.beta_high;
     vol_beta_high = zeros([nx*ny*nz size(extras.beta_dc_high,1)]);
@@ -322,6 +342,9 @@ end
 
 %% Writting the regression coefficients for low frequencies
 if ~strcmp(files_out.beta_low,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting low frequency coefficients in %s ...\n',files_out.beta_low);
+    end
     hdr_out = hdr;
     hdr_out.file_name = files_out.beta_low;
     vol_beta_low = zeros([nx*ny*nz size(extras.beta_dc_low,1)]);
@@ -338,6 +361,9 @@ end
 
 %% Writting the discrete cosine basis for low frequencies
 if ~strcmp(files_out.dc_low,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting the (low frequency) discrete cosines in %s ...\n',files_out.dc_low);
+    end
     fid = fopen(files_out.dc_low,'w');    
     fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_low) ; extras.freq_dc_low']);
     fprintf(fid,'\n');
@@ -346,10 +372,14 @@ if ~strcmp(files_out.dc_low,'gb_niak_omitted')
         fprintf(fid,'%1.5f ',extras.tseries_dc_low(num_l,:));
         fprintf(fid,'\n');
     end
+    fclose(fid)
 end
 
 %% Writting the discrete cosine basis for high frequencies
 if ~strcmp(files_out.dc_high,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting the (high frequency) discrete cosines in %s ...\n',files_out.dc_high);
+    end
     fid = fopen(files_out.dc_high,'w');    
     fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_high)'; extras.freq_dc_high']);
     fprintf(fid,'\n');
@@ -358,10 +388,14 @@ if ~strcmp(files_out.dc_high,'gb_niak_omitted')
         fprintf(fid,'%1.5f ',extras.tseries_dc_high(num_l,:));
         fprintf(fid,'\n');
     end
+    fclose(fid)
 end
 
 %% Writting the relative variance for low frequencies
 if ~strcmp(files_out.var_low,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting the relative variance map of filtered low frequencies in %s ...\n',files_out.var_low);
+    end
     hdr_out = hdr;
     hdr_out.file_name = files_out.var_low;
     vol_var_low = zeros([nx ny nz]);
@@ -378,6 +412,9 @@ end
 
 %% Writting the relative variance for high frequencies
 if ~strcmp(files_out.var_high,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting the relative variance map of filtered high frequencies in %s ...\n',files_out.var_low);
+    end
     hdr_out = hdr;
     hdr_out.file_name = files_out.var_high;
     vol_var_high = zeros([nx ny nz]);
