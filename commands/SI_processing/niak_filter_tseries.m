@@ -1,44 +1,73 @@
 function [tseries_f,extras] = niak_filter_tseries(tseries,opt)
-
-% Filter time series using Discrete-Cosine (DC) least-square linear regression.
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_FILTER_TSERIES
+%
+% Filter time series using Discrete-Cosine (DC) least-square linear 
+% regression.
 %
 % SYNTAX:
 % TSERIES_F = NIAK_FILTER_TSERIES(TSERIES,OPT) 
 %
+% _________________________________________________________________________
 % INPUTS:
-% TSERIES       (2D array, size T*N) a time*space array of time series.
 %
-% OPT           (structure) with the following fields:
+% TSERIES       
+%       (2D array, size T*N) a time*space array of time series.
 %
-%               TR (real) the repetition time of the time series (s)
-%                   which is the inverse of the sampling frequency (Hz).
-%               HP (real, default -Inf) the cut-off frequency for high pass
-%                   filtering. opt.hp = -Inf means no high-pass filtering.
-%               LP (real, default Inf) the cut-off frequency for low pass
-%                   filtering. opt.lp = Inf means no low-pass filtering.
+% OPT           
+%       (structure) with the following fields:
 %
-% OUTPUTS
-% TSERIES_F    (2D array, size T*N) a time*space array of filtered tseries.
+%       TR 
+%           (real) the repetition time of the time series (s)
+%           which is the inverse of the sampling frequency (Hz).
 %
-% EXTRAS       (structure) with the following fields :
+%       HP 
+%           (real, default -Inf) the cut-off frequency for high pass
+%           filtering. opt.hp = -Inf means no high-pass filtering.
+%           
+%       LP 
+%           (real, default Inf) the cut-off frequency for low pass
+%           filtering. opt.lp = Inf means no low-pass filtering.
 %
-%              TSERIES_DC_LOW  (2D array, size T*Kl) a (time*nb cosines)
-%                   array of discrete cosines covering the frequency window
-%                   that is to be suppressed in high-pass filtering.
-%              BETA_DC_LOW  (2D ARRAY, size Kl*N) a (nb cosines * space)
-%                    array such that BETA_DC_LOW(k,n) is the weight of the
-%                    low-frequency discrete cosine number k at location n.
-%              FREQ_DC_LOW (vector, size Kl*1) FREQ_DC_LOW(k) is the
-%                    frequency associated to cosine TSERIES_DC_LOW(:,k)
-%              TSERIES_DC_HIGH  (2D array, size T*Kh) a (time*nb cosines)
-%                   array of discrete cosines covering the frequency window
-%                   that is to be suppressed in low-pass filtering.
-%              BETA_DC_HIGH  (2D ARRAY, size Kl*N) a (nb cosines * space)
-%                    array such that BETA_DC_HIGH(k,n) is the weight of the
-%                    high-frequency discrete cosine number k at location n.
-%              FREQ_DC_HIGH (vector, size Kl*1) FREQ_DC_HIGH(k) is the
-%                    frequency associated to cosine TSERIES_DC_HIGH(:,k)
+% _________________________________________________________________________
+% OUTPUTS:
 %
+% TSERIES_F    
+%       (2D array, size T*N) a time*space array of filtered tseries.
+%
+% EXTRAS       
+%       (structure) with the following fields :
+%
+%       TSERIES_DC_LOW  
+%           (2D array, size T*Kl) a (time*nb cosines)
+%           array of discrete cosines covering the frequency window that is 
+%           to be suppressed in high-pass filtering.
+%
+%       BETA_DC_LOW  
+%           (2D ARRAY, size Kl*N) a (nb cosines * space)
+%           array such that BETA_DC_LOW(k,n) is the weight of the
+%           low-frequency discrete cosine number k at location n.
+%           
+%       FREQ_DC_LOW 
+%           (vector, size Kl*1) FREQ_DC_LOW(k) is the frequency associated 
+%           to cosine TSERIES_DC_LOW(:,k)
+%           
+%       TSERIES_DC_HIGH  
+%           (2D array, size T*Kh) a (time*nb cosines)
+%           array of discrete cosines covering the frequency window that is 
+%           to be suppressed in low-pass filtering.
+%           
+%       BETA_DC_HIGH  
+%           (2D ARRAY, size Kl*N) a (nb cosines * space)
+%           array such that BETA_DC_HIGH(k,n) is the weight of the
+%           high-frequency discrete cosine number k at location n.
+%
+%       FREQ_DC_HIGH 
+%           (vector, size Kl*1) FREQ_DC_HIGH(k) is the frequency associated 
+%           to cosine TSERIES_DC_HIGH(:,k)
+%
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
