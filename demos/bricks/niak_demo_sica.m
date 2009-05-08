@@ -89,12 +89,12 @@ files_out.time = ''; % The default output name will be used
 files_out.figure = ''; % The default output name will be used
 
 %% Options
-opt.nb_comp = 10;
+opt.nb_comp = 3;
 opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 
 %% Job
 [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt);
-
+return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Component selection : ventricle %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

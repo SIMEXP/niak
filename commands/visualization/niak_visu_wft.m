@@ -65,11 +65,11 @@ if nargin<2
     tr = 1;
 end
 
-[specgm,specgm_show,T,F]=WFT(tseries,floor(nt*tr/(8)),1,'Gaussian',tr);
+[specgm,specgm_show,T,F] = sub_WFT(tseries,floor(nt*tr/(8)),1,'Gaussian',tr);
 
 M = ceil(sqrt(n));
 N = ceil(n/M);
-for i = 1:n
+for i = 1:n    
     if n>1
         subplot(M,N,i);
     end
@@ -116,11 +116,11 @@ t = ((1:(2*n+1))-(n+1))./n./2;
 if strcmp(Name,'Rectangle'),
     win = ones(size(t));
 elseif strcmp(Name,'Hanning'),
-    win = realpow(cos(pi.*t),2);
+    win = cos(pi.*t).^2;
 elseif strcmp(Name,'Hamming'),
     win = .54 + .46*cos(2.*pi.*t);
 elseif strcmp(Name,'Gaussian'),
-    win = exp(-realpow(t,2)*18);
+    win = exp(-t.^2*18);    
 elseif strcmp(Name,'Blackman'),
     win = .42 + .50*cos(2.*pi.*t) + .08*cos(4.*pi.*t);
 end;
@@ -143,7 +143,7 @@ end;
 % Comments? e-mail wavelab@stat.stanford.edu
 %
 
-function [specgm,specgm_show,T,F] = WFT(sig,w,m,Name,tr)
+function [specgm,specgm_show,T,F] = sub_WFT(sig,w,m,Name,tr)
 % WindowFT -- Window Fourier Transform
 %  Usage
 %    specgm = WindowFT(sig,w,m,Name,tr)

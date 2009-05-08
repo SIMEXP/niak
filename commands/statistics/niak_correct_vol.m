@@ -68,7 +68,11 @@ M = double(M);
 niak_gb_Y = niak_gb_Y/(length(M)*(max(niak_gb_X)-min(niak_gb_X)))*length(niak_gb_X);
 
 % Gaussian parameters fitting.
-par = fminsearch('niak_gaussian_fit',[median(M);1.4826*median(abs(M-median(M)))]);
+if exist('fminsearch','file')
+    par = fminsearch('niak_gaussian_fit',[median(M);1.4826*median(abs(M-median(M)))]);
+else
+    par = [median(M);1.4826*median(abs(M-median(M)))];
+end
 
 if flag_visu
     [err,val] = niak_gaussian_fit(par);

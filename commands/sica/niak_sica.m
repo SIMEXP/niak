@@ -80,8 +80,8 @@ function [res_ica]=niak_sica(data,opt)
 % Core of this function is copied from the fMRlab toolbox developed at
 % Stanford :
 % http://www-stat.stanford.edu/wavelab/Wavelab_850/index_wavelab850.html
-% The code was essentially contributed by Scott Makeig under a GNU
-% licenses. See subfunctions for details. 
+% The code was mainly contributed by Scott Makeig under a GNU
+% license. See subfunctions for details. 
 %
 % Copyright (c) Vincent Perlbarg, U678, LIF, Inserm, UMR_S 678, Laboratoire
 % d'Imagerie Fonctionnelle, F-75634, Paris, France, 2005.
@@ -458,14 +458,14 @@ end
 for i = 3:2:nargin % for each Keyword
     Keyword = eval(['p',int2str((i-3)/2 +1)]);
     Value = eval(['v',int2str((i-3)/2 +1)]);
-    if ~isstr(Keyword)
+    if ~ischar(Keyword)
         fprintf('runica(): keywords must be strings')
         return
     end
     Keyword = lower(Keyword); % convert upper or mixed case to lower
 
     if strcmp(Keyword,'weights') | strcmp(Keyword,'weight')
-        if isstr(Value)
+        if ischar(Value)
             fprintf(...
                 'runica(): weights value must be a weight matrix or sphere')
             return
@@ -474,7 +474,7 @@ for i = 3:2:nargin % for each Keyword
             wts_passed =1;
         end
     elseif strcmp(Keyword,'ncomps')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): ncomps value must be an integer')
             return
         end
@@ -491,7 +491,7 @@ for i = 3:2:nargin % for each Keyword
             fprintf('runica(): Use either PCA or ICA dimension reduction');
             return
         end
-        if isstr(Value)
+        if ischar(Value)
             fprintf(...
                 'runica(): pca value should be the number of principal components to retain')
             return
@@ -504,7 +504,7 @@ for i = 3:2:nargin % for each Keyword
         end
         chans = ncomps;
     elseif strcmp(Keyword,'posact')
-        if ~isstr(Value)
+        if ~ischar(Value)
             fprintf('runica(): posact value must be on or off')
             return
         else
@@ -516,7 +516,7 @@ for i = 3:2:nargin % for each Keyword
             posactflag = Value;
         end
     elseif strcmp(Keyword,'lrate')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): lrate value must be a number')
             return
         end
@@ -529,7 +529,7 @@ for i = 3:2:nargin % for each Keyword
             lrate = DEFAULT_LRATE;
         end
     elseif strcmp(Keyword,'block') | strcmp(Keyword,'blocksize')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): block size value must be a number')
             return
         end
@@ -539,13 +539,13 @@ for i = 3:2:nargin % for each Keyword
         end
     elseif strcmp(Keyword,'stop') | strcmp(Keyword,'nochange') ...
             | strcmp(Keyword,'stopping')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): stop wchange value must be a number')
             return
         end
         nochange = Value;
     elseif strcmp(Keyword,'maxsteps') | strcmp(Keyword,'steps')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): maxsteps value must be an integer')
             return
         end
@@ -558,7 +558,7 @@ for i = 3:2:nargin % for each Keyword
             return
         end
     elseif strcmp(Keyword,'anneal') | strcmp(Keyword,'annealstep')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): anneal step value (%2.4f) must be a number (0,1)',Value)
             return
         end
@@ -568,7 +568,7 @@ for i = 3:2:nargin % for each Keyword
             return
         end
     elseif strcmp(Keyword,'annealdeg') | strcmp(Keyword,'degrees')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): annealdeg value must be a number')
             return
         end
@@ -582,7 +582,7 @@ for i = 3:2:nargin % for each Keyword
 
         end
     elseif strcmp(Keyword,'momentum')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): momentum value must be a number')
             return
         end
@@ -593,7 +593,7 @@ for i = 3:2:nargin % for each Keyword
         end
     elseif strcmp(Keyword,'sphering') | strcmp(Keyword,'sphereing') ...
             | strcmp(Keyword,'sphere')
-        if ~isstr(Value)
+        if ~ischar(Value)
             fprintf('runica(): sphering value must be on, off, or none')
             return
         else
@@ -605,7 +605,7 @@ for i = 3:2:nargin % for each Keyword
             sphering = Value;
         end
     elseif strcmp(Keyword,'bias')
-        if ~isstr(Value)
+        if ~ischar(Value)
             fprintf('runica(): bias value must be on or off')
             return
         else
@@ -626,7 +626,7 @@ for i = 3:2:nargin % for each Keyword
                 'runica(): MATLAB Sig. Proc. Toolbox function "specgram" not found.\n')
             return
         end
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): specgram argument must be a vector')
             return
         end
@@ -674,7 +674,7 @@ for i = 3:2:nargin % for each Keyword
         Specgramflag = 1; % set flag to perform specgram()
 
     elseif strcmp(Keyword,'extended') | strcmp(Keyword,'extend')
-        if isstr(Value)
+        if ischar(Value)
             fprintf('runica(): extended value must be an integer (+/-)')
             return
         else
@@ -694,7 +694,7 @@ for i = 3:2:nargin % for each Keyword
             end
         end
     elseif strcmp(Keyword,'verbose')
-        if ~isstr(Value)
+        if ~ischar(Value)
             fprintf('runica(): verbose flag value must be on or off')
             return
         elseif strcmp(Value,'on'),
@@ -831,9 +831,9 @@ end
 %%%%%%%%%%%%%%%%%%% Perform PCA reduction %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 if strcmp(pcaflag,'on')
-    fprintf('Reducing the data to %d principal dimensions...\n',ncomps);
+    fprintf('    Reducing the data to %d principal dimensions...\n',ncomps);
 
-    covarianceMatrix = cov(data', 1);
+    covarianceMatrix = cov(data');
     [E, D] = eig(covarianceMatrix);
     [eigenval,index] = sort(diag(D));
     index=rot90(rot90(index));
@@ -1236,8 +1236,8 @@ end
 %%%%%%%%%%%%%% If pcaflag, compose PCA and ICA matrices %%%%%%%%%%%%%%%
 %
 if strcmp(pcaflag,'on')
-    fprintf('Composing the eigenvector, weights, and sphere matrices\n');
-    fprintf('  into a single rectangular weights matrix; sphere=eye(%d)\n'...
+    fprintf('    Composing the eigenvector, weights, and sphere matrices\n');
+    fprintf('        into a single rectangular weights matrix; sphere=eye(%d)\n'...
         ,chans);
     %weights= weights*sphere*eigenvectors(:,1:ncomps)';
     weights= weights*sphere*eigenvectors(:,1:ncomps)';
@@ -1258,7 +1258,7 @@ if wts_passed == 0
     if ncomps == urchans % if weights are square . . .
         winv = inv(weights*sphere);
     else
-        fprintf('Using pseudo-inverse of weight matrix to rank order component projections.\n');
+        fprintf('    Using pseudo-inverse of weight matrix to rank order component projections.\n');
         winv = pinv(weights*sphere);
     end
     for s=1:ncomps
@@ -1305,7 +1305,7 @@ end
 %
 if verbose
     waitbar(1,h)
-    close(h)
+    close(h);
 end
 return
 
@@ -1396,7 +1396,7 @@ end
 actout = activations;
 winvout = winv;
 
-fprintf('Inverting negative activations: ');
+fprintf('    Inverting negative activations: ');
 for r=1:rows,
         pos = find(activations(r,:)>=0);
         posrms = sqrt(sum(activations(r,pos).*activations(r,pos))/length(pos));
