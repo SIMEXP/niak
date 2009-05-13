@@ -94,15 +94,15 @@ flag_verbose = strcmp(is_verbose,'on');
 % Initialization
 X = [];
 for numRoi=1:length(tc_cell)
-     X = tc_cell{numRoi};
-
-    I=find(isnan(X(1,:))==1);
+    X = tc_cell{numRoi};
+        I=find(isnan(X(1,:))==1);
     if ~isempty(I)
         [T,N]=size(X)
         mtmp = zeros(T,N);
         mtmp(:,I) = 1;
-        X=X(mtmp==0);
-        X=reshape(X,T,N-length(I));
+        X=X(mtmp==0);        
+        N-length(I)        
+        X=reshape(X,T,N-length(I));            
     end
 
     [T,N] = size(X);
@@ -128,23 +128,26 @@ for numRoi=1:length(tc_cell)
                 curr_perc = new_perc;
             end
         end
-        [P,Y,I_intra,I_inter] = niak_kmeans_clustering(X,opt_kmeans);
-
+        
+        [P,Y,I_intra,I_inter] = niak_kmeans_clustering(X,opt_kmeans);        
+        
         I_total = sum(I_intra)+I_inter;
         inertia = I_intra/I_total + I_inter/(length(I_intra)*I_total);
-
-        siz_p = [];
+                
+        siz_p = zeros([1 max(P)]);
         for num_p = 1:max(P)
-            siz_p(num_p) = sum(P==num_p);
+            siz_p(num_p) = sum(P==num_p);            
         end
-        OK = siz_p > 3;
-
+        
+        OK = siz_p > 3;        
+        
         if sum(OK) == 0
             [val_max,i_max] = max(siz_p);
             OK(i_max) = 1;
-        end
-        
+        end        
+                
         [selection,num_comp_cell,Freq_tmp,nbRegions,Inert_tmp]=niak_sub_get_stepwise_comp(Y(OK,:)',regressors,thr_p_s,inertia);
+        
         FreqSel(s,:) =  Freq_tmp/nbRegions;
         nbClust = nbClust + nbRegions;
         InertSel(s,:) = Inert_tmp;
@@ -155,8 +158,7 @@ for numRoi=1:length(tc_cell)
         
     end
     tFreq(numRoi,:) = mean(FreqSel,1);
-    tInert(numRoi,:) = mean(InertSel,1);
-    warning on    
+    tInert(numRoi,:) = mean(InertSel,1);    
     
 end
 
@@ -206,8 +208,7 @@ clear regressors;
 Freq = zeros(1,size(X,2));
 Inert = zeros(1,size(X,2));
 for k=1:nb_regions
-    Y = data_tc(:,k);
-    
+    Y = data_tc(:,k);    
     [M,num_X,Ftmp,ptmp]=niak_sub_do_stepwise_regression(Y,X,thr_p,0);
     F(:,k)=Ftmp;
     p(:,k)=ptmp;
@@ -269,18 +270,28 @@ Ychap = zeros(nt,nb_reg);
 R2 = zeros(size(liste_reg));
 R1 = (1/(nt-1))*E1'*E1;
 out=0;
+
 while test == 0
     % forward
     taille = taille+1;
     n_r = length(liste_unselect);
-    for k=1:n_r
+    
+    for k=1:n_r       
+    
         Xk = X(:,liste_unselect(k));
-        reg_c = [reg Xk];
+        if isempty(reg)
+            reg_c = Xk;
+        else
+            reg_c = [reg Xk];
+        end
+      
         Ychap(:,liste_unselect(k)) = reg_c*((reg_c'*reg_c)^(-1))*(reg_c'*Y);
+        
         R2(liste_unselect(k)) = (1/(nt-1))*Ychap(:,liste_unselect(k))'*Ychap(:,liste_unselect(k));
         F(liste_unselect(k)) = (nt-taille-1)*(R2(liste_unselect(k)) - R1)/(1-R2(liste_unselect(k)));
         p(liste_unselect(k)) = 1-sub_spm_Fcdf(F(liste_unselect(k)),1,nt-taille-1);
         p(isnan(p))=Inf;
+        
     end
     out=out+1;
     if out==1

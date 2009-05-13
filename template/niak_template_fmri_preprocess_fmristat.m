@@ -71,7 +71,7 @@ opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
 %%%%%%%%%%%%%%%%%%%%%%%
 
 opt.style = 'fmristat'; % The style of the preprocessing
-opt.size_out = 'quality_control'; % The quantity of outputs
+opt.size_output = 'quality_control'; % The quantity of outputs
 opt.folder_out = '/home/pbellec/demo_niak/fmri_preprocess/'; % Where to store the results
 
 pipeline = niak_pipeline_fmri_preprocess(files_in,opt); % Run the pipeline

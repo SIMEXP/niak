@@ -195,11 +195,21 @@ if flag_test == 1
     return
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The brick starts here %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if flag_verbose
+    msg = 'Selection of ICA components using spatial priors';
+    stars = repmat('*',[1 length(msg)]);
+    fprintf('\n%s\n%s\n%s\n\n',stars,msg,stars);
+end
+
 %%%%%%%%%%%%%%%%%%%%
 %% Reading inputs %%
 %%%%%%%%%%%%%%%%%%%%
 
-%%
+%% Read a table of components that need to be preserved
 if ~strcmp(files_in.component_to_keep,'gb_niak_omitted')
     [XOI,labx,laby] = niak_read_tab(files_in.component_to_keep);
 end
@@ -272,7 +282,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    fprintf('\n*********\nPerforming stepwise regression\n*********\n\n');
+    fprintf('Performing stepwise regression ...\n');
 end
 
 if nb_vox <= 20
@@ -292,7 +302,7 @@ else
         opt.nb_cluster = nb_cluster;
     end
 
-    %% Computing score and score significance        
+    %% Computing score and score significance            
     [intersec,selecVector,selecInfo] = niak_component_sel(sigs,tseries_ica,opt.p,opt.nb_samps,opt.nb_cluster,opt.type_score,0,'on');
 
     %% Reordering scores

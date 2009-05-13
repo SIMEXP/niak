@@ -259,7 +259,7 @@ end
 
 %% Temporal sources
 A = res_ica.poids;
-res_ica = rmfield(res_ica,'poids');
+
 if ~strcmp(files_out.time,'gb_niak_omitted')
     [hf,mesg] = fopen(files_out.time,'w');
     if hf == -1
