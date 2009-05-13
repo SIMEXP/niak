@@ -3,11 +3,11 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_PIPELINE_FMRI_PREPROCESS
 %
-% Build a pipeline structure to preprocess an fMRI database. Mutliple 
-% preprocessing "styles" are available, depending on the analysis planned 
-% afterwards, and the amount of generated outputs can be adjusted.
-% Steps of the analysis can be further customized by changing virtually any
-% parameter of the bricks used in the pipeline.
+% Run a pipeline to preprocess an fMRI database. Mutliple preprocessing 
+% "styles" are available, depending on the analysis planned afterwards, and 
+% the amount of generated outputs can be adjusted. Steps of the analysis 
+% can be further customized by changing virtually any parameter of the 
+% bricks used in the pipeline.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT)
