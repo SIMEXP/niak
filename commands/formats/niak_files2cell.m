@@ -55,18 +55,32 @@ cell_files = cell(0);
 
 if isstruct(files)     % That's a structure
     
-    list_field = fieldnames(files);
+    files = files(:);
+    
+    if length(files)>1
+        
+        for num_e = 1:length(files)
+            cell_tmp = niak_files2cell(files(num_e));
+            cell_files(end+1:end+length(cell_tmp)) = cell_tmp;
+        end
+        
+    else
+        
+        list_field = fieldnames(files);
 
-    for num_f = 1:length(list_field) %% Loop over the fields
+        for num_f = 1:length(list_field) %% Loop over the fields
 
-        list_files_in = files.(list_field{num_f});
-        cell_tmp = niak_files2cell(list_files_in); %% Ugly recursive call to fix that
-        cell_files(end+1:end+length(cell_tmp)) = cell_tmp;
-        num_cell = num_cell + length(cell_tmp);
+            list_files_in = files.(list_field{num_f});
+            cell_tmp = niak_files2cell(list_files_in); %% Ugly recursive call to fix that
+            cell_files(end+1:end+length(cell_tmp)) = cell_tmp;
+            num_cell = num_cell + length(cell_tmp);
 
+        end
     end
 
 elseif iscellstr(files) %% That's a cell
+    
+    files = files(:);
     
     for num_i = 1:length(files)
 
@@ -86,7 +100,11 @@ elseif ischar(files) % That's a string
     end
     
 else    
-    error('FILES should be a string or a cell of strings, or a structure with arbitrary depths whos terminal fields are strings or cell of strings');
+    
+    if ~isempty(files)
+        error('FILES should be a string or a cell of strings, or a structure with arbitrary depths whos terminal fields are strings or cell of strings');
+    end
+    
 end
 
 function str2 = sub_suppress_doublon(str)
