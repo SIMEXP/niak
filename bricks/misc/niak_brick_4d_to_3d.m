@@ -111,7 +111,11 @@ end
 %% Reading the header of the input file for updating the output
 hdr = niak_read_vol(files_in);
 if isempty(opt.list)
-    opt.list = 1:hdr.info.dimensions(4);
+    if length(hdr.info.dimensions)>3
+        opt.list = 1:hdr.info.dimensions(4);
+    else
+        opt.list = 1;
+    end
 end
 
 %% Files out
@@ -121,7 +125,8 @@ if ~iscell(files_out)
     else
         files_out = cell(0);
         for num_c = opt.list
-            files_out{num_c} = cat(2,opt.folder_out,filesep,name_f,'_',num2str(num_c),ext_f);
+            lab_vol = [repmat('0',[1 4-length(num2str(num_c))]) num2str(num_c)];
+            files_out{num_c} = cat(2,opt.folder_out,filesep,name_f,'_',lab_vol,ext_f);
         end
     end
 end
