@@ -153,7 +153,7 @@ try
         end
     end
     
-    delete(tmp_folder);
+   system(['rm -rf ' tmp_folder]);
     
     if flag_recursive
         
@@ -165,5 +165,5 @@ try
     end
     
 catch
-    delete(tmp_folder);
+    system(['rm -rf ' tmp_folder]);
 end
