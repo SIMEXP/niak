@@ -88,6 +88,16 @@ end
 
 cell_header = niak_string2lines(str_header);
 
+num_l = 1;
+while (num_l<length(cell_header))&&isempty(findstr(cell_header{num_l},'netcdf'))&&isempty(findstr(cell_header{num_l},'hdf5'))
+    num_l = num_l + 1;
+end
+if num_l == length(cell_header)
+    error('niak:read: Could not parse the minc header !')
+else
+    cell_header = cell_header(num_l:end);
+end
+
 %% Setting up the file type and file name
 if ~isempty(strfind(cell_header{1},'netcdf'))
     hdr.type = 'minc1';
