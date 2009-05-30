@@ -165,5 +165,7 @@ try
     end
     
 catch
+    errmsg = lasterror;
     system(['rm -rf ' tmp_folder]);
+    fprintf('\n\n******************\nSomething went bad ... the pipeline has FAILED !\nThe last error message occured was :\n%s\n',errmsg.message);
 end
