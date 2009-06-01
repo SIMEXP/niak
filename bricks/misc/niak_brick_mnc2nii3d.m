@@ -111,7 +111,9 @@ try
     for num_f = 1:length(list_files)
         
         file_name = list_files{num_f};
-        source_file = [files_in filesep file_name];
+        if ~exist(file_name,'file')
+            source_file = [files_in filesep file_name];
+        end
         
         [path_tmp,name_tmp,ext] = fileparts(file_name);
         if strcmp(ext,gb_niak_zip_ext)
