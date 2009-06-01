@@ -28,6 +28,10 @@ function [files_in,files_out,opt] = niak_brick_mnc2nii3d(files_in,files_out,opt)
 %           (string, default '') an argument that will be added in
 %           the system call to the MNC2NII function.
 %
+%       FLAG_SKIP
+%           (string, default true) if FLAG_SKIP is true, any existing
+%           output will not be overwritten.
+%
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function prints
 %           some infos during the processing.
@@ -82,8 +86,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_recursive','flag_verbose','arg_mnc2nii'};
-gb_list_defaults = {true,true,''};
+gb_list_fields = {'flag_skip','flag_recursive','flag_verbose','arg_mnc2nii'};
+gb_list_defaults = {true,true,true,''};
 niak_set_defaults
 
 dir_files = dir(files_in);
@@ -120,35 +124,68 @@ try
                 fprintf('%s',msg)
             end
             
-            [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
-            
-            for num_g = 1:length(files_out_3d)
-                [path_tmp,name_tmp,ext] = fileparts(files_out_3d{num_g});
-                if strcmp(ext,gb_niak_zip_ext)
-                    [path_tmp,name_tmp,ext] = fileparts(name_tmp);
-                end
-                target_file = [files_out filesep name_tmp '.nii'];
-                instr_cp = ['mnc2nii ',arg_mnc2nii,' ',files_out_3d{num_g},' ',target_file];
-                if ~strcmp(source_file,target_file)
-                    
-                    [flag_err,err_msg] = system(instr_cp);
-                    if flag_err
-                        error(err_msg)
+            if flag_skip
+                opt_3d.flag_test = true;
+                [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
+                
+                flag_exist = true;
+                for num_g = 1:length(files_out_3d)
+                    [path_tmp,name_tmp,ext] = fileparts(files_out_3d{num_g});
+                    if strcmp(ext,gb_niak_zip_ext)
+                        [path_tmp,name_tmp,ext] = fileparts(name_tmp);
                     end
+                    target_file = [files_out filesep name_tmp '.nii'];
+                    flag_exist = flag_exist & exist(target_file,'file');
+                end
+            else
+                flag_exist = false;
+            end
+            
+            if ~flag_exist
+                opt_3d.flag_test = false;
+                [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
+                for num_g = 1:length(files_out_3d)
+                    [path_tmp,name_tmp,ext] = fileparts(files_out_3d{num_g});
+                    if strcmp(ext,gb_niak_zip_ext)
+                        [path_tmp,name_tmp,ext] = fileparts(name_tmp);
+                    end
+                    target_file = [files_out filesep name_tmp '.nii'];
+                    instr_cp = ['mnc2nii ',arg_mnc2nii,' ',files_out_3d{num_g},' ',target_file];
+                    if ~strcmp(source_file,target_file)
+                        
+                        [flag_err,err_msg] = system(instr_cp);
+                        if flag_err
+                            error(err_msg)
+                        end
+                    end
+                end
+            else
+                msg = sprintf('   The output already existed. I will skip this one (FLAG_SKIP is true) ...\n',file_name);
+                if flag_verbose
+                    fprintf('%s',msg)
                 end
             end
             
         else
             target_file = [files_out filesep file_name];
-            instr_cp = ['cp -f ' source_file ' ' target_file];
-            msg = sprintf('Copy %s to %s\n',source_file,target_file);
-            if ~strcmp(source_file,target_file)
-                if flag_verbose
-                    fprintf('%s',msg)
+            flag_exist = exist(target_file,'file')&flag_skip;
+            if ~flag_exist
+                instr_cp = ['cp -f ' source_file ' ' target_file];
+                msg = sprintf('Copying %s to %s\n',source_file,target_file);
+                if ~strcmp(source_file,target_file)
+                    if flag_verbose
+                        fprintf('%s',msg)
+                    end
+                    [flag_err,err_msg] = system(instr_cp);
+                    if flag_err
+                        error(err_msg)
+                    end
                 end
-                [flag_err,err_msg] = system(instr_cp);
-                if flag_err
-                    error(err_msg)
+            else
+                msg = sprintf('Copying %s to %s\n',source_file,target_file);
+                msg2 = sprintf('   The output already existed. I will skip this one (FLAG_SKIP is true) ...\n',file_name);
+                if flag_verbose
+                    fprintf('%s%s',msg,msg2)
                 end
             end
             
