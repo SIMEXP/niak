@@ -115,7 +115,7 @@ try
         end
         
         if strcmp(ext,'.mnc')
-            [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file);
+            [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
             msg = sprintf('Converting %s ...\n',file_name);
             if flag_verbose
                 fprintf('%s',msg)
