@@ -113,6 +113,8 @@ try
         file_name = list_files{num_f};
         if ~exist(file_name,'file')
             source_file = [files_in filesep file_name];
+        else
+            source_file = file_name;
         end
         
         [path_tmp,name_tmp,ext] = fileparts(file_name);
