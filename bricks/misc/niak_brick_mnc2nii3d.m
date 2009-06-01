@@ -115,11 +115,13 @@ try
         end
         
         if strcmp(ext,'.mnc')
-            [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
             msg = sprintf('Converting %s ...\n',file_name);
             if flag_verbose
                 fprintf('%s',msg)
             end
+            
+            [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
+            
             for num_g = 1:length(files_out_3d)
                 [path_tmp,name_tmp,ext] = fileparts(files_out_3d{num_g});
                 if strcmp(ext,gb_niak_zip_ext)
