@@ -172,7 +172,7 @@ else
 
         %% The file does not exist ... check for wild cards !
         cell_name = dir(file_name);
-        file_name2 = {cell_name.name};
+        file_name2 = char(cell_name.name);
         if length(file_name2)==0
             error('niak:read: Couldn''t find any file fitting the description %s\n',file_name)
         else
