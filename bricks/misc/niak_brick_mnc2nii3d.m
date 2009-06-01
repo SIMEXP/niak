@@ -126,7 +126,7 @@ try
                     [path_tmp,name_tmp,ext] = fileparts(name_tmp);
                 end
                 target_file = [files_out filesep name_tmp '.nii'];
-                instr_cp = ['mnc2nii ',arg_mnc2nii,' ',files_out3d{num_f},' ',target_file];
+                instr_cp = ['mnc2nii ',arg_mnc2nii,' ',files_out_3d{num_f},' ',target_file];
                 if ~strcmp(source_file,target_file)
                     
                     [flag_err,err_msg] = system(instr_cp);
