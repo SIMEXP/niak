@@ -281,11 +281,12 @@ else
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %% history
-    for num_l = 1:size(hdr.info.history,1)
+    hist = niak_string2lines(hdr.info.history(num_l,:));
+    for num_l = 1:length(hist)
         if num_l == 1
-            system(cat(2,'minc_modify_header -sinsert :history=''',deblank(hdr.info.history(num_l,:)),''' ',file_name));
+            system(cat(2,'minc_modify_header -sinsert :history=''',deblank(hist),''' ',file_name));
         else
-            system(cat(2,'minc_modify_header -sappend :history=''',deblank(hdr.info.history(num_l,:)),''' ',file_name));
+            system(cat(2,'minc_modify_header -sappend :history=''',deblank(hist),''' ',file_name));
         end
     end
 
