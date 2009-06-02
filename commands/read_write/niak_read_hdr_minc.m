@@ -255,8 +255,9 @@ nb_dim = sum(pos_xyzt ~=  0);
 for num_f = 1:length(list_dim_long)
     if num_f <= nb_dim
         [flag,str_dim] = system(cat(2,'mincinfo -dimlength ',list_dim_long{num_f},' ',file_name));
+        cell_dim = niak_string2cell(str_dim);
         if flag == 0
-            hdr.info.dimensions(num_f) = str2num(str_dim);
+            hdr.info.dimensions(num_f) = str2num(cell_dim{end});
         else
             error('niak:read: Could not find the spatial dimensions. I expect ''xspace'', ''yspace'' and ''zspace'' to be defined')
         end
