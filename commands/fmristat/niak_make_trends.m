@@ -43,9 +43,11 @@ function trend = niak_make_trends(opt)
 %           if a 3D array, the first two dimensions are the matrix, 
 %           the third is the slice.
 %
-%       N_FRAMES
-%           number of frames in the volume
+%       SPATIAL_AV
+%           colum vector of the spatial average time courses.
 %
+%       N_SLICES
+%           number of slices in the data.
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -101,22 +103,25 @@ function trend = niak_make_trends(opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'n_temporal','n_spatial','exclude','tr','confounds','n_frames'};
-gb_list_defaults = {3,1,[],1,[],NaN};
+gb_list_fields = {'n_temporal','n_spatial','exclude','tr','confounds','spatial_av','n_slices'};
+gb_list_defaults = {3,1,[],1,[],NaN,NaN};
 niak_set_defaults
 
-% Keep time points that are not excluded:
 
-n_frames = opt.n_frames;
+n_temporal = opt.n_temporal;
+n_spatial = opt.n_spatial;
+exclude = opt.exclude;
+tr = opt.tr;
+confounds = opt.confounds;
+spatial_av = opt.spatial_av;
+n_frames = length(spatial_av);
+nz = n_slices;
+
+% Keep time points that are not excluded:
 allpts = 1:n_frames;
 allpts(exclude) = zeros(1,length(exclude));
 keep = allpts( ( allpts >0 ) );
 n = length(keep);
-
-n_temporal = opt.n_temporal;
-n_spatial = opt.n_spatial;
-tr = opt.tr;
-
 
 % Create temporal trends:
 

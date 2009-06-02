@@ -1,36 +1,42 @@
-function full_contrast = niak_make_contrasts(contrast,opt)
+function [opt_out] = niak_make_which_stats(opt)
 
 % _________________________________________________________________________
-% SUMMARY NIAK_MAKE_CONTRASTS
+% SUMMARY NIAK_MAKE_WHICH_STATS
 %
-% Creates full contrasts for the Linear Model
+% Constructs a binay matrix corresponding to the desired statistical
+% outputs.
 % 
 % SYNTAX:
-% [FULL_CONTRAST] = NIAK_MAKE_CONTRASTS(CONTRAST,OPT)
+% [OPT_OUT] = NIAK_MAKE_WHICH_STATS(OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% CONTRAST         
-%       matrix of contrast of interest for the responses or a structure
-%       with fields x,c,t,s for the contrast associated to the responses,
-%       confounds, temporal trends and spatial trends, respectively.
-% 
 % OPT         
 %       structure with the following fields :
 %
-%       NUMRESPONSES
-%           number of respnses in the model, determined by the matrix x_cache
-%           with niak_fmridesign.
+%       WHICH_STATS
+%            String correspondings to the desired statistical outputs
 %
-%       SIZE_TRENDS 
-%           vector of 3 components with the number of temporal trends, 
-%           spatial trends and confounds
+%       CONTRASTS
+%            Matrix of full contrasts of the model.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FULL_CONTRAST       
-%       updated matrix of full contrasts of the model.
+% OPT_OUT      
+%       Updated structure with the following fields :
+%       
+%      WHICH_STATS
+%            Number of Contrasts X 9 binary matrix correspondings to the 
+%            desired statistical outputs
+%
+%      CONTRASTS
+%            Matrix of full contrasts of the model.
+%
+%      CONTRAST_IS_DELAY
+%            Binary vector specifying the desired contrasts for delays 
+%            (to be used in NIAK_WHITEN_GLM)
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -78,52 +84,57 @@ function full_contrast = niak_make_contrasts(contrast,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-
-% Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'numresponses','size_trends'};
+gb_list_fields = {'which_stats','contrasts'};
 gb_list_defaults = {NaN,NaN};
 niak_set_defaults
 
-numresponses = opt.numresponses;
-n_temporal_trend = opt.size_trends(1);
-n_spatial_trend = opt.size_trends(2);
-n_confounds = opt.size_trends(3);
+which_stats = opt.which_stats;
+contrasts = opt.contrasts;
 
-% Make full contrasts:
+numcontrasts = size(contrasts,1);
+contrast_is_delay = [];
 
-if isstruct(contrast)
-   contrasts = contrast; 
-   numcontrasts=0;
-   if isfield(contrast,'x') 
-       numcontrasts=size(contrast.x,1); 
-   end
-   if isfield(contrast,'c') 
-       numcontrasts=size(contrast.c,1); 
-   end
-   if isfield(contrast,'t') 
-       numcontrasts=size(contrast.t,1); 
-   end
-   if isfield(contrast,'s') 
-       numcontrasts=size(contrast.s,1); 
-   end
+if size(which_stats,1)==1 & numcontrasts>0
+   which_stats=repmat(which_stats,numcontrasts,1);
+end
+if isnumeric(which_stats)
+   which_stats = [which_stats zeros(numcontrasts,9-size(which_stats,2))];
+   contrast_is_delay = [contrast_is_delay; ...
+        zeros(numcontrasts-length(contrast_is_delay),1)];
 else
-    numcontrasts=size(contrast,1);
-    contrasts.x = contrast;
+   ws=which_stats; 
+   which_stats=[];
+   c = contrasts;
+   contrasts=[];
+   contrast_is_delay=[];
+   fst=['_t ';'_ef';'_sd';'_F '];
+   fmd=['_mag';'_del'];
+   for i=1:numcontrasts
+      for k=1:2
+         wsn=zeros(1,9);
+         for j=1:(5-k)
+            wsn(j) = ~isempty(findstr(ws(i,:),[deblank(fmd(k,:)) deblank(fst(j,:))])); 
+         end
+         if any(wsn)
+            which_stats = [which_stats; wsn];
+            contrasts = [contrasts; c(i,:)];
+            contrast_is_delay = [contrast_is_delay; k-1];
+         end
+      end
+   end
+   f2=['_cor   ';'_resid ';'_wresid';'_AR    ';'_fwhm  '];
+   for j=5:9
+      which_stats(1,j) = ~isempty(findstr(ws(1,:),deblank(f2(j-4,:))));
+   end
+   if isempty(contrasts)
+      contrasts = c;
+      contrast_is_delay = zeros(size(c,1),1);
+      if size(c,1)>1
+         which_stats=[which_stats; zeros(size(c,1)-1,9)];
+      end
+   end
 end
-
-if ~isfield(contrasts,'x')
-    contrasts.x = zeros(numcontrasts,numresponses); 
-end
-if ~isfield(contrasts,'c') 
-   contrasts.c = zeros(numcontrasts,n_confounds); 
-end
-if ~isfield(contrasts,'t') 
-    contrasts.t=zeros(numcontrasts,n_temporal_trend); 
-end
-if ~isfield(contrasts,'s') 
-    contrasts.s=zeros(numcontrasts,n_spatial_trend); 
-end
-
-full_contrast = [contrasts.x contrasts.t contrasts.s contrasts.c];
-
+opt_out.contrasts = contrasts;
+opt_out.contrast_is_delay = contrast_is_delay;
+opt_out.which_stats = which_stats;
