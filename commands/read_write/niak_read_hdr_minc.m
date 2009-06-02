@@ -234,7 +234,7 @@ hdr.info.history = str_info;
 if strcmp(hdr.type,'minc1')
     [flag,str_info] = system(cat(2,'mincinfo ',file_name));
     cell_lines = niak_string2lines(str_info);
-    str_dim = cell_lines{3};
+    str_dim = cell_lines{niak_find_str_cell(cell_lines,'image dimensions')};
 end
 
 if strcmp(hdr.type,'minc2')
