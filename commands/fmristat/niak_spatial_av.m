@@ -22,7 +22,7 @@ function spatial_av = niak_spatial_av(vol,mask)
 % OUTPUTS:
 %
 % SPATIAL_AV
-%       colum vector of the spatial average time courses.
+%       column vector of the spatial average time courses.
 %
 % _________________________________________________________________________
 % COMMENTS:

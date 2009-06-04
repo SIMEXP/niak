@@ -97,7 +97,7 @@ gb_list_defaults = {[],NaN,'spectral'};
 niak_set_defaults
 
 
-switch lower(basis_type)
+switch lower(opt.basis_type)
 case 'taylor',    
    basis1=1;
    basis2=2;

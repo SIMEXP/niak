@@ -123,7 +123,7 @@ function x_cache = niak_fmridesign(opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'frametimes','slicetimes','events','s'};
+gb_list_fields = {'frame_times','slice_times','events','s'};
 gb_list_defaults = {NaN,0,[1 0],[]};
 niak_set_defaults
 
@@ -131,8 +131,8 @@ niak_set_defaults
 hrf_parameters = [5.4 5.2 10.8 7.35 0.35];
 shift = [-4.5 4.5];
 
-n = length(opt.frametimes);
-numslices = length(opt.slicetimes);
+n = length(opt.frame_times);
+numslices = length(opt.slice_times);
 events = opt.events;
 
 % Keep time points that are not excluded:
@@ -169,8 +169,8 @@ end
 % Set up response matrix:
 
 dt=0.02;
-startime=min(mineventime,min(frametimes)+min([slicetimes 0]));
-finishtime=max(maxeventime,max(frametimes)+max([slicetimes 0]));
+startime=min(mineventime,min(frame_times)+min([slice_times 0]));
+finishtime=max(maxeventime,max(frame_times)+max([slice_times 0]));
 numtimes=ceil((finishtime-startime)/dt)+1;
 numresponses=numeventypes+numcolS;
 response=zeros(numtimes,numresponses);
@@ -190,9 +190,9 @@ end
 if ~isempty(s)
    for j=1:numcolS
       for i=find(s(:,j)')
-         n1=ceil((frametimes(i)-startime)/dt)+1;
+         n1=ceil((frame_times(i)-startime)/dt)+1;
          if i<n
-            n2=ceil((frametimes(i+1)-startime)/dt);
+            n2=ceil((frame_times(i+1)-startime)/dt);
          else
             n2=numtimes;
          end
@@ -313,10 +313,10 @@ end
 x_cache.x=zeros(n,numresponses,4,numslices);
 
 for slice = 1:numslices
-   subtime=ceil((frametimes+slicetimes(slice)-startime)/dt)+1;
+   subtime=ceil((frame_times+slice_times(slice)-startime)/dt)+1;
    x_cache.x(:,:,:,slice)=eventmatrix(subtime,:,:);
 end
 
-x_cache.tr=(max(frametimes)-min(frametimes))/(length(frametimes)-1);
+x_cache.tr=(max(frame_times)-min(frame_times))/(length(frame_times)-1);
 
 
