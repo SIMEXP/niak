@@ -1,11 +1,11 @@
-function [fwhm,df] = niak_update_fwhm(contrasts,matrix_x,opt)
+function opt = niak_update_fwhm(opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_UPDATE_FWHM
 %
 % Updates the values of fwhm and df required for smoothing autocorrelations
 % 
 % SYNTAX:
-% [FWHM,DF] = NIAK_UPDATE_FWHM(X_CACHE,TREND,OPT)
+% OPT = NIAK_UPDATE_FWHM(OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -20,6 +20,12 @@ function [fwhm,df] = niak_update_fwhm(contrasts,matrix_x,opt)
 % OPT         
 %       structure with the following fields :
 %
+%       MATRIX_X
+%            Full design matrix of the model.
+%
+%       CONTRASTS
+%            Matrix of full contrasts of the model.
+%
 %       NUMLAGS
 %           (integer, default 1) The order (p) of the autoregressive model.
 %
@@ -33,7 +39,7 @@ function [fwhm,df] = niak_update_fwhm(contrasts,matrix_x,opt)
 %           functions is needed to estimate the magnitude, but two basis functions
 %           are needed to estimate the delay.
 %
-%       NUMRESPONSES
+%       NB_RESPONSE
 %           number of respnses in the model, determined by the matrix x_cache
 %           with niak_fmridesign.
 %     
@@ -50,12 +56,16 @@ function [fwhm,df] = niak_update_fwhm(contrasts,matrix_x,opt)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FWHM       
-%       Structure with the fields COR and DATA (updated)
+% OPT         
+%       Updated structure with the additional fields:
 %
-% DF
-%       Structure with the field RESID, COR, T and F, degrees of freedom of the
-%       residuals, correlations, t and F statistics, respectively. 
+%       FWHM       
+%          (real number) Estimated value of the FWHM. 
+%
+%       DF
+%          Structure with the field RESID, COR, T and F, degrees of freedom 
+%          of the residuals, correlations, t and F statistics, respectively. 
+%       
 % _________________________________________________________________________
 % COMMENTS:
 %
@@ -104,15 +114,16 @@ function [fwhm,df] = niak_update_fwhm(contrasts,matrix_x,opt)
 
 
 gb_name_structure = 'opt';
-gb_list_fields = {'numlags','exclude','num_hrf_bases','numresponses','which_stats','fwhm','df'};
-gb_list_defaults = {1,[],NaN,NaN,NaN,NaN,NaN};
+gb_list_fields = {'matrix_x','contrasts','numlags','exclude','num_hrf_bases','nb_response','which_stats','fwhm','df'};
+gb_list_defaults = {NaN,NaN,1,[],NaN,NaN,NaN,NaN,NaN};
 niak_set_defaults
 
-
+matrix_x = opt.matrix_x;
+contrasts = opt.contrasts;
 numlags = opt.numlags;
 exclude = opt.exclude;
 num_hrf_bases = opt.num_hrf_bases;
-numresponses = opt.numresponses;
+numresponses = opt.nb_response;
 which_stats = opt.which_stats;
 df = opt.df;
 FWHM_COR = opt.fwhm.cor;
@@ -196,3 +207,5 @@ df.t=dfts(1:numcontrasts);
 if p>0
     df.F=[p dfts(1+numcontrasts)];
 end
+opt.df = df;
+opt.fwhm = fwhm;

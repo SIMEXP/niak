@@ -1,4 +1,4 @@
-function [opt_out] = niak_make_which_stats(opt)
+function opt = niak_make_which_stats(opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_MAKE_WHICH_STATS
@@ -7,7 +7,7 @@ function [opt_out] = niak_make_which_stats(opt)
 % outputs.
 % 
 % SYNTAX:
-% [OPT_OUT] = NIAK_MAKE_WHICH_STATS(OPT)
+% OPT = NIAK_MAKE_WHICH_STATS(OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -24,7 +24,7 @@ function [opt_out] = niak_make_which_stats(opt)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% OPT_OUT      
+% OPT      
 %       Updated structure with the following fields :
 %       
 %      WHICH_STATS
@@ -135,6 +135,6 @@ else
       end
    end
 end
-opt_out.contrasts = contrasts;
-opt_out.contrast_is_delay = contrast_is_delay;
-opt_out.which_stats = which_stats;
+opt.contrasts = contrasts;
+opt.contrast_is_delay = contrast_is_delay;
+opt.which_stats = which_stats;

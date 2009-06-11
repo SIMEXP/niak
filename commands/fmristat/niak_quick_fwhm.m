@@ -1,4 +1,4 @@
-function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
+function opt = niak_quick_fwhm(wresid_vol,mask,opt)
 
 % _________________________________________________________________________
 % SUMMARY NIAK_QUICK_FWHM
@@ -24,6 +24,20 @@ function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
 %       VOXEL_SIZE
 %           (vector 1*3, default [1 1 1]) Voxel size in mm.
 %
+%       DF
+%
+%           Structure with the following fields:
+% 
+%           RESID
+%              degrees of freedom of the residuals.
+%
+%           FIXED
+%              degrees of freedom of the residuals.
+%
+%           LIMIT
+%              degrees of freedom of the residuals.
+
+%       IS_SD
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -78,15 +92,23 @@ function fwhm = niak_quick_fwhm(wresid_vol,mask,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'voxel_size'};
-gb_list_defaults = {[1 1 1]};
+gb_list_fields = {'voxel_size','df'};
+gb_list_defaults = {[1 1 1],[]};
 niak_set_defaults
 
 Steps = opt.voxel_size;
+df = opt.df;
 [nx,ny,nz,nt] = size(wresid_vol);
 
-if nargin < 2
+if isempty(mask)
     mask = true([nx ny nz]);
+end
+
+is_sd = isfield(df,'fixed');
+
+if isempty(df)
+    df.limit = 4;
+    df.resid = df.limit + 1;
 end
 
 % Quick fwhm of data
@@ -104,8 +126,12 @@ for slice=1:nz
                uy=diff(u(i1,:,:),1,2);
                axx=sum(ux.^2,3);
                ayy=sum(uy.^2,3);
-               axy=sum(ux.*uy,3);
-               detlam=(axx.*ayy-axy.^2);
+               if df.resid>df.limit
+                  axy=sum(ux.*uy,3);
+                  detlam=(axx.*ayy-axy.^2);
+               else
+                  detlam=axx.*ayy;
+               end
                r=conv2((detlam>0).*sqrt(detlam+(detlam<=0)),ones(2))./nxy;
             else
                r=zeros(nx,ny);
@@ -120,10 +146,14 @@ for slice=1:nz
             axx=sum(ux.^2,3);
             ayy=sum(uy.^2,3);
             azz=sum(uz.^2,3);
-            axy=sum(ux.*uy,3);
-            axz=sum(ux.*uz,3);
-            ayz=sum(uy.*uz,3);
-            detlam=(axx.*ayy-axy.^2).*azz-(axz.*ayy-2*axy.*ayz).*axz-axx.*ayz.^2;
+            if df.resid>df.limit
+                axy=sum(ux.*uy,3);
+                axz=sum(ux.*uz,3);
+                ayz=sum(uy.*uz,3);
+                detlam=(axx.*ayy-axy.^2).*azz-(axz.*ayy-2*axy.*ayz).*axz-axx.*ayz.^2;
+            else
+                detlam=axx.*ayy.*azz;
+            end
             mask1=mask_slice;
             mask_slice = mask(:,:,slice);
             tot=tot+sum(mask_slice(:));
@@ -137,4 +167,25 @@ for slice=1:nz
             fwhm = sqrt(4*log(2))*(prod(abs(Steps(1:D)))*tot/sumr)^(1/3);
          end
 end
+
+%Bias Correction for niak_brick_multistat
+if ~isempty(opt.df)
+    if is_sd
+        Df = df.fixed;
+    else
+        Df = df.resid;
+    end
+    alphar = 1/2;
+    dr = df.resid/Df;
+    dv = df.resid-dr-(0:D-1);
+    if df.resid>df.limit
+        biasr=exp(sum(gammaln(dv/2+alphar)-gammaln(dv/2)) ...
+            +gammaln(Df/2-D*alphar)-gammaln(Df/2))*dr^(-D*alphar);
+    else
+        biasr=exp((gammaln(dv(1)/2+alphar)-gammaln(dv(1)/2))*D+ ...
+            +gammaln(Df/2-D*alphar)-gammaln(Df/2))*dr^(-D*alphar);
+    end
+    fwhm = fwhm*(biasr)^(1/3);
+end
+opt.fwhm = fwhm;
       

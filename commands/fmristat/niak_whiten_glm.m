@@ -29,8 +29,8 @@ function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 %            colum vector of the spatial average time courses, obtained
 %            from niak_make_trends.
 %
-%       PERCENT: 
-%           if PERCENT=1(Default), then the data is converted to percentages 
+%       PCNT: 
+%           if PCNT=1(Default), then the data is converted to percentages 
 %           before analysis by dividing each frame by its spatial average,* 100%.
 %
 %       EXCLUDE: 
@@ -46,7 +46,7 @@ function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 %           functions is needed to estimate the magnitude, but two basis functions
 %           are needed to estimate the delay.
 %
-%       NUMRESPONSES
+%       NB_RESPONSE
 %           number of respnses in the model, determined by the matrix x_cache
 %           with niak_fmridesign.
 %
@@ -122,18 +122,18 @@ function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 % THE SOFTWARE.
 
 gb_name_structure = 'opt';
-gb_list_fields = {'matrix_x','spatial_av','percent','exclude','numlags',...
-    'num_hrf_bases','numresponses','numtrends','contrasts','which_stats','contrast_is_delay'};
+gb_list_fields = {'matrix_x','spatial_av','pcnt','exclude','numlags',...
+    'num_hrf_bases','nb_response','nb_trends','contrasts','which_stats','contrast_is_delay'};
 gb_list_defaults = {NaN,NaN,1,[],1,NaN,NaN,NaN,NaN,NaN,NaN};
 niak_set_defaults
 
 matrix_x = opt.matrix_x;
 spatial_av = opt.spatial_av;
-ispcnt = opt.percent;
+ispcnt = opt.pcnt;
 numlags = opt.numlags;
 num_hrf_bases = opt.num_hrf_bases;
-numresponses = opt.numresponses;
-numtrends = opt.numtrends;
+numresponses = opt.nb_response;
+numtrends = opt.nb_trends(1) + opt.nb_trends(2);
 contrasts = opt.contrasts;
 which_stats = opt.which_stats;
 contrast_is_delay = opt.contrast_is_delay;

@@ -1,18 +1,26 @@
-function [rho_vol,opt] = niak_autoregressive(vol,mask,opt)
+function [varatio_vol,opt] = niak_variance_ratio(vol,mask,opt)
 % _________________________________________________________________________
-% SUMMARY NIAK_AUTOREGRESSIVE
+% SUMMARY NIAK_VARIANCE_RATIO
 %
-% Estimates an autoregressive model for each voxel time course and gives an
-% approximate value for the fwhm based on the model residuals (optional).
+% Estimates the ratio between the standard deviation of the random effects
+% and the standart deviation of the fixed effects. Additionally, it updates
+% the structure OPT by incorporating an approximate value for the data
+% fwhm.
 % 
 % SYNTAX:
-% [RHO_VOL,OPT] = NIAK_AUTOREGRESSIVE(VOL,MASK,OPT)
+% [VARATIO_VOL,OPT] = NIAK_VARIANCE_RATIO(VOL,MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
 % VOL         
-%       (4D array) a 3D+t dataset
+%       structure with the following fields :
+%
+%       EF
+%       (4D array) a 3D+n volumes of effects
+%
+%       SD
+%       (4D array) a 3D+n volumes of standard deviations
 %
 % MASK
 %       (3D volume, default all voxels) a binary mask of the voxels that 
@@ -25,42 +33,33 @@ function [rho_vol,opt] = niak_autoregressive(vol,mask,opt)
 %            Full design matrix of the model, obtained from
 %            nial_full_design
 %
-%       SPATIAL_AV
-%            colum vector of the spatial average time courses, obtained
-%            from niak_make_trends.
-%
-%       PCNT: 
-%           if PCNT=1(Default), then the data is converted to percentages 
-%           before analysis by dividing each frame by its spatial average,* 100%.
-%
-%       EXCLUDE: 
-%           is a list of frames that should be excluded from the analysis. 
-%           Default is [].
-%
-%       NUMLAGS
-%           (integer, default 1) The order (p) of the autoregressive model.
-%
 %       VOXEL_SIZE
 %           (vector 1*3, default [1 1 1]) Voxel size in mm.
 %
+%       DF
+%
+%           Structure with the following fields:
+% 
+%           RESID
+%              degrees of freedom of the residuals.
+%
+%           FIXED
+%              degrees of freedom of the residuals.
+%
+%           LIMIT
+%              degrees of freedom of the residuals.
+% 
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% RHO_VOL      
+% VARATIO_VOL      
 %       (4D array) 3D + numlags dataset
 %       Estimated parameters of the autoregressive lineal model.
+% OPT   
+%       Updated structure with the additional field
 %
-% OPT         
-%       Updated structure with the additional fields:
-%
-%       FWHM       
+%       FWHM 
 %          (real number) Estimated value of the FWHM. 
-%
-%       DF
-%          Structure with the field 
-%
-%          RESID 
-%              degrees of freedom of the residuals. 
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -109,99 +108,83 @@ function [rho_vol,opt] = niak_autoregressive(vol,mask,opt)
 % THE SOFTWARE.
 
 gb_name_structure = 'opt';
-gb_list_fields = {'matrix_x','spatial_av','pcnt','exclude','numlags','voxel_size'};
-gb_list_defaults = {NaN,NaN,1,[],1,[1 1 1]};
+gb_list_fields = {'matrix_x','voxel_size','df'};
+gb_list_defaults = {NaN,[1 1 1],NaN};
 niak_set_defaults
 
-spatial_av = opt.spatial_av;
-numlags = opt.numlags;
-ispcnt = opt.pcnt;
 matrix_x = opt.matrix_x;
+df = opt.df;
+
+[nx,ny,nz,n] = size(vol.ef);
+numpix = nx*ny;
+is_sd = isfield(vol,'sd');
 
 
-[nx,ny,nz,nt] = size(vol);
-allpts = 1:nt;
-allpts(opt.exclude) = zeros(1,length(opt.exclude));
-keep = allpts( ( allpts >0 ) );
-n = length(keep);
-
-indk1=((keep(2:n)-keep(1:n-1))==1);
-k1=find(indk1)+1;
-Diag1=diag(indk1,1)+diag(indk1,-1);
-  
-vol = reshape(vol,[nx*ny*nz nt]);
-vol = vol(:,keep);
-spatial_av = spatial_av(keep);
-
-if ispcnt
-   spatial_av = repmat(spatial_av',nx*ny*nz,1);
-   vol = 100*(vol./spatial_av);
-   clear spatial_av
-end
-vol = reshape(vol,[nx ny nz n]);
-
+Sreduction = 0.99;
 for k=1:nz
-    X_k = squeeze(matrix_x(:,:,k));
-    dfs(k)=n-rank(X_k);
-    pinvX = pinv(X_k);
-    R = eye(n)-X_k*pinvX;
-    if numlags==1
-        M(1,1) = trace(R);
-        M(1,2) = trace(R*Diag1);
-        M(2,1) = M(1,2)/2;
-        M(2,2) = trace(R*Diag1*R*Diag1)/2;
-    else
-        M=zeros(numlags+1,nz);
-         for i=1:numlags+1
-            for j=1:numlags+1
-               Di=(diag(ones(1,n-i+1),i-1)+diag(ones(1,n-i+1),-i+1))/(1+(i==1));
-               Dj=(diag(ones(1,n-j+1),j-1)+diag(ones(1,n-j+1),-j+1))/(1+(j==1));
-               M(i,j)=trace(R*Di*R*Dj)/(1+(i>1));
-            end
-         end
-    end
-    invM(:,:,k) = inv(M);
-    Y = squeeze(vol(:,:,k,:));
+    Y = squeeze(vol.ef(:,:,k,:));
     Y = (reshape(Y,nx*ny,n))';
-    betahat_ls = pinvX*Y;
-    resid(:,k,:) = (Y - X_k*betahat_ls)';
+    resid_slice = Y-matrix_x*pinv(matrix_x)*Y;
+    sigma2 = sum((resid_slice).^2,1)/df.resid;
+    if is_sd
+       S = squeeze(vol.sd(:,:,k,:));
+       S = (reshape(S,nx*ny,n))'; 
+       S = S.^2;
+       varfix = df.data*S/df.fixed;
+       sdd = (varfix>0)./sqrt(varfix*df.resid+(varfix<=0));
+    else
+       sdd =(sigma2>0)./sqrt(sigma2*df.resid+(sigma2<=0)); 
+    end
+    resid(:,k,:) = (resid_slice.*repmat(sdd,n,1))';
+    if is_sd
+        minS = min(S)*Sreduction;
+        Sm = S-repmat(minS,n,1);
+        if size(matrix_x,2)==1
+           % When X is a vector, calculations can be done in parallel:
+           for iter=1:niter
+               Sms = Sm+repmat(sigma2,n,1);
+               W = (Sms>0)./(Sms+(Sms<=0));
+               X2W = X2*W;
+               XWXinv = (X2W>0)./(X2W+(X2W<=0));
+               betahat = XWXinv.*(X'*(W.*Y));
+               R = W.*(Y-X*betahat);
+               ptrS = p+sum(Sm.*W,1)-(X2*(Sm.*W.^2)).*XWXinv;
+               sigma2 = (sigma2.*ptrS+(sigma2.^2).*sum(R.^2,1))/n; 
+           end
+           sigma2=sigma2-minS;
+        else
+            % Otherwise when X is a matrix, we have to loop over voxels:
+            for pix = 1:numpix
+                sigma2_pix = sigma2(pix);
+                Sm_pix = Sm(:,pix);
+                Y_pix = Y(:,pix);
+                for iter = 1:niter
+                    Sms = Sm_pix+sigma2_pix;
+                    W = (Sms>0)./(Sms+(Sms<=0));
+                    Whalf = diag(sqrt(W));
+                    WhalfX = Whalf*X;
+                    pinvX = pinv(WhalfX);
+                    WhalfY = Whalf*Y_pix;
+                    betahat = pinvX*WhalfY;
+                    R = WhalfY-WhalfX*betahat;
+                    SW = diag(Sm_pix.*W);
+                    ptrS = p+sum(Sm_pix.*W,1)-sum(sum((SW*WhalfX).*pinvX'));
+                    sigma2_pix=(sigma2_pix.*ptrS+ ...
+                        (sigma2_pix.^2).*sum(W.*(R.^2),1))/n; 
+                end
+                sigma2(pix)=sigma2_pix-minS(pix);
+            end
+        end
+    end
+    varatio_vol(:,k)=(sigma2./(varfix+(varfix<=0)).*(varfix>0))';
 end
 clear vol
-
-resid = reshape(resid,[nx*ny*nz,n]);
-
-if numlags==1
-   Cov0 = sum(resid.^2,2);
-   Cov1 = sum(resid(:,k1).*resid(:,k1-1),2);
-   Cov = [Cov0, Cov1];
-else
-   for lag=0:numlags
-       Cov(:,lag+1)=sum(resid(:,1:n-lag).*resid(:,(lag+1):n),2);
-   end
-   Cov0 = Cov(:,1);
-end
-Cov = reshape(Cov',[numlags+1,nx*ny,nz]);
-for k=1:nz
-    Covadj(:,:,k) = squeeze(invM(:,:,k))*squeeze(Cov(:,:,k));
-end
-Covadj = reshape(Covadj,[numlags+1,nx*ny*nz]);
-if numlags==1
-   rho_vol = (Covadj(2,:)./ ...
-            (Covadj(1,:)+(Covadj(1,:)<=0)).*(Covadj(1,:,:)>0))';
-else
-   rho_vol = ( Covadj(2:(numlags+1),:) ...
-            .*( ones(numlags,1)*((Covadj(1,:)>0)./ ...
-            (Covadj(1,:)+(Covadj(1,:)<=0)))) )';
-end
-rho_vol = reshape(rho_vol,[nx ny nz numlags]);
-
+varatio_vol = reshape(varatio_vol,[nx,ny,nz]);
 if nargout>=2
-    sdd=(Cov0>0)./sqrt(Cov0+(Cov0<=0));
-    resid = resid.*repmat(sdd,1,n);
     resid = reshape(resid,[nx,ny,nz,n]);
     opt_fwhm.voxel_size = opt.voxel_size;
+    opt_fwhm.df = opt.df;
+    opt_fwhm.is_fixed = opt.is_fixed;
     opt_fwhm = niak_quick_fwhm(resid,mask,opt_fwhm);
-    df.resid = round(mean(dfs));
 end
 opt.fwhm = opt_fwhm.fwhm;
-opt.df = df;

@@ -19,11 +19,11 @@ function full_contrast = niak_make_contrasts(contrast,opt)
 % OPT         
 %       structure with the following fields :
 %
-%       NUMRESPONSES
+%       NB_RESPONSE
 %           number of respnses in the model, determined by the matrix x_cache
 %           with niak_fmridesign.
 %
-%       SIZE_TRENDS 
+%       NB_TRENDS
 %           vector of 3 components with the number of temporal trends, 
 %           spatial trends and confounds
 % _________________________________________________________________________
@@ -81,14 +81,14 @@ function full_contrast = niak_make_contrasts(contrast,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'numresponses','size_trends'};
+gb_list_fields = {'nb_response','nb_trends'};
 gb_list_defaults = {NaN,NaN};
 niak_set_defaults
 
-numresponses = opt.numresponses;
-n_temporal_trend = opt.size_trends(1);
-n_spatial_trend = opt.size_trends(2);
-n_confounds = opt.size_trends(3);
+numresponses = opt.nb_response;
+n_temporal_trend = opt.nb_trends(1);
+n_spatial_trend = opt.nb_trends(2);
+n_confounds = opt.nb_trends(3);
 
 % Make full contrasts:
 
