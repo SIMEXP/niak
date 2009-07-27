@@ -49,8 +49,6 @@ function file_name = niak_file_tmp(ext)
 
 flag_gb_niak_fast_gb = 1; %% the initialization of global variables will be as fast as possible
 niak_gb_vars
-c_clock = clock;
-rand('state',100000*c_clock(end));
 flag_tmp = 1;
 
 while flag_tmp == 1;

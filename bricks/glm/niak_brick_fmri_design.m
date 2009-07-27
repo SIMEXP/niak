@@ -1,24 +1,38 @@
-function [files_out,opt] = niak_brick_fmri_design(files_in,opt)
+function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,opt)
 
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_SLICE_TIMING
+%
+% Create the design matrix for an fMRI general linear model analysis. 
+%
 % SYNTAX:
-% [FILES_OUT,OPT] = NIAK_BRICK_FMRI_DESIGN(FILES_IN,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FMRI_DESIGN(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN  
-%       (structure) with the following field :
-%
-%       FMRI 
-%           (string) the name of a file containing an fMRI dataset. 
+%  FILES_IN  
+%       (string) the name of a file containing an fMRI dataset. 
 %     
+%  FILES_OUT
+%       (string) the name a matlab file containing a description of the
+%       design matrix in the two following variables : 
 %
-% _________________________________________________________________________
+%       X_CACHE 
+%           Describes the covariates of the model. See the help of 
+%           FMRIDESIGN in the fMRIstat toolbox and
+%           http://www.math.mcgill.ca/keith/fmristat/#making for an 
+%           example.
+%
+%       MATRIX_X 
+%           the full design matrix, resulting from concatenating 
+%           X_CACHE with the temporal, spatial trends as well as additional 
+%           confounds.
+%
 % OPT   
 %     (structure) with the following fields.
 %     Note that if a field is omitted, it will be set to a default
 %     value if possible, or will issue an error otherwise.
-%
 %
 %     EVENTS 
 %           (matrix, default [1 0]) rows are events and columns are:
@@ -115,29 +129,11 @@ function [files_out,opt] = niak_brick_fmri_design(files_in,opt)
 %           if FLAG_TEST equals 1, the brick does not do anything but 
 %           update the default values in FILES_IN, FILES_OUT and OPT.
 %
-%
 % _________________________________________________________________________
 % OUTPUTS
 %
-%  * FILES_OUT 
-%       (structure) with the following field. Note that if
-%       a field is an empty string, a default value will be used to
-%       name the outputs. If a field is omitted, the output won't be
-%       saved at all (this is equivalent to setting up the output file
-%       names to 'gb_niak_omitted').
-%
-%       DESIGN 
-%           (string) a MAT file containing the variable X_CACHE and MATRIX_X. 
-%           X_CACHE describes the covariates of the model.
-%           See the help of FMRIDESIGN in the fMRIstat toolbox and
-%           http://www.math.mcgill.ca/keith/fmristat/#making for an 
-%           example.
-%           MATRIX_X is the full design matrix, resulting from concatenating 
-%           X_CACHE with the temporal, spatial trends as well as additinal 
-%           confounds.
-%
-%      The structure OPT is updated with default values. 
-%      If OPT.FLAG_TEST == 0, the specified outputs are written.
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -186,7 +182,6 @@ function [files_out,opt] = niak_brick_fmri_design(files_in,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -194,18 +189,13 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('opt','var')
-    error('SYNTAX: [FILES_OUT,OPT] = NIAK_BRICK_FMRI_DESIGN(FILES_IN,OPT).\n Type ''help niak_brick_fmri_design'' for more info.')
+if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+    error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FMRI_DESIGN(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_fmri_design'' for more info.')
 end
 
 %% FILES_IN
-gb_name_structure = 'files_in';
-gb_list_fields = {'fmri'};
-gb_list_defaults = {NaN};
-niak_set_defaults
-
-if ~ischar(files_in.fmri)
-    error('niak_brick_fmri_design: FILES_IN.FMRI should be a string');
+if ~ischar(files_in)
+    error('niak_brick_fmri_design: FILES_IN should be a string');
 end
 
 %% OPTIONS
@@ -214,20 +204,12 @@ gb_list_fields = {'events','slice_times','spatial_av','confounds','exclude','nb_
 gb_list_defaults = {[1 0],NaN,[],[],[],0,3,[],'spectral',0,'',1};
 niak_set_defaults
 
-
 if (nb_trends_spatial>=1) && isempty(spatial_av)
     error('Please provide a non empty value for SPATIAL_AV.\n Type ''help niak_brick_fmri_design'' for more info.')
 end
 
-
 %% FILES_OUT
-gb_name_structure = 'files_out';
-gb_list_fields = {'design'};
-gb_list_defaults = {'gb_niak_omitted'};
-niak_set_defaults
-
-%% Parsing base names
-[path_f,name_f,ext_f] = fileparts(files_in.fmri);
+[path_f,name_f,ext_f] = fileparts(files_in);
 
 if isempty(path_f)
     path_f = '.';
@@ -235,9 +217,6 @@ end
 
 if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f] = fileparts(name_f);
-    flag_zip = 1;
-else
-    flag_zip = 0;
 end
 
 if isempty(opt.folder_out)
@@ -246,27 +225,24 @@ else
     folder_f = opt.folder_out;
 end
 
-files_out.design = cat(2,folder_f,filesep,name_f,'_design.mat');
-
-%% Input file
-if flag_zip
-    file_input = niak_file_tmp(cat(2,'_func.mnc',gb_niak_zip_ext));
-    instr_cp = cat(2,'cp ',files_in.fmri,' ',file_input);
-    system(instr_cp);
-    instr_unzip = cat(2,gb_niak_unzip,' ',file_input);
-    system(instr_unzip);
-    file_input = file_input(1:end-length(gb_niak_zip_ext));
-else
-    file_input = files_in.fmri;
+if isempty(files_out)
+    files_out = cat(2,folder_f,filesep,name_f,'_design.mat');
 end
 
+if flag_test 
+    return
+end
 
 %% Open file_input:
-hdr = niak_read_vol(file_input);
+hdr = niak_read_vol(files_in);
 
 %% Image dimensions
 numslices = hdr.info.dimensions(3);
-numframes = hdr.info.dimensions(4);
+if length(hdr.info.dimensions)>3
+    numframes = hdr.info.dimensions(4);
+else
+    numframes = 1;
+end
 
 %% Creates temporal and spatial trends:
 opt_trends.nb_trends_temporal = opt.nb_trends_temporal;
@@ -304,10 +280,5 @@ matrix_x = niak_full_design(x_cache,trend,opt_x);
 clear opt_x;
 
 if ~strcmp(files_out.design,'gb_niak_omitted');
-    save(files_out.design,'x_cache','matrix_x');
-end
-
-%% Deleting temporary files
-if flag_zip
-    delete(file_input);
+    save(files_out,'x_cache','matrix_x');
 end

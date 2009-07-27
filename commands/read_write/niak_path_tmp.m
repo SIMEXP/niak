@@ -53,8 +53,6 @@ function path_name = niak_path_tmp(ext)
 % THE SOFTWARE.
 
 niak_gb_vars
-c_clock = clock;
-rand('state',100000*c_clock(end));
 flag_tmp = 1;
 
 while flag_tmp == 1
