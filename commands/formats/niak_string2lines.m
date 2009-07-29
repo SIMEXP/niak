@@ -35,6 +35,8 @@ function cell_lines = niak_string2lines(vec_string)
 
 pos_ent = findstr(vec_string,char(10));
 pos_ent = [0 ; pos_ent(:)];
+cell_lines{1} = [];
 for num_p = 1:length(pos_ent)-1
     cell_lines{num_p} = vec_string(pos_ent(num_p)+1:pos_ent(num_p+1)-1);
 end
+
