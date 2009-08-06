@@ -56,5 +56,3 @@ while flag_tmp == 1;
     flag_tmp = exist(file_name,'file')>0;
 end
 save(file_name,'flag_tmp')
-%hft = fopen(file_name,'w');
-%fclose(hft);
