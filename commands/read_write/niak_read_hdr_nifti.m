@@ -318,11 +318,11 @@ end
 %% hdr.info.voxel_size
 hdr.info.voxel_size = hdr.details.pixdim(2:4);
 
-%% hdr.info.dimensions
+%% hdr.info.dimensions    
 hdr.info.dimensions = hdr.details.dim(2:5);
 
 %% hdr.info.tr
-if hdr.details.dim(1) == 4
+if length(hdr.details.pixdim)>=5 
     hdr.info.tr = hdr.details.pixdim(5);
 end
 

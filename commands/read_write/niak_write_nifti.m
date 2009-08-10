@@ -131,6 +131,7 @@ if length(size(vol))==3
     hdr.details.dim(5) = 1;
 elseif length(size(vol))==4
     hdr.details.dim(2:5) = size(vol);
+    hdr.details.pixdim(5) = hdr.info.tr;
 else
     error('VOL need to be a 3D or 4D array!');
 end
@@ -139,8 +140,10 @@ hdr.descrip = hdr.info.history;
 
 if ndims(vol)==3
     hdr.details.dim(2:4) = size(vol);
+    hdr.details.dim(1) = 3;
 elseif ndims(vol)==4
     hdr.details.dim(2:5) = size(vol);
+    hdr.details.dim(1) = 4;
 end
 
 hdr.details.srow_x = hdr.info.mat(1,1:4);
