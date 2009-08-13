@@ -5,7 +5,7 @@ function [files_in,files_out,opt] = niak_brick_nii3d2nii4d(files_in,files_out,op
 %
 % Convert a bunch of nifti 3d volumes into one 4d nifti files.
 %
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MNC2NII3D(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_NII3D2NII4D(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
@@ -57,7 +57,7 @@ function [files_in,files_out,opt] = niak_brick_nii3d2nii4d(files_in,files_out,op
 % NOTE 3
 %
 % To zip the output, the output file should end with 'nii.gz' instead of
-% '.nii'.  The tools used to zip files in 'gzip'. This behavior can be 
+% '.nii'.  The tool used to zip files is 'gzip'. This behavior can be 
 % changed by editing the variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the 
 % file NIAK_GB_VARS.
 %
@@ -65,7 +65,7 @@ function [files_in,files_out,opt] = niak_brick_nii3d2nii4d(files_in,files_out,op
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : pipeline, niak, preprocessing, fMRI
+% Keywords : niak, nifti, conversion, 4D
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal

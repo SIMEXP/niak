@@ -202,7 +202,7 @@ try
         
         for num_d = 1:length(list_dir)
             
-            niak_brick_mnc2nii([files_in filesep list_dir{num_d}],[files_out filesep list_dir{num_d}],opt);
+            niak_brick_mnc2nii3d([files_in filesep list_dir{num_d}],[files_out filesep list_dir{num_d}],opt);
             
         end
     end
