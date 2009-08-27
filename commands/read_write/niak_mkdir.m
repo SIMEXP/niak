@@ -75,8 +75,6 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-niak_gb_vars
-
 list_path = niak_string2words(path_name,{filesep});
 
 path_curr = filesep;
@@ -96,10 +94,10 @@ for num_p = 1:length(list_path)
         if isempty(path_curr)
             [success,message] = mkdir(list_path{num_p});
         else
-            if strcmp(gb_niak_language,'matlab')
-                [success,message] = mkdir(path_curr,list_path{num_p});
-            elseif strcmp(gb_niak_language,'octave')
+            if exist('OCTAVE_VERSION','builtin')
                 [success,message] = mkdir(cat(2,path_curr,filesep,list_path{num_p}));
+            else
+                [success,message] = mkdir(path_curr,list_path{num_p});
             end
         end
         
