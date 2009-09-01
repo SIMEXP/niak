@@ -90,7 +90,8 @@ function opt = niak_update_fwhm(opt)
 %##########################################################################
 %
 % Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-% Maintainer : felix.carbonell@mail.mcgill.ca
+%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
 
@@ -132,7 +133,7 @@ fwhm_data = opt.fwhm.data;
 numframes = size(matrix_x,1);
 allpts = 1:numframes;
 allpts(exclude) = zeros(1,length(exclude));
-keep = allpts( find( allpts ) );
+keep = allpts(allpts>0);
 n = length(keep);
 indk1=((keep(2:n)-keep(1:n-1))==1);
 k1=find(indk1)+1;
@@ -163,10 +164,10 @@ for slice=1:numslices
     else
        for lag=1:numlags
           CovX1=cpinvX(:,1:(n-lag))*cpinvX(:,(lag+1):n)';
-          corX2(1:numcontrasts,slice)=CorX2(1:numcontrasts,slice)+ ...
+          corX2(1:numcontrasts,slice)=corX2(1:numcontrasts,slice)+ ...
              (diag(CovX1)./diag(CovX0)).^2; 
           Covx1=x(:,1:(n-lag))*x(:,(lag+1):n)';
-          corX2(numcontrasts+1,slice)=CorX2(numcontrasts+1,slice)+ ...
+          corX2(numcontrasts+1,slice)=corX2(numcontrasts+1,slice)+ ...
              (sum(diag(Covx1*CovX0(j,j)))/(p+(p<=0))).^2*(p>0);
        end
     end

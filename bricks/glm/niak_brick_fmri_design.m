@@ -1,9 +1,9 @@
 function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,opt)
 
 % _________________________________________________________________________
-% SUMMARY NIAK_BRICK_SLICE_TIMING
+% SUMMARY NIAK_BRICK_FMRI_DESIGN
 %
-% Create the design matrix for an fMRI general linear model analysis. 
+% Creates the design matrix for an fMRI general linear model analysis. 
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FMRI_DESIGN(FILES_IN,FILES_OUT,OPT)
@@ -29,7 +29,7 @@ function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,op
 %           X_CACHE with the temporal, spatial trends as well as additional 
 %           confounds.
 %
-% OPT   
+%  OPT   
 %     (structure) with the following fields.
 %     Note that if a field is omitted, it will be set to a default
 %     value if possible, or will issue an error otherwise.
@@ -83,7 +83,7 @@ function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,op
 %           weighted by first non-excluded frame; 
 %          
 %     NB_TRENDS_TEMPORAL 
-%           (scalar, default 0)
+%           (scalar, default 3)
 %           number of cubic spline temporal trends to be removed per 6 
 %           minutes of scanner time. 
 %           Temporal  trends are modeled by cubic splines, so for a 6 
@@ -204,7 +204,7 @@ gb_list_fields = {'events','slice_times','spatial_av','confounds','exclude','nb_
 gb_list_defaults = {[1 0],NaN,[],[],[],0,3,[],'spectral',0,'',1};
 niak_set_defaults
 
-if (nb_trends_spatial>=1) && isempty(spatial_av)
+if (nb_trends_spatial>=1) && isempty(opt.spatial_av)
     error('Please provide a non empty value for SPATIAL_AV.\n Type ''help niak_brick_fmri_design'' for more info.')
 end
 
@@ -235,6 +235,7 @@ end
 
 %% Open file_input:
 hdr = niak_read_vol(files_in);
+tr = hdr.info.tr;
 
 %% Image dimensions
 numslices = hdr.info.dimensions(3);
@@ -248,7 +249,7 @@ end
 opt_trends.nb_trends_temporal = opt.nb_trends_temporal;
 opt_trends.nb_trends_spatial = opt.nb_trends_spatial;
 opt_trends.exclude = opt.exclude;
-opt_trends.tr = hdr.info.tr;
+opt_trends.tr = tr;
 opt_trends.confounds = opt.confounds;
 opt_trends.spatial_av = opt.spatial_av;
 opt_trends.nb_slices = numslices;
@@ -257,7 +258,7 @@ trend = niak_make_trends(opt_trends);
 clear opt.trends
 
 %% Creates x_cache
-opt_cache.frame_times = (0:(numframes-1))*hdr.info.tr;
+opt_cache.frame_times = (0:(numframes-1))*tr;
 opt_cache.slice_times = opt.slice_times;
 opt_cache.events = opt.events;
 x_cache = niak_fmridesign(opt_cache);
@@ -269,7 +270,7 @@ else
     nb_response = 0;
 end
 if isempty(opt.num_hrf_bases)
-    opt.num_hrf_bases = ones([nb_response 1]);
+    opt.num_hrf_bases = ones(1,nb_response);
 end
 
 %% Creates matrix_x
@@ -279,6 +280,6 @@ opt_x.basis_type = opt.basis_type;
 matrix_x = niak_full_design(x_cache,trend,opt_x);
 clear opt_x;
 
-if ~strcmp(files_out.design,'gb_niak_omitted');
+if ~strcmp(files_out,'gb_niak_omitted');
     save(files_out,'x_cache','matrix_x');
 end

@@ -62,8 +62,7 @@ function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 %
 %       CONTRAST_IS_DELAY
 %            Binary vector specifying the desired contrasts for delays 
-%            (to be used in NIAK_WHITEN_GLM)
-
+%            
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -124,7 +123,7 @@ function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 gb_name_structure = 'opt';
 gb_list_fields = {'matrix_x','spatial_av','pcnt','exclude','numlags',...
     'num_hrf_bases','nb_response','nb_trends','contrasts','which_stats','contrast_is_delay'};
-gb_list_defaults = {NaN,NaN,1,[],1,NaN,NaN,NaN,NaN,NaN,NaN};
+gb_list_defaults = {NaN,[],0,[],1,NaN,NaN,NaN,NaN,NaN,NaN};
 niak_set_defaults
 
 matrix_x = opt.matrix_x;
@@ -152,9 +151,9 @@ k1=find(indk1)+1;
   
 vol = reshape(vol,[nx*ny*nz nt]);
 vol = vol(:,keep);
-spatial_av = spatial_av(keep);
 
 if ispcnt
+   spatial_av = spatial_av(keep);
    spatial_av = repmat(spatial_av',nx*ny*nz,1);
    vol = 100*(vol./spatial_av);
    clear spatial_av
@@ -204,6 +203,9 @@ for k=1:nz
          factor=1./sqrt(1-rho^2);
          Ystar(k1,:)=(Y(k1,pix)-rho*Y(k1-1,pix))*factor;
          Xstar_k(k1,:)=(X_k(k1,:)-rho*X_k(k1-1,:))*factor;
+         if which_stats(1,8)
+             A_slice(pix,1) = rho;
+         end
       else
          Coradj_pix=squeeze(rho_vol(pix,k,:));
          [Ainvt posdef]=chol(toeplitz([1 Coradj_pix']));
@@ -216,7 +218,7 @@ for k=1:nz
          Vmhalf=spdiags(B,1:nl,n-nl,n);
          Ystar=zeros(n,1);
          Ystar(1:nl)=A*Y(1:nl,pix);
-         Ystar((nl+1):n)=Vmhalf*Y(:,pix);
+         Ystar((nl+1):n)=full(Vmhalf)*Y(:,pix);
          Xstar_k(1:nl,:)=A*X_k(1:nl,:);
          Xstar_k((nl+1):n,:)=Vmhalf*X_k;
       end
@@ -229,7 +231,7 @@ for k=1:nz
       SSE=sum(resid.^2,1);
       sd=sqrt(SSE/Df);
       if which_stats(1,7) | which_stats(1,9)
-         sdd=(sd>0)./(sd+(sd<=0));
+         sdd=(sd>0)./(sd+(sd<=0))/sqrt(Df);
          wresid_slice(pix,:)=(resid.*repmat(sdd,n,1))';
       end
       V=pinvXstar*pinvXstar';

@@ -1,5 +1,4 @@
 function spatial_av = niak_spatial_av(vol,mask)
-
 % _________________________________________________________________________
 % SUMMARY NIAK_SPATIAL_AV
 %
@@ -48,7 +47,8 @@ function spatial_av = niak_spatial_av(vol,mask)
 %##########################################################################
 %
 % Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-% Maintainer : felix.carbonell@mail.mcgill.ca
+%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
 
@@ -71,7 +71,10 @@ function spatial_av = niak_spatial_av(vol,mask)
 % THE SOFTWARE.
 
 [nx,ny,nz,nt] = size(vol);
-tseries = reshape(vol,[nx*ny*nz nt]);
-tseries = tseries(mask(:),:);
-spatial_av = mean(tseries);
+tot = sum(mask(:));
+for i=1:nt
+    temp = vol(:,:,:,i).*mask;
+    spatial_av(i) = sum(temp(:));
+end
+spatial_av = spatial_av/tot;
 spatial_av = spatial_av(:);

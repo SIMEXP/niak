@@ -36,8 +36,6 @@ function opt = niak_quick_fwhm(wresid_vol,mask,opt)
 %
 %           LIMIT
 %              degrees of freedom of the residuals.
-
-%       IS_SD
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -68,7 +66,8 @@ function opt = niak_quick_fwhm(wresid_vol,mask,opt)
 %##########################################################################
 %
 % Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-% Maintainer : felix.carbonell@mail.mcgill.ca
+%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
 
@@ -108,7 +107,7 @@ is_sd = isfield(df,'fixed');
 
 if isempty(df)
     df.limit = 4;
-    df.resid = df.limit + 1;
+    df.resid = 0;
 end
 
 % Quick fwhm of data

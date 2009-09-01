@@ -62,7 +62,8 @@ function opt = niak_make_which_stats(opt)
 %##########################################################################
 %
 % Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-% Maintainer : felix.carbonell@mail.mcgill.ca
+%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
 

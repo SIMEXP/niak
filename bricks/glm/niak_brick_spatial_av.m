@@ -1,31 +1,41 @@
-function [files_out] = niak_brick_spatial_av(files_in,opt)
+function [files_in,files_out,opt] = niak_brick_spatial_av(files_in,files_out,opt)
 
+% _________________________________________________________________________
+% SUMMARY NIAK_BRICK_SPATIAL_AV
+%
+% Creates the spatial average time course. 
+%
 % SYNTAX:
-% [FILES_OUT,OPT] = NIAK_BRICK_FMRI_DESIGN(FILES_IN,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SPATIAL_AV(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN  
+%  FILES_IN  
 %       (structure) with the following field :
 %
 %       FMRI 
 %           (string) the name of a file containing an fMRI dataset. 
-%     
 %
-% _________________________________________________________________________
-% OPT   
+%       MASK
+%
+%           (string) the name of a 3D binary volume.
+%
+%
+%  FILES_OUT
+%       (string) the name a matlab file containing the following variable: 
+%
+%       SPATIAL_AV 
+%            column vector of the spatial average time courses.
+%
+%  OPT   
 %     (structure) with the following fields.
 %     Note that if a field is omitted, it will be set to a default
 %     value if possible, or will issue an error otherwise.
 %
-%     EXCLUDE 
-%           (vector, default []) 
-%           A list of frames that should be excluded from the
-%           analysis. This must be used with Siemens EPI scans to remove the
-%           first few frames, which do not represent steady-state images.
-%           If OPT.NUMLAGS=1, the excluded frames can be arbitrary, 
-%           otherwise they should be from the beginning and/or end.
+%    MASK_THRESH
+%       a scalar value for thresholding a volumen and defininig a brain
+%       mask
 %
 %     FOLDER_OUT 
 %           (string, default: path of FILES_IN) 
@@ -42,22 +52,11 @@ function [files_out] = niak_brick_spatial_av(files_in,opt)
 %           if FLAG_TEST equals 1, the brick does not do anything but 
 %           update the default values in FILES_IN, FILES_OUT and OPT.
 %
-%
 % _________________________________________________________________________
 % OUTPUTS
 %
-%  * FILES_OUT 
-%       (structure) with the following field. Note that if
-%       a field is an empty string, a default value will be used to
-%       name the outputs. If a field is omitted, the output won't be
-%       saved at all (this is equivalent to setting up the output file
-%       names to 'gb_niak_omitted').
-%
-%       SPATIAL_AV 
-%            column vector of the spatial average time courses.
-%
-%      The structure OPT is updated with default values. 
-%      If OPT.FLAG_TEST == 0, the specified outputs are written.
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -114,40 +113,33 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('opt','var')
-    error('SYNTAX: [FILES_OUT] = NIAK_BRICK_SPATIAL_AV(FILES_IN,OPT).\n Type ''help niak_brick_spatial_av'' for more info.')
+if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+    error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SPATIAL_AV(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_spatial_av'' for more info.')
 end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
 gb_list_fields = {'fmri','mask'};
-gb_list_defaults = {NaN,NaN};
+gb_list_defaults = {NaN,[]};
 niak_set_defaults
 
 if ~ischar(files_in.fmri)
     error('niak_brick_spatial_av: FILES_IN.FMRI should be a string');
 end
 
-if ~ischar(files_in.mask)
-    error('niak_brick_spatial_av: FILES_IN.MASK should be a string');
+if isempty(files_in.mask)
+    files_in.mask = files_in.fmri;
 end
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'exclude','flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {[],0,'',1};
+gb_list_fields = {'exclude','mask_thresh','flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {[],[],0,'',1};
 niak_set_defaults
 
 
 %% FILES_OUT
-gb_name_structure = 'files_out';
-gb_list_fields = {'spatial_av'};
-gb_list_defaults = {'gb_niak_omitted'};
-niak_set_defaults
-
-%% Parsing base names
 [path_f,name_f,ext_f] = fileparts(files_in.fmri);
-[path_m,name_m,ext_m] = fileparts(files_in.mask);
 
 if isempty(path_f)
     path_f = '.';
@@ -155,17 +147,7 @@ end
 
 if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f] = fileparts(name_f);
-    flag_zip = 1;
-else
-    flag_zip = 0;
 end
-
-if strcmp(ext_m,gb_niak_zip_ext)
-    flag_zip_mask = 1;
-else
-    flag_zip_mask = 0;
-end
-
 
 if isempty(opt.folder_out)
     folder_f = path_f;
@@ -173,51 +155,42 @@ else
     folder_f = opt.folder_out;
 end
 
-files_out.spatial_av = cat(2,folder_f,filesep,name_f,'_spatial_av.mat');
-
-%% Input file
-if flag_zip
-    file_input = niak_file_tmp(cat(2,'_func.mnc',gb_niak_zip_ext));
-    instr_cp = cat(2,'cp ',files_in.fmri,' ',file_input);
-    system(instr_cp);
-    instr_unzip = cat(2,gb_niak_unzip,' ',file_input);
-    system(instr_unzip);
-    file_input = file_input(1:end-length(gb_niak_zip_ext));
-else
-    file_input = files_in.fmri;
+if isempty(files_out)
+    files_out = cat(2,folder_f,filesep,name_f,'_spatial_av.mat');
 end
-%% Input mask
-if flag_zip_mask
-    file_mask = niak_file_tmp(cat(2,'_func.mnc',gb_niak_zip_ext));
-    instr_cp = cat(2,'cp ',files_in.mask,' ',file_mask);
-    system(instr_cp);
-    instr_unzip = cat(2,gb_niak_unzip,' ',file_mask);
-    system(instr_unzip);
-    file_mask = file_mask(1:end-length(gb_niak_zip_ext));
-else
-    file_mask = files_in.mask;
+
+if flag_test 
+    return
 end
 
 %% Open file_input:
-[hdr_vol,vol] = niak_read_vol(file_input);
+[hdr_vol,vol] = niak_read_vol(files_in.fmri);
 
-%% Open file_mask:
-[hdr_mask,vol_mask] = niak_read_vol(file_mask);
+
+%% Defining a mask volume:
+[hdr_mask,mask] = niak_read_vol(files_in.mask);
+
+if isempty(opt.mask_thresh)
+    mask_thresh = niak_mask_threshold(squeeze(mask(:,:,:,1)));
+end
+
+mask = mask(:,:,:,1) > mask_thresh;
+
+
+numframes = size(vol,4);
+allpts = 1:numframes;
+allpts(opt.exclude) = zeros(1,length(opt.exclude));
+keep = allpts( allpts > 0);
+
+data = vol(:,:,:,keep(1));
+weighted_mask = data.*mask ;
+
+
+
 
 %% Creates spatial_av:
-vol_mask = vol_mask>0;
-spatial_av = niak_spatial_av(vol,vol_mask);
+spatial_av = niak_spatial_av(vol,weighted_mask);
 
-if ~strcmp(files_out.spatial_av,'gb_niak_omitted');
-    save(files_out.spatial_av,'spatial_av');
+if ~strcmp(files_out,'gb_niak_omitted');
+    save(files_out,'spatial_av');
 end
-
-%% Deleting temporary files
-if flag_zip
-    delete(file_input);
-end
-
-if flag_zip_mask
-    delete(file_mask);
-end
-

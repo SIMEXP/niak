@@ -30,7 +30,7 @@ function [rho_vol,opt] = niak_autoregressive(vol,mask,opt)
 %            from niak_make_trends.
 %
 %       PCNT: 
-%           if PCNT=1(Default), then the data is converted to percentages 
+%           if PCNT=1, then the data is converted to percentages 
 %           before analysis by dividing each frame by its spatial average,* 100%.
 %
 %       EXCLUDE: 
@@ -86,7 +86,8 @@ function [rho_vol,opt] = niak_autoregressive(vol,mask,opt)
 %##########################################################################
 %
 % Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-% Maintainer : felix.carbonell@mail.mcgill.ca
+%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
 
@@ -110,7 +111,7 @@ function [rho_vol,opt] = niak_autoregressive(vol,mask,opt)
 
 gb_name_structure = 'opt';
 gb_list_fields = {'matrix_x','spatial_av','pcnt','exclude','numlags','voxel_size'};
-gb_list_defaults = {NaN,NaN,1,[],1,[1 1 1]};
+gb_list_defaults = {NaN,[],0,[],1,[1 1 1]};
 niak_set_defaults
 
 spatial_av = opt.spatial_av;
@@ -131,9 +132,9 @@ Diag1=diag(indk1,1)+diag(indk1,-1);
   
 vol = reshape(vol,[nx*ny*nz nt]);
 vol = vol(:,keep);
-spatial_av = spatial_av(keep);
 
 if ispcnt
+   spatial_av = spatial_av(keep);
    spatial_av = repmat(spatial_av',nx*ny*nz,1);
    vol = 100*(vol./spatial_av);
    clear spatial_av
@@ -151,7 +152,7 @@ for k=1:nz
         M(2,1) = M(1,2)/2;
         M(2,2) = trace(R*Diag1*R*Diag1)/2;
     else
-        M=zeros(numlags+1,nz);
+        M=zeros(numlags+1);
          for i=1:numlags+1
             for j=1:numlags+1
                Di=(diag(ones(1,n-i+1),i-1)+diag(ones(1,n-i+1),-i+1))/(1+(i==1));
@@ -199,7 +200,7 @@ if nargout>=2
     sdd=(Cov0>0)./sqrt(Cov0+(Cov0<=0));
     resid = resid.*repmat(sdd,1,n);
     resid = reshape(resid,[nx,ny,nz,n]);
-    opt_fwhm.voxel_size = opt.voxel_size;
+    opt_fwhm.voxel_size = abs(opt.voxel_size);
     opt_fwhm = niak_quick_fwhm(resid,mask,opt_fwhm);
     df.resid = round(mean(dfs));
 end

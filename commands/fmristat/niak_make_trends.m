@@ -83,7 +83,8 @@ function trend = niak_make_trends(opt)
 %##########################################################################
 %
 % Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-% Maintainer : felix.carbonell@mail.mcgill.ca
+%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
 
@@ -144,7 +145,7 @@ end
 % Create spatial trends:
 
 if n_spatial>=1 
-   trend=opt.spatial_av(keep);
+   trend=opt.spatial_av(keep)-mean(opt.spatial_av(keep));
    spatial_trend=(trend*ones(1,n_spatial)).^(ones(n,1)*(1:n_spatial));
 else
    spatial_trend=[];
