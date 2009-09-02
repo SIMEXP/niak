@@ -157,11 +157,18 @@ if nargout > 1
         vol = squeeze(reshape(vol, [3 hdr.details.dim(2:4) length(vol_idx)]));
         vol = permute(vol, [2 3 4 1 5]);
     elseif hdr.details.datatype == 511 & hdr.details.bitpix == 96
-        vol = double(vol);
+        vol = single(vol);
         vol = (vol - min(vol))/(max(vol) - min(vol));
         vol = squeeze(reshape(vol, [3 hdr.details.dim(2:4) length(vol_idx)]));
         vol = permute(vol, [2 3 4 1 5]);
     else
         vol = squeeze(reshape(vol, [hdr.details.dim(2:4) length(vol_idx)]));
     end
+    
+    if ((hdr.details.scl_slope~=0)&(hdr.details.scl_slope~=1))|(hdr.details.scl_inter~=0)
+        vol = hdr.details.scl_slope * single(vol) + hdr.details.scl_inter;
+        hdr.details.scl_slope = 1;
+        hdr.details.scl_inter = 0;
+    end  
+    vol = single(vol);
 end
