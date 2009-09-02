@@ -3,7 +3,7 @@ function [files_in,files_out,opt] = niak_brick_nii3d2nii4d(files_in,files_out,op
 % _________________________________________________________________________
 % SUMMARY NIAK_BRICK_NII3D2NII4D
 %
-% Convert a bunch of nifti 3d volumes into one 4d nifti files.
+% Convert a bunch of nifti 3d volumes into one 4d nifti file.
 %
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_NII3D2NII4D(FILES_IN,FILES_OUT,OPT)
 %
