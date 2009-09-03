@@ -112,7 +112,6 @@ opt_comp_sel.flag_test = 0;
 %% job
 [files_in_comp_sel,files_out_comp_sel,opt_comp_sel] = niak_brick_component_sel(files_in_comp_sel,files_out_comp_sel,opt_comp_sel);
 
-return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Suppression of physiological noise %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -126,7 +125,7 @@ files_out_supp = '';
 
 %% Options
 opt_supp.flag_test = 0;
-opt_supp.threshold = 0.05;
+opt_supp.threshold = Inf;
 
 %% job
 [files_in_supp,files_out_supp,opt_supp] = niak_brick_component_supp(files_in_supp,files_out_supp,opt_supp);

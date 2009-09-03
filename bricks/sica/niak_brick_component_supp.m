@@ -47,9 +47,10 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 %           (scalar, default 0.15) 
 %           a threshold to apply on the score for suppression (scores 
 %           above the thresholds are selected). If the threshold is -Inf, 
-%           all components will be suppressed. If the threshold is Inf, an 
-%           adaptative method based on the Otsu algorithm will be applied 
-%           to select the threshold automatically.
+%           all components will be suppressed. If the threshold is Inf, no
+%           component will be suppressed (the algorithm is basically
+%           copying the file, expect that the data is masked inside the 
+%           brain).
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN.SPACE) 

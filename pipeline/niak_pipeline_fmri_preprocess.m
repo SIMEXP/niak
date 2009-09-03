@@ -146,13 +146,14 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %               (reconstruction of 4D data after suppression of some ICA 
 %               components from the linear mixture).
 %
-%               THRESHOLD
+%               THRESHOLD 
 %                   (scalar, default 0.15) a threshold to apply on the 
 %                   score for suppression (scores above the thresholds are 
 %                   selected). If the threshold is -Inf, all components 
-%                   will be suppressed. If the threshold is Inf, an 
-%                   adaptative method based on the Otsu algorithm will be 
-%                   applied to select the threshold automatically.
+%                   will be suppressed. If the threshold is Inf, no
+%                   component will be suppressed (the algorithm is 
+%                   basically copying the file, expect that the data is 
+%                   masked inside the brain).
 %
 %           The Following additional fields can be used if the
 %           preprocessing style is 'standard-native' or 'standard-stereotaxic':
