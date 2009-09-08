@@ -20,7 +20,6 @@ function [val,ind] = niak_find_local_max_1d(sig,ww)
 % WW
 %       (integer) window width. T will be a local max if SIG(T) is bigger
 %       or equal for all values SIG(U) where U varies from T-WW to T+WW.
-%       Edges of the signal are excluded from the analysis.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -66,7 +65,7 @@ nt = length(sig);
 val = [];
 ind = [];
 
-for num_t = ww+1:length(sig)-ww
+for num_t = ww:length(sig)-ww
 
     if min(sig(num_t) >= sig(num_t-ww:num_t+ww))>0
         
