@@ -18,9 +18,7 @@ function [files_in,files_out,opt] = niak_brick_spatial_av(files_in,files_out,opt
 %           (string) the name of a file containing an fMRI dataset. 
 %
 %       MASK
-%
 %           (string) the name of a 3D binary volume.
-%
 %
 %  FILES_OUT
 %       (string) the name a matlab file containing the following variable: 

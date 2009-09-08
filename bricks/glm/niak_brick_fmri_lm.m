@@ -1,21 +1,27 @@
 function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 
 % _________________________________________________________________________
-% SUMMARY NIAK_BRICK_FMRILM
+% SUMMARY NIAK_BRICK_FMRI_LM
 %
-% Creates the spatial average time course. 
+% Fits a linear model to fMRI time series data.
+%
+% The method is based on linear models with correlated AR(p) errors:
+% Y = hrf*X b + e, e_t=a_1 e_(t-1) + ... + a_p e_(t-p) + white noise_t. %
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FMRILM(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FMRI_LM(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
 %  FILES_IN  
-%       (structure) with the following field :
+%       (structure) with the following fields:
 %
 %       FMRI 
 %           (string) the name of a file containing an fMRI dataset. 
+%
+%       MASK
+%           (string) the name of a 3D binary volume.
 %
 %       DESIGN
 %
@@ -24,11 +30,45 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %
 %
 %  FILES_OUT
-%       (string) the name a matlab file containing the following variable: 
+%        (structure) of filenames with the following fields:
 %
-%       SPATIAL_AV 
-%            column vector of the spatial average time courses.
+%        DF
+%          The name a matlab file containing the variable DF
 %
+%        FWHM
+%          The name a matlab file containing the variable FWHM
+%
+%        MAG_T 
+%          The name an image file containing the T statistic image =ef/sd 
+%          for magnitudes. If T > 100, T = 100.
+%
+%        MAG_EF      
+%          The name an image file containing the effect image for magnitudes.
+%
+%        MAG_SD      
+%          The name an image file containing the standard deviation of the 
+%          effect for magnitudes. 
+%
+%        MAG_F    
+%          The name an image file containing theF-statistic for test of 
+%          magnitudes of all rows of OPT.CONTRAST selected by MAG_F. 
+%          The degrees of freedom are DF.F. If F > 1000, F = 1000.
+%
+%        COR
+%          The name an image file containing the temporal autocorrelation(s). 
+%
+%        RESID   
+%          The name an image file containing the residuals from the model, 
+%          only for non-excluded frames.
+%
+%        WRESID  
+%          The name an image file containing the whitened residuals from 
+%          the model normalized by dividing by their root sum of squares, 
+%          only for non-excluded frames.
+%
+%        AR
+%          The name an image file containing the AR parameter(s) a_1 ... a_p.
+%         
 %  OPT   
 %     (structure) with the following fields.
 %     Note that if a field is omitted, it will be set to a default
@@ -265,6 +305,11 @@ if ~isfield(files_out,'df')
     files_out = setfield(files_out,'df',full_name);
 end
 
+if ~isfield(files_out,'fwhm')
+    full_name = cat(2,folder_f,filesep,name_f,'_fwhm.mat');
+    files_out = setfield(files_out,'fwhm',full_name);
+end
+
 list_outputs = {'_mag_t','_del_t','_mag_ef','_del_ef','_mag_sd','_del_sd','_mag_f','_cor','_fwhm','_resid','_wresid','_ar'};
 for num_l = 1:length(list_outputs)
     field_name = lower(list_outputs{num_l}(2:end));
@@ -401,10 +446,6 @@ if ~isempty(opt.contrast)
     clear opt_upd
 end
 
-fwhm.data
-fwhm.cor
-df
-
 disp('Smoothing the autoregressive parameter volumes...')
 if fwhm.cor>0 && fwhm.cor<Inf
     opt_smooth.fwhm = fwhm.cor./Steps;
@@ -434,6 +475,10 @@ opt_whiten.contrast_is_delay = contrast_is_delay;
 disp('Writing outputs...')
 if ~strcmp(files_out.df,'gb_niak_omitted');
     save(files_out.df,'df');
+end
+
+if ~strcmp(files_out.fwhm,'gb_niak_omitted');
+    save(files_out.fwhm,'fwhm');
 end
 
 hdr = hdr(1);
