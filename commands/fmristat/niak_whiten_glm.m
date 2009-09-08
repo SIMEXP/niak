@@ -1,12 +1,12 @@
 function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 % _________________________________________________________________________
-% SUMMARY NIAK_AUTOREGRESSIVE
+% SUMMARY NIAK_WHITEN_GLM
 %
-% Estimates an autoregressive model for each voxel time course and gives an
-% approximate value for the fwhm based on the model residuals (optional).
+% Estimates the parameters of the GLM based on the whitened residuals
+% obtained from a linear autoregressive model.
 % 
 % SYNTAX:
-% [STATS_VOL] = NIAK_AUTOREGRESSIVE(VOL,RHO_VOL,OPT)
+% [STATS_VOL] = NIAK_WHITEN_GLM(VOL,RHO_VOL,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -66,14 +66,9 @@ function [stats_vol] = niak_whiten_glm(vol,rho_vol,opt)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% RHO_VOL      
-%       (4D array) 3D + numlags dataset
+% STATS_VOL      
+%       (4D array) 3D + number of stats dataset
 %       Estimated parameters of the autoregressive lineal model.
-% FWHM       
-%       (real number) Estimated value of the FWHM. 
-% DF
-%       Structure with the field RESID, degrees of freedom of the residuals. 
-%
 % _________________________________________________________________________
 % COMMENTS:
 %
@@ -230,14 +225,12 @@ for k=1:nz
       end
       SSE=sum(resid.^2,1);
       sd=sqrt(SSE/Df);
-      if which_stats(1,7) | which_stats(1,9)
-         sdd=(sd>0)./(sd+(sd<=0))/sqrt(Df);
+      if which_stats(1,7) || which_stats(1,9)
+         sdd=(sd>0)./(sd+(sd<=0));
          wresid_slice(pix,:)=(resid.*repmat(sdd,n,1))';
       end
       V=pinvXstar*pinvXstar';
-      sdbetahat=sqrt(diag(V))*sd;
-      T0=betahat./(sdbetahat+(sdbetahat<=0)).*(sdbetahat>0);
-      
+     
       % estimate magnitudes:
       mag_ef=contr_mag*betahat(find_X_is_mag,:);
       VV=V(find_X_is_mag,find_X_is_mag);
@@ -254,7 +247,7 @@ for k=1:nz
    end
    for k_cont=1:numcontrasts
       if which_stats(k_cont,1)
-         tstat_slice=min(tstat_slice,100);
+         tstat_slice = min(tstat_slice,100);
          stats_vol.t(:,:,k,k_cont) = reshape(tstat_slice(:,k_cont),nx,ny);
       end
       if which_stats(k_cont,2)

@@ -109,7 +109,7 @@ else
    c = contrasts;
    contrasts=[];
    contrast_is_delay=[];
-   fst=['_t ';'_ef';'_sd';'_F '];
+   fst=['_t ';'_ef';'_sd';'_f '];
    fmd=['_mag';'_del'];
    for i=1:numcontrasts
       for k=1:2
@@ -124,7 +124,7 @@ else
          end
       end
    end
-   f2=['_cor   ';'_resid ';'_wresid';'_AR    ';'_fwhm  '];
+   f2=['_cor   ';'_resid ';'_wresid';'_ar    ';'_fwhm  '];
    for j=5:9
       which_stats(1,j) = ~isempty(findstr(ws(1,:),deblank(f2(j-4,:))));
    end
