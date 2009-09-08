@@ -1,14 +1,14 @@
-function [varatio_vol,opt] = niak_variance_ratio(vol,mask,opt)
+function [varatio_vol,opt] = niak_variance_ratio(vol,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_VARIANCE_RATIO
 %
 % Estimates the ratio between the standard deviation of the random effects
 % and the standart deviation of the fixed effects. Additionally, it updates
-% the structure OPT by incorporating an approximate value for the data
+% the structure OPT by adding an approximate value for the data
 % fwhm.
 % 
 % SYNTAX:
-% [VARATIO_VOL,OPT] = NIAK_VARIANCE_RATIO(VOL,MASK,OPT)
+% [VARATIO_VOL,OPT] = NIAK_VARIANCE_RATIO(VOL,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -52,14 +52,11 @@ function [varatio_vol,opt] = niak_variance_ratio(vol,mask,opt)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% VARATIO_VOL      
-%       (4D array) 3D + numlags dataset
-%       Estimated parameters of the autoregressive lineal model.
+% VARATIO_VOL
+%       (3D array) the ratio of the random effects variance divided by the 
+%       fixed effects variance.
 % OPT   
-%       Updated structure with the additional field
-%
-%       FWHM 
-%          (real number) Estimated value of the FWHM. 
+%       Updated structure.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -108,32 +105,36 @@ function [varatio_vol,opt] = niak_variance_ratio(vol,mask,opt)
 % THE SOFTWARE.
 
 gb_name_structure = 'opt';
-gb_list_fields = {'matrix_x','voxel_size','df'};
-gb_list_defaults = {NaN,[1 1 1],NaN};
+gb_list_fields = {'matrix_x','voxel_size','df','nb_iter'};
+gb_list_defaults = {NaN,[1 1 1],NaN,10};
 niak_set_defaults
 
 matrix_x = opt.matrix_x;
+X2 = matrix_x'.^2;
 df = opt.df;
+niter = opt.nb_iter;
+p = rank(matrix_x);
 
 [nx,ny,nz,n] = size(vol.ef);
 numpix = nx*ny;
 is_sd = isfield(vol,'sd');
 
-
 Sreduction = 0.99;
 for k=1:nz
     Y = squeeze(vol.ef(:,:,k,:));
-    Y = (reshape(Y,nx*ny,n))';
+    Y = (reshape(Y,numpix,n))';
     resid_slice = Y-matrix_x*pinv(matrix_x)*Y;
     sigma2 = sum((resid_slice).^2,1)/df.resid;
     if is_sd
        S = squeeze(vol.sd(:,:,k,:));
-       S = (reshape(S,nx*ny,n))'; 
+       S = (reshape(S,numpix,n))'; 
        S = S.^2;
        varfix = df.data*S/df.fixed;
        sdd = (varfix>0)./sqrt(varfix*df.resid+(varfix<=0));
+       mask(:,:,k) = reshape(sqrt(varfix),nx,ny);
     else
-       sdd =(sigma2>0)./sqrt(sigma2*df.resid+(sigma2<=0)); 
+       sdd =(sigma2>0)./sqrt(sigma2*df.resid+(sigma2<=0));
+       mask(:,:,k) = reshape(sqrt(sigma2),nx,ny);
     end
     resid(:,k,:) = (resid_slice.*repmat(sdd,n,1))';
     if is_sd
@@ -146,8 +147,8 @@ for k=1:nz
                W = (Sms>0)./(Sms+(Sms<=0));
                X2W = X2*W;
                XWXinv = (X2W>0)./(X2W+(X2W<=0));
-               betahat = XWXinv.*(X'*(W.*Y));
-               R = W.*(Y-X*betahat);
+               betahat = XWXinv.*(matrix_x'*(W.*Y));
+               R = W.*(Y-matrix_x*betahat);
                ptrS = p+sum(Sm.*W,1)-(X2*(Sm.*W.^2)).*XWXinv;
                sigma2 = (sigma2.*ptrS+(sigma2.^2).*sum(R.^2,1))/n; 
            end
@@ -162,7 +163,7 @@ for k=1:nz
                     Sms = Sm_pix+sigma2_pix;
                     W = (Sms>0)./(Sms+(Sms<=0));
                     Whalf = diag(sqrt(W));
-                    WhalfX = Whalf*X;
+                    WhalfX = Whalf*matrix_x;
                     pinvX = pinv(WhalfX);
                     WhalfY = Whalf*Y_pix;
                     betahat = pinvX*WhalfY;
@@ -184,7 +185,6 @@ if nargout>=2
     resid = reshape(resid,[nx,ny,nz,n]);
     opt_fwhm.voxel_size = opt.voxel_size;
     opt_fwhm.df = opt.df;
-    opt_fwhm.is_fixed = opt.is_fixed;
     opt_fwhm = niak_quick_fwhm(resid,mask,opt_fwhm);
 end
 opt.fwhm = opt_fwhm.fwhm;
