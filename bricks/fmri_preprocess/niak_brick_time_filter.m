@@ -83,6 +83,12 @@ function [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,op
 %           do anything but update the default values in FILES_IN, 
 %           FILES_OUT and OPT.
 %
+%       FLAG_MEAN
+%           (boolean, default: 1) if FLAG_MEAN is 1, the brick does leave
+%           the mean of the time series after filtering (it is otherwise
+%           suppressed as soon as a high-pass filter is applied with a
+%           threshold greater than 0).
+%
 %       HP 
 %           (real, default: 0.01) the cut-off frequency for high pass
 %           filtering. opt.hp = -Inf means no high-pass filtering.
@@ -161,8 +167,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_verbose','tr','hp','lp','folder_out','flag_test'};
-gb_list_defaults = {true,-Inf,0.01,Inf,'',0};
+gb_list_fields = {'flag_mean','flag_verbose','tr','hp','lp','folder_out','flag_test'};
+gb_list_defaults = {true,true,-Inf,0.01,Inf,'',0};
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in(1,:));
@@ -285,7 +291,9 @@ else
 end
 
 vol = reshape(vol,[nx*ny*nz nt])';
+vol_f = vol';
 vol = vol(:,mask>0);
+
 
 %% Filtering the data
 if flag_verbose
@@ -294,7 +302,13 @@ end
 opt_f.tr = opt.tr;
 opt_f.hp = opt.hp;
 opt_f.lp = opt.lp;
+opt_f.flag_mean = opt.flag_mean;
 [tseries_f,extras] = niak_filter_tseries(vol,opt_f);
+
+if flag_verbose
+    fprintf('   Number of low frequencies cosines : %i\n',length(extras.freq_dc_low));
+    fprintf('   Number of high frequencies cosines : %i\n',length(extras.freq_dc_high));
+end
 
 %% If relative variance maps have been requested, compute total variance of
 %% the time series
@@ -303,8 +317,6 @@ if ~strcmp(files_out.var_high,'gb_niak_omitted')|~strcmp(files_out.var_low,'gb_n
 end
 
 %% Reshaping the filtered time series into a 3D+t volume
-%clear vol
-vol_f = zeros([nx*ny*nz nt]);
 vol_f(mask>0,:) = tseries_f';
 clear tseries_f
 vol_f = reshape(vol_f,[nx ny nz nt]);
@@ -333,7 +345,9 @@ if ~strcmp(files_out.beta_high,'gb_niak_omitted')
     hdr_out = hdr;
     hdr_out.file_name = files_out.beta_high;
     vol_beta_high = zeros([nx*ny*nz size(extras.beta_dc_high,1)]);
-    vol_beta_high(mask>0,:) = extras.beta_dc_high';
+    if ~isempty(extras.beta_dc_high)
+        vol_beta_high(mask>0,:) = extras.beta_dc_high';
+    end
     vol_beta_high = reshape(vol_beta_high,[nx,ny,nz,size(extras.beta_dc_high,1)]);
     opt_hist.command = 'niak_brick_time_filter';
     opt_hist.files_in = files_in;
@@ -352,7 +366,9 @@ if ~strcmp(files_out.beta_low,'gb_niak_omitted')
     hdr_out = hdr;
     hdr_out.file_name = files_out.beta_low;
     vol_beta_low = zeros([nx*ny*nz size(extras.beta_dc_low,1)]);
-    vol_beta_low(mask>0,:) = extras.beta_dc_low';
+    if ~isempty(extras.beta_dc_low)
+        vol_beta_low(mask>0,:) = extras.beta_dc_low';
+    end
     vol_beta_low = reshape(vol_beta_low,[nx,ny,nz,size(extras.beta_dc_low,1)]);
     opt_hist.command = 'niak_brick_time_filter';
     opt_hist.files_in = files_in;

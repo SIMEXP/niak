@@ -30,6 +30,12 @@ function [tseries_f,extras] = niak_filter_tseries(tseries,opt)
 %           (real, default Inf) the cut-off frequency for low pass
 %           filtering. opt.lp = Inf means no low-pass filtering.
 %
+%       FLAG_MEAN
+%           (boolean, default: 0) if FLAG_MEAN is 1, the funtion does leave
+%           the mean of the time series after filtering (it is otherwise
+%           suppressed as soon as a high-pass filter is applied with a
+%           threshold greater than 0).
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -99,8 +105,8 @@ function [tseries_f,extras] = niak_filter_tseries(tseries,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'tr','hp','lp'};
-gb_list_defaults = {NaN,-Inf,Inf};
+gb_list_fields = {'flag_mean','tr','hp','lp'};
+gb_list_defaults = {false,NaN,-Inf,Inf};
 niak_set_defaults
 
 if ~(isinf(opt.lp)==1)&((opt.lp<0)|(opt.lp>(1/(2*tr))))
@@ -121,6 +127,10 @@ opt_dc.type_fw = 'low';
 opt_dc.cutoff = opt.hp;
 [Q_low,freq_low] = niak_build_dc(opt_dc);
 
+if (flag_mean)&&(size(Q_low,2)>1)
+    Q_low = Q_low(:,2:end);
+    freq_low = freq_low(2:end);
+end
 % Building the high-frequency DC matrix
 opt_dc.type_fw = 'high';
 opt_dc.cutoff = opt.lp;
@@ -128,7 +138,12 @@ opt_dc.cutoff = opt.lp;
 
 %%% Exctracting residuals after linear regression
 Q = [Q_low,Q_high];
-[beta,tseries_f] = niak_lse(tseries,Q);
+if ~isempty(Q)
+    [beta,tseries_f] = niak_lse(tseries,Q);
+else
+    beta = [];
+    tseries_f = tseries;
+end
 
 if nargout > 1
     extras.tseries_dc_low = Q_low;
