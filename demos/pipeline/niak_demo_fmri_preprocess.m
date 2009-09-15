@@ -6,7 +6,7 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 % This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS.
 %
 % SYNTAX:
-% [PIPELINE,OPT] = NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO,FLAG_TEST)
+% [PIPELINE,OPT] = NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -220,8 +220,7 @@ if ~strcmp(opt.style,'fmristat')
     opt.bricks.slice_timing.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
     opt.bricks.slice_timing.timing(1)=TR/nb_slices; % Time beetween slices
     opt.bricks.slice_timing.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
-    opt.bricks.slice_timing.suppress_vol = 1; % Remove the first and last volume after slice-timing correction to prevent edges effects.
-    
+    opt.bricks.slice_timing.suppress_vol = 0; % Do not remove volumes.
     % Temporal filetring (niak_brick_time_filter)
     opt.bricks.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
     opt.bricks.time_filter.lp = Inf; % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.

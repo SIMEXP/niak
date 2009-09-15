@@ -52,7 +52,7 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %           regression.
 %
 %       NB_SAMPS 
-%           (default 10) the number of kmeans repetition.
+%           (default 50) the number of kmeans repetition.
 %
 %       TYPE_SCORE 
 %           (string, default 'freq') Score function. 'freq' for the
@@ -154,7 +154,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'ww','nb_cluster','p','nb_samps','type_score','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0,0,0.0001,10,'freq',1,0,''};
+gb_list_defaults = {0,0,0.0001,50,'freq',1,0,''};
 niak_set_defaults
 
 %% Parsing the input names

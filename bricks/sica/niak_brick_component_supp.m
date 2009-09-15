@@ -210,9 +210,9 @@ vec_time = load(files_in.time);
 %% Reshaping the functional data in a time*space array
 mask_brain = niak_mask_brain(mean(abs(vol_func),4));
 [nx,ny,nz,nt] = size(vol_func);
-tseries_func = reshape(vol_func,[nx*ny*nz nt]);
+vol_supp = reshape(vol_func,[nx*ny*nz nt]);
 clear vol_func
-tseries_func = tseries_func(mask_brain>0,:)';
+tseries_func = vol_supp(mask_brain>0,:)';
 
 %% Building the time*space array associated with the sica components
 vec_space = reshape(vol_space,[nx*ny*nz size(vol_space,4)]);
@@ -223,7 +223,6 @@ tseries_sica = vec_time(:,list_supp)*vec_space(mask_brain>0,list_supp)';
 if flag_verbose
     fprintf('Removing the effect of components ...\n')
 end
-vol_supp = zeros([nx*ny*nz nt]);
 vol_supp(mask_brain>0,:) = (tseries_func-tseries_sica)';
 vol_supp = reshape(vol_supp,[nx ny nz nt]);
 

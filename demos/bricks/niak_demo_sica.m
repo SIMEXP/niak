@@ -125,7 +125,7 @@ files_out_supp = '';
 
 %% Options
 opt_supp.flag_test = 0;
-opt_supp.threshold = Inf;
+opt_supp.threshold = 0.15;
 
 %% job
 [files_in_supp,files_out_supp,opt_supp] = niak_brick_component_supp(files_in_supp,files_out_supp,opt_supp);

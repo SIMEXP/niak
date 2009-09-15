@@ -67,7 +67,7 @@ ind = [];
 
 for num_t = ww:length(sig)-ww
 
-    if min(sig(num_t) >= sig(num_t-ww:num_t+ww))>0
+    if min(sig(num_t) >= sig(max(1,num_t-ww):num_t+ww))>0
         
         val = [val ; sig(num_t)];
         ind = [ind ; num_t];
