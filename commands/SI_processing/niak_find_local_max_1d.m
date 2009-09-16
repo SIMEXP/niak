@@ -1,4 +1,4 @@
-function [val,ind] = niak_find_local_max_1d(sig,ww)
+function [val,ind] = niak_find_local_max_1d(sig,neigh)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_FIND_LOCAL_MAX_1D
@@ -17,9 +17,9 @@ function [val,ind] = niak_find_local_max_1d(sig,ww)
 %       observation where proximity in the order list makes sense to define
 %       a neighbourhood
 %
-% WW
-%       (integer) window width. T will be a local max if SIG(T) is bigger
-%       or equal for all values SIG(U) where U varies from T-WW to T+WW.
+%       NEIGH
+%           (vector, default [0.7 1.3]) defines the local neighbourhood of
+%           a number of clusters.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -65,9 +65,11 @@ nt = length(sig);
 val = [];
 ind = [];
 
-for num_t = ww:length(sig)-ww
-
-    if min(sig(num_t) >= sig(max(1,num_t-ww):num_t+ww))>0
+for num_t = 1:length(sig)
+    low = max(1,floor(neigh(1)*num_t));
+    up = min(length(sig),ceil(neigh(2)*num_t));
+    
+    if ~any(sig(num_t) < sig(low:up))
         
         val = [val ; sig(num_t)];
         ind = [ind ; num_t];
