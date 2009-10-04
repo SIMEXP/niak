@@ -80,7 +80,7 @@ for num_t = 1:length(sig)
     if any(mask)&&(~any(sig(num_t) < sig(mask)))
         
         val = [val ; sig(num_t)];
-        ind = [ind ; x(num_t)];
+        ind = [ind ; num_t];
         
     end
 end
