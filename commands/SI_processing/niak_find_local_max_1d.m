@@ -7,7 +7,7 @@ function [val,ind] = niak_find_local_max_1d(x,sig,neigh)
 % a symmetric time window.
 %
 % SYNTAX:
-% [VAL,IND] = NIAK_FIND_LOCAL_MAX_1D(X,SIG,WW)
+% [VAL,IND] = NIAK_FIND_LOCAL_MAX_1D(X,SIG,NEIGH)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -76,7 +76,7 @@ for num_t = 1:length(sig)
     mask_low = x >= floor(neigh(1)*x(num_t));
     mask_up = x <= ceil(neigh(2)*x(num_t));
     mask = mask_low & mask_up;
-    
+    mask(num_t) = false;
     if any(mask)&&(~any(sig(num_t) < sig(mask)))
         
         val = [val ; sig(num_t)];
