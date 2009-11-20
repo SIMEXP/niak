@@ -1,4 +1,4 @@
-function mask2 = niak_erode_mask(mask,type_neigh)
+function mask2 = niak_erode_mask(mask,type_neig)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_ERODE_MASK
