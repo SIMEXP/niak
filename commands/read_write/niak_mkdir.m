@@ -75,9 +75,17 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-list_path = niak_string2words(path_name,{filesep});
+list_path = psom_string2words(path_name,{filesep});
 
-path_curr = filesep;
+if ispc
+    % This is windows, include the volume name in the root directory
+    path_curr = list_path{1};
+    path_curr = [path_curr filesep];
+    list_path = list_path(2:end);
+else
+    % this is a reasonable OS, the root is /
+    path_curr = filesep;
+end
 
 success = 1;
 message = '';
@@ -94,7 +102,7 @@ for num_p = 1:length(list_path)
         if isempty(path_curr)
             [success,message] = mkdir(list_path{num_p});
         else
-            if exist('OCTAVE_VERSION','builtin')
+             if exist('OCTAVE_VERSION','builtin')
                 [success,message] = mkdir(cat(2,path_curr,filesep,list_path{num_p}));
             else
                 [success,message] = mkdir(path_curr,list_path{num_p});
@@ -106,6 +114,5 @@ for num_p = 1:length(list_path)
     path_curr = cat(2,path_curr,list_path{num_p},filesep);
     
 end
-
         
         
