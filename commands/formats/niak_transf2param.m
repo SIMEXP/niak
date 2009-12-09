@@ -1,14 +1,14 @@
-function [rpy,tsl] = niak_transf2param(transf)
+function [rot,tsl] = niak_transf2param(transf)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_TRANSF2PARAM
 %
 % Convert a lsq6 transformation (3 rotations, 3 translations) from the standard
-% 4*4 matrix array (y=M*x+T) to the roll/pitch/yaw and translation
+% 4*4 matrix array (y=M*x+T) to the x/y/z rotation and translation
 % parameters.
 %
 % SYNTAX:
-% [RPY,TSL] = NIAK_TRANSF2PARAM(TRANSF)
+% [ROT,TSL] = NIAK_TRANSF2PARAM(TRANSF)
 % 
 % _________________________________________________________________________
 % INPUT:
@@ -20,9 +20,9 @@ function [rpy,tsl] = niak_transf2param(transf)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% RPY 
-%       (array 3*1) the roll, pitch and yaw parameters (rotation in x, y 
-%       and z planes). Unit is degrees.
+% ROT 
+%       (array 3*1) the rotation parameters (in x, y and z planes). 
+%       Unit is degrees.
 %
 % TSL 
 %       (array 3*1) the translation parameters.
@@ -96,12 +96,12 @@ r1=r+(1-sign(r)-sign(r)^2)*pi;
 % takes smaller values of angles
 
 if norm([y1 p1 r1]) < norm([y p r])
-    rpy = [r1;-p1;y1];
+    rot = [r1;-p1;y1];
 else
-    rpy = [r;p;y];       
+    rot = [r;p;y];       
 end
 
-rpy = (rpy/pi)*180; % Conversion in degrees
+rot = (rot/pi)*180; % Conversion in degrees
 tsl = O;
 
 function z=vp(x,y)

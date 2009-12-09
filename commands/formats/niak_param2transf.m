@@ -1,9 +1,9 @@
-function transf = niak_param2transf(rpy,tsl)
+function transf = niak_param2transf(rot,tsl)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_PARAM2TRANSF
 %
-% Convert roll/pitch/yaw and translation parameters to a standard
+% Convert rotation and translation parameters to a standard
 % 4*4 matrix array (y=M*x+T).
 %
 % SYNTAX:
@@ -12,9 +12,9 @@ function transf = niak_param2transf(rpy,tsl)
 % _________________________________________________________________________
 % INPUTS:
 %
-% RPY 
-%       (array 3*1) the roll, pitch and yaw parameters (rotation in x, y 
-%       and z planes). Unit is degrees.
+% ROT 
+%       (array 3*1) the rotation parameters (in x, y and z planes). 
+%       Unit is degrees.
 %
 % TSL 
 %       (array 3*1) the translation parameters.
@@ -63,9 +63,9 @@ function transf = niak_param2transf(rpy,tsl)
 % THE SOFTWARE.
 
 O=tsl;
-r=(rpy(1)/180)*pi;
-p=(rpy(2)/180)*pi;
-y=(rpy(3)/180)*pi;
+r=(rot(1)/180)*pi;
+p=(rot(2)/180)*pi;
+y=(rot(3)/180)*pi;
 
 R=expm(vp([0 0 1]',y))*expm(vp([0 1 0]',p))*expm(vp([1 0 0]',r));
 
