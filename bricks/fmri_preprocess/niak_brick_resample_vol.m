@@ -41,7 +41,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %          ,'sinc'.
 %
 %       FLAG_KEEP_RANGE
-%           (boolean, default 1) if the flag is on, the range of values of
+%           (boolean, default 0) if the flag is on, the range of values of
 %           the new volume will be kept to the initial one. Otherwise the
 %           range will be adapted to the new range of the interpolated
 %           data.
@@ -141,7 +141,7 @@ niak_set_defaults
 % Setting up options
 gb_name_structure = 'opt';
 gb_list_fields = {'interpolation','flag_tfm_space','voxel_size','folder_out','flag_test','flag_invert_transf','flag_verbose','flag_adjust_fov','flag_keep_range'};
-gb_list_defaults = {'trilinear',0,0,'',0,0,1,0,1};
+gb_list_defaults = {'trilinear',0,0,'',0,0,1,0,0};
 niak_set_defaults
 
 if flag_keep_range

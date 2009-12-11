@@ -7,7 +7,7 @@ function transf = niak_param2transf(rot,tsl)
 % 4*4 matrix array (y=M*x+T).
 %
 % SYNTAX:
-% TRANSF = NIAK_PARAM2TRANSF(RPY,TSL)
+% TRANSF = NIAK_PARAM2TRANSF(ROT,TSL)
 % 
 % _________________________________________________________________________
 % INPUTS:
