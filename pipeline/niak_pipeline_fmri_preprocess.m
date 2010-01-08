@@ -152,7 +152,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %                   selected). If the threshold is -Inf, all components 
 %                   will be suppressed. If the threshold is Inf, no
 %                   component will be suppressed (the algorithm is 
-%                   basically copying the file, expect that the data is 
+%                   basically copying the file, except that the data is 
 %                   masked inside the brain).
 %
 %           The Following additional fields can be used if the
@@ -245,7 +245,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % The physiological & motion noise correction CORSICA is changing the
 % degrees of freedom of the data. It is usullay negligible for intra-subject
 % analysis, and will have no impact on the between-subject variance
-% estimate (expect those should be less noisy). However, the purist may
+% estimate (except those should be less noisy). However, the purist may
 % consider to take that into account in the linear model analysis. This
 % will be taken care of in the (yet to come) NIAK_PIPELINE_FMRISTAT
 %
@@ -450,7 +450,7 @@ end % subject
 %% slice-timing correction %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
+if strcmp(style,'standard-native')||strcmp(style,'standard-stereotaxic')
     
     name_process = 'slice_timing';    
 
@@ -650,7 +650,7 @@ for num_s = 1:nb_subject
     files_out_tmp.anat_lowres = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_lowres.mnc');
     
     %% Setting up options
-    opt_tmp = getfield(opt.bricks,name_process);
+    opt_tmp = opt.bricks.(name_process);
     opt_tmp.folder_out = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep);
 
     %% Setting up defaults of the coregistration
