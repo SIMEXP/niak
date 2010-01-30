@@ -121,7 +121,7 @@ switch opt.type
         mean_ts = mean(tseries,1);
         tseries_n = tseries - ones([nt 1])*mean_ts;
         std_ts = (1/sqrt(nt-1))*sqrt(sum(tseries_n.^2,1));        
-        if ~isempty(tseries_n)
+        if ~isempty(tseries_n)&&(any(std_ts~=0))
             tseries_n(:,std_ts~=0) = tseries_n(:,std_ts~=0)./(ones([nt 1])*std_ts(std_ts~=0));
         end
         
