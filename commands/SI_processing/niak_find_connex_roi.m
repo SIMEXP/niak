@@ -1,4 +1,4 @@
-function [mask_c,list_size] = niak_find_connex_roi(mask,opt)
+function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_FIND_CONNEX_ROI
@@ -29,9 +29,8 @@ function [mask_c,list_size] = niak_find_connex_roi(mask,opt)
 % MASK_C   
 %       (3D array) (MASK_C==i) is the ith connex region
 %
-% IND      
-%       (vector) IND(i) is the linear index of the ith voxel in MASK.
-%       I = FIND(MASK(:))
+% SIZE_ROI
+%       (vector) SIZE_ROI(I) is the size of the Ith region (MASK_C==I).
 %
 % _________________________________________________________________________
 % COMMENTS :
@@ -67,44 +66,48 @@ gb_list_fields = {'type_neig','thre_size'};
 gb_list_defaults = {6,1};
 niak_set_defaults
 
-[neig,ind] = niak_build_neighbour(mask>0,type_neig);
-
-is_neig = max(neig,[],2)>0;
+decxyz = niak_build_neighbour_mat(type_neig);
+mask = mask>0;
+ind = find(mask);
 nb_roi = 0;
 mask_c = zeros(size(mask));
+opt_grow.type_neig = type_neig;
+opt_grow.decxyz = decxyz;
+opt_grow.ind = ind;
 
-while max(is_neig)>0    
+while any(mask(:))
     
-    list_is_neig = find(is_neig);
-    ind_roi = list_is_neig(1);    
-    neig_roi = neig(ind_roi,:);    
-    neig_roi = neig_roi(neig_roi~=0);
-    neig_roi = unique(neig_roi(:));
-    is_neig_roi = ismember(neig_roi,ind_roi);
-    neig_roi = neig_roi(~is_neig_roi);
-    
-    while min(is_neig_roi)==0
-        
-        neig_tmp = neig(neig_roi,:); % Have a look to the neighbours of the new voxels
-        
-        ind_roi = union(ind_roi,neig_roi); % The new roi comprises all neighbours of the roi at last iteration
-        
-        %% Update the neighbourhood of the new voxels
-        neig_roi = neig_tmp(neig_tmp~=0);
-        neig_roi = unique(neig_roi(:));
-        is_neig_roi = ismember(neig_roi,ind_roi);
-        neig_roi = neig_roi(~is_neig_roi);
-        
-    end
-    
-    if length(ind_roi)>=thre_size;
+    ind_roi = find(mask,1);
+    mask_roi = sub_region_growing(ind_roi,mask,opt_grow);
+    mask(mask_roi) = false;
+    size_roi_tmp = sum(mask_roi(:));
+    if size_roi_tmp>=thre_size;
         nb_roi = nb_roi + 1;
-        mask_c(ind(ind_roi)) = nb_roi;
-        list_size(nb_roi) = length(ind_roi);
-    end
-    
-    is_neig(ind_roi) = 0;
+        mask_c(mask_roi) = nb_roi;
+        size_roi(nb_roi) = size_roi_tmp;
+    end        
 end
 
         
+%%%%%%%%%%%%%%%%%
+%% SUBFUNCTION %%
+%%%%%%%%%%%%%%%%%
+
+function mask_roi = sub_region_growing(ind_roi,mask,opt_grow)
+
+mask_roi = false(size(mask));
+mask_roi(ind_roi) = true;
+is_new = true;
+mask_border = mask_roi;
+
+while is_new
+    mask_neig = niak_build_neighbour_mask(mask,mask_border,opt_grow);
+    mask_border = mask_neig;
+    mask_border(mask_roi) = false;        
+    is_new = any(mask_border(:));
+    if is_new        
+        mask_roi(mask_border) = true;        
+    end
+end
+
         

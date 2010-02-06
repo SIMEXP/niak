@@ -29,6 +29,11 @@ function vol_s = niak_smooth_vol(vol,opt)
 %           maximum of the Gaussian kernel, in each dimension. If fwhm has 
 %           length 1, an isotropic kernel is implemented.
 %
+%       FLAG_EDGE
+%           (boolean, default 1) if the flag is 1, then a correction is
+%           applied for edges effects in the smoothing (such that a volume
+%           full of ones is left untouched by the smoothing).
+%
 %       FLAG_VERBOSE
 %           (boolean, default true) if the flag is 1, then the function prints 
 %           some infos during the processing.
@@ -75,8 +80,8 @@ function vol_s = niak_smooth_vol(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_verbose','voxel_size','fwhm'};
-gb_list_defaults = {true,[1 1 1]',[2 2 2]'};
+gb_list_fields = {'flag_edge','flag_verbose','voxel_size','fwhm'};
+gb_list_defaults = {true,true,[1 1 1]',[2 2 2]'};
 niak_set_defaults
 
 if length(voxel_size)>3
@@ -110,6 +115,13 @@ hdr.file_name = file_in_sm;
 hdr.type = 'minc1';
 hdr.info.voxel_size = voxel_size;
 
+if flag_edge
+    opt_smooth = opt;
+    opt_smooth.flag_edge = false;
+    opt_smooth.flag_verbose = false;    
+    vol_corr = niak_smooth_vol(ones([nx ny nz]),opt_smooth);    
+end
+
 for num_t = 1:nt    
 
     if flag_verbose
@@ -128,7 +140,11 @@ for num_t = 1:nt
     
     %% Read the smoothed volume
     [hdr_tmp,vol_tmp] = niak_read_vol(file_out_sm);
-    vol_s(:,:,:,num_t) = vol_tmp;
+    if flag_edge
+        vol_s(:,:,:,num_t) = vol_tmp./vol_corr;
+    else
+        vol_s(:,:,:,num_t) = vol_tmp;
+    end
     
 end
 

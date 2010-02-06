@@ -40,7 +40,8 @@ function [hdr,vol] = niak_read_vol(file_name)
 %           header.
 %
 %       TYPE   
-%           (string) the file format (either 'minc1', 'minc2','nii').
+%           (string) the file format (either 'minc1', 'minc2','nii','img' 
+%           or 'analyze').
 %
 %       INFO 
 %           (structure) with the following subfields:

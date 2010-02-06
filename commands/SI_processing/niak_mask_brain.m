@@ -22,7 +22,7 @@ function mask = niak_mask_brain(vol,opt)
 %           voxel size unit. A value of 0 for FWHM will skip the smoothing step.
 %       
 %       VOXEL_SIZE 
-%           (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%           (vector of size [3 1] or [4 1], default [3 3 3]) the resolution
 %           in the respective dimensions, i.e. the space in mmm
 %           between two voxels in x, y, and z (yet the unit is
 %           irrelevant and just need to be consistent with
@@ -32,6 +32,18 @@ function mask = niak_mask_brain(vol,opt)
 %           (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
 %           attempt is done to remove the eyes from the mask.
 %
+%       FLAG_FILL
+%           (boolean, deafult 0) if FLAG_FILL == 1, the mask is inverted
+%           and the largest connected component is identified as the ouside
+%           of the head. The final mask is an inverted version of that
+%           component. This process is not usefull for fMRI, but can be
+%           handy for T1 image to "fill" the ventricles and CSF inside the
+%           brain.
+%
+%       TYPE_NEIG
+%           (scalar, default [1 1 1 3]) the type of spatial neighbourhood to use in
+%           the connected component extraction, see
+%           NIAK_BUILD_NEIGHBOUR_MAT.
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -70,8 +82,8 @@ function mask = niak_mask_brain(vol,opt)
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes'};
-gb_list_defaults = {6,[3 3 3],0};
+gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes','flag_fill'};
+gb_list_defaults = {6,[3 3 3],0,0};
 niak_set_defaults
 
 
@@ -82,8 +94,8 @@ abs_vol_mean(mask_nan) = 0;
 
 %% Smoothing the mean
 if max(opt.fwhm) ~=0
-    opt_smooth.fwhm = fwhm;
-    opt_smooth.voxel_size = voxel_size;
+    opt_smooth.fwhm = opt.fwhm;
+    opt_smooth.voxel_size = opt.voxel_size;
     opt_smooth.flag_verbose = false;
     abs_vol_mean = niak_smooth_vol(abs_vol_mean,opt_smooth);
 end
@@ -102,7 +114,16 @@ if flag_remove_eyes
     [val,ind] = max(list_size);
     mask = mask == ind;
 end
-    
+ 
+%% Filling the brain
+if flag_fill
+    mask = ~mask;
+    opt_con.type_neig = 26;
+    [mask,size_roi] = niak_find_connex_roi(mask);
+    [val,ind] = max(size_roi);
+    mask = mask ~= ind;
+end
+
 function seuil = otsu(hist)
 % An implementation of the Otsu algorithm to separate two Gaussian
 % distribution in an histogram.

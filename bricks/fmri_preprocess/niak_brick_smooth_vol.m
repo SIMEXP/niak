@@ -32,6 +32,11 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %           outputs will be created in the folder FOLDER_OUT. The folder 
 %           needs to be created beforehand.
 %
+%       FLAG_EDGE
+%           (boolean, default 1) if the flag is 1, then a correction is
+%           applied for edges effects in the smoothing (such that a volume
+%           full of ones is left untouched by the smoothing).
+%
 %       FLAG_VERBOSE 
 %           (boolean, default 1) if the flag is 1, then the function prints 
 %           some infos during the processing.
@@ -91,8 +96,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {[4 4 4],1,0,'',0};
+gb_list_fields = {'flag_edge','fwhm','flag_verbose','flag_test','folder_out','flag_zip'};
+gb_list_defaults = {true,[4 4 4],1,0,'',0};
 niak_set_defaults
 
 if length(opt.fwhm) == 1
@@ -153,17 +158,17 @@ end
 if opt.fwhm ~=0
 
     %% Blurring
-
     if flag_verbose
         fprintf('Reading data ...\n');
     end
 
-    [hdr,vol] = niak_read_vol(files_in);
-
+    [hdr,vol] = niak_read_vol(files_in);    
+        
     opt_smooth.voxel_size = hdr.info.voxel_size;
     opt_smooth.fwhm = opt.fwhm;
     opt_smooth.flag_verbose = opt.flag_verbose;
-    vol_s = niak_smooth_vol(vol,opt_smooth);    
+    opt_smooth.flag_edge = opt.flag_edge;
+    vol_s = niak_smooth_vol(vol,opt_smooth);                    
 
     %% Updating the history and saving output
     hdr = hdr(1);
