@@ -45,6 +45,10 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 %           (integer, default 1) number of iterations of the kmeans (the 
 %           best clustering, i.e. with lowest I_INTRA, will be selected).
 %
+%       NB_ITER_MAX
+%           (integer, default 100) Maximal number of iterations of the
+%           k-means algorithm.
+%
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function prints
 %           some infos during the processing.
@@ -93,8 +97,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'type_init','type_death','nb_classes','p','nb_iter','flag_verbose'};
-gb_list_defaults = {'random_partition','singleton',NaN,[],1,1};
+gb_list_fields = {'type_init','type_death','nb_classes','p','nb_iter','flag_verbose','nb_iter_max'};
+gb_list_defaults = {'random_partition','singleton',NaN,[],1,1,100};
 niak_set_defaults
 
 if nb_iter > 1
@@ -116,8 +120,7 @@ if nb_iter > 1
 else
 
     i_inter = NaN;
-    data = data';
-    N_iter_max = 100;
+    data = data';    
     [N,T] = size(data);
     if isempty(p)
         p = ones([N 1]);
@@ -128,12 +131,12 @@ else
 
 
     %% Initialization
-    part = zeros([N 100]);
+    part = zeros([N nb_iter_max]);
     changement = 1;
     N_iter = 1;
 
     %% Initialization of cluster centers
-    gi = zeros([nb_classes T N_iter_max]);
+    gi = zeros([nb_classes T nb_iter_max]);
     gi_init = [];
 
     switch type_init
@@ -166,7 +169,7 @@ else
         fprintf('Number of displacements : ');
     end
 
-    while ( changement == 1 ) && ( N_iter < N_iter_max )
+    while ( changement == 1 ) && ( N_iter < nb_iter_max )
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Build the partition matching the centers %%
@@ -204,7 +207,7 @@ else
 
                 case 'singleton'
 
-                    if N_iter<N_iter_max
+                    if N_iter<nb_iter_max-1
                         ind_dead = find(~ismember(1:nb_classes,part(:,N_iter)));
                         ind_dead = ind_dead(1);
                         A = attraction(data,gi(:,:,N_iter),p);
@@ -223,7 +226,7 @@ else
     end
     
     if flag_verbose
-        if N_iter < N_iter_max
+        if N_iter < nb_iter_max
             fprintf('\n')
         else
             fprintf('The maximal number of iteration was reached.\n')

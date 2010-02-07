@@ -72,6 +72,8 @@ if type_neig == 26
     decxyz = decxyz(2:27,:);
 elseif type_neig == 6
     decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
+elseif type_neig == 4
+    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0];
 elseif type_neig == 18
     dec = [-3 -2 -1 1 2 3];
     decxyz = zeros([18 3]);

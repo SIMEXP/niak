@@ -17,7 +17,7 @@ function mask_neig = niak_build_neighbour_mask(mask,mask_sub,opt)
 %       0s outside)
 %
 % MASK_NEIG
-%       (3D array) subpart of MASK.
+%       (3D array) subpart of MASK. 
 %
 % OPT
 %       (structure) with the following fields : 

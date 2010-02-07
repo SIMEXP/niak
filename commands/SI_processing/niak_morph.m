@@ -6,7 +6,7 @@ function vol_m = niak_morph(vol,arg,opt)
 % Apply morphomat transformations on a volume.
 %
 % SYNTAX:
-% VOL_M = NIAK_MASK_MORPH(VOL,INSTR,OPT)
+% VOL_M = NIAK_MASK_MORPH(VOL,ARG,OPT)
 % 
 % _________________________________________________________________________
 % INPUTS: 

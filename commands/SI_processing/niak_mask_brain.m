@@ -30,7 +30,8 @@ function mask = niak_mask_brain(vol,opt)
 %
 %       FLAG_REMOVE_EYES 
 %           (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
-%           attempt is done to remove the eyes from the mask.
+%           attempt is done to remove the eyes from the mask. Work only for
+%           fMRI !
 %
 %       FLAG_FILL
 %           (boolean, deafult 0) if FLAG_FILL == 1, the mask is inverted
@@ -40,10 +41,10 @@ function mask = niak_mask_brain(vol,opt)
 %           handy for T1 image to "fill" the ventricles and CSF inside the
 %           brain.
 %
-%       TYPE_NEIG
-%           (scalar, default [1 1 1 3]) the type of spatial neighbourhood to use in
-%           the connected component extraction, see
-%           NIAK_BUILD_NEIGHBOUR_MAT.
+%       FLAG_VERBOSE
+%           (boolean, default false) if the flag is on, print info on the
+%           progress.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -82,8 +83,8 @@ function mask = niak_mask_brain(vol,opt)
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes','flag_fill'};
-gb_list_defaults = {6,[3 3 3],0,0};
+gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes','flag_fill','flag_verbose'};
+gb_list_defaults = {6,[3 3 3],0,0,false};
 niak_set_defaults
 
 
@@ -116,12 +117,11 @@ if flag_remove_eyes
 end
  
 %% Filling the brain
-if flag_fill
-    mask = ~mask;
-    opt_con.type_neig = 26;
-    [mask,size_roi] = niak_find_connex_roi(mask);
-    [val,ind] = max(size_roi);
-    mask = mask ~= ind;
+if flag_fill    
+    opt_hull.flag_verbose = flag_verbose;
+    opt_hull.nb_splits = ceil(size(mask,2)/15);
+    mask = niak_build_convhull_mask(mask);
+    mask = mask>0;
 end
 
 function seuil = otsu(hist)

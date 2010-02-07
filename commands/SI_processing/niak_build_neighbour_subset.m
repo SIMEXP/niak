@@ -102,7 +102,7 @@ coord = [coordx,coordy,coordz];
 
 %% Generation of the neighborhood matrix
 if isempty(decxyz)
-    decxyz = sub_neighbourhood(type_neig);
+    decxyz = niak_build_neighbour_mat(type_neig);
 end
 long_neig = length(decxyz);
 
@@ -131,28 +131,3 @@ end
 
 %% Reshaping the neighbor matrix
 neig(in_vol) = neig2;
-
-%%%%%%%%%%%%%%%%%%
-%% SUBFUNCTIONS %%
-%%%%%%%%%%%%%%%%%%
-
-function decxyz = sub_neighbourhood(type_neig)
-
-if type_neig == 26
-    dec = [0,1,-1];
-    num = 1;
-    decxyz = zeros([27 3]);
-    for i = 1:3
-        for j = 1:3
-            for k = 1:3
-                decxyz(num,:) = [dec(i),dec(j),dec(k)];
-                num = num + 1;
-            end
-        end
-    end
-    decxyz = decxyz(2:27,:);
-elseif type_neig == 6
-    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
-else
-    error('%i : unsupported parameter for a connex neighbourhood',type_neig)
-end

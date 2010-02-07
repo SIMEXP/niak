@@ -1,4 +1,4 @@
-function [neig,ind] = niak_build_neighbour(mask,par_neig)
+function [neig,ind] = niak_build_neighbour(mask,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_BUILD_NEIGHBOUR
@@ -16,9 +16,26 @@ function [neig,ind] = niak_build_neighbour(mask,par_neig)
 %       (3D array) binary mask of one 3D-region of interest (1s inside,
 %       0s outside)
 %
-% PAR_NEIG    
-%       (integer value, default 26) 
-%       The parameter of neighbourhood. Available options : 6 or 26
+% OPT
+%       (structure) with the following fields : 
+%
+%       TYPE_NEIG    
+%           (integer value, default 26) 
+%           The parameter of neighbourhood. Available options : 6 or 26
+%
+%       FLAG_POSITION
+%           (boolean, default 1) if FLAG_POSITION is true, values in SUBS 
+%           and NEIG are positions in the list FIND(MASK), otherwise they 
+%           are linear indices in MASK, i.e. elements of FIND(MASK).
+%
+%       IND
+%           (vector, default find(MASK)) The result of "find(MASK)". This
+%           option is given to avoid recomputing it at every execution.
+%
+%       DECXYZ
+%           (matrix) defines spatial neighbourhood. See
+%           NIAK_BUILD_NEIGHBOUR_MAT. This option is given to avoid
+%           recomputing the translation matrix at every execution.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -35,6 +52,9 @@ function [neig,ind] = niak_build_neighbour(mask,par_neig)
 %
 % _________________________________________________________________________
 % COMMENTS :
+%
+% For backward compatibility, TYPE_NEIG can be used in place of OPT, i.e.
+% OPT is scalar and interpreted as OPT.TYPE_NEIG.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
 %               Neurological Institute, McGill University, 2008.
@@ -60,39 +80,31 @@ function [neig,ind] = niak_build_neighbour(mask,par_neig)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-%% Default inputs
-if nargin < 2
-    par_neig = 26;
+if exist('opt','var')&&isnumeric(opt)
+    type_neig = opt;
+    clear opt
+    opt.type_neig = type_neig;
 end
 
+%% Default inputs
+gb_name_structure = 'opt';
+gb_list_fields = {'type_neig','flag_position','ind','decxyz'};
+gb_list_defaults = {26,1,[],[]};
+niak_set_defaults
+
 %% Find linear indices and 3D coordinates of voxels in the mask
-ind = find(mask(:));
+if isempty(ind)
+    ind = find(mask(:));
+end
 N = length(ind);
 [nx,ny,nz] = size(mask);
 [coordx,coordy,coordz] = ind2sub(size(mask),ind);
 coord = [coordx,coordy,coordz];
 
 %% Generation of the neighborhood matrix
-
-if par_neig == 26
-    dec = [0,1,-1];
-    num = 1;
-    decxyz = zeros([27 3]);
-    for i = 1:3
-        for j = 1:3
-            for k = 1:3
-                decxyz(num,:) = [dec(i),dec(j),dec(k)];
-                num = num + 1;
-            end
-        end
-    end
-    decxyz = decxyz(2:27,:);
-elseif par_neig == 6
-    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
-else
-    error('%i : unsupported parameter for a connex neighbourhood',par_neig)
+if isempty(decxyz)
+    decxyz = niak_build_neighbour_mat(type_neig);
 end
-
 long_neig = length(decxyz);
 
 %% Generating the matrix of neighbors
@@ -111,12 +123,14 @@ to_keep = mask(neig2)>0;
 neig2(to_keep==0) = 0; % Get rid of neighbours that fall outside the mask
 
 %% Converting the linear indices into position within the list IND
-neig3 = neig2(to_keep == 1);
-mask_ind = zeros(size(mask));
-mask_ind(mask>0) = 1:sum(mask(:)>0);
-neig3 = mask_ind(neig3);
+if flag_position
+    neig3 = neig2(to_keep == 1);
+    mask_ind = zeros(size(mask));
+    mask_ind(mask>0) = 1:sum(mask(:)>0);
+    neig3 = mask_ind(neig3);
+    neig2(to_keep == 1) = neig3;
+end
 
 %% Reshaping the neighbor matrix
-neig2(to_keep == 1) = neig3;
 neig(in_vol) = neig2;
 
