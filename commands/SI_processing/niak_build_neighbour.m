@@ -21,13 +21,20 @@ function [neig,ind] = niak_build_neighbour(mask,opt)
 %
 %       TYPE_NEIG    
 %           (integer value, default 26) 
-%           The parameter of neighbourhood. Available options : 6 or 26
+%           The parameter of neighbourhood. See NIAK_BUILD_NEIGHBOUR_MAT
+%           for more options.
 %
 %       FLAG_POSITION
-%           (boolean, default 1) if FLAG_POSITION is true, values in SUBS 
-%           and NEIG are positions in the list FIND(MASK), otherwise they 
+%           (boolean, default 1) if FLAG_POSITION is true, values in NEIG 
+%           are positions in the list FIND(MASK), otherwise they 
 %           are linear indices in MASK, i.e. elements of FIND(MASK).
 %
+%       FLAG_WITHIN_MASK
+%           (boolean, default 1) if the flag is true, neighbours will be
+%           searched only within the mask. Otherwise, every neighbours
+%           within the field-of-view are reported. Note that if 
+%           FLAG_WITHIN_MASK is false, FLAG_POSITION is false too.
+%       
 %       IND
 %           (vector, default find(MASK)) The result of "find(MASK)". This
 %           option is given to avoid recomputing it at every execution.
@@ -88,9 +95,11 @@ end
 
 %% Default inputs
 gb_name_structure = 'opt';
-gb_list_fields = {'type_neig','flag_position','ind','decxyz'};
-gb_list_defaults = {26,1,[],[]};
+gb_list_fields = {'type_neig','flag_position','ind','decxyz','flag_within_mask'};
+gb_list_defaults = {26,1,[],[],true};
 niak_set_defaults
+
+flag_position = flag_position & flag_within_mask;
 
 %% Find linear indices and 3D coordinates of voxels in the mask
 if isempty(ind)
@@ -116,11 +125,12 @@ neigz = coord(:,3)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,3)');
 in_vol = (neigx>0)&(neigx<=nx)&(neigy>0)&(neigy<=ny)&(neigz>0)&(neigz<=nz);
 
 %% Generation of the neighbour array
-
 neig2 = sub2ind(size(mask),neigx(in_vol),neigy(in_vol),neigz(in_vol));
 neig = zeros(size(in_vol));
-to_keep = mask(neig2)>0;
-neig2(to_keep==0) = 0; % Get rid of neighbours that fall outside the mask
+if flag_within_mask
+    to_keep = mask(neig2)>0;
+    neig2(to_keep==0) = 0; % Get rid of neighbours that fall outside the mask
+end
 
 %% Converting the linear indices into position within the list IND
 if flag_position

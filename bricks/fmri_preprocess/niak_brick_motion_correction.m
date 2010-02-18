@@ -475,7 +475,7 @@ if ischar(files_in.motion_parameters) % that means that we need to estimate the 
         end
 
         %% Setting up options of the within-run motion correction
-        if ~ischar(opt.vol_ref)&(length(opt.vol_ref)>1)
+        if ~ischar(opt.vol_ref)&&(length(opt.vol_ref)>1)
             opt_session.vol_ref = vol_ref(num_s);
         else
             opt_session.vol_ref = vol_ref;
@@ -741,8 +741,15 @@ if ~ischar(files_out.motion_corrected_data)
     hdr_target = niak_read_vol(file_target);
     dim_t = hdr_target.info.dimensions;
     mask_all = ones(dim_t(1:3));
-    mean_all = zeros(dim_t(1:3));
-    std_all = zeros(dim_t(1:3));
+    
+    if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
+        mean_all = zeros(dim_t(1:3));
+    end
+    
+    if ~strcmp(files_out.std_volume,'gb_niak_omitted')
+        std_all = zeros(dim_t(1:3));
+    end
+    
     nb_runs = 0;
 
     for num_s = 1:length(list_sessions)
@@ -794,24 +801,30 @@ if ~ischar(files_out.motion_corrected_data)
                 data_r(:,:,:,num_v-suppress_vol) = vol2;
 
             end
-
+            clear data
+            
             %% Building the mean volume of all runs
-            mean_run = mean(data_r,4);
-            std_run = std(data_r,0,4);
-
-            mean_all = mean_all + mean_run;
-            std_all = std_all + std_run;
+            if ~strcmp(files_out.mean_volume,'gb_niak_omitted')
+                mean_run = mean(data_r,4);
+                mean_all = mean_all + mean_run;
+            end
+            
+            %% Building the std volume of all runs
+            if ~strcmp(files_out.std_volume,'gb_niak_omitted')
+                std_run = std(data_r,0,4);
+                std_all = std_all + std_run;
+            end
             nb_runs = nb_runs+1;
 
             %% Building a mask common to all runs
-            mask_run = niak_mask_brain(mean(abs(data_r),4));
-            mask_all = mask_all & mask_run;
+            if ~strcmp(files_out.mask_volume,'gb_niak_omitted')
+                mask_run = niak_mask_brain(mean(abs(data_r),4));
+                mask_all = mask_all & mask_run;
+            end
 
             %% Writting resampled data
             if ~ischar(files_out.motion_corrected_data)
 
-                %% If OPT.FLAG_PERCENTAGE == 1, convert the units of the fMRI volume
-                %% into percentage of the baseline
                 switch opt.correction
 
                     case 'none'

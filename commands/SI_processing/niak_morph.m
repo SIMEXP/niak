@@ -69,19 +69,25 @@ gb_list_fields = {'voxel_size'};
 gb_list_defaults = {[1 1 1]'};
 niak_set_defaults
 
+[nx,ny,nz] = size(vol);
+vol2 = zeros(nx+1,ny+1,nz+1);
+vol2(2:end,2:end,2:end) = vol;
 file_tmp = niak_file_tmp('_vol.mnc');
 file_tmp2 = niak_file_tmp('_vol_m.mnc');
 hdr.file_name = file_tmp;
 hdr.type = 'minc1';
 hdr.info.voxel_size = voxel_size;
 
-niak_write_vol(hdr,vol);
+niak_write_vol(hdr,vol2);
 instr_morph = cat(2,'mincmorph -clobber ',arg,' ',file_tmp,' ',file_tmp2);
 [status,result] = system(instr_morph);
 if status
+    delete(file_tmp);
     error(result)
+else
+    [hdr,vol_m] = niak_read_vol(file_tmp2);
+    vol_m = vol_m(2:end,2:end,2:end);
+    delete(file_tmp);
+    delete(file_tmp2);
 end
-[hdr,vol_m] = niak_read_vol(file_tmp2);
-delete(file_tmp);
-delete(file_tmp2);
 

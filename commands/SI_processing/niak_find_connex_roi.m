@@ -11,22 +11,22 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 % _________________________________________________________________________
 % INPUTS :
 %
-% MASK    
+% MASK
 %       (3D array) binary volume.
-% OPT     
+% OPT
 %       (structure) optional, with the following fields :
 %
-%       TYPE_NEIG 
+%       TYPE_NEIG
 %           (integer, default 6) the spatial neighbourhood of a
 %           voxel, values : 6 or 26.
 %
-%       THRE_SIZE 
+%       THRE_SIZE
 %           (integer, default 1) the minimal acceptable size of ROIs.
 %
 % _________________________________________________________________________
 % OUTPUTS :
 %
-% MASK_C   
+% MASK_C
 %       (3D array) (MASK_C==i) is the ith connex region
 %
 % SIZE_ROI
@@ -65,29 +65,32 @@ gb_name_structure = 'opt';
 gb_list_fields = {'type_neig','thre_size'};
 gb_list_defaults = {6,1};
 niak_set_defaults
-
-decxyz = niak_build_neighbour_mat(type_neig);
-mask = mask>0;
-ind = find(mask);
-nb_roi = 0;
-mask_c = zeros(size(mask));
-opt_grow.type_neig = type_neig;
-opt_grow.decxyz = decxyz;
-opt_grow.ind = ind;
-
-while any(mask(:))
+if max(mask(:))>1
+    mask = mask>0;
+else
     
-    ind_roi = find(mask,1);
-    mask_roi = sub_region_growing(ind_roi,mask,opt_grow);
-    mask(mask_roi) = false;
-    size_roi_tmp = sum(mask_roi(:));
-    if size_roi_tmp>=thre_size;
-        nb_roi = nb_roi + 1;
-        mask_c(mask_roi) = nb_roi;
-        size_roi(nb_roi) = size_roi_tmp;
-    end        
+    decxyz = niak_build_neighbour_mat(type_neig);
+    mask = mask>0;
+    ind = find(mask);
+    nb_roi = 0;
+    mask_c = zeros(size(mask));
+    opt_grow.type_neig = type_neig;
+    opt_grow.decxyz = decxyz;
+    opt_grow.ind = ind;
+    
+    while any(mask(:))
+        
+        ind_roi = find(mask,1);
+        mask_roi = sub_region_growing(ind_roi,mask,opt_grow);
+        mask(mask_roi) = false;
+        size_roi_tmp = sum(mask_roi(:));
+        if size_roi_tmp>=thre_size;
+            nb_roi = nb_roi + 1;
+            mask_c(mask_roi) = nb_roi;
+            size_roi(nb_roi) = size_roi_tmp;
+        end
+    end
 end
-
         
 %%%%%%%%%%%%%%%%%
 %% SUBFUNCTION %%
@@ -109,5 +112,3 @@ while is_new
         mask_roi(mask_border) = true;        
     end
 end
-
-        

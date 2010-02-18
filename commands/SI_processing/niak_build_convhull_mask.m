@@ -21,11 +21,11 @@ function mask_c = niak_build_convhull_mask(mask,opt);
 %           (boolean, default true) print info about the progress.
 %
 %       NB_SPLITS
-%           (integer, default 10) if NB_SPLITS>1, the volume is splitted in
-%           equal chuncks along the y axis before extracting the hull.
+%           (integer, default 20) if NB_SPLITS>1, the volume is splitted in
+%           equal chunks along the y axis before extracting the hull.
 %
 %       MEMORY_BLOCK
-%           (integer, default 2*1e7) the size of memory blocks used to
+%           (integer, default 1e7) the size of memory blocks used to
 %           derive the mask
 %
 % _________________________________________________________________________
@@ -71,32 +71,42 @@ function mask_c = niak_build_convhull_mask(mask,opt);
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'memory_block','flag_verbose','nb_splits'};
-gb_list_defaults = {2*1e7,true,10};
+gb_list_defaults = {1e7,true,20};
 niak_set_defaults
 
+% ind = find(mask);
+% [x,y,z] = ind2sub(size(mask),ind);
+% mask2 = false(size(mask));
+% mask2(min(x):max(x),min(y):max(y),min(z):max(z)) = 1;
+% mask2 = mask2&~mask;
+% ind2 = find(ones(size(mask2)));
+% [x2,y2,z2] = ind2sub(size(mask),ind2);
+% mask_c = sub_inhull([x2,y2,z2],[x,y,z],[],[],memory_block,flag_verbose);
+% mask_c = reshape(mask_c,size(mask));
 if nb_splits>1
     ny = size(mask,2);
-    chuncks = 1:ceil(ny/nb_splits):ny;
+    ind = find(mask);
+    [x,y,z] = ind2sub(size(mask),ind);
+    y0 = max(1,min(y)-2);
+    y1 = min(size(mask,2),max(y)+2);    
+    dy = floor((y1-y0)/nb_splits);
+    chunks = y0:dy:y1;
+    chunks(end) = y1;    
     mask_c = zeros(size(mask));
     opt.nb_splits = 1;
     opt.flag_verbose = false;
     if flag_verbose
-        fprintf('   Percentage completed : ')
+        fprintf('   Percentage completed : 0 - ')
         perc = 0;
     end
-    for num_c = 1:(length(chuncks)-1)
+    for num_c = 1:(length(chunks)-1)
         if flag_verbose
-            if ceil(100*num_c/(length(chuncks)-1))-perc>10;
-                perc = ceil(100*num_c/(length(chuncks)-1));
-                fprintf('%1.2f - ',perc);
+            if ceil(100*num_c/(length(chunks)-1))-perc>=10;
+                perc = ceil(100*num_c/(length(chunks)-1));
+                fprintf('%i - ',perc);
             end
-        end
-        mask_chunck = mask(:,chuncks(num_c):chuncks(num_c+1),:);
-        if sum(mask_chunck(:))>10;
-            mask_c(:,chuncks(num_c):chuncks(num_c+1),:) = niak_build_convhull_mask(mask_chunck,opt);
-        else
-            mask_c(:,chuncks(num_c):chuncks(num_c+1),:) = mask_chunck;
-        end
+        end        
+        mask_c(:,chunks(num_c):chunks(num_c+1),:) = niak_build_convhull_mask(mask(:,chunks(num_c):chunks(num_c+1),:),opt);
     end
     
     if flag_verbose
@@ -105,12 +115,14 @@ if nb_splits>1
 else
     ind = find(mask);
     [x,y,z] = ind2sub(size(mask),ind);
-    mask2 = mask;
+    mask2 = false(size(mask));
     mask2(min(x):max(x),min(y):max(y),min(z):max(z)) = 1;
-    ind2 = find(ones(size(mask2)));
+    mask2 = mask2&~mask;
+    ind2 = find(mask2);
     [x2,y2,z2] = ind2sub(size(mask),ind2);
-    mask_c = sub_inhull([x2,y2,z2],[x,y,z],[],[],memory_block,flag_verbose);
-    mask_c = reshape(mask_c,size(mask));
+    mask_in = sub_inhull([x2,y2,z2],[x,y,z],[],10^(-15),memory_block,flag_verbose);
+    mask_c = mask;
+    mask_c(mask2) = mask_in;
 end
 
 function in = sub_inhull(testpts,xyz,tess,tol,memblock,flag_verbose)
@@ -294,7 +306,6 @@ in = repmat(false,n,1);
 
 % if n is too large, we need to worry about the
 % dot product grabbing huge chunks of memory.
-memblock = 1e7;
 blocks = max(1,floor(n/(memblock/nt)));
 aNr = repmat(aN,1,length(1:blocks:n));
 if flag_verbose

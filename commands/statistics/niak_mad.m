@@ -56,4 +56,4 @@ function std_mad = niak_mad(tseries);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-std_mad = 1.4785*median(abs(tseries)-repmat(median(tseries,1),[size(tseries,1) 1]),1);
+std_mad = 1.4785*median(abs(tseries-repmat(median(tseries,1),[size(tseries,1) 1])),1);

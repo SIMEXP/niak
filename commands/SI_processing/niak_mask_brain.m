@@ -33,14 +33,6 @@ function mask = niak_mask_brain(vol,opt)
 %           attempt is done to remove the eyes from the mask. Work only for
 %           fMRI !
 %
-%       FLAG_FILL
-%           (boolean, deafult 0) if FLAG_FILL == 1, the mask is inverted
-%           and the largest connected component is identified as the ouside
-%           of the head. The final mask is an inverted version of that
-%           component. This process is not usefull for fMRI, but can be
-%           handy for T1 image to "fill" the ventricles and CSF inside the
-%           brain.
-%
 %       FLAG_VERBOSE
 %           (boolean, default false) if the flag is on, print info on the
 %           progress.
@@ -83,8 +75,8 @@ function mask = niak_mask_brain(vol,opt)
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes','flag_fill','flag_verbose'};
-gb_list_defaults = {6,[3 3 3],0,0,false};
+gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes','flag_verbose'};
+gb_list_defaults = {6,[3 3 3],0,false};
 niak_set_defaults
 
 
@@ -116,14 +108,6 @@ if flag_remove_eyes
     mask = mask == ind;
 end
  
-%% Filling the brain
-if flag_fill    
-    opt_hull.flag_verbose = flag_verbose;
-    opt_hull.nb_splits = ceil(size(mask,2)/15);
-    mask = niak_build_convhull_mask(mask);
-    mask = mask>0;
-end
-
 function seuil = otsu(hist)
 % An implementation of the Otsu algorithm to separate two Gaussian
 % distribution in an histogram.
