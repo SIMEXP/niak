@@ -179,7 +179,7 @@ else
         A = attraction(data,gi,p);
 
         %% look for maximal attraction points
-        [A_max,part_bis] = min(A,[],2);
+        [A_min,part_bis] = min(A,[],2);
         deplacements = sum(part(:,part_curr)~=part_bis);
         if flag_verbose
             fprintf(' %d -',deplacements);
@@ -193,32 +193,23 @@ else
         end
         part(:,part_curr) = part_bis;
         gi = centre_gravite(data,part_bis,p,nb_classes);
-        
+               
         %% Deal with empty clusters
-        if ~strcmp(type_death,'none')
-            while length(unique(part(:,part_curr)))<nb_classes
-                
+        if ~strcmp(type_death,'none')                                    
+            if length(unique(part(:,part_curr)))~=nb_classes
                 switch type_death
                     
                     case 'singleton'
                         ind_dead = find(~ismember(1:nb_classes,part(:,part_curr)));
                         ind_dead = ind_dead(1);
-                        A = attraction(data,gi,p);
-                        [A_max,part_bis] = max(A,[],2);
-                        [val_max,ind_max] = max(A_max);
-                        gi(ind_dead,:) = data(ind_max(1),:);
-                        part(:,part_curr) = part_bis;
-                    otherwise
-                        
-                        error('%s is an unknwon type of cluster death. Please check the value of OPT.TYPE_DEATH',type_death);
+                        [val_max,ind_max] = max(A_min);
+                        gi(ind_dead,:) = data(ind_max(1),:);                                                
                 end
             end
-        end
-        
-        
-        %% Check we're not in a cycle
+        end      
+         %% Check we're not in a cycle
         changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
-        N_iter = N_iter + 1;       
+        N_iter = N_iter + 1;
         
     end
     

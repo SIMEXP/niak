@@ -7,43 +7,58 @@ function vol_m = niak_morph(vol,arg,opt)
 %
 % SYNTAX:
 % VOL_M = NIAK_MASK_MORPH(VOL,ARG,OPT)
-% 
+%
 % _________________________________________________________________________
-% INPUTS: 
+% INPUTS:
 %
 % VOL
 %       (3D array) a 3D volume
 %
 % ARG
-%       (string) The argument sent to MINCMORPH. Type "help mincmorph" in a
-%       terminal for available options.
+%       (string) The argument sent to MINCMORPH. Type "mincmorph -help" in
+%       a terminal for available options.
 %
-% OPT       
+% OPT
 %       (structure) With the following fields :
 %
-%       VOXEL_SIZE  
+%       VOXEL_SIZE
 %           (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
-%           in the respective dimensions, i.e. the space in mmm between 
-%           two voxels in x, y, and z (yet the unit is irrelevant and just 
-%           needs to be consistent with the filter width (fwhm)). The 
-%           fourth element is ignored.
+%           in the respective dimensions, i.e. the space in mmm between
+%           two voxels in x, y, and z.
+%
+%       PAD_SIZE
+%           (integer, default 0) add elements at the begining/end of each
+%           dimension of the volume to deal with edges effects.
+%
+%       PAD_ORDER
+%           (vector, default [3 2 1]) the order in which dimensions are
+%           padded. If a single value is specified, then padding is
+%           performed with that value rather than by replicating actual
+%           slices of the volume.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% VOL_M     
+% VOL_M
 %       (3D array) The volume after morphomaths operations have been
 %       applied.
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% This is a simple wraper around MINCMORPH from the MINC tools.
+% NOTE 1:
+%    This is a simple wraper around MINCMORPH from the MINC tools.
+%
+% NOTE 2:
+%   The padding of the volume proceeds by duplicating the first
+%   (resp. last) slices of the volume at the beginning (resp. end) of the
+%   volume. This is done to limit edges effect in certain transform, such
+%   as the distance transform.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, segmentation, MRI, fMRI
+% Keywords : medical imaging, MINC tools, mincmorph, morphomaths
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -65,28 +80,68 @@ function vol_m = niak_morph(vol,arg,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'voxel_size'};
-gb_list_defaults = {[1 1 1]'};
+gb_list_fields = {'pad_size','pad_order','voxel_size'};
+gb_list_defaults = {0,[3 2 1],[1 1 1]'};
 niak_set_defaults
 
+flag_pad = length(pad_order)==1;
+if flag_pad
+    val_pad = pad_order;
+    pad_order = [1 2 3];
+end
+
 [nx,ny,nz] = size(vol);
-vol2 = zeros(nx+1,ny+1,nz+1);
-vol2(2:end,2:end,2:end) = vol;
 file_tmp = niak_file_tmp('_vol.mnc');
 file_tmp2 = niak_file_tmp('_vol_m.mnc');
 hdr.file_name = file_tmp;
 hdr.type = 'minc1';
 hdr.info.voxel_size = voxel_size;
+if pad_size>0
+    vol_m = zeros(size(vol)+2*pad_size);
+    vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1:pad_size+size(vol,3)) = vol;
+    for num_d = pad_order
+        if num_d == 1
+            if flag_pad
+                vol_m(1:pad_size,:,:) = val_pad;
+                vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = val_pad;
+            else
+                vol_m(1:pad_size,:,:) = repmat(vol_m(pad_size+1,:,:),[pad_size 1 1]);
+                vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = repmat(vol_m(pad_size+size(vol,1),:,:),[pad_size 1 1]);
+            end
+        elseif num_d == 2
+            if flag_pad
+                vol_m(:,1:pad_size,:) = val_pad;
+                vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = val_pad;
+            else
+                vol_m(:,1:pad_size,:) = repmat(vol_m(:,pad_size+1,:),[1 pad_size 1]);
+                vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = repmat(vol_m(:,pad_size+size(vol,2),:),[1 pad_size 1]);
+            end
+        elseif num_d == 3
+            if flag_pad
+                vol_m(:,:,1:pad_size) = val_pad;
+                vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = val_pad;
+            else
+                vol_m(:,:,1:pad_size) = repmat(vol_m(:,:,pad_size+1),[1 1 pad_size]);
+                vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = repmat(vol_m(:,:,pad_size+size(vol,3)),[1 1 pad_size]);
+            end
+        end
+    end   
+    niak_write_vol(hdr,vol_m);
+    clear vol_m
+else
+    niak_write_vol(hdr,vol);
+end
 
-niak_write_vol(hdr,vol2);
 instr_morph = cat(2,'mincmorph -clobber ',arg,' ',file_tmp,' ',file_tmp2);
 [status,result] = system(instr_morph);
 if status
     delete(file_tmp);
     error(result)
 else
-    [hdr,vol_m] = niak_read_vol(file_tmp2);
-    vol_m = vol_m(2:end,2:end,2:end);
+    [hdr,vol_m] = niak_read_vol(file_tmp2);    
+    if pad_size>0
+        vol_m = vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1:pad_size+size(vol,3));
+    end
     delete(file_tmp);
     delete(file_tmp2);
 end

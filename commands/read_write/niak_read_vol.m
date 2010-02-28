@@ -86,7 +86,6 @@ function [hdr,vol] = niak_read_vol(file_name)
 %
 % _________________________________________________________________________
 % SEE ALSO :
-%
 % NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_WRITE_VOL, NIAK_READ_HDR_NIFTI,
 % NIAK_READ_NIFTI.
 %

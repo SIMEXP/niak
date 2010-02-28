@@ -1,5 +1,9 @@
 function [mat] = niak_hdr_minc2mat(direction_cosine,step,start)
 
+%
+% _________________________________________________________________________
+% SUMMARY NIAK_HDR_MINC2MAT
+%
 % Convert a "voxel-to-world" coordinates affine transformation from the 
 % cosines/start/step representation used in minc headers to the standard
 % 4*4 matrix array (y=M*x+T).
@@ -7,7 +11,9 @@ function [mat] = niak_hdr_minc2mat(direction_cosine,step,start)
 % SYNTAX:
 % [MAT] = NIAK_HDR_MINC2MAT(DIRECTION_COSINE,STEP,START)
 % 
-% INPUT:
+% _________________________________________________________________________
+% INPUTS:
+%
 % DIRECTION_COSINES (array 3*3) gives you the direction assigned to the
 %           respective dimensions of the voxel array.
 %
@@ -17,16 +23,22 @@ function [mat] = niak_hdr_minc2mat(direction_cosine,step,start)
 % STEP  (vector 3*1) the step made at each voxel dimension along the
 %       DIRECTION_COSINES vector.
 %
+% _________________________________________________________________________
 % OUTPUTS:
+%
 % MAT   (4*4 array) An affine transformation, usually seen as a
 %           "voxel-to-world" space transform.
-% 
+%
+% _________________________________________________________________________
 % COMMENTS:
+%
 % This function is based on the description of MINC2 system of coordinates
 % that can be found at :
 % http://www.bic.mni.mcgill.ca/software/minc/minc2_format/node4.html
 %
+% _________________________________________________________________________
 % SEE ALSO:
+%
 % NIAK_READ_HDR_MINC, NIAK_WRITE_MINC
 %
 % Copyright (c) Pierre Bellec, McConnel Brain Imaging Center, Montreal 

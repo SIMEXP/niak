@@ -73,7 +73,6 @@ function [] = niak_write_minc(hdr,vol)
 % amount of time.
 % _________________________________________________________________________
 % SEE ALSO:
-%
 % NIAK_READ_HDR_MINC, NIAK_READ_MINC, NIAK_READ_VOL, NIAK_WRITE_VOL
 %
 % _________________________________________________________________________
