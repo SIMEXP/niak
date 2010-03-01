@@ -150,7 +150,9 @@ end
 
 nb_file = size(file_name,1);
 
-vol(isnan(vol)) = 0; % replace NaNs with 0
+if any(isnan(vol(:)));
+    vol(isnan(vol)) = 0; % replace NaNs with 0
+end
 
 if nb_file > 1
 
