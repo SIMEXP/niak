@@ -17,6 +17,10 @@ function [mask_head,mask_brain] = niak_mask_brain_t1(anat,opt)
 %   OPT
 %       (structure) with the following fields.
 %
+%       VOXEL_SIZE
+%
+%       COEFF_GM
+%
 %       HEAD
 %           (structure) with the following fields :
 %
