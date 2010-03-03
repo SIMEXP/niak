@@ -29,11 +29,17 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 %           (string, default 'random_partition') the strategy to 
 %           initialize the kmeans. Available options are :
 %           'random_partition' : self-explanatory
-%           'random_centroid' : self-explanatory
 %           'random_point' : randomly select some data points as
 %               centroids.
 %           'pca' : use the first principal components as centroids.
+%           'user-specified' : use OPT.INIT as inial centroids of the
+%           partition.
 %
+%       INIT
+%           (2D array T*K) each column is used as initial centroid of a
+%           cluster. Note that this value will be used only if
+%           OPT.TYPE_INIT equals 'user-specified'.
+%           
 %       TYPE_DEATH
 %           (string, default 'singleton') the strategy to deal with dead
 %           (empty) cluster :
@@ -101,8 +107,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'type_init','type_death','nb_classes','p','nb_iter','flag_verbose','nb_iter_max','nb_tests_cycle'};
-gb_list_defaults = {'random_partition','none',NaN,[],1,1,100,5};
+gb_list_fields = {'init','type_init','type_death','nb_classes','p','nb_iter','flag_verbose','nb_iter_max','nb_tests_cycle'};
+gb_list_defaults = {[],'random_partition','none',NaN,[],1,1,100,5};
 niak_set_defaults
 
 if nb_iter > 1
@@ -162,6 +168,12 @@ else
             [eig_val,eig_vec] = niak_pca(data);
             gi = eig_vec(:,1:nb_classes)';
 
+        case 'user-specified'
+            
+            %% Initialization used the user-specified centroids
+            gi = init';
+            clear init
+            
         otherwise
 
             error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',type_init);

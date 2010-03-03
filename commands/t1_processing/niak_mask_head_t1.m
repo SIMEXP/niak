@@ -101,12 +101,12 @@ function mask_head = niak_mask_head_t1(anat,opt)
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'voxel_size','flag_verbose','pad_size','thresh_fwhm','thresh_dist','nb_clust_max'};
-gb_list_defaults = {[1 1 1],true,[],0.01,10,10};
+gb_list_fields = {'voxel_size','flag_verbose','pad_size','thresh_dist','nb_clust_max'};
+gb_list_defaults = {[1 1 1],true,[],10,10};
 niak_set_defaults
 
 if isempty(pad_size)
-    pad_size = (1.5 * opt.thresh_dist)/min(voxel_size);
+    pad_size = ceil((1.5 * opt.thresh_dist)/min(voxel_size));
 end
 
 %% A mask of the brain

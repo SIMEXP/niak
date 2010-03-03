@@ -210,7 +210,6 @@ end
 
 function vec_dense = sub_density(mask,type_neig)
 
-profile on
 decxyz = niak_build_neighbour_mat(type_neig);
 nb_n = size(decxyz,1);
 opt_neig.ind = find(mask);
@@ -231,4 +230,3 @@ for num_n = 1:nb_n
     end
 end
 vec_dense = vec_dense/nb_n;
-profile off
