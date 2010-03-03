@@ -1,10 +1,10 @@
-function [mask_part,mask_dense] = niak_clustering_space_density(mask,opt);
+function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,opt);
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_CLUSTERING_SPACE_DENSITY
 %
-% Clustering of spatial points in 3D space using spatial density of the 
-% voxels. 
+% Clustering of spatial points in 3D space using spatial density of the
+% voxels.
 %
 % SYNTAX :
 % PART = NIAK_CLUSTERING_SPACE_DENSITY(MASK,OPT)
@@ -15,6 +15,11 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,opt);
 % MASK
 %       (3D binary volume) a set of 3D voxels on a regular grid.
 %
+% MASK_EXTRAS
+%       (3D volume)  extra voxels to be classified in the region
+%       growing process but not in the density estimation. Empty values 
+%       will result in no extra voxels.
+%
 % OPT
 %       (structure) with the following fields (absent fields will be
 %       assigned a default value):
@@ -24,21 +29,21 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,opt);
 %           before defining the spatial density.
 %
 %       SMOOTH
-%           (structure) with the following fields : 
+%           (structure) with the following fields :
 %
 %           FWHM
-%               (scalar, default 2) the FWHM of the Gaussian kernel used 
+%               (scalar, default 2) the FWHM of the Gaussian kernel used
 %               to define the spatial density.
 %
 %           VOXEL_SIZE
 %               (vector [1 3], default [1 1 1]) the size of the voxels.
 %
 %       THRE_DENSITY
-%           (scalar, default 0.8) the spatial density threshold to define
+%           (scalar, default 0.9) the spatial density threshold to define
 %           the core clusters.
 %
 %       TYPE_NEIG
-%           (integer, default 26) defines the spatial neighbourhood. 
+%           (integer, default 26) defines the spatial neighbourhood.
 %           Available options 4 (2D), 6 (3D), 8 (2D) and 26 (3D).
 %
 %       NB_ITER_MAX
@@ -46,11 +51,7 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,opt);
 %           region growing to propagate cluster labels
 %
 %       NB_CLUSTERS_MAX
-%           (integer, default 15) the maximal number of clusters. 
-%
-%       MASK_EXTRA
-%           (3D binary volume) extra voxels to be classified in the region
-%           growing process.
+%           (integer, default 15) the maximal number of clusters.
 %
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function prints
@@ -72,38 +73,38 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,opt);
 %
 % NOTE 1 :
 %
-%   The Outline of the algorithm is as follows. It not for the spatial 
-%   density idea, the clustering would simply consist in extracting 
-%   connected components according to a spatial neghbourhood rules. 
-%   The extraction of connected components is actually applied only to 
-%   the voxels that have a sufficient number of neighbours. Each of these 
-%   dense connected components are then growing to propagate their labels 
-%   to the remaining non-dense voxels. At each iteration, conflicts are 
-%   solved using the order of size to define precedence of dense clusters. 
+%   The Outline of the algorithm is as follows. It not for the spatial
+%   density idea, the clustering would simply consist in extracting
+%   connected components according to a spatial neghbourhood rules.
+%   The extraction of connected components is actually applied only to
+%   the voxels that have a sufficient number of neighbours. Each of these
+%   dense connected components are then growing to propagate their labels
+%   to the remaining non-dense voxels. At each iteration, conflicts are
+%   solved using the order of size to define precedence of dense clusters.
 %   Note that this procedure implicitely defines the number of clusters.
 %
-% NOTE 2 : 
+% NOTE 2 :
 %
-%   The principles of this algorithm are a simple adaption of the DBSCAN 
+%   The principles of this algorithm are a simple adaption of the DBSCAN
 %   algorithm :
 %
-%   Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu (1996). 
-%   "A density-based algorithm for discovering clusters in large spatial 
+%   Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu (1996).
+%   "A density-based algorithm for discovering clusters in large spatial
 %   databases with noise"
-%   in Evangelos Simoudis, Jiawei Han, Usama M. Fayyad. 
-%   Proceedings of the Second International Conference on Knowledge 
-%   Discovery and Data Mining (KDD-96). AAAI Press. pp. 226–231. 
-%   ISBN 1-57735-004-9. 
+%   in Evangelos Simoudis, Jiawei Han, Usama M. Fayyad.
+%   Proceedings of the Second International Conference on Knowledge
+%   Discovery and Data Mining (KDD-96). AAAI Press. pp. 226–231.
+%   ISBN 1-57735-004-9.
 %   http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.71.1980.
 %
 %   The difference is that the density of the neighbourhood of a voxel is
 %   defined by spatial smoothing using a Gaussian kernel rather than actual
-%   count of edges in a graph. The construction of dense clusters and 
+%   count of edges in a graph. The construction of dense clusters and
 %   the propagation of labels to non-dense voxels falls within the DBSCAN
 %   algorithm, except that the current implementation fixes an order on the
 %   label propagation, while the original version algorithm depended on an
 %   arbitrary order of visit of the voxels.
-% 
+%
 % Copyright (c) partierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -129,8 +130,8 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,opt);
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'nb_clusters_max','nb_erosions','mask_extra','nb_iter_max','thre_density','smooth','type_neig','flag_verbose'};
-gb_list_defaults = {15,0,[],Inf,0.9,[],26,true};
+gb_list_fields = {'nb_clusters_max','nb_erosions','nb_iter_max','thre_density','type_neig_dense','type_neig_grow','flag_verbose'};
+gb_list_defaults = {15,0,Inf,0.9,26,6,true};
 niak_set_defaults
 
 gb_name_structure = 'opt.fwhm';
@@ -138,41 +139,34 @@ gb_list_fields = {'fwhm','voxel_size'};
 gb_list_defaults = {2,[1 1 1]};
 niak_set_defaults
 
-switch type_neig    
+switch type_neig_grow
     case 4
         arg_m = ' -2D04';
-    case 6 
+    case 6
         arg_m = ' -3D06';
     case 8
         arg_m = ' -2D06';
     case 26
-        arg_m = ' -3D26';        
+        arg_m = ' -3D26';
 end
 
 %% Build the core clusters
 if flag_verbose
-    fprintf('     Building dense core clusters ...\n');
+    fprintf('     Building a spatial density map ...\n');
 end
 
-if flag_verbose
-    fprintf('     Smoothing binary map ...\n');
-end
-opt.smooth.flag_verbose = false;
 if nb_erosions>0
     mask_dense = niak_morph(mask,['-successive ' repmat('E',[1 nb_erosions]) arg_m]);
 else
     mask_dense = mask;
 end
-%mask_dense = niak_smooth_vol(mask_dense,opt.smooth);
-neig = niak_build_neighbour(mask_dense,type_neig);
-mask_dense = double(mask_dense);
-mask_dense(mask_dense>0) = sum(neig>0,2)/size(neig,2);
+mask_dense(mask) = sub_density(mask,type_neig_dense)>thre_density;
+mask_dense = mask_dense&mask;
 
 if flag_verbose
     fprintf('     Extracting connected clusters in dense voxels ...');
 end
-mask_dense = (mask_dense>thre_density)&mask;
-mask_dense = niak_morph(mask_dense,['-successive G' arg_m]);
+mask_dense = niak_morph(mask_dense,['-successive PG' arg_m]);
 mask_dense = round(mask_dense);
 mask_dense(mask_dense>nb_clusters_max) = 0;
 nb_cores = max(mask_dense(:));
@@ -194,13 +188,13 @@ end
 if any(mask_todo(:))
     mask_border = mask_part;
     nb_iter = 0;
-    while (any(mask_border(:)))&~(nb_iter>nb_iter_max)
+    while (any(mask_border(:)))&&~(nb_iter>nb_iter_max)
         mask_border_new = niak_morph(mask_border,['-successive D' arg_m]); % dilate the border
         mask_border_new = round(mask_border_new);
         mask_border_new(~mask_todo) = 0; % contrain the border in the "to do" mask
         mask_border_new(mask_part>0) = 0;
-        mask_border_new(mask_border>0) = 0;       
-        mask_part(mask_border_new>0) = mask_border_new(mask_border_new>0);        
+        mask_border_new(mask_border>0) = 0;
+        mask_part(mask_border_new>0) = mask_border_new(mask_border_new>0);
         mask_todo(mask_border_new>0) = 0;
         mask_border = mask_border_new;
         nb_iter = nb_iter+1;
@@ -209,8 +203,32 @@ if any(mask_todo(:))
         end
     end
 end
-    
+
 if flag_verbose
     fprintf('Done !\n');
 end
 
+function vec_dense = sub_density(mask,type_neig)
+
+profile on
+decxyz = niak_build_neighbour_mat(type_neig);
+nb_n = size(decxyz,1);
+opt_neig.ind = find(mask);
+[coordx,coordy,coordz] = ind2sub(size(mask),opt_neig.ind);
+opt_neig.coord = [coordx,coordy,coordz];
+clear coordx coordy coordz
+opt_neig.type_neig = type_neig;
+opt_neig.flag_position = true;
+opt_neig.flag_within_mask = true;
+
+for num_n = 1:nb_n
+    opt_neig.decxyz = decxyz(num_n,:);
+    neig = niak_build_neighbour(mask,opt_neig);
+    if num_n == 1
+        vec_dense = double(neig>0);
+    else
+        vec_dense = vec_dense + (neig>0);
+    end
+end
+vec_dense = vec_dense/nb_n;
+profile off

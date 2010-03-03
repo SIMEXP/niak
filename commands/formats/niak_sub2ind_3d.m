@@ -1,4 +1,4 @@
-function ind = niak_sub2ind_3d(siz,sub)
+function ind = niak_sub2ind_3d(siz,subx,suby,subz)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_SUB2IND_3D
@@ -38,12 +38,12 @@ function ind = niak_sub2ind_3d(siz,sub)
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
-% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% to use, copy, modify, merge, publish, distribute, subxlicense, and/or sell
 % copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
+% furnished to do so, subxject to the following conditions:
 %
 % The above copyright notice and this permission notice shall be included in
-% all copies or substantial portions of the Software.
+% all copies or subxstantial portions of the Software.
 %
 % THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 % IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -52,5 +52,8 @@ function ind = niak_sub2ind_3d(siz,sub)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
-ind = sub(:,1) + (sub(:,2)-1)*siz(1) + (sub(:,3)-1)*siz(1)*siz(2);
+if nargin == 2
+    ind = subx(:,1) + (subx(:,2)-1)*siz(1) + (subx(:,3)-1)*siz(1)*siz(2);
+else
+    ind = subx + (suby-1)*siz(1) + (subz-1)*siz(1)*siz(2);
+end

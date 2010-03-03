@@ -39,6 +39,11 @@ function [neig,ind] = niak_build_neighbour(mask,opt)
 %           (vector, default find(MASK)) The result of "find(MASK)". This
 %           option is given to avoid recomputing it at every execution.
 %
+%       COORD
+%           (matrix N*3, default coordinates of IND) the 3D coordinates of
+%           the points in mask. This option is given to avoid recomputing 
+%           it at every execution.
+%
 %       DECXYZ
 %           (matrix) defines spatial neighbourhood. See
 %           NIAK_BUILD_NEIGHBOUR_MAT. This option is given to avoid
@@ -49,9 +54,10 @@ function [neig,ind] = niak_build_neighbour(mask,opt)
 %
 % NEIG     
 %       (2D array) NEIG(i,:) is the list of neighbours of voxel i. All 
-%       numbers refer to a position in FIND(MASK(:)). Because all voxels
-%       do not necessarily have the same number of neighbours, 0 are
-%       used to pad each line.
+%       numbers refer to a position in FIND(MASK(:)), unless FLAG_POSITION 
+%       is false in which case they refer to linear indices in MASK. 
+%       Because all voxels do not necessarily have the same number of 
+%       neighbours, 0 are used to pad each line.
 %
 % IND      
 %       (vector) IND(i) is the linear index of the ith voxel in MASK.
@@ -95,8 +101,8 @@ end
 
 %% Default inputs
 gb_name_structure = 'opt';
-gb_list_fields = {'type_neig','flag_position','ind','decxyz','flag_within_mask'};
-gb_list_defaults = {26,1,[],[],true};
+gb_list_fields = {'coord','type_neig','flag_position','ind','decxyz','flag_within_mask'};
+gb_list_defaults = {[],26,1,[],[],true};
 niak_set_defaults
 
 flag_position = flag_position & flag_within_mask;
@@ -105,28 +111,39 @@ flag_position = flag_position & flag_within_mask;
 if isempty(ind)
     ind = find(mask(:));
 end
+
 N = length(ind);
 [nx,ny,nz] = size(mask);
-[coordx,coordy,coordz] = ind2sub(size(mask),ind);
-coord = [coordx,coordy,coordz];
+if isempty(coord)
+    [coordx,coordy,coordz] = ind2sub(size(mask),ind);
+    coord = [coordx,coordy,coordz];
+    clear coordx coordy coordz
+end
 
 %% Generation of the neighborhood matrix
 if isempty(decxyz)
     decxyz = niak_build_neighbour_mat(type_neig);
 end
-long_neig = length(decxyz);
+decxyz = decxyz;
+long_neig = size(decxyz,1);
 
 %% Generating the matrix of neighbors
-neigx = coord(:,1)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,1)');
-neigy = coord(:,2)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,2)');
-neigz = coord(:,3)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,3)');
+if long_neig == 1
+    neigx = coord(:,1)+decxyz(1);
+    neigy = coord(:,2)+decxyz(2);
+    neigz = coord(:,3)+decxyz(2);
+else
+    neigx = uint32(coord(:,1)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,1)'));
+    neigy = uint32(coord(:,2)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,2)'));
+    neigz = uint32(coord(:,3)*ones([1 long_neig]) + ones([N 1])*(decxyz(:,3)'));
+end
 
 %% Get rid of the neighbors outside the volume
 in_vol = (neigx>0)&(neigx<=nx)&(neigy>0)&(neigy<=ny)&(neigz>0)&(neigz<=nz);
 
 %% Generation of the neighbour array
-neig2 = sub2ind(size(mask),neigx(in_vol),neigy(in_vol),neigz(in_vol));
-neig = zeros(size(in_vol));
+neig2 = uint32(niak_sub2ind_3d(size(mask),neigx(in_vol),neigy(in_vol),neigz(in_vol)));
+neig = zeros(size(in_vol),'uint32');
 if flag_within_mask
     to_keep = mask(neig2)>0;
     neig2(to_keep==0) = 0; % Get rid of neighbours that fall outside the mask
@@ -136,7 +153,7 @@ end
 if flag_position
     neig3 = neig2(to_keep == 1);
     mask_ind = zeros(size(mask));
-    mask_ind(mask>0) = 1:sum(mask(:)>0);
+    mask_ind(mask>0) = 1:N;
     neig3 = mask_ind(neig3);
     neig2(to_keep == 1) = neig3;
 end

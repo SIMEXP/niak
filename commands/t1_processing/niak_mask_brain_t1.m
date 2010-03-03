@@ -1,4 +1,4 @@
-function [mask_brain,mask_head] = niak_mask_brain_t1(anat,opt)
+function [mask_head,mask_brain] = niak_mask_brain_t1(anat,opt)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_MASK_BRAIN_T1
@@ -6,7 +6,7 @@ function [mask_brain,mask_head] = niak_mask_brain_t1(anat,opt)
 % Derive a head and a brain masks from a T1 scan.
 %
 % SYNTAX:
-% [MASK_BRAIN,MASK_HEAD] = NIAK_MASK_BRAIN_T1(ANAT,OPT)
+% [MASK_HEAD,MASK_BRAIN] = NIAK_MASK_BRAIN_T1(ANAT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS :
@@ -54,12 +54,7 @@ function [mask_brain,mask_head] = niak_mask_brain_t1(anat,opt)
 %       REGION_GROWING
 %           (structure) with the following fields :
 %
-%           ALPHA_CONF
-%               (real value, default 2/3) the confidence region is defined
-%               through a threshold in-between the estimated average gray
-%               and white matter intensities. The threshold is actually
-%               ALPHA_CONF times the average gray matter intensity +
-%               (1-ALPHA_CONF) times the average white matter intensity.
+%           See the OPT field in NIAK_CLUSTERING_SPACE_DENSITY.
 %
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function
@@ -155,8 +150,8 @@ function [mask_brain,mask_head] = niak_mask_brain_t1(anat,opt)
 opt_tmp.flag_verbose = 1;
 
 gb_name_structure = 'opt';
-gb_list_fields = {'kmeans','head','voxel_size','flag_verbose'};
-gb_list_defaults = {opt_tmp,opt_tmp,[1 1 1],true};
+gb_list_fields = {'region_growing','kmeans','head','voxel_size','flag_verbose'};
+gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,[1 1 1],true};
 niak_set_defaults
 
 gb_name_structure = 'opt.head';
@@ -166,11 +161,18 @@ niak_set_defaults
 
 gb_name_structure = 'opt.kmeans';
 gb_list_fields = {'flag_verbose','nb_iter_max','nb_tests_cycle','type_death'};
-gb_list_defaults = {opt.flag_verbose,20,3,'singleton'};
+gb_list_defaults = {opt.flag_verbose,10,3,'singleton'};
 niak_set_defaults
 opt.kmeans.flag_verbose = opt.flag_verbose;
 
+gb_name_structure = 'opt.region_growing';
+gb_list_fields = {'flag_verbose','type_neig_dense','type_neig_grow','thre_density','nb_iter_max','nb_erosions','nb_clusters_max'};
+gb_list_defaults = {opt.flag_verbose,26,6,0.75,10,0,10};
+niak_set_defaults
+opt.region_growing.flag_verbose = opt.flag_verbose;
+  
 flag_verbose = opt.flag_verbose;
+
 %% A mask of the brain
 if flag_verbose
     tic;
@@ -194,7 +196,7 @@ opt_smooth.fwhm = opt.head.fwhm;
 opt_smooth.flag_edge = true;
 opt_smooth.flag_verbose = false;
 mask_head = niak_smooth_vol(mask_head,opt_smooth);
-mask_head = mask_head>opt.head.thre_fwhm;
+mask_head = mask_head>opt.head.thresh_fwhm;
 
 % Fill the holes with morphomath
 if flag_verbose
@@ -215,13 +217,13 @@ opt_m.voxel_size = opt.voxel_size;
 opt_m.pad_size = opt.head.pad_size;
 opt_m.pad_order = [1 2 3];
 mask_head = niak_morph(mask_head,'-successive F',opt_m);
-mask_head = mask_head>opt.head.thre_dist/max(voxel_size);
+mask_head = mask_head>opt.head.thresh_dist/max(voxel_size);
 
 if flag_verbose
     fprintf('     Time elapsed %1.3f sec.\n',toc);
 end
 
-if nargout > 2
+if nargout >= 2
     %% Get a intensity-based segmentation
     if flag_verbose
         tic;
@@ -248,23 +250,21 @@ if nargout > 2
     part = order(part);
     clear vec_anat
     
+    if flag_verbose
+        fprintf('     Time elapsed %1.3f sec.\n',toc);
+    end
+    
     %% Extract the brain mask using competitive region growing
     if flag_verbose
         tic;
         fprintf('Competitive region growing starting from dense white matter regions ...\n')
     end
     mask_conf = false(size(mask_head));
-    mask_conf(mask_head) = anat(mask_head) > ((2/3)*mean_c(2)+(1/3)*mean_c(3));
-    opt_sdc.smooth.fwhm = 2;
-    opt_sdc.smooth.voxel_size = opt.voxel_size;
-    opt_sdc.type_neig = 6;
-    opt_sdc.thre_density = 0.9;
-    opt_sdc.nb_iter_max = 10;
-    opt_sdc.nb_erosions = 0;
-    opt_sdc.mask_extra = false(size(mask_head));
-    opt_sdc.mask_extra(mask_head) = (part==2)|(part==3);
-    opt_sdc.nb_clusters_max = 15;
-    mask_brain = niak_clustering_space_density(mask_conf,opt_sdc);
+    mask_conf(mask_head) = anat(mask_head) > ((2/3)*mean_c(2)+(1/3)*mean_c(3));    
+    mask_extra = false(size(mask_head));
+    mask_extra(mask_head) = (part==2)|(part==3);
+        
+    mask_brain = niak_clustering_space_density(mask_conf,mask_extra,opt.region_growing);
     mask_brain = round(mask_brain)==1;
     
     if flag_verbose
