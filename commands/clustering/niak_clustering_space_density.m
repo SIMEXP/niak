@@ -28,22 +28,13 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 %           (integer, default 0) number of erosions to apply on the mask
 %           before defining the spatial density.
 %
-%       SMOOTH
-%           (structure) with the following fields :
-%
-%           FWHM
-%               (scalar, default 2) the FWHM of the Gaussian kernel used
-%               to define the spatial density.
-%
-%           VOXEL_SIZE
-%               (vector [1 3], default [1 1 1]) the size of the voxels.
-%
 %       THRE_DENSITY
 %           (scalar, default 0.9) the spatial density threshold to define
 %           the core clusters.
 %
-%       TYPE_NEIG
-%           (integer, default 26) defines the spatial neighbourhood.
+%       TYPE_NEIG_GROW
+%           (integer, default 6) defines the spatial neighbourhood in the
+%           region growing.
 %           Available options 4 (2D), 6 (3D), 8 (2D) and 26 (3D).
 %
 %       NB_ITER_MAX
@@ -130,8 +121,8 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'nb_clusters_max','nb_erosions','nb_iter_max','thre_density','type_neig_dense','type_neig_grow','flag_verbose'};
-gb_list_defaults = {15,0,Inf,0.9,26,6,true};
+gb_list_fields = {'nb_clusters_max','nb_erosions','nb_iter_max','thre_density','type_neig_grow','flag_verbose'};
+gb_list_defaults = {15,0,Inf,0.9,6,true};
 niak_set_defaults
 
 gb_name_structure = 'opt.fwhm';
@@ -160,16 +151,32 @@ if nb_erosions>0
 else
     mask_dense = mask;
 end
-mask_dense(mask) = sub_density(mask,type_neig_dense)>thre_density;
+if ~exist('smooth3','file')
+    mask_dense(mask) = sub_density(mask,26)>thre_density;
+else
+    mask_dense = smooth3(mask_dense,'box',3)>thre_density;
+end
 mask_dense = mask_dense&mask;
 
 if flag_verbose
     fprintf('     Extracting connected clusters in dense voxels ...');
 end
-mask_dense = niak_morph(mask_dense,['-successive PG' arg_m]);
-mask_dense = round(mask_dense);
-mask_dense(mask_dense>nb_clusters_max) = 0;
-nb_cores = max(mask_dense(:));
+if ~exist('bwconncomp','file')
+    mask_dense = niak_morph(mask_dense,['-successive G' arg_m]);
+    mask_dense = round(mask_dense);
+    mask_dense(mask_dense>nb_clusters_max) = 0;
+    nb_cores = max(mask_dense(:));
+else
+    cc = bwconncomp(mask_dense);
+    size_roi = cellfun('length',cc.PixelIdxList);
+    [val,order] = sort(size_roi,'descend');
+    mask_dense = zeros(size(mask_dense));
+    nb_cores = min(nb_clusters_max,length(order));
+    for num_c = 1:nb_cores
+        mask_dense(cc.PixelIdxList{order(num_c)}) = num_c;
+    end
+    clear cc
+end
 if flag_verbose
     fprintf(' %i dense core clusters were found.\n',nb_cores);
 end
@@ -185,12 +192,20 @@ if ~isempty(mask_extra)
     mask_todo = mask_todo|mask_extra;
 end
 
+if exist('imdilate','file')
+    str_el = sub_strel(type_neig_grow);
+end
+
 if any(mask_todo(:))
     mask_border = mask_part;
     nb_iter = 0;
     while (any(mask_border(:)))&&~(nb_iter>nb_iter_max)
-        mask_border_new = niak_morph(mask_border,['-successive D' arg_m]); % dilate the border
-        mask_border_new = round(mask_border_new);
+        if exist('imdilate','file')
+            mask_border_new = imdilate(mask_border,str_el);
+        else
+            mask_border_new = niak_morph(mask_border,['-successive D' arg_m]); % dilate the border
+            mask_border_new = round(mask_border_new);
+        end
         mask_border_new(~mask_todo) = 0; % contrain the border in the "to do" mask
         mask_border_new(mask_part>0) = 0;
         mask_border_new(mask_border>0) = 0;
@@ -198,7 +213,7 @@ if any(mask_todo(:))
         mask_todo(mask_border_new>0) = 0;
         mask_border = mask_border_new;
         nb_iter = nb_iter+1;
-        if flag_verbose
+        if flag_verbose&&~(nb_iter>nb_iter_max)
             fprintf('%i - ',nb_iter);
         end
     end
@@ -206,6 +221,18 @@ end
 
 if flag_verbose
     fprintf('Done !\n');
+end
+
+function str_el = sub_strel(type_neig)
+str_el = zeros([3 3 3]);
+if type_neig == 6;
+    str_el(:,:,1) = [0 0 0; 0 1 0; 0 0 0];
+    str_el(:,:,2) = [0 1 0; 1 0 1; 0 1 0];
+    str_el(:,:,3) = [0 0 0; 0 1 0; 0 0 0];
+elseif type_neig == 26
+    str_el(:,:,1) = ones([3 3]);
+    str_el(:,:,2) = [1 1 1; 1 0 1; 1 1 1];
+    str_el(:,:,3) = ones([3 3]);
 end
 
 function vec_dense = sub_density(mask,type_neig)
@@ -224,9 +251,9 @@ for num_n = 1:nb_n
     opt_neig.decxyz = decxyz(num_n,:);
     neig = niak_build_neighbour(mask,opt_neig);
     if num_n == 1
-        vec_dense = double(neig>0);
+        vec_dense = double(neig>0)+1;
     else
         vec_dense = vec_dense + (neig>0);
     end
 end
-vec_dense = vec_dense/nb_n;
+vec_dense = vec_dense/(nb_n+1);

@@ -48,8 +48,7 @@ function [hdr,vol] = niak_read_nifti(file_name)
 % Important parts of this code are copied and modified from a matlab
 % toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
 % toolbox did not include a copyright notice.
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
-% 8797&objectType=file
+% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8797&objectType=file
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

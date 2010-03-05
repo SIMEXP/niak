@@ -196,7 +196,7 @@ else
 
                 [path_f,name_f,type] = fileparts(name_f);
                 
-                file_tmp_gz = niak_file_tmp([type gb_niak_zip_ext]);
+                file_tmp_gz = niak_file_tmp([name_f type gb_niak_zip_ext]);
                 
                 [succ,msg] = system(cat(2,'cp ',file_name,' ',file_tmp_gz));
                 if succ~=0

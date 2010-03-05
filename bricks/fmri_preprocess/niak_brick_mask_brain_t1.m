@@ -1,24 +1,25 @@
-function mask_brain = niak_mask_brain_t1(anat,opt)
+function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,opt)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_MASK_BRAIN_T1
+% SUMMARY NIAK_BRICK_MASK_BRAIN_T1
 %
-% Derive a head and a brain masks from a T1 scan.
+% Derive a brain mask from one T1 volume
 %
 % SYNTAX:
-% MASK_BRAIN = NIAK_MASK_BRAIN_T1(ANAT,MASK_HEAD,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_BRAIN_T1(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS :
+% INPUTS:
 %
-%   ANAT
-%       (3D volume) a T1 volume of a brain.
+%  * FILES_IN        
+%       (string) the name of a file with a t1 volume.
 %
-%   OPT
-%       (structure) with the following fields.
-%
-%       VOXEL_SIZE
-%           (vector 1*3, default [1 1 1]) the size of a voxel.
+%  * FILES_OUT   
+%       (string, default <BASE FILES_IN>_mask.<EXT FILES_IN>) 
+%       the name of a file with a binary mask of the brain.
+%   
+%  * OPT           
+%       (structure) with the following fields.  
 %
 %       PERC_CONF
 %           (scalar, default 0.5) the portion of brain tissue that is
@@ -56,30 +57,32 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %               (scalar, default 10) the distance for expansion/shrinking
 %               of the brain, expressed in the same units as VOXEL_SIZE.
 %
-%       FLAG_VERBOSE
-%           (boolean, default 1) if the flag is 1, then the function
+%       FOLDER_OUT 
+%           (string, default: path of FILES_IN) If present, all default 
+%           outputs will be created in the folder FOLDER_OUT. The folder 
+%           needs to be created beforehand.
+%
+%       FLAG_VERBOSE 
+%           (boolean, default 1) if the flag is 1, then the function 
 %           prints some infos during the processing.
 %
-%       FLAG_TEST
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not
-%           do anything but update the default values in FILES_IN,
+%       FLAG_TEST 
+%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%           do anything but update the default values in FILES_IN, 
 %           FILES_OUT and OPT.
+%           
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
+%              
+% _________________________________________________________________________
+% SEE ALSO:
+% NIAK_MASK_BRAIN_T1, NIAK_CLUSTERING_SPACE_DENSITY
 %
 % _________________________________________________________________________
-% OUTPUTS :
-%
-%   MASK_BRAIN
-%       (volume) a binary mask of the brain tissues, i.e. gray matter,
-%       white matter and inner CSF. Ideally, the veinous sinus and dura
-%       should be stripped out, but some of it may be included in the mask.
-%       The skull and fat should be masked out.
-%
-% _________________________________________________________________________
-% SEE ALSO :
-% NIAK_MASK_BRAIN, NIAK_BRICK_MASK_BRAIN_T1, NIAK_CLUSTERING_SPACE_DENSITY
-%
-% _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % The algorithm is similar conceptually to the competitive region growing
 % approach proposed in :
@@ -134,16 +137,34 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = true;
+niak_gb_vars % Load some important NIAK variables
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if ~exist('files_in','var')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_BRAIN_T1(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_mask_brain'' for more info.')
+end
+
+%% FILES_IN
+if ~ischar(files_in)
+    error('FILES_IN should be a string');
+end
+
+%% FILES_OUT
+if exist('files_out','var')&&~ischar(files_out)&&~isempty(files_out)
+    error('FILES_OUT should be a string');
+end
+
 
 %% Options
 opt_tmp.flag_verbose = 1;
 
 gb_name_structure = 'opt';
-gb_list_fields = {'fill_holes','region_growing','voxel_size','perc_conf','flag_verbose'};
-gb_list_defaults = {opt_tmp,opt_tmp,[1 1 1],0.5,true};
+gb_list_fields = {'folder_out','fill_holes','region_growing','voxel_size','perc_conf','flag_verbose','flag_test'};
+gb_list_defaults = {'',opt_tmp,opt_tmp,[1 1 1],0.5,true,false};
 niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
@@ -159,112 +180,72 @@ niak_set_defaults
 
 flag_verbose = opt.flag_verbose;
 
-
-%% Get a intensity-based segmentation
-if flag_verbose
-    tic;
-    fprintf('Deriving a segmentation of the T1 image using Otsu intensity threshold ...\n')
-end
-opt_mask.fwhm = 0;
-mask_head = niak_mask_brain(anat,opt_mask);
-if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
+%% Output files
+[path_f,name_f,ext_f] = fileparts(files_in);
+if isempty(path_f)
+    path_f = '.';
 end
 
-%% Extract the brain mask using competitive region growing
-if flag_verbose
-    tic;
-    fprintf('Competitive region growing starting from dense white matter regions ...\n')
-end
-val = sort(anat(mask_head));
-mask_conf = anat>val(ceil(perc_conf*length(val)));
-clear val
-mask_brain = niak_clustering_space_density(mask_conf,mask_head,opt.region_growing);
-mask_brain = round(mask_brain)==1;
-
-if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
+if strcmp(ext_f,gb_niak_zip_ext)
+    [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
-%% Fill the brain
-pad_size = ceil((1.5 * opt.fill_holes.thresh_dist)/min(voxel_size));
-
-if pad_size>0
-    mask_brain = sub_pad(mask_brain,pad_size);
+if strcmp(opt.folder_out,'')
+    opt.folder_out = path_f;
 end
 
-if flag_verbose
-    tic;
-    fprintf('Filling holes in the brain ...\n')
-end
+%% Building default output names
+if ~exist('files_out','var')||isempty(files_out)
 
-if flag_verbose
-    fprintf('     Expanding the brain ...\n')
-end
+    if size(files_in,1) == 1
 
-if ~exist('bwdist','file')
-    
-    opt_m.voxel_size = opt.voxel_size;
-    opt_m.pad_size = pad_size;
-    mask_brain = niak_morph(~mask_brain,'-successive F',opt_m);
-    mask_brain = mask_brain>=(opt.fill_holes.thresh_dist/max(voxel_size));
-else
-    mask_brain = bwdist(mask_brain);
-    mask_brain = mask_brain>=(opt.fill_holes.thresh_dist/max(voxel_size));
-end
+        files_out = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
 
-if flag_verbose
-    fprintf('     Finding the outside of the brain ...\n')
-end
-if ~exist('bwconncomp','file')
-    mask_brain = niak_morph(mask_brain,'-successive G');
-    mask_brain = round(mask_brain)~=1;
-else
-    cc = bwconncomp(mask_brain);
-    size_roi = cellfun('length',cc.PixelIdxList);
-    [val,ind] = max(size_roi);
-    mask_brain = false(size(mask_brain));
-    mask_brain(cc.PixelIdxList{ind}) = true;
-    clear cc
-end
+    else
 
-if flag_verbose
-    fprintf('     Shrinking the brain back...\n')
-end
-if ~exist('bwdist','file')
-    mask_brain = niak_morph(mask_brain,'-successive F',opt_m);
-    mask_brain = mask_brain>=((opt.fill_holes.thresh_dist)/max(voxel_size));
-else
-    mask_brain = bwdist(mask_brain);
-    mask_brain = mask_brain>=((opt.fill_holes.thresh_dist)/max(voxel_size));
-end
+        name_filtered_data = cell([size(files_in,1) 1]);
 
-if pad_size>0
-    mask_brain = sub_unpad(mask_brain,pad_size);
-end
+        for num_f = 1:size(files_in,1)
+            [path_f,name_f,ext_f] = fileparts(files_in(num_f,:));
 
-if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
-    fprintf('Done !\n')
-end
+            if strcmp(ext_f,'.gz')
+                [tmp,name_f,ext_f] = fileparts(name_f);
+            end
+            
+            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
+        end
+        files_out = char(name_filtered_data);
 
-function vol_m = sub_pad(vol,pad_size)
-pad_order = [3 2 1];
-vol_m = zeros(size(vol)+2*pad_size);
-vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1:pad_size+size(vol,3)) = vol;
-for num_d = pad_order
-    if num_d == 1
-        vol_m(1:pad_size,:,:) = repmat(vol_m(pad_size+1,:,:),[pad_size 1 1]);
-        vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = repmat(vol_m(pad_size+size(vol,1),:,:),[pad_size 1 1]);
-    elseif num_d == 2
-        vol_m(:,1:pad_size,:) = repmat(vol_m(:,pad_size+1,:),[1 pad_size 1]);
-        vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = repmat(vol_m(:,pad_size+size(vol,2),:),[1 pad_size 1]);
-    elseif num_d == 3
-        vol_m(:,:,1:pad_size) = repmat(vol_m(:,:,pad_size+1),[1 1 pad_size]);
-        vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = repmat(vol_m(:,:,pad_size+size(vol,3)),[1 1 pad_size]);
     end
 end
 
-function vol = sub_unpad(vol_m,pad_size);
-siz_vol = size(vol_m)-2*pad_size;
-vol = vol_m(pad_size+1:pad_size+siz_vol(1),pad_size+1:pad_size+siz_vol(2),pad_size+1:pad_size+siz_vol(3));
+if flag_test == 1
+    return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The brick starts here %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if flag_verbose
+    fprintf('Masking the brain in the T1 volume %s ...\n',files_in);
+end
+
+%% Reading data
+if flag_verbose
+    fprintf('Reading T1 image %s ...\n',files_in);
+end
+[hdr,anat] = niak_read_vol(files_in);
+
+%% Masking individual data
+opt_mask = rmfield(opt,{'folder_out','flag_test'});
+opt_mask.voxel_size = hdr.info.voxel_size;
+mask = niak_mask_brain_t1(anat,opt_mask);
+
+%% Writting output 
+if flag_verbose
+    fprintf('Writting the mask in %s ...\n',files_out);
+end
+hdr.file_name = files_out;
+niak_write_vol(hdr,mask);

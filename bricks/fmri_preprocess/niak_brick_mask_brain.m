@@ -193,7 +193,6 @@ end
 %% The brick starts here %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 %% Masking individual data
 opt_mask.flag_remove_eyes = opt.flag_remove_eyes;
 opt_mask.fwhm = opt.fwhm;
