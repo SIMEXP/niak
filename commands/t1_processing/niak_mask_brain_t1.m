@@ -20,6 +20,17 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %       VOXEL_SIZE
 %           (vector 1*3, default [1 1 1]) the size of a voxel.
 %
+%       NB_COMP_MAX
+%           (integer, default 3) To find the brain, the procedure will test
+%           the sphericity of the NB_COMP_MAX largest connected components.
+%
+%       SIZE_SPHERE
+%           (scalar, default 25) To find the brain, the procedure will test
+%           the which portion of a sphere of radius SIZE_SPHERE and 
+%           centered on the center of gravity of each component is included 
+%           in this component. The unit of the radius are the one of
+%           VOXEL_SIZE.
+%
 %       PERC_CONF
 %           (scalar, default 0.5) the portion of brain tissue that is
 %           excluded when defining core dense regions (the darkest voxels
@@ -142,8 +153,8 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 opt_tmp.flag_verbose = 1;
 
 gb_name_structure = 'opt';
-gb_list_fields = {'fill_holes','region_growing','voxel_size','perc_conf','flag_verbose'};
-gb_list_defaults = {opt_tmp,opt_tmp,[1 1 1],0.5,true};
+gb_list_fields = {'size_sphere','nb_comp_max','fill_holes','region_growing','voxel_size','perc_conf','flag_verbose'};
+gb_list_defaults = {25,3,opt_tmp,opt_tmp,[1 1 1],0.5,true};
 niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
@@ -180,7 +191,15 @@ val = sort(anat(mask_head));
 mask_conf = anat>val(ceil(perc_conf*length(val)));
 clear val
 mask_brain = niak_clustering_space_density(mask_conf,mask_head,opt.region_growing);
-mask_brain = round(mask_brain)==1;
+
+if flag_verbose
+    tic;
+    fprintf('     Extract the most "spherical" component ...\n')
+end
+
+nb_comp = min(nb_comp_max,max(mask_brain(:)));
+num_comp = sub_max_sphere(mask_brain,nb_comp,size_sphere,voxel_size);
+mask_brain = mask_brain==num_comp;
 
 if flag_verbose
     fprintf('     Time elapsed %1.3f sec.\n',toc);
@@ -268,3 +287,30 @@ end
 function vol = sub_unpad(vol_m,pad_size);
 siz_vol = size(vol_m)-2*pad_size;
 vol = vol_m(pad_size+1:pad_size+siz_vol(1),pad_size+1:pad_size+siz_vol(2),pad_size+1:pad_size+siz_vol(3));
+
+function num_comp = sub_max_sphere(mask,nb_comp,size_sphere,voxel_size)
+%% draw a sphere centered in the center of gravity of each region in a
+%% mask, and test which proportion of this sphere is included in the mask
+sphere_score = zeros([nb_comp 1]);
+opt_neig.type_neig = [voxel_size size_sphere];
+opt_neig.flag_within_mask = false;
+opt_neig.flag_position = false;
+
+for num_c = 1:nb_comp
+    % Extract the coordinates of the center of gravity    
+    ind = find(mask);
+    [x,y,z] = ind2sub(size(mask),ind);
+    clear ind
+    coord = round(mean([x,y,z],1));
+    coord = max(coord,[1 1 1]);
+    coord = min(coord,size(mask));
+    clear x y z
+    indg = sub2ind(size(mask),coord(1),coord(2),coord(3));
+    mask_g = false(size(mask));
+    mask_g(indg) = true;
+    ind_sphere = niak_build_neighbour(mask_g,opt_neig);
+    ind_sphere = ind_sphere(ind_sphere>0);
+    sphere_score(num_c) = mean(mask(ind_sphere)==num_c);
+end
+
+[val,num_comp] = max(sphere_score);
