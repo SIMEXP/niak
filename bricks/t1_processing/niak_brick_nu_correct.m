@@ -19,8 +19,9 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %           (string) the file name of a T1 volume.
 %
 %       MASK
-%           (string, default '') the file name of a binary mask of a region
-%           of interest. If left empty, no mask is specified.
+%           (string, default 'gb_niak_omitted') the file name of a binary 
+%           mask of a region of interest. If unspecified (or equal to 
+%           'gb_niak_omitted'), no mask is used.
 %
 %  * FILES_OUT
 %       (structure) with the following fields.  Note that if a field is an 
@@ -66,7 +67,7 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_BRICK_MASK_BRAIN_T1, NIAK_PIPELINE_ANAT_PREPROCESS
+% NIAK_BRICK_MASK_BRAIN_T1, NIAK_PIPELINE_BRICK_PREPROCESS
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -178,25 +179,17 @@ if flag_verbose
 end
 
 %% Setting up the system call to NU_CORRECT
-[path_f,name_f,ext_f] = fileparts(files_out.t1_nu);
+[path_f,name_f,ext_f] = fileparts(files_in.t1);
 flag_zip = strcmp(ext_f,gb_niak_zip_ext);
 
 path_tmp = niak_path_tmp(['_' name_f]);
 file_tmp_nu = [path_tmp 't1_nu.mnc'];
 file_tmp_imp = [path_tmp 't1_nu.imp'];
 
-if isempty(arg)
-    if strcmp(files_in.mask,'gb_niak_omitted')
-        instr = ['nu_correct -tmpdir ' path_tmp ' ' files_in.t1 ' ' file_tmp_nu];
-    else
-        instr = ['nu_correct -tmpdir ' path_tmp ' -mask ' files_in.mask ' ' files_in.t1 ' ' file_tmp_nu];
-    end
+if strcmp(files_in.mask,'gb_niak_omitted')
+    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' ' files_in.t1 ' ' file_tmp_nu];
 else
-    if strcmp(files_in.mask,'gb_niak_omitted')
-        instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' ' files_in.t1 ' ' file_tmp_nu];
-    else
-        instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.t1 ' ' file_tmp_nu];
-    end
+    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.t1 ' ' file_tmp_nu];
 end
 
 %% Running NU_CORRECT

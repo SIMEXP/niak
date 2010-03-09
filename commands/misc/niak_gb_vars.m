@@ -49,7 +49,7 @@ gb_niak_unzip = 'gunzip -f';
 % The extension of zipped files
 gb_niak_zip_ext = '.gz'; 
 
-if exist('flag_gb_niak_fast_gb','var')
+if exist('flag_gb_niak_fast_gb','var')&&flag_gb_niak_fast_gb
     return
 end
 

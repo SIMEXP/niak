@@ -192,8 +192,7 @@ mask_conf = anat>val(ceil(perc_conf*length(val)));
 clear val
 mask_brain = niak_clustering_space_density(mask_conf,mask_head,opt.region_growing);
 
-if flag_verbose
-    tic;
+if flag_verbose    
     fprintf('     Extract the most "spherical" component ...\n')
 end
 
