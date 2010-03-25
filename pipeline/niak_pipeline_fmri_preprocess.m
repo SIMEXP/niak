@@ -727,11 +727,11 @@ for num_s = 1:nb_subject
     %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
     files_in_tmp(1).transformation = pipeline.(name_stage_concat).files_out;
     files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mean_average;
-    files_in_tmp(1).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+    files_in_tmp(1).target = opt.template_fmri;
 
     files_in_tmp(2).transformation = pipeline.(name_stage_concat).files_out;
     files_in_tmp(2).source = pipeline.(name_stage_mask).files_out.mask;
-    files_in_tmp(2).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+    files_in_tmp(2).target = opt.template_fmri;
 
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
     files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereonl.mnc');
@@ -772,11 +772,11 @@ for num_s = 1:nb_subject
     %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
     files_in_tmp(1).transformation = pipeline.(name_stage_coregister).files_out.transformation;
     files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mean_average;
-    files_in_tmp(1).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+    files_in_tmp(1).target = opt.template_fmri;
     
     files_in_tmp(2).transformation = pipeline.(name_stage_coregister).files_out.transformation;
     files_in_tmp(2).source = pipeline.(name_stage_mask).files_out.mask;
-    files_in_tmp(2).target = cat(2,gb_niak_path_template,filesep,'roi_aal.mnc');
+    files_in_tmp(2).target = opt.template_fmri;
 
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
     files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereolin.mnc');
