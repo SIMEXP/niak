@@ -143,9 +143,11 @@ else
 end
 
 %% Generating a temporary raw data file
+[path_tmp,name_tmp,ext_tmp] = fileparts(file_name);
+
 if isempty(hdr.raw)
     flag_flush = true;
-    file_tmp = niak_file_tmp('.raw');
+    file_tmp = niak_file_tmp([name_tmp '.raw']);
 else
     flag_flush = false;
     file_tmp = hdr.raw;
