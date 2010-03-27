@@ -237,7 +237,8 @@ elseif ischar(file_name)
         end
         
         if strcmp(ext_f,gb_niak_zip_ext)
-            hdr.file_name = cat(2,path_f,filesep,name_f);
+            file_name = hdr.file_name;
+            hdr.file_name = niak_file_tmp(['_' name_f]);
         end
         switch type_f
             case {'minc1','minc2'} % That's a minc file
@@ -250,11 +251,15 @@ elseif ischar(file_name)
 
         if strcmp(ext_f,gb_niak_zip_ext)
             instr_zip = cat(2,gb_niak_zip,' ',hdr.file_name);
-            [succ,msg] = system(instr_zip);
-            if succ~=0
+            [status,msg] = system(instr_zip);
+            if status~=0
                 error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
             end
-
+            instr_mv = ['mv ' hdr.file_name gb_niak_zip_ext ' ' file_name];
+            [status,msg] = system(instr_mv);
+            if status~=0
+                error(cat(2,'niak:write: ',msg,'. There was a problem moving the compressed file from the temporary folder to its final destination'));
+            end
         end
 
     end
