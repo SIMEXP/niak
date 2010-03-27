@@ -29,6 +29,10 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %               'mean_var'          
 %                   Correct the time series to zero mean and unit variance.
 %
+%               'grand_mean'
+%                   Express the time series as a percentage of the grand
+%                   mean of all time series.
+%
 %               'fir'
 %                   Correct the mean of the time samples OPT.IND_TIME to 
 %                   zero.
@@ -124,6 +128,11 @@ switch opt.type
         if ~isempty(tseries_n)&&(any(std_ts~=0))
             tseries_n(:,std_ts~=0) = tseries_n(:,std_ts~=0)./(ones([nt 1])*std_ts(std_ts~=0));
         end
+ 
+    case 'grand_mean'
+        
+        grand_mean = mean(tseries(:));
+        tseries_n = tseries/grand_mean;
         
     case 'fir'
         
