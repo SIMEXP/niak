@@ -143,8 +143,8 @@ switch opt.type
         
         mean_ts = mean(tseries(opt.ind_time,:),1);
         tseries_n = tseries - ones([nt 1])*mean_ts;
-        norm2_ts = sqrt(sum(tseries.^2,1));
-        tseries_n(:,norm2_ts~=0) = tseries(:,norm2_ts~=0) ./ (ones([nt 1])*norm2_ts(:,norm2_ts~=0));
+        norm2_ts = sqrt(sum(tseries_n.^2,1)/(nt-1));
+        tseries_n(:,norm2_ts~=0) = tseries_n(:,norm2_ts~=0) ./ (ones([nt 1])*norm2_ts(:,norm2_ts~=0));
         
     otherwise
 
