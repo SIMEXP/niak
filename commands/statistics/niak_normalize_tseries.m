@@ -38,10 +38,11 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %                   zero.
 %
 %               'shape_fir'
-%                   Same as 'fir*', except that the 2-norm of the time
-%                   series are normalized to 1.
+%                   Same as 'fir', except that the average of the 
+%                   sum-of-squares2-norm of the time series are normalized 
+%                   to 1.
 %                   
-%       If OPT.TYPE = 'fir'
+%       If OPT.TYPE = 'fir' or OPT.TYPE = 'shape_fir'
 %
 %           IND_TIME
 %               (vector of integers) the indices of the time samples
@@ -55,7 +56,6 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %
 % _________________________________________________________________________
 % SEE ALSO :
-%
 % NIAK_CORRECT_MEAN_VAR
 %
 % _________________________________________________________________________
@@ -143,7 +143,7 @@ switch opt.type
         
         mean_ts = mean(tseries(opt.ind_time,:),1);
         tseries_n = tseries - ones([nt 1])*mean_ts;
-        norm2_ts = sqrt(sum(tseries_n.^2,1)/(nt-1));
+        norm2_ts = sqrt(sum(tseries_n.^2,1)/nt);
         tseries_n(:,norm2_ts~=0) = tseries_n(:,norm2_ts~=0) ./ (ones([nt 1])*norm2_ts(:,norm2_ts~=0));
         
     otherwise

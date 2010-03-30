@@ -12,8 +12,15 @@ function [files_in,files_out,opt] = niak_brick_spca(files_in,files_out,opt)
 % INPUTS
 %
 %  * FILES_IN        
-%       (string) file name of a 3D+t dataset. See NIAK_READ_VOL for
-%       supported formats
+%       (structure) with the following fields :
+%       
+%       FMRI
+%           (string) file name of a 3D+t dataset. See NIAK_READ_VOL for
+%           supported formats
+%
+%       MASK
+%           (string) file name of a binary mask of the voxels of interest.
+%           If not specified, NIAK_MASK_BRAIN will be used to extract one.
 %
 %  * FILES_OUT 
 %       (structure) with the following fields. Note that if a field
@@ -122,16 +129,17 @@ gb_list_fields = {'nb_comp','flag_test','folder_out','flag_verbose'};
 gb_list_defaults = {[],0,'',1};
 niak_set_defaults
 
+%% Input files
+gb_name_structure = 'files_in';
+gb_list_fields = {'fmri','mask'};
+gb_list_defaults = {NaN,'gb_niak_omitted'};
+niak_set_defaults
+
 %% Output files
 gb_name_structure = 'files_out';
 gb_list_fields = {'space','time','variance','figure'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
-
-%% Input files
-if ~ischar(files_in)
-    error('FILES_IN should be a cell of strings');
-end
 
 [path_f,name_f,ext_f] = fileparts(files_in);
 if isempty(path_f)
@@ -183,10 +191,15 @@ end
 [hdr,vol] = niak_read_vol(files_in);
 
 %% Brain mask
-if flag_verbose
-    fprintf('\n Extracting brain mask ...\n')
+if ~strcmp(files_in.mask,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('\n Extracting brain mask ...\n')
+    end
+    mask = niak_mask_brain(mean(abs(vol),4));
+else
+    [hdr_mask,mask] = niak_read_vol(files_in.mask);
+    mask = round(mask)>0;
 end
-mask = niak_mask_brain(mean(abs(vol),4));
 
 %% Correcting time series for mean and variance
 if flag_verbose

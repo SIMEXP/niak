@@ -83,6 +83,8 @@ function [res_ica]=niak_sica(data,opt)
 % The code was mainly contributed by Scott Makeig under a GNU
 % license. See subfunctions for details. 
 %
+% The FastICA methods require the installation of the fastICA toolbox.
+%
 % Copyright (c) Vincent Perlbarg, U678, LIF, Inserm, UMR_S 678, Laboratoire
 % d'Imagerie Fonctionnelle, F-75634, Paris, France, 2005.
 % Maintainer : vperlbar@imed.jussieu.fr
