@@ -95,10 +95,12 @@ function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,
 % of spatial density rather than more standard morphomathematical 
 % operations. Specifically, the main stages are the following :
 %
-%   1. Classification of brain tissues into CSF/WM/GM using k-means.
+%   1. Intensity based segmentation into CSF, pseudo white matter and 
+%   white + grey matter.
 %
 %   2. Competitive region growing. The seed regions are the bigger
-%   connected components within the dense portions of the grey matter. This
+%   connected components within the dense portions of the white matter. 
+%   Labels are propageted to grey matter through region-growing. This
 %   method is known as DBSCAN and has been proposed in :
 %
 %   Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu (1996).

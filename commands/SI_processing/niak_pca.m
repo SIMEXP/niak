@@ -7,7 +7,7 @@ function [eig_val,eig_vec,weights] = niak_pca(data,nb_comp)
 % Perform a principal component analysis on a 2D data array.
 %
 % SYNTAX:
-% [EIG_VAL,EIG_VEC] = NIAK_PCA(DATA)
+% [EIG_VAL,EIG_VEC,WEIGHTS] = NIAK_PCA(DATA)
 %
 % _________________________________________________________________________
 % INPUTS

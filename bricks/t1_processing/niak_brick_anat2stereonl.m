@@ -1,16 +1,17 @@
-function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_anat2stereonl(files_in,files_out,opt)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_BRICK_ANAT2STEREOLIN
+% SUMMARY NIAK_BRICK_ANAT2STEREONL
 %
-% Linear coregistration of a T1 anatomical scan in native space to the MNI
-% stereotaxic space.
+% Non-linear coregistration of a T1 anatomical scan in native space to the 
+% MNI stereotaxic space.
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2STEREOLIN(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2STEREONL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
+%
 %   FILES_IN        
 %       (structure) with the following fields :
 %
@@ -41,12 +42,12 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 %       equivalent to setting up the output file names to 
 %       'gb_niak_omitted'). 
 %                       
-%       TRANSFORMATION
-%           (string, default <base FILES_IN.T1>_native_to_stereolin.xfm) The linear
+%       TRANSFORM
+%           (string, default <base FILES_IN.T1>_native_to_stereonl.xfm) The linear
 %           transformation to the stereotaxic space.
 %
-%       T1_STEREOLIN
-%           (string, default <base FILES_IN.T1>_stereolin.<ext FILE_IN.T1>) 
+%       T1_STEREONL
+%           (string, default <base FILES_IN.T1>_stereonl.<ext FILE_IN.T1>) 
 %           The T1 image resampled in stereotaxic space.
 %
 %   OPT           
@@ -71,22 +72,23 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 %           needs to be created beforehand.
 %               
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_BRICK_MASK_BRAIN_T1, NIAK_BRICK_NU_CORRECT, NIAK_BRICK_ANAT_PREPROCESS
+% NIAK_BRICK_MASK_BRAIN_T1, NIAK_BRICK_NU_CORRECT,
+% NIAK_BRICK_ANAT_PREPROCESS, NIAK_BRICK_ANAT2STEREOLIN
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
 % NOTE 1:
-%   This is a simple wrapper of a perl script called BESTLINREG.PL, by
+%   This is a simple wrapper of a perl script called BEST1STEPNLREG.PL, by
 %   Claude Lepage and Andrew Janke. The script is bundled in NIAK and can
-%   be found in <root niak>/extensions/CIVET-1.1.9/niak_bestlinreg.pl
+%   be found in <root niak>/extensions/CIVET-1.1.9/niak_best1stnlreg.pl
 %   See the script code for license information (it is a BSD-like license
 %   similar to what is used in most minc tools). Note that the script is
 %   simply included in NIAK archive releases, but is not part of the
@@ -95,11 +97,12 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 %   this brick to work.
 %
 % NOTE 2: 
-%   The BESTLINREG script does hierachical linear fitting between two files.
-%   The script needs to be manually edited to change the parameters of the
-%   fit. Most of the work is actually done by the MNI-AUTOREG package by
-%   Louis Collins, Andrew Janke and Steve Robbins. This package needs to be
-%   installed independently of NIAK, as part of the MINC bundle. See
+%   The BEST1STEPNLREG script does hierachical non-linear fitting between 
+%   two files. The script needs to be manually edited to change the 
+%   parameters of the fit. Most of the work is actually done by the 
+%   MNI-AUTOREG package by Louis Collins, Andrew Janke and Steve Robbins. 
+%   This package needs to be installed independently of NIAK, as part of 
+%   the MINC bundle. See :
 %   http://www.bic.mni.mcgill.ca/ServicesSoftware/HomePage
 %
 % NOTE 3:
@@ -120,7 +123,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, T1, linear coregistration, template
+% Keywords : medical imaging, T1, non-linear coregistration, template
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -149,7 +152,7 @@ niak_gb_vars; % load important NIAK variables
 
 %% Syntax
 if ~exist('files_in','var')|~exist('files_out','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2STEREOLIN(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_anat2stereolin'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2STEREONL(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_anat2stereonl'' for more info.')
 end
 
 %% Input files
@@ -160,7 +163,7 @@ niak_set_defaults
 
 %% Output files
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation','t1_stereolin'};
+gb_list_fields = {'transformation','t1_stereonl'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
@@ -193,12 +196,12 @@ if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
 end
 
-if isempty(files_out.t1_stereolin)
-    files_out.t1_stereolin = [opt.folder_out,filesep,name_f,'_stereolin',ext_f];
+if isempty(files_out.t1_stereonl)
+    files_out.t1_stereonl = [opt.folder_out,filesep,name_f,'_stereonl',ext_f];
 end
 
 if isempty(files_out.transformation)
-    files_out.transformation = [opt.folder_out,filesep,name_f,'_native_to_stereolin.xfm'];
+    files_out.transformation = [opt.folder_out,filesep,name_f,'_native_to_stereonl.xfm'];
 end
 
 if flag_test == 1    
@@ -210,7 +213,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    msg = 'Linear coregistration to stereotaxic space';
+    msg = 'Non-linear coregistration to stereotaxic space';
     stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);    
 end
@@ -221,7 +224,7 @@ if ~exist('gb_niak_path_niak','var')
     niak_gb_vars; % load important NIAK variables
 end
 
-file_script = [gb_niak_path_niak 'extensions' filesep 'CIVET-1.1.9' filesep 'niak_bestlinreg.pl'];
+file_script = [gb_niak_path_niak 'extensions' filesep 'CIVET-1.1.9' filesep 'niak_best1stepnlreg.pl'];
    
 %% Setting up the system call to NIAK_BESTLINREG.PL
 if strcmp(files_in.t1_mask,'gb_niak_omitted')
@@ -231,22 +234,22 @@ else
 end
 
 if strcmp(files_out.transformation,'gb_niak_omitted')
-    arg_transf = niak_file_tmp(['_' name_f '_native2stereolin.xfm']);
+    arg_transf = niak_file_tmp(['_' name_f '_native2stereonl.xfm']);
 else
     arg_transf = files_out.transformation;
 end
 
-if strcmp(files_out.t1_stereolin,'gb_niak_omitted')
+if strcmp(files_out.t1_stereonl,'gb_niak_omitted')
     arg_out = '';
 else
-    arg_out = files_out.t1_stereolin;
+    arg_out = files_out.t1_stereonl;
 end
 
 instr = [file_script ' -clobber ' arg ' ' arg_mask ' ' files_in.t1 ' ' files_in.template ' ' arg_transf ' ' arg_out];    
 
 %% Running NIAK_BESTLINREG.PL
 if flag_verbose
-    fprintf('Running BESTLINREG with the following command:\n%s\n\n',instr)
+    fprintf('Running BEST1STEPNLREG with the following command:\n%s\n\n',instr)
 end
 
 if flag_verbose
@@ -254,7 +257,7 @@ if flag_verbose
 else
     [status,msg] = system(instr);
     if status~=0
-        error('The bestlinreg command failed with that error message :\n%s\n',msg);
+        error('The BEST1STEPNLREG command failed with that error message :\n%s\n',msg);
     end
 end
 
