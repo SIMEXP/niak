@@ -145,4 +145,5 @@ opt.flag_test = true;
 opt.flag_test = false;
 file_anat_stereonl = files_out.t1_stereonl;
 file_anat2stereonl = files_out.transformation;
+opt.arg = '-normalize';
 niak_brick_anat2stereonl(files_in,files_out,opt);

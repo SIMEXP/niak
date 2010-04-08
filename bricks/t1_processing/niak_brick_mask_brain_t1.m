@@ -57,6 +57,13 @@ function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,
 %               (scalar, default 10) the distance for expansion/shrinking
 %               of the brain, expressed in the same units as VOXEL_SIZE.
 %
+%       DIST_BRAIN
+%           (scalar, default 130) voxels that are further away than
+%           DIST_BRAIN from the center of mass of the brain are excluded of
+%           the mask. That can be used to get rid of the spinal cord.
+%           Setting up DIST_BRAIN to Inf will result in keeping the whole
+%           mask.
+%
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
 %           outputs will be created in the folder FOLDER_OUT. The folder 
@@ -115,6 +122,11 @@ function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,
 %   3. Holes in the brain mask are filled using morphomathematical
 %   operations.
 %
+% 	4. The spinal cord can optionally be removed from the mask. This is 
+%   done by excluding voxels that are more than 150mm apart from the center 
+%   of mass of the brain. This distance threshold can be ajusted using
+%   OPT.DIST_BRAIN . Setting it up to Inf will result in keeping
+%   everything.
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -165,8 +177,8 @@ end
 opt_tmp.flag_verbose = 1;
 
 gb_name_structure = 'opt';
-gb_list_fields = {'folder_out','fill_holes','region_growing','voxel_size','perc_conf','flag_verbose','flag_test'};
-gb_list_defaults = {'',opt_tmp,opt_tmp,[1 1 1],0.5,true,false};
+gb_list_fields = {'folder_out','fill_holes','region_growing','dist_brain','perc_conf','flag_verbose','flag_test'};
+gb_list_defaults = {'',opt_tmp,opt_tmp,130,0.5,true,false};
 niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
@@ -176,10 +188,10 @@ niak_set_defaults
 opt.region_growing.flag_verbose = opt.flag_verbose;
 
 gb_name_structure = 'opt.fill_holes';
-gb_list_fields = {'voxel_size','flag_verbose','thresh_dist'};
-gb_list_defaults = {opt.voxel_size,opt.flag_verbose,10};
+gb_list_fields = {'flag_verbose','thresh_dist'};
+gb_list_defaults = {true,10};
 niak_set_defaults
-
+opt.fill_holes = rmfield(opt.fill_holes,'flag_verbose');
 flag_verbose = opt.flag_verbose;
 
 %% Output files

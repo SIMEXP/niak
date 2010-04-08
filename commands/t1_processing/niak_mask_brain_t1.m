@@ -67,6 +67,13 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %               (scalar, default 10) the distance for expansion/shrinking
 %               of the brain, expressed in the same units as VOXEL_SIZE.
 %
+%       DIST_BRAIN
+%           (scalar, default 130) voxels that are further away than
+%           DIST_BRAIN from the center of mass of the brain are excluded of
+%           the mask. That can be used to get rid of the spinal cord.
+%           Setting up DIST_BRAIN to Inf will result in keeping the whole
+%           mask.
+%
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function
 %           prints some infos during the processing.
@@ -121,6 +128,11 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %   3. Holes in the brain mask are filled using morphomathematical
 %   operations.
 %
+% 	4. The spinal cord can optionally be removed from the mask. This is 
+%   done by excluding voxels that are more than 150mm apart from the center 
+%   of mass of the brain. This distance threshold can be ajusted using
+%   OPT.DIST_BRAIN . Setting it up to Inf will result in keeping
+%   everything.
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -153,8 +165,8 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 opt_tmp.flag_verbose = 1;
 
 gb_name_structure = 'opt';
-gb_list_fields = {'size_sphere','nb_comp_max','fill_holes','region_growing','voxel_size','perc_conf','flag_verbose'};
-gb_list_defaults = {25,3,opt_tmp,opt_tmp,[1 1 1],0.5,true};
+gb_list_fields = {'dist_brain','size_sphere','nb_comp_max','fill_holes','region_growing','voxel_size','perc_conf','flag_verbose'};
+gb_list_defaults = {130,25,3,opt_tmp,opt_tmp,[1 1 1],0.5,true};
 niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
@@ -193,7 +205,7 @@ clear val
 mask_brain = niak_clustering_space_density(mask_conf,mask_head,opt.region_growing);
 
 if flag_verbose    
-    fprintf('     Extract the most "spherical" component ...\n')
+    fprintf('     Extracting the most "spherical" component ...\n')
 end
 
 nb_comp = min(nb_comp_max,max(mask_brain(:)));
@@ -266,6 +278,23 @@ if flag_verbose
     fprintf('Done !\n')
 end
 
+%% Remove spinal cord
+if flag_verbose
+    fprintf('Removing the spinal cord...\n')   
+    tic
+end
+
+if dist_brain~=Inf
+    mask_brain = sub_cord(mask_brain,voxel_size,dist_brain);
+end
+
+if flag_verbose
+    fprintf('     Time elapsed %1.3f sec.\n',toc);
+    fprintf('Done !\n')
+end
+
+
+
 function vol_m = sub_pad(vol,pad_size)
 pad_order = [3 2 1];
 vol_m = zeros(size(vol)+2*pad_size);
@@ -287,6 +316,21 @@ function vol = sub_unpad(vol_m,pad_size);
 siz_vol = size(vol_m)-2*pad_size;
 vol = vol_m(pad_size+1:pad_size+siz_vol(1),pad_size+1:pad_size+siz_vol(2),pad_size+1:pad_size+siz_vol(3));
 
+function mask2 = sub_cord(mask,voxel_size,dist_brain)
+ind = find(mask);
+[coord,x,y,z] = sub_center(mask,ind);
+dist = sqrt((voxel_size(1)*(x-repmat(coord(1),[length(x) 1]))).^2+(voxel_size(2)*(y-repmat(coord(2),[length(y) 1]))).^2+(voxel_size(3)*(z-repmat(coord(3),[length(z) 1]))).^2);
+mask2 = zeros(size(mask));
+mask2(mask>0) = dist<=dist_brain;
+
+function [coord,x,y,z] = sub_center(mask,ind)
+
+[x,y,z] = ind2sub(size(mask),ind);
+clear ind
+coord = round(median([x,y,z],1));
+coord = max(coord,[1 1 1]);
+coord = min(coord,size(mask));
+
 function num_comp = sub_max_sphere(mask,nb_comp,size_sphere,voxel_size)
 %% draw a sphere centered in the center of gravity of each region in a
 %% mask, and test which proportion of this sphere is included in the mask
@@ -298,12 +342,7 @@ opt_neig.flag_position = false;
 for num_c = 1:nb_comp
     % Extract the coordinates of the center of gravity    
     ind = find(mask);
-    [x,y,z] = ind2sub(size(mask),ind);
-    clear ind
-    coord = round(mean([x,y,z],1));
-    coord = max(coord,[1 1 1]);
-    coord = min(coord,size(mask));
-    clear x y z
+    coord = sub_center(mask,ind);
     indg = sub2ind(size(mask),coord(1),coord(2),coord(3));
     mask_g = false(size(mask));
     mask_g(indg) = true;

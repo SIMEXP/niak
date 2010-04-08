@@ -54,7 +54,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereonl(files_in,files_out,
 %       (structure) with the following fields:
 %
 %       ARG
-%           (string, default '-normalize') any argument that will be passed to the
+%           (string, default '') any argument that will be passed to the
 %           NIAK_BESTLINREG script (see comments below). 
 %
 %       FLAG_VERBOSE 
@@ -170,7 +170,7 @@ niak_set_defaults
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'arg','flag_verbose','folder_out','flag_test'};
-gb_list_defaults = {'-normalize',true,'',false};
+gb_list_defaults = {'',true,'',false};
 niak_set_defaults
 
 %% Building default input names for template

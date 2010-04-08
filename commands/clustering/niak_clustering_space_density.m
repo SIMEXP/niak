@@ -7,7 +7,7 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 % voxels.
 %
 % SYNTAX :
-% PART = NIAK_CLUSTERING_SPACE_DENSITY(MASK,OPT)
+% PART = NIAK_CLUSTERING_SPACE_DENSITY(MASK,MASK_EXTRA,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -15,7 +15,7 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 % MASK
 %       (3D binary volume) a set of 3D voxels on a regular grid.
 %
-% MASK_EXTRAS
+% MASK_EXTRA
 %       (3D volume)  extra voxels to be classified in the region
 %       growing process but not in the density estimation. Empty values 
 %       will result in no extra voxels.
