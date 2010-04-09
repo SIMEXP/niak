@@ -109,16 +109,26 @@ for num_f = 1:length(list_files)
         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
     end
     
-    if strcmp(ext,'.nii')
-        target_file = [files_out filesep name_tmp '.mnc'];
-        instr_cp = ['nii2mnc ',arg_nii2mnc,' ',source_file,' ',target_file];       
-        msg = sprintf('Convert %s to %s\n',source_file,target_file);
-    else
-        target_file = [files_out filesep file_name];
-        instr_cp = ['cp -f ' source_file ' ' target_file];        
-        msg = sprintf('Copy %s to %s\n',source_file,target_file);
-    end    
-        
+    switch ext
+        case {'.nii','.img'}
+            
+            target_file = [files_out filesep name_tmp '.mnc'];
+            instr_cp = ['nii2mnc ',arg_nii2mnc,' ',source_file,' ',target_file];
+            msg = sprintf('Convert %s to %s\n',source_file,target_file);
+            
+        case '.hdr'
+            
+            target_file = '';
+            instr_cp = '';
+            msg = sprintf('Skipping the header file %s\n',source_file);
+                        
+        otherwise
+            
+            target_file = [files_out filesep file_name];
+            instr_cp = ['cp -f ' source_file ' ' target_file];
+            msg = sprintf('Copy %s to %s\n',source_file,target_file);
+    end
+    
     if ~strcmp(source_file,target_file)
         if flag_verbose
             fprintf('%s',msg)
@@ -135,7 +145,7 @@ if flag_recursive
     
     for num_d = 1:length(list_dir)
         
-        niak_brick_mnc2nii([files_in filesep list_dir{num_d}],[files_out filesep list_dir{num_d}],opt);
+        niak_brick_nii2mnc([files_in filesep list_dir{num_d}],[files_out filesep list_dir{num_d}],opt);
         
     end
 end
