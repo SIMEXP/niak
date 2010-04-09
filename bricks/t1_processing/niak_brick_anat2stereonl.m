@@ -224,7 +224,7 @@ if ~exist('gb_niak_path_niak','var')
     niak_gb_vars; % load important NIAK variables
 end
 
-file_script = [gb_niak_path_niak 'extensions' filesep 'CIVET-1.1.9' filesep 'niak_best1stepnlreg.pl'];
+file_script = [gb_niak_path_niak 'commands' filesep 't1_processing' filesep 'niak_best1stepnlreg.pl'];
    
 %% Setting up the system call to NIAK_BESTLINREG.PL
 if strcmp(files_in.t1_mask,'gb_niak_omitted')
