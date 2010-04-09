@@ -37,12 +37,12 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %                   Correct the mean of the time samples OPT.IND_TIME to 
 %                   zero.
 %
-%               'shape_fir'
+%               'fir_shape'
 %                   Same as 'fir', except that the average of the 
 %                   sum-of-squares2-norm of the time series are normalized 
 %                   to 1.
 %                   
-%       If OPT.TYPE = 'fir' or OPT.TYPE = 'shape_fir'
+%       If OPT.TYPE = 'fir' or OPT.TYPE = 'fir_shape'
 %
 %           IND_TIME
 %               (vector of integers) the indices of the time samples
