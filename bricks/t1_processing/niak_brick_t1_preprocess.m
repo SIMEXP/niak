@@ -17,7 +17,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %   FILES_IN        
 %       (string) the file name of a T1 volume.
 %
-%  FILES_OUT  
+%   FILES_OUT  
 %       (structure) with the following fields. Note that if a field is an 
 %       empty string, a default value will be used to name the outputs. If 
 %       a field is ommited, the output won't be saved at all (this is 

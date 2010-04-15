@@ -1,0 +1,53 @@
+
+MNI ICBM152 non-linear 40th generation symmetric and asymmetric Average Brain
+                     Stereotaxic Registration Model
+                                  2009
+
+This is a very partial version of the ICBM Average Brain - an average of 152
+T1-weighted MRI scans, linearly and non-linearly (40 iterations)
+transformed to form symmetric and asymmetric models in Talairach 
+space - that is specially adapted for use with the MNI Linear 
+Registration Package (mni_autoreg). 
+Please see http://www.bic.mni.mcgill.ca/ServicesAtlases/HomePage for the full version of the package.
+
+Please note that the volumes here are different from the mni305 model
+(average_305) that was originally (back in ancient times) included
+with mni_autoreg.
+
+Included in this package are the following files:
+
+  mni_icbm152_{t1,t2,pd,gm,wm,csf,cls}_tal_nlin_{asym,sym}_09a[_{mask,headmask,eye_mask,face_mask,outline}].mnc
+
+where 
+
+  t1 - T1w modality [0,100]
+  t2 - T2w modality [0,100]
+  pd - PDw modality [0,100]
+  gm - GM probability map [0,1]
+  wm - WM probability map [0,1]
+  csf - CSF probability map [0,1]
+  cls - hard classes ( 1 - CSF, 2 - GM, 3 - WM )
+
+  asym - asymmetric version of the model
+  sym - symmetric version of the model
+
+  mask - brain mask, it is the same for all modalities but only file for 
+         T1w exists [0;1]
+  headmask - head mask including skull, it is the same for all modalities 
+             but only file for T1w exists [0;1]
+  eye_mask - mask for the eyes, it is the same for all modalities 
+             but only file for T1w exists [0;1]
+  face_mask - mask for face stripping, it is the same for all 
+              modalities but only file for T1w exists [0;1]
+  outline - approximate brain surface outline (useful for QC scripts, for 
+            quick checking of the quality of linear registration) [0;1]
+
+All volumes are sampled with 1mm cubic voxels.
+
+
+Reference:
+V.S. Fonov, A.C. Evans, R.C. McKinstry, C.R. Almli, D.L. Collins,
+"Unbiased nonlinear average age-appropriate brain templates from 
+birth to adulthood", accepted for poster presentation at HBM'09,
+San Francisco, 2009.
+
