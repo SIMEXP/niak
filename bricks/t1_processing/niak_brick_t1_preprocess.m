@@ -13,6 +13,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %
 % _________________________________________________________________________
 % INPUTS:
+%
 %   FILES_IN        
 %       (string) the file name of a T1 volume.
 %
@@ -65,14 +66,14 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %       CLASSIFY 
 %           (string, default <BASE_ANAT>_classify_stereolin.<EXT>)
 %           final masked discrete tissue classification in stereotaxic
-%           (linear) space after correction for partial volumes.
+%           (linear) space.
 %
 %   OPT           
 %       (structure) with the following fields:
 %
 %       N3_DISTANCE 
 %           (real number, default 200 mm)  N3 spline distance in mm 
-%           (suggested values: 200 for 1.5T scan; 25 for 3T scan). 
+%           (suggested values: 200 for 1.5T scan; 50 for 3T scan). 
 %
 %       FLAG_VERBOSE 
 %           (boolean, default: 1) If FLAG_VERBOSE == 1, write
@@ -98,19 +99,19 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % SEE ALSO:
 % NIAK_BRICK_MASK_BRAIN_T1, NIAK_BRICK_NU_CORRECT,
 % NIAK_BRICK_ANAT2STEREOLIN, NIAK_BRICK_ANAT2STEREONL,
-% NIAK_BRICK_NU_CORRECT, NIAK_BRICK_INORMALIZE
+% NIAK_BRICK_NU_CORRECT, NIAK_BRICK_INORMALIZE, NIAK_BRICK_CLASSIFY
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
 % NOTE 1:
 %   This is essentially a NIAKified version of a small subpart of the CIVET
-%   pipeline, see http://wiki.bic.mni.mcgill.ca/index.php/CIVET
-%   developed in the lab of Alan C. Evans.
+%   pipeline developed in the lab of Alan C. Evans, see :
+%   http://wiki.bic.mni.mcgill.ca/index.php/CIVET
 %   Claude Lepage, Andrew Janke and Patrick Bermudez gave precious
 %   directions to NIAKify this part of the pipeline.
-%   Many people were and are still involved in the development of CIVET, 
-%   including Yasser Ad-Dab'bagh, Jason Lerch and Oliver Lyttelton. 
+%   Many other people were and are still involved in the development of 
+%   CIVET, including Yasser Ad-Dab'bagh, Jason Lerch and Oliver Lyttelton. 
 %   See the CIVET webpage for a detailed list of contributions. 
 %
 % NOTE 2:
@@ -133,11 +134,23 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %
 % NOTE 4:
 %   The flowchart of the brick is as follows :
-%       1. Brain extraction in native space:
-%          NIAK_BRICK_MASK_BRAIN_T1
-%       2. Non-uniformity correction in native space:
-%          NIAK_BRICK_NU_CORRECT
-%       (...)
+%       1.  Brain extraction in native space:
+%           NIAK_BRICK_MASK_BRAIN_T1
+%       2.  Non-uniformity correction in native space:
+%           NIAK_BRICK_NU_CORRECT
+%       3.  Linear coregistration in stereotaxic space.
+%           NIAK_BRICK_ANAT2STEREOLIN
+%       4.  Non-uniformity correction based on the template mask
+%           NIAK_BRICK_NU_CORRECT
+%       5.  Brain extraction, combined with the template mask
+%           NIAK_BRICK_MASK_BRAIN_T1
+%       6.  Intensity normalization
+%           NIAK_BRICK_INORMALIZE
+%       7.  Non-linear coregistration in template space
+%           NIAK_BRICK_ANAT2STEREONL
+%       8.  Tissue classification
+%           NIAK_BRICK_CLASSIFY
+%
 % NOTE 5:
 %   The template is the so-called "mni-models_icbm152-nl-2009-1.0"
 %   by Louis Collins, Vladimir Fonov and Andrew Janke. 
@@ -222,4 +235,143 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+
+niak_gb_vars
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Seting up default arguments %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% SYNTAX
+if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+    error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_T1_PREPROCESS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_civet'' for more info.')
+end
+
+%% FILES_IN
+if ~ischar(files_in)
+    error('FILES_IN should be a string !\n')
+end
+
+%% FILES_OUT
+gb_name_structure = 'files_out';
+gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask_native','mask_stereolin','classify'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+niak_set_defaults
+
+%% OPTIONS
+gb_name_structure = 'opt';
+gb_list_fields = {'flag_test','folder_out','flag_verbose','n3_distance'};
+gb_list_defaults = {0,'',1,200};
+niak_set_defaults
+
+%% Building default output names
+[path_anat,name_anat,ext_anat] = fileparts(files_in.anat);
+
+if isempty(path_anat)
+    path_anat = '.';
+end
+
+if strcmp(ext_anat,gb_niak_zip_ext)
+    [tmp,name_anat,ext_anat] = fileparts(name_anat);
+    ext_anat = cat(2,ext_anat,gb_niak_zip_ext);
+end
+
+if isempty(opt.folder_out)
+    folder_anat = path_anat;
+else
+    folder_anat = opt.folder_out;
+end
+
+if strcmp(files_out.transformation_lin,'')
+    files_out.transformation_lin = cat(2,folder_anat,name_anat,'_native2stereolin.xfm');
+end
+
+if strcmp(files_out.transformation_nl,'')
+    files_out.transformation_nl = cat(2,folder_anat,name_anat,'_stereolin2stereonl.xfm');
+end
+
+if strcmp(files_out.transformation_nl_grid,'')
+    files_out.transformation_nl_grid = cat(2,folder_anat,name_anat,'_stereolin2stereonl_grid.mnc');
+end
+
+if strcmp(files_out.anat_nuc,'')
+    files_out.anat_nuc = cat(2,folder_anat,name_anat,'_nuc_native',ext_anat);
+end
+
+if strcmp(files_out.anat_nuc_stereo_lin,'')
+    files_out.anat_nuc_stereo_lin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);
+end
+
+if strcmp(files_out.anat_nuc_stereo_nl,'')
+    files_out.anat_nuc_stereo_nl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);
+end
+
+if strcmp(files_out.mask_native,'')
+    files_out.mask = cat(2,folder_anat,name_anat,'_mask_native',ext_anat);
+end
+
+if strcmp(files_out.mask_stereo,'')
+    files_out.mask_stereo = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
+end
+
+if strcmp(files_out.classify,'')
+    files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
+end
+
+if flag_test == 1
+    return
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The brick starts here %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Generate template file names
+
+%% Generate temporary file names
+
+path_tmp = niak_path_tmp('_',name_anat,'t1_preprocess');
+
+anat_stereolin_raw = [path_tmp,name_anat,'_raw_stereolin' ext_anat];
+
+anat_stereolin_nu = [path_tmp,name_anat,'_nu_stereolin' ext_anat];
+
+anat_stereolin_mask = [path_tmp,name_anat,'_mask_stereolin' ext_anat];
+
+if strcmp(files_out.transformation_lin,'gb_niak_omitted')
+    files_out.transformation_lin = cat(2,path_tmp,name_anat,'_native2stereolin.xfm');
+end
+
+if strcmp(files_out.transformation_nl,'gb_niak_omitted')
+    files_out.transformation_nl = cat(2,path_tmp,name_anat,'_stereolin2stereonl.xfm');
+end
+
+if strcmp(files_out.transformation_nl_grid,'gb_niak_omitted')
+    files_out.transformation_nl_grid = cat(2,path_tmp,name_anat,'_stereolin2stereonl_grid.mnc');
+end
+
+if strcmp(files_out.anat_nuc,'gb_niak_omitted')
+    files_out.anat_nuc = cat(2,path_tmp,name_anat,'_nuc_native',ext_anat);
+end
+
+if strcmp(files_out.anat_nuc_stereo_lin,'gb_niak_omitted')
+    files_out.anat_nuc_stereo_lin = cat(2,path_tmp,name_anat,'_nuc_stereolin',ext_anat);
+end
+
+if strcmp(files_out.anat_nuc_stereo_nl,'gb_niak_omitted')
+    files_out.anat_nuc_stereo_nl = cat(2,path_tmp,name_anat,'_nuc_stereonl',ext_anat);
+end
+
+if strcmp(files_out.mask_native,'gb_niak_omitted')
+    files_out.mask = cat(2,path_tmp,name_anat,'_mask_native',ext_anat);
+end
+
+if strcmp(files_out.mask_stereo,'gb_niak_omitted')
+    files_out.mask_stereo = cat(2,path_tmp,name_anat,'_mask_stereolin',ext_anat);
+end
+
+if strcmp(files_out.classify,'gb_niak_omitted')
+    files_out.classify = cat(2,path_tmp,name_anat,'_classify_stereolin',ext_anat);
+end
 
