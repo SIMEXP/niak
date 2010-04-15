@@ -3,12 +3,11 @@ function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
 % _________________________________________________________________________
 % SUMMARY NIAK_BRICK_MATH_VOL
 %
-% Combine multiple brain masks. Those masks have integer values : Is in the
-% region number number I, and 0 outside the mask. Multiple combinaisons are
-% available : union, intersection, restriction.
+% Apply an arbitrary matlab operation on multiple brain volume to generate
+% an outpout volume.
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMBINE_MASK(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MATH_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
@@ -61,7 +60,7 @@ function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, volume
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal

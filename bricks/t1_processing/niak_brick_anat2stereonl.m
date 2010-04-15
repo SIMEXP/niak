@@ -177,8 +177,8 @@ niak_set_defaults
 if isempty(files_in.template)
     flag_gb_niak_fast_gb = false;
     niak_gb_vars; % load important NIAK variables
-    files_in.template = [gb_niak_path_niak 'extensions' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
-    files_in.template_mask = [gb_niak_path_niak 'extensions' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
+    files_in.template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
+    files_in.template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
 end
 
 %% Building default output names
