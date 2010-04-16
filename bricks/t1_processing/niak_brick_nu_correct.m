@@ -42,8 +42,10 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %       (structure) with the following fields:
 %
 %       ARG
-%           (string, default '') any argument that will be passed to the
-%           NU_CORRECT command (see comments below). 
+%           (string, default '-distance 200') any argument that will be 
+%           passed to the NU_CORRECT command (see comments below). The 
+%           '-distance' option sets the N3 spline distance in mm (suggested 
+%           values: 200 for 1.5T scan; 50 for 3T scan). 
 %
 %       FLAG_VERBOSE 
 %           (boolean, default: 1) If FLAG_VERBOSE == 1, write
@@ -138,7 +140,7 @@ niak_set_defaults
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'arg','flag_verbose','folder_out','flag_test'};
-gb_list_defaults = {'',true,'',false};
+gb_list_defaults = {'-distance 200',true,'',false};
 niak_set_defaults
 
 %% Building default output names

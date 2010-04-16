@@ -42,7 +42,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 %       'gb_niak_omitted'). 
 %                       
 %       TRANSFORMATION
-%           (string, default <base FILES_IN.T1>_native_to_stereolin.xfm) The linear
+%           (string, default <base FILES_IN.T1>_native2stereolin.xfm) The linear
 %           transformation to the stereotaxic space.
 %
 %       T1_STEREOLIN
@@ -174,8 +174,8 @@ niak_set_defaults
 if isempty(files_in.template)
     flag_gb_niak_fast_gb = false;
     niak_gb_vars; % load important NIAK variables
-    files_in.template = [gb_niak_path_niak 'extensions' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
-    files_in.template_mask = [gb_niak_path_niak 'extensions' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
+    files_in.template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
+    files_in.template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
 end
 
 %% Building default output names
@@ -198,7 +198,7 @@ if isempty(files_out.t1_stereolin)
 end
 
 if isempty(files_out.transformation)
-    files_out.transformation = [opt.folder_out,filesep,name_f,'_native_to_stereolin.xfm'];
+    files_out.transformation = [opt.folder_out,filesep,name_f,'_native2stereolin.xfm'];
 end
 
 if flag_test == 1    

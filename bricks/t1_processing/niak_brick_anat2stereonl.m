@@ -42,9 +42,14 @@ function [files_in,files_out,opt] = niak_brick_anat2stereonl(files_in,files_out,
 %       equivalent to setting up the output file names to 
 %       'gb_niak_omitted'). 
 %                       
-%       TRANSFORM
-%           (string, default <base FILES_IN.T1>_native_to_stereonl.xfm) The linear
-%           transformation to the stereotaxic space.
+%       TRANSFORMATION
+%           (string, default <base FILES_IN.T1>_native2stereonl.xfm) The 
+%           non-linear transformation to the stereotaxic space.
+%
+%       TRANSFORMATION_GRID
+%           (string, default <base FILES_IN.T1>_native2stereonl_grid.<ext FILE_IN.T1>) 
+%           The grid of the non-linear transformation to the stereotaxic 
+%           space.
 %
 %       T1_STEREONL
 %           (string, default <base FILES_IN.T1>_stereonl.<ext FILE_IN.T1>) 
@@ -163,8 +168,8 @@ niak_set_defaults
 
 %% Output files
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation','t1_stereonl'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'transformation','transformation_grid','t1_stereonl'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% Options
@@ -201,7 +206,11 @@ if isempty(files_out.t1_stereonl)
 end
 
 if isempty(files_out.transformation)
-    files_out.transformation = [opt.folder_out,filesep,name_f,'_native_to_stereonl.xfm'];
+    files_out.transformation = [opt.folder_out,filesep,name_f,'_native2stereonl.xfm'];
+end
+
+if isempty(files_out.transformation_grid)
+    files_out.transformation_grid = [opt.folder_out,filesep,name_f,'_native2stereonl_grid' ext_f];
 end
 
 if flag_test == 1    
@@ -261,6 +270,25 @@ else
     end
 end
 
+%% Renaming the output grid file
+[path_t,name_t,ext_t] = fileparts(files_out.transformation);
+file_grid = [path_t,filesep,name_t,'_grid_0.mnc'];
+[path_g,name_g,ext_g] = fileparts(files_out.transformation_grid);
+if strcmp(ext_g,gb_niak_zip_ext)    
+    instr_zip = [gb_niak_zip ' ' file_grid];
+    [status,msg] = system(instr_zip);
+    if status ~= 0
+        error('There was a problem zipping the grid file, error message : %s',msg);
+    end
+    file_grid = [file_grid gb_niak_zip_ext];
+end
+instr_mv = ['mv ' file_grid ' ' files_out.transformation_grid];
+[status,msg] = system(instr_mv);
+if status ~= 0
+    error('There was a problem moving the final grid file, error message : %s',msg);
+end
+sub_rename_grid(files_out.transformation_grid,files_out.transformation);
+
 %% Cleaning temporary files
 if strcmp(files_out.transformation,'gb_niak_omitted')
    system(['rm -f ' arg_transf])
@@ -268,3 +296,23 @@ end
 if flag_verbose
     fprintf('Done !\n')
 end
+
+%% Rename the grid file in the xfm file
+function [] = sub_rename_grid(file_grid,file_xfm)
+
+hf = fopen(file_xfm,'r');
+xfm_info = fread(hf,Inf,'uint8=>char')';
+fclose(hf);
+
+hf2 = fopen(file_xfm,'w');
+cell_info = niak_string2lines(xfm_info);
+
+for num_l = 1:length(cell_info)
+    if num_l~=length(cell_info)
+        fprintf(hf2,'%s\n',cell_info{num_l});
+    else
+        [tmp,tmp2,tmp3] = fileparts(file_grid);
+        fprintf(hf2,'Displacement_Volume = %s;\n',cat(2,tmp2,tmp3));
+    end
+end
+fclose(hf2);

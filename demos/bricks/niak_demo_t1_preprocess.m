@@ -1,12 +1,12 @@
-function [files_in,files_out,opt] = niak_demo_anat2stereonl(path_demo)
+function [files_in,files_out,opt] = niak_demo_t1_preprocess(path_demo)
 % _________________________________________________________________________
-% SUMMARY NIAK_DEMO_ANAT2STEREONL
+% SUMMARY NIAK_DEMO_T1_PREPROCESS
 %
 % This is a script to demonstrate the usage of :
-% NIAK_BRICK_ANAT2STEREONL
+% NIAK_BRICK_T1_PREPROCESS
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_ANAT2STEREONL(PATH_DEMO)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_T1_PREPROCESS(PATH_DEMO)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -20,7 +20,7 @@ function [files_in,files_out,opt] = niak_demo_anat2stereonl(path_demo)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_ANAT2STEREONL (a 
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_T1_PREPROCESS (a 
 % description of input and output files with all options).
 %
 % _________________________________________________________________________
@@ -78,72 +78,16 @@ switch gb_niak_format_demo
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
 end
 
-%% Apply non-uniformity correction
-clear files_in files_out opt
-files_in.t1 = file_anat;
-files_out.t1_nu = '';
-opt.arg = '-distance 50';
-opt.flag_test = true;
-[files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt);
-opt.flag_test = false;
-file_anat_nu = files_out.t1_nu;
-niak_brick_nu_correct(files_in,files_out,opt);
+files_out.transformation_lin = '';
+files_out.transformation_nl = '';
+files_out.transformation_nl_grid = '';
+files_out.anat_nuc = '';
+files_out.anat_nuc_stereolin = '';
+files_out.anat_nuc_stereonl = '';
+files_out.mask_native = '';
+files_out.mask_stereolin = '';
+files_out.classify = '';
 
-%% Derive a mask of the brain
-clear files_in files_out opt
-files_in = file_anat_nu;
-files_out = '';
-opt.flag_test = true;
-[files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,opt);
-opt.flag_test = false;
-file_anat_mask = files_out;
-niak_brick_mask_brain_t1(files_in,files_out,opt);
+opt.nu_correct.arg = '-distance 50';
 
-%% Run a linear coregistration in Talairach space
-clear files_in files_out opt
-files_in.t1 = file_anat_nu;
-files_in.t1_mask = file_anat_mask;
-files_out.transformation = '';
-files_out.t1_stereolin = '';
-opt.flag_test = true;
-[files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out,opt);
-opt.flag_test = false;
-file_anat_stereolin = files_out.t1_stereolin;
-file_anat2stereolin = files_out.transformation;
-niak_brick_anat2stereolin(files_in,files_out,opt);
-
-%% Apply non-uniformity correction in Talairach space
-clear files_in files_out opt
-files_in.t1 = file_anat_stereolin;
-files_in.mask = [gb_niak_path_niak 'extensions' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];
-files_out.t1_nu = '';
-opt.arg = '-distance 50';
-opt.flag_test = true;
-[files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt);
-opt.flag_test = false;
-file_anat_stereolin_nu = files_out.t1_nu;
-niak_brick_nu_correct(files_in,files_out,opt);
-
-%% Derive a mask of the brain in Talairach space
-clear files_in files_out opt
-files_in = file_anat_stereolin_nu;
-files_out = '';
-opt.flag_test = true;
-[files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,opt);
-opt.flag_test = false;
-file_anat_stereolin_mask = files_out;
-niak_brick_mask_brain_t1(files_in,files_out,opt);
-
-%% Run a non-linear coregistration in Talairach space
-clear files_in files_out opt
-files_in.t1 = file_anat_stereolin_nu;
-files_in.t1_mask = file_anat_stereolin_mask;
-files_out.transformation = '';
-files_out.t1_stereonl = '';
-opt.flag_test = true;
-[files_in,files_out,opt] = niak_brick_anat2stereonl(files_in,files_out,opt);
-opt.flag_test = false;
-file_anat_stereonl = files_out.t1_stereonl;
-file_anat2stereonl = files_out.transformation;
-opt.arg = '-normalize';
-niak_brick_anat2stereonl(files_in,files_out,opt);
+niak_brick_t1_preprocess(file_anat,files_out,opt);

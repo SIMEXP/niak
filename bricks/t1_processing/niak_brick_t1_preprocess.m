@@ -71,9 +71,20 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %   OPT           
 %       (structure) with the following fields:
 %
-%       N3_DISTANCE 
-%           (real number, default 200 mm)  N3 spline distance in mm 
-%           (suggested values: 200 for 1.5T scan; 50 for 3T scan). 
+%       MASK_BRAIN_T1
+%           (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
+%           for an exact list of options.
+%
+%       NU_CORRECT
+%           (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
+%           for an exact list of options. The most usefull option is the
+%           following :
+%
+%           ARG
+%               (string, default '-distance 200') any argument that will be 
+%               passed to the NU_CORRECT command. The '-distance' option 
+%               sets the N3 spline distance in mm (suggested values: 200 
+%               for 1.5T scan; 50 for 3T scan). 
 %
 %       FLAG_VERBOSE 
 %           (boolean, default: 1) If FLAG_VERBOSE == 1, write
@@ -255,18 +266,19 @@ end
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask_native','mask_stereolin','classify'};
+gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask_native','mask_stereolin','classify'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS
+opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_test','folder_out','flag_verbose','n3_distance'};
-gb_list_defaults = {0,'',1,200};
+gb_list_fields = {'mask_brain_t1','nu_correct','flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {opt_tmp,opt_tmp,0,'',1};
 niak_set_defaults
 
 %% Building default output names
-[path_anat,name_anat,ext_anat] = fileparts(files_in.anat);
+[path_anat,name_anat,ext_anat] = fileparts(files_in);
 
 if isempty(path_anat)
     path_anat = '.';
@@ -299,20 +311,20 @@ if strcmp(files_out.anat_nuc,'')
     files_out.anat_nuc = cat(2,folder_anat,name_anat,'_nuc_native',ext_anat);
 end
 
-if strcmp(files_out.anat_nuc_stereo_lin,'')
-    files_out.anat_nuc_stereo_lin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);
+if strcmp(files_out.anat_nuc_stereolin,'')
+    files_out.anat_nuc_stereolin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);
 end
 
-if strcmp(files_out.anat_nuc_stereo_nl,'')
-    files_out.anat_nuc_stereo_nl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);
+if strcmp(files_out.anat_nuc_stereonl,'')
+    files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);
 end
 
 if strcmp(files_out.mask_native,'')
-    files_out.mask = cat(2,folder_anat,name_anat,'_mask_native',ext_anat);
+    files_out.mask_native = cat(2,folder_anat,name_anat,'_mask_native',ext_anat);
 end
 
-if strcmp(files_out.mask_stereo,'')
-    files_out.mask_stereo = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
+if strcmp(files_out.mask_stereolin,'')
+    files_out.mask_stereolin = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
 end
 
 if strcmp(files_out.classify,'')
@@ -345,7 +357,7 @@ file_template_mask_dilate = [gb_niak_path_niak 'template' filesep 'mni-models_ic
 
 %% Generate temporary file names
 
-path_tmp = niak_path_tmp('_',name_anat,'t1_preprocess');
+path_tmp = niak_path_tmp(['_',name_anat,'t1_preprocess']);
 
 anat_stereolin_raw = [path_tmp,name_anat,'_raw_stereolin' ext_anat];
 
@@ -369,19 +381,19 @@ if strcmp(files_out.anat_nuc,'gb_niak_omitted')
     files_out.anat_nuc = cat(2,path_tmp,name_anat,'_nuc_native',ext_anat);
 end
 
-if strcmp(files_out.anat_nuc_stereo_lin,'gb_niak_omitted')
-    files_out.anat_nuc_stereo_lin = cat(2,path_tmp,name_anat,'_nuc_stereolin',ext_anat);
+if strcmp(files_out.anat_nuc_stereolin,'gb_niak_omitted')
+    files_out.anat_nuc_stereolin = cat(2,path_tmp,name_anat,'_nuc_stereolin',ext_anat);
 end
 
-if strcmp(files_out.anat_nuc_stereo_nl,'gb_niak_omitted')
-    files_out.anat_nuc_stereo_nl = cat(2,path_tmp,name_anat,'_nuc_stereonl',ext_anat);
+if strcmp(files_out.anat_nuc_stereonl,'gb_niak_omitted')
+    files_out.anat_nuc_stereonl = cat(2,path_tmp,name_anat,'_nuc_stereonl',ext_anat);
 end
 
 if strcmp(files_out.mask_native,'gb_niak_omitted')
-    files_out.mask = cat(2,path_tmp,name_anat,'_mask_native',ext_anat);
+    files_out.mask_native = cat(2,path_tmp,name_anat,'_mask_native',ext_anat);
 end
 
-if strcmp(files_out.mask_stereo,'gb_niak_omitted')
+if strcmp(files_out.mask_stereolin,'gb_niak_omitted')
     files_out.mask_stereo = cat(2,path_tmp,name_anat,'_mask_stereolin',ext_anat);
 end
 
@@ -397,8 +409,7 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = files_in;
 files_out_tmp.t1_nu = files_out.anat_nuc;
-opt_tmp.arg = ['-distance ' num2str(opt.n3_distance)];
-opt_tmp.flag_test = false;
+opt_tmp = opt.nu_correct;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Derive a mask of the brain
@@ -408,7 +419,7 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp = files_out.anat_nuc;
 files_out_tmp = files_out.mask_native;
-opt_tmp.flag_test = false;
+opt_tmp = opt.mask_brain_t1;
 niak_brick_mask_brain_t1(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Run a linear coregistration in stereotaxic space
@@ -418,7 +429,7 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = files_out.anat_nuc;
 files_in_tmp.t1_mask = files_out.mask_native;
-files_out_tmp.transformation = files_in.transformation_lin;
+files_out_tmp.transformation = files_out.transformation_lin;
 files_out_tmp.t1_stereolin = anat_stereolin_raw;
 opt_tmp.flag_test = false;
 niak_brick_anat2stereolin(files_in_tmp,files_out_tmp,opt_tmp);
@@ -431,7 +442,6 @@ clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = anat_stereolin_raw;
 files_in_tmp.mask = file_template_mask_erode;
 files_out_tmp.t1_nu = anat_stereolin_nu;
-opt_tmp.arg = ['-distance ' num2str(opt.n3_distance)];
 opt_tmp.flag_test = false;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
 
@@ -442,7 +452,7 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp = anat_stereolin_nu;
 files_out_tmp = anat_stereolin_mask;
-opt_tmp.flag_test = false;
+opt_tmp = opt.mask_brain_t1;
 niak_brick_mask_brain_t1(files_in_tmp,files_out_tmp,opt_tmp);
 
 % Combine the mask with the template masks
@@ -464,14 +474,13 @@ files_in_tmp.vol = anat_stereolin_nu;
 files_in_tmp.model = file_template;
 files_out_tmp = files_out.anat_nuc_stereolin;
 opt_tmp.flag_test = false;
-niak_brick_mask_brain_t1(files_in_tmp,files_out_tmp,opt_tmp);
-
+niak_brick_inormalize(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Run tissue classification in stereotaxic space
 if flag_verbose
     fprintf('\n\n\n**********\nClassification into tissue types ...\n');
 end
-instr_classify = ['classify ' files_out.anat_nuc_stereolin files_out.classify];
+instr_classify = ['classify_clean -mask_source ' files_out.mask_stereolin ' ' files_out.anat_nuc_stereolin ' ' files_out.classify];
 [status,msg] = system(instr_classify);
 if status~=0
     error('Classification into tissue types failed with the following error message : %s',msg);
@@ -484,7 +493,8 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = files_out.anat_nuc_stereolin;
 files_in_tmp.t1_mask = files_out.mask_stereolin;
-files_out_tmp.transformation = files_out.transformation_stereonl;
+files_out_tmp.transformation = files_out.transformation_nl;
+files_out_tmp.transformation_grid = files_out.transformation_nl_grid;
 files_out_tmp.t1_stereonl = files_out.anat_nuc_stereonl;
 opt_tmp.flag_test = false;
 niak_brick_anat2stereonl(files_in_tmp,files_out_tmp,opt_tmp);
