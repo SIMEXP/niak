@@ -55,10 +55,6 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %           non-linear transformation, fully corrected for non-uniformities (with
 %           mask) and with intensities normalized to match the MNI template.
 %       
-%       MASK_NATIVE
-%           (string, default <BASE_ANAT>_mask_native.<EXT>)
-%           brain mask in native space.
-%
 %       MASK_STEREOLIN 
 %           (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
 %           brain mask in stereotaxic (linear) space.
@@ -119,8 +115,8 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %   This is essentially a NIAKified version of a small subpart of the CIVET
 %   pipeline developed in the lab of Alan C. Evans, see :
 %   http://wiki.bic.mni.mcgill.ca/index.php/CIVET
-%   Claude Lepage, Andrew Janke and Patrick Bermudez gave precious
-%   directions to NIAKify this part of the pipeline.
+%   Claude Lepage, Andrew Janke, Vladimir Fonov and Patrick Bermudez gave 
+%   precious directions to NIAKify this part of the pipeline.
 %   Many other people were and are still involved in the development of 
 %   CIVET, including Yasser Ad-Dab'bagh, Jason Lerch and Oliver Lyttelton. 
 %   See the CIVET webpage for a detailed list of contributions. 
@@ -266,8 +262,8 @@ end
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask_native','mask_stereolin','classify'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask_stereolin','classify'};
+gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS
@@ -319,10 +315,6 @@ if strcmp(files_out.anat_nuc_stereonl,'')
     files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);
 end
 
-if strcmp(files_out.mask_native,'')
-    files_out.mask_native = cat(2,folder_anat,name_anat,'_mask_native',ext_anat);
-end
-
 if strcmp(files_out.mask_stereolin,'')
     files_out.mask_stereolin = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
 end
@@ -357,13 +349,18 @@ file_template_mask_dilate = [gb_niak_path_niak 'template' filesep 'mni-models_ic
 
 %% Generate temporary file names
 
+% Temporary folder
 path_tmp = niak_path_tmp(['_',name_anat,'t1_preprocess']);
-
+% The raw T1 in stereotaxic linear space
 anat_stereolin_raw = [path_tmp,name_anat,'_raw_stereolin' ext_anat];
-
+% The T1 corrected of non-uniformities in stereotaxic linear space
 anat_stereolin_nu = [path_tmp,name_anat,'_nu_stereolin' ext_anat];
-
+% The mask extracted by region growing in native space
+anat_native_mask = [path_tmp,name_anat,'_mask_native' ext_anat];
+% The mask extracted by region growing in stereotaxic linear space
 anat_stereolin_mask = [path_tmp,name_anat,'_mask_stereolin' ext_anat];
+% The mask extracted by region growing in stereotaxic linear space
+anat_stereolin_mask2 = [path_tmp,name_anat,'_mask_stereolin2' ext_anat];
 
 if strcmp(files_out.transformation_lin,'gb_niak_omitted')
     files_out.transformation_lin = cat(2,path_tmp,name_anat,'_native2stereolin.xfm');
@@ -389,10 +386,6 @@ if strcmp(files_out.anat_nuc_stereonl,'gb_niak_omitted')
     files_out.anat_nuc_stereonl = cat(2,path_tmp,name_anat,'_nuc_stereonl',ext_anat);
 end
 
-if strcmp(files_out.mask_native,'gb_niak_omitted')
-    files_out.mask_native = cat(2,path_tmp,name_anat,'_mask_native',ext_anat);
-end
-
 if strcmp(files_out.mask_stereolin,'gb_niak_omitted')
     files_out.mask_stereo = cat(2,path_tmp,name_anat,'_mask_stereolin',ext_anat);
 end
@@ -403,56 +396,46 @@ end
 
 
 %% Apply non-uniformity correction
-if flag_verbose
-    fprintf('\n\n\n**********\nNon-uniformity correction in native space ...\n');
-end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = files_in;
 files_out_tmp.t1_nu = files_out.anat_nuc;
 opt_tmp = opt.nu_correct;
+opt_tmp.flag_verbose = flag_verbose;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Derive a mask of the brain
-if flag_verbose
-    fprintf('\n\n\n**********\nExtracting a mask of the brain in native space ...\n');
-end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp = files_out.anat_nuc;
-files_out_tmp = files_out.mask_native;
+files_out_tmp = anat_native_mask;
 opt_tmp = opt.mask_brain_t1;
+opt_tmp.flag_verbose = flag_verbose;
 niak_brick_mask_brain_t1(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Run a linear coregistration in stereotaxic space
-if flag_verbose
-    fprintf('\n\n\n**********\nLinear coregistration in stereotaxic space ...\n');
-end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = files_out.anat_nuc;
-files_in_tmp.t1_mask = files_out.mask_native;
+files_in_tmp.t1_mask = anat_native_mask;
 files_out_tmp.transformation = files_out.transformation_lin;
 files_out_tmp.t1_stereolin = anat_stereolin_raw;
 opt_tmp.flag_test = false;
+opt_tmp.flag_verbose = flag_verbose;
 niak_brick_anat2stereolin(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Apply non-uniformity correction in stereotaxic space
-if flag_verbose
-    fprintf('\n\n\n**********\nNon-uniformity correction in stereotaxic space ...\n');
-end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.t1 = anat_stereolin_raw;
 files_in_tmp.mask = file_template_mask_erode;
 files_out_tmp.t1_nu = anat_stereolin_nu;
 opt_tmp.flag_test = false;
+opt_tmp.flag_verbose = flag_verbose;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Derive a mask of the brain in stereotaxic space
-if flag_verbose
-    fprintf('\n\n\n**********\nExtracting a mask of the brain in stereotaxic space ...\n');
-end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp = anat_stereolin_nu;
 files_out_tmp = anat_stereolin_mask;
 opt_tmp = opt.mask_brain_t1;
+opt_tmp.flag_verbose = flag_verbose;
 niak_brick_mask_brain_t1(files_in_tmp,files_out_tmp,opt_tmp);
 
 % Combine the mask with the template masks
@@ -460,41 +443,59 @@ clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp{1} = anat_stereolin_mask;
 files_in_tmp{2} = file_template_mask_erode;
 files_in_tmp{3} = file_template_mask_dilate;
-files_out_tmp = files_out.mask_stereolin;
+files_out_tmp = anat_stereolin_mask2;
 opt_tmp.flag_test = false;
-opt_tmp.operation = 'vol = vol_in{1}; vol(vol_in{2}>0) = 1; vol(vol_in{3}==0) = 0;';
+opt_tmp.flag_verbose = flag_verbose;
+opt_tmp.operation = 'vol = vol_in{1}; vol(round(vol_in{2})>0) = 1; vol(round(vol_in{3})==0) = 0;';
 niak_brick_math_vol(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Run intensity normalization in stereotaxic space
-if flag_verbose
-    fprintf('\n\n\n**********\nIntensity normalization in stereotaxic space ...\n');
-end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol = anat_stereolin_nu;
 files_in_tmp.model = file_template;
 files_out_tmp = files_out.anat_nuc_stereolin;
 opt_tmp.flag_test = false;
+opt_tmp.flag_verbose = flag_verbose;
 niak_brick_inormalize(files_in_tmp,files_out_tmp,opt_tmp);
+
+%% Run a non-linear coregistration in stereotaxic space
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp.t1 = files_out.anat_nuc_stereolin;
+files_in_tmp.t1_mask = anat_stereolin_mask2;
+files_out_tmp.transformation = files_out.transformation_nl;
+files_out_tmp.transformation_grid = files_out.transformation_nl_grid;
+files_out_tmp.t1_stereonl = files_out.anat_nuc_stereonl;
+opt_tmp.flag_test = false;
+opt_tmp.flag_verbose = flag_verbose;
+niak_brick_anat2stereonl(files_in_tmp,files_out_tmp,opt_tmp);
+
+%% Combine the template and individual masks
+% resample the template mask with non-linear deformations
+if flag_verbose
+    fprintf('\n\n\n**********\nCombine the template and individual masks ...\n');
+end
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp.source = file_template_mask;
+files_in_tmp.target = file_template;
+files_in_tmp.transformation = files_out.transformation_nl;
+files_out_tmp = files_out.mask_stereolin;
+opt_tmp.interpolation = 'nearest_neighbour';
+opt_tmp.flag_invert_transf = true;
+opt_tmp.flag_verbose = flag_verbose;
+niak_brick_resample_vol(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Run tissue classification in stereotaxic space
 if flag_verbose
     fprintf('\n\n\n**********\nClassification into tissue types ...\n');
 end
-instr_classify = ['classify_clean -mask_source ' files_out.mask_stereolin ' ' files_out.anat_nuc_stereolin ' ' files_out.classify];
+instr_classify = ['classify_clean -tmpdir ' path_tmp ' -mask_source ' files_out.mask_stereolin ' ' files_out.anat_nuc_stereolin ' ' files_out.classify];
 [status,msg] = system(instr_classify);
 if status~=0
     error('Classification into tissue types failed with the following error message : %s',msg);
 end
 
-%% Run a non-linear coregistration in stereotaxic space
-if flag_verbose
-    fprintf('\n\n\n**********\nNon-linear coregistration in stereotaxic space ...\n');
+%% Clean the temporary folder
+[status,msg] = system(['rm -rf ' path_tmp]);
+if status~=0
+    error('There was a problem when trying to clean the temporary folder : %s',msg);
 end
-clear files_in_tmp files_out_tmp opt_tmp
-files_in_tmp.t1 = files_out.anat_nuc_stereolin;
-files_in_tmp.t1_mask = files_out.mask_stereolin;
-files_out_tmp.transformation = files_out.transformation_nl;
-files_out_tmp.transformation_grid = files_out.transformation_nl_grid;
-files_out_tmp.t1_stereonl = files_out.anat_nuc_stereonl;
-opt_tmp.flag_test = false;
-niak_brick_anat2stereonl(files_in_tmp,files_out_tmp,opt_tmp);

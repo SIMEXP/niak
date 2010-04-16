@@ -84,7 +84,6 @@ files_out.transformation_nl_grid = '';
 files_out.anat_nuc = '';
 files_out.anat_nuc_stereolin = '';
 files_out.anat_nuc_stereonl = '';
-files_out.mask_native = '';
 files_out.mask_stereolin = '';
 files_out.classify = '';
 

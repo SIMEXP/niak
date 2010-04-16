@@ -157,9 +157,13 @@ if flag_verbose
 end
 
 %% Applying INORMALIZE
-[path_f,name_f,ext_f] = fileparts(files_in.vol);
+[path_f,name_f,ext_f] = fileparts(files_out);
 flag_zip = strcmp(ext_f,gb_niak_zip_ext);
-instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' files_in.vol ' ' files_out];
+if ~flag_zip
+    instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' files_in.vol ' ' files_out];
+else
+    instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' files_in.vol ' ' path_f filesep name_f];
+end
 
 %% Running NU_CORRECT
 if flag_verbose
@@ -177,6 +181,6 @@ end
 
 %% Compressing outputs if needed
 if flag_zip
-    system([gb_niak_zip ' ' files_out]);    
+    system([gb_niak_zip ' ' path_f filesep name_f]);    
 end
 
