@@ -288,10 +288,9 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     opt_visu.type_color = 'jet';        
     
     for num_c = 1:size(vol_space,4)
-    
-        hf = figure;
-        
+                    
         %% Spatial distribution
+        hf = figure;
         subplot(1,1,1)
         vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
         niak_montage(abs(vol_c),opt_visu);
@@ -353,8 +352,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
                 
         niak_append_ps(file_fig);
         close(hf)
-    end
-    close(hf)
+    end    
         
     %% In octave, use ps2pdf to convert the result into PDF format
     instr_ps2pdf = cat(2,'ps2pdf -dEPSCrop ',file_fig,' ',files_out.figure);
