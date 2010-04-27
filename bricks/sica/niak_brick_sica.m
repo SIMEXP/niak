@@ -320,11 +320,9 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         
         xlabel('time')
         ylabel('a.u.')
-        title(sprintf('Time component %i, file %s',num_c,name_f),'interpreter','none');
-        close(hf)
+        title(sprintf('Time component %i, file %s',num_c,name_f),'interpreter','none');        
         
-        %% Frequency distribution
-        hf = figure;
+        %% Frequency distribution        
         subplot(3,1,2)
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
@@ -337,8 +335,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         end
         close(hf)
         
-        %% Time-frequency distribution
-        hf = figure;
+        %% Time-frequency distribution        
         subplot(3,1,3)
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
