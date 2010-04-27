@@ -832,9 +832,9 @@ pipeline.(name_job).files_in = files_in_tmp;
 pipeline.(name_job).files_out = files_out_tmp;
 pipeline.(name_job).opt = opt_tmp;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Group mask (stereolin) %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Group mask (stereonl) %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 name_job = 'mask_group_stereonl';
 

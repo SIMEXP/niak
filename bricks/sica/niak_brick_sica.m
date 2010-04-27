@@ -285,11 +285,11 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
     opt_visu.fwhm = opt.fwhm;
     opt_visu.vol_limits = [0 3];
     opt_visu.type_slice = 'axial';
-    opt_visu.type_color = 'jet';
+    opt_visu.type_color = 'jet';        
     
-    figure;
-    hf = gcf;
     for num_c = 1:size(vol_space,4)
+    
+        hf = figure;
         
         %% Spatial distribution
         subplot(1,1,1)
@@ -301,9 +301,11 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
             print(file_fig,'-dpsc2');
         else
             niak_append_ps(file_fig);
-        end
+        end        
+        close(hf)        
         
         %% temporal distribution
+        hf = figure;
         nt = size(A,1);
         subplot(3,1,1)
         
@@ -320,8 +322,10 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         xlabel('time')
         ylabel('a.u.')
         title(sprintf('Time component %i, file %s',num_c,name_f),'interpreter','none');
+        close(hf)
         
         %% Frequency distribution
+        hf = figure;
         subplot(3,1,2)
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
@@ -332,8 +336,10 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         else
             niak_visu_spectrum(A(:,num_c),1);
         end
+        close(hf)
         
         %% Time-frequency distribution
+        hf = figure;
         subplot(3,1,3)
         if isfield(hdr.info,'tr')
             if hdr.info.tr~=0
@@ -346,7 +352,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
         end
                 
         niak_append_ps(file_fig);
-        
+        close(hf)
     end
     close(hf)
         
