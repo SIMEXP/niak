@@ -332,8 +332,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
             end
         else
             niak_visu_spectrum(A(:,num_c),1);
-        end
-        close(hf)
+        end        
         
         %% Time-frequency distribution        
         subplot(3,1,3)
