@@ -130,7 +130,7 @@ function [files_in,files_out,opt] = niak_brick_coregister(files_in,files_out,opt
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, filtering, fMRI
+% Keywords : medical imaging, coregistration, rigid-body motion, fMRI, T1
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -158,7 +158,7 @@ niak_gb_vars
 
 %% SYNTAX
 if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MOTION_CORRECTION_WS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_time_filter'' for more info.')
+    error(sprintf('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COREGISTER(FILES_IN,FILES_OUT,OPT).\nType ''help niak_brick_coregister'' for more info.'))
 end
 
 %% FILES_IN

@@ -286,7 +286,7 @@ if strcmp(ext_anat,gb_niak_zip_ext)
 end
 
 if isempty(opt.folder_out)
-    folder_anat = path_anat;
+    folder_anat = [path_anat filesep];
 else
     folder_anat = opt.folder_out;
 end

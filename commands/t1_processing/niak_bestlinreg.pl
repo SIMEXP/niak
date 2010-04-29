@@ -75,7 +75,8 @@ $me = &basename($0);
    'init_xfm'  => undef,
    'source_mask' => undef,
    'target_mask' => undef,
-   'lsqtype'     => "-lsq9"
+   'lsqtype'     => "-lsq9",
+   'cost_function' => "-xcorr"
    );
 
 $Help = <<HELP;
@@ -107,7 +108,11 @@ $Usage = "Usage: $me [options] source.mnc target.mnc output.xfm [output.mnc]\n".
    ["-lsq12", "const", "-lsq12", \$opt{lsqtype},
       "use 12-parameter transformation (default -lsq9)" ],
    ["-lsq6", "const", "-lsq6", \$opt{lsqtype},
-      "use 6-parameter transformation" ]
+      "use 6-parameter transformation" ],
+   ["-xcorr", "const", "-xcorr", \$opt{cost_function},
+      "Use a cross correlation cost function." ],
+   ["-mi", "const", "-mi", \$opt{cost_function},
+      "Use a mutual information cost function." ]
    );
 
 # Check arguments
@@ -244,7 +249,7 @@ for ($i=0; $i<=$#conf; $i++){
    }
    
    # set up registration
-   @args = ('minctracc', '-clobber', '-xcorr', $opt{lsqtype},
+   @args = ('minctracc', '-clobber', $opt{cost_function}, $opt{lsqtype},
             '-step', @{$conf[$i]{steps}}, '-simplex', $conf[$i]{simplex},
             '-tol', $conf[$i]{tolerance});
 

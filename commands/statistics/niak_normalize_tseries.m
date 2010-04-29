@@ -18,7 +18,8 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %       (structure) with the following fields :
 %
 %       TYPE
-%           (string) the type of temporal normalization. Available options:
+%           (string, default 'mean_var') 
+%           the type of temporal normalization. Available options:
 %
 %               'none'
 %                   Don't do anything
@@ -91,14 +92,14 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Syntax 
-if ~exist('tseries','var')||~exist('opt','var')
+if ~exist('tseries','var')
     error('Syntax : TSERIES_N = NIAK_NORMALIZE_TSERIES(TSERIES,OPT) ; for more infos, type ''help niak_normalize_tseries''.')
 end
 
 %% Setting up default values for the 'info' part of the header
 gb_name_structure = 'opt';
 gb_list_fields = {'type','ind_time'};
-gb_list_defaults = {NaN,[]};
+gb_list_defaults = {'mean_var',[]};
 niak_set_defaults
 
 if ismember(opt.type,{'fir','fir_shape'})
