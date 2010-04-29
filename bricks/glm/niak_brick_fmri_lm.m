@@ -6,7 +6,7 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 % Fits a linear model to fMRI time series data.
 %
 % The method is based on linear models with correlated AR(p) errors:
-% Y = hrf*X b + e, e_t=a_1 e_(t-1) + ... + a_p e_(t-p) + white noise_t. %
+% Y = hrf*X b + e, e_t=a_1 e_(t-1) + ... + a_p e_(t-p) + white noise_t. 
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FMRI_LM(FILES_IN,FILES_OUT,OPT)
@@ -21,7 +21,10 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           (string) the name of a file containing an fMRI dataset. 
 %
 %       MASK
-%           (string) the name of a 3D binary volume.
+%           (string, default 'gb_niak_omitted') the name of a 3D binary 
+%           volume that defines a mask of the brain. If non-specified (or
+%           equal to 'gb_niak_omitted'), a brain mask is computed 
+%           internally.
 %
 %       DESIGN
 %
@@ -33,58 +36,73 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %        (structure) of filenames with the following fields:
 %
 %        DF
-%          The name a matlab file containing the variable DF
+%           (string, default <BASE FMRI>_df.mat) 
+%           The name a matlab file containing the variable DF
 %
 %        FWHM
-%          The name a matlab file containing the variable FWHM
+%           (string, default <BASE FMRI>_fwhm.mat) 
+%           The name a matlab file containing the variable FWHM
 %
 %        MAG_T 
-%          The name an image file containing the T statistic image =ef/sd 
-%          for magnitudes. If T > 100, T = 100.
+%           (string, default <BASE FMRI>_mag_t.<EXT FMRI>) 
+%           The name an image file containing the T statistic image =ef/sd 
+%           for magnitudes. If T > 100, T = 100.
 %
 %        MAG_EF      
-%          The name an image file containing the effect image for magnitudes.
+%           (string, default <BASE FMRI>_mag_ef.<EXT FMRI>) 
+%           The name an image file containing the effect image for 
+%           magnitudes.
 %
 %        MAG_SD      
-%          The name an image file containing the standard deviation of the 
-%          effect for magnitudes. 
+%           (string, default <BASE FMRI>_mag_sd.<EXT FMRI>) 
+%           The name an image file containing the standard deviation of the 
+%           effect for magnitudes. 
 %
 %        MAG_F    
-%          The name an image file containing theF-statistic for test of 
-%          magnitudes of all rows of OPT.CONTRAST selected by MAG_F. 
-%          The degrees of freedom are DF.F. If F > 1000, F = 1000.
+%           (string, default <BASE FMRI>_mag_f.<EXT FMRI>) 
+%           The name an image file containing the F-statistic for test of 
+%           magnitudes of all rows of OPT.CONTRAST selected by MAG_F. 
+%           The degrees of freedom are DF.F. If F > 1000, F = 1000.
 %
 %        COR
-%          The name an image file containing the temporal autocorrelation(s). 
+%           (string, default <BASE FMRI>_cor.<EXT FMRI>) 
+%           The name an image file containing the temporal 
+%           autocorrelation(s). 
 %
 %        RESID   
-%          The name an image file containing the residuals from the model, 
-%          only for non-excluded frames.
+%           (string, default <BASE FMRI>_resid.<EXT FMRI>) 
+%           The name an image file containing the residuals from the model, 
+%           only for non-excluded frames.
 %
 %        WRESID  
-%          The name an image file containing the whitened residuals from 
-%          the model normalized by dividing by their root sum of squares, 
-%          only for non-excluded frames.
+%           (string, default <BASE FMRI>_wresid.<EXT FMRI>) 
+%           The name an image file containing the whitened residuals from 
+%           the model normalized by dividing by their root sum of squares, 
+%           only for non-excluded frames.
 %
 %        AR
-%          The name an image file containing the AR parameter(s) a_1 ... a_p.
+%           (string, default <BASE FMRI>_ar.<EXT FMRI>) 
+%           The name an image file containing the AR parameter(s) 
+%           a_1 ... a_p.
 %         
 %  OPT   
-%     (structure) with the following fields.
-%     Note that if a field is omitted, it will be set to a default
-%     value if possible, or will issue an error otherwise.
+%       (structure) with the following fields.
+%       Note that if a field is omitted, it will be set to a default
+%       value if possible, or will issue an error otherwise.
 %
-%     MASK_THRESH
-%       a scalar value for thresholding a volumen and defininig a brain
-%       mask
+%       MASK_THRESH
+%           (scalar, default : computed using NIAK_MASK_THRESHOLD)
+%           a scalar value for thresholding a volume and defininig a brain
+%           mask. Note that the mask will not be computed if FILES_IN.MASK
+%           is specified.
 %
-%     CONTRAST         
+%       CONTRAST         
 %            matrix of contrast of interest for the responses or a structure
 %            with fields x,c,t,s for the contrast associated to the responses,
 %            confounds, temporal trends and spatial trends, respectively.
 %
 %     SPATIAL_AV
-%           (default [] and NB_TRENDS_SPATIAL = 0)
+%           (vector, default [] and NB_TRENDS_SPATIAL = 0)
 %           colum vector of the spatial average time courses.
 %
 %     CONFOUNDS 
@@ -146,33 +164,39 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %     NUMLAGS
 %           (integer, default 1) The order (p) of the autoregressive model.
 %
-%     PCNT: 
+%     PCNT
+%           (boolean, default 0)
 %           if PCNT=1, then the data is converted to percentages 
 %           before analysis by dividing each frame by its spatial average,* 100%.
 %
 %     FWHM
+%           (default [], which corresponds to achieving 100 df, but if
+%           CONTRAST is empty then the default is 0 i.e. no smoothing.)
 %           It is the fwhm in mm of a 3D Gaussian kernel used to smooth the
-%           autocorrelation of residuals. Setting it to Inf smooths the auto-
-%           correlation to 0, i.e. it assumes the frames are uncorrelated 
-%           (useful for TR>10 seconds). Setting it to 0 does no smoothing.
+%           autocorrelation of residuals. Setting it to Inf smooths the 
+%           autocorrelation to 0, i.e. it assumes the frames are 
+%           uncorrelated (useful for TR>10 seconds). Setting it to 0 does 
+%           no smoothing.
 %           If FWHM_COR is negative, it is taken as the desired df, and the 
 %           fwhm is chosen to achive this df, or 90% of the residual df, 
 %           whichever is smaller, for every contrast, up to 50mm. 
-%           If a second component is supplied, it is the fwhm in mm of the data, 
-%           otherwise this is estimated quickly from the least-squares residuals. 
+%           If a second component is supplied, it is the fwhm in mm of the 
+%           data, otherwise this is estimated quickly from the 
+%           least-squares residuals. 
 %           If FWHM_COR is a file name, e.g. the _cor.ext file created by a
-%           previous run, it is used for the autocorrelations - saves execution time.
-%           If df.cor cannot be found in the header or _cor_df.txt file, Inf is used.
-%           Default is [], which corresponds to achieving 100 df, but if
-%          CONTRAST is empty then the default is 0 i.e. no smoothing.
+%           previous run, it is used for the autocorrelations - saves 
+%           execution time.
+%           If df.cor cannot be found in the header or _cor_df.txt file, 
+%           Inf is used.           
 %
 %     DF_LIMIT 
-%           scalar value to control which method is used for estimating FWHM. 
-%           If DF > DF_LIMIT, then the FWHM is calculated assuming the Gaussian 
-%           filter is arbitrary. However if DF is small, this gives inaccurate 
-%           results, so if DF <= DF_LIMIT, the FWHM is calculated assuming that 
-%           the axes of the Gaussian filter are aligned with the x, y and z axes 
-%           of the data. Default is 4. 
+%           (scalar, default 4)
+%           Controls which method is used for estimating FWHM. 
+%           If DF > DF_LIMIT, then the FWHM is calculated assuming the 
+%           Gaussian filter is arbitrary. However if DF is small, this 
+%           gives inaccurate results, so if DF <= DF_LIMIT, the FWHM is 
+%           calculated assuming that the axes of the Gaussian filter are 
+%           aligned with the x, y and z axes of the data. 
 %
 %     FOLDER_OUT 
 %           (string, default: path of FILES_IN) 
@@ -242,6 +266,7 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = true; % Fast initialization : load only critical global variables
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -291,7 +316,8 @@ if isempty(path_f)
 end
 
 if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f] = fileparts(name_f);
+    [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
 if isempty(opt.folder_out)
@@ -310,13 +336,13 @@ if ~isfield(files_out,'fwhm')
     files_out = setfield(files_out,'fwhm',full_name);
 end
 
-list_outputs = {'_mag_t','_del_t','_mag_ef','_del_ef','_mag_sd','_del_sd','_mag_f','_cor','_fwhm','_resid','_wresid','_ar'};
+list_outputs = {'_mag_t','_del_t','_mag_ef','_del_ef','_mag_sd','_del_sd','_mag_f','_cor','_resid','_wresid','_ar'};
 for num_l = 1:length(list_outputs)
     field_name = lower(list_outputs{num_l}(2:end));
     if isfield(files_out,field_name)
-       if isempty(getfield(files_out,field_name))
-          full_name = cat(2,folder_f,filesep,name_f,list_outputs{num_l},'.mnc');
-          files_out = setfield(files_out,field_name,full_name);
+       if isempty(files_out.(field_name))           
+          full_name = cat(2,folder_f,filesep,name_f,list_outputs{num_l},ext_f);
+          files_out.(field_name) = full_name; 
        end
     end
 end
@@ -368,16 +394,19 @@ disp('Loading Data...')
 [hdr,vol] = niak_read_vol(files_in.fmri);
 Steps = abs(hdr.info.voxel_size);
 
-%% Defining a mask volume:
-disp('Defining a mask volume...')
-[hdr_mask,mask] = niak_read_vol(files_in.mask);
-
-if isempty(opt.mask_thresh)
-    mask_thresh = niak_mask_threshold(squeeze(mask(:,:,:,1)));
+%% Brain masking:
+if ~strcmp(files_in.mask,'gb_niak_omitted')
+    disp('Reading the brain mask ...')
+    [hdr_mask,mask] = niak_read_vol(files_in.mask);
+    mask = mask>0;
+else    
+    disp('Defining a brain mask ...')
+    if isempty(opt.mask_thresh)
+        mask_thresh = niak_mask_threshold(squeeze(mask(:,:,:,1)));
+    end
+    
+    mask = mask(:,:,:,1) > mask_thresh;
 end
-
-mask = mask(:,:,:,1) > mask_thresh;
-
 numframes = size(vol,4);
 allpts = 1:numframes;
 allpts(opt.exclude) = zeros(1,length(opt.exclude));
@@ -555,7 +584,7 @@ end
 
 if which_stats(1,7)
     if flag_verbose
-        fprintf('Writing the whiten residuals in %s ...\n',files_out.wresid);
+        fprintf('Writing the whitened residuals in %s ...\n',files_out.wresid);
     end
     hdr_out = hdr;
     hdr_out.file_name = files_out.wresid;
