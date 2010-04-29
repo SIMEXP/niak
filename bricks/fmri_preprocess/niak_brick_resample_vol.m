@@ -329,6 +329,16 @@ if nt1 == 1
         fprintf('\n Resampling source on target ...\n');
     end
 
+    [path_f,name_f,ext_f] = fileparts(files_out);
+    
+    if strcmp(ext_f,gb_niak_zip_ext)
+        [tmp,name_f,ext_f] = fileparts(name_f);        
+        flag_zip = true;        
+    else 
+        flag_zip = false;
+    end
+    files_out = [tmp,name_f,ext_f];
+    
     %% Case of a single 3D volume
     if ~isempty(files_in.transformation)
         if flag_invert_transf
@@ -347,6 +357,10 @@ if nt1 == 1
     
     if flag_tmp~=0
         error(str_tmp);
+    end
+    
+    if flag_zip
+        system([gb_niak_zip ' ' files_out]);
     end
 
 else
