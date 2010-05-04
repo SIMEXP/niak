@@ -3,19 +3,18 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % _________________________________________________________________________
 % SUMMARY NIAK_BRICK_RESAMPLE_VOL
 %
-% Apply MINCRESAMPLE to resample a volume with a transformation to a target
-% space. The function allows to change the target resolution, and to
-% resample the data such that the direction cosines are exactly x, y and z.
+% Apply MINCRESAMPLE to resample a volume or a 4D volume with a 
+% transformation to a target space. The function allows to change the 
+% target resolution, and to resample the data such that the direction 
+% cosines are exactly x, y and z.
 %
-% _________________________________________________________________________
-% SYNTAX
-%
+% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-% * FILES_IN      
+%   FILES_IN      
 %       (structure) with the following fields :
 %
 %       SOURCE 
@@ -29,10 +28,10 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           (string, default identity)  name of a xfm transformation file
 %           to apply on SOURCE.
 %
-% * FILES_OUT 
+%   FILES_OUT 
 %       (string,default <BASE_SOURCE>_res) the name of the output resampled volume.
 %
-% * OPT           
+%   OPT           
 %       (structure, optional) has the following fields:
 %
 %       INTERPOLATION 
@@ -89,7 +88,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % values. If OPT.FLAG_TEST == 0, the specified outputs are written.
@@ -99,13 +98,14 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %
 % This is a simple wrapper of MINCRESAMPLE, but is has a couple of
 % additional features (i.e. the possibility to change the resolution or to
-% get rid of the direction cosines).
+% get rid of the direction cosines). More importantly it works for 4D
+% images, i.e. fMRI datasets, while MINCRESAMPLE works only on 3D volumes.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, minc
+% Keywords : medical imaging, minc, resampling
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
