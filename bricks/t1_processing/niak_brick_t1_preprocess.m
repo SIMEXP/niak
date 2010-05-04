@@ -124,11 +124,11 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % NOTE 2:
 %   This brick is based on all the bricks listed in the "see also" section
 %   above. Please see the help of these bricks for more details. Two PERL
-%   scripts are also used and distributed with NIAK (NIAK_BESTLINREG.PL and
-%   NIAK_BEST1STEPNL.PL). These scripts do not follow the MIT license 
-%   typically found in NIAK. See the PERL scripts code for license 
-%   information (it is a BSD-like license similar to what is used in most 
-%   minc tools). 
+%   scripts written by Claude Lepage and Andrew Janke are also used and 
+%   distributed with NIAK (NIAK_BESTLINREG.PL and NIAK_BEST1STEPNL.PL). 
+%   These scripts do not follow the MIT license typically found in NIAK. 
+%   See the PERL scripts code for license information (it is a BSD-like 
+%   license similar to what is used in most minc tools). 
 %
 % NOTE 3: 
 %   Almost all of the work here (except for the brain extraction) is done
@@ -145,7 +145,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %           NIAK_BRICK_NU_CORRECT
 %       1.  Brain extraction in native space:
 %           NIAK_BRICK_MASK_BRAIN_T1
-%       3.  Linear coregistration in stereotaxic space.
+%       3.  Linear coregistration in stereotaxic space (with mask from 2).
 %           NIAK_BRICK_ANAT2STEREOLIN
 %       4.  Non-uniformity correction based on the template mask
 %           NIAK_BRICK_NU_CORRECT
@@ -153,9 +153,11 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %           NIAK_BRICK_MASK_BRAIN_T1
 %       6.  Intensity normalization
 %           NIAK_BRICK_INORMALIZE
-%       7.  Non-linear coregistration in template space
+%       7.  Non-linear coregistration in template space (with mask from 5)
 %           NIAK_BRICK_ANAT2STEREONL
-%       8.  Tissue classification
+%       8.  Generation of the final mask by application of the inverse
+%           non-linear transform from 7 and the template mask.
+%       9.  Tissue classification
 %           NIAK_BRICK_CLASSIFY
 %
 % NOTE 5:

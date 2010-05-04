@@ -337,7 +337,7 @@ if nt1 == 1
     else 
         flag_zip = false;
     end
-    files_out = [tmp,name_f,ext_f];
+    files_out = [path_f,filesep,name_f,ext_f];
     
     %% Case of a single 3D volume
     if ~isempty(files_in.transformation)
