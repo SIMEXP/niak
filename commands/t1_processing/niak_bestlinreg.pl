@@ -174,12 +174,12 @@ my $target_masked = $target;
 if( defined($opt{source_mask}) and defined($opt{target_mask}) ) { 
   if( -e $opt{source_mask} and -e $opt{target_mask} ) {
     $source_masked = "${tmpdir}/${s_base}_masked.mnc";
-    &do_cmd( 'minccalc', '-clobber',
+    &do_cmd( 'minccalc', '-nocheck_dimensions', '-clobber',
              '-expression', 'if(A[1]>0.5){out=A[0];}else{out=A[1];}',
              $source, $opt{source_mask}, $source_masked );
 
     $target_masked = "${tmpdir}/${t_base}_masked.mnc";
-    &do_cmd( 'minccalc', '-clobber',
+    &do_cmd( 'minccalc', '-nocheck_dimensions', '-clobber',
              '-expression', 'if(A[1]>0.5){out=A[0];}else{out=A[1];}',
              $target, $opt{target_mask}, $target_masked );
   }
