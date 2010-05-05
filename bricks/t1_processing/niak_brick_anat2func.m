@@ -17,9 +17,7 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       (structure) with the following fields :
 %
 %       FUNC
-%           (string) a file with one or multiple fMRI volume. If multiple
-%           time frames are present, the coregistration will be performed
-%           on the average.
+%           (string) a file with one fMRI volume. 
 %
 %       MASK_FUNC
 %           (string, default 'gb_niak_omitted') a file with a binary mask 
@@ -83,6 +81,11 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %           (vector, default [20 10 5 5 5]) LIST_CROP(I) is the cropping
 %           parameter for the functional & anatomical masks at iteration I.
 %
+%       LIST_MES
+%           (cell of string, default {'xcorr','xcorr','xcorr','mi','mi'}) 
+%           LIST_MES{I} is the measure (cost function) used to coregister 
+%           the two volumes in MINCTRACC at iteration I.
+%
 %       INIT
 %           (string, default 'identity') how to set the initial guess
 %           of the transformation. 'center': translation to align the
@@ -128,9 +131,12 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %   rigid-body coregistration (lsq6).
 %
 % NOTE 2:
-%   The targets are coregistered using a mutual-information cost function
+%   The targets are coregistered first using a cross-correlation cost 
+%   function (robust to large displacement) and then mutual information 
 %   to account for different tissue-contrast properties in T1 and EPI
-%   sequences.
+%   sequences. Note that the T1 volume is "T2ified", i.e. its histogram is
+%   modified to fit the inverse histogram of the T2. This justifies to use
+%   "xcorr" in early steps, and improves the effect of blurring with MI.
 %
 % NOTE 3:
 %   The coregistration is done in an iterative way, using large-to-small
@@ -203,8 +209,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_invert_transf','list_fwhm','list_step','list_simplex','list_crop','flag_test','folder_out','flag_verbose','init'};
-gb_list_defaults = {false,[16,8,4,8,4],[8,4,4,4,4],[32,16,8,4,2],[20,10,5,5,5],0,'',1,'identity'};
+gb_list_fields = {'flag_invert_transf','list_mes','list_fwhm','list_step','list_simplex','list_crop','flag_test','folder_out','flag_verbose','init'};
+gb_list_defaults = {false,{'xcorr','xcorr','xcorr','mi','mi'},[16,8,4,8,4],[8,4,4,4,4],[32,16,8,4,2],[20,10,5,5,5],0,'',1,'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
@@ -295,7 +301,6 @@ file_mask_anat_crop = [path_tmp 'mask_anat_crop.mnc'];  % The cropped brain mask
 file_transf_init    = [path_tmp 'transf_init.xfm'];     % The initial transformation
 file_transf_guess   = [path_tmp 'transf_guess.xfm'];    % The guess transformation
 file_transf_est     = [path_tmp 'transf_est.xfm'];      % The estimated transformation
-file_transf_final   = [path_tmp 'transf_final.xfm'];    % The final transformation
 file_transf_tmp     = [path_tmp 'transf_tmp.xfm'];      % Temporary transformation for concatenation
 
 % Scratch files for dirty jobs ...
@@ -307,9 +312,16 @@ if strcmp(files_in.transformation_init,'gb_niak_omitted')
     transf = eye(4);
     niak_write_transf(transf,file_transf_init);
 else
-    [succ,msg] = system(cat(2,'cp ',files_in.transformation_init,' ',file_transf_init));
-    if succ ~= 0
-        error(msg);
+    if flag_invert_transf
+        [succ,msg] = system(cat(2,'xfminvert ',files_in.transformation_init,' ',file_transf_init));
+        if succ ~= 0
+            error(msg);
+        end
+    else
+        [succ,msg] = system(cat(2,'cp ',files_in.transformation_init,' ',file_transf_init));
+        if succ ~= 0
+            error(msg);
+        end
     end
 end
 
@@ -326,14 +338,13 @@ files_in_res.transformation = file_transf_init;
 files_out_res = file_anat_init;
 opt_res.voxel_size = 0;
 opt_res.flag_tfm_space = 1;
-opt_res.flag_invert_transf = flag_invert_transf;
 opt_res.flag_verbose = 0;
 opt_res.interpolation = 'tricubic';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
 %% Generating anatomical mask
 if flag_verbose
-    fprintf('Resampling the mask of the brain in the anatomical space ...\n');
+    fprintf('Resampling the anatomical mask of the brain in the functional space ...\n');
 end
 clear files_in_res files_out_res opt_res
 files_in_res.source = files_in.mask_anat;
@@ -342,22 +353,13 @@ files_in_res.transformation = file_transf_init;
 files_out_res = file_mask_anat;
 opt_res.voxel_size = 0;
 opt_res.flag_tfm_space = 1;
-opt_res.flag_invert_transf = flag_invert_transf;
 opt_res.flag_verbose = 0;
 opt_res.interpolation = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
-%% Copying the functional volume & mask
+%% Copying the functional mask
 if flag_verbose
-    fprintf('Creating temporary copies of the functional volume & mask ...\n');
-end
-% The functional volume
-[hdr_func,vol_func] = niak_read_vol(files_in.func);
-hdr_func.file_name = file_func_init;
-if size(vol_func,4)>1
-    niak_write_vol(hdr_func,mean(vol_func,4));
-else
-    niak_write_vol(hdr_func,vol_func);
+    fprintf('Creating temporary copies of the functional mask ...\n');
 end
 
 % The functional mask
@@ -365,6 +367,47 @@ end
 mask_func = round(mask_func)>0;
 hdr_func.file_name = file_mask_func;
 niak_write_vol(hdr_func,mask_func);
+
+%% Applying non-uniformity correction on the functional volume
+if flag_verbose
+    fprintf('Applying non-uniformity correction on the functional volume ...\n');
+end
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp.vol = files_in.func;
+files_in_tmp.mask = file_mask_func;
+files_out_tmp.vol_nu = file_func_init;
+opt_tmp.flag_verbose = false;
+niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
+[hdr_func,vol_func] = niak_read_vol(file_func_init);
+
+%% "T2ify" the T1 volume
+if flag_verbose
+    fprintf('"T2ifying" the T1 volume ...\n');
+end
+% Read anatomical stuff
+[hdr_anat,vol_anat] = niak_read_vol(file_anat_init);
+[hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);
+mask_anat = round(mask_anat)>0;
+
+% Build a cumulative distribution function for the anat
+[ya,xa] = hist(vol_anat(mask_anat),100);
+ca = cumsum(ya)/sum(mask_anat(:));
+
+% Build a cumulative distribution function for the functional
+[yf,xf] = hist(vol_func(mask_func),100);
+cf = cumsum(yf)/sum(mask_func(:));
+[cf,ind] = unique(cf);
+xf = xf(ind);
+
+% Modify the intensity distribution of the T1 to make it more similar to
+% the functional
+vol_anat2 = zeros(size(vol_anat));
+vol_anat2(mask_anat) = interp1(xa,ca,vol_anat(mask_anat));
+vol_anat2(mask_anat) = interp1(1-cf,xf,vol_anat2(mask_anat));
+hdr_anat.file_name = file_anat_init;
+clear vol_anat 
+niak_write_vol(hdr_anat,vol_anat2);
+clear vol_anat2
 
 %% For large displacement, make a first guess of the transformation by
 %% matching the centers of mass
@@ -374,9 +417,7 @@ switch opt.init
 
         if flag_verbose
             fprintf('Deriving a reasonable guess of the transformation by matching the brain masks ...\n');
-        end
-        [hdr_func,mask_func] = niak_read_vol(file_mask_func);
-        [hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);        
+        end     
         ind = find(mask_func>0);
         [x,y,z] = ind2sub(size(mask_func),ind);
         coord = (hdr_func.info.mat*[x';y';z';ones([1 length(x)])]);
@@ -410,7 +451,8 @@ for num_i = 1:length(list_fwhm)
     step_val = list_step(num_i);
     simplex_val = list_simplex(num_i);
     crop_val = list_crop(num_i);
-
+    mes_val = list_mes{num_i};
+    
     if flag_verbose
         fprintf('\n***************\nIteration %i\nSmoothing %1.2f\nStep %1.2f\nSimplex %1.2f\nCropping %1.2f\n***************\n',num_i,fwhm_val,step_val,simplex_val,crop_val);
     end
@@ -545,7 +587,7 @@ for num_i = 1:length(list_fwhm)
     niak_write_vol(hdr_func,vol_func);        
 
     %% applying MINCTRACC    
-    instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -mi -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
+    instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -',mes_val,' -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
 
     if flag_verbose
         fprintf('Spatial coregistration using mutual information :\n     %s\n',instr_minctracc);
@@ -608,7 +650,7 @@ if ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres
         end
         files_out_res = files_out.anat_hires;
         opt_res.flag_tfm_space = 1;
-        opt_res.flag_invert_transf = 1;
+        opt_res.flag_invert_transf = 0;
         opt_res.voxel_size = -1;
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
@@ -629,7 +671,7 @@ if ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres
         opt_res.flag_invert_transf = 1;
         files_out_res = files_out.anat_lowres;
         opt_res.flag_tfm_space = 0;
-        opt_res.flag_invert_transf = 1;
+        opt_res.flag_invert_transf = 0;
         opt_res.voxel_size = 0;
         niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
     end
@@ -643,30 +685,3 @@ if flag_verbose
     fprintf('\nDone !\n');
 end
 
-% "T2ify" the T1 volume
-%
-% %% Read anatomical stuff
-% [hdr_anat,vol_anat] = niak_read_vol('anat_mni_561_stereolin.mnc');
-% [hdr,mask_anat] = niak_read_vol('anat_mni_561_mask_stereolin.mnc');
-% mask_anat = mask_anat>0;
-% 
-% %% Read functional stuff
-% [hdr_func,vol_func] = niak_read_vol('func_mean_nativefunc.mnc');
-% [hdr,mask_func] = niak_read_vol('func_mask_nativefunc.mnc');
-% mask_func = mask_func>0;
-% 
-% %% Build a cumulative distribution function for the anat
-% [ya,xa] = hist(vol_anat(mask_anat),100);
-% ca = cumsum(ya)/sum(mask_anat(:));
-% 
-% %% Build a cumulative distribution function for the functional
-% [yf,xf] = hist(vol_func(mask_func),100);
-% cf = cumsum(yf)/sum(mask_func(:));
-% [cf,ind] = unique(cf);
-% xf = xf(ind);
-% 
-% %% Modify the intensity distribution of the T1 to make it more similar to
-% %% the functional
-% vol_anat2 = zeros(size(vol_anat));
-% vol_anat2(mask_anat) = interp1(xa,ca,vol_anat(mask_anat));
-% vol_anat2(mask_anat) = interp1(1-cf,xf,vol_anat2(mask_anat));

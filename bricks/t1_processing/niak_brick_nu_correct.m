@@ -3,7 +3,7 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 % _________________________________________________________________________
 % SUMMARY NIAK_BRICK_NU_CORRECT
 %
-% Non-uniformity correction on a T1 scan. See comments for details on the
+% Non-uniformity correction on an MR scan. See comments for details on the
 % algorithm. 
 %
 % SYNTAX:
@@ -15,8 +15,8 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %  * FILES_IN        
 %       (structure) with the following fields :
 %
-%       T1
-%           (string) the file name of a T1 volume.
+%       VOL
+%           (string) the file name of an MR volume (typically T1 or T2).
 %
 %       MASK
 %           (string, default 'gb_niak_omitted') the file name of a binary 
@@ -30,11 +30,11 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %       equivalent to setting up the output file names to 
 %       'gb_niak_omitted'). 
 %                       
-%       T1_NU
+%       VOL_NU
 %           (string, default <FILES_IN.T1>_NU.<EXT>) The non-uniformity
 %           corrected T1 scan.
 %
-%       T1_IMP
+%       VOL_IMP
 %           (string, default <FILES_IN.T1>_NU.IMP) The estimated
 %           intensity mapping.
 %
@@ -127,13 +127,13 @@ end
 
 %% Input files
 gb_name_structure = 'files_in';
-gb_list_fields = {'t1','mask'};
+gb_list_fields = {'vol','mask'};
 gb_list_defaults = {NaN,'gb_niak_omitted'};
 niak_set_defaults
 
 %% Output files
 gb_name_structure = 'files_out';
-gb_list_fields = {'t1_nu','t1_imp'};
+gb_list_fields = {'vol_nu','vol_imp'};
 gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
@@ -144,7 +144,7 @@ gb_list_defaults = {'-distance 200',true,'',false};
 niak_set_defaults
 
 %% Building default output names
-[path_f,name_f,ext_f] = fileparts(files_in.t1);
+[path_f,name_f,ext_f] = fileparts(files_in.vol);
 if isempty(path_f)
     path_f = '.';
 end
@@ -158,12 +158,12 @@ if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
 end
 
-if isempty(files_out.t1_nu)    
-    files_out.t1_nu = [opt.folder_out,filesep,name_f,'_nu',ext_f];
+if isempty(files_out.vol_nu)    
+    files_out.vol_nu = [opt.folder_out,filesep,name_f,'_nu',ext_f];
 end
 
-if isempty(files_out.t1_imp)    
-    files_out.t1_imp = [opt.folder_out,filesep,name_f,'_nu.imp'];
+if isempty(files_out.vol_imp)    
+    files_out.vol_imp = [opt.folder_out,filesep,name_f,'_nu.imp'];
 end
 
 if flag_test == 1    
@@ -175,23 +175,25 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    msg = 'Non-uniformity correction on T1 volume';
+    msg = 'Non-uniformity correction on an MR volume';
     stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);    
 end
 
 %% Setting up the system call to NU_CORRECT
-[path_f,name_f,ext_f] = fileparts(files_in.t1);
-flag_zip = strcmp(ext_f,gb_niak_zip_ext);
+[path_f,name_f,ext_f] = fileparts(files_out.vol_nu);
+flag_zip_nu = strcmp(ext_f,gb_niak_zip_ext);
+[path_f,name_f,ext_f] = fileparts(files_out.vol_imp);
+flag_zip_imp = strcmp(ext_f,gb_niak_zip_ext);
 
 path_tmp = niak_path_tmp(['_' name_f]);
-file_tmp_nu = [path_tmp 't1_nu.mnc'];
-file_tmp_imp = [path_tmp 't1_nu.imp'];
+file_tmp_nu = [path_tmp 'vol_nu.mnc'];
+file_tmp_imp = [path_tmp 'vol_nu.imp'];
 
 if strcmp(files_in.mask,'gb_niak_omitted')
-    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' ' files_in.t1 ' ' file_tmp_nu];
+    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' ' files_in.vol ' ' file_tmp_nu];
 else
-    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.t1 ' ' file_tmp_nu];
+    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.vol ' ' file_tmp_nu];
 end
 
 %% Running NU_CORRECT
@@ -209,17 +211,22 @@ else
 end
 
 %% Writting outputs
-if ~strcmp(files_out.t1_nu,'gb_niak_omitted')
-    if flag_zip
+if ~strcmp(files_out.vol_nu,'gb_niak_omitted')
+    if flag_zip_nu
         system([gb_niak_zip ' ' file_tmp_nu]);        
-        system(['mv ' file_tmp_nu gb_niak_zip_ext ' ' files_out.t1_nu]);
+        system(['mv ' file_tmp_nu gb_niak_zip_ext ' ' files_out.vol_nu]);
     else
-        system(['mv ' file_tmp_nu ' ' files_out.t1_nu]);
+        system(['mv ' file_tmp_nu ' ' files_out.vol_nu]);
     end
 end
 
-if ~strcmp(files_out.t1_imp,'gb_niak_omitted')
-    system(['mv ' file_tmp_imp ' ' files_out.t1_imp]);    
+if ~strcmp(files_out.vol_imp,'gb_niak_omitted')
+    if flag_zip_imp
+        system([gb_niak_zip ' ' file_tmp_imp]);        
+        system(['mv ' file_tmp_imp gb_niak_zip_ext ' ' files_out.vol_imp]);
+    else
+        system(['mv ' file_tmp_imp ' ' files_out.vol_imp]);
+    end    
 end
 
 system(['rm -rf ' path_tmp]);

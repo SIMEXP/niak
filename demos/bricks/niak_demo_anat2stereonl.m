@@ -80,13 +80,13 @@ end
 
 %% Apply non-uniformity correction
 clear files_in files_out opt
-files_in.t1 = file_anat;
-files_out.t1_nu = '';
+files_in.vol = file_anat;
+files_out.vol_nu = '';
 opt.arg = '-distance 50';
 opt.flag_test = true;
 [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt);
 opt.flag_test = false;
-file_anat_nu = files_out.t1_nu;
+file_anat_nu = files_out.vol_nu;
 niak_brick_nu_correct(files_in,files_out,opt);
 
 %% Derive a mask of the brain
@@ -114,14 +114,14 @@ niak_brick_anat2stereolin(files_in,files_out,opt);
 
 %% Apply non-uniformity correction in Talairach space
 clear files_in files_out opt
-files_in.t1 = file_anat_stereolin;
-files_in.mask = [gb_niak_path_niak 'extensions' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];
-files_out.t1_nu = '';
+files_in.vol = file_anat_stereolin;
+files_in.mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];
+files_out.vol_nu = '';
 opt.arg = '-distance 50';
 opt.flag_test = true;
 [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt);
 opt.flag_test = false;
-file_anat_stereolin_nu = files_out.t1_nu;
+file_anat_stereolin_nu = files_out.vol_nu;
 niak_brick_nu_correct(files_in,files_out,opt);
 
 %% Derive a mask of the brain in Talairach space

@@ -399,8 +399,8 @@ end
 
 %% Apply non-uniformity correction
 clear files_in_tmp files_out_tmp opt_tmp
-files_in_tmp.t1 = files_in;
-files_out_tmp.t1_nu = files_out.anat_nuc;
+files_in_tmp.vol = files_in;
+files_out_tmp.vol_nu = files_out.anat_nuc;
 opt_tmp = opt.nu_correct;
 opt_tmp.flag_verbose = flag_verbose;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
@@ -425,9 +425,9 @@ niak_brick_anat2stereolin(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Apply non-uniformity correction in stereotaxic space
 clear files_in_tmp files_out_tmp opt_tmp
-files_in_tmp.t1 = anat_stereolin_raw;
+files_in_tmp.vol = anat_stereolin_raw;
 files_in_tmp.mask = file_template_mask_erode;
-files_out_tmp.t1_nu = anat_stereolin_nu;
+files_out_tmp.vol_nu = anat_stereolin_nu;
 opt_tmp.flag_test = false;
 opt_tmp.flag_verbose = flag_verbose;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
