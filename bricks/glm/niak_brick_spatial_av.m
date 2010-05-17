@@ -127,6 +127,13 @@ end
 
 if isempty(files_in.mask)
     files_in.mask = files_in.fmri;
+    flag_mask = 0;
+else
+    if strcmp(files_in.fmri,files_in.mask)
+        flag_mask = 0;
+    else
+        flag_mask = 1;
+    end
 end
 
 %% OPTIONS
@@ -164,27 +171,44 @@ end
 %% Open file_input:
 [hdr_vol,vol] = niak_read_vol(files_in.fmri);
 
-
-%% Defining a mask volume:
-[hdr_mask,mask] = niak_read_vol(files_in.mask);
-
-if isempty(opt.mask_thresh)
-    mask_thresh = niak_mask_threshold(squeeze(mask(:,:,:,1)));
-end
-
-mask = mask(:,:,:,1) > mask_thresh;
-
-
 numframes = size(vol,4);
 allpts = 1:numframes;
 allpts(opt.exclude) = zeros(1,length(opt.exclude));
 keep = allpts( allpts > 0);
 
-data = vol(:,:,:,keep(1));
-weighted_mask = data.*mask ;
-
-
-
+%% Brain masking:
+if flag_mask
+    disp('Reading the brain mask ...')
+    [hdr_mask,mask] = niak_read_vol(files_in.mask);
+    if isempty(opt.mask_thresh)
+        mask_thresh1 = 0;
+        mask_thresh2 = Inf;
+    else
+        mask_thresh1 = opt.mask_thresh(1);
+        if length(opt.mask_thresh)>=2
+            mask_thresh2 = opt.mask_thresh(2);
+        else
+            mask_thresh2 = Inf;
+        end
+    end
+else
+    disp('Defining a brain mask ...')
+    if isempty(opt.mask_thresh)
+        mask_thresh = niak_mask_threshold(vol);
+        mask_thresh1=mask_thresh(1);
+        if length(mask_thresh)>=2
+            mask_thresh2=mask_thresh(2);
+        else
+            mask_thresh2=Inf;
+        end
+    else
+        mask_thresh1 = 0;
+        mask_thresh2 = Inf;
+    end
+    mask = squeeze(vol(:,:,:,keep(1)));
+end
+mask = (mask>mask_thresh1)&(mask<=mask_thresh2);
+weighted_mask = squeeze(vol(:,:,:,keep(1))).*mask ;
 
 %% Creates spatial_av:
 spatial_av = niak_spatial_av(vol,weighted_mask);

@@ -294,65 +294,50 @@ end
 
 if isempty(files_in.mask)
     files_in.mask = files_in.fmri;
+    flag_mask = 0;
+else
+    if strcmp(files_in.fmri,files_in.mask)
+        flag_mask = 0;
+    else
+        flag_mask = 1;
+    end
 end
-
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'mask_thresh','contrast','spatial_av','confounds','exclude','nb_trends_spatial',...
+gb_list_fields = {'mask_thresh','contrast','contrast_names','spatial_av','confounds','exclude','nb_trends_spatial',...
     'nb_trends_temporal','num_hrf_bases','basis_type','numlags','pcnt','fwhm','df_limit',...
     'flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {[],NaN,[],[],[],0,3,[],'spectral',1,0,[],4,0,'',1};
+gb_list_defaults = {[],NaN,[],[],[],[],0,3,[],'spectral',1,0,[],4,0,'',1};
 niak_set_defaults
 
 if ((nb_trends_spatial>=1)||(opt.pcnt)) && isempty(opt.spatial_av)
     error('Please provide a non empty value for SPATIAL_AV.\n Type ''help niak_brick_fmri_lm'' for more info.')
 end
 
-%% FILES_OUT
-[path_f,name_f,ext_f] = fileparts(files_in.fmri);
-
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
-
-if isempty(opt.folder_out)
-    folder_f = path_f;
+if isempty(opt.contrast_names)
+    if isstruct(opt.contrast)
+        fn_contrast = fieldnames(opt.contrast);
+        numcontrasts = size(opt.contrast.(fn_contrast{1}),1);
+    else
+        numcontrasts = size(opt.contrast,1);
+    end
+    for i=1:numcontrasts
+        opt.contrast_names{i} = ['_c',num2str(i)];
+    end
 else
-    folder_f = opt.folder_out;
-end
-
-if ~isfield(files_out,'df')
-    full_name = cat(2,folder_f,filesep,name_f,'_df.mat');
-    files_out = setfield(files_out,'df',full_name);
-end
-
-if ~isfield(files_out,'fwhm')
-    full_name = cat(2,folder_f,filesep,name_f,'_fwhm.mat');
-    files_out = setfield(files_out,'fwhm',full_name);
-end
-
-list_outputs = {'_mag_t','_del_t','_mag_ef','_del_ef','_mag_sd','_del_sd','_mag_f','_cor','_resid','_wresid','_ar'};
-for num_l = 1:length(list_outputs)
-    field_name = lower(list_outputs{num_l}(2:end));
-    if isfield(files_out,field_name)
-       if isempty(files_out.(field_name))           
-          full_name = cat(2,folder_f,filesep,name_f,list_outputs{num_l},ext_f);
-          files_out.(field_name) = full_name; 
-       end
+    numcontrasts = length(opt.contrast_names);
+    for i=1:numcontrasts
+        opt.contrast_names{i} = ['_',opt.contrast_names{i}];
     end
 end
-
+    
 if flag_test 
     return
 end
 
 %% STATS OUTPUT
 which_stats = '';
+list_outputs = {'_mag_t','_del_t','_mag_ef','_del_ef','_mag_sd','_del_sd','_mag_f','_cor','_resid','_wresid','_ar'};
 
 for num_l = 1:length(list_outputs)
     field_name = lower(list_outputs{num_l}(2:end));
@@ -394,26 +379,44 @@ disp('Loading Data...')
 [hdr,vol] = niak_read_vol(files_in.fmri);
 Steps = abs(hdr.info.voxel_size);
 
-%% Brain masking:
-if ~strcmp(files_in.mask,'gb_niak_omitted')
-    disp('Reading the brain mask ...')
-    [hdr_mask,mask] = niak_read_vol(files_in.mask);
-    mask = mask>0;
-else    
-    disp('Defining a brain mask ...')
-    if isempty(opt.mask_thresh)
-        mask_thresh = niak_mask_threshold(squeeze(mask(:,:,:,1)));
-    end
-    
-    mask = mask(:,:,:,1) > mask_thresh;
-end
 numframes = size(vol,4);
 allpts = 1:numframes;
 allpts(opt.exclude) = zeros(1,length(opt.exclude));
 keep = allpts( allpts >0 );
 
-data = vol(:,:,:,keep(1));
-weighted_mask = data.*mask ;
+%% Brain masking:
+disp('Reading the brain mask ...')
+if flag_mask
+    [hdr_mask,mask] = niak_read_vol(files_in.mask);
+    if isempty(opt.mask_thresh)
+        mask_thresh1 = 0;
+        mask_thresh2 = Inf;
+    else
+        mask_thresh1 = opt.mask_thresh(1);
+        if length(opt.mask_thresh)>=2
+            mask_thresh2 = opt.mask_thresh(2);
+        else
+            mask_thresh2 = Inf;
+        end
+    end
+else
+    disp('Defining a brain mask ...')
+    if isempty(opt.mask_thresh)
+        mask_thresh = niak_mask_threshold(vol);
+        mask_thresh1=mask_thresh(1);
+        if length(mask_thresh)>=2
+            mask_thresh2=mask_thresh(2);
+        else
+            mask_thresh2=Inf;
+        end
+    else
+        mask_thresh1 = 0;
+        mask_thresh2 = Inf;
+    end
+    mask = squeeze(vol(:,:,:,keep(1)));
+end
+mask = (mask>mask_thresh1)&(mask<=mask_thresh2);
+weighted_mask = squeeze(vol(:,:,:,keep(1))).*mask ;
 
 %% Start Computations:
 disp('Start Computations...')
@@ -499,6 +502,55 @@ opt_whiten.which_stats = which_stats;
 opt_whiten.contrast_is_delay = contrast_is_delay;
 [stats_vol] = niak_whiten_glm(vol,rho_vol,opt_whiten);
 
+%% FILES_OUT
+[path_f,name_f,ext_f] = fileparts(files_in.fmri);
+
+if isempty(path_f)
+    path_f = '.';
+end
+
+if strcmp(ext_f,gb_niak_zip_ext)
+    [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+end
+
+if isempty(opt.folder_out)
+    folder_f = path_f;
+else
+    folder_f = opt.folder_out;
+end
+
+if ~isfield(files_out,'df')
+    full_name = cat(2,folder_f,filesep,name_f,'_df.mat');
+    files_out = setfield(files_out,'df',full_name);
+end
+
+if ~isfield(files_out,'fwhm')
+    full_name = cat(2,folder_f,filesep,name_f,'_fwhm.mat');
+    files_out = setfield(files_out,'fwhm',full_name);
+end
+
+for num_l = 1:6
+    field_name = lower(list_outputs{num_l}(2:end));
+    if isfield(files_out,field_name)
+       if isempty(files_out.(field_name))
+          for i=1:numcontrasts
+              full_name = cat(2,folder_f,filesep,name_f,list_outputs{num_l},opt.contrast_names{i},ext_f);
+              files_out.(field_name){i} = full_name;
+          end
+       end
+       files_out.(field_name) = files_out.(field_name)(:);
+    end
+end
+for num_l = 7:length(list_outputs)
+    field_name = lower(list_outputs{num_l}(2:end));
+    if isfield(files_out,field_name)
+       if isempty(files_out.(field_name))           
+          full_name = cat(2,folder_f,filesep,name_f,list_outputs{num_l},ext_f);
+          files_out.(field_name) = full_name; 
+       end
+    end
+end
 
 %% Writing output files
 disp('Writing outputs...')
@@ -513,45 +565,57 @@ end
 hdr = hdr(1);
 
 if any(which_stats(:,1))
-    if flag_verbose
-        fprintf('Writing the t stats data in %s ...\n',files_out.mag_t);
+    for i=1:numcontrasts
+        if flag_verbose
+           file_name_tmp = files_out.mag_t{i};
+           fprintf('Writing the t stats data in %s ...\n',file_name_tmp);
+        end
+        hdr_out = hdr;
+        hdr_out.file_name = files_out.mag_t{i};
+        opt_hist.command = 'niak_brick_fmri_lm';
+        opt_hist.files_in = files_in;
+        opt_hist.files_out = files_out.mag_t{i};
+        opt_hist.comment = sprintf('T stats data');
+        hdr_out = niak_set_history(hdr_out,opt_hist);
+        stats_vol_contr.t = squeeze(stats_vol.t(:,:,:,i));
+        niak_write_vol(hdr_out,stats_vol_contr.t);
     end
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.mag_t;
-    opt_hist.command = 'niak_brick_fmri_lm';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.mag_t;
-    opt_hist.comment = sprintf('T stats data');
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,stats_vol.t);
 end
 
 if any(which_stats(:,2))
-    if flag_verbose
-        fprintf('Writing the effects in %s ...\n',files_out.mag_ef);
+   for i=1:numcontrasts
+        if flag_verbose
+            file_name_tmp = files_out.mag_ef{i};
+            fprintf('Writing the effects in %s ...\n',file_name_tmp);
+        end
+        hdr_out = hdr;
+        hdr_out.file_name = files_out.mag_ef{i};
+        opt_hist.command = 'niak_brick_fmri_lm';
+        opt_hist.files_in = files_in;
+        opt_hist.files_out = files_out.mag_ef{i};
+        opt_hist.comment = sprintf('Magnitude of effects data');
+        hdr_out = niak_set_history(hdr_out,opt_hist);
+        stats_vol_contr.ef = squeeze(stats_vol.ef(:,:,:,i));
+        niak_write_vol(hdr_out,stats_vol_contr.ef);
     end
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.mag_ef;
-    opt_hist.command = 'niak_brick_fmri_lm';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.mag_ef;
-    opt_hist.comment = sprintf('Magnitude of effects data');
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,stats_vol.ef);
 end
 
 if any(which_stats(:,3))
-    if flag_verbose
-        fprintf('Writing the standard deviations of effects in %s ...\n',files_out.mag_sd);
+    for i=1:numcontrasts
+        if flag_verbose
+            file_name_tmp = files_out.mag_sd{i};
+            fprintf('Writing the standard deviations of effects in %s ...\n',file_name_tmp);
+        end
+        hdr_out = hdr;
+        hdr_out.file_name = files_out.mag_sd{i};
+        opt_hist.command = 'niak_brick_fmri_lm';
+        opt_hist.files_in = files_in;
+        opt_hist.files_out = files_out.mag_sd{i};
+        opt_hist.comment = sprintf('Standard deviations of effects data');
+        hdr_out = niak_set_history(hdr_out,opt_hist);
+        stats_vol_contr.sd = squeeze(stats_vol.sd(:,:,:,i));
+        niak_write_vol(hdr_out,stats_vol_contr.sd);
     end
-    hdr_out = hdr;
-    hdr_out.file_name = files_out.mag_sd;
-    opt_hist.command = 'niak_brick_fmri_lm';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out.mag_sd;
-    opt_hist.comment = sprintf('Standard deviations of effects data');
-    hdr_out = niak_set_history(hdr_out,opt_hist);
-    niak_write_vol(hdr_out,stats_vol.sd);
 end
 
 if any(which_stats(:,4))
