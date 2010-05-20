@@ -11,9 +11,36 @@ function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,op
 % _________________________________________________________________________
 % INPUTS:
 %
-%  FILES_IN  
-%       (string) the name of a file containing an fMRI dataset. 
-%     
+%  FILES_IN
+%       (structure) with the following fields:
+%
+%       FMRI 
+%           (string) the name of a file containing an fMRI dataset. 
+%
+%       SLICING
+%           (string) the name of a file containing relative slice acquisition 
+%           times i.e. absolute acquisition time of a slice is
+%           FRAME_TIMES+SLICE_TIMES. (default 0) means that slice timing 
+%           correction was already done during pre-processing
+%
+%       EVENTS
+%
+%           (string) the name a matlab file containing a description of the
+%           events matrix (default [1 0]) rows are events and columns are:
+%           1. id - an integer from 1:(number of events) to identify event type;
+%           2. times - start of event, synchronised with frame and slice times;
+%           3. durations (optional - default is 0) - duration of event;
+%           4. heights (optional - default is 1) - height of response for event.
+%           For each event type, the response is a box function starting at the 
+%           event times, with the specified durations and heights, convolved with 
+%           the hemodynamic response function (see below). If the duration is zero, 
+%           the response is the hemodynamic response function whose integral is 
+%           the specified height - useful for `instantaneous' stimuli such as visual 
+%           stimuli. The response is then subsampled at the appropriate frame and 
+%           slice times to create a design matrix for each slice, whose columns 
+%           correspond to the event id number. EVENT_TIMES=[] will ignore event 
+%           times and just use the stimulus design matrix S (see next). 
+%
 %  FILES_OUT
 %       (string) the name a matlab file containing a description of the
 %       design matrix in the two following variables : 
@@ -34,25 +61,8 @@ function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,op
 %     Note that if a field is omitted, it will be set to a default
 %     value if possible, or will issue an error otherwise.
 %
-%     EVENTS 
-%           (matrix, default [1 0]) rows are events and columns are:
-%           1. id - an integer from 1:(number of events) to identify event type;
-%           2. times - start of event, synchronised with frame and slice times;
-%           3. durations (optional - default is 0) - duration of event;
-%           4. heights (optional - default is 1) - height of response for event.
-%           For each event type, the response is a box function starting at the 
-%           event times, with the specified durations and heights, convolved with 
-%           the hemodynamic response function (see below). If the duration is zero, 
-%           the response is the hemodynamic response function whose integral is 
-%           the specified height - useful for `instantaneous' stimuli such as visual 
-%           stimuli. The response is then subsampled at the appropriate frame and 
-%           slice times to create a design matrix for each slice, whose columns 
-%           correspond to the event id number. EVENT_TIMES=[] will ignore event 
-%           times and just use the stimulus design matrix S (see next). 
-%
-%     SLICE_TIMES 
-%           (row vector, default 0) relative slice acquisition times i.e. 
-%           absolute acquisition time of a slice is FRAME_TIMES+SLICE_TIMES
+%     TR
+%           Time resolution (default read from header of FILES_IN.FMRI)
 %
 %     SPATIAL_AV
 %           (default [] and NB_TRENDS_SPATIAL = 0)
@@ -194,14 +204,40 @@ if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
 end
 
 %% FILES_IN
-if ~ischar(files_in)
-    error('niak_brick_fmri_design: FILES_IN should be a string');
+if ~isstruct(files_in)
+    error('FILES_IN should be a struture!')
+else
+    if ~isfield(files_in,'fmri')
+        error('I could not find the field FILES_IN.%s.FMRI!')
+    else
+        if ~ischar(files_in.fmri)
+            error('niak_brick_fmri_design: FILES_IN.%s.FMRI! should be a string');
+        end
+    end
+    if ~isfield(files_in,'events')
+        events = [1 0];
+    else
+       if ~ischar(files_in.events)
+           error('niak_brick_fmri_design: FILES_IN.%s.EVENTS! should be a string');
+       else
+           events = importdata(files_in.events);
+       end
+    end
+    if ~isfield(files_in,'slicing')
+        slice_times = 0;
+    else
+       if ~ischar(files_in.slicing)
+           error('niak_brick_fmri_design: FILES_IN.%s.SLICING! should be a string');
+       else
+           slice_times = importdata(files_in.slicing);
+       end
+    end
 end
-
+ 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'events','slice_times','spatial_av','confounds','exclude','nb_trends_spatial','nb_trends_temporal','num_hrf_bases','basis_type','flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {[1 0],NaN,[],[],[],0,3,[],'spectral',0,'',1};
+gb_list_fields = {'tr','spatial_av','confounds','exclude','nb_trends_spatial','nb_trends_temporal','num_hrf_bases','basis_type','flag_test','folder_out','flag_verbose'};
+gb_list_defaults = {[],[],[],[],0,3,[],'spectral',0,'',1};
 niak_set_defaults
 
 if (nb_trends_spatial>=1) && isempty(opt.spatial_av)
@@ -209,7 +245,7 @@ if (nb_trends_spatial>=1) && isempty(opt.spatial_av)
 end
 
 %% FILES_OUT
-[path_f,name_f,ext_f] = fileparts(files_in);
+[path_f,name_f,ext_f] = fileparts(files_in.fmri);
 
 if isempty(path_f)
     path_f = '.';
@@ -234,8 +270,11 @@ if flag_test
 end
 
 %% Open file_input:
-hdr = niak_read_vol(files_in);
-tr = hdr.info.tr;
+hdr = niak_read_vol(files_in.fmri);
+
+if isempty(opt.tr)
+    tr = hdr.info.tr;
+end
 
 %% Image dimensions
 numslices = hdr.info.dimensions(3);
@@ -259,8 +298,8 @@ clear opt.trends
 
 %% Creates x_cache
 opt_cache.frame_times = (0:(numframes-1))*tr;
-opt_cache.slice_times = opt.slice_times;
-opt_cache.events = opt.events;
+opt_cache.slice_times = slice_times;
+opt_cache.events = events;
 x_cache = niak_fmridesign(opt_cache);
 clear opt_cache
 
