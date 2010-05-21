@@ -1,21 +1,15 @@
-function [coord stress disp] = niak_visu_mds(dist,opt)
-
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_VISU_MDS
-%
-% Multi-dimensional scaling representation of individuals based on a
-% distance matrix
+function coord = niak_visu_mds(dist_mat,opt)
+% Multi-dimensional scaling representation of points in arbitrary dimension
 %
 % SYNTAX:
-% [COORD,STRESS,DISP] = NIAK_VISU_MDS(SIM,OPT)
+% COORD = NIAK_VISU_MDS(DIST_MAT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% DIST
-%       (square matrix N*N) a distance matrix, e.g. the square root of 1 -
-%       a correlation matrix between multiple time series
+% DIST_MAT
+%       (square matrix N*N) a distance matrix, e.g. the Euclidian distance
+%       built through NIAK_BUILD_DISTANCE.
 %
 % OPT
 %       (structure, optional) has the following fields:
@@ -26,8 +20,10 @@ function [coord stress disp] = niak_visu_mds(dist,opt)
 %
 %       PART
 %           (vector, default ones([N 1])) partition of the individuals into
-%           a finite set of clusters. A different color will be used for
-%           each cluster.
+%           a finite set of clusters. A different marker will be used for
+%           each cluster. Note that if the number of clusters is > 13, the
+%           same marker will be used for more than one cluster, resulting
+%           in possible confusion.
 %
 %       MARKER_SIZE
 %           (real number, default 15) the size of the marker used in the
@@ -47,12 +43,11 @@ function [coord stress disp] = niak_visu_mds(dist,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% This function is based on MDSCALE from the statistical toolbox.
+% This function is based on NIAK_MDS.
 %
-% Only NB_DIM = 2 and NB_DIM = 3 are supported for visualization.
-%
-% DIST has to be a square matrix. MDSCALE supports linearized matrix, but
-% not this function.
+% _________________________________________________________________________
+% SEE ALSO:
+% NIAK_BUILD_DISTANCE
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -84,15 +79,18 @@ gb_list_fields = {'nb_dim','flag_disp','part','marker_size'};
 gb_list_defaults = {2,true,[],15};
 niak_set_defaults
 
-N = size(dist,1);
+N = size(dist_mat,1);
 if isempty(part)
     part = ones([N 1]);
 end
 
 % Running MDS
-[coord stress disp] = mdscale(dist,nb_dim);
+opt_mds.nb_dim = nb_dim;
+opt_mds.flag_disp = flag_disp;
+coord = niak_mds(dist_mat,opt_mds);
 
 % Plot the MDS results
+clf
 if flag_disp
     
     list_c = unique(part);
@@ -103,15 +101,16 @@ if flag_disp
         hold on
         for num_c = 1:nb_c
             ind_c = find(part==list_c(num_c));
-            plot(coord(ind_c,1),coord(ind_c,2),'o','MarkerFaceColor',cm(num_c,:),'MarkerSize',15);
+            plot(coord(1,ind_c),coord(2,ind_c),'o','MarkerFaceColor',cm(num_c,:),'MarkerSize',15);
         end
                 
     elseif nb_dim == 3
         hold on
         for num_c = 1:nb_c
             ind_c = find(part==list_c(num_c));
-            plot3(coord(ind_c,1),coord(ind_c,2),coord(ind_c,3),'o','MarkerFaceColor',cm(num_c,:),'MarkerSize',15);
+            plot3(coord(1,ind_c),coord(2,ind_c),coord(3,ind_c),'o','MarkerFaceColor',cm(num_c,:),'MarkerSize',15);
         end        
         
     end
 end
+

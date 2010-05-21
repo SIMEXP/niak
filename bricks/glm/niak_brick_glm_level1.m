@@ -338,6 +338,8 @@ end
 if strcmp(ext_f,gb_niak_zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
     flag_zip = 1;
+else 
+    flag_zip = 0;
 end
 
 if isempty(opt.folder_out)

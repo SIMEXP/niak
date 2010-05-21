@@ -70,28 +70,28 @@ catch
 end
    
 %% Loop on every field
-nb_fields = length(gb_list_fields);
+gb_niak_nb_fields = length(gb_list_fields);
 
-for num_f = 1:nb_fields
+for num_f = 1:gb_niak_nb_fields
     
-    field = gb_list_fields{num_f};
-    val = gb_list_defaults{num_f};
-    flag_field = isfield(gb_niak_struct,field);
+    gb_niak_field = gb_list_fields{num_f};
+    gb_niak_val = gb_list_defaults{num_f};
+    gb_niak_flag_field = isfield(gb_niak_struct,gb_niak_field);
 
     %% If the field does not exist, create it with default value
-    if ~flag_field  
-        if isnumeric(val)
-            if isnan(val)
+    if ~gb_niak_flag_field  
+        if isnumeric(gb_niak_val)
+            if isnan(gb_niak_val)
                 error(cat(2,'niak:defaults: Please specify field ',field,' in structure ',gb_name_structure,' !\n'))                
             end
         end        
-        gb_niak_struct(1).(field) = val;        
+        gb_niak_struct(1).(gb_niak_field) = gb_niak_val;        
     end    
                     
     % Upload the field as a variable   
 
     %assignin('caller',field,gb_niak_struct.(field));
-    instr_upload = sprintf('%s = gb_niak_struct.%s;',field,field);
+    instr_upload = sprintf('%s = gb_niak_struct.%s;',gb_niak_field,gb_niak_field);
     eval(instr_upload);
 end
 
