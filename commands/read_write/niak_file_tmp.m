@@ -47,12 +47,17 @@ function file_name = niak_file_tmp(ext)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+global gb_psom_name_job
 flag_gb_niak_fast_gb = 1; %% the initialization of global variables will be as fast as possible
 niak_gb_vars
 flag_tmp = 1;
 
 while flag_tmp == 1;
-    file_name = sprintf('%sniak_tmp_%i%s',gb_niak_tmp,floor(10000*rand(1)),ext);
+    if ~isempty(gb_psom_name_job)
+        file_name = sprintf('%sniak_tmp_%s_%i%s',gb_niak_tmp,gb_psom_name_job,floor(1000000000*rand(1)),ext);
+    else
+        file_name = sprintf('%sniak_tmp_%i%s',gb_niak_tmp,floor(1000000000*rand(1)),ext);
+    end
     flag_tmp = exist(file_name,'file')>0;
 end
 save(file_name,'flag_tmp')

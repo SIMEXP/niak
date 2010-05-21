@@ -1,8 +1,4 @@
 function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_FMRI_PREPROCESS
-%
 % This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS.
 %
 % SYNTAX:
@@ -56,6 +52,7 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
+% Note 1:
 % The demo will apply a 'standard-native' preprocessing pipeline on the 
 % functional data of subjects 1 and 2 (rest and motor conditions) as well 
 % as their anatomical image. This will take about 2 hours on a single 
@@ -63,10 +60,7 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 % computing, see : 
 % http://code.google.com/p/psom/wiki/HowToUsePsom#PSOM_configuration
 %
-% _________________________________________________________________________
-% COMMENT:
-%
-% NOTE 1:
+% NOTE 2:
 % A more detailed description of NIAK_PIPELINE_FMRI_PREPROCESS can be found
 % on : 
 % http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing
@@ -79,7 +73,7 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, demo, pipeline, preprocessing, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
