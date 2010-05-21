@@ -1,4 +1,4 @@
-function [coord stress disp] = niak_mds(dist_mat,opt)
+function coord = niak_mds(dist_mat,opt)
 % Multi-dimensional scaling on a distance matrix.
 %
 % SYNTAX:
