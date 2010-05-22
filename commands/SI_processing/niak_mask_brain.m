@@ -1,8 +1,4 @@
 function mask = niak_mask_brain(vol,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_MASK_BRAIN
-%
 % Create a binary mask of the inside of the brain in an MRI/fMRI dataset
 %
 % SYNTAX:
@@ -44,11 +40,25 @@ function mask = niak_mask_brain(vol,opt)
 %       (3D array) binary mask of the inside of the brain
 %
 % _________________________________________________________________________
+% REFERENCE:
+%
+% Otsu, N.
+% A Threshold Selection Method from Gray-Level Histograms.
+% IEEE Transactions on Systems, Man, and Cybernetics, Vol. 9, No. 1, 1979, 
+% pp. 62-66.
+%
+% _________________________________________________________________________
+% SEE ALSO:
+% NIAK_BRICK_MASK_BRAIN, NIAK_MASK_HEAD_T1, NIAK_MASK_BRAIN_T1,
+% NIAK_BRICK_MASK_BRAIN_T1
+%
+% _________________________________________________________________________
 % COMMENTS:
 %
 % Use the "Otsu" algorithm to separate two Gaussian distributions in an 
 % histogram of the mean of the absolute values of all volumes. This is a 
 % port from the FORTRAN "spider" library, by Joachim Frank.
+%
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

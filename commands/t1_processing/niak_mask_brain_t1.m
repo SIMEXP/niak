@@ -1,12 +1,8 @@
 function mask_brain = niak_mask_brain_t1(anat,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_MASK_BRAIN_T1
-%
-% Derive a head and a brain masks from a T1 scan.
+% Derive a brain mask from a T1 scan.
 %
 % SYNTAX:
-% MASK_BRAIN = NIAK_MASK_BRAIN_T1(ANAT,MASK_HEAD,OPT)
+% [MASK_BRAIN,MASK_HEAD] = NIAK_MASK_BRAIN_T1(ANAT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS :
@@ -89,8 +85,8 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %   MASK_BRAIN
 %       (volume) a binary mask of the brain tissues, i.e. gray matter,
 %       white matter and inner CSF. Ideally, the veinous sinus and dura
-%       should be stripped out, but some of it may be included in the mask.
-%       The skull and fat should be masked out.
+%       should be stripped out, but usually most of it is still included 
+%       in the mask. The skull and fat should be masked out.
 %
 % _________________________________________________________________________
 % SEE ALSO :
@@ -99,8 +95,9 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 % _________________________________________________________________________
 % COMMENTS
 %
-% The algorithm is similar conceptually to the competitive region growing
-% approach proposed in :
+% This method is not accurate, but should be quite robust to
+% poor-quality scans. The algorithm is similar conceptually to the 
+% competitive region growing approach proposed in :
 %
 % J. G. Park & C. Lee (2009). `Skull stripping based on region growing for
 % magnetic resonance brain images'. NeuroImage 47(4):1394-1407.
@@ -110,7 +107,8 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 % of spatial density rather than more standard morphomathematical 
 % operations. Specifically, the main stages are the following :
 %
-%   1. Classification of brain tissues into CSF/WM/GM using k-means.
+%   1. Rough head and gray matter segmentation using intensity
+%   thresholding.
 %
 %   2. Competitive region growing. The seed regions are the bigger
 %   connected components within the dense portions of the grey matter. This

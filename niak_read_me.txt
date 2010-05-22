@@ -1,4 +1,4 @@
-﻿= Neuroimaging Analysis Kit (NIAK) v0.6 =
+﻿= Neuroimaging Analysis Kit (NIAK) v0.6.3 =
 
 The NIAK is a library of functions dedicated to process neuroimaging data within Octave or Matlab(r), with an emphasis on functional magnetic resonance images (fMRI). Tools have been implemented in a modular fashion following consistent coding guidelines, such that they would integrate easily into new projects. A generic pipeline system is available to handle complex multi-stage processing and support distributed computing. Please read niak_install.txt for download and installation instructions. The latest version of the user's guide can be found at http://wiki.bic.mni.mcgill.ca/index.php/NeuroImagingAnalysisKit.
 
