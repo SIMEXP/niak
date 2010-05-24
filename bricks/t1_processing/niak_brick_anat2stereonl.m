@@ -251,7 +251,21 @@ end
 if strcmp(files_out.t1_stereonl,'gb_niak_omitted')
     arg_out = '';
 else
-    arg_out = files_out.t1_stereonl;
+    [path_f,name_f,ext_f] = fileparts(files_out.t1_stereonl);
+    
+    if isempty(path_f)
+        path_f = '.';
+    end
+    
+    if strcmp(ext_f,gb_niak_zip_ext)
+        [tmp,name_f,ext_f] = fileparts(name_f);        
+        flag_zip = true;        
+    else 
+        flag_zip = false;
+    end
+    file_stereonl = [path_f,filesep,name_f,ext_f];
+    
+    arg_out = file_stereonl;
 end
 
 instr = [file_script ' -clobber ' arg ' ' arg_mask ' ' files_in.t1 ' ' files_in.template ' ' arg_transf ' ' arg_out];    
@@ -268,6 +282,11 @@ else
     if status~=0
         error('The BEST1STEPNLREG command failed with that error message :\n%s\n',msg);
     end
+end
+
+%% if necessary, zip the output non-linear volume
+if flag_zip
+    system([gb_niak_zip ' ' file_stereonl]);
 end
 
 %% Renaming the output grid file

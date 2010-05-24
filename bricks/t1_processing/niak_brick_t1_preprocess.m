@@ -471,8 +471,7 @@ opt_tmp.flag_test = false;
 opt_tmp.flag_verbose = flag_verbose;
 niak_brick_anat2stereonl(files_in_tmp,files_out_tmp,opt_tmp);
 
-%% Combine the template and individual masks
-% resample the template mask with non-linear deformations
+%% Resample the template mask with non-linear deformations 
 if flag_verbose
     fprintf('\n\n\n**********\nCombine the template and individual masks ...\n');
 end

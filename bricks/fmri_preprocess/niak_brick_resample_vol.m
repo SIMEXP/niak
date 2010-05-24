@@ -1,12 +1,7 @@
 function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_RESAMPLE_VOL
-%
-% Apply MINCRESAMPLE to resample a volume or a 4D volume with a 
-% transformation to a target space. The function allows to change the 
-% target resolution, and to resample the data such that the direction 
-% cosines are exactly x, y and z.
+% Resample a volume or a 4D volume with a transformation to a target space. 
+% The function allows to change the target resolution, and to resample the 
+% data such that the direction cosines are exactly x, y and z.
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
@@ -29,7 +24,8 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           to apply on SOURCE.
 %
 %   FILES_OUT 
-%       (string,default <BASE_SOURCE>_res) the name of the output resampled volume.
+%       (string,default <BASE_SOURCE>_res) the name of the output resampled 
+%       volume.
 %
 %   OPT           
 %       (structure, optional) has the following fields:
@@ -96,7 +92,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % _________________________________________________________________________
 % COMMENTS:
 %
-% This is a simple wrapper of MINCRESAMPLE, but is has a couple of
+% This is a simple wrapper of MINCRESAMPLE, but it has a couple of
 % additional features (i.e. the possibility to change the resolution or to
 % get rid of the direction cosines). More importantly it works for 4D
 % images, i.e. fMRI datasets, while MINCRESAMPLE works only on 3D volumes.
@@ -330,6 +326,10 @@ if nt1 == 1
     end
 
     [path_f,name_f,ext_f] = fileparts(files_out);
+    
+    if isempty(path_f)
+        path_f = '.';
+    end
     
     if strcmp(ext_f,gb_niak_zip_ext)
         [tmp,name_f,ext_f] = fileparts(name_f);        
