@@ -490,11 +490,13 @@ niak_brick_resample_vol(files_in_tmp,files_out_tmp,opt_tmp);
 if flag_verbose
     fprintf('\n\n\n**********\nClassification into tissue types ...\n');
 end
-instr_classify = ['classify_clean -tmpdir ' path_tmp ' -mask_source ' files_out.mask_stereolin ' ' files_out.anat_nuc_stereolin ' ' files_out.classify];
-[status,msg] = system(instr_classify);
-if status~=0
-    error('Classification into tissue types failed with the following error message : %s',msg);
-end
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp.vol = files_out.anat_nuc_stereolin;
+files_in_tmp.mask = files_out.mask_stereolin;
+files_in_tmp.transf = files_out.transformation_nl;
+files_out_tmp = files_out.classify;
+opt_tmp.flag_verbose = flag_verbose;
+niak_brick_classify(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Clean the temporary folder
 [status,msg] = system(['rm -rf ' path_tmp]);

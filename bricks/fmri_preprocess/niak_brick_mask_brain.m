@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MASK_BRAIN
-%
 % Derive a brain mask from one fMRI dataset
 %
 % SYNTAX:

@@ -1,14 +1,13 @@
-function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt)
-% Non-uniformity correction on an MR scan. See comments for details on the
-% algorithm. 
+function [files_in,files_out,opt] = niak_brick_classify(files_in,files_out,opt)
+% Brain tissue segmentation on T1 scan in stereotaxic space.
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_NU_CORRECT(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CLASSIFY(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN        
+%   FILES_IN        
 %       (structure) with the following fields :
 %
 %       VOL
@@ -19,29 +18,21 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %           mask of a region of interest. If unspecified (or equal to 
 %           'gb_niak_omitted'), no mask is used.
 %
-%  * FILES_OUT
-%       (structure) with the following fields.  Note that if a field is an 
-%       empty string, a default value will be used to name the outputs. 
-%       If a field is ommited, the output won't be saved at all (this is 
-%       equivalent to setting up the output file names to 
-%       'gb_niak_omitted'). 
-%                       
-%       VOL_NU
-%           (string, default <FILES_IN.VOL>_NU.<EXT>) The non-uniformity
-%           corrected T1 scan.
+%       TRANSF
+%           (string, default 'gb_niak_omitted') non-linear transformation 
+%           to map the tags from stereotaxic space to subject 
 %
-%       VOL_IMP
-%           (string, default <FILES_IN.VOL>_NU.IMP) The estimated
-%           intensity mapping.
+%   FILES_OUT
+%       (string, default <FILES_IN.VOL>_CLASSIFY.<EXT>) Integer labels
+%       coding for cerebrospinal fluid / gray matter / white matter (in
+%       this order).
 %
-%  * OPT           
+%   OPT           
 %       (structure) with the following fields:
 %
 %       ARG
-%           (string, default '-distance 200') any argument that will be 
-%           passed to the NU_CORRECT command (see comments below). The 
-%           '-distance' option sets the N3 spline distance in mm (suggested 
-%           values: 200 for 1.5T scan; 50 for 3T scan). 
+%           (string, default '') any argument that will be 
+%           passed to the CLASSIFY command (see comments below). 
 %
 %       FLAG_VERBOSE 
 %           (boolean, default: 1) If FLAG_VERBOSE == 1, write
@@ -65,31 +56,20 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 %
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_BRICK_MASK_BRAIN_T1, NIAK_PIPELINE_T1_PREPROCESS
+% NIAK_PIPELINE_T1_PREPROCESS
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% NOTE 1:
 %   This function is a simple NIAK-compliant wrapper around the minc tool
-%   called NU_CORRECT. Type "nu_correct -help" in a terminal for more
-%   infos.
-%
-% NOTE 2:
-%   The correction method is N3 [1], and should work with any MR volume 
-%   including raw (non-stereotaxic) data.  The performance of this method 
-%   can be enhanced by supplying a mask for the region of interest.
-%
-%   [1] J.G. Sled, A.P. Zijdenbos and A.C. Evans, "A non-parametric method
-%       for automatic correction of intensity non-uniformity in MRI data",
-%       in "IEEE Transactions on Medical Imaging", vol. 17, n. 1,
-%       pp. 87-97, 1998 
+%   called CLASSIFY_CLEAN. Type "classify_clean -help" in a terminal for 
+%   more infos.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, T1, non-uniformity correction
+% Keywords : medical imaging, T1, tissue segmentation
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -118,25 +98,24 @@ niak_gb_vars; % load important NIAK variables
 
 %% Syntax
 if ~exist('files_in','var')|~exist('files_out','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_NU_CORRECT(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_nu_correct'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CLASSIFY(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_classify'' for more info.')
 end
 
 %% Input files
 gb_name_structure = 'files_in';
-gb_list_fields = {'vol','mask'};
-gb_list_defaults = {NaN,'gb_niak_omitted'};
+gb_list_fields = {'vol','mask','transf'};
+gb_list_defaults = {NaN,'gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% Output files
-gb_name_structure = 'files_out';
-gb_list_fields = {'vol_nu','vol_imp'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
-niak_set_defaults
+if ~ischar(files_out)
+    error('FILES_OUT should be a string');
+end
 
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'arg','flag_verbose','folder_out','flag_test'};
-gb_list_defaults = {'-distance 200',true,'',false};
+gb_list_defaults = {'',true,'',false};
 niak_set_defaults
 
 %% Building default output names
@@ -154,12 +133,8 @@ if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
 end
 
-if isempty(files_out.vol_nu)    
-    files_out.vol_nu = [opt.folder_out,filesep,name_f,'_nu',ext_f];
-end
-
-if isempty(files_out.vol_imp)    
-    files_out.vol_imp = [opt.folder_out,filesep,name_f,'_nu.imp'];
+if isempty(files_out)    
+    files_out = [opt.folder_out,filesep,name_f,'_classify',ext_f];
 end
 
 if flag_test == 1    
@@ -171,30 +146,31 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    msg = 'Non-uniformity correction on an MR volume';
+    msg = 'Tissue classification on an MR volume';
     stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);    
 end
 
 %% Setting up the system call to NU_CORRECT
-[path_f,name_f,ext_f] = fileparts(files_out.vol_nu);
-flag_zip_nu = strcmp(ext_f,gb_niak_zip_ext);
-[path_f,name_f,ext_f] = fileparts(files_out.vol_imp);
-flag_zip_imp = strcmp(ext_f,gb_niak_zip_ext);
+[path_f,name_f,ext_f] = fileparts(files_out);
+flag_zip = strcmp(ext_f,gb_niak_zip_ext);
 
 path_tmp = niak_path_tmp(['_' name_f]);
-file_tmp_nu = [path_tmp 'vol_nu.mnc'];
-file_tmp_imp = [path_tmp 'vol_nu.imp'];
+file_tmp_classify = [path_tmp 'vol_classify.mnc'];
 
-if strcmp(files_in.mask,'gb_niak_omitted')
-    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' ' files_in.vol ' ' file_tmp_nu];
-else
-    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.vol ' ' file_tmp_nu];
+if ~strcmp(files_in.mask,'gb_niak_omitted')
+    arg = [arg ' -mask_source ' files_in.mask];
 end
+
+if ~strcmp(files_in.transf,'gb_niak_omitted')
+    arg = [arg ' -tag_transform ' files_in.transf];
+end
+
+instr = ['classify_clean -tmpdir ' path_tmp ' ' arg ' ' files_in.vol ' ' file_tmp_classify];
 
 %% Running NU_CORRECT
 if flag_verbose
-    fprintf('Running NU_CORRECT with the following command:\n%s\n\n',instr)
+    fprintf('Running CLASSIFY with the following command:\n%s\n\n',instr)
 end
 
 if flag_verbose
@@ -202,27 +178,16 @@ if flag_verbose
 else
     [status,msg] = system(instr);
     if status~=0
-        error('The nu_correct command failed with that error message :\n%s\n',msg);
+        error('The classify_clean command failed with that error message :\n%s\n',msg);
     end
 end
 
 %% Writting outputs
-if ~strcmp(files_out.vol_nu,'gb_niak_omitted')
-    if flag_zip_nu
-        system([gb_niak_zip ' ' file_tmp_nu]);        
-        system(['mv ' file_tmp_nu gb_niak_zip_ext ' ' files_out.vol_nu]);
-    else
-        system(['mv ' file_tmp_nu ' ' files_out.vol_nu]);
-    end
-end
-
-if ~strcmp(files_out.vol_imp,'gb_niak_omitted')
-    if flag_zip_imp
-        system([gb_niak_zip ' ' file_tmp_imp]);        
-        system(['mv ' file_tmp_imp gb_niak_zip_ext ' ' files_out.vol_imp]);
-    else
-        system(['mv ' file_tmp_imp ' ' files_out.vol_imp]);
-    end    
+if flag_zip
+    system([gb_niak_zip ' ' file_tmp_classify]);
+    system(['mv ' file_tmp_classify gb_niak_zip_ext ' ' files_out]);
+else
+    system(['mv ' file_tmp_nu ' ' files_out]);
 end
 
 system(['rm -rf ' path_tmp]);

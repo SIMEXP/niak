@@ -1,8 +1,4 @@
 function  [err,msg] = niak_write_csv(file_name,tab,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_WRITE_CSV
-%
 % Write a table into a CSV (comma-separated values) text file. 
 % The first row and first column can be used as string labels, while
 % the rest of the table is a numerical array. 
@@ -93,10 +89,6 @@ if isempty(labels_x)
     labels_x = repmat({''},[nx 1]);
 end
 
-if isempty(labels_y)
-    labels_y = repmat({''},[ny 1]);
-end
-
 %% Writting the table
 
 %% column labels
@@ -110,6 +102,7 @@ end
 %% Convert the table into string
 tab_str = cell([nx+1 ny+1]);
 str_num = ['%1.' num2str(precision) 'f'];
+
 for numx = 1:(nx+1)
     for numy = 1:(ny+1)
         if numy == 1
@@ -124,11 +117,12 @@ for numx = 1:(nx+1)
             end
         else
             if numx == 1
-                if ~isempty(labels_y{numy-1})
+                if ~isempty(labels_y)&&~isempty(labels_y{numy-1})                
                     tab_str{numx,numy} = ['"' labels_y{numy-1} '"'];
                 else
                     tab_str{numx,numy} = '';
                 end
+                    
             else
                 tab_str{numx,numy} = sprintf(str_num,tab(numx-1,numy-1));
             end
@@ -137,8 +131,12 @@ for numx = 1:(nx+1)
 end
 
 %% Write the table
-
-for numx = 1:size(tab_str,1)
+if isempty(labels_y)
+    startx = 2;
+else
+    startx = 1;
+end
+for numx = startx:size(tab_str,1)
     for numy = 1:size(tab_str,2)        
         
         if ~(numy == ny+1)
