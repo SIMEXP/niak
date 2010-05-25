@@ -159,7 +159,7 @@ niak_gb_vars % Load some important NIAK variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist('files_in','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_BRAIN_T1(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_mask_brain'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_BRAIN_T1(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_mask_brain_t1'' for more info.')
 end
 
 %% FILES_IN
@@ -211,27 +211,7 @@ end
 
 %% Building default output names
 if ~exist('files_out','var')||isempty(files_out)
-
-    if size(files_in,1) == 1
-
-        files_out = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
-
-    else
-
-        name_filtered_data = cell([size(files_in,1) 1]);
-
-        for num_f = 1:size(files_in,1)
-            [path_f,name_f,ext_f] = fileparts(files_in(num_f,:));
-
-            if strcmp(ext_f,'.gz')
-                [tmp,name_f,ext_f] = fileparts(name_f);
-            end
-            
-            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
-        end
-        files_out = char(name_filtered_data);
-
-    end
+    files_out = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
 end
 
 if flag_test == 1

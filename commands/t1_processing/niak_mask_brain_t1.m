@@ -230,8 +230,7 @@ if flag_verbose
     fprintf('     Expanding the brain ...\n')
 end
 
-if ~exist('bwdist','file')
-    
+if ~exist('bwdist','file')    
     opt_m.voxel_size = opt.voxel_size;
     opt_m.pad_size = pad_size;
     mask_brain = niak_morph(~mask_brain,'-successive F',opt_m);

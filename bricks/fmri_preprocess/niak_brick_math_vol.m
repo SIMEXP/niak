@@ -1,10 +1,5 @@
 function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MATH_VOL
-%
-% Apply an arbitrary matlab operation on multiple brain volume to generate
-% an outpout volume.
+% Apply an arbitrary matlab operation on multiple brain volumes.
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MATH_VOL(FILES_IN,FILES_OUT,OPT)
@@ -95,6 +90,10 @@ gb_name_structure = 'opt';
 gb_list_fields = {'opt_operation','operation','flag_verbose','flag_test'};
 gb_list_defaults = {[],NaN,true,false};
 niak_set_defaults
+
+if flag_test
+    return
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The brick starts here %%

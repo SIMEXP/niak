@@ -1,9 +1,5 @@
 function [files_in,files_out,opt] = niak_demo_t1_preprocess(path_demo)
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_T1_PREPROCESS
-%
-% This is a script to demonstrate the usage of :
-% NIAK_BRICK_T1_PREPROCESS
+% A script to demonstrate the usage of NIAK_BRICK_T1_PREPROCESS
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_T1_PREPROCESS(PATH_DEMO)
@@ -85,6 +81,7 @@ files_out.anat_nuc = '';
 files_out.anat_nuc_stereolin = '';
 files_out.anat_nuc_stereonl = '';
 files_out.mask_stereolin = '';
+files_out.mask_stereonl = '';
 files_out.classify = '';
 
 opt.nu_correct.arg = '-distance 50';

@@ -1,8 +1,4 @@
 function mask_head = niak_mask_head_t1(anat,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_MASK_HEAD_T1
-%
 % Derive a head mask from a T1 scan.
 %
 % SYNTAX:
@@ -20,23 +16,17 @@ function mask_head = niak_mask_head_t1(anat,opt)
 %       VOXEL_SIZE
 %           (vector 1*3, default [1 1 1]) the size of the voxels.
 %
-%       FWHM
-%           (real value, default 10) the FWHM of the blurring kernel in
-%           used to segment the head.
-%
-%       THRESH_FWHM
-%           (real value, default 0.01) the threshold applied on the
-%           smoothed intensity mask of the head.
-%
 %       PAD_SIZE
-%           (real value, default 15) the number of padded slices in the
-%           distance transform.
+%           (real value, default 1.5 the THRESH_DIST converted in voxel 
+%           size) the number of padded slices in the distance transform.
+%
+%       NB_CLUSTERS_MAX
+%           (integer, default 10) the number of largest connected
+%           components in the mask.
 %
 %       THRESH_DIST
-%           (real value, default 10) the threshold applied to the
-%           distance to non-brain tissue in order to correct for the
-%           effect of smoothing.
-%
+%           (real value, default 15) the distance applied to expand /
+%           shrink the head mask.
 %
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function
@@ -50,7 +40,7 @@ function mask_head = niak_mask_head_t1(anat,opt)
 %
 % _________________________________________________________________________
 % SEE ALSO :
-% NIAK_MASK_BRAIN, NIAK_BRICK_MASK_BRAIN_T1
+% NIAK_MASK_BRAIN, NIAK_MASK_BRAIN_T1, NIAK_BRICK_MASK_BRAIN_T1
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -60,16 +50,15 @@ function mask_head = niak_mask_head_t1(anat,opt)
 %   1. Extraction of a rough mask using intensity thresholding with the
 %   Ostu algorithm as implemented in NIAK_MASK_BRAIN
 %
-%   2. Padding of the field of view to ensure that enough space is left
-%   between the head and the edges for the following operations.
+%   2. Keep the largest NB_CLUSTERS spatially connected clusters
 %
-%   3. Blurring of the rough binary mask with a large kernel followed by
-%   a low threshold application. This results into an expanded mask with no
-%   holes.
+%   3. Expanding the mask with a distance transform (max distance from the
+%   mask is THRESH_DIST).
 %
-%   4. Derivation of a distance function based on the expanded mask. This
-%   distance function is thresholded using the kernel size to correct the
-%   expansion effect in the smoothing step.
+%   4. Closure on the mask using morphomath.
+%
+%   5. Shrinkage of the mask with a distance transform (max distance from
+%   ~mask is THRESH_DIST).
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -102,7 +91,7 @@ function mask_head = niak_mask_head_t1(anat,opt)
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'voxel_size','flag_verbose','pad_size','thresh_dist','nb_clust_max'};
-gb_list_defaults = {[1 1 1],true,[],10,10};
+gb_list_defaults = {[1 1 1],true,[],15,10};
 niak_set_defaults
 
 if isempty(pad_size)
@@ -136,34 +125,53 @@ mask_head = niak_morph(mask_head,'-successive PG');
 mask_head = round(mask_head);
 mask_head(mask_head>nb_clust_max) = 0;
 
-%% Get rid of small clusters
+%% Expanding the mask
 if flag_verbose
     fprintf('     Expanding the mask using a distance transform ...\n')
 end
-opt_m.pad_size = pad_size;
-mask_head = niak_morph(~mask_head,'-successive F',opt_m);
-mask_head = mask_head>=opt.thresh_dist/max(voxel_size);
+if ~exist('bwdist','file')
+    opt_m.pad_size = pad_size;
+    mask_head = niak_morph(~mask_head,'-successive F',opt_m);
+    mask_head = mask_head>=opt.thresh_dist/max(voxel_size);
+else
+    mask_head = bwdist(mask_head);
+    mask_head = mask_head>=(opt.thresh_dist/max(voxel_size));
+end
 
 %% Fill the holes with morphomath
 if flag_verbose
     fprintf('     Filling the holes in the brain with morphomath ...\n')
 end
-mask_head = niak_morph(mask_head,'-successive G',opt_m);
-mask_head = round(mask_head)~=1;
+if ~exist('bwconncomp','file')
+    mask_head = niak_morph(mask_head,'-successive G',opt_m);
+    mask_head = round(mask_head)~=1;
+else
+    cc = bwconncomp(mask_head);
+    size_roi = cellfun('length',cc.PixelIdxList);
+    [val,ind] = max(size_roi);
+    mask_head = false(size(mask_head));
+    mask_head(cc.PixelIdxList{ind}) = true;
+    clear cc
+end
 
 %% Now shrink the mask back to correct the expansion
 if flag_verbose
     fprintf('     Using a distance transform to correct the effect of expansion ...\n')
 end
-mask_head = niak_morph(mask_head,'-successive F',opt_m);
-mask_head = mask_head>opt.thresh_dist/max(voxel_size);
+if ~exist('bwdist','file')
+    mask_head = niak_morph(mask_head,'-successive F',opt_m);
+    mask_head = mask_head>opt.thresh_dist/max(voxel_size);
+else
+    mask_head = bwdist(mask_head);
+    mask_head = mask_head>=((opt.thresh_dist)/max(voxel_size));
+end
 
 if pad_size>0
     mask_head = sub_unpad(mask_head,pad_size);
 end
 
 if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
+    fprintf('Time elapsed %1.3f sec.\n',toc);
 end
 
 function vol_m = sub_pad(vol,pad_size)
