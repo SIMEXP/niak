@@ -314,15 +314,22 @@ if ((nb_trends_spatial>=1)||(opt.pcnt)) && isempty(opt.spatial_av)
     error('Please provide a non empty value for SPATIAL_AV.\n Type ''help niak_brick_fmri_lm'' for more info.')
 end
 
+if isnan(opt.contrast)
+    error('Please provide a non empty value for CONTRAST.\n Type ''help niak_brick_fmri_lm'' for more info.')
+end
+
 if isempty(opt.contrast_names)
     if isstruct(opt.contrast)
         fn_contrast = fieldnames(opt.contrast);
         numcontrasts = size(opt.contrast.(fn_contrast{1}),1);
+        for i=1:numcontrasts
+            opt.contrast_names{i} = ['_c',fn_contrast{1},num2str(i)];
+        end
     else
         numcontrasts = size(opt.contrast,1);
-    end
-    for i=1:numcontrasts
-        opt.contrast_names{i} = ['_c',num2str(i)];
+        for i=1:numcontrasts
+            opt.contrast_names{i} = ['_cX',num2str(i)];
+        end
     end
 else
     numcontrasts = length(opt.contrast_names);
@@ -419,10 +426,9 @@ mask = (mask>mask_thresh1)&(mask<=mask_thresh2);
 weighted_mask = squeeze(vol(:,:,:,keep(1))).*mask ;
 
 %% Start Computations:
-disp('Start Computations...')
+disp('Starting Computations...')
 
 if isempty(which_stats)
-   df = [];
    return
 end
 
