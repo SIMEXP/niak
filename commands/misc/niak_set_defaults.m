@@ -82,7 +82,7 @@ for num_f = 1:gb_niak_nb_fields
     if ~gb_niak_flag_field  
         if isnumeric(gb_niak_val)
             if isnan(gb_niak_val)
-                error(cat(2,'niak:defaults: Please specify field ',field,' in structure ',gb_name_structure,' !\n'))                
+                error(cat(2,'niak:defaults: Please specify field ',gb_niak_field,' in structure ',gb_name_structure,' !\n'))                
             end
         end        
         gb_niak_struct(1).(gb_niak_field) = gb_niak_val;        

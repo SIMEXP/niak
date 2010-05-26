@@ -69,6 +69,10 @@ function [] = niak_visu_points(coord,val,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if nargin<2
+    val = ones([size(coord,2) 1]);
+end
+
 % Setting up default
 gb_name_structure = 'opt';
 gb_list_fields = {'marker_size','marker_type','type_colormap','limits'};

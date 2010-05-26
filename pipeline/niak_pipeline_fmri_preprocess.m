@@ -66,7 +66,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           suppressed of the linear mixture.
 %       
 %       TEMPLATE_FMRI
-%           (string, default '<~niak>/template/roi_aal.mnc') a volume that
+%           (string, default '<~niak>/template/roi_aal.mnc.gz') a volume that
 %           will be used to resample the fMRI datasets. By default it uses
 %           a 2 mm isotropic space with a field of view adjusted on the
 %           brain.
@@ -357,7 +357,7 @@ end
 gb_name_structure = 'opt';
 default_psom.path_logs = '';
 gb_list_fields = {'template_fmri','flag_corsica','style','size_output','folder_out','flag_test','psom','bricks'};
-gb_list_defaults = {cat(2,gb_niak_path_template,filesep,'roi_aal.mnc'),1,NaN,'quality_control',NaN,false,default_psom,struct([])};
+gb_list_defaults = {cat(2,gb_niak_path_template,filesep,'roi_aal.mnc.gz'),1,NaN,'quality_control',NaN,false,default_psom,struct([])};
 niak_set_defaults
 
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
