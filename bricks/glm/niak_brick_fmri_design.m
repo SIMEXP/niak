@@ -218,9 +218,8 @@ else
         events = [1 0];
     else
        if ~ischar(files_in.events)
-           error('niak_brick_fmri_design: FILES_IN.%s.EVENTS! should be a string');
-       else
-           events = importdata(files_in.events);
+           error('niak_brick_fmri_design: FILES_IN.%s.EVENTS! should be a string');                  
+           
        end
     end
     if ~isfield(files_in,'slicing')
@@ -228,8 +227,6 @@ else
     else
        if ~ischar(files_in.slicing)
            error('niak_brick_fmri_design: FILES_IN.%s.SLICING! should be a string');
-       else
-           slice_times = importdata(files_in.slicing);
        end
     end
 end
@@ -268,6 +265,12 @@ end
 if flag_test 
     return
 end
+
+%% Slice times
+slice_times = importdata(files_in.slicing);
+
+%% Events file
+events = importdata(files_in.events);
 
 %% Open file_input:
 hdr = niak_read_vol(files_in.fmri);
