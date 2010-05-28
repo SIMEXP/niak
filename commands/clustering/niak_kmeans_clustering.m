@@ -60,7 +60,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 %           check for cycles.
 %
 %       FLAG_VERBOSE
-%           (boolean, default 1) if the flag is 1, then the function prints
+%           (boolean, default 0) if the flag is 1, then the function prints
 %           some infos during the processing.
 %
 % _________________________________________________________________________
@@ -108,7 +108,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'init','type_init','type_death','nb_classes','p','nb_iter','flag_verbose','nb_iter_max','nb_tests_cycle'};
-gb_list_defaults = {[],'random_partition','none',NaN,[],1,1,100,5};
+gb_list_defaults = {[],'random_partition','none',NaN,[],1,0,100,5};
 niak_set_defaults
 
 if nb_iter > 1
