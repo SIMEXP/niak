@@ -1,4 +1,4 @@
-function [flag_fail,message] = niak_append_ps(file_name)
+function [flag_fail,message] = niak_append_ps(file_name,opt_print)
 %
 % _________________________________________________________________________
 % SUMMARY NIAK_APPEND_EPS
@@ -14,6 +14,10 @@ function [flag_fail,message] = niak_append_ps(file_name)
 % FILE_NAME
 %       (string) the name of the output eps file.
 %       
+% OPT_PRINT
+%       (string, default -dspc2) the option used to call print and generate
+%       the new figure.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -38,7 +42,7 @@ function [flag_fail,message] = niak_append_ps(file_name)
 % In Matlab, this would simply be a print -append FILE_NAME.
 %
 % In Octave this functionality is not available, so a workaround was
-% implemented using the PSMERGE functions (comes with the package PSUTILS).
+% implemented using the PSMERGE function (comes with the package PSUTILS).
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -63,22 +67,27 @@ function [flag_fail,message] = niak_append_ps(file_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if nargin<2
+    opt_print = '-dpsc2';
+end
+
 if exist('OCTAVE_VERSION','builtin')
     
     %% Generate a PS description of the current figure in a temporary file
     %% and read it
-    file_eps_tmp1 = niak_file_tmp('_1.eps');            
-    print(file_eps_tmp1,'-dpsc2');    
-    hf2 = fopen(file_eps_tmp1,'r');
-    data = fread(hf2,Inf,'uint8');
-    fclose(hf2);
-    delete(file_eps_tmp1);    
-    
-    %% Append the description to the PS file
-    hf = fopen(file_name,'a+');    
-    fwrite(hf,data);
-    fclose(hf);
-    
+    file_eps_tmp1 = niak_file_tmp('_1.eps');
+    file_eps_tmp2 = niak_file_tmp('_2.eps');
+    print(file_eps_tmp1,opt_print);
+    instr_merge = ['gs  -q -dNOPAUSE -dSAFER -sOutputFile=' file_eps_tmp2 '  -sDEVICE=pswrite ' file_name ' ' file_eps_tmp1 ' quit.ps'];
+    [failed,msg] = system(instr_merge);
+    if failed
+        error(msg);
+    end
+    instr_mv = ['mv ' file_eps_tmp2 ' ' file_name];
+    [failed,msg] = system(instr_mv);
+    if failed
+        error(msg)
+    end
 
 else
     
