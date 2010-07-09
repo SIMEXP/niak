@@ -164,7 +164,7 @@ for num_f = 1:length(list_files)
         for num_e = 1:size(instr_cp,1)
             [flag_err,err_msg] = system(instr_cp(num_e,:));
             if flag_err
-                error(err_msg)
+                warning(err_msg)
             end
         end
                 
