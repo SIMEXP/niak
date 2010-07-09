@@ -31,6 +31,11 @@ function [files_in,files_out,opt] = niak_brick_nii2mnc(files_in,files_out,opt)
 %           (boolean, default 1) if the flag is 1, then the function prints 
 %           some infos during the processing.
 %
+%       FLAG_ZIP
+%           (boolean, default false) if the flag is true, the output minc
+%           files are compressed (see comments below). This is useful with
+%           MINC1 file format.
+%
 % _________________________________________________________________________
 % OUTPUTS
 %
@@ -41,6 +46,11 @@ function [files_in,files_out,opt] = niak_brick_nii2mnc(files_in,files_out,opt)
 % COMMENTS
 %
 % This brick is just a wraper of NII2MNC system calls.
+%
+% Compressed zip files (ended in .gz) are supported. To change the
+% compression extension and/or the command used to uncompress files, please
+% change the variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file
+% NIAK_GB_VARS.M
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
@@ -81,8 +91,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_recursive','flag_verbose','arg_nii2mnc'};
-gb_list_defaults = {true,true,''};
+gb_list_fields = {'flag_zip','flag_recursive','flag_verbose','arg_nii2mnc'};
+gb_list_defaults = {false,true,true,''};
 niak_set_defaults
 
 dir_files = dir(files_in);
@@ -107,13 +117,31 @@ for num_f = 1:length(list_files)
     
     if strcmp(ext,gb_niak_zip_ext)
         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
-    end
+        ext = [ext gb_niak_zip_ext];
+    end        
     
     switch ext
+        case {['.nii' gb_niak_zip_ext]}
+            
+            target_file = [files_out filesep name_tmp '.mnc'];
+            tmp_file = niak_file_tmp('.nii');
+            instr_cp0 = ['cp ' source_file ' ' tmp_file gb_niak_zip_ext];
+            instr_cp0bis = [gb_niak_unzip ' ' tmp_file gb_niak_zip_ext];
+            instr_cp1 = ['nii2mnc ',arg_nii2mnc,' ',tmp_file,' ',target_file];
+            instr_cp2 = ['rm ' tmp_file];
+            instr_cp = char(instr_cp0,instr_cp0bis,instr_cp1,instr_cp2);
+            if flag_zip
+                instr_cp = char(instr_cp,[gb_niak_zip ' ' target_file]);
+            end
+            msg = sprintf('Convert %s to %s\n',source_file,target_file);
+            
         case {'.nii','.img'}
             
             target_file = [files_out filesep name_tmp '.mnc'];
             instr_cp = ['nii2mnc ',arg_nii2mnc,' ',source_file,' ',target_file];
+            if flag_zip
+                instr_cp = char(instr_cp,[gb_niak_zip ' ' target_file]);
+            end
             msg = sprintf('Convert %s to %s\n',source_file,target_file);
             
         case '.hdr'
@@ -133,11 +161,15 @@ for num_f = 1:length(list_files)
         if flag_verbose
             fprintf('%s',msg)
         end
-        [flag_err,err_msg] = system(instr_cp);
-        if flag_err
-            error(err_msg)
+        for num_e = 1:size(instr_cp,1)
+            [flag_err,err_msg] = system(instr_cp(num_e,:));
+            if flag_err
+                error(err_msg)
+            end
         end
+                
     end
+    
 
 end
 
