@@ -1,21 +1,17 @@
 function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 
+% Spatial independent component analysis (sICA) of an fMRI dataset.
 %
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_SICA
-%
-% Compute a decomposition of an (individual) fMRI dataset into spatially
-% independent components.
-%
+% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SICA(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN
+%  FILES_IN
 %       (string) an fMRI dataset.
 %
-%  * FILES_OUT
+%  FILES_OUT
 %       (structure) with the following fields.  Note that if a field is an
 %       empty string, a default value will be used to name the outputs.
 %       If a field is ommited, the output won't be saved at all (this is
@@ -39,7 +35,7 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           distribution, as well as the time, spectral and time frequency
 %           representation of the time component.
 %
-%  * OPT
+%  OPT
 %       (structure) with the following fields :
 %
 %       NORM
@@ -79,21 +75,16 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           values in FILES_IN, FILES_OUT and OPT.
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
-% COMMENTS
-%
-% This brick is using multiple functions from the SICA toolbox, developped
-% by Vincent Perlbarg, LIF Inserm U678, Faculte de medecine
-% Pitie-Salpetriere, Universite Pierre et Marie Curie, France.
-% E-mail: Vincent.Perlbarg@imed.jussieu.fr
+% COMMENTS:
 %
 % _________________________________________________________________________
-% REFERENCES
+% REFERENCES:
 %
 % Perlbarg, V., Bellec, P., Anton, J.-L., Pelegrini-Issac, P., Doyon, J. and
 % Benali, H.; CORSICA: correction of structured noise in fMRI by automatic
@@ -105,8 +96,7 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
 %
 % _________________________________________________________________________
-% SEE ALSO :
-%
+% SEE ALSO:
 % NIAK_BRICK_SICA, NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA
 %
 % _________________________________________________________________________
@@ -141,7 +131,7 @@ niak_gb_vars; % Importing NIAK global variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')|~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SICA(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_sica'' for more info.')
 end
 

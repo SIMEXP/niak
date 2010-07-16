@@ -1,12 +1,12 @@
-function [flag_fail,message] = niak_append_ps(file_name,opt_print)
+function [] = niak_append_ps(file_name,opt_print)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_APPEND_EPS
+% SUMMARY NIAK_APPEND_PS
 %
 % Append the current figure to an eps file.
 %
 % SYNTAX:
-% [FLAG_FAIL,MESSAGE] = NIAK_APPEND_EPS(PATH_NAME)
+% [FLAG_FAIL,MESSAGE] = NIAK_APPEND_PS(FILE_NAME)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -15,8 +15,9 @@ function [flag_fail,message] = niak_append_ps(file_name,opt_print)
 %       (string) the name of the output eps file.
 %       
 % OPT_PRINT
-%       (string, default -dspc2) the option used to call print and generate
-%       the new figure.
+%       (string, default '-dspc2') the option used to call print and 
+%       generate the new figure. Note that multiple options can be
+%       specified, e.g. '-r300 -dspc2'.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -33,16 +34,23 @@ function [flag_fail,message] = niak_append_ps(file_name,opt_print)
 %
 % _________________________________________________________________________
 % SEE ALSO:
-%
 % PRINT
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% In Matlab, this would simply be a print -append FILE_NAME.
+% NOTE 1:
+% In Matlab, this would simply be a print -append FILE_NAME. Note that the
+% format of options is slightly different (PRINT requires one argument per
+% option, e.g. "print(toto.ps,'-r300','-dspc2')" while this function
+% supports "opt_print = '-r300 -dspc2'".
 %
-% In Octave this functionality is not available, so a workaround was
-% implemented using the PSMERGE function (comes with the package PSUTILS).
+% In Octave '-append' is not available, so a workaround was
+% implemented using the ghostscript package.
+%
+% NOTE 2:
+% If the output file does not exist, the file is simply created with the
+% current figure.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -71,29 +79,47 @@ if nargin<2
     opt_print = '-dpsc2';
 end
 
-if exist('OCTAVE_VERSION','builtin')
+if ~exist(file_name,'file')
     
-    %% Generate a PS description of the current figure in a temporary file
-    %% and read it
-    file_eps_tmp1 = niak_file_tmp('_1.eps');
-    file_eps_tmp2 = niak_file_tmp('_2.eps');
-    print(file_eps_tmp1,opt_print);
-    instr_merge = ['gs  -q -dNOPAUSE -dSAFER -sOutputFile=' file_eps_tmp2 '  -sDEVICE=pswrite ' file_name ' ' file_eps_tmp1 ' quit.ps'];
-    [failed,msg] = system(instr_merge);
-    if failed
-        error(msg);
-    end
-    instr_mv = ['mv ' file_eps_tmp2 ' ' file_name];
-    [failed,msg] = system(instr_mv);
-    if failed
-        error(msg)
-    end
-
+    opt_print = niak_string2words(opt_print);
+    sub_print(file_name,opt_print);
+    
 else
+    opt_print = [opt_print ' -append'];
+    opt_print = niak_string2words(opt_print);
     
-    print(file_name,'-append','-dpsc2');
-    flag_fail = false;
-    message = '';
-    
+    if exist('OCTAVE_VERSION','builtin')
+        
+        %% Generate a PS description of the current figure in a temporary file
+        %% and read it
+        file_eps_tmp1 = niak_file_tmp('_1.eps');
+        file_eps_tmp2 = niak_file_tmp('_2.eps');
+        sub_print(file_eps_tmp1,opt_print);
+        instr_merge = ['gs  -q -dNOPAUSE -dSAFER -sOutputFile=' file_eps_tmp2 '  -sDEVICE=pswrite ' file_name ' ' file_eps_tmp1 ' quit.ps'];
+        [failed,msg] = system(instr_merge);
+        if failed
+            error(msg);
+        end
+        instr_mv = ['mv ' file_eps_tmp2 ' ' file_name];
+        [failed,msg] = system(instr_mv);
+        if failed
+            error(msg)
+        end
+        
+    else
+        
+        sub_print(file_name,opt_print);
+        flag_fail = false;
+        message = '';
+        
+    end
 end
 
+function [] = sub_print(file_name,opt_print)
+
+instr_print = ['print(''' file_name ''''];
+for num_e = 1:length(opt_print)
+    instr_print = [instr_print ',''' opt_print{num_e},''''];
+end
+instr_print = [instr_print ');'];
+eval(instr_print);

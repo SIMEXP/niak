@@ -1,14 +1,12 @@
 function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
+% Run the CIVET pipeline on a T1 anatomical image. 
 %
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_CIVET
-%
-% Run the CIVET pipeline on a T1 anatomical image. Possible outputs include
-% the estimated transformation to the MNI152 template (linear/lsq9 and non-linear), 
-% non-uniformity corrected volumes in the native and template space, 
-% segmentation in white matter/grey matter/CSF in native and template spaces, 
-% partial volume effect estimates in native and tempate spaces, a mask of the brain 
-% in native and template spaces. 
+% Possible outputs include the estimated transformation to the MNI152 
+% template (linear/lsq9 and non-linear), non-uniformity corrected volumes 
+% in the native and template space, segmentation in white matter/grey 
+% matter/CSF in native and template spaces, partial volume effect estimates 
+% in native and tempate spaces, a mask of the brain in native and template 
+% spaces. 
 % 
 % For more information on the CIVET pipeline, see :
 % http://wiki.bic.mni.mcgill.ca/index.php/CIVET
