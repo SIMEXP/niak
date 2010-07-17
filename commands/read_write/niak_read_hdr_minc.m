@@ -294,6 +294,15 @@ for num_d = 1:length(list_dim_long)
         pos = find(niak_find_str_cell(struct_dim.varatts,'direction_cosines'));
         if ~isempty(pos)
             cosines_v(:,num_e) = struct_dim.attvalue{pos}(:);
+        else
+            switch list_dim_long{num_d}
+                case 'xspace'
+                    cosines_v(:,num_e) = [1;0;0];
+                case 'yspace'
+                    cosines_v(:,num_e) = [0;1;0];
+                case 'zspace'
+                    cosines_v(:,num_e) = [0;0;1];
+            end
         end
 
         pos = find(niak_find_str_cell(struct_dim.varatts,'start'));

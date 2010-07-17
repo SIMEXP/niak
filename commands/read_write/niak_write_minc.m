@@ -176,7 +176,7 @@ else
     str_raw = 'rawtominc '; % rawtominc is used to create the file
 
     %% Setting up "rawtominc" arguments
-    if length(size(vol))~=4
+    if ndims(vol)~=4
         tmp = findstr(hdr.info.dimension_order,'t');
         if ~isempty(tmp)
             list_ind_order = 1:4;
@@ -184,21 +184,16 @@ else
             hdr.info.dimension_order = hdr.info.dimension_order(list_ind_order);
         end
     end
-    dim_order(1) = findstr(hdr.info.dimension_order,'x'); % setting up the dimension order
-    dim_order(2) = findstr(hdr.info.dimension_order,'y');
-    dim_order(3) = findstr(hdr.info.dimension_order,'z');
-    if length(size(vol))==4
-        tmp = findstr(hdr.info.dimension_order,'t');
-        if ~isempty(tmp)
-            dim_order(4) = tmp;
-        else
-            dim_order(4) = 4;
-        end
+    dim_order = zeros([ndims(vol) 1]);
+    if (ndims(vol) == 4)&&(length(hdr.info.dimension_order)==3)
+        hdr.info.dimension_order = [hdr.info.dimension_order 't'];
+    end    
+    for num_d = 1:ndims(vol)    
+        dim_order(num_d) = findstr('xyzt',hdr.info.dimension_order(num_d));
     end
-
+    
     %% Build the dimension order argument for minc to raw
-    dim_names = {'xspace,','yspace,','zspace,','time,'};
-    dim_order = dim_order(dim_order);
+    dim_names = {'xspace,','yspace,','zspace,','time,'};    
     arg_dim_order = [dim_names{dim_order(end:-1:1)}]; % the order notations in NetCDF/HDF5 is reversed compared to matlab
 
     %% While we're at it, build a list of order field names for spatial
@@ -210,7 +205,6 @@ else
     str_raw = [str_raw '-dimorder ' arg_dim_order(1:end-1),' '];
 
     str_raw = [str_raw '-' hdr.info.precision ' ']; % setting up the precision of the file
-
 
     str_raw = [str_raw '-scan_range ']; % scan input to set up min and max
 
