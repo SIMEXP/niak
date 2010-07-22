@@ -32,6 +32,35 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           (string, default 'spline') the method for temporal interpolation,
 %           Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
 %
+%       TYPE_ACQUISITION
+%           (string, default 'manual') the type of acquisition used by the
+%           scanner. If 'manual', SLICE_ORDER needs to be specified, 
+%           otherwise it will be calculated. Possible choices are
+%           'manual','sequential ascending','sequential descending',
+%           'interleaved ascending','interleaved descending'. For
+%           interleaved modes, FIRST_NUMBER needs to be specified.
+%       
+%       FIRST_NUMBER
+%           (string, default 'odd') the first number when using interleaved
+%           mode of TYPE_ACQUISITION. Use 'odd' or 'even'.
+%       
+%       Z_STEP
+%           (integer, default 0) the interval in z between the slices. If 0, 
+%           uses the header number from FILES_IN.
+%       
+%       NB_SLICES
+%           (integer) the number of slices to use to calculate the
+%           SLICE_ORDER. If not defined, uses the header number from
+%           FILES_IN.
+%       
+%       TR
+%           (integer) the time between slices in a volume. If not defined, 
+%           uses the header number from FILES_IN.
+%       
+%       DELAY_IN_TR
+%           (integer, default 0) the delay between the last slice of the
+%           first volume and the first slice of the following volume.
+%       
 %       SLICE_ORDER 
 %           (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
 %           was acquired in ith position. The order of the slices is 
@@ -115,6 +144,26 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % Subsequently modified by R Henson, C Buechel, J Ashburner and M Erb.
 % Adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
 %
+% NOTE 4:
+% The step in z (z_step) is essential to determine the correct slice order.
+% It tells us the slices were taken going from neck to top of head or 
+% inversely. Having a positive step in z means the slices were taken from 
+% neck to top of head and that the slice order determined by this function when
+% given a type_acquisition option other than manual is in the correct order.
+% 
+% NOTE 5:
+% The type_acquisition option (opt.type_acquisition) can have the following 
+% values : 'manual','sequential ascending','sequential descending',
+% 'interleaved ascending' or 'interleaved descending'. Any other value will 
+% return an error. If using 'interleaved' modes, first_number must be 
+% specified in the form of 'odd' or 'even'. By default, it is set to 'manual' 
+% mode in which case a slice_order needs to be input. If a mode other than 
+% 'manual' is input as well as a slice_order, the latter will be used.
+% 
+% NOTE 6:
+% If the timing option is empty, a tr value and a delay_in_tr value may
+% be input, otherwise the tr and delay_in_tr values are ignored. If no values
+% are input for nb_slices and tr, they will be read from the file. 
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -152,14 +201,91 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_skip','flag_variance','suppress_vol','interpolation','slice_order','ref_slice','timing','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0,1,0,'spline',NaN,[],NaN,1,0,''};
-niak_set_defaults
+gb_list_fields = {'flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
+gb_list_defaults = {0        ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,0       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
+niak_set_defaults;
 
-nb_slices = length(opt.slice_order);
+[hdr,vol] = niak_read_vol(files_in);
+[mat,step,start] = niak_hdr_mat2minc(hdr.info.mat);
+if opt.z_step==0
+    opt.z_step = step(3);
+end
+
+%% Use specified values if defined. Use header values otherwise.
+if ~exist(opt.tr,'var')
+    opt.tr = hdr.info.tr;
+end
+
+if ~exist(opt.nb_slices,'var')
+    opt.nb_slices = hdr.info.dimensions(3);
+end
+
+if ~exist(opt.timing,'var')
+    opt.timing(1) = (opt.tr-opt.delay_in_tr)/opt.nb_slices;
+    opt.timing(2) = opt.timing(1) + delay_in_tr;
+end
+
+if ~exist(opt.slice_order,'var')
+    switch opt.type_acquisition
+      case 'manual'
+	if ~exist(opt.slice_order,'var')
+	    error('niak:brick', 'opt: slice_order must be specified when using type_acquisition manual.\n Type ''help niak_brick_slice_timing'' for more info.');
+	end
+      case 'sequential ascending'
+	if opt.z_step > 0
+	    opt.slice_order = 1:opt.nb_slices;
+	else
+	    opt.slice_order = opt.nb_slices:-1:1;
+	end
+      case 'sequential descending'
+	if opt.z_step > 0
+	    opt.slice_order = opt.nb_slices:-1:1;
+	else
+	    opt.slice_order = 1:opt.nb_slices;
+	end
+      case 'interleaved ascending'
+	if opt.z_step > 0
+	    if strcmp(opt.first_number,'odd')
+		opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
+	    elseif strcmp(opt.first_number,'even')
+		opt.slice_order = [2:2:opt.nb_slices 1:2:opt.nb_slices];
+	    else
+		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
+	    end
+	else
+	    if strcmp(opt.first_number,'odd')
+		opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
+	    elseif strcmp(opt.first_number,'even')
+		opt.slice_order = [opt.nb_slices-1:-2:1 opt.nb_slices:-2:1];
+	    else
+		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
+	    end
+	end
+      case 'interleaved descending'
+	if opt.z_step > 0
+	    if strcmp(opt.first_number,'odd')
+		opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
+	    elseif strcmp(opt.first_number,'even')
+		opt.slice_order = [opt.nb_slices-1:-2:1 opt.nb_slices:-2:1];
+	    else
+		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
+	    end
+	else
+	    if strcmp(opt.first_number,'odd')
+		opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
+	    elseif strcmp(opt.first_number,'even')
+		opt.slice_order = [2:2:opt.nb_slices 1:2:opt.nb_slices];
+	    else
+		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
+	    end
+	end
+      otherwise
+	error('niak:brick','opt: type_acquisition must be on of the specified values.\n Type ''help niak_brick_slice_timing'' for more info.');
+    end
+end
 
 if isempty(ref_slice)        
-    ref_slice = slice_order(ceil(nb_slices/2));
+    ref_slice = opt.slice_order(ceil(opt.nb_slices/2));
     opt.ref_slice = ref_slice;
 end
 
@@ -230,8 +356,6 @@ else
         msg = sprintf('Reading data...');
         fprintf('\n%s\n',msg);
     end
-
-    [hdr,vol] = niak_read_vol(files_in);
 
     if flag_variance
         std_vol = std(vol,0,4);
