@@ -50,6 +50,10 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 %  OPT           
 %       (structure) with the following fields.  
 %
+%       LABELS_SUBJECT
+%           (cell of strings, default FILES_IN.VOL) the labels used for 
+%           each volume in the tables.
+%
 %       THRESH
 %           (real number, default 0.5) the threshold used to define a group 
 %           mask based on the average of all individual masks.
@@ -151,8 +155,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'thresh','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0.5,true,false,''};
+gb_list_fields = {'labels_subject','thresh','flag_verbose','flag_test','folder_out'};
+gb_list_defaults = {files_in.vol,0.5,true,false,''};
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in.vol{1});
@@ -247,6 +251,9 @@ std_vol  = sqrt((std_vol-length(files_in.vol)*(mean_vol.^2))/(length(files_in.vo
 
 
 %% Compute score of fit
+if flag_verbose
+    fprintf('Deriving goodness of fit measures ...\n');
+end
 if ~strcmp(files_out.tab_coregister,'gb_niak_omitted')
     
     tab_coregister = zeros([length(files_in) 2]);
@@ -254,6 +261,10 @@ if ~strcmp(files_out.tab_coregister,'gb_niak_omitted')
     mean_v = mean_vol(mask_all);    
         
     for num_f = 1:length(files_in.vol)
+        if flag_verbose
+            fprintf('   File %s ...\n',files_in.vol{num_f});
+        end
+        
         % The mask
         if length(files_in.mask)==1
             tab_coregister(num_f,1) = 1;
@@ -310,6 +321,7 @@ if ~strcmp(files_out.tab_coregister,'gb_niak_omitted')
     if flag_verbose
         fprintf('Saving the scores of fit in the file %s ...\n',files_out.tab_coregister);
     end    
+    opt_tab.labels_x = labels_subject;
     opt_tab.labels_y = {'perc_overlap_mask','xcorr_vol'};
     niak_write_csv(files_out.tab_coregister,tab_coregister,opt_tab);
 end
