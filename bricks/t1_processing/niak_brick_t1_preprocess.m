@@ -149,27 +149,37 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %
 % NOTE 4:
 %   The flowchart of the brick is as follows :
-%       2.  Non-uniformity correction in native space (without mask):
+%
+%       1.  Non-uniformity correction in native space (without mask):
 %           NIAK_BRICK_NU_CORRECT
-%       1.  Brain extraction in native space:
+%
+%       2.  Brain extraction in native space:
 %           NIAK_BRICK_MASK_BRAIN_T1
+%
 %       3.  Linear coregistration in stereotaxic space (with mask from 2).
 %           NIAK_BRICK_ANAT2STEREOLIN
+%
 %       4.  Non-uniformity correction based on the template mask
 %           NIAK_BRICK_NU_CORRECT
+%
 %       5.  Brain extraction, combined with the template mask
 %           NIAK_BRICK_MASK_BRAIN_T1
+%
 %       6.  Intensity normalization
 %           NIAK_BRICK_INORMALIZE
+%
 %       7.  Non-linear coregistration in template space (with mask from 5)
 %           NIAK_BRICK_ANAT2STEREONL
+%
 %       8.  Generation of the brain mask in the non-linear stereotaxic
 %           space by intersection of the template mask with a head mask.
 %           NIAK_BRICK_MASK_HEAD_T1, NIAK_BRICK_MATH_VOL
+%
 %       9.  Generation of the mask in the stereotaxic linear space by 
 %           application of the inverse non-linear transform from 7 and the 
 %           brain mask from 8.
 %           NIAK_BRICK_RESAMPLE_VOL
+%
 %       10. Tissue classification
 %           NIAK_BRICK_CLASSIFY
 %
