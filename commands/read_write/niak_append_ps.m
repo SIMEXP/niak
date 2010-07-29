@@ -85,7 +85,9 @@ if ~exist(file_name,'file')
     sub_print(file_name,opt_print);
     
 else
-    opt_print = [opt_print ' -append'];
+    if ~exist('OCTAVE_VERSION','builtin')
+      opt_print = [opt_print ' -append'];
+    end
     opt_print = niak_string2words(opt_print);
     
     if exist('OCTAVE_VERSION','builtin')
