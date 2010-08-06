@@ -196,8 +196,8 @@ opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep);
 % comprehensive list can be found in the help of the respective bricks.
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
-% space (niak_brick_civet)
-opt.bricks.civet.n3_distance = 200; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 25 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
+% space (niak_brick_t1_preprocess)
+opt.bricks.t1_preprocess.nu_correct.arg = '-distance 200'; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 25 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
 
 % Motion correction (niak_brick_motion_correction)
 opt.bricks.motion_correction.suppress_vol = 0; % There is no dummy scan to supress.

@@ -45,8 +45,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           mode of TYPE_ACQUISITION. Use 'odd' or 'even'.
 %       
 %       Z_STEP
-%           (integer, default 0) the interval in z between the slices. If 0, 
-%           uses the header number from FILES_IN.
+%           (integer, default []) the interval in z between the slices. 
+%           If [], use the info from the header of FILES_IN.
 %       
 %       NB_SLICES
 %           (integer) the number of slices to use to calculate the
@@ -201,87 +201,97 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0        ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,0       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
+gb_list_fields      = {'flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
+gb_list_defaults    = {0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
 niak_set_defaults;
 
 [hdr,vol] = niak_read_vol(files_in);
 [mat,step,start] = niak_hdr_mat2minc(hdr.info.mat);
-if opt.z_step==0
+if isempty(opt.z_step)
     opt.z_step = step(3);
 end
 
 %% Use specified values if defined. Use header values otherwise.
-if ~exist(opt.tr,'var')
+if isempty(opt.tr)
     opt.tr = hdr.info.tr;
 end
 
-if ~exist(opt.nb_slices,'var')
+if isempty(opt.nb_slices)
     opt.nb_slices = hdr.info.dimensions(3);
 end
 
-if ~exist(opt.timing,'var')
+if isempty(opt.timing)
     opt.timing(1) = (opt.tr-opt.delay_in_tr)/opt.nb_slices;
     opt.timing(2) = opt.timing(1) + delay_in_tr;
 end
 
-if ~exist(opt.slice_order,'var')
+if isempty(opt.slice_order)
+    
     switch opt.type_acquisition
-      case 'manual'
-	if ~exist(opt.slice_order,'var')
-	    error('niak:brick', 'opt: slice_order must be specified when using type_acquisition manual.\n Type ''help niak_brick_slice_timing'' for more info.');
-	end
-      case 'sequential ascending'
-	if opt.z_step > 0
-	    opt.slice_order = 1:opt.nb_slices;
-	else
-	    opt.slice_order = opt.nb_slices:-1:1;
-	end
-      case 'sequential descending'
-	if opt.z_step > 0
-	    opt.slice_order = opt.nb_slices:-1:1;
-	else
-	    opt.slice_order = 1:opt.nb_slices;
-	end
-      case 'interleaved ascending'
-	if opt.z_step > 0
-	    if strcmp(opt.first_number,'odd')
-		opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
-	    elseif strcmp(opt.first_number,'even')
-		opt.slice_order = [2:2:opt.nb_slices 1:2:opt.nb_slices];
-	    else
-		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
-	    end
-	else
-	    if strcmp(opt.first_number,'odd')
-		opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
-	    elseif strcmp(opt.first_number,'even')
-		opt.slice_order = [opt.nb_slices-1:-2:1 opt.nb_slices:-2:1];
-	    else
-		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
-	    end
-	end
-      case 'interleaved descending'
-	if opt.z_step > 0
-	    if strcmp(opt.first_number,'odd')
-		opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
-	    elseif strcmp(opt.first_number,'even')
-		opt.slice_order = [opt.nb_slices-1:-2:1 opt.nb_slices:-2:1];
-	    else
-		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
-	    end
-	else
-	    if strcmp(opt.first_number,'odd')
-		opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
-	    elseif strcmp(opt.first_number,'even')
-		opt.slice_order = [2:2:opt.nb_slices 1:2:opt.nb_slices];
-	    else
-		error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');      
-	    end
-	end
-      otherwise
-	error('niak:brick','opt: type_acquisition must be on of the specified values.\n Type ''help niak_brick_slice_timing'' for more info.');
+        
+        case 'manual'
+            if ~exist(opt.slice_order,'var')
+                error('niak:brick', 'opt: slice_order must be specified when using type_acquisition manual.\n Type ''help niak_brick_slice_timing'' for more info.');
+            end
+            
+        case 'sequential ascending'
+            if opt.z_step > 0
+                opt.slice_order = 1:opt.nb_slices;
+            else
+                opt.slice_order = opt.nb_slices:-1:1;
+            end
+            
+        case 'sequential descending'
+            if opt.z_step > 0
+                opt.slice_order = opt.nb_slices:-1:1;
+            else
+                opt.slice_order = 1:opt.nb_slices;
+            end
+            
+        case 'interleaved ascending'
+            if opt.z_step > 0
+                if strcmp(opt.first_number,'odd')
+                    opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
+                elseif strcmp(opt.first_number,'even')
+                    opt.slice_order = [2:2:opt.nb_slices 1:2:opt.nb_slices];
+                else
+                    error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');
+                end
+            else
+                if strcmp(opt.first_number,'odd')
+                    opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
+                elseif strcmp(opt.first_number,'even')
+                    opt.slice_order = [opt.nb_slices-1:-2:1 opt.nb_slices:-2:1];
+                else
+                    error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');
+                end
+            end
+            
+        case 'interleaved descending'
+            if opt.z_step > 0
+                if strcmp(opt.first_number,'odd')
+                    opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
+                elseif strcmp(opt.first_number,'even')
+                    opt.slice_order = [opt.nb_slices-1:-2:1 opt.nb_slices:-2:1];
+                else
+                    error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');
+                end
+            else
+                if strcmp(opt.first_number,'odd')
+                    opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
+                elseif strcmp(opt.first_number,'even')
+                    opt.slice_order = [2:2:opt.nb_slices 1:2:opt.nb_slices];
+                else
+                    error('niak:brick','opt: first_number can only be ''odd'' or ''even''.\n Type ''help niak_brick_slice_timing'' for more info.');
+                end
+            end
+            
+        otherwise
+            
+            error('niak:brick','opt: type_acquisition must be on of the specified values.\n Type ''help niak_brick_slice_timing'' for more info.');
+            
     end
+    
 end
 
 if isempty(ref_slice)        

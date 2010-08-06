@@ -43,13 +43,13 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %           t1 image partially corrected for non-uniformities (without
 %           mask), in native space. Intensities have not been normalized.
 %       
-%       ANAT_NUC_STEREO_LIN 
+%       ANAT_NUC_STEREOLIN 
 %           (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
 %           original t1 image transformed in stereotaxic space using the 
 %           lsq9 transformation, fully corrected for non-uniformities (with mask)
 %           and with intensities normalized to match the MNI template.
 %
-%       ANAT_NUC_STEREO_NL 
+%       ANAT_NUC_STEREONL 
 %           (string, default <BASE_ANAT>_nuc_stereonl.<EXT>)
 %           original t1 image transformed in stereotaxic space using the 
 %           non-linear transformation, fully corrected for non-uniformities (with

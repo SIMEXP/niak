@@ -1,11 +1,7 @@
 function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_ANAT2FUNC
-%
-% Coregister a T1 image with a T2* EPI image of the same subject using
-% a rigid-body (lsq6) transform. The two images are assumed not to be too
-% far from each other.
+% Coregister a T1 image with a T2* EPI image of the same subject.
+% The estimated transformation is a rigid-body (lsq6) transform. 
+% The two images are assumed not to be too far from each other.
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2FUNC(FILES_IN,FILES_OUT,OPT)
@@ -36,10 +32,10 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %
 %       TRANSFORMATION_INIT
 %           (string, default identity) an initial guess of the
-%           transformation between the functional image and the anatomical
-%           image (e.g. the transformation from T1 native space to
-%           stereotaxic linear space if the anat is in stereotaxic linear
-%           space). 
+%           transformation from the anatomical image to the functional 
+%           image (e.g. the inverse of the transformation from T1 native 
+%           space to stereotaxic linear space if the anat is in stereotaxic 
+%           linear space). 
 %
 %  * FILES_OUT
 %       (structure) with the following fields. Note that if a field is an
@@ -158,7 +154,7 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %   The quality of this approach critically relies on the T1 brain mask. 
 %   This brick should therefore be used in conjunction with 
 %   NIAK_BRICK_T1_PREPROCESS (this is what's being done in 
-%   NIAK_PIPELINE_FMRI_PREPROCESSING).
+%   NIAK_PIPELINE_FMRI_PREPROCESS).
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-10.
@@ -208,9 +204,9 @@ gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS
-gb_name_structure = 'opt';
-gb_list_fields = {'flag_invert_transf','list_mes','list_fwhm','list_step','list_simplex','list_crop','flag_test','folder_out','flag_verbose','init'};
-gb_list_defaults = {false,{'xcorr','xcorr','xcorr','mi','mi'},[16,8,4,8,4],[8,4,4,4,4],[32,16,8,4,2],[20,10,5,5,5],0,'',1,'identity'};
+gb_name_structure   = 'opt';
+gb_list_fields      = {'flag_invert_transf' ,'list_mes'                         ,'list_fwhm'     ,'list_step'    ,'list_simplex' ,'list_crop'    ,'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
+gb_list_defaults    = {false                ,{'xcorr','xcorr','xcorr','mi','mi'},[16,8,4,8,4]    ,[8,4,4,4,4]    ,[32,16,8,4,2]  ,[20,10,5,5,5]  ,0              ,''             ,1              ,'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
@@ -311,7 +307,7 @@ file_tmp2           = [path_tmp 'vol_tmp2.mnc'];        % Temporary volume #2
 if strcmp(files_in.transformation_init,'gb_niak_omitted')
     transf = eye(4);
     niak_write_transf(transf,file_transf_init);
-else
+else    
     if flag_invert_transf
         [succ,msg] = system(cat(2,'xfminvert ',files_in.transformation_init,' ',file_transf_init));
         if succ ~= 0

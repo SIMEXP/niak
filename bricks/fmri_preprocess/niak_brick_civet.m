@@ -5,7 +5,7 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 % template (linear/lsq9 and non-linear), non-uniformity corrected volumes 
 % in the native and template space, segmentation in white matter/grey 
 % matter/CSF in native and template spaces, partial volume effect estimates 
-% in native and tempate spaces, a mask of the brain in native and template 
+% in native and template spaces, a mask of the brain in native and template 
 % spaces. 
 % 
 % For more information on the CIVET pipeline, see :
@@ -118,6 +118,11 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %           all default outputs will be created in the folder FOLDER_OUT.
 %           The folder needs to be created beforehand.
 %
+%       FLAG_KEEP_TMP
+%           (boolean, default 0) if FLAG_KEEP_TMP is true, the temporary
+%           folder will not be removed after completion of the job. This
+%           might be useful to get access to the logs of CIVET.
+%
 %       FLAG_TEST 
 %           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
 %           do anything but update the default values in FILES_IN, 
@@ -214,8 +219,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'civet_command','flag_test','folder_out','flag_verbose','n3_distance','civet'};
-gb_list_defaults = {'',0,'',1,200,'gb_niak_omitted'};
+gb_list_fields = {'flag_keep_tmp','civet_command','flag_test','folder_out','flag_verbose','n3_distance','civet'};
+gb_list_defaults = {0,'',0,'',1,200,'gb_niak_omitted'};
 niak_set_defaults
         
 if isempty(civet_command)
@@ -459,13 +464,16 @@ if ~flag_civet
 
     if flag_verbose
         fprintf('Cleaning temporary files.\n')
+    end
+    
+    if ~flag_keep_tmp
         try
             str = rmdir(civet_folder,'s');
         catch
             warning(str);
         end
-
     end
+    
 end
 
 fprintf('Done !\n')
