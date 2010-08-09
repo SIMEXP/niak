@@ -663,11 +663,11 @@ for num_s = 1:nb_subject
     files_in_tmp = niak_files2cell(pipeline.(name_stage_motion).files_out.motion_corrected_data);    
     
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
-    files_out_tmp.mean_average = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
-    files_out_tmp.std_average = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_std_nativefunc.mnc');
-    files_out_tmp.mask = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
-    files_out_tmp.mask_average = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_average_nativefunc.mnc');
-    files_out_tmp.tab_fit = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_tab_fit.dat');
+    files_out_tmp.mean_average  = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc',ext_f);
+    files_out_tmp.std_average   = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_std_nativefunc',ext_f);
+    files_out_tmp.mask          = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc',ext_f);
+    files_out_tmp.mask_average  = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_average_nativefunc',ext_f);
+    files_out_tmp.tab_fit       = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_tab_fit.dat');
     
     %% Setting up options
     opt_tmp = opt.bricks.mask_brain;
@@ -676,10 +676,10 @@ for num_s = 1:nb_subject
     opt_tmp.flag_test = 0;
 
      %% Adding the stage to the pipeline        
-    pipeline(1).(name_stage).command = 'niak_brick_mask_brain(files_in,files_out,opt)';
-    pipeline(1).(name_stage).files_in = files_in_tmp;
-    pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;   
+    pipeline(1).(name_stage).command    = 'niak_brick_mask_brain(files_in,files_out,opt)';
+    pipeline(1).(name_stage).files_in   = files_in_tmp;
+    pipeline(1).(name_stage).files_out  = files_out_tmp;
+    pipeline(1).(name_stage).opt        = opt_tmp;   
     
 end
 
@@ -706,13 +706,14 @@ for num_s = 1:nb_subject
     
     %% Building outputs for NIAK_BRICK_COREGISTER
     files_out_tmp.transformation = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'transf_',subject,'_nativefunc_to_stereolin.xfm');
-    files_out_tmp.anat_hires     = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_hires.mnc');
-    files_out_tmp.anat_lowres    = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_lowres.mnc');
+    files_out_tmp.anat_hires     = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_hires',ext_f);
+    files_out_tmp.anat_lowres    = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_lowres',ext_f);
     
     %% Setting up options
-    opt_tmp                     = opt.bricks.anat2func;
-    opt_tmp.folder_out          = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep);
-    opt_tmp.flag_invert_transf  = true;
+    opt_tmp                            = opt.bricks.anat2func;
+    opt_tmp.folder_out                 = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep);
+    opt_tmp.flag_invert_transf_init    = true;
+    opt_tmp.flag_invert_transf_output  = true;
 
     %% Add job
     pipeline = psom_add_job(pipeline,['anat2func_',subject],'niak_brick_anat2func',files_in_tmp,files_out_tmp,opt_tmp);
@@ -781,8 +782,8 @@ for num_s = 1:nb_subject
     files_in_tmp(2).target = opt.template_fmri;
 
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
-    files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereonl.mnc');
-    files_out_tmp{2} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereonl.mnc');
+    files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereonl',ext_f);
+    files_out_tmp{2} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereonl',ext_f);
     files_mean_nl{num_s} = files_out_tmp{1};
     
     %% Setting up options
@@ -826,8 +827,8 @@ for num_s = 1:nb_subject
     files_in_tmp(2).target = opt.template_fmri;
 
     %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
-    files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereolin.mnc');
-    files_out_tmp{2} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereolin.mnc');
+    files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereolin',ext_f);
+    files_out_tmp{2} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereolin',ext_f);
     files_mean_lin{num_s} = files_out_tmp{1};
     
     %% Setting up options
@@ -863,10 +864,10 @@ if strcmp(ext_f,gb_niak_zip_ext)
     ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
-files_out_tmp.mean_average = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereolin' ext_f];
-files_out_tmp.mask_average = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
-files_out_tmp.mask = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
-files_out_tmp.tab_fit = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereolin.dat'];
+files_out_tmp.mean_average  = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereolin' ext_f];
+files_out_tmp.mask_average  = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
+files_out_tmp.mask          = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
+files_out_tmp.tab_fit       = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereolin.dat'];
 
 %% OPT
 opt_tmp = opt.bricks.mask_brain;
@@ -898,10 +899,10 @@ if strcmp(ext_f,gb_niak_zip_ext)
     ext_f = cat(2,ext_f,gb_niak_zip_ext);
 end
 
-files_out_tmp.mean_average = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereonl' ext_f];
-files_out_tmp.mask_average = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
-files_out_tmp.mask = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
-files_out_tmp.tab_fit = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereonl.dat'];
+files_out_tmp.mean_average  = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereonl' ext_f];
+files_out_tmp.mask_average  = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
+files_out_tmp.mask          = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
+files_out_tmp.tab_fit       = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereonl.dat'];
 
 %% OPT
 opt_tmp = opt.bricks.mask_brain;

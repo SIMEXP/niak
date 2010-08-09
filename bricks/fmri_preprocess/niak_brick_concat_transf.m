@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_concat_transf(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_CONCAT_TRANSF
-%
 % Concatenate multiple transformations in xfm format.
 %
 % SYNTAX:
@@ -33,8 +29,7 @@ function [files_in,files_out,opt] = niak_brick_concat_transf(files_in,files_out,
 %   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
-% SEE ALSO
-%
+% SEE ALSO:
 % NIAK_TRANSF2PARAM, NIAK_PARAM2TRANSF
 %
 % _________________________________________________________________________
@@ -72,8 +67,8 @@ function [files_in,files_out,opt] = niak_brick_concat_transf(files_in,files_out,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak_brick_motion_correction, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CONCAT_TRANSF(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_time_filter'' for more info.')
+if ~exist('files_in','var')|~exist('files_out','var')
+    error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CONCAT_TRANSF(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_concat_transf'' for more info.')
 end
 
 if  ~iscellstr(files_in)

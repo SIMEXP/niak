@@ -90,10 +90,16 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %           only if you have very big misrealignement between the two
 %           images (say, > 2 cm).
 %
-%       FLAG_INVERT_TRANSF
+%       FLAG_INVERT_TRANSF_INIT
 %           (boolean, default false) if the flag is true, the
-%           transfonsformation provided in FILES_IN.TRANSFORMATION_INIT
+%           transformation provided in FILES_IN.TRANSFORMATION_INIT
 %           will be inverted before being applied.
+%
+%       FLAG_INVERT_TRANSF_OUTPUT
+%           (boolean, default false) if the flag is true, the outpout
+%           transformation provided in FILES_OUT.TRANSFORMATION
+%           will be inverted, i.e. the transformation goes from functional 
+%           to anatomical space.
 %
 %       FOLDER_OUT
 %           (string, default: path of FILES_IN) If present, all default
@@ -205,8 +211,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = {'flag_invert_transf' ,'list_mes'                         ,'list_fwhm'     ,'list_step'    ,'list_simplex' ,'list_crop'    ,'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
-gb_list_defaults    = {false                ,{'xcorr','xcorr','xcorr','mi','mi'},[16,8,4,8,4]    ,[8,4,4,4,4]    ,[32,16,8,4,2]  ,[20,10,5,5,5]  ,0              ,''             ,1              ,'identity'};
+gb_list_fields      = {'flag_invert_transf_output' ,'flag_invert_transf_init' ,'list_mes'                          ,'list_fwhm'     ,'list_step'    ,'list_simplex' ,'list_crop'    ,'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
+gb_list_defaults    = {false                       ,false                     ,{'xcorr','xcorr','xcorr','mi','mi'} ,[16,8,4,8,4]    ,[8,4,4,4,4]    ,[32,16,8,4,2]  ,[20,10,5,5,5]  ,0              ,''             ,1              ,'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
@@ -308,7 +314,7 @@ if strcmp(files_in.transformation_init,'gb_niak_omitted')
     transf = eye(4);
     niak_write_transf(transf,file_transf_init);
 else    
-    if flag_invert_transf
+    if flag_invert_transf_init
         [succ,msg] = system(cat(2,'xfminvert ',files_in.transformation_init,' ',file_transf_init));
         if succ ~= 0
             error(msg);
@@ -616,16 +622,22 @@ if flag_verbose
     fprintf('\nWritting the outputs\n');
 end
 
+[succ,msg] = system(cat(2,'xfmconcat ',file_transf_init,' ',file_transf_guess,' ',file_transf_est));
+if succ~=0
+    error(msg)
+end
+
 if ~strcmp(files_out.transformation,'gb_niak_omitted')
-    [succ,msg] = system(cat(2,'xfmconcat ',file_transf_init,' ',file_transf_guess,' ',files_out.transformation));
-    if succ~=0
-        error(msg)
-    end
-else
-        
-    [succ,msg] = system(cat(2,'xfmconcat ',file_transf_init,' ',file_transf_guess,' ',file_transf_est));
-    if succ~=0
-        error(msg)
+    if flag_invert_transf_output
+        [succ,msg] = system(cat(2,'xfminvert ',file_transf_est,' ',files_out.transformation));
+        if succ~=0
+            error(msg)
+        end
+    else
+        [succ,msg] = system(cat(2,'cp ',file_transf_est,' ',files_out.transformation));
+        if succ~=0
+            error(msg)
+        end
     end
 end
 
@@ -639,11 +651,7 @@ if ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres
         end
         files_in_res.source = files_in.anat;
         files_in_res.target = files_in.func;
-        if ~strcmp(files_out.transformation,'gb_niak_omitted')
-            files_in_res.transformation = files_out.transformation;
-        else
-            files_in_res.transformation = file_transf_est;
-        end
+        files_in_res.transformation = file_transf_est;        
         files_out_res = files_out.anat_hires;
         opt_res.flag_tfm_space = 1;
         opt_res.flag_invert_transf = 0;
@@ -659,12 +667,7 @@ if ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres
         end
         files_in_res.source = files_in.anat;
         files_in_res.target = files_in.func;
-        if ~strcmp(files_out.transformation,'gb_niak_omitted')
-            files_in_res.transformation = files_out.transformation;
-        else
-            files_in_res.transformation = file_transf_est;
-        end
-        opt_res.flag_invert_transf = 1;
+        files_in_res.transformation = file_transf_est;                
         files_out_res = files_out.anat_lowres;
         opt_res.flag_tfm_space = 0;
         opt_res.flag_invert_transf = 0;

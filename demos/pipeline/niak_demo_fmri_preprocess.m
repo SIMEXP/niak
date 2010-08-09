@@ -235,4 +235,4 @@ opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
 %% Run the fmri_preprocess template  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
+pipeline = niak_pipeline_fmri_preprocess_dev(files_in,opt);
