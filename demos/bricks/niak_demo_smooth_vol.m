@@ -1,37 +1,39 @@
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_SMOOTH_VOL
-%
+function [files_in,files_out,opt] = niak_demo_smooth_vol(path_demo)
 % This is a script to demonstrate the usage of NIAK_BRICK_SMOOTH_VOL
-% Just type in NIAK_DEMO_SMOOTH_VOL
+%
+% SYNTAX:
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_SMOOTH_VOL(PATH_DEMO)
 %
 % _________________________________________________________________________
-% OUTPUT
+% INPUTS:
 %
-% It will apply a spatial smoothing on the functional data of subject
-% 1 (motor condition) and use the default output name.
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
 % _________________________________________________________________________
-% COMMENTS
+% OUTPUTS:
 %
-% NOTE 1
-% This script will clear the workspace !!
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_SMOOTH_VOL (a 
+% description of input and output files with all options).
 %
-% NOTE 2
-% Note that the path to access the demo data is stored in a variable
-% called GB_NIAK_PATH_DEMO defined in the script NIAK_GB_VARS.
-% 
-% NOTE 3
-% The demo database exists in multiple file formats.NIAK looks into the demo 
-% path and is supposed to figure out which format you are intending to use 
-% by himself.You can the format by changing the variable GB_NIAK_FORMAT_DEMO 
-% in the script NIAK_GB_VARS.
+% _________________________________________________________________________
+% COMMENTS:
+%
+% This function applies a spatial smoothing on the functional data of 
+% subject 1 (motor condition) and use the default output name.
+%
+% _________________________________________________________________________
+% SEE ALSO:
+% NIAK_BRICK_SMOOTH_VOL
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, smoothing, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -51,11 +53,26 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
+if nargin>=1
+    gb_niak_path_demo = path_demo;
+end
+
 niak_gb_vars
 
+%% In which format is the niak demo ?
+format_demo = 'minc2';
+if exist(cat(2,path_demo,'anat_subject1.mnc'))
+    format_demo = 'minc2';
+elseif exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
+    format_demo = 'minc1';
+elseif exist(cat(2,path_demo,'anat_subject1.nii'))
+    format_demo = 'nii';
+elseif exist(cat(2,path_demo,'anat_subject1.img'))
+    format_demo = 'analyze';
+end
+
 %% Setting input/output files
-switch gb_niak_format_demo
+switch format_demo
     
     case 'minc2' % If data are in minc2 format
         

@@ -56,8 +56,20 @@ end
 
 niak_gb_vars
 
+%% In which format is the niak demo ?
+format_demo = 'minc2';
+if exist(cat(2,path_demo,'anat_subject1.mnc'))
+    format_demo = 'minc2';
+elseif exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
+    format_demo = 'minc1';
+elseif exist(cat(2,path_demo,'anat_subject1.nii'))
+    format_demo = 'nii';
+elseif exist(cat(2,path_demo,'anat_subject1.img'))
+    format_demo = 'analyze';
+end
+
 %% Setting input/output files
-switch gb_niak_format_demo
+switch format_demo
         
     case 'minc2' % If data are in minc2 format
         

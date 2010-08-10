@@ -1,25 +1,21 @@
 function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_SMOOTH_VOL
-%
 % Spatial smoothing of 3D or 3D+t data, using a Gaussian separable kernel
 %
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SMOOTH_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN        
+%  FILES_IN        
 %       (string) a file name of a 3D+t dataset
 %
-%  * FILES_OUT       
+%  FILES_OUT       
 %       (string, default <BASE FILES_IN>.<EXT>) File name for outputs. 
 %       NOTE that if FILES_OUT is an empty string or cell, the name of the 
 %       outputs will be the same as the inputs, with a '_s' suffix added 
 %       at the end.
 %
-%  * OPT           
+%  OPT           
 %       (structure) with the following fields :
 %
 %       FWHM  
@@ -53,9 +49,8 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are generated.
 %
 % _________________________________________________________________________
-% SEE ALSO
-%
-% NIAK_SMOOTH_VOL
+% SEE ALSO:
+% NIAK_SMOOTH_VOL, NIAK_DEMO_SMOOTH_VOL
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -63,7 +58,7 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, smoothing, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal

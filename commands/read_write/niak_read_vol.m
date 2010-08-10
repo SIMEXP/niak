@@ -1,10 +1,7 @@
 function [hdr,vol] = niak_read_vol(file_name)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_READ_VOL
-%
-% Read 3D or 3D+t data. Currently supported formats are minc1 and minc2
-% (.mnc), nifti (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
+% Read brain image in 3D or 3D+t volumes in various formats. 
+% Currently supported formats are minc1 and minc2 (.mnc), nifti 
+% (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
 % The data can also be zipped (additional extension .gz, see the COMMENTS
 % section below).
 %
@@ -172,9 +169,12 @@ else
 
         %% The file does not exist ... check for wild cards !
         cell_name = dir(file_name);
+        if isempty(cell_name)
+            error('niak','Couldn''t find any file fitting the description %s\n',file_name)
+        end
         file_name2 = char(cell_name.name);
         if length(file_name2)==0
-            error('niak:read: Couldn''t find any file fitting the description %s\n',file_name)
+            error('niak','Couldn''t find any file fitting the description %s\n',file_name)
         else
             if nargout == 2
                 [hdr,vol] = niak_read_vol(file_name2);

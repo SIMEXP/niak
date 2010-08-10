@@ -1,10 +1,5 @@
-function [] = niak_demo_slice_timing(path_demo)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_SLICE_TIMING
-%
-% This is a script to demonstrate the usage of :
-% NIAK_BRICK_SLICE_TIMING
+function [files_in,files_out,opt] = niak_demo_slice_timing(path_demo)
+% This is a script to demonstrate the usage of NIAK_BRICK_SLICE_TIMING
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_SLICE_TIMING(PATH_DEMO)
@@ -60,8 +55,20 @@ end
 
 niak_gb_vars
 
+%% In which format is the niak demo ?
+format_demo = 'minc2';
+if exist(cat(2,path_demo,'anat_subject1.mnc'))
+    format_demo = 'minc2';
+elseif exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
+    format_demo = 'minc1';
+elseif exist(cat(2,path_demo,'anat_subject1.nii'))
+    format_demo = 'nii';
+elseif exist(cat(2,path_demo,'anat_subject1.img'))
+    format_demo = 'analyze';
+end
+
 %% Setting input/output files
-switch gb_niak_format_demo
+switch format_demo
     
      case 'minc1' % If data are in minc1 format
         
