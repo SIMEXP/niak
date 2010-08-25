@@ -20,6 +20,10 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %           just generate the PIPELINE and OPT structure, otherwise it will 
 %           process the pipeline.
 %
+%	FLAG_DEV
+%	    (boolean, default false) if FLAG_DEV == true, the demo will use 
+%	    the developpement version of the pipeline.
+%
 %       STYLE
 %           (string, default 'fmristat') the style of the pipeline. 
 %           Available choices : 'fmristat', 'standard-native',
@@ -110,8 +114,8 @@ end
 %% Set up defaults
 gb_name_structure = 'opt';
 default_psom.path_logs = '';
-gb_list_fields = {'flag_corsica','style','size_output','flag_test','psom'};
-gb_list_defaults = {1,'fmristat','quality_control',false,default_psom};
+gb_list_fields = {'flag_corsica','style','size_output','flag_test','psom','flag_dev'};
+gb_list_defaults = {1,'fmristat','quality_control',false,default_psom,false};
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -234,5 +238,8 @@ opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess template  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pipeline = niak_pipeline_fmri_preprocess_dev(files_in,opt);
+if flag_dev
+    pipeline = niak_pipeline_fmri_preprocess_dev(files_in,opt);
+else
+    pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
+end
