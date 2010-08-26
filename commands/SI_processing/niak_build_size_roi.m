@@ -1,8 +1,4 @@
-function [size_roi,labels_roi] = niak_build_size_roi(mask)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BUILD_SIZE_ROI
-%
+function [size_roi,labels_roi] = niak_build_size_roi(mask,flag_iterative)
 % Extract the labels and size of regions of interest in a 3D volume 
 %
 % [SIZE_ROI,LABELS_ROI] = NIAK_BUILD_SIZE_ROI(MASK)
@@ -26,11 +22,16 @@ function [size_roi,labels_roi] = niak_build_size_roi(mask)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
-%               Neurological Institute, McGill University, 2008.
+% Copyright (c) Pierre Bellec, 
+%               McConnell Brain Imaging Center,Montreal Neurological 
+%               Institute, McGill University, 2008
+%               &
+%               Centre de recherche de l'institut de geriatrie de Montreal,
+%               Universite de Montreal, 2010.
+%
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : ROI
+% Keywords : ROI, connected components, 3D volume
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -50,14 +51,44 @@ function [size_roi,labels_roi] = niak_build_size_roi(mask)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-labels_roi = unique(mask(:));
-labels_roi = labels_roi(labels_roi~=0);
+if nargin < 2
+    flag_iterative = false;
+end
 
-nb_roi = length(labels_roi);
-size_roi = zeros([nb_roi 1]);
+%% test for an empty mask
+if ~any(mask(:))
+    size_roi = [];
+    labels_roi = [];
+    return
+end
 
-mask_v = mask(mask>0);
-
-for num_r = 1:nb_roi
-    size_roi(num_r) = sum(mask_v == labels_roi(num_r));
+if ~flag_iterative
+    
+    %% Implementation based on sorting
+    vec = sort(mask(mask>0));
+    vec = [vec ; vec(end)+1];
+    size_roi = find(diff(vec));
+    if isempty(size_roi)
+        size_roi = length(vec);
+        labels_roi = vec(1);
+    else
+        labels_roi = vec(size_roi);
+        size_roi = size_roi - [0 ; size_roi(1:(end-1))];
+    end
+    
+else
+    
+    %% Implementation based on a loop
+    labels_roi = unique(mask(:));
+    labels_roi = labels_roi(labels_roi~=0);
+    
+    nb_roi = length(labels_roi);
+    size_roi = zeros([nb_roi 1]);
+    
+    mask_v = mask(mask>0);
+    
+    for num_r = 1:nb_roi
+        size_roi(num_r) = sum(mask_v == labels_roi(num_r));
+    end
+    
 end

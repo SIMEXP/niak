@@ -15,7 +15,7 @@ function decxyz = niak_build_neighbour_mat(type_neig)
 %
 % TYPE_NEIG 
 %   (scalar or vector 1*4, default 6) the type of spatial connexity. 
-%   Possible values for scalars : 6 or 26
+%   Possible values for scalars : 4, 6, 8, 18, 26
 %   If TYPE_NEIG is a vector, the three first elements are the size of
 %   voxels in X, Y and Z directions, and the last element is the radius of
 %   an isotropic ball.

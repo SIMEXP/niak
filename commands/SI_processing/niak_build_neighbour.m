@@ -7,7 +7,7 @@ function [neig,ind] = niak_build_neighbour(mask,opt)
 % a 3D binary mask.
 %
 % SYNTAX :
-% NEIG = NIAK_BUILD_NEIGHBOUR(MASK,PAR_NEIGH)
+% NEIG = NIAK_BUILD_NEIGHBOUR(MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS :

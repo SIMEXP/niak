@@ -18,11 +18,21 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %
 %       TYPE_NEIG
 %           (integer, default 6) the spatial neighbourhood of a
-%           voxel, values : 6 or 26.
+%           voxel, possible values : 
+%              4             two-dimensional four-connected neighborhood
+%              8             two-dimensional eight-connected neighborhood
+%              6             three-dimensional six-connected neighborhood
+%              10            three-dimensional 10-connected neighborhood
+%              18            three-dimensional 18-connected neighborhood
+%              26            three-dimensional 26-connected neighborhoodsee 
+%           See NIAK_BUILD_NEIGHBOUR_MAT for more options.
 %
 %       THRE_SIZE
 %           (integer, default 1) the minimal acceptable size of ROIs.
 %
+%       FLAG_INT
+%           (boolean, default 1) the mask of connected components is 
+%           generated in the 'uint32' type. Otherwise it is a double array.
 % _________________________________________________________________________
 % OUTPUTS :
 %
@@ -34,6 +44,18 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %
 % _________________________________________________________________________
 % COMMENTS :
+%
+% NOTE 1:
+%   The algorithm employed for TYPE_NEIG == 4, 6, 8, 10 and other types are 
+%   completely different. With 18 and 26, it is a region growing which
+%   is only practical for low resolution volume (say 64*64*30), is greedy
+%   both computationally and in terms of memory. It works fine when the 
+%   ROIs are small though. With TYPE_NEIG == 4, 6, 8, 10 the algorithm 
+%   first works in 2D and then propagates labels between slices. This is 
+%   much faster and memory efficient.
+%
+% NOTE 2:
+%   The order of the ROIs is completely arbitrary.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
 %               Neurological Institute, McGill University, 2008.
@@ -62,18 +84,70 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'type_neig','thre_size'};
-gb_list_defaults = {6,1};
+gb_list_fields = {'flag_int','type_neig','thre_size'};
+gb_list_defaults = {true,6,1};
 niak_set_defaults
-if max(mask(:))>1
-    mask = mask>0;
+
+mask = mask>0;
+
+if flag_int
+    mask_c = zeros(size(mask),'uint32');
+else
+    mask_c = zeros(size(mask));
+end
+
+if ismember(type_neig,[4,6,8,10]);
+    
+    if type_neig == 10
+        type_neig = 8;
+    elseif type_neig == 6
+        type_neig = 4;
+    end
+    
+    [nx,ny,nz] = size(mask);
+    
+    % Extract connected components in every slices    
+    nb_roi_slice = zeros([nz 1]);
+    nb_roi = 0;
+    for num_z = 1:nz        
+        slice = bwlabel(mask(:,:,num_z),type_neig);        
+        nb_roi_slice(num_z) = max(slice(:));  
+        slice(mask(:,:,num_z)) = slice(mask(:,:,num_z)) + nb_roi;                                      
+        nb_roi = nb_roi + nb_roi_slice(num_z);        
+        mask_c(:,:,num_z) = slice;
+    end
+    
+    % Propagate labels by ascending slices
+    if nz>1
+        start_roi = nb_roi_slice(1)+1;
+        part = 1:nb_roi;
+        for num_z = 2:nz
+            if nb_roi_slice(num_z)>0 % if there are rois in the slice
+                list_roi = start_roi : (start_roi + nb_roi_slice(num_z)-1); % list of roi in the slice
+                start_roi = start_roi + nb_roi_slice(num_z);
+                slice1 = mask_c(:,:,num_z-1);
+                slice2 = mask_c(:,:,num_z);
+                mask1 = mask(:,:,num_z-1);
+                for num_r = list_roi
+                    to_merge = [unique(part(slice1(mask1&(slice2==num_r)))) num_r];
+                    if length(to_merge)>1
+                        part(ismember(part,to_merge)) = to_merge(1);
+                    end
+                end
+            end
+        end
+    end
+    [tmp1,tmp2,part] = unique(part);
+    mask_c(mask) = part(mask_c(mask));
+    if nargout>1
+        size_roi = niak_build_size_roi(mask_c);
+    end
 else
     
     decxyz = niak_build_neighbour_mat(type_neig);
     mask = mask>0;
     ind = find(mask);
     nb_roi = 0;
-    mask_c = zeros(size(mask));
     opt_grow.type_neig = type_neig;
     opt_grow.decxyz = decxyz;
     opt_grow.ind = ind;
@@ -91,7 +165,7 @@ else
         end
     end
 end
-        
+
 %%%%%%%%%%%%%%%%%
 %% SUBFUNCTION %%
 %%%%%%%%%%%%%%%%%
