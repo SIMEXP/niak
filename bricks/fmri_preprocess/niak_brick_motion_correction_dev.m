@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_motion_correction_dev(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MOTION_CORRECTION
-%
 % Estimate rigid-body motion parameters on fMRI volumes.
 %
 % SYNTAX:

@@ -1,9 +1,5 @@
 function [files_in,files_out,opt] = niak_demo_motion_correction(path_demo)
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_MOTION_CORRECTION
-%
-% This is a script to demonstrate the usage of :
-% NIAK_BRICK_MOTION_CORRECTION
+% This is a script to demonstrate the usage of NIAK_BRICK_MOTION_CORRECTION
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_MOTION_CORRECTION(PATH_DEMO)
@@ -20,7 +16,7 @@ function [files_in,files_out,opt] = niak_demo_motion_correction(path_demo)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_MOTION_CORRECTION_WS (a 
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_MOTION_CORRECTION (a 
 % description of input and output files with all options).
 %
 % _________________________________________________________________________
@@ -30,7 +26,7 @@ function [files_in,files_out,opt] = niak_demo_motion_correction(path_demo)
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : medical imaging, motion correction, fMRI
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -95,7 +91,6 @@ end
 files_out = ''; % use default names
 
 %% Options
-
 opt.flag_test = 0; % Actually perform the motion correction
 opt.tol = 0.0005;
 opt.fwhm = 5;

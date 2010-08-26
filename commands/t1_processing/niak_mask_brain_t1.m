@@ -230,7 +230,7 @@ if flag_verbose
     fprintf('     Expanding the brain ...\n')
 end
 
-if ~exist('bwdist','file')    
+if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
     opt_m.voxel_size = opt.voxel_size;
     opt_m.pad_size = pad_size;
     mask_brain = niak_morph(~mask_brain,'-successive F',opt_m);
@@ -243,7 +243,7 @@ end
 if flag_verbose
     fprintf('     Finding the outside of the brain ...\n')
 end
-if ~exist('bwconncomp','file')
+if ~exist('bwconncomp','file')||exist('OCTAVE_VERSION','builtin')    
     mask_brain = niak_morph(mask_brain,'-successive G');
     mask_brain = round(mask_brain)~=1;
 else
@@ -258,7 +258,7 @@ end
 if flag_verbose
     fprintf('     Shrinking the brain back...\n')
 end
-if ~exist('bwdist','file')
+if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
     mask_brain = niak_morph(mask_brain,'-successive F',opt_m);
     mask_brain = mask_brain>=((opt.fill_holes.thresh_dist)/max(voxel_size));
 else

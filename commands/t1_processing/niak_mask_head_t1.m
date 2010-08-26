@@ -129,7 +129,7 @@ mask_head(mask_head>nb_clust_max) = 0;
 if flag_verbose
     fprintf('     Expanding the mask using a distance transform ...\n')
 end
-if ~exist('bwdist','file')
+if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
     opt_m.pad_size = pad_size;
     mask_head = niak_morph(~mask_head,'-successive F',opt_m);
     mask_head = mask_head>=opt.thresh_dist/max(voxel_size);
@@ -142,7 +142,7 @@ end
 if flag_verbose
     fprintf('     Filling the holes in the brain with morphomath ...\n')
 end
-if ~exist('bwconncomp','file')
+if ~exist('bwconncomp','file')||exist('OCTAVE_VERSION','builtin')    
     mask_head = niak_morph(mask_head,'-successive G',opt_m);
     mask_head = round(mask_head)~=1;
 else
@@ -158,7 +158,7 @@ end
 if flag_verbose
     fprintf('     Using a distance transform to correct the effect of expansion ...\n')
 end
-if ~exist('bwdist','file')
+if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
     mask_head = niak_morph(mask_head,'-successive F',opt_m);
     mask_head = mask_head>opt.thresh_dist/max(voxel_size);
 else

@@ -161,7 +161,7 @@ mask_dense = mask_dense&mask;
 if flag_verbose
     fprintf('     Extracting connected clusters in dense voxels ...');
 end
-if ~exist('bwconncomp','file')
+if ~exist('bwconncomp','file')||exist('OCTAVE_VERSION','builtin')    
     mask_dense = niak_morph(mask_dense,['-successive G' arg_m]);
     mask_dense = round(mask_dense);
     mask_dense(mask_dense>nb_clusters_max) = 0;

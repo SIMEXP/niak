@@ -135,7 +135,12 @@ end
 instr_morph = cat(2,'mincmorph -clobber ',arg,' ',file_tmp,' ',file_tmp2);
 [status,result] = system(instr_morph);
 if status
-    delete(file_tmp);
+    if exist(file_tmp,'file')
+        delete(file_tmp);
+    end
+    if exist(file_tmp2,'file')
+        delete(file_tmp2);
+    end
     error(result)
 else
     [hdr,vol_m] = niak_read_vol(file_tmp2);    
