@@ -1,5 +1,6 @@
 function [size_roi,labels_roi] = niak_build_size_roi(mask,flag_iterative)
-% Extract the labels and size of regions of interest in a 3D volume 
+% Extract the labels and size of regions of interest in an integer array of
+% labels.
 %
 % [SIZE_ROI,LABELS_ROI] = NIAK_BUILD_SIZE_ROI(MASK)
 %
@@ -7,7 +8,7 @@ function [size_roi,labels_roi] = niak_build_size_roi(mask,flag_iterative)
 % INPUTS:
 %
 % MASK      
-%       (3D array) voxels belonging to no region are coded with 0, those 
+%       (array) voxels belonging to no region are coded with 0, those 
 %       belonging to region I are coded with I (I being a positive integer).
 %
 % _________________________________________________________________________
@@ -21,6 +22,9 @@ function [size_roi,labels_roi] = niak_build_size_roi(mask,flag_iterative)
 %
 % _________________________________________________________________________
 % COMMENTS:
+%
+% The function was initially designed for 3D volumes, but should work on
+% any dimensional array, including vectors.
 %
 % Copyright (c) Pierre Bellec, 
 %               McConnell Brain Imaging Center,Montreal Neurological 
@@ -66,7 +70,7 @@ if ~flag_iterative
     
     %% Implementation based on sorting
     vec = sort(mask(mask>0));
-    vec = [vec ; vec(end)+1];
+    vec = [vec(:) ; vec(end)+1];
     size_roi = find(diff(vec));
     if isempty(size_roi)
         size_roi = length(vec);
