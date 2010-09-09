@@ -159,7 +159,7 @@ else
         case 'random_partition'
 
             %% Initialization using random partition            
-            part(:,part_curr) = ceil(nb_classes*rand([N 1]));
+            part(:,part_curr) = ceil(nb_classes.*rand([N 1]));
             gi = centre_gravite(data,part(:,1),p,nb_classes);
 
         case 'pca'
