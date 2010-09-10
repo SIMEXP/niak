@@ -1,8 +1,4 @@
 function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_KMEANS_CLUSTERING
-%
 % k-means clustering.
 %
 % SYNTAX :
@@ -282,6 +278,6 @@ gi = zeros([nb_classes T]);
 for i = 1:nb_classes;
     mask_i = (part == i);
     ind = data(mask_i,:);
-    g = (1/sum(p(mask_i)))*sum(ind*(p(mask_i)*ones([1 T])),1);
+    g = (1/sum(p(mask_i)))*sum(ind.*(p(mask_i)*ones([1 T])),1);
     gi(i,:) = g;
 end
