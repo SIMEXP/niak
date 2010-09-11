@@ -84,7 +84,8 @@ function [hdr,vol] = niak_read_vol(file_name)
 % _________________________________________________________________________
 % SEE ALSO :
 % NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_WRITE_VOL, NIAK_READ_HDR_NIFTI,
-% NIAK_READ_NIFTI.
+% NIAK_READ_NIFTI, NIAK_HDR_MAT2MINC, NIAK_HDR_MINC2MAT,
+% NIAK_COORD_VOX2WORLD, NIAK_COORD_WORLD2VOX.
 %
 % _________________________________________________________________________
 % COMMENTS
@@ -105,6 +106,12 @@ function [hdr,vol] = niak_read_vol(file_name)
 % The extension of zipped file is assumed to be .gz. The tools used to
 % unzip files in 'gunzip'. This setting can be changed by changing the
 % variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
+%
+% NOTE 4:
+% "voxel coordinates" start from 0. This is not the default matlab
+% behaviour, that indexes array starting from 1. To convert coordinates
+% from (matlab) voxel system to world system see NIAK_COORD_WORLD2VOX and
+% NIAK_COORD_VOX2WORLD.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca

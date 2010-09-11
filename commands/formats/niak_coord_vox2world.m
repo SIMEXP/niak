@@ -1,38 +1,49 @@
-function [] = niak_seed_rand(seed)
-% Change the seed of the uniform and Gaussian rand number generator
+function coord_w = niak_coord_vox2world(coord_v,mat,opt);
+% Convert coordinates in the voxel space into coordinates in the world
+% space. 
 %
 % SYNTAX:
-% [] = NIAK_SEED_RAND(SEED)
+% COORD_W = NIAK_COORD_WORLD2VOXEL(COORD_V,MAT,OPT)
 %
 % _________________________________________________________________________
+%
 % INPUTS:
 %
-% SEED
-%       (scalar, default sum(100*clock))) the seed of the random number 
-%       generator.
-%       
+% COORD_V
+%       (matrix N*3) each row is a vector of 3D coordinates in voxel space.
+%
+% MAT
+%       (matrix 4*4) an affine transformation from voxel to world
+%       coordinates. See the help of NIAK_READ_VOL for more infos. It is 
+%       generally the HDR.INFO.MAT field of the header of a volume file.
+%
+% OPT
+%       (structure, optional) with the following fields :
+%
+%       FLAG_ZERO
+%           (boolean, default false) if FLAG_ZERO is true, voxel 
+%           coordinates start from 1 (default behaviour in matlab), 
+%           otherwise they start from 0 (default behaviour in C/C++ or 
+%           MINC).
+%
 % _________________________________________________________________________
 % OUTPUTS:
-%         
+%
+% COORD_W
+%       (matrix N*3) each row is a vector of 3D coordinates in world space.
+%
 % _________________________________________________________________________
 % SEE ALSO:
-% RAND, RANDN, RANDSTREAM
+% NIAK_COORD_WORLD2VOX, NIAK_READ_VOL
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-%   This function is, in general, simply equivalent to :
-%   >> rand('state',seed)
-%   >> randn('state',seed)
-%
-%   The exact method however depends on the version of Matlab and/or
-%   Octave. 
-%   This version should work for every version and language.
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, Montreal 
+%               Neurological Institute, McGill University, 2007.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : random number generator, simulation
+% Keywords : affine transformation, coordinates
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -51,14 +62,18 @@ function [] = niak_seed_rand(seed)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
-if nargin == 0
-    seed = sum(100*clock);
+if nargin < 3
+    flag_zero = false;
+else
+    if isfield(opt,'flag_zero')
+        flag_zero = opt.flag_zero;
+    else
+        flag_zero = false;
+    end
 end
-
-try
-    RandStream.setDefaultStream(RandStream('mt19937ar','seed',seed)); % matlab 7.9+
-catch
-    rand('state',seed); % Matlab 5+
-    randn('state',seed);
+if flag_zero
+    coord_w = [coord_v ones([size(coord_v,1) 1])]*(mat');
+else
+    coord_w = [coord_v-1 ones([size(coord_v,1) 1])]*(mat');
 end
+coord_w = coord_w(:,1:3);

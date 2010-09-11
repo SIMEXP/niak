@@ -1,12 +1,8 @@
 function [] = niak_append_ps(file_name,opt_print)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_APPEND_PS
-%
 % Append the current figure to an eps file.
 %
 % SYNTAX:
-% [FLAG_FAIL,MESSAGE] = NIAK_APPEND_PS(FILE_NAME)
+% [FLAG_FAIL,MESSAGE] = NIAK_APPEND_PS(FILE_NAME,OPT_PRINT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -97,7 +93,7 @@ else
         file_eps_tmp1 = niak_file_tmp('_1.eps');
         file_eps_tmp2 = niak_file_tmp('_2.eps');
         sub_print(file_eps_tmp1,opt_print);
-        instr_merge = ['gs  -q -dNOPAUSE -dSAFER -sOutputFile=' file_eps_tmp2 '  -sDEVICE=pswrite ' file_name ' ' file_eps_tmp1 ' quit.ps'];
+        instr_merge = ['gs  -q -dNOPAUSE -dBATCH -dNOPLATFONTS -sOutputFile=' file_eps_tmp2 '  -sDEVICE=pswrite ' file_name ' ' file_eps_tmp1 ' quit.ps'];
         [failed,msg] = system(instr_merge);
         if failed
             error(msg);

@@ -34,17 +34,20 @@ function [direction_cosine,step,start] = niak_hdr_mat2minc(mat)
 %
 % This function is based on the description of MINC2 system of coordinates
 % that can be found at :
-% http://www.bic.mni.mcgill.ca/software/minc/minc2_format/node4.html
+% http://en.wikibooks.org/wiki/MINC/Reference/MINC2.0_File_Format_Reference#MINC_2.0_coordinate_system
 %
+% There is however no recommended method for this operation in the official
+% MINC2 API. This function is a hack that seems to work in all the
+% situation that have been tested so far.
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_READ_HDR_MINC, NIAK_WRITE_MINC
+% NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_HDR_MINC2MAT
 %
 % Copyright (c) Pierre Bellec, McConnel Brain Imaging Center, Montreal 
 % Neurological Institute, McGill University, Montreal, Canada, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, I/O, affine transformation
+% Keywords : medical imaging, I/O, affine transformation, minc
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
