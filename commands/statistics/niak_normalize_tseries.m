@@ -30,6 +30,11 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %               'mean_var'          
 %                   Correct the time series to zero mean and unit variance.
 %
+%               'median_mad'
+%                   Correct the time series to zero median and a
+%                   median-absolute-deviation (MAD) corresponding to a
+%                   standard-deviation of 1 for a Gaussian process (0.6764).
+%
 %               'grand_mean'
 %                   Express the time series as a percentage of the grand
 %                   mean of all time series.
@@ -121,15 +126,17 @@ switch opt.type
 
     case {'mean','mean_var2','mean_var'}
         
-        tseries_n = niak_correct_mean_var(tseries,opt.type);
+        tseries_n = niak_correct_mean_var(tseries,opt.type);                
+ 
+    case 'median_mad'
         
-        mean_ts = mean(tseries,1);
-        tseries_n = tseries - ones([nt 1])*mean_ts;
-        std_ts = (1/sqrt(nt-1))*sqrt(sum(tseries_n.^2,1));        
+        median_ts = median(tseries,1);
+        tseries_n = tseries - ones([nt 1])*median_ts;
+        std_ts = 1.4785*median(abs(tseries_n),1);
         if ~isempty(tseries_n)&&(any(std_ts~=0))
             tseries_n(:,std_ts~=0) = tseries_n(:,std_ts~=0)./(ones([nt 1])*std_ts(std_ts~=0));
         end
- 
+        
     case 'grand_mean'
         
         grand_mean = mean(tseries(:));
