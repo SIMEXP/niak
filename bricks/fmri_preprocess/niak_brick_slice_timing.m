@@ -205,26 +205,90 @@ gb_list_fields      = {'flag_skip','flag_variance','suppress_vol','interpolation
 gb_list_defaults    = {0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
 niak_set_defaults;
 
+%% Use specified values if defined. Use header values otherwise.
+
+%% Output files
+[path_f,name_f,ext_f] = fileparts(files_in(1,:));
+if isempty(path_f)
+    path_f = '.';
+end
+
+if strcmp(ext_f,gb_niak_zip_ext)
+    [tmp,name_f,ext_f] = fileparts(name_f);
+    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+end
+
+if strcmp(opt.folder_out,'')
+    opt.folder_out = path_f;
+end
+
+%% Building default output names
+if isempty(files_out)
+
+    if size(files_in,1) == 1
+
+        files_out = cat(2,opt.folder_out,filesep,name_f,'_a',ext_f);
+
+    else
+
+        name_filtered_data = cell([size(files_in,1) 1]);
+
+        for num_f = 1:size(files_in,1)
+            [path_f,name_f,ext_f] = fileparts(files_in(num_f,:));
+
+            if strcmp(ext_f,'.gz')
+                [tmp,name_f,ext_f] = fileparts(name_f);
+            end
+            
+            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_a',ext_f);
+        end
+        files_out = char(name_filtered_data);
+
+    end
+end
+
+if flag_test == 1
+    return
+end
+
+%% Check if the user specified to skip this step
+if flag_skip
+    if flag_verbose
+        msg = sprintf('FLAG_SKIP is on, the brick will just copy the input on the output. NO SLICE TIMING CORRECTION WAS APPLIED !');
+        fprintf('\n%s\n',msg);
+    end
+
+    instr_copy = ['cp ',files_in,' ',files_out];
+    system(instr_copy);
+    return
+end
+
+%% Set up the defaults that necessitate to read the file
 [hdr,vol] = niak_read_vol(files_in);
 [mat,step,start] = niak_hdr_mat2minc(hdr.info.mat);
+
+% Z step
 if isempty(opt.z_step)
     opt.z_step = step(3);
 end
 
-%% Use specified values if defined. Use header values otherwise.
+% TR
 if isempty(opt.tr)
     opt.tr = hdr.info.tr;
 end
 
+% Number of slices
 if isempty(opt.nb_slices)
     opt.nb_slices = hdr.info.dimensions(3);
 end
 
+% Timing
 if isempty(opt.timing)
     opt.timing(1) = (opt.tr-opt.delay_in_tr)/opt.nb_slices;
     opt.timing(2) = opt.timing(1) + delay_in_tr;
 end
 
+% slice order
 if isempty(opt.slice_order)
     
     switch opt.type_acquisition
@@ -288,135 +352,79 @@ if isempty(opt.slice_order)
             
         otherwise
             
-            error('niak:brick','opt: type_acquisition must be on of the specified values.\n Type ''help niak_brick_slice_timing'' for more info.');
+            error('niak:brick','opt: type_acquisition must be one of the specified values.\n Type ''help niak_brick_slice_timing'' for more info.');
             
     end
     
 end
 
+% Reference slice
 if isempty(ref_slice)        
     ref_slice = opt.slice_order(ceil(opt.nb_slices/2));
     opt.ref_slice = ref_slice;
 end
 
-%% Output files
 
-[path_f,name_f,ext_f] = fileparts(files_in(1,:));
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
-
-if strcmp(opt.folder_out,'')
-    opt.folder_out = path_f;
-end
-
-%% Building default output names
-if isempty(files_out)
-
-    if size(files_in,1) == 1
-
-        files_out = cat(2,opt.folder_out,filesep,name_f,'_a',ext_f);
-
-    else
-
-        name_filtered_data = cell([size(files_in,1) 1]);
-
-        for num_f = 1:size(files_in,1)
-            [path_f,name_f,ext_f] = fileparts(files_in(num_f,:));
-
-            if strcmp(ext_f,'.gz')
-                [tmp,name_f,ext_f] = fileparts(name_f);
-            end
-            
-            name_filtered_data{num_f} = cat(2,opt.folder_out,filesep,name_f,'_a',ext_f);
-        end
-        files_out = char(name_filtered_data);
-
-    end
-end
-
-if flag_test == 1
-    return
-end
-
+%% Reading data
 if flag_verbose
     msg = sprintf('Performing slice timing correction on volume %s',files_in);
     stars = repmat('*',[length(msg) 1]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);
 end
 
-%% Reading data
-if flag_skip
+if flag_verbose
+    msg = sprintf('Reading data...');
+    fprintf('\n%s\n',msg);
+end
+
+if flag_variance
+    std_vol = std(vol,0,4);
+    moy_vol = mean(vol,4);
+end
+
+%% Performing slice timing correction
+if flag_verbose
+    msg = sprintf('Applying slice timing correction...');
+    fprintf('\n%s\n',msg);
+end
+opt_a.slice_order = opt.slice_order;
+opt_a.timing = opt.timing;
+opt_a.ref_slice = opt.ref_slice;
+opt_a.interpolation = opt.interpolation;
+
+[vol_a,opt] = niak_slice_timing(vol,opt_a);
+
+if suppress_vol > 0;
+    vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
+end
+
+if flag_variance
     if flag_verbose
-        msg = sprintf('FLAG_SKIP is on, the brick will just copy the input on the output. NO SLICE TIMING CORRECTION WAS APPLIED !');
+        msg = sprintf('Preserving the mean and variance of the time series...');
         fprintf('\n%s\n',msg);
     end
-
-    instr_copy = ['cp ',files_in,' ',files_out];
-    system(instr_copy);
-
-else
     
-    if flag_verbose
-        msg = sprintf('Reading data...');
-        fprintf('\n%s\n',msg);
-    end
-
-    if flag_variance
-        std_vol = std(vol,0,4);
-        moy_vol = mean(vol,4);
-    end
+    [nx,ny,nz,nt] = size(vol_a);
+    vol_a = reshape(vol_a,[nx*ny*nz nt]);
+    std_a = std(vol_a,0,2);
+    moy_a = mean(vol_a,2);
+    mask_a = std_a>0;
     
-    %% Performing slice timing correction
-    if flag_verbose
-        msg = sprintf('Applying slice timing correction...');
-        fprintf('\n%s\n',msg);
+    for num_v = 1:nt
+        vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a(mask_a))./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
     end
-    opt_a.slice_order = opt.slice_order;
-    opt_a.timing = opt.timing;
-    opt_a.ref_slice = opt.ref_slice;
-    opt_a.interpolation = opt.interpolation;
-    
-    [vol_a,opt] = niak_slice_timing(vol,opt_a);
+    vol_a = reshape(vol_a,[nx ny nz nt]);
+end
 
-    if suppress_vol > 0;
-        vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
-    end
-
-    if flag_variance
-        if flag_verbose
-            msg = sprintf('Preserving the mean and variance of the time series...');
-            fprintf('\n%s\n',msg);
-        end
-
-        [nx,ny,nz,nt] = size(vol_a);
-        vol_a = reshape(vol_a,[nx*ny*nz nt]);
-        std_a = std(vol_a,0,2);
-        moy_a = mean(vol_a,2);
-        mask_a = std_a>0;
-
-        for num_v = 1:nt
-            vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a(mask_a))./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
-        end
-        vol_a = reshape(vol_a,[nx ny nz nt]);
-    end
-
-    %% Updating the history and saving output
-    if flag_verbose
-        msg = sprintf('Writting results...');
-        fprintf('\n%s\n',msg);
-    end
-    hdr = hdr(1);
-    hdr.file_name = files_out;
-    opt_hist.command = 'niak_slice_timing';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out;
-    hdr = niak_set_history(hdr,opt_hist);
-    niak_write_vol(hdr,vol_a);
-
-end % if flag_skip
+%% Updating the history and saving output
+if flag_verbose
+    msg = sprintf('Writting results...');
+    fprintf('\n%s\n',msg);
+end
+hdr = hdr(1);
+hdr.file_name = files_out;
+opt_hist.command = 'niak_slice_timing';
+opt_hist.files_in = files_in;
+opt_hist.files_out = files_out;
+hdr = niak_set_history(hdr,opt_hist);
+niak_write_vol(hdr,vol_a);

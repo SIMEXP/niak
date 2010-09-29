@@ -87,11 +87,7 @@ switch format_demo
 end
 
 %% Options
-TR = 2.33; % Repetition time in seconds
-nb_slices = 42; % Number of slices in a volume
-opt.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
-opt.timing(1)=TR/nb_slices; % Time beetween slices
-opt.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
+opt.type_acquisition = 'interleaved ascending'; % Interleaved ascending (odd first by default)
 opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 
 [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt);
