@@ -1,10 +1,5 @@
 function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_SLICE_TIMING
-%
-% Correct for differences in slice timing in a 4D fMRI acquisition via
-% temporal interpolation
+% Correct for slice timing differences in 3D+t fMRI via temporal interpolation
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT)
@@ -82,6 +77,20 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           (boolean, default 1) if FLAG_VARIANCE == 1, the mean and 
 %           variance of the time series at each voxel is preserved.
 %
+%	FLAG_REGULAR
+%	    (boolean, default 1) if FLAG_REGULAR == 1, the spacing of all axis 
+%	    will be set to regular in MINC files. This is done to avoid bugs in 
+%           latter stage of the analysis (MINCRESAMPLE cannot handle files with 
+%	    irregular spacing.
+%
+%       FLAG_HISTORY
+%           (boolean, default 0) if FLAG_HISTORY == 1, the brick will preserve 
+%           the history of MINC files. It is often a good idea to get rid of it, 
+%           as the conversion from DICOM creates huge history that can even crash 
+%           MINC tools and are in any case too long to be useful. On top of that
+%           the NIAK tools do not set the history consistently, so in any case it 
+%           does not matter to preserve it as it is not accurate. 
+%
 %       FLAG_SKIP
 %           (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing
 %           anything, just copying the input to the output. This flag is
@@ -109,8 +118,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % _________________________________________________________________________
-% SEE ALSO
-%
+% SEE ALSO:
 % NIAK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
 %
 % _________________________________________________________________________
@@ -146,7 +154,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 % NOTE 4:
 % The step in z (z_step) is essential to determine the correct slice order.
-% It tells us the slices were taken going from neck to top of head or 
+% It tells us if the slices were taken going from neck to top of head or 
 % inversely. Having a positive step in z means the slices were taken from 
 % neck to top of head and that the slice order determined by this function when
 % given a type_acquisition option other than manual is in the correct order.
@@ -165,8 +173,10 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % be input, otherwise the tr and delay_in_tr values are ignored. If no values
 % are input for nb_slices and tr, they will be read from the file. 
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Sebastien Lavoie-Courchesne
+% Montreal Neurological Institute, 2008.
+% Centre de recherche de l'institut de gériatrie de Montréal, 2010.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, slice timing, fMRI
 
@@ -201,8 +211,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = {'flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
-gb_list_defaults    = {0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
+gb_list_fields      = {'flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
+gb_list_defaults    = {0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
@@ -392,7 +402,7 @@ opt_a.timing = opt.timing;
 opt_a.ref_slice = opt.ref_slice;
 opt_a.interpolation = opt.interpolation;
 
-[vol_a,opt] = niak_slice_timing(vol,opt_a);
+[vol_a,opt_a] = niak_slice_timing(vol,opt_a);
 
 if suppress_vol > 0;
     vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
@@ -416,6 +426,29 @@ if flag_variance
     vol_a = reshape(vol_a,[nx ny nz nt]);
 end
 
+
+if suppress_vol > 0;
+    vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
+end
+
+if flag_variance
+    if flag_verbose
+        msg = sprintf('Preserving the mean and variance of the time series...');
+        fprintf('\n%s\n',msg);
+    end
+
+    [nx,ny,nz,nt] = size(vol_a);
+    vol_a = reshape(vol_a,[nx*ny*nz nt]);
+    std_a = std(vol_a,0,2);
+    moy_a = mean(vol_a,2);
+    mask_a = std_a>0;
+
+    for num_v = 1:nt
+        vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a(mask_a))./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
+    end
+    vol_a = reshape(vol_a,[nx ny nz nt]);
+end
+
 %% Updating the history and saving output
 if flag_verbose
     msg = sprintf('Writting results...');
@@ -423,8 +456,23 @@ if flag_verbose
 end
 hdr = hdr(1);
 hdr.file_name = files_out;
-opt_hist.command = 'niak_slice_timing';
-opt_hist.files_in = files_in;
-opt_hist.files_out = files_out;
-hdr = niak_set_history(hdr,opt_hist);
+if flag_history
+    opt_hist.command = 'niak_slice_timing';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out;
+    hdr = niak_set_history(hdr,opt_hist);
+else
+    hdr.info.history = 'niak_slice_timing';
+end
+if flag_regular
+    if ismember(hdr.type,{'minc1','minc2'})
+        list_axis = {'xspace','yspace','zspace'};
+        for num_a = 1:3
+            ind = find(ismember(hdr.details.(list_axis{num_a}).varatts,'spacing'));
+            if ~isempty(ind)
+                hdr.details.(list_axis{num_a}).attvalue{ind} = 'regular__';
+            end
+        end
+    end
+end
 niak_write_vol(hdr,vol_a);
