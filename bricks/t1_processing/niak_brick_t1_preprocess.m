@@ -1,12 +1,8 @@
 function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_T1_PREPROCESS
-%
-% Linear and non-linear coregistration of a T1 brain volume in the MNI 
-% stereotaxic space, along with various preprocessing (non-uniformity
-% correction, intensity normalization, brain extraction) and tissue
-% classification. 
+% Coregistration of a T1 brain volume in the MNI stereotaxic space.
+% Both linear and non-linear transformations are estimated along with 
+% various preprocessing (non-uniformity correction, intensity 
+% normalization, brain extraction) and tissue classification. 
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_T1_PREPROCESS(FILES_IN,FILES_OUT,OPT)
@@ -276,7 +272,7 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_T1_PREPROCESS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_civet'' for more info.')
 end
 
@@ -367,7 +363,6 @@ if flag_verbose
     fprintf('***********************************\nPreprocessing of a T1 brain volume\n***********************************\n');
     fprintf('Original brain volume : %s\n',files_in);
 end
-
 
 %% Generate template file names
 % The T1 non-linear average

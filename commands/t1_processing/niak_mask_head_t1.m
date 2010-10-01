@@ -17,7 +17,7 @@ function mask_head = niak_mask_head_t1(anat,opt)
 %           (vector 1*3, default [1 1 1]) the size of the voxels.
 %
 %       PAD_SIZE
-%           (real value, default 1.5 the THRESH_DIST converted in voxel 
+%           (real value, default 1.5 the THRESH_DIST converted in voxel
 %           size) the number of padded slices in the distance transform.
 %
 %       NB_CLUSTERS_MAX
@@ -27,6 +27,10 @@ function mask_head = niak_mask_head_t1(anat,opt)
 %       THRESH_DIST
 %           (real value, default 15) the distance applied to expand /
 %           shrink the head mask.
+%
+%       FLAG_MINCMORPH
+%           (boolean, default false) force usage of the MINCMORPH tool to
+%           perform the operation of extracting all morphomath operations.
 %
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function
@@ -45,7 +49,7 @@ function mask_head = niak_mask_head_t1(anat,opt)
 % _________________________________________________________________________
 % COMMENTS
 %
-% The steps of the segmentation are the following : 
+% The steps of the segmentation are the following :
 %
 %   1. Extraction of a rough mask using intensity thresholding with the
 %   Ostu algorithm as implemented in NIAK_MASK_BRAIN
@@ -90,13 +94,18 @@ function mask_head = niak_mask_head_t1(anat,opt)
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'voxel_size','flag_verbose','pad_size','thresh_dist','nb_clust_max'};
-gb_list_defaults = {[1 1 1],true,[],15,10};
+gb_list_fields = {'flag_mincmorph','voxel_size','flag_verbose','pad_size','thresh_dist','nb_clust_max'};
+gb_list_defaults = {false,[1 1 1],true,[],15,10};
 niak_set_defaults
+
+opt_neig.type_neig = 6;
+opt_neig.flag_int = false;
 
 if isempty(pad_size)
     pad_size = ceil((1.5 * opt.thresh_dist)/min(voxel_size));
 end
+opt_m.voxel_size = opt.voxel_size;
+opt_m.pad_size = pad_size;
 
 %% A mask of the brain
 if flag_verbose
@@ -118,50 +127,77 @@ end
 
 %% Get rid of small clusters
 if flag_verbose
-    fprintf('     Sieving small clusters ...\n')
+    fprintf('     Sieving small clusters ')
 end
-opt_m.voxel_size = opt.voxel_size;
-mask_head = niak_morph(mask_head,'-successive PG');
-mask_head = round(mask_head);
-mask_head(mask_head>nb_clust_max) = 0;
+if ~exist('bwlabel','file')||flag_mincmorph
+    if flag_verbose
+        fprintf('using MINCMORPH ...\n')
+    end            
+    mask_head = niak_morph(mask_head,'-successive PG');
+    mask_head = round(mask_head);
+    mask_head(mask_head>nb_clust_max) = 0;
+else
+    if flag_verbose
+        fprintf('using NIAK_FIND_CONNEX_ROI ...\n')
+    end
+    mask_head = niak_find_connex_roi(mask_head,opt_neig);
+    size_roi = niak_build_size_roi(mask_head);
+    [val,ind] = max(size_roi);
+    mask_head = ismember(mask_head,ind(1:min(length(ind),nb_clust_max)));    
+end
 
 %% Expanding the mask
 if flag_verbose
-    fprintf('     Expanding the mask using a distance transform ...\n')
+    fprintf('     Expanding the mask using a distance transform ')
 end
-if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
-    opt_m.pad_size = pad_size;
+if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')||flag_mincmorph
+    if flag_verbose
+        fprintf('using MINCMORPH ...\n')
+    end        
     mask_head = niak_morph(~mask_head,'-successive F',opt_m);
-    mask_head = mask_head>=opt.thresh_dist/max(voxel_size);
 else
+    if flag_verbose
+        fprintf('using BWDIST ...\n')
+    end
     mask_head = bwdist(mask_head);
-    mask_head = mask_head>=(opt.thresh_dist/max(voxel_size));
 end
+mask_head = mask_head>=(opt.thresh_dist/max(voxel_size));
 
 %% Fill the holes with morphomath
 if flag_verbose
-    fprintf('     Filling the holes in the brain with morphomath ...\n')
+    fprintf('     Filling the holes in the brain with morphomath ')
 end
-if ~exist('bwconncomp','file')||exist('OCTAVE_VERSION','builtin')    
+
+if ~exist('bwlabel','file')||flag_mincmorph
+    if flag_verbose
+        fprintf('using MINCMORPH ...\n')
+    end
     mask_head = niak_morph(mask_head,'-successive G',opt_m);
-    mask_head = round(mask_head)~=1;
+    mask_head = round(mask_head)==1;
 else
-    cc = bwconncomp(mask_head);
-    size_roi = cellfun('length',cc.PixelIdxList);
+    if flag_verbose
+        fprintf('using NIAK_FIND_CONNEX_ROI ...\n')
+    end
+    mask_head = niak_find_connex_roi(mask_head,opt_neig);
+    size_roi = niak_build_size_roi(mask_head);
     [val,ind] = max(size_roi);
-    mask_head = false(size(mask_head));
-    mask_head(cc.PixelIdxList{ind}) = true;
-    clear cc
+    mask_head = mask_head==ind;
 end
 
 %% Now shrink the mask back to correct the expansion
 if flag_verbose
-    fprintf('     Using a distance transform to correct the effect of expansion ...\n')
+    fprintf('     Using a distance transform to correct the effect of expansion ')
 end
-if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
-    mask_head = niak_morph(mask_head,'-successive F',opt_m);
-    mask_head = mask_head>opt.thresh_dist/max(voxel_size);
+if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')||flag_mincmorph
+    if flag_verbose
+        fprintf('using MINCMORPH ...\n')
+    end
+    mask_head = niak_morph(~mask_head,'-successive F',opt_m);
+    mask_head = mask_head>=((opt.thresh_dist)/max(voxel_size));
 else
+    if flag_verbose
+        fprintf('using BWDIST ...\n')
+    end
     mask_head = bwdist(mask_head);
     mask_head = mask_head>=((opt.thresh_dist)/max(voxel_size));
 end
@@ -181,13 +217,13 @@ vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1
 for num_d = pad_order
     if num_d == 1
         vol_m(1:pad_size,:,:) = repmat(vol_m(pad_size+1,:,:),[pad_size 1 1]);
-        vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = repmat(vol_m(pad_size+size(vol,1),:,:),[pad_size 1 1]);
+        vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = repmat(vol_m(size(vol,1)+pad_size,:,:),[pad_size 1 1]);
     elseif num_d == 2
         vol_m(:,1:pad_size,:) = repmat(vol_m(:,pad_size+1,:),[1 pad_size 1]);
-        vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = repmat(vol_m(:,pad_size+size(vol,2),:),[1 pad_size 1]);
+        vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = repmat(vol_m(:,size(vol,2)+pad_size,:),[1 pad_size 1]);
     elseif num_d == 3
         vol_m(:,:,1:pad_size) = repmat(vol_m(:,:,pad_size+1),[1 1 pad_size]);
-        vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = repmat(vol_m(:,:,pad_size+size(vol,3)),[1 1 pad_size]);
+        vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = repmat(vol_m(:,:,size(vol,3)+pad_size),[1 1 pad_size]);
     end
 end
 
