@@ -1,8 +1,4 @@
 function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_FIND_CONNEX_ROI
-%
 % Find spatially connected rois in a binary mask
 %
 % SYNTAX :
@@ -33,6 +29,7 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %       FLAG_INT
 %           (boolean, default 1) the mask of connected components is 
 %           generated in the 'uint32' type. Otherwise it is a double array.
+%
 % _________________________________________________________________________
 % OUTPUTS :
 %
@@ -52,7 +49,8 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %   both computationally and in terms of memory. It works fine when the 
 %   ROIs are small though. With TYPE_NEIG == 4, 6, 8, 10 the algorithm 
 %   first works in 2D and then propagates labels between slices. This is 
-%   much faster and memory efficient.
+%   much faster and memory efficient. This depends on the BWLABEL function
+%   from the image processing package though.
 %
 % NOTE 2:
 %   The order of the ROIs is completely arbitrary.
@@ -71,8 +69,7 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 % furnished to do so, subject to the following conditions:
 %
 % The above copyright notice and this permission notice shall be included
-% in
-% all copies or substantial portions of the Software.
+% in all copies or substantial portions of the Software.
 %
 % THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 % IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

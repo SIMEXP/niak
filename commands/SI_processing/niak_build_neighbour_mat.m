@@ -57,49 +57,49 @@ function decxyz = niak_build_neighbour_mat(type_neig)
 % THE SOFTWARE.
 
 if length(type_neig)==1
-if type_neig == 26
-    dec = [0,1,-1];
-    num = 1;
-    decxyz = zeros([27 3]);
-    for i = 1:3
-        for j = 1:3
-            for k = 1:3
-                decxyz(num,:) = [dec(i),dec(j),dec(k)];
-                num = num + 1;
+    if type_neig == 26
+        dec = [0,1,-1];
+        num = 1;
+        decxyz = zeros([27 3]);
+        for i = 1:3
+            for j = 1:3
+                for k = 1:3
+                    decxyz(num,:) = [dec(i),dec(j),dec(k)];
+                    num = num + 1;
+                end
             end
         end
-    end
-    decxyz = decxyz(2:27,:);
-elseif type_neig == 6
-    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
-elseif type_neig == 4
-    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0];
+        decxyz = decxyz(2:27,:);
+    elseif type_neig == 6
+        decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 0 0 1; 0 0 -1];
+    elseif type_neig == 4
+        decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0];
     elseif type_neig == 8
-    decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 1 1 0; -1 1 0; 1 -1 0; -1 -1 0];
-elseif type_neig == 18
-    dec = [-3 -2 -1 1 2 3];
-    decxyz = zeros([18 3]);
-    for num_d = 1:length(dec)
-        decxyz(num_d,:) = [dec(num_d) 0 0];
-        decxyz(num_d+6,:) = [0 dec(num_d) 0];
-        decxyz(num_d+12,:) = [0 0 dec(num_d)];
+        decxyz = [1 0 0;-1 0 0; 0 1 0; 0 -1 0; 1 1 0; -1 1 0; 1 -1 0; -1 -1 0];
+    elseif type_neig == 18
+        dec = [-3 -2 -1 1 2 3];
+        decxyz = zeros([18 3]);
+        for num_d = 1:length(dec)
+            decxyz(num_d,:) = [dec(num_d) 0 0];
+            decxyz(num_d+6,:) = [0 dec(num_d) 0];
+            decxyz(num_d+12,:) = [0 0 dec(num_d)];
+        end
+    elseif type_neig == 30
+        dec = [-10 -4 -3 -2 -1 1 2 3 4 10];
+        decxyz = zeros([length(dec)*3 3]);
+        for num_d = 1:length(dec)
+            decxyz(num_d,:) = [dec(num_d) 0 0];
+            decxyz(num_d+length(dec),:) = [0 dec(num_d) 0];
+            decxyz(num_d+2*length(dec),:) = [0 0 dec(num_d)];
+        end
+    else
+        error('%i : unsupported parameter for a connex neighbourhood',type_neig)
     end
-elseif type_neig == 30
-    dec = [-10 -4 -3 -2 -1 1 2 3 4 10];
-    decxyz = zeros([length(dec)*3 3]);
-    for num_d = 1:length(dec)
-        decxyz(num_d,:) = [dec(num_d) 0 0];
-        decxyz(num_d+length(dec),:) = [0 dec(num_d) 0];
-        decxyz(num_d+2*length(dec),:) = [0 0 dec(num_d)];
-    end
-else
-    error('%i : unsupported parameter for a connex neighbourhood',type_neig)
-end
 else
     voxel_size = type_neig(1:3);
     radius = type_neig(4);
     
-    % Get the voxels in the ball defined by the radius    
+    % Get the voxels in the ball defined by the radius
     mask_neig = ones([ceil(1.2*radius/voxel_size(1))*2 ceil(1.2*radius/voxel_size(2))*2 ceil(1.2*radius/voxel_size(3))*2]);
     ind = find(mask_neig);
     [x,y,z] = ind2sub(size(mask_neig),ind);

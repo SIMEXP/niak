@@ -52,9 +52,10 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %               (integer, default Inf) the maximal number of iteration in the
 %               region growing to propagate cluster labels
 %
-%           NB_CLUSTERS_MAX
-%               (integer, default 15) the maximal number of clusters.
-%               See the OPT field in NIAK_CLUSTERING_SPACE_DENSITY.
+%           MIN_SIZE_CORES
+%               (scalar, default 10) the minimum size of dense cores for
+%               region growing. This is expressed in volume with a unit
+%               consistent with OPT.VOXEL_SIZE.
 %
 %       FILL_HOLES
 %           (structure) with the following fields :
@@ -168,7 +169,7 @@ gb_list_defaults = {130,25,3,opt_tmp,opt_tmp,[1 1 1],0.5,true};
 niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
-gb_list_fields = {'flag_verbose','type_neig_grow','thre_density','nb_iter_max','nb_erosions','nb_clusters_max'};
+gb_list_fields = {'flag_verbose','type_neig_grow','thre_density','nb_iter_max','nb_erosions','min_size_cores'};
 gb_list_defaults = {opt.flag_verbose,6,0.9,10,0,10};
 niak_set_defaults
 opt.region_growing.flag_verbose = opt.flag_verbose;
@@ -179,105 +180,94 @@ gb_list_defaults = {opt.voxel_size,opt.flag_verbose,10};
 niak_set_defaults
 
 flag_verbose = opt.flag_verbose;
-
+opt_neig.type_neig = 6;
+opt_neig.flag_int = false;
 
 %% Get a intensity-based segmentation
 if flag_verbose
     tic;
-    fprintf('Deriving a segmentation of the T1 image using Otsu intensity threshold ...\n')
+    fprintf('Deriving a segmentation of the T1 image using Otsu intensity threshold ...')
 end
 opt_mask.fwhm = 0;
 mask_head = niak_mask_brain(anat,opt_mask);
 if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
+    fprintf(' %1.3f sec.\n',toc);
 end
 
 %% Extract the brain mask using competitive region growing
 if flag_verbose
-    tic;
+    tstart = tic;
     fprintf('Competitive region growing starting from dense white matter regions ...\n')
 end
 val = sort(anat(mask_head));
 mask_conf = anat>val(ceil(perc_conf*length(val)));
 clear val
+opt.region_growing.min_size_cores = ceil(opt.region_growing.min_size_cores/prod(opt.voxel_size));
 mask_brain = niak_clustering_space_density(mask_conf,mask_head,opt.region_growing);
-
-if flag_verbose    
-    fprintf('     Extracting the most "spherical" component ...\n')
-end
 
 nb_comp = min(nb_comp_max,max(mask_brain(:)));
 num_comp = sub_max_sphere(mask_brain,nb_comp,size_sphere,voxel_size);
 mask_brain = mask_brain==num_comp;
 
 if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
+    fprintf('     Time elapsed %1.3f sec.\n',toc(tstart));
 end
 
 %% Fill the brain
 pad_size = ceil((1.5 * opt.fill_holes.thresh_dist)/min(voxel_size));
 
 if pad_size>0
-    mask_brain = sub_pad(mask_brain,pad_size);
+    opt_pad.pad_size = pad_size;
+    mask_brain = niak_pad_vol(mask_brain,opt_pad);
 end
 
 if flag_verbose
-    tic;
+    tstart = tic;
     fprintf('Filling holes in the brain ...\n')
 end
 
-if flag_verbose
-    fprintf('     Expanding the brain ...\n')
+if flag_verbose    
+    fprintf('     Expanding the brain ... ')
 end
-
-if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
-    opt_m.voxel_size = opt.voxel_size;
-    opt_m.pad_size = pad_size;
-    mask_brain = niak_morph(~mask_brain,'-successive F',opt_m);
-    mask_brain = mask_brain>=(opt.fill_holes.thresh_dist/max(voxel_size));
-else
-    mask_brain = bwdist(mask_brain);
-    mask_brain = mask_brain>=(opt.fill_holes.thresh_dist/max(voxel_size));
+tic
+opt_m.voxel_size = opt.voxel_size;
+opt_m.pad_size = pad_size;
+mask_brain = niak_morph(~mask_brain,'-distance',opt_m);
+mask_brain = mask_brain>=(opt.fill_holes.thresh_dist/max(voxel_size));
+if flag_verbose
+    fprintf(' %1.2f sec\n',toc);
 end
 
 if flag_verbose
-    fprintf('     Finding the outside of the brain ...\n')
+    fprintf('     Finding the outside of the brain ...')
 end
-if ~exist('bwconncomp','file')||exist('OCTAVE_VERSION','builtin')    
-    mask_brain = niak_morph(mask_brain,'-successive G');
-    mask_brain = round(mask_brain)~=1;
-else
-    cc = bwconncomp(mask_brain);
-    size_roi = cellfun('length',cc.PixelIdxList);
-    [val,ind] = max(size_roi);
-    mask_brain = false(size(mask_brain));
-    mask_brain(cc.PixelIdxList{ind}) = true;
-    clear cc
+tic;
+mask_brain = niak_find_connex_roi(mask_brain,opt_neig);
+size_roi = niak_build_size_roi(mask_brain);
+[val,ind] = max(size_roi);
+mask_brain = mask_brain==ind;
+if flag_verbose
+    fprintf(' %1.2f sec\n',toc);
 end
 
 if flag_verbose
-    fprintf('     Shrinking the brain back...\n')
+    fprintf('     Shrinking the brain back...')
 end
-if ~exist('bwdist','file')||exist('OCTAVE_VERSION','builtin')    
-    mask_brain = niak_morph(mask_brain,'-successive F',opt_m);
-    mask_brain = mask_brain>=((opt.fill_holes.thresh_dist)/max(voxel_size));
-else
-    mask_brain = bwdist(mask_brain);
-    mask_brain = mask_brain>=((opt.fill_holes.thresh_dist)/max(voxel_size));
+tic;
+mask_brain = niak_morph(~mask_brain,'-distance',opt_m);
+mask_brain = mask_brain>=((opt.fill_holes.thresh_dist)/max(voxel_size));
+if flag_verbose
+    fprintf(' %1.2f sec\n',toc);
 end
 
 if pad_size>0
-    mask_brain = sub_unpad(mask_brain,pad_size);
+    mask_brain = niak_unpad_vol(mask_brain,pad_size);
 end
 
-if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
-    fprintf('Done !\n')
-end
 
 %% Remove spinal cord
 if flag_verbose
-    fprintf('Removing the spinal cord...\n')   
+    fprintf('Removing the spinal cord... ')   
     tic
 end
 
@@ -286,32 +276,9 @@ if dist_brain~=Inf
 end
 
 if flag_verbose
-    fprintf('     Time elapsed %1.3f sec.\n',toc);
+    fprintf('%1.3f sec.\n',toc);
     fprintf('Done !\n')
 end
-
-
-
-function vol_m = sub_pad(vol,pad_size)
-pad_order = [3 2 1];
-vol_m = zeros(size(vol)+2*pad_size);
-vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1:pad_size+size(vol,3)) = vol;
-for num_d = pad_order
-    if num_d == 1
-        vol_m(1:pad_size,:,:) = repmat(vol_m(pad_size+1,:,:),[pad_size 1 1]);
-        vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = repmat(vol_m(pad_size+size(vol,1),:,:),[pad_size 1 1]);
-    elseif num_d == 2
-        vol_m(:,1:pad_size,:) = repmat(vol_m(:,pad_size+1,:),[1 pad_size 1]);
-        vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = repmat(vol_m(:,pad_size+size(vol,2),:),[1 pad_size 1]);
-    elseif num_d == 3
-        vol_m(:,:,1:pad_size) = repmat(vol_m(:,:,pad_size+1),[1 1 pad_size]);
-        vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = repmat(vol_m(:,:,pad_size+size(vol,3)),[1 1 pad_size]);
-    end
-end
-
-function vol = sub_unpad(vol_m,pad_size);
-siz_vol = size(vol_m)-2*pad_size;
-vol = vol_m(pad_size+1:pad_size+siz_vol(1),pad_size+1:pad_size+siz_vol(2),pad_size+1:pad_size+siz_vol(3));
 
 function mask2 = sub_cord(mask,voxel_size,dist_brain)
 ind = find(mask);

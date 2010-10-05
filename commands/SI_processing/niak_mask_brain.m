@@ -14,7 +14,7 @@ function mask = niak_mask_brain(vol,opt)
 %       (structure, optional) with the following fields:   
 %       
 %       FWHM 
-%           (real value, default 3) the FWHM of the blurring kernel in 
+%           (real value, default 0) the FWHM of the blurring kernel in 
 %           voxel size unit. A value of 0 for FWHM will skip the smoothing step.
 %       
 %       VOXEL_SIZE 
@@ -86,7 +86,7 @@ function mask = niak_mask_brain(vol,opt)
 %% OPTIONS
 gb_name_structure = 'opt';
 gb_list_fields = {'fwhm','voxel_size','flag_remove_eyes','flag_verbose'};
-gb_list_defaults = {6,[3 3 3],0,false};
+gb_list_defaults = {0,[3 3 3],0,false};
 niak_set_defaults
 
 

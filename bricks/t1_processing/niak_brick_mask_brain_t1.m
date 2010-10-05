@@ -102,13 +102,13 @@ function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,
 % of spatial density rather than more standard morphomathematical 
 % operations. Specifically, the main stages are the following :
 %
-%   1. Intensity based segmentation into CSF, pseudo white matter and 
-%   white + grey matter.
+%   1. Intensity segmentation resulting into a binary mask of most brain 
+%   tissues.
 %
 %   2. Competitive region growing. The seed regions are the bigger
 %   connected components within the dense portions of the white matter. 
 %   Labels are propageted to grey matter through region-growing. This
-%   method is known as DBSCAN and has been proposed in :
+%   method is adapted from DBSCAN and has been proposed in :
 %
 %   Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu (1996).
 %   "A density-based algorithm for discovering clusters in large spatial

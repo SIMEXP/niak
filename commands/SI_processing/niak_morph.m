@@ -80,15 +80,9 @@ function vol_m = niak_morph(vol,arg,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'pad_size','pad_order','voxel_size'};
-gb_list_defaults = {0,[3 2 1],[1 1 1]'};
+gb_list_fields = {'pad_size','pad_order','pad_val','voxel_size'};
+gb_list_defaults = {0,[3 2 1],[],[1 1 1]'};
 niak_set_defaults
-
-flag_pad = length(pad_order)==1;
-if flag_pad
-    val_pad = pad_order;
-    pad_order = [1 2 3];
-end
 
 [nx,ny,nz] = size(vol);
 file_tmp = niak_file_tmp('_vol.mnc');
@@ -97,35 +91,10 @@ hdr.file_name = file_tmp;
 hdr.type = 'minc1';
 hdr.info.voxel_size = voxel_size;
 if pad_size>0
-    vol_m = zeros(size(vol)+2*pad_size);
-    vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1:pad_size+size(vol,3)) = vol;
-    for num_d = pad_order
-        if num_d == 1
-            if flag_pad
-                vol_m(1:pad_size,:,:) = val_pad;
-                vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = val_pad;
-            else
-                vol_m(1:pad_size,:,:) = repmat(vol_m(pad_size+1,:,:),[pad_size 1 1]);
-                vol_m((size(vol_m,1)-pad_size+1):size(vol_m,1),:,:) = repmat(vol_m(pad_size+size(vol,1),:,:),[pad_size 1 1]);
-            end
-        elseif num_d == 2
-            if flag_pad
-                vol_m(:,1:pad_size,:) = val_pad;
-                vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = val_pad;
-            else
-                vol_m(:,1:pad_size,:) = repmat(vol_m(:,pad_size+1,:),[1 pad_size 1]);
-                vol_m(:,(size(vol_m,2)-pad_size+1):size(vol_m,2),:) = repmat(vol_m(:,pad_size+size(vol,2),:),[1 pad_size 1]);
-            end
-        elseif num_d == 3
-            if flag_pad
-                vol_m(:,:,1:pad_size) = val_pad;
-                vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = val_pad;
-            else
-                vol_m(:,:,1:pad_size) = repmat(vol_m(:,:,pad_size+1),[1 1 pad_size]);
-                vol_m(:,:,(size(vol_m,3)-pad_size+1):size(vol_m,3)) = repmat(vol_m(:,:,pad_size+size(vol,3)),[1 1 pad_size]);
-            end
-        end
-    end   
+    opt_pad.pad_size = pad_size;
+    opt_pad.pad_val = pad_val;
+    opt_pad.pad_order = pad_order;
+    vol_m = niak_pad_vol(vol,opt_pad);
     niak_write_vol(hdr,vol_m);
     clear vol_m
 else
@@ -145,7 +114,7 @@ if status
 else
     [hdr,vol_m] = niak_read_vol(file_tmp2);    
     if pad_size>0
-        vol_m = vol_m(pad_size+1:pad_size+size(vol,1),pad_size+1:pad_size+size(vol,2),pad_size+1:pad_size+size(vol,3));
+        vol_m = niak_unpad_vol(vol_m,opt_pad.pad_size);
     end
     delete(file_tmp);
     delete(file_tmp2);

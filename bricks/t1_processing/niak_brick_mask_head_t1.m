@@ -119,8 +119,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_mincmorph','folder_out','thresh_dist','nb_clust_max','flag_verbose','flag_test'};
-gb_list_defaults = {false,'',15,10,true,false};
+gb_list_fields = {'folder_out','thresh_dist','nb_clust_max','flag_verbose','flag_test'};
+gb_list_defaults = {'',15,10,true,false};
 niak_set_defaults
 
 %% Output files

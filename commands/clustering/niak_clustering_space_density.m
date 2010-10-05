@@ -1,10 +1,5 @@
 function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,opt);
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_CLUSTERING_SPACE_DENSITY
-%
-% Clustering of spatial points in 3D space using spatial density of the
-% voxels.
+% Clustering of spatial points in 3D space using spatial density.
 %
 % SYNTAX :
 % PART = NIAK_CLUSTERING_SPACE_DENSITY(MASK,MASK_EXTRA,OPT)
@@ -41,8 +36,9 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 %           (integer, default Inf) the maximal number of iteration in the
 %           region growing to propagate cluster labels
 %
-%       NB_CLUSTERS_MAX
-%           (integer, default 15) the maximal number of clusters.
+%       MIN_SIZE_CORES
+%           (integer, default 10) the minimum number of voxels in the dense
+%           cores used for competitive region growing.
 %
 %       FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function prints
@@ -64,7 +60,7 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 %
 % NOTE 1 :
 %
-%   The Outline of the algorithm is as follows. It not for the spatial
+%   The Outline of the algorithm is as follows. If not for the spatial
 %   density idea, the clustering would simply consist in extracting
 %   connected components according to a spatial neghbourhood rules.
 %   The extraction of connected components is actually applied only to
@@ -88,18 +84,19 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 %   ISBN 1-57735-004-9.
 %   http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.71.1980.
 %
-%   The difference is that the density of the neighbourhood of a voxel is
-%   defined by spatial smoothing using a Gaussian kernel rather than actual
-%   count of edges in a graph. The construction of dense clusters and
-%   the propagation of labels to non-dense voxels falls within the DBSCAN
-%   algorithm, except that the current implementation fixes an order on the
-%   label propagation, while the original version algorithm depended on an
-%   arbitrary order of visit of the voxels.
+%   The density of the neighbourhood of a voxel is defined by counting the 
+%   number of neighbours in the mask within a 26 neighbourhood for each 
+%   voxel. The construction of dense clusters and the propagation of labels 
+%   to non-dense voxels follow the DBSCAN algorithm, except that the 
+%   current implementation fixes an order on the label propagation, while 
+%   the original version algorithm depended on an arbitrary order of visit 
+%   of the voxels.
 %
-% Copyright (c) partierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008 &
+% Centre de recherche de l'institut de geriatrie de Montreal, 2010.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : clustering
+% Keywords : clustering, DBSCAN, spatial density.
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -111,24 +108,26 @@ function [mask_part,mask_dense] = niak_clustering_space_density(mask,mask_extra,
 % The above copyright notice and this permission notice shall be included in
 % all copies or substantial portions of the Software.
 %
-% THE SOFTWARE IS partROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EdatapartRESS OR
-% IMpartLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-% FITNESS FOR A partARTICULAR partURpartOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-% AUTHORS OR COpartYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EdataPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'nb_clusters_max','nb_erosions','nb_iter_max','thre_density','type_neig_grow','flag_verbose'};
-gb_list_defaults = {15,0,Inf,0.9,6,true};
+gb_list_fields = {'min_size_cores','nb_erosions','nb_iter_max','thre_density','type_neig_grow','flag_verbose'};
+gb_list_defaults = {10,0,Inf,0.9,6,true};
 niak_set_defaults
 
 gb_name_structure = 'opt.fwhm';
 gb_list_fields = {'fwhm','voxel_size'};
 gb_list_defaults = {2,[1 1 1]};
 niak_set_defaults
+
+opt_neig.type_neig = type_neig_grow;
 
 switch type_neig_grow
     case 4
@@ -143,47 +142,40 @@ end
 
 %% Build the core clusters
 if flag_verbose
-    fprintf('     Building a spatial density map ...\n');
+    tic
+    fprintf('     Building a spatial density map ...');
 end
-
 if nb_erosions>0
     mask_dense = niak_morph(mask,['-successive ' repmat('E',[1 nb_erosions]) arg_m]);
 else
     mask_dense = mask;
 end
-if ~exist('smooth3','file')
-    mask_dense(mask) = sub_density(mask,26)>thre_density;
-else
-    mask_dense = smooth3(mask_dense,'box',3)>thre_density;
-end
+mask_dense(mask) = niak_build_density_mask(mask,26)>thre_density;
 mask_dense = mask_dense&mask;
+if flag_verbose
+    fprintf(' %1.2f secs.\n',toc);
+end
 
 if flag_verbose
+    tic
     fprintf('     Extracting connected clusters in dense voxels ...');
 end
-if ~exist('bwconncomp','file')||exist('OCTAVE_VERSION','builtin')    
-    mask_dense = niak_morph(mask_dense,['-successive G' arg_m]);
-    mask_dense = round(mask_dense);
-    mask_dense(mask_dense>nb_clusters_max) = 0;
-    nb_cores = max(mask_dense(:));
-else
-    cc = bwconncomp(mask_dense);
-    size_roi = cellfun('length',cc.PixelIdxList);
-    [val,order] = sort(size_roi,'descend');
-    mask_dense = zeros(size(mask_dense));
-    nb_cores = min(nb_clusters_max,length(order));
-    for num_c = 1:nb_cores
-        mask_dense(cc.PixelIdxList{order(num_c)}) = num_c;
-    end
-    clear cc
-end
+mask_dense = niak_find_connex_roi(mask_dense,opt_neig);
+size_roi = niak_build_size_roi(mask_dense);
+[val,ind] = sort(size_roi,'descend');
+to_keep = val>min_size_cores;
+new_labels = zeros([length(ind) 1]);
+new_labels(ind(to_keep)) = sum(to_keep):-1:1;
+mask_dense(mask_dense>0) = new_labels(mask_dense(mask_dense>0));
+nb_cores = max(mask_dense(:));
 if flag_verbose
+    fprintf(' %1.2f secs.',toc);
     fprintf(' %i dense core clusters were found.\n',nb_cores);
 end
 
 %% Propagate the cluster labels
 if flag_verbose
-    fprintf('     Propagation of cluster labels, number of iterations : 0 - ');
+    fprintf('     Propagation of cluster labels, number of iterations :\n ');
 end
 
 mask_todo = mask&~mask_dense;
@@ -192,20 +184,13 @@ if ~isempty(mask_extra)
     mask_todo = mask_todo|mask_extra;
 end
 
-if exist('imdilate','file')
-    str_el = sub_strel(type_neig_grow);
-end
-
 if any(mask_todo(:))
     mask_border = mask_part;
     nb_iter = 0;
-    while (any(mask_border(:)))&&~(nb_iter>nb_iter_max)
-        if exist('imdilate','file')
-            mask_border_new = imdilate(mask_border,str_el);
-        else
-            mask_border_new = niak_morph(mask_border,['-successive D' arg_m]); % dilate the border
-            mask_border_new = round(mask_border_new);
-        end
+    while (any(mask_border(:)))&&~(nb_iter>nb_iter_max) 
+        tic;
+        mask_border_new = niak_morph(mask_border,['-successive D' arg_m]); % dilate the border
+        mask_border_new = round(mask_border_new);
         mask_border_new(~mask_todo) = 0; % contrain the border in the "to do" mask
         mask_border_new(mask_part>0) = 0;
         mask_border_new(mask_border>0) = 0;
@@ -214,25 +199,13 @@ if any(mask_todo(:))
         mask_border = mask_border_new;
         nb_iter = nb_iter+1;
         if flag_verbose&&~(nb_iter>nb_iter_max)
-            fprintf('%i - ',nb_iter);
+            fprintf('     %i (%1.2f) - \n',nb_iter,toc);
         end
     end
 end
 
 if flag_verbose
     fprintf('Done !\n');
-end
-
-function str_el = sub_strel(type_neig)
-str_el = zeros([3 3 3]);
-if type_neig == 6;
-    str_el(:,:,1) = [0 0 0; 0 1 0; 0 0 0];
-    str_el(:,:,2) = [0 1 0; 1 0 1; 0 1 0];
-    str_el(:,:,3) = [0 0 0; 0 1 0; 0 0 0];
-elseif type_neig == 26
-    str_el(:,:,1) = ones([3 3]);
-    str_el(:,:,2) = [1 1 1; 1 0 1; 1 1 1];
-    str_el(:,:,3) = ones([3 3]);
 end
 
 function vec_dense = sub_density(mask,type_neig)
