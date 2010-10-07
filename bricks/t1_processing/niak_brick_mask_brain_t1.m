@@ -46,9 +46,10 @@ function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,
 %               (integer, default Inf) the maximal number of iteration in the
 %               region growing to propagate cluster labels
 %
-%           NB_CLUSTERS_MAX
-%               (integer, default 15) the maximal number of clusters.
-%               See the OPT field in NIAK_CLUSTERING_SPACE_DENSITY.
+%           MIN_SIZE_CORES
+%               (scalar, default 30) the minimum size of dense cores for
+%               region growing. This is expressed in volume with a unit
+%               consistent with OPT.VOXEL_SIZE.
 %
 %       FILL_HOLES
 %           (structure) with the following fields :
@@ -182,8 +183,8 @@ gb_list_defaults = {'',opt_tmp,opt_tmp,130,0.5,true,false};
 niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
-gb_list_fields = {'flag_verbose','type_neig_grow','thre_density','nb_iter_max','nb_erosions','nb_clusters_max'};
-gb_list_defaults = {opt.flag_verbose,6,0.9,10,0,10};
+gb_list_fields = {'flag_verbose','type_neig_grow','thre_density','nb_iter_max','nb_erosions','min_size_cores'};
+gb_list_defaults = {opt.flag_verbose,6,0.9,10,0,30};
 niak_set_defaults
 opt.region_growing.flag_verbose = opt.flag_verbose;
 

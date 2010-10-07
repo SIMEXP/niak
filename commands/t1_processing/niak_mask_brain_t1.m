@@ -53,7 +53,7 @@ function mask_brain = niak_mask_brain_t1(anat,opt)
 %               region growing to propagate cluster labels
 %
 %           MIN_SIZE_CORES
-%               (scalar, default 10) the minimum size of dense cores for
+%               (scalar, default 30) the minimum size of dense cores for
 %               region growing. This is expressed in volume with a unit
 %               consistent with OPT.VOXEL_SIZE.
 %
@@ -170,7 +170,7 @@ niak_set_defaults
 
 gb_name_structure = 'opt.region_growing';
 gb_list_fields = {'flag_verbose','type_neig_grow','thre_density','nb_iter_max','nb_erosions','min_size_cores'};
-gb_list_defaults = {opt.flag_verbose,6,0.9,10,0,10};
+gb_list_defaults = {opt.flag_verbose,6,0.9,10,0,30};
 niak_set_defaults
 opt.region_growing.flag_verbose = opt.flag_verbose;
 
@@ -222,7 +222,7 @@ if pad_size>0
 end
 
 if flag_verbose
-    tstart = tic;
+    tic;
     fprintf('Filling holes in the brain ...\n')
 end
 
@@ -243,9 +243,11 @@ if flag_verbose
 end
 tic;
 mask_brain = niak_find_connex_roi(mask_brain,opt_neig);
-size_roi = niak_build_size_roi(mask_brain);
-[val,ind] = max(size_roi);
-mask_brain = mask_brain==ind;
+if max(mask_brain(:))>1
+    size_roi = niak_build_size_roi(mask_brain);
+    [val,ind] = max(size_roi);
+    mask_brain = mask_brain==ind;
+end
 if flag_verbose
     fprintf(' %1.2f sec\n',toc);
 end

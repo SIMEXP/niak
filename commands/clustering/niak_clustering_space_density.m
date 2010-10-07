@@ -165,7 +165,7 @@ size_roi = niak_build_size_roi(mask_dense);
 [val,ind] = sort(size_roi,'descend');
 to_keep = val>min_size_cores;
 new_labels = zeros([length(ind) 1]);
-new_labels(ind(to_keep)) = sum(to_keep):-1:1;
+new_labels(ind(to_keep)) = 1:sum(to_keep);
 mask_dense(mask_dense>0) = new_labels(mask_dense(mask_dense>0));
 nb_cores = max(mask_dense(:));
 if flag_verbose
@@ -175,7 +175,7 @@ end
 
 %% Propagate the cluster labels
 if flag_verbose
-    fprintf('     Propagation of cluster labels, number of iterations :\n ');
+    fprintf('     Propagation of cluster labels, number of iterations :\n');
 end
 
 mask_todo = mask&~mask_dense;
@@ -199,7 +199,7 @@ if any(mask_todo(:))
         mask_border = mask_border_new;
         nb_iter = nb_iter+1;
         if flag_verbose&&~(nb_iter>nb_iter_max)
-            fprintf('     %i (%1.2f) - \n',nb_iter,toc);
+            fprintf('        %i (%1.2f) - \n',nb_iter,toc);
         end
     end
 end
