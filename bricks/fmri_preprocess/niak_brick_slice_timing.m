@@ -35,9 +35,22 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           'interleaved ascending','interleaved descending'. For
 %           interleaved modes, FIRST_NUMBER needs to be specified.
 %       
+%       TYPE_SCANNER
+%           (string, default '') the type of MR scanner. The only value
+%           that will change something to the processing here is 'Siemens',
+%           which has different conventions for interleaved acquisitions.
+%           This will change the default for OPT.FIRST_NUMBER. For every
+%           MR scanner type, interleaved acquisition will start with odd
+%           slices. On Siemens scanners, it will start with odd slices if
+%           the number of slices is odd, and even slices if the number of
+%           slices is even. 
+%
 %       FIRST_NUMBER
-%           (string, default 'odd') the first number when using interleaved
-%           mode of TYPE_ACQUISITION. Use 'odd' or 'even'.
+%           (string, default see description) the first number when using 
+%           interleaved mode of TYPE_ACQUISITION. The default is 'odd' if
+%           OPT.TYPE_SCANNER is different of 'Siemens'. For Siemens
+%           scanner, the default will be 'odd' if the number of slices is
+%           odd, and 'even' otherwise.
 %       
 %       Z_STEP
 %           (integer, default []) the interval in z between the slices. 
@@ -77,11 +90,11 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           (boolean, default 1) if FLAG_VARIANCE == 1, the mean and 
 %           variance of the time series at each voxel is preserved.
 %
-%	FLAG_REGULAR
-%	    (boolean, default 1) if FLAG_REGULAR == 1, the spacing of all axis 
-%	    will be set to regular in MINC files. This is done to avoid bugs in 
+%       FLAG_REGULAR
+%           (boolean, default 1) if FLAG_REGULAR == 1, the spacing of all axis 
+%           will be set to regular in MINC files. This is done to avoid bugs in 
 %           latter stage of the analysis (MINCRESAMPLE cannot handle files with 
-%	    irregular spacing.
+%           irregular spacing.
 %
 %       FLAG_HISTORY
 %           (boolean, default 0) if FLAG_HISTORY == 1, the brick will preserve 
@@ -211,8 +224,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = {'flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
-gb_list_defaults    = {0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
+gb_list_fields      = {'type_scanner','flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
+gb_list_defaults    = {''            ,0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
@@ -264,12 +277,27 @@ end
 %% Check if the user specified to skip this step
 if flag_skip
     if flag_verbose
-        msg = sprintf('FLAG_SKIP is on, the brick will just copy the input on the output. NO SLICE TIMING CORRECTION WAS APPLIED !');
+        msg = sprintf('FLAG_SKIP is on, the brick will just copy the input on the output (yet it may simplify the header for MINC files, see OPT.FLAG_HISTORY and OPT.FLAG_REGULAR). NO SLICE TIMING CORRECTION WAS APPLIED !');
         fprintf('\n%s\n',msg);
     end
-
-    instr_copy = ['cp ',files_in,' ',files_out];
-    system(instr_copy);
+    
+    [hdr,vol] = niak_read_vol(files_in);
+    hdr.file_name = files_out;
+    if ~flag_history
+        hdr.info.history = 'niak_slice_timing';
+    end
+    if flag_regular
+        if ismember(hdr.type,{'minc1','minc2'})
+            list_axis = {'xspace','yspace','zspace'};
+            for num_a = 1:3
+                ind = find(ismember(hdr.details.(list_axis{num_a}).varatts,'spacing'));
+                if ~isempty(ind)
+                    hdr.details.(list_axis{num_a}).attvalue{ind} = 'regular__';
+                end
+            end
+        end
+    end
+    niak_write_vol(hdr,vol);
     return
 end
 
@@ -282,6 +310,22 @@ if isempty(opt.z_step)
     opt.z_step = step(3);
 end
 
+% First number
+if isempty(opt.first_number)
+    switch opt.type_scanner
+        
+        case 'Siemens'
+            if floor(size(vol,3)/2) == size(vol,3)/2
+                opt.first_number = 'even';
+            else
+                opt.first_number = 'odd';
+            end
+            
+        otherwise
+            opt.first_number = 'odd';
+    end
+end
+
 % TR
 if isempty(opt.tr)
     opt.tr = hdr.info.tr;
@@ -292,7 +336,7 @@ if isempty(opt.nb_slices)
     opt.nb_slices = hdr.info.dimensions(3);
 end
 
-% Timing
+% timing
 if isempty(opt.timing)
     opt.timing(1) = (opt.tr-opt.delay_in_tr)/opt.nb_slices;
     opt.timing(2) = opt.timing(1) + delay_in_tr;
@@ -374,7 +418,6 @@ if isempty(ref_slice)
     opt.ref_slice = ref_slice;
 end
 
-
 %% Reading data
 if flag_verbose
     msg = sprintf('Performing slice timing correction on volume %s',files_in);
@@ -420,29 +463,6 @@ if flag_variance
     moy_a = mean(vol_a,2);
     mask_a = std_a>0;
     
-    for num_v = 1:nt
-        vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a(mask_a))./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
-    end
-    vol_a = reshape(vol_a,[nx ny nz nt]);
-end
-
-
-if suppress_vol > 0;
-    vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
-end
-
-if flag_variance
-    if flag_verbose
-        msg = sprintf('Preserving the mean and variance of the time series...');
-        fprintf('\n%s\n',msg);
-    end
-
-    [nx,ny,nz,nt] = size(vol_a);
-    vol_a = reshape(vol_a,[nx*ny*nz nt]);
-    std_a = std(vol_a,0,2);
-    moy_a = mean(vol_a,2);
-    mask_a = std_a>0;
-
     for num_v = 1:nt
         vol_a(mask_a,num_v) = (((vol_a(mask_a,num_v)-moy_a(mask_a))./std_a(mask_a)).*std_vol(mask_a))+moy_vol(mask_a);
     end
