@@ -187,7 +187,7 @@ if flag_zip
     system([gb_niak_zip ' ' file_tmp_classify]);
     system(['mv ' file_tmp_classify gb_niak_zip_ext ' ' files_out]);
 else
-    system(['mv ' file_tmp_nu ' ' files_out]);
+    system(['mv ' file_tmp_classify ' ' files_out]);
 end
 
 system(['rm -rf ' path_tmp]);
