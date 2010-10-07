@@ -77,7 +77,9 @@ if ~flag_iterative
         labels_roi = vec(1);
     else
         labels_roi = vec(size_roi);
-        size_roi = size_roi - [0 ; size_roi(1:(end-1))];
+        if length(size_roi)>1
+            size_roi = size_roi - [0 ; size_roi(1:(end-1))];
+        end
     end
     
 else
