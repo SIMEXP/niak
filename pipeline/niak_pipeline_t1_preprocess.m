@@ -155,9 +155,9 @@ for num_s = 1:nb_subject
     files_out_tmp.mask_stereonl = '';
     files_out_tmp.classify = '';
     
-    % Opt
-    opt_tmp.folder_out = [opt.folder_out subject filesep];
+    % Opt    
     opt_tmp = opt.t1_preprocess;    
+    opt_tmp.folder_out = [opt.folder_out subject filesep];
     
     % Add job
     pipeline = psom_add_job(pipeline,name_job,name_brick,files_in_tmp,files_out_tmp,opt_tmp);
@@ -176,12 +176,12 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 name_brick = 'niak_brick_qc_coregister';
 name_job = 'qc_coregister_lin';
-files_out_tmp.mask_average   = [opt.folder_out 'mask_anat_average_lin.mnc.gz'];
-files_out_tmp.mask_group     = [opt.folder_out 'mask_anat_group_lin.mnc.gz'];
-files_out_tmp.mean_vol       = [opt.folder_out 'anat_mean_lin.mnc.gz'];
-files_out_tmp.std_vol        = [opt.folder_out 'anat_std_lin.mnc.gz'];
-files_out_tmp.fig_coregister = [opt.folder_out 'tab_qc_anat_coregister_lin.pdf'];
-files_out_tmp.tab_coregister = [opt.folder_out 'tab_qc_anat_coregister_lin.csv'];
+files_out_tmp.mask_average   = [opt.folder_out 'qc_coregister_lin' filesep 'mask_anat_average_lin.mnc.gz'];
+files_out_tmp.mask_group     = [opt.folder_out 'qc_coregister_lin' filesep 'mask_anat_group_lin.mnc.gz'];
+files_out_tmp.mean_vol       = [opt.folder_out 'qc_coregister_lin' filesep 'anat_mean_lin.mnc.gz'];
+files_out_tmp.std_vol        = [opt.folder_out 'qc_coregister_lin' filesep 'anat_std_lin.mnc.gz'];
+files_out_tmp.fig_coregister = [opt.folder_out 'qc_coregister_lin' filesep 'tab_qc_anat_coregister_lin.pdf'];
+files_out_tmp.tab_coregister = [opt.folder_out 'qc_coregister_lin' filesep 'tab_qc_anat_coregister_lin.csv'];
 opt_tmp.labels_subject = list_subject;
 pipeline = psom_add_job(pipeline,name_job,name_brick,files_in_qc_lin,files_out_tmp,opt_tmp);
 
@@ -191,12 +191,12 @@ pipeline = psom_add_job(pipeline,name_job,name_brick,files_in_qc_lin,files_out_t
 clear files_in_tmp files_out_tmp opt_tmp
 name_brick = 'niak_brick_qc_coregister';
 name_job = 'qc_coregister_nl';
-files_out_tmp.mask_average   = [opt.folder_out 'mask_anat_average_nl.mnc.gz'];
-files_out_tmp.mask_group     = [opt.folder_out 'mask_anat_group_nl.mnc.gz'];
-files_out_tmp.mean_vol       = [opt.folder_out 'anat_mean_nl.mnc.gz'];
-files_out_tmp.std_vol        = [opt.folder_out 'anat_std_nl.mnc.gz'];
-files_out_tmp.fig_coregister = [opt.folder_out 'tab_qc_anat_coregister_nl.pdf'];
-files_out_tmp.tab_coregister = [opt.folder_out 'tab_qc_anat_coregister_nl.csv'];
+files_out_tmp.mask_average   = [opt.folder_out 'qc_coregister_nl' filesep 'mask_anat_average_nl.mnc.gz'];
+files_out_tmp.mask_group     = [opt.folder_out 'qc_coregister_nl' filesep 'mask_anat_group_nl.mnc.gz'];
+files_out_tmp.mean_vol       = [opt.folder_out 'qc_coregister_nl' filesep 'anat_mean_nl.mnc.gz'];
+files_out_tmp.std_vol        = [opt.folder_out 'qc_coregister_nl' filesep 'anat_std_nl.mnc.gz'];
+files_out_tmp.fig_coregister = [opt.folder_out 'qc_coregister_nl' filesep 'tab_qc_anat_coregister_nl.pdf'];
+files_out_tmp.tab_coregister = [opt.folder_out 'qc_coregister_nl' filesep 'tab_qc_anat_coregister_nl.csv'];
 opt_tmp.labels_subject = list_subject;
 pipeline = psom_add_job(pipeline,name_job,name_brick,files_in_qc_nl,files_out_tmp);
 
