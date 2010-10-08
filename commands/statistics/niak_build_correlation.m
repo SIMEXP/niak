@@ -1,29 +1,32 @@
-function val = niak_get_minc_att(hdr,var_name,att_name);
-% Get the value of a the attribute of a minc variable from a minc header.
+function R = niak_build_correlation(tseries,flag_vec);
+% Compute the correlation matrix from regional time series.
 %
 % SYNTAX:
-% VAL = NIAK_GET_MINC_ATT(HDR,VAR_NAME,ATT_NAME)
+% R = NIAK_BUILD_PARTIAL_CORRELATION(TSERIES,FLAG_VEC)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% HDR
-%       (structure) a minc header (see NIAK_READ_HDR_MINC).
+% TSERIES       
+%       (array) time series. First dimension is time.
 %
-% VAR_NAME
-%       (string) the name of a variable in the minc file.
-%
-% ATT_NAME
-%       (string) the name of an attribute of the variable.
+% FLAG_VEC
+%       (boolean, default false) if FLAG_VEC == true, the matrix is
+%       "vectorized" and the redundant elements are suppressed. Use
+%       NIAK_VEC2MAT to unvectorize it.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% VAL
-%       The value of the selected attribute of the selected variable.
+% R             
+%       (square matrix or vector) Empirical correlation matrix. R is 
+%       symmetrical with ones on the diagonal.
 %
 % _________________________________________________________________________
 % SEE ALSO:
+% NIAK_BUILD_MEASURE, NIAK_MAT2VEC, NIAK_MAT2LVEC, NIAK_VEC2MAT,
+% NIAK_LVEC2MAT, NIAK_BUILD_COVARIANCE, NIAK_BUILD_CORRELATION,
+% NIAK_BUILD_CONCENTRATION, NIAK_BUILD_PARTIAL_CORRELATION.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -32,7 +35,7 @@ function val = niak_get_minc_att(hdr,var_name,att_name);
 %               Neurological Institute, McGill University, 2007.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : 
+% Keywords : statistics, correlation
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -51,25 +54,7 @@ function val = niak_get_minc_att(hdr,var_name,att_name);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
-if ~exist('hdr','var')|~exist('var_name','var')|~exist('att_name','var')
-    error('niak:commands','syntax: VAL = NIAK_GET_MINC_ATT(HDR,VAR_NAME,ATT_NAME).\n Type ''help niak_get_minc_att'' for more info.')
+if nargin < 2
+    flag_vec = false;
 end
-
-if ~isstruct(hdr)
-    error('HDR should be a structure');
-end
-
-try
-    var_data = hdr.details.(var_name);
-catch
-    error('I could not find the variable %s in HDR',var_name);
-end
-
-ind = find(ismember(var_data.varatts,att_name),1);
-
-if isempty(ind)
-    error('I could not find the attribute %s in the variable %s',att_name,var_name);
-end
-
-val = var_data.attvalue{ind};
+[S,R] = niak_build_srup(tseries,flag_vec);
