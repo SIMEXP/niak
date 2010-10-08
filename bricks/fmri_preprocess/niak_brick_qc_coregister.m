@@ -278,7 +278,7 @@ if flag_verbose
 end
 if ~strcmp(files_out.tab_coregister,'gb_niak_omitted')
     
-    tab_coregister = zeros([length(files_in) 2]);
+    tab_coregister = zeros([length(files_in.vol) 2]);
     mask_v = mask_all(:);
     mean_v = mean_vol(mask_all);
     
