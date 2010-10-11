@@ -237,7 +237,7 @@ for num_s = 1:nb_session
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
         clear files_in_tmp files_out_tmp opt_tmp
         name_job_target = sprintf('target_%s%s',label,name_f);
-        name_job = sprintf('within_run_%s%s',label,name_f);
+        name_job = sprintf('motion_within_run_%s%s',label,name_f);
         files_in_tmp.fmri   = files_in.(session){num_r};
         files_in_tmp.target = pipeline.(name_job_target).files_out;
         files_out_tmp       = [opt.folder_out name_job '.mat'];
@@ -259,7 +259,7 @@ for num_s = 1:nb_session
             name_job_source     = sprintf('target_%s%s',label,name_source);
             name_job_target     = sprintf('target_%s%s',label,name_target);            
             clear files_in_tmp files_out_tmp opt_tmp
-            name_job            = sprintf('within_session_%s%s',label,name_source);
+            name_job            = sprintf('motion_within_session_%s%s',label,name_source);
             files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
             files_in_tmp.target = pipeline.(name_job_target).files_out;
             files_out_tmp       = [opt.folder_out name_job '.mat'];
@@ -281,7 +281,7 @@ for num_s = 1:nb_session
         name_job_target    = sprintf('target_%s%s',label,name_target);
         name_job_source    = sprintf('target_%s%s',label,name_source);
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job            = sprintf('between_session_%s%s',label,session);
+        name_job            = sprintf('motion_between_session_%s%s',label,name_source);
         files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
         files_in_tmp.target = pipeline.(name_job_target).files_out;
         files_out_tmp       = [opt.folder_out name_job '.mat'];
@@ -300,15 +300,16 @@ for num_s = 1:nb_session
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
         clear files_in_tmp files_out_tmp opt_tmp
         name_job            = sprintf('motion_parameters_%s%s',label,name_f);
-        files_in_tmp{1} = pipeline.(sprintf('within_run_%s%s',label,name_f)).files_out;
+        files_in_tmp{1} = pipeline.(sprintf('motion_within_run_%s%s',label,name_f)).files_out;
         if num_r~=run_ref
-            files_in_tmp{2} = pipeline.(sprintf('within_session_%s%s',label,name_f)).files_out;
+            files_in_tmp{2} = pipeline.(sprintf('motion_within_session_%s%s',label,name_f)).files_out;
             nb_transf = 3;
         else
             nb_transf = 2;
         end
         if ~strcmp(session,session_ref)
-            files_in_tmp{nb_transf} = pipeline.(sprintf('between_session_%s%s',label,session)).files_out;
+            [path_f,name_ref,ext_f] = niak_fileparts(files_in.(session){run_ref});
+            files_in_tmp{nb_transf} = pipeline.(sprintf('motion_between_session_%s%s',label,name_ref)).files_out;
         end                
         files_out_tmp       = [opt.folder_out name_job '.mat'];
         opt_tmp.var_name    = 'transf';
