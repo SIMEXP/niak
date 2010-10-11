@@ -1,13 +1,9 @@
-function [files_in,files_out,opt] = niak_demo_time_filter(path_demo)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_TIME_FILTER
-%
+function [files_in,files_out,opt] = niak_demo_time_filter(path_demo,opt)
 % This is a script to demonstrate the usage of :
 % NIAK_BRICK_TIME_FILTER
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_TIME_FILTER(PATH_DEMO)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_TIME_FILTER(PATH_DEMO,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -18,11 +14,15 @@ function [files_in,files_out,opt] = niak_demo_time_filter(path_demo)
 %       multiple file formats at the following address : 
 %       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
 %
+% OPT
+%       (structure) the options of NIAK_BRICK_TIME_FILTER. The options TR,
+%       LP and HP are set by the demo and cannot be modified.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_CIVET (a description of
-% input and output files with all options).
+% FILES_IN,FILES_OUT,OPT : outputs of NIAK_BRICK_TIME_FILTER (a description 
+% of input and output files with all options).
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -91,7 +91,6 @@ files_out.beta_low = '';
 opt.tr = 2.33; % Repetition time in seconds
 opt.lp = 0.1; % Exclude frequencies above 0.1 Hz
 opt.hp = 0.01; % Exclude frequencies below 0.01 Hz
-opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 
 [files_in,files_out,opt] = niak_brick_time_filter(files_in,files_out,opt);
 
