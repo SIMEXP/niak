@@ -10,42 +10,42 @@ function  [err,msg] = niak_write_csv(file_name,tab,opt)
 % INPUTS:
 %
 % FILE_NAME     
-%       (string) the name of the text file (usually ends in .csv)
+%   (string) the name of the text file (usually ends in .csv)
 %
 % TAB   
-%       (matrix M*N) the numerical data array. 
+%   (matrix M*N) the numerical data array. 
 %
 %
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+%   (structure) with the following fields.  
 %
-%       LABELS_X
-%           (cell of strings 1*M, default {}) LABELS_X{NUM_R} is the label 
-%           of row NUM_R in TAB.
+%   LABELS_X
+%   	(cell of strings 1*M, default {}) LABELS_X{NUM_R} is the label 
+%       of row NUM_R in TAB.
 %
-%       LABELS_Y
-%           (cell of strings 1*N, default {}) LABELS_X{NUM_C} is the label 
-%           of column NUM_C in TAB.
+%   LABELS_Y
+%   	(cell of strings 1*N, default {}) LABELS_X{NUM_C} is the label 
+%       of column NUM_C in TAB.
 %
-%       SEPARATOR
-%           (string, default ',') The character used to separate values. 
+%   SEPARATOR
+%   	(string, default ',') The character used to separate values. 
 %
-%       PRECISION
-%           (integer, default 15) The number of decimals used to write the
-%           table.
+%   PRECISION
+%   	(integer, default 15) The number of decimals used to write the
+%       table.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % ERR
-%       (boolean) if ERR == 1 an error occured, ERR = 0 otherwise.
+%   (boolean) if ERR == 1 an error occured, ERR = 0 otherwise.
 %
 % MSG 
-%       (string) the error message (empty if ERR==0).
+%   (string) the error message (empty if ERR==0).
 %
 % _________________________________________________________________________
 % SEE ALSO:
-%
+% NIAK_READ_CSV
 % _________________________________________________________________________
 % COMMENTS:
 %
@@ -79,8 +79,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'labels_x','labels_y','separator','precision'};
-gb_list_defaults = {{},{},',',15};
+gb_list_fields   = {'labels_x' , 'labels_y' , 'separator' ,'precision' };
+gb_list_defaults = {{}         , {}         , ','         ,15          };
 niak_set_defaults
 
 [nx,ny] = size(tab);

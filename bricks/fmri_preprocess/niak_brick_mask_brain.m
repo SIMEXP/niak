@@ -7,56 +7,15 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN        
-%       (cell of string) multiple file names 3D+t dataset in the same
-%       space.
+% FILES_IN        
+%   (string) file name of one 3D+t dataset.
 %
-%  * FILES_OUT   
-%       (structure) with the following fields : 
-%   
-%       MASK_AVERAGE
-%           (string, default <path of FILES_IN{1}>_mask_average.<EXT>) 
-%           the average of binary mask of the brain for all files in 
-%           FILES_IN.
-%
-%       MASK_GROUP
-%           (string, default <path of FILES_IN{1}>_mask.<EXT>) 
-%           A binary version of MASK_AVERAGE after a threshold has been
-%           applied.
-%
-%       MEAN_AVERAGE
-%           (string, default <path of FILES_IN{1}>_mean.<EXT>) 
-%           the average of the mean volumes for all files in 
-%           FILES_IN.
-%
-%       STD_AVERAGE
-%           (string, default <path of FILES_IN{1}>_mean.<EXT>) 
-%           the average of the std volumes for all files in 
-%           FILES_IN.
-%
-%       MASK_GROUP
-%           (string, default <path of FILES_IN{1}>_mask.<EXT>) 
-%           A binary version of MASK_AVERAGE after a threshold has been
-%           applied.
-%
-%       TAB_FIT
-%           (string, default <path of FILES_IN{1}>_mask_fit.dat)
-%           A text table. First line is a lable ('fit_to_group_mask'), and
-%           subsequent lines are for each entry of FILES_IN. The score is
-%           the relative overlap between the individual mask and the group
-%           mask. This is useful to identify subjects/runs that have been
-%           poorly coregistered.
+% FILES_OUT   
+%   (string, default <NAME FILES_IN>_mask<EXT FILES_IN>) the name of a 4D
+%   file with a binary mask of the brain.
 %   
 %  * OPT           
 %       (structure) with the following fields.  
-%
-%       THRESH
-%           (real number, default 0.5) the threshold used to define a group 
-%           mask based on the average of all individual masks.
-%
-%       FLAG_IS_MASK
-%           (boolean, default 0) if FLAG_IS_MASK is true, the data in
-%           FILES_IN is assumed to be a binary mask.
 %
 %       FWHM 
 %           (real value, default 3) the FWHM of the blurring kernel in 
@@ -82,24 +41,32 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %           FILES_OUT and OPT.
 %           
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % _________________________________________________________________________
-% SEE ALSO
-%
+% SEE ALSO:
 % NIAK_MASK_BRAIN, NIAK_PIPELINE_MASK_BRAIN
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
-% _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% The algorithm is a threshold on the intensity of the average
+% of the absolute values of all volumes. The threshold is selected with the
+% following method :
+%
+% Otsu, N.
+% A Threshold Selection Method from Gray-Level Histograms.
+% IEEE Transactions on Systems, Man, and Cybernetics, Vol. 9, No. 1, 1979, 
+% pp. 62-66.
+%
+% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
+% geriatrie de Montreal, Montreal, Canada, 2010.
+% Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : brain mask, fMRI, segmentation, Otsu
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -126,59 +93,34 @@ niak_gb_vars % Load some important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_BRAIN(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_mask_brain'' for more info.')
 end
 
 %% FILES_IN
-if ~iscellstr(files_in)
-    error('FILES_IN should be a cell of string');
+if ~ischar(files_in)
+    error('FILES_IN should be a string');
 end
 
 %% FILES_OUT
-gb_name_structure = 'files_out';
-gb_list_fields = {'mean_average','std_average','mask_average','mask','tab_fit'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','','gb_niak_omitted'};
-niak_set_defaults
+if ~ischar(files_out)
+    error('FILES_OUT should be a string');
+end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'thresh','flag_is_mask','fwhm','flag_remove_eyes','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0.5,false,6,0,true,false,''};
+gb_list_fields   = {'fwhm' , 'flag_remove_eyes' , 'flag_verbose' ,'flag_test' ,'folder_out' };
+gb_list_defaults = {3      , 0                  , true           ,false       ,''           };
 niak_set_defaults
 
-[path_f,name_f,ext_f] = fileparts(files_in{1});
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in);
 
 if isempty(opt.folder_out)
     opt.folder_out = path_f;
 end
 
-if isempty(files_out.mask)
-    files_out.mask = [opt.folder_out name_f,'_mask',ext_f];
-end
-
-if isempty(files_out.mask_average)
-    files_out.mask_average = [opt.folder_out name_f,'_mask_averaged',ext_f];
-end
-
-if isempty(files_out.mean_average)
-    files_out.mean_average = [opt.folder_out name_f,'_mean',ext_f];
-end
-
-if isempty(files_out.std_average)
-    files_out.std_average = [opt.folder_out name_f,'_std',ext_f];
-end
-
-if isempty(files_out.tab_fit)
-    files_out.tab_fit = [opt.folder_out name_f,'_mask_fit.dat'];
+if isempty(files_out)
+    files_out = [opt.folder_out name_f,'_mask',ext_f];
 end
 
 if flag_test == 1
@@ -193,105 +135,16 @@ end
 opt_mask.flag_remove_eyes = opt.flag_remove_eyes;
 opt_mask.fwhm = opt.fwhm;
 if flag_verbose
-    fprintf('Masking brain ...\n');
+    fprintf('Masking brain in file %s ...\n',files_in);
 end
 
-for num_f = 1:length(files_in)
-    if flag_verbose
-        fprintf('   File %s ...\n',files_in{num_f});
-    end
-    [hdr,vol] = niak_read_vol(files_in{num_f});
-    opt_mask.voxel_size = hdr.info.voxel_size;
-    if flag_is_mask
-        mask = vol;
-    else
-        mask = niak_mask_brain(vol,opt_mask);
-    end
-    if num_f == 1
-        mask_avg = double(mask);
-        
-        if ~strcmp(files_out.tab_fit,'gb_niak_omitted')
-            mask_list = false([size(mask) length(files_in)]);
-            mean_list = zeros([size(mask) length(files_in)]);
-        end
-
-        mean_avg = zeros(size(mask));
-        std_avg = zeros(size(mask));
-    else
-        mask_avg = mask_avg + double(mask);
-    end
-    
-    mean_vol = mean(vol,4);
-    mean_avg = mean_avg + mean_vol;
-    
-    if ~strcmp(files_out.tab_fit,'gb_niak_omitted')
-        mask_list(:,:,:,num_f) = mask;
-        mean_list(:,:,:,num_f) = mean_vol;
-    end
-
-    std_avg = std_avg + std(vol,[],4);
-
-end
-
-mask_avg = mask_avg/length(files_in);
-mean_avg = mean_avg/length(files_in);
-std_avg = std_avg/length(files_in);
-mask_all = mask_avg>=opt.thresh;
-
-
-%% Compute score of fit
-if ~strcmp(files_out.tab_fit,'gb_niak_omitted')
-    tab_fit = zeros([length(files_in) 3]);
-    mask_v = mask_all(:);
-    mean_v = mean_avg(mask_all);
-    size_g = sum(mask_v);
-    for num_f = 1:length(files_in)
-        mask_f = mask_list(:,:,:,num_f);
-        mean_f = mean_list(:,:,:,num_f);
-        mean_f = mean_f(mask_all);
-        tab_fit(num_f,1) = sum(mask_v&mask_f(:))/sum(mask_f(:));
-        tab_fit(num_f,2) = sum(mask_v&mask_f(:))/size_g;
-        rmean = corrcoef(mean_v,mean_f);
-        tab_fit(num_f,3) = rmean(1,2);
-    end
-end
+[hdr,vol] = niak_read_vol(files_in{num_f});
+opt_mask.voxel_size = hdr.info.voxel_size;
+mask = niak_mask_brain(vol,opt_mask);
 
 %% Saving outputs
-if ~strcmp(files_out.mask,'gb_niak_omitted')
-    if flag_verbose
-        fprintf('Saving the mask in the file %s ...\n',files_out.mask);
-    end
-    hdr.file_name = files_out.mask;
-    niak_write_vol(hdr,mask_all);
+if flag_verbose
+    fprintf('Saving the mask in the file %s ...\n',files_out.mask);
 end
-
-if ~strcmp(files_out.mask_average,'gb_niak_omitted')
-    if flag_verbose
-        fprintf('Saving the average mask in the file %s ...\n',files_out.mask_average);
-    end
-    hdr.file_name = files_out.mask_average;
-    niak_write_vol(hdr,mask_avg);
-end
-
-if ~strcmp(files_out.mean_average,'gb_niak_omitted')
-    if flag_verbose
-        fprintf('Saving the average mean volume in the file %s ...\n',files_out.mean_average);
-    end
-    hdr.file_name = files_out.mean_average;
-    niak_write_vol(hdr,mean_avg);
-end
-
-if ~strcmp(files_out.std_average,'gb_niak_omitted')
-    if flag_verbose
-        fprintf('Saving the average std volume in the file %s ...\n',files_out.std_average);
-    end
-    hdr.file_name = files_out.std_average;
-    niak_write_vol(hdr,std_avg);
-end
-
-if ~strcmp(files_out.tab_fit,'gb_niak_omitted')
-    if flag_verbose
-        fprintf('Saving the scores of fit in the file %s ...\n',files_out.tab_fit);
-    end    
-    niak_write_tab(files_out.tab_fit,tab_fit,files_in,{'fit_mask_ind_to_group','fit_mask_group_to_ind','fit_mean_in_mask'});
-end
+hdr.file_name = files_out.mask;
+niak_write_vol(hdr,mask_all);
