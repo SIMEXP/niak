@@ -31,7 +31,7 @@ function [files_in,files_out,opt] = niak_brick_motion_parameters(files_in,files_
 %           slices of the volume in the coregistration process.
 %
 %       FWHM
-%           (real number, default 4 mm) the fwhm of the blurring kernel
+%           (real number, default 5 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
 %
 %       STEP
@@ -127,8 +127,8 @@ end
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'ignore_slice','folder_out','flag_test','flag_verbose','fwhm','step','tol'};
-gb_list_defaults = {1,'',false,true,5,10,0.0005};
+gb_list_fields   = {'ignore_slice' ,'folder_out' ,'flag_test' ,'flag_verbose' ,'fwhm' ,'step' ,'tol'};
+gb_list_defaults = {1              ,''           ,false       ,true           ,5      ,10     ,0.0005};
 niak_set_defaults
 
 %% Building default output names

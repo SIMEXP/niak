@@ -110,10 +110,10 @@ for num_f = 1:nb_file
         if size(data.(var_name),3)~=1
             error(sprintf('There should be only one transformation in %s',file_name));
         end
-    end
-    for num_t = 1:nb_transf
-        transf = data.(var_name)*transf(:,:,num_t);
-    end
+        for num_t = 1:nb_transf
+            transf(:,:,num_t) = data.(var_name)*transf(:,:,num_t);
+        end
+    end    
 end
 
 %%%%%%%%%%%%%%%%%%
