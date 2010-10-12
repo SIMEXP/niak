@@ -3,7 +3,7 @@ function [pipeline,opt] = niak_pipeline_motion_correction(files_in,opt)
 % Correction is implemented via estimation of a rigid-body transform and 
 % spatial resampling.
 %
-% [PIPELINE,OPT] = NIAK_PIELINE_MOTION_CORRECTION(FILES_IN,OPT)
+% [PIPELINE,OPT] = NIAK_PIPELINE_MOTION_CORRECTION(FILES_IN,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -70,10 +70,11 @@ function [pipeline,opt] = niak_pipeline_motion_correction(files_in,opt)
 %
 %       SUPPRESS_VOL 
 %           (integer, default 0) the number of volumes that are suppressed 
-%           at the begining of the time series.
-%           This is a good stage to get rid of "dummy scans"
-%           necessary to reach signal stabilization (that takes
-%           about 3 volumes).
+%           at the begining of the time series. This is a good stage to get 
+%           rid of "dummy scans" necessary to reach signal stabilization 
+%           (that takes about 10 seconds, usually 3 to 5 volumes depending 
+%           on the TR). Note that most brain imaging centers now 
+%           automatically discard dummy scans.
 %
 %       INTERPOLATION 
 %           (string, default 'sinc') the spatial interpolation method used 
@@ -82,13 +83,11 @@ function [pipeline,opt] = niak_pipeline_motion_correction(files_in,opt)
 %           'nearest_neighbour', 'sinc'.
 %
 %       FLAG_SKIP
-%          (boolean, default 0) if FLAG_SKIP == 0, the flag does not do
-%          anything. If FLAG_SKIP == 1, the motion parameters are 
-%          still estimated for quality control, but no 
-%          transformation only is actually applied in the resampling 
-%          (simple copy from source to target). This flag is usefull to get
-%          rid of motion correction in pipeline mode. The brick can still
-%          be used to suppress volumes at the begining of the run.
+%           (boolean, default 0) if FLAG_SKIP == 1, the flag does not 
+%           do anything, just copying the inputs to the outputs (note 
+%           that it is still possible to suppress volumes). The motion 
+%           parameters are still estimated and the quality control is
+%           still performed.
 %
 %       FLAG_TEST 
 %           (boolean, default: 0) if FLAG_TEST equals 1, the

@@ -38,9 +38,13 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %       (structure, optional) has the following fields:
 %
 %       INTERPOLATION 
-%          (string, default 'trilinear') the spatial interpolation method. 
+%          (string, default 'tricubic') the spatial interpolation method. 
 %          Available options : 'trilinear', 'tricubic', 'nearest_neighbour'
 %          ,'sinc'.
+%
+%       FLAG_SKIP
+%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
+%           anything, just copy the input on the output. 
 %
 %       FLAG_KEEP_RANGE
 %           (boolean, default 0) if the flag is on, the range of values of
@@ -156,8 +160,8 @@ niak_set_defaults
 
 % Setting up options
 gb_name_structure = 'opt';
-gb_list_fields = {'suppress_vol' ,'transf_name' ,'interpolation' ,'flag_tfm_space' ,'voxel_size' ,'folder_out' ,'flag_test' ,'flag_invert_transf' ,'flag_verbose' ,'flag_adjust_fov' ,'flag_keep_range'};
-gb_list_defaults = {0            ,'transf'      ,'trilinear'     ,0                ,0            ,''           ,0           ,0                    ,1              ,0                 ,0};
+gb_list_fields    = {'flag_skip' , 'suppress_vol' ,'transf_name' ,'interpolation' ,'flag_tfm_space' ,'voxel_size' ,'folder_out' ,'flag_test' ,'flag_invert_transf' ,'flag_verbose' ,'flag_adjust_fov' ,'flag_keep_range'};
+gb_list_defaults  = {0           , 0              ,'transf'      ,'tricubic'      ,0                ,0            ,''           ,0           ,0                    ,1              ,0                 ,0};
 niak_set_defaults
 
 if flag_keep_range
@@ -191,6 +195,14 @@ end
 if flag_test == 1
     return
 end
+
+if flag_skip
+    instr_copy = cat(2,'cp ',files_in.source,' ',files_out);
+    
+    [status,msg] = system(instr_copy);
+    if status~=0
+        error(msg)
+    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Convert the transformation %%

@@ -19,9 +19,13 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 %       (structure) with the following fields :
 %
 %       FWHM  
-%           (vector of size [1 3], default [4 4 4]) the full width at half 
+%           (vector of size [1 3], default 6) the full width at half 
 %           maximum of the Gaussian kernel, in each dimension. If fwhm has 
 %           length 1, an isotropic kernel is implemented.
+%
+%       FLAG_SKIP
+%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
+%           anything, just copy the input on the output. 
 %
 %       FOLDER_OUT 
 %           (string, default: path of FILES_IN) If present, all default 
@@ -92,7 +96,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'flag_edge','fwhm','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {true,[4 4 4],1,0,'',0};
+gb_list_defaults = {true,6,1,0,'',0};
 niak_set_defaults
 
 if length(opt.fwhm) == 1
@@ -179,8 +183,8 @@ else
 
     instr_copy = cat(2,'cp ',files_in,' ',files_out);
     
-    [succ,msg] = system(instr_copy);
-    if succ~=0
+    [status,msg] = system(instr_copy);
+    if status~=0
         error(msg)
     end
 

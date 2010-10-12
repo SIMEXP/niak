@@ -84,8 +84,9 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %
 %       INIT
 %           (string, default 'identity') how to set the initial guess
-%           of the transformation. 'center': translation to align the
-%           center of mass. 'identity' : identity transformation.
+%           of the transformation. 
+%               'center': translation to align the centers of mass. 
+%               'identity' : identity transformation.
 %           The 'center' option usually does more harm than good. Use it
 %           only if you have very big misrealignement between the two
 %           images (say, > 2 cm).
