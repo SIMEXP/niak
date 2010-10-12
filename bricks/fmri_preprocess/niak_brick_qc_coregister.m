@@ -110,6 +110,12 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 %       the individual volume with the average volume, restricted to the
 %       group brain mask.
 %
+%   NOTE 3:
+%       
+%       If the datasets are 3D+t, the brick will work on the average
+%       volumes. The STD volume will then be the average of std volumes
+%       generated within each 3D+t dataset.
+%
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -147,20 +153,20 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields = {'vol','mask'};
-gb_list_defaults = {NaN,NaN};
+gb_list_fields    = {'vol' , 'mask' };
+gb_list_defaults  = {NaN   , NaN    };
 niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'mean_vol','std_vol','mask_average','mask_group','fig_coregister','tab_coregister'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'mean_vol'        , 'std_vol'         , 'mask_average'    , 'mask_group'      , 'fig_coregister'  , 'tab_coregister'  };
+gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'labels_subject','thresh','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {files_in.vol,0.5,true,false,''};
+gb_list_fields    = {'labels_subject' , 'thresh' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = {files_in.vol     , 0.5      , true           , false       , ''           };
 niak_set_defaults
 
 [path_f,name_f,ext_f] = fileparts(files_in.vol{1});
@@ -257,17 +263,34 @@ for num_f = 1:length(files_in.vol)
         end
     end
     [hdr,vol] = niak_read_vol(files_in.vol{num_f});
-    
+        
     if num_f == 1
-        mean_vol = vol;
-        std_vol = vol.^2;
+        flag_4d = size(vol,4)>1;
+        if flag_4d
+            mean_vol = mean(vol,4);
+            std_vol = std(vol,[],4);
+        else
+            mean_vol = vol;
+            std_vol = vol.^2;
+        end
     else
-        mean_vol = vol + mean_vol;
-        std_vol = vol.^2 + std_vol;
+        if flag_4d
+            mean_vol = mean(vol,4) + mean_vol;
+            std_vol = std(vol,[],4) + std_vol;
+        else
+            mean_vol = vol + mean_vol;
+            std_vol = vol.^2 + std_vol;
+        end
     end
 end
+
 mean_vol = mean_vol/length(files_in.vol);
-std_vol  = sqrt((std_vol-length(files_in.vol)*(mean_vol.^2))/(length(files_in.vol)-1));
+if flag_4d
+    std_vol  = std_vol/length(files_in.vol);
+else
+    std_vol  = sqrt((std_vol-length(files_in.vol)*(mean_vol.^2))/(length(files_in.vol)-1));
+end
+
 if flag_verbose
     fprintf('\n');
 end
