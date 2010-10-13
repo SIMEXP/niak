@@ -63,6 +63,17 @@ function [path_f,name_f,ext_f,flag_zip] = niak_fileparts(file_name);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if iscellstr(file_name)
+    nb_file = length(file_name);
+    path_f  = cell([nb_file 1]);
+    name_f  = cell([nb_file 1]);
+    ext_f   = cell([nb_file 1]);
+    for num_f = 1:nb_file
+        [path_f{num_f},name_f{num_f},ext_f{num_f}] = niak_fileparts(file_name{num_f});
+    end
+    return
+end
+
 flag_gb_niak_fast_gb = true;
 niak_gb_vars
 

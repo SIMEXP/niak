@@ -1,17 +1,27 @@
-
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_CORSICA
-%
-% This is a script to demonstrate the usage of :
-% NIAK_PIPELINE_CORSICA
+function [pipeline,opt] = niak_demo_corsica(path_demo,opt)
+% This is a script to demonstrate the usage of NIAK_PIPELINE_CORSICA
 %
 % SYNTAX:
-% Just type in NIAK_DEMO_CORSICA
+% [FILES_IN,FILES_OUT,OPT] = NIAK_DEMO_CORSICA(PATH_DEMO,OPT)
 %
 % _________________________________________________________________________
-% OUTPUT
+% INPUTS:
 %
+% PATH_DEMO
+%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%       the full path to the NIAK demo dataset. The dataset can be found in 
+%       multiple file formats at the following address : 
+%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+%
+% OPT
+%       (structure) options for NIAK_PIPELINE_CORSICA
+%
+% _________________________________________________________________________
+% OUTPUTS:
+%
+% PIPELINE,OPT : outputs of NIAK_PIPELINE_MOTION_CORRECTION.
+%
+% _________________________________________________________________________
 % This script will apply corsica on the motor condition of subject 1. There
 % is no transformation from the native space to MNI152 specified, so the
 % resuts of the selection are completely random. This demo is mainly to
@@ -57,13 +67,30 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-clear
+if nargin>=1
+    if ~isempty(path_demo)
+        gb_niak_path_demo = path_demo;
+    end
+end
+
 niak_gb_vars
+
+%% In which format is the niak demo ?
+format_demo = 'minc2';
+if exist(cat(2,path_demo,'anat_subject1.mnc'))
+    format_demo = 'minc2';
+elseif exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
+    format_demo = 'minc1';
+elseif exist(cat(2,path_demo,'anat_subject1.nii'))
+    format_demo = 'nii';
+elseif exist(cat(2,path_demo,'anat_subject1.img'))
+    format_demo = 'analyze';
+end
 
 %%%%%%%%%%%%%%%
 %% FILES IN %%%
 %%%%%%%%%%%%%%%
-switch gb_niak_format_demo
+switch format_demo
     
     case 'minc2' % If data are in minc2 format
         
@@ -127,8 +154,4 @@ opt.folder_out = cat(2,gb_niak_path_demo,filesep,'corsica',filesep);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pipeline = niak_pipeline_corsica(files_in,opt);
-
-%% Initialization of the pipeline
-opt_pipe.path_logs = cat(2,opt.folder_out,'logs',filesep);
-%file_pipeline = niak_init_pipeline(pipeline,opt_pipe)
 

@@ -283,15 +283,15 @@ end
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask_stereolin','mask_stereonl','classify'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask_stereolin'  , 'mask_stereonl'   , 'classify'        };
+gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields = {'mask_brain_t1','mask_head_t1','nu_correct','flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,0,'',1};
+gb_list_fields    = {'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
 niak_set_defaults
 
 %% Building default output names

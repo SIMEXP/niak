@@ -7,117 +7,115 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2FUNC(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN
-%       (structure) with the following fields :
+% FILES_IN
+%   (structure) with the following fields :
 %
-%       FUNC
-%           (string) a file with one fMRI volume. 
+%   FUNC
+%       (string) a file with one fMRI volume. 
 %
-%       MASK_FUNC
-%           (string, default 'gb_niak_omitted') a file with a binary mask 
-%           of the brain in the functional space. The mask needs 
-%           to be in the same voxel & world space as the anatomical image.
-%           If not specified a mask will be estimated using
-%           NIAK_MASK_BRAIN.
+%   MASK_FUNC
+%       (string, default 'gb_niak_omitted') a file with a binary mask of 
+%       the brain in the functional space. The mask needs to be in the same 
+%       voxel & world space as the functional image. If not specified a 
+%       mask will be estimated using NIAK_MASK_BRAIN.
 %
-%       ANAT
-%           (string) a file with one T1 volume of the same subject.
+%   ANAT
+%       (string) a file with one T1 volume of the same subject.
 %
-%       MASK_ANAT
-%           (string) a file with a binary mask of the brain in the 
-%           anatomical data. The mask needs to be in the same voxel & world 
-%           space as the anatomical image.
+%   MASK_ANAT
+%       (string) a file with a binary mask of the brain in the anatomical 
+%       data. The mask needs to be in the same voxel & world space as the 
+%       anatomical image.
 %
-%       TRANSFORMATION_INIT
-%           (string, default identity) an initial guess of the
-%           transformation from the anatomical image to the functional 
-%           image (e.g. the inverse of the transformation from T1 native 
-%           space to stereotaxic linear space if the anat is in stereotaxic 
-%           linear space). 
+%   TRANSFORMATION_INIT
+%       (string, default identity) an initial guess of the transformation 
+%       from the anatomical image to the functional image (e.g. the inverse 
+%       of the transformation from T1 native space to stereotaxic linear 
+%       space if the anat is in stereotaxic linear space). 
 %
-%  * FILES_OUT
-%       (structure) with the following fields. Note that if a field is an
-%       empty string, a default value will be used to name the outputs. If
-%       a field is ommited, the output won't be saved at all (this is
-%       equivalent to setting up the output file names to 'gb_niak_omitted').
+% FILES_OUT
+%   (structure) with the following fields. Note that if a field is an empty 
+%   string, a default value will be used to name the outputs. If a field is 
+%   ommited, the output won't be saved at all (this is equivalent to 
+%   setting up the output file names to 'gb_niak_omitted').
 %
-%       TRANSFORMATION
-%           (string, default: transf_<BASE_ANAT>_to_<BASE_FUNC>.XFM)
-%           File name for saving the transformation from the anatomical 
-%           space to the functional space.
+%   TRANSFORMATION
+%       (string, default: transf_<BASE_ANAT>_to_<BASE_FUNC>.XFM)
+%       File name for saving the transformation from the anatomical space 
+%       to the functional space.
 %
-%       ANAT_HIRES
-%           (string, default <BASE_ANAT>_nativefunc_hires)
-%           File name for saving the anatomical image resampled in the
-%           space of the functional space, using native resolution.
+%   ANAT_HIRES
+%       (string, default <BASE_ANAT>_nativefunc_hires) File name for saving 
+%       the anatomical image resampled in the space of the functional 
+%       space, using native resolution.
 %
-%       ANAT_LOWRES
-%           (string, default <BASE_ANAT>_nativefunc_hires)
-%           File name for saving the anatomical image resampled in the
-%           space of the functional space, using the target resolution.
+%   ANAT_LOWRES
+%       (string, default <BASE_ANAT>_nativefunc_hires)
+%       File name for saving the anatomical image resampled in the space of 
+%       the functional space, using the target resolution.
 %
-%  * OPT
-%       (structure) with the following fields:
+% OPT
+%   (structure) with the following fields:
 %
-%       LIST_FWHM
-%           (vector, default [16,8,4,8,4]) LIST_FWHM(I) is the FWHM of the
-%           Gaussian smoothing applied at iteration I.
+%   LIST_FWHM
+%       (vector, default [16,8,4,8,4]) LIST_FWHM(I) is the FWHM of the
+%       Gaussian smoothing applied at iteration I.
 %
-%       LIST_STEP
-%           (vector, default [8,4,4,4,4]) LIST_STEP(I) is the step of
-%           MINCTRACC at iteration I.
+%   LIST_STEP
+%       (vector, default [8,4,4,4,4]) LIST_STEP(I) is the step of MINCTRACC 
+%       at iteration I.
 %
-%       LIST_SIMPLEX
-%           (vector, default [32,16,8,4,2]) LIST_SIMPLEX(I) is the simplex 
-%           parameter of MINCTRACC at iteration I.
+%   LIST_SIMPLEX
+%       (vector, default [32,16,8,4,2]) LIST_SIMPLEX(I) is the simplex 
+%       parameter of MINCTRACC at iteration I.
 %
-%       LIST_CROP
-%           (vector, default [20 10 5 5 5]) LIST_CROP(I) is the cropping
-%           parameter for the functional & anatomical masks at iteration I.
+%   LIST_CROP
+%       (vector, default [20 10 5 5 5]) LIST_CROP(I) is the cropping
+%       parameter for the functional & anatomical masks at iteration I.
 %
-%       LIST_MES
-%           (cell of string, default {'xcorr','xcorr','xcorr','mi','mi'}) 
-%           LIST_MES{I} is the measure (cost function) used to coregister 
-%           the two volumes in MINCTRACC at iteration I.
+%   LIST_MES
+%       (cell of string, default {'xcorr','xcorr','xcorr','mi','mi'}) 
+%       LIST_MES{I} is the measure (cost function) used to coregister the 
+%       two volumes in MINCTRACC at iteration I.
 %
-%       INIT
-%           (string, default 'identity') how to set the initial guess
-%           of the transformation. 
-%               'center': translation to align the centers of mass. 
-%               'identity' : identity transformation.
-%           The 'center' option usually does more harm than good. Use it
-%           only if you have very big misrealignement between the two
-%           images (say, > 2 cm).
+%   INIT
+%       (string, default 'identity') how to set the initial guess of the 
+%       transformation. 
+%           'center': translation to align the centers of mass. 
+%           'identity' : identity transformation.
+%       The 'center' option usually does more harm than good. Use it only 
+%       if you have very big misrealignement between the two images 
+%       (say, > 2 cm).
 %
-%       FLAG_INVERT_TRANSF_INIT
-%           (boolean, default false) if the flag is true, the
-%           transformation provided in FILES_IN.TRANSFORMATION_INIT
-%           will be inverted before being applied.
+%   FLAG_INVERT_TRANSF_INIT
+%       (boolean, default false) if the flag is true, the transformation 
+%       provided in FILES_IN.TRANSFORMATION_INIT will be inverted before 
+%       being applied.
 %
-%       FLAG_INVERT_TRANSF_OUTPUT
-%           (boolean, default false) if the flag is true, the outpout
-%           transformation provided in FILES_OUT.TRANSFORMATION
-%           will be inverted, i.e. the transformation goes from functional 
-%           to anatomical space.
+%   FLAG_INVERT_TRANSF_OUTPUT
+%       (boolean, default false) if the flag is true, the outpout
+%       transformation provided in FILES_OUT.TRANSFORMATION will be 
+%       inverted, i.e. the transformation goes from functional to 
+%       anatomical space.
 %
-%       FOLDER_OUT
-%           (string, default: path of FILES_IN) If present, all default
-%           outputs will be created in the folder FOLDER_OUT. The folder
-%           needs to be created beforehand.
+%   FOLDER_OUT
+%       (string, default: path of FILES_IN) If present, all default outputs 
+%       will be created in the folder FOLDER_OUT. The folder needs to be 
+%       created beforehand.
 %
-%       FLAG_TEST
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not
-%           do anything but update the default values in FILES_IN,
-%           FILES_OUT and OPT.
+%   FLAG_TEST
+%       (boolean, default: 0) if FLAG_TEST equals 1, the brick does not do 
+%       anything but update the default values in FILES_IN, FILES_OUT and 
+%       OPT.
 %
-%       FLAG_VERBOSE
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write messages
-%           indicating progress.
+%   FLAG_VERBOSE
+%       (boolean, default: 1) If FLAG_VERBOSE == 1, write messages 
+%       indicating progress.
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % values. If OPT.FLAG_TEST == 0, the specified outputs are written.

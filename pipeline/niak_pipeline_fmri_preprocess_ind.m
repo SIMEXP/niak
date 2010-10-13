@@ -1,8 +1,8 @@
 function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % Run a pipeline to preprocess individual fMRI datasets. 
-% The flowchart of the pipeline is flexible using flags, and the various 
-% steps of the analysis can be further customized by changing virtually any 
-% parameter.
+% The flowchart of the pipeline is flexible (steps can be skipped using 
+% flags), and the various steps of the analysis can be further customized 
+% by changing virtually any parameter.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS_IND(FILES_IN,OPT)
@@ -119,9 +119,10 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           is still possible to suppress volumes). The motion oarameters 
 %           are still estimated and the quality control is still performed.
 %  
-%   QC_MOTION
-%       (structure) options of NIAK_BRICK_QC_MOTION (Individual brain mask 
-%       in fMRI data, measures of quality for motion correction).
+%   QC_MOTION_CORRECTION_IND
+%       (structure) options of NIAK_BRICK_QC_MOTION_CORRECTION_IND 
+%       (Individual brain mask in fMRI data, measures of quality for 
+%       motion correction).
 %
 %   T1_PREPROCESS
 %       (structure) Options of NIAK_BRICK_T1_PREPROCESS, the brick of 
@@ -207,9 +208,8 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 % NOTE 1:
 % The steps of the pipeline are the following :
-%  
 %       1.  Slice timing correction
-%       2.  Motion correction (within- and between-run for each subject).
+%       2.  Motion correction (within- and between-run for each label).
 %       3.  Quality control for motion correction.
 %       4.  Linear and non-linear spatial normalization of the anatomical 
 %           image (and many more anatomical stuff such as brain masking and
@@ -227,7 +227,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % NOTE 2:
 %   The physiological & motion noise correction CORSICA is changing the
 %   degrees of freedom of the data. It is usullay negligible for 
-%   intra-subject analysis, and will have no impact on the between-subject 
+%   intra-label analysis, and will have no impact on the between-label 
 %   variance estimate (except those should be less noisy). However, the 
 %   purist may consider to take that into account in the linear model 
 %   analysis. This will be taken care of in the (yet to come) 
@@ -258,7 +258,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % in the Software without restriction, including without limitation the rights
 % to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 % copies of the Software, and to permit persons to whom the Software is
-% furnished to do so, subject to the following conditions:
+% furnished to do so, label to the following conditions:
 %
 % The above copyright notice and this permission notice shall be included in
 % all copies or substantial portions of the Software.
@@ -280,718 +280,224 @@ niak_gb_vars
 
 %% Input files
 if ~exist('files_in','var')|~exist('opt','var')
-    error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT).\n Type ''help niak_pipeline_fmri_preprocess'' for more info.')
+    error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS_IND(FILES_IN,OPT).\n Type ''help niak_pipeline_fmri_preprocess_ind'' for more info.')
 end
 
 %% Checking that FILES_IN is in the correct format
 if ~isstruct(files_in)
-
     error('FILES_IN should be a struture!')
-    
-else
-   
-    list_subject = fieldnames(files_in);
-    nb_subject = length(list_subject);
-    
-    for num_s = 1:nb_subject
-        
-        subject = list_subject{num_s};
-        data_subject = files_in.(subject);
-        
-        if ~isstruct(data_subject)
-            error('FILES_IN.%s should be a structure!',upper(subject));
-        end
-        
-        if ~isfield(data_subject,'fmri')
-            error('I could not find the field FILES_IN.%s.FMRI!',upper(subject));
-        end
-        
-        data_fmri = data_subject.fmri;
-        list_session{num_s} = fieldnames(data_fmri);
-        
-        for num_c = 1:length(list_session{num_s})
-            session = list_session{num_s}{num_c};
-            data_session = data_fmri.(session);
-            if ~iscellstr(data_session)
-                error('FILES_IN.%s.fmri.%s is not a cell of strings!',upper(subject),upper(session));
-            end
-            if (num_s == 1)&&(num_c==1)
-                [path_f,name_f,ext_f] = fileparts(data_session{1});
-                if isempty(path_f)
-                    path_f = '.';
-                end
-                
-                if strcmp(ext_f,gb_niak_zip_ext)
-                    [tmp,name_f,ext_f] = fileparts(name_f);
-                    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-                end
-            end
-            
-        end
-                   
-        if ~isfield(data_subject,'anat')
-            error('I could not find the field FILES_IN.%s.ANAT!',upper(subject));
-        end
-        
-        data_anat = getfield(data_subject,'anat');
-        if ~ischar(data_anat)
-             error('FILES_IN.%s.ANAT is not a string!',upper(subject));
-        end
-        
-        if ~isfield(data_subject,'component_to_keep')
-            files_in.(subject).component_to_keep = 'gb_niak_omitted';            
-        end
-        
+end
+list_session = fieldnames(files_in.fmri);
+nb_session   = length(list_session); 
+for num_c = 1:nb_session
+    session = list_session{num_c};
+    if ~iscellstr(files_in.fmri.(session))
+        error(sprintf('FILES_IN.FMRI.%s is not a cell of strings!',session));
     end
-    
+    if num_c==1
+        [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri.session{1});
+    end
+end
+
+if ~isfield(files_in,'anat')
+    error('I could not find the field FILES_IN.ANAT!');
+end
+
+if ~ischar(files_in.anat)
+    error('FILES_IN.ANAT is not a string!');
+end
+
+if ~isfield(files_in,'component_to_keep')
+    files_in.component_to_keep = 'gb_niak_omitted';
 end
 
 %% Options
-gb_name_structure = 'opt';
 default_psom.path_logs = '';
-gb_list_fields = {'method_t1_process','template_fmri','flag_corsica','style','size_output','folder_out','flag_test','psom','bricks'};
-gb_list_defaults = {'t1_preprocess',cat(2,gb_niak_path_template,filesep,'roi_aal.mnc.gz'),1,NaN,'quality_control',NaN,false,default_psom,struct([])};
-niak_set_defaults
-
-opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
-
-switch opt.size_output % check that the size of outputs is a valid option
-    case {'minimum','quality_control','all'}
-        
-    otherwise
-        error(cat(2,opt.size_output,': is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all'''))
-end
-
-%% The options for the bricks
-gb_name_structure = 'opt.bricks';
 opt_tmp.flag_test = false;
-
-switch style
-    
-    case 'fmristat'
-    
-        gb_list_fields = {method_t1_preprocess,'mask_brain','resample_vol','motion_correction','coregister','sica','component_sel','component_supp','smooth_vol'};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
-    
-    case 'standard-native'
-        
-        gb_list_fields = {method_t1_preprocess,'mask_brain','resample_vol','motion_correction','slice_timing','coregister','time_filter','sica','component_sel','component_supp','smooth_vol'};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
-        
-    case 'standard-stereotaxic'
-        
-        gb_list_fields = {method_t1_preprocess,'mask_brain','motion_correction','slice_timing','coregister','time_filter','smooth_vol','resample_vol','sica','component_sel','component_supp',};
-        gb_list_defaults = {opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp,opt_tmp};
-        
-end
+file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
+gb_name_structure = 'opt';
+gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_preprocessed' , 'folder_anat' , 'folder_qc' , 'folder_qc' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
+gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN                   , NaN           , NaN         , NaN         , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
 niak_set_defaults
+opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Initialization of the pipeline %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pipeline = struct([]);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% CIVET (spatial normalization) %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_process = 'anat';
-
-switch method_t1_preprocess
-    
-    case 't1_preprocess'
-        
-        for num_s = 1:nb_subject
-            
-            subject = list_subject{num_s};
-            data_anat = getfield(files_in,subject,'anat');
-            name_stage = cat(2,name_process,'_',subject);
-            
-            %% Inputs and options
-            clear files_in_tmp files_out_tmp opt_tmp
-            opt_tmp = opt.bricks.t1_preprocess;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-                        
-            %% Outputs
-            files_out_tmp.transformation_lin = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereolin.xfm');
-            files_out_tmp.transformation_nl = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_stereolin_to_stereonl.xfm');
-            files_out_tmp.transformation_nl_grid = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_stereolin_to_stereonl_grid',ext_f);
-            files_out_tmp.anat_nuc = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_nativet1',ext_f);
-            files_out_tmp.anat_nuc_stereo_lin = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereolin',ext_f);
-            files_out_tmp.anat_nuc_stereo_nl = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereonl',ext_f);
-            files_out_tmp.mask_stereolin = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_mask_stereolin',ext_f);
-            files_out_tmp.mask_stereonl = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_mask_stereonl',ext_f);
-            files_out_tmp.classify = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_classify_stereolin',ext_f);
-            files_out_tmp.pve_wm = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_wm_stereolin',ext_f);
-            files_out_tmp.pve_gm = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_gm_stereolin',ext_f);
-            files_out_tmp.pve_csf = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_csf_stereolin',ext_f);
-            files_out_tmp.verify = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_verify.png');
-            
-            %% set the default values
-            pipeline = psom_add_job(pipeline,[name_process subject],'niak_brick_t1_preprocess',files_in_tmp,files_out_tmp,opt.bricks.t1_preprocess);
-            
-        end % subject
-        
-    case 'civet'
-        
-        for num_s = 1:nb_subject
-            
-            subject = list_subject{num_s};
-            data_anat = getfield(files_in,subject,'anat');
-            name_stage = cat(2,name_process,'_',subject);
-            
-            %% Inputs and options
-            clear files_in_tmp files_out_tmp opt_tmp
-            opt_tmp = opt.bricks.civet;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-            
-            if isfield(opt_tmp,'civet')
-                opt_tmp.civet.id = subject;
-                files_in_tmp.anat = '';
-            else
-                files_in_tmp.anat = data_anat;
-            end
-            
-            %% Outputs
-            files_out_tmp.transformation_lin = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_nativet1_to_stereolin.xfm');
-            files_out_tmp.transformation_nl = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_stereolin_to_stereonl.xfm');
-            files_out_tmp.transformation_nl_grid = cat(2,opt_tmp.folder_out,filesep,'transf_',subject,'_stereolin_to_stereonl_grid.mnc');
-            files_out_tmp.anat_nuc = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_nativet1.mnc');
-            files_out_tmp.anat_nuc_stereo_lin = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereolin.mnc');
-            files_out_tmp.anat_nuc_stereo_nl = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_stereonl.mnc');
-            files_out_tmp.mask = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_mask_nativet1.mnc');
-            files_out_tmp.mask_stereo = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_mask_stereolin.mnc');
-            files_out_tmp.classify = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_classify_stereolin.mnc');
-            files_out_tmp.pve_wm = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_wm_stereolin.mnc');
-            files_out_tmp.pve_gm = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_gm_stereolin.mnc');
-            files_out_tmp.pve_csf = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_pve_csf_stereolin.mnc');
-            files_out_tmp.verify = cat(2,opt_tmp.folder_out,filesep,'anat_',subject,'_verify.png');
-            
-            %% set the default values
-            opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_civet(files_in_tmp,files_out_tmp,opt_tmp);
-            opt_tmp.flag_test = 0;
-            
-            %% Adding the stage to the pipeline
-            pipeline(1).(name_stage).command = 'niak_brick_civet(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-            
-        end % subject
-        
-    otherwise
-        error([method_t1_preprocess ' is an unknown method to preprocess the T1 image']);
+if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
+    error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
 end
+
+%% Initialization of the pipeline 
+pipeline = struct([]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% slice-timing correction %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if strcmp(style,'standard-native')||strcmp(style,'standard-stereotaxic')
-    
-    name_process = 'slice_timing';    
-
-    for num_s = 1:nb_subject
-
-        subject = list_subject{num_s};    
-        list_session = fieldnames(files_in.(subject).fmri);
-        nb_session = length(list_session);
-        
-        for num_sess = 1:nb_session
-            
-            session = list_session{num_sess};
-            files_session = files_in.(subject).fmri.(session);
-            nb_run = length(files_session);
-
-            for num_r = 1:nb_run
-
-                run = cat(2,'run',num2str(num_r));
-                name_stage = cat(2,'slice_timing_',subject,'_',session,'_',run);
-
-                %% Bulding inputs for NIAK_BRICK_SLICE_TIMING
-                files_in_tmp = files_session{num_r};
-                files_out_tmp = '';
-
-                %% Setting up options
-                opt_tmp = opt.bricks.slice_timing;
-                opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-
-                %% Setting up defaults of the motion correction
-                opt_tmp.flag_test = 1;
-                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_slice_timing(files_in_tmp,files_out_tmp,opt_tmp);
-                opt_tmp.flag_test = 0;
-
-                %% Keeping track of the file names
-                files_a.(subject).(session){num_r} = files_out_tmp;
-                
-                %% Adding the stage to the pipeline
-                pipeline(1).(name_stage).command = 'niak_brick_slice_timing(files_in,files_out,opt)';
-                pipeline(1).(name_stage).files_in = files_in_tmp;
-                pipeline(1).(name_stage).files_out = files_out_tmp;
-                pipeline(1).(name_stage).opt = opt_tmp;
-
-            end % run
-        end % session
-    end % subject
-end % style of pipeline
+for num_sess = 1:nb_session
+    session = list_session{num_sess};
+    nb_run = length(files_session);
+    for num_r = 1:nb_run
+        run      = ['run',num2str(num_r)];
+        name_job = ['slice_timing_',label,'_',session,'_',run];
+        clear files_in_tmp files_out_tmp opt_tmp        
+        files_in_tmp                = files_in.fmri.(session){num_r};        
+        opt_tmp                     = opt.slice_timing;
+        opt_tmp.folder_out          = [opt.folder_intermediate,filesep,label,filesep,'slice_timing',filesep];
+        files_out_tmp               = [opt_tmp.folder_out filesep 'fmri_' label '_' session '_' run '_a' ext_f];        
+        files_a.(session){num_r}    = files_out_tmp;
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_slice_timing',files_in_tmp,files_out_tmp,opt_tmp);        
+    end % run
+end % session
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Motion correction %%
 %%%%%%%%%%%%%%%%%%%%%%%
+clear opt_tmp files_in_tmp files_out_tmp
+files_in_tmp        = files_a;
+opt_tmp             = opt.motion_correction;
+opt_tmp.label       = opt.label;
+opt_tmp.flag_test   = true;
+opt_tmp.folder_out  = [opt.folder_intermediate,filesep,label,filesep,'motion_correction',filesep];
+[pipeline_mc,opt_tmp,files_mc,files_mp] = niak_pipeline_motion_correction(files_in_tmp,opt_tmp);
+pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
 
-name_process = 'motion_correction';
-opt_tmp = opt.bricks.motion_correction;
-
-for num_s = 1:nb_subject
-    
-    subject = list_subject{num_s};
+%% Clean-up
+if strcmp(size_output,'quality_control')    
     clear opt_tmp files_in_tmp files_out_tmp
-    name_stage = cat(2,'motion_correction_',subject);
-    data_subject = files_in.(subject);    
-    
-    %% Bulding inputs 
-    switch style
-        case 'fmristat'
-            files_in_tmp.sessions = files_in.(subject).fmri;
-        otherwise
-            files_in_tmp.sessions = files_a.(subject);
-    end    
-
-    %% Building outputs
-    switch size_output
-        
-        case {'minimum','quality_control'}
-            
-            files_out_tmp.motion_corrected_data = '';
-            files_out_tmp.motion_parameters = '';
-            files_out_tmp.fig_motion = ''; 
-            
-        case 'all'
-            
-            files_out_tmp.motion_corrected_data = '';
-            files_out_tmp.transf_within_session = '';
-            files_out_tmp.transf_between_session = '';
-            files_out_tmp.fig_motion = '';
-            files_out_tmp.motion_parameters = '';
-            
-    end
-
-    %% Setting up default options
-    opt_tmp = getfield(opt,'bricks',name_process);
-    opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-
-    %% Setting up defaults of the motion correction
-    opt_tmp.flag_test = 1;
-    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_motion_correction(files_in_tmp,files_out_tmp,opt_tmp);
-    opt_tmp.flag_test = 0;
-
-    %% Adding the stage to the pipeline
-    pipeline(1).(name_stage).command = 'niak_brick_motion_correction(files_in,files_out,opt)';
-    pipeline(1).(name_stage).files_in = files_in_tmp;
-    pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;
-
-    %% If the amount of outputs is 'minimum' or 'quality_control',
-    %% clean the motion-corrected data when the slice-timing corrected
-    %% images have been successfully generated.
-
-    if (strcmp(size_output,'minimum')||strcmp(size_output,'quality_control'))&&~strcmp(style,'fmristat')
-        
-        clear files_in_tmp
-        files_in_tmp = pipeline(1).(name_stage).files_out.motion_corrected_data;
-        clear opt_tmp
-        opt_tmp.clean = pipeline(1).(name_stage).files_in.sessions;
-        files_out_tmp = {};
-        opt_tmp.flag_test = 1;
-        [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
-        opt_tmp.flag_test = 0;
-
-        %% Adding the stage to the pipeline
-        name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));
-        pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
-        pipeline(1).(name_stage_new).files_in = files_in_tmp;
-        pipeline(1).(name_stage_new).files_out = files_out_tmp;
-        pipeline(1).(name_stage_new).opt = opt_tmp;
-
-    end
-        
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Generate masks in the native space %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_process = 'mask_ind_native';
-
-for num_s = 1:nb_subject
-
-    subject = list_subject{num_s};
-    clear opt_tmp files_in_tmp files_out_tmp
-
-    %% Names of input/output stages
-    name_stage = cat(2,name_process,'_',subject);
-    name_stage_motion = cat(2,'motion_correction_',subject);
-    
-    %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
-    files_in_tmp = niak_files2cell(pipeline.(name_stage_motion).files_out.motion_corrected_data);    
-    
-    %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
-    files_out_tmp.mean_average = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_nativefunc.mnc');
-    files_out_tmp.std_average = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_std_nativefunc.mnc');
-    files_out_tmp.mask = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_nativefunc.mnc');
-    files_out_tmp.mask_average = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_average_nativefunc.mnc');
-    files_out_tmp.tab_fit = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_tab_fit.dat');
-    
-    %% Setting up options
-    opt_tmp = opt.bricks.mask_brain;
-    opt_tmp.flag_test = true;
-    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_mask_brain(files_in_tmp,files_out_tmp,opt_tmp);
-    opt_tmp.flag_test = 0;
-
-     %% Adding the stage to the pipeline        
-    pipeline(1).(name_stage).command = 'niak_brick_mask_brain(files_in,files_out,opt)';
-    pipeline(1).(name_stage).files_in = files_in_tmp;
-    pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;   
-    
+    name_job = ['clean_slice_timing_',label];
+    files_in_tmp = files_mc;    
+    files_out_tmp = {};
+    opt_tmp.clean = files_a;
+    pipeline = psom_add_job(pipeline,name_job,'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp);        
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-%% T1 T2 coregistration %%
+%% QC motion correction %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
+clear files_in_tmp files_out_tmp opt_tmp
+name_job                             = ['qc_motion_' label];
+files_in_tmp.vol                     = psom_files2cell(files_mc);
+files_in_tmp.motion_parameters       = psom_files2cell(files_mp);
+files_out_tmp.fig_motion_parameters  = [opt.folder_qc label filesep 'motion_correction' filesep 'fig_motion_within_run.pdf'];
+files_out_tmp.mask_average           = [opt.folder_qc label filesep 'motion_correction' filesep 'mask_average' ext_f];
+files_out_tmp.mask_group             = [opt.folder_anat 'func_' label '_mask_nativefunc' ext_f];
+files_out_tmp.mean_vol               = [opt.folder_anat 'func_' label '_mean_nativefunc' ext_f];
+files_out_tmp.std_vol                = [opt.folder_anat 'func_' label '_std_nativefunc' ext_f];
+files_out_tmp.fig_coregister         = [opt.folder_qc label filesep 'motion_correction' filesep 'fig_coregister_motion.pdf'];
+files_out_tmp.tab_coregister         = [opt.folder_qc label filesep 'motion_correction' filesep 'tab_coregister_motion.csv'];
+opt_tmp                              = opt.qc_motion_correction_ind;
+[tmp1,opt_tmp.labels_vol]            = niak_fileparts(files_in_tmp.vol);
+pipeline = psom_add_job(pipeline,name_job,'niak_brick_qc_motion_correction_ind',files_in_tmp,files_out_tmp,opt_tmp);  
 
-for num_s = 1:nb_subject
+%%%%%%%%%%%%%%%%%%%
+%% T1 preprocess %%
+%%%%%%%%%%%%%%%%%%%
+clear files_in_tmp files_out_tmp opt_tmp
+name_job                              = ['t1_preprocess_',label];
+files_in_tmp                          = files_in.anat;
+files_out_tmp.transformation_lin      = [opt_tmp.folder_anat,filesep,'transf_',label,'_nativet1_to_stereolin.xfm'];
+files_out_tmp.transformation_nl       = [opt_tmp.folder_anat,filesep,'transf_',label,'_stereolin_to_stereonl.xfm'];
+files_out_tmp.transformation_nl_grid  = [opt_tmp.folder_anat,filesep,'transf_',label,'_stereolin_to_stereonl_grid.mnc'];
+files_out_tmp.anat_nuc                = [opt_tmp.folder_anat,filesep,'anat_',label,'_nuc_nativet1',ext_f];
+files_out_tmp.anat_nuc_stereolin      = [opt_tmp.folder_anat,filesep,'anat_',label,'_nuc_stereolin',ext_f];
+files_out_tmp.anat_nuc_stereonl       = [opt_tmp.folder_anat,filesep,'anat_',label,'_nuc_stereonl',ext_f];
+files_out_tmp.mask_stereolin          = [opt_tmp.folder_anat,filesep,'anat_',label,'_mask_stereolin',ext_f];
+files_out_tmp.mask_stereonl           = [opt_tmp.folder_anat,filesep,'anat_',label,'_mask_stereonl',ext_f];
+files_out_tmp.classify                = [opt_tmp.folder_anat,filesep,'anat_',label,'_classify_stereolin',ext_f];
+opt_tmp                               = opt.t1_preprocess;
+opt_tmp.folder_out                    = opt.folder_anat;
+pipeline = psom_add_job(pipeline,name_job,'niak_brick_t1_preprocess',files_in_tmp,files_out_tmp,opt_tmp);
 
-    subject = list_subject{num_s};
-
-    clear opt_tmp files_in_tmp files_out_tmp
-
-    %% Names of input/output stages    
-    name_job_mask = cat(2,'mask_ind_native_',subject);
-    name_job_anat = cat(2,'anat_',subject);
-
-    %% Building inputs for NIAK_BRICK_COREGISTER
-    files_in_tmp.func                   = getfield(pipeline,name_job_mask,'files_out','mean_average');
-    files_in_tmp.mask_func              = getfield(pipeline,name_job_mask,'files_out','mask');
-    files_in_tmp.anat                   = getfield(pipeline,name_job_anat,'files_out','anat_nuc_stereo_lin');    
-    files_in_tmp.mask_anat              = getfield(pipeline,name_job_anat,'files_out','mask_stereo');
-    files_in_tmp.transformation_init    = getfield(pipeline,name_job_anat,'files_out','transformation_lin');    
-    
-    %% Building outputs for NIAK_BRICK_COREGISTER
-    files_out_tmp.transformation = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'transf_',subject,'_nativefunc_to_stereolin.xfm');
-    files_out_tmp.anat_hires     = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_hires.mnc');
-    files_out_tmp.anat_lowres    = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'anat_',subject,'_nativefunc_lowres.mnc');
-    
-    %% Setting up options
-    opt_tmp             = opt.bricks.anat2func;
-    opt_tmp.folder_out  = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep);
-
-    %% Add job
-    pipeline = psom_add_job(pipeline,['anat2func_',subject],'niak_brick_anat2func',files_in_tmp,files_out_tmp,opt_tmp);
-
-end 
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% T1-T2 coregistration %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear opt_tmp files_in_tmp files_out_tmp
+name_job_qc_motion                  = ['qc_motion_' label];
+name_job_t1                         = ['t1_preprocess_' label];
+files_in_tmp.func                   = pipeline.(name_job_qc_motion).files_out.mean_vol;
+files_in_tmp.mask_func              = pipeline.(name_job_qc_motion).files_out.mask_group;
+files_in_tmp.anat                   = pipeline.(name_job_t1).files_out.anat_nuc_stereolin;
+files_in_tmp.mask_anat              = pipeline.(name_job_t1).files_out.mask_stereolin;
+files_in_tmp.transformation_init    = pipeline.(name_job_t1).files_out.transformation_lin;
+files_out_tmp.transformation        = [opt.folder_anat 'transf_',label,'_nativefunc_to_stereolin.xfm'];
+files_out_tmp.anat_hires            = [opt.folder_anat 'anat_',label,'_nativefunc_hires.mnc'];
+files_out_tmp.anat_lowres           = [opt.folder_anat 'anat_',label,'_nativefunc_lowres.mnc'];
+opt_tmp                             = opt.anat2func;
+opt_tmp.flag_invert_transf_init     = true;
+opt_tmp.flag_invert_transf_output   = true;
+pipeline = psom_add_job(pipeline,['anat2func_',label],'niak_brick_anat2func',files_in_tmp,files_out_tmp,opt_tmp);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Concatenate T2-to-T1_stereo_lin and T1_stereo_lin-to-stereotaxic-nl spatial transformation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_process = 'concat_transf_nl';
-
-for num_s = 1:nb_subject
-
-    subject = list_subject{num_s};
-
-    clear opt_tmp files_in_tmp files_out_tmp
-
-    %% Names of input/output stages
-    name_stage = cat(2,name_process,'_',subject);
-    name_stage_coregister = cat(2,'coregister_',subject);
-    name_stage_anat = cat(2,'anat_',subject);
-
-    %% Building inputs for NIAK_BRICK_CONCAT_TRANSF
-    files_in_tmp{1} = getfield(pipeline,name_stage_coregister,'files_out','transformation');
-    files_in_tmp{2} = getfield(pipeline,name_stage_anat,'files_out','transformation_nl');
-
-    %% Building outputs for NIAK_BRICK_CONCAT_TRANSF
-    files_out_tmp = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'transf_',subject,'_nativefunc_to_stereonl.xfm');
-
-    %% Setting up options
-    opt_tmp.flag_test = 0;
-
-    %% Adding the stage to the pipeline        
-    pipeline(1).(name_stage).command = 'niak_brick_concat_transf(files_in,files_out,opt)';
-    pipeline(1).(name_stage).files_in = files_in_tmp;
-    pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;    
-
-end % subject
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Generate masks in the stereotaxic (non-linear) space %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%MMMM%%%%%%%%
-
-name_process = 'mask_ind_stereonl';
-files_mean_nl = cell([nb_subject 1]);
-
-for num_s = 1:nb_subject
-
-    subject = list_subject{num_s};
-    clear opt_tmp files_in_tmp files_out_tmp
-
-    %% Names of input/output stages
-    name_stage = cat(2,name_process,'_',subject);
-    name_stage_concat = cat(2,'concat_transf_nl_',subject);
-    name_stage_mask = cat(2,'mask_ind_native_',subject);
-    
-    %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
-    files_in_tmp(1).transformation = pipeline.(name_stage_concat).files_out;
-    files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mean_average;
-    files_in_tmp(1).target = opt.template_fmri;
-
-    files_in_tmp(2).transformation = pipeline.(name_stage_concat).files_out;
-    files_in_tmp(2).source = pipeline.(name_stage_mask).files_out.mask;
-    files_in_tmp(2).target = opt.template_fmri;
-
-    %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
-    files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereonl.mnc');
-    files_out_tmp{2} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereonl.mnc');
-    files_mean_nl{num_s} = files_out_tmp{1};
-    
-    %% Setting up options
-    opt_tmp(1) = opt.bricks.resample_vol;
-    opt_tmp(2) = opt.bricks.resample_vol;
-    opt_tmp(1).interpolation = 'tricubic';
-    opt_tmp(2).interpolation = 'nearest_neighbour';
-
-    %% Adding the stage to the pipeline
-    pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
-    pipeline(1).(name_stage).files_in = files_in_tmp;
-    pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;   
-    
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Generate masks in the stereotaxic (linear) space %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_process = 'mask_ind_stereolin';
-files_mean_lin = cell([nb_subject 1]);
-
-for num_s = 1:nb_subject
-
-    subject = list_subject{num_s};
-    clear opt_tmp files_in_tmp files_out_tmp
-
-    %% Names of input/output stages
-    name_stage = cat(2,name_process,'_',subject);
-    name_stage_coregister = cat(2,'coregister_',subject);
-    name_stage_mask = cat(2,'mask_ind_native_',subject);
-    
-    %% Building inputs for NIAK_BRICK_RESAMPLE_VOL
-    files_in_tmp(1).transformation = pipeline.(name_stage_coregister).files_out.transformation;
-    files_in_tmp(1).source = pipeline.(name_stage_mask).files_out.mean_average;
-    files_in_tmp(1).target = opt.template_fmri;
-    
-    files_in_tmp(2).transformation = pipeline.(name_stage_coregister).files_out.transformation;
-    files_in_tmp(2).source = pipeline.(name_stage_mask).files_out.mask;
-    files_in_tmp(2).target = opt.template_fmri;
-
-    %% Building outputs for NIAK_BRICK_RESAMPLE_VOL
-    files_out_tmp{1} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mean_stereolin.mnc');
-    files_out_tmp{2} = cat(2,opt.folder_out,filesep,'anat',filesep,subject,filesep,'func_mask_stereolin.mnc');
-    files_mean_lin{num_s} = files_out_tmp{1};
-    
-    %% Setting up options
-    opt_tmp(1) = opt.bricks.resample_vol;
-    opt_tmp(2) = opt.bricks.resample_vol;
-    opt_tmp(1).interpolation = 'tricubic';
-    opt_tmp(2).interpolation = 'nearest_neighbour';
-    
-     %% Adding the stage to the pipeline        
-    pipeline(1).(name_stage).command = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
-    pipeline(1).(name_stage).files_in = files_in_tmp;
-    pipeline(1).(name_stage).files_out = files_out_tmp;
-    pipeline(1).(name_stage).opt = opt_tmp;   
-    
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Group mask (stereolin) %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_job = 'mask_group_stereolin';
-
 clear opt_tmp files_in_tmp files_out_tmp
+name_job            = ['concat_transf_nl_' label];
+name_job_anat2func  = ['anat2func_' label];
+name_job_anat       = ['t1_preprocess_',label];
+files_in_tmp{1}     = pipeline.(name_job_anat2func).files_out.transformation;
+files_in_tmp{2}     = pipeline.(name_job_anat).files_out.transformation_nl;
+files_out_tmp       = [opt.folder_anat 'transf_',label,'_nativefunc_to_stereonl.xfm'];
+opt_tmp.flag_test   = 0;
+pipeline = psom_add_job(pipeline,name_job,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
 
-%% FILES IN
-files_in_tmp = files_mean_lin;
-
-%% FILES OUT
-[path_f,name_f,ext_f] = fileparts(files_in_tmp{1});
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
-
-files_out_tmp.mean_average = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereolin' ext_f];
-files_out_tmp.mask_average = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereolin' ext_f];
-files_out_tmp.mask = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereolin' ext_f];
-files_out_tmp.tab_fit = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereolin.dat'];
-
-%% OPT
-opt_tmp = opt.bricks.mask_brain;
-opt_tmp.flag_test = 1;
-[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_mask_brain(files_in_tmp,files_out_tmp,opt_tmp);
-opt_tmp.flag_test = 0;
-
-pipeline.(name_job).command = 'niak_brick_mask_brain(files_in,files_out,opt);';
-pipeline.(name_job).files_in = files_in_tmp;
-pipeline.(name_job).files_out = files_out_tmp;
-pipeline.(name_job).opt = opt_tmp;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Group mask (stereonl) %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_job = 'mask_group_stereonl';
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate masks & mean volumes in the stereotaxic (non-linear) space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear opt_tmp files_in_tmp files_out_tmp
+name_job                        = ['mask_ind_stereonl_',label];
+name_job_concat                 = cat(2,'concat_transf_nl_',label);
+name_job_qc_motion              = cat(2,'qc_motion_',label);
+files_in_tmp(1).transformation  = pipeline.(name_job_concat).files_out;
+files_in_tmp(1).source          = pipeline.(name_job_qc_motion).files_out.mean_vol;
+files_in_tmp(1).target          = opt.template_fmri;
+files_in_tmp(2).transformation  = pipeline.(name_job_concat).files_out;
+files_in_tmp(2).source          = pipeline.(name_job_qc_motion).files_out.mask_group;
+files_in_tmp(2).target          = opt.template_fmri;
+files_out_tmp{1}                = [opt.folder_anat 'func_' label '_mean_stereonl' ext_f];
+files_out_tmp{2}                = [opt.folder_anat 'func_' label '_mask_stereonl' ext_f];
+opt_tmp(1).interpolation        = 'tricubic';
+opt_tmp(2).interpolation        = 'nearest_neighbour';
+pipeline(1).(name_job).command    = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
+pipeline(1).(name_job).files_in   = files_in_tmp;
+pipeline(1).(name_job).files_out  = files_out_tmp;
+pipeline(1).(name_job).opt        = opt_tmp;
 
-%% FILES IN
-files_in_tmp = files_mean_nl;
-
-%% FILES OUT
-[path_f,name_f,ext_f] = fileparts(files_in_tmp{1});
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
-
-files_out_tmp.mean_average = [opt.folder_out filesep 'group' filesep 'func_mean_average_stereonl' ext_f];
-files_out_tmp.mask_average = [opt.folder_out filesep 'group' filesep 'func_mask_average_stereonl' ext_f];
-files_out_tmp.mask = [opt.folder_out filesep 'group' filesep 'func_mask_group_stereonl' ext_f];
-files_out_tmp.tab_fit = [opt.folder_out filesep 'group' filesep 'func_mask_tab_fit_stereonl.dat'];
-
-%% OPT
-opt_tmp = opt.bricks.mask_brain;
-opt_tmp.flag_test = 1;
-[files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_mask_brain(files_in_tmp,files_out_tmp,opt_tmp);
-opt_tmp.flag_test = 0;
-
-pipeline.(name_job).command = 'niak_brick_mask_brain(files_in,files_out,opt);';
-pipeline.(name_job).files_in = files_in_tmp;
-pipeline.(name_job).files_out = files_out_tmp;
-pipeline.(name_job).opt = opt_tmp;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate masks & mean volumes in the stereotaxic linear space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+name_job                        = ['mask_ind_stereolin_' label];
+name_job_anat2func              = ['anat2func_' label];
+files_in_tmp(1).transformation  = pipeline.(name_job_anat2func).files_out.transformation;
+files_in_tmp(2).transformation  = pipeline.(name_job_anat2func).files_out.transformation;
+pipeline(1).(name_job).command    = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
+pipeline(1).(name_job).files_in   = files_in_tmp;
+pipeline(1).(name_job).files_out  = files_out_tmp;
+pipeline(1).(name_job).opt        = opt_tmp;
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% temporal filtering %%
 %%%%%%%%%%%%%%%%%%%%%%%%
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    for num_r = 1:nb_run
+        run = ['run' num2str(num_r)];
+        clear opt_tmp files_in_tmp files_out_tmp
+        name_job                     = ['time_filter_',label,'_',session,'_',run];        
+        files_in_tmp                 = list_mc.(session){num_r};
+        files_out_tmp.filtered_data  = '';                                    
+        opt_tmp                      = opt.time_filter;
+        opt_tmp.folder_out           = [opt.folder_intermediate filesep label filesep 'time_filter' filesep];
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
+        files_tf.(session){num_r}    = pipeline.(name_job).files_out;               
+    end
+end
 
-if strcmp(style,'standard-native')|strcmp(style,'standard-stereotaxic')
-    
-    name_process = 'time_filter';
-
-    for num_s = 1:nb_subject
-
-        subject = list_subject{num_s};
-        name_stage_motion = cat(2,'motion_correction_',subject);
-        files_motion = pipeline.(name_stage_motion).files_out.motion_corrected_data;
-        list_session = fieldnames(files_motion);
-        nb_session = length(list_session);
-        nb_run_tot = 0;
+%% Clean-up
+if strcmp(size_output,'quality_control')
+    clear opt_tmp files_in_tmp files_out_tmp
+    files_in_tmp  = files_tf;
+    opt_tmp.clean = files_mc;
+    pipeline = psom_add_job(pipeline,['clean_motion_correction_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);        
+end
         
-        for num_sess = 1:nb_session
-
-            session = list_session{num_sess};
-
-            list_files = files_motion.(session);
-            nb_run = length(list_files);
-
-            for num_r = 1:nb_run
-
-                nb_run_tot = nb_run_tot + 1;
-                
-                clear opt_tmp files_in_tmp files_out_tmp
-
-                run = cat(2,'run',num2str(nb_run_tot));
-                name_stage = cat(2,name_process,'_',subject,'_',run);
-                
-
-                %% Building inputs for NIAK_BRICK_TIME_FILTER
-                files_in_tmp = list_files{num_r};
-
-                %% Building outputs for NIAK_BRICK_TIME_FILTER
-                switch size_output
-
-                    case 'minimum'
-
-                        files_out_tmp.filtered_data = '';
-
-                    case 'quality_control'
-
-                        files_out_tmp.filtered_data = '';
-                        files_out_tmp.var_high = '';
-                        files_out_tmp.var_low = '';
-
-                    case 'all'
-
-                        files_out_tmp.filtered_data = '';
-                        files_out_tmp.var_high = '';
-                        files_out_tmp.var_low = '';
-                        files_out_tmp.beta_high = '';
-                        files_out_tmp.beta_low = '';
-                        files_out_tmp.dc_high = '';
-                        files_out_tmp.dc_low = '';
-
-                end
-
-                %% Setting up options
-                opt_tmp = opt.bricks.time_filter;
-                opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-
-                %% Setting up defaults of the motion correction
-                opt_tmp.flag_test = 1;
-                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_time_filter(files_in_tmp,files_out_tmp,opt_tmp);
-                opt_tmp.flag_test = 0;
-
-                %% Adding the stage to the pipeline
-                pipeline(1).(name_stage).command = 'niak_brick_time_filter(files_in,files_out,opt)';
-                pipeline(1).(name_stage).files_in = files_in_tmp;
-                pipeline(1).(name_stage).files_out = files_out_tmp;
-                pipeline(1).(name_stage).opt = opt_tmp;
-
-                %% If the amount of outputs is 'minimum' or 'quality_control',
-                %% clean the slice-timing-corrected data when temporally
-                %% filtered images have been successfully generated.
-
-                if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
-                    clear files_in_tmp
-                    files_in_tmp = pipeline(1).(name_stage).files_out.filtered_data;
-                    clear opt_tmp
-                    opt_tmp.clean = pipeline(1).(name_stage).files_in;
-                    files_out_tmp = {};
-                    opt_tmp.flag_test = 1;
-                    [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
-                    opt_tmp.flag_test = 0;
-
-                    %% Adding the stage to the pipeline
-                    name_stage_new = cat(2,'clean_slice_timing_',subject,'_run',num2str(num_r));
-                    pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
-                    pipeline(1).(name_stage_new).files_in = files_in_tmp;
-                    pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                    pipeline(1).(name_stage_new).opt = opt_tmp;
-                end
-
-            end % run
-        end % session
-    end % subject
-end % style of pipeline
-
 %%%%%%%%%%%%%
 %% CORSICA %%
 %%%%%%%%%%%%%
@@ -1000,26 +506,26 @@ name_process = 'corsica';
 
 if flag_corsica % If the user requested a correction of physiological noise
 
-    for num_s = 1:nb_subject
+    for num_s = 1:nb_label
         
-        subject = list_subject{num_s};
+        label = list_label{num_s};
         
         switch opt.style
             case 'fmristat'
                 
-                name_stage_in = cat(2,'motion_correction_',subject);
+                name_stage_in = cat(2,'motion_correction_',label);
                 nb_run = length(pipeline.(name_stage_in).files_out.motion_corrected_data);
                 
             case {'standard-native','standard-stereotaxic'}
                 
-                name_stage_in = cat(2,'time_filter_',subject);
+                name_stage_in = cat(2,'time_filter_',label);
                 job_pipeline = fieldnames(pipeline);
                 list_stage_in = job_pipeline(find(niak_find_str_cell(job_pipeline,[name_stage_in '_'])));
                 nb_run = length(list_stage_in);
                 
         end
            
-        name_stage_transf = cat(2,'concat_transf_nl_',subject);
+        name_stage_transf = cat(2,'concat_transf_nl_',label);
 
         %% Building inputs for NIAK_PIPELINE_CORSICA
         clear opt_tmp files_in_tmp files_out_tmp
@@ -1028,18 +534,18 @@ if flag_corsica % If the user requested a correction of physiological noise
             
             case 'fmristat'
                                 
-                files_in_tmp.(subject).fmri = niak_files2cell(pipeline.(name_stage_in).files_out.motion_corrected_data);
+                files_in_tmp.(label).fmri = niak_files2cell(pipeline.(name_stage_in).files_out.motion_corrected_data);
 
             case {'standard-native','standard-stereotaxic'}
                 
                 for num_r = 1:nb_run
-                    files_in_tmp.(subject).fmri{num_r} = deal(pipeline.(list_stage_in{num_r}).files_out.filtered_data);
+                    files_in_tmp.(label).fmri{num_r} = deal(pipeline.(list_stage_in{num_r}).files_out.filtered_data);
                 end % run
                 
         end
 
-        files_in_tmp.(subject).component_to_keep = files_in.(subject).component_to_keep;
-        files_in_tmp.(subject).transformation = pipeline.(name_stage_transf).files_out;
+        files_in_tmp.(label).component_to_keep = files_in.(label).component_to_keep;
+        files_in_tmp.(label).transformation = pipeline.(name_stage_transf).files_out;
 
         %% Setting up options
         gb_name_structure = 'opt_tmp';
@@ -1062,7 +568,7 @@ if flag_corsica % If the user requested a correction of physiological noise
 
             for num_r = 1:nb_run
                 run = cat(2,'run',num2str(num_r));
-                name_stage = cat(2,'component_supp_',subject,'_',run);
+                name_stage = cat(2,'component_supp_',label,'_',run);
                 clear files_in_tmp
                 files_in_tmp = pipeline(1).(name_stage).files_out;
                 clear opt_tmp
@@ -1076,9 +582,9 @@ if flag_corsica % If the user requested a correction of physiological noise
                 %% Adding the stage to the pipeline
                 switch style
                     case 'fmristat'
-                        name_stage_new = cat(2,'clean_motion_correction_',subject,'_run',num2str(num_r));
+                        name_stage_new = cat(2,'clean_motion_correction_',label,'_run',num2str(num_r));
                     case {'standard-native'}
-                        name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));
+                        name_stage_new = cat(2,'clean_time_filter_',label,'_run',num2str(num_r));
                 end
                 
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
@@ -1088,120 +594,9 @@ if flag_corsica % If the user requested a correction of physiological noise
             end % run
         end % Cleaning ('minimum' or 'quality_control')
 
-    end % subject
+    end % label
 
 end % if flag_corsica
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% spatial smoothing (native space) %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-name_process = 'smooth_vol';
-
-if strcmp(style,'fmristat')|strcmp(style,'standard-native')
-
-    for num_s = 1:nb_subject
-
-        subject = list_subject{num_s};
-        job_pipeline = fieldnames(pipeline);
-        stage_motion = cat(2,'motion_correction_',subject);
-        files_motion = niak_files2cell(pipeline.(stage_motion).files_out.motion_corrected_data);        
-        nb_run = length(files_motion);
-
-        for num_r = 1:nb_run
-
-            clear opt_tmp files_in_tmp files_out_tmp
-
-            run = cat(2,'run',num2str(num_r));
-            name_stage = cat(2,name_process,'_',subject,'_',run);
-
-            %% Building inputs for NIAK_BRICK_SMOOTH_VOL
-
-            if flag_corsica
-                
-                %% CORSICA has been applied, we use the
-                %% physiologically-corrected data
-                name_stage_in = cat(2,'component_supp_',subject,'_',run);
-                files_in_tmp = pipeline.(name_stage_in).files_out;
-                
-            else
-                %% NO CORSICA !
-                
-                switch style
-                    
-                    case 'fmristat'                     
-                        
-                        %% For fMRIstat
-                        files_in_tmp = files_motion{num_r};
-                        
-                    case {'standard-native'}
-                        
-                        name_stage_in = cat(2,'time_filter_',subject,'_',run);
-                        files_in_tmp = pipeline.(name_stage_in).files_out.filtered_data;
-                        
-                end
-            end
-
-            %% Building outputs for NIAK_BRICK_SMOOTH_VOL
-            files_out_tmp = '';
-
-            %% Setting up options
-            opt_tmp = opt.bricks.smooth_vol;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-
-            %% Setting up defaults of the motion correction
-            opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_tmp);
-            opt_tmp.flag_test = 0;
-
-            %% Adding the stage to the pipeline           
-            pipeline(1).(name_stage).command = 'niak_brick_smooth_vol(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;            
-
-            %% If the amount of outputs is 'minimum' or 'quality_control',
-            %% clean the inputs when the outpus have been successfully
-            %% generated
-
-            if strcmp(size_output,'minimum')|strcmp(size_output,'quality_control')
-                
-                clear files_in_tmp
-                files_in_tmp = pipeline(1).(name_stage).files_out;
-                clear opt_tmp
-                opt_tmp.clean = pipeline(1).(name_stage).files_in;
-                files_out_tmp = {};
-
-                opt_tmp.flag_test = 1;
-                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_clean(files_in_tmp,files_out_tmp,opt_tmp);
-                opt_tmp.flag_test = 0;
-
-                %% Adding the stage to the pipeline
-                if flag_corsica
-                    
-                    name_stage_new = cat(2,'clean_corsica_',subject,'_run',num2str(num_r));                                        
-                    
-                else
-
-                    switch style
-                        case 'fmristat'
-                            name_stage_new = cat(2,'clean_motion_correction_',subject,'_run',num2str(num_r));
-                        case {'standard-native'}
-                            name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));
-                    end                    
-                    
-                end
-
-                pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
-                pipeline(1).(name_stage_new).files_in = files_in_tmp;
-                pipeline(1).(name_stage_new).files_out = files_out_tmp;
-                pipeline(1).(name_stage_new).opt = opt_tmp;                
-
-            end
-
-        end % run
-    end % subject
-end % Styles 'fmristat' or 'standard_native'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Spatial resampling in stereotaxic space %%
@@ -1211,24 +606,24 @@ if strcmp(style,'standard-stereotaxic')
 
     name_process = 'resample_vol';
 
-    for num_s = 1:nb_subject
+    for num_s = 1:nb_label
 
-        subject = list_subject{num_s};               
+        label = list_label{num_s};               
         job_pipeline = fieldnames(pipeline);
-        files_raw = niak_files2cell(getfield(files_in,subject,'fmri'));
+        files_raw = niak_files2cell(getfield(files_in,label,'fmri'));
         nb_run = length(files_raw);
-        name_stage_transf = cat(2,'concat_transf_nl_',subject);
+        name_stage_transf = cat(2,'concat_transf_nl_',label);
         
         for num_r = 1:nb_run
 
             clear opt_tmp files_in_tmp files_out_tmp
             
             run = cat(2,'run',num2str(num_r));            
-            name_stage = cat(2,name_process,'_',subject,'_',run);
+            name_stage = cat(2,name_process,'_',label,'_',run);
             if flag_corsica
-                name_stage_in = cat(2,'component_supp_',subject,'_',run);
+                name_stage_in = cat(2,'component_supp_',label,'_',run);
             else
-                name_stage_in = cat(2,'time_filter_',subject,'_',run);
+                name_stage_in = cat(2,'time_filter_',label,'_',run);
             end
 
             %% Building inputs 
@@ -1245,7 +640,7 @@ if strcmp(style,'standard-stereotaxic')
             
             %% Setting up options
             opt_tmp = opt.bricks.resample_vol;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,label,filesep);
 
             %% Setting up defaults 
             opt_tmp.flag_test = 1;
@@ -1278,9 +673,9 @@ if strcmp(style,'standard-stereotaxic')
                 %% Adding the stage to the pipeline
                 
                 if flag_corsica
-                    name_stage_new = cat(2,'clean_corsica_',subject,'_run',num2str(num_r));                    
+                    name_stage_new = cat(2,'clean_corsica_',label,'_run',num2str(num_r));                    
                 else
-                    name_stage_new = cat(2,'clean_time_filter_',subject,'_run',num2str(num_r));                    
+                    name_stage_new = cat(2,'clean_time_filter_',label,'_run',num2str(num_r));                    
                 end
                                 
                 pipeline(1).(name_stage_new).command     =  'niak_brick_clean(files_in,files_out,opt)';
@@ -1291,7 +686,7 @@ if strcmp(style,'standard-stereotaxic')
             end
             
         end % run
-    end % subject
+    end % label
 end % style of pipeline
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1302,11 +697,11 @@ name_process = 'smooth_vol';
 
 if strcmp(style,'standard-stereotaxic')
 
-    for num_s = 1:nb_subject
+    for num_s = 1:nb_label
 
-        subject = list_subject{num_s};
+        label = list_label{num_s};
         job_pipeline = fieldnames(pipeline);
-        files_raw = niak_files2cell(getfield(files_in,subject,'fmri'));
+        files_raw = niak_files2cell(getfield(files_in,label,'fmri'));
         nb_run = length(files_raw);      
 
         for num_r = 1:nb_run
@@ -1314,10 +709,10 @@ if strcmp(style,'standard-stereotaxic')
             clear opt_tmp files_in_tmp files_out_tmp
 
             run = cat(2,'run',num2str(num_r));
-            name_stage = cat(2,name_process,'_',subject,'_',run);
+            name_stage = cat(2,name_process,'_',label,'_',run);
 
             %% Building inputs for NIAK_BRICK_SMOOTH_VOL
-            name_stage_in = cat(2,'resample_vol_',subject,'_',run);
+            name_stage_in = cat(2,'resample_vol_',label,'_',run);
             files_in_tmp = pipeline.(name_stage_in).files_out;
 
 
@@ -1326,7 +721,7 @@ if strcmp(style,'standard-stereotaxic')
 
             %% Setting up options
             opt_tmp = opt.bricks.smooth_vol;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
+            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,label,filesep);
 
             %% Setting up defaults of the motion correction
             opt_tmp.flag_test = 1;
@@ -1356,7 +751,7 @@ if strcmp(style,'standard-stereotaxic')
                 opt_tmp.flag_test = 0;
 
                 %% Adding the stage to the pipeline
-                name_stage_new = cat(2,'clean_resample_vol_',subject,'_run',num2str(num_r));                
+                name_stage_new = cat(2,'clean_resample_vol_',label,'_run',num2str(num_r));                
 
                 pipeline(1).(name_stage_new).command = 'niak_brick_clean(files_in,files_out,opt)';
                 pipeline(1).(name_stage_new).files_in = files_in_tmp;
@@ -1366,7 +761,7 @@ if strcmp(style,'standard-stereotaxic')
             end
 
         end % run
-    end % subject
+    end % label
 end % Styles 'fmristat' or 'standard_native'
 
 %%%%%%%%%%%%%%%%%%%%%%

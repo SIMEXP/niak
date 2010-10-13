@@ -1,4 +1,4 @@
-function [pipeline,opt] = niak_pipeline_motion_correction(files_in,opt)
+function [pipeline,opt,files_out,files_out_within_run] = niak_pipeline_motion_correction(files_in,opt)
 % Within-subject motion correction of fMRI data.
 % Correction is implemented via estimation of a rigid-body transform and 
 % spatial resampling.
@@ -8,108 +8,112 @@ function [pipeline,opt] = niak_pipeline_motion_correction(files_in,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-%   FILES_IN  
-%       (structure) with the following fields (the field names <SESSION> 
-%       can be any arbitrary string) : 
+% FILES_IN  
+%   (structure) with the following fields (the field names <SESSION> can be 
+%   any arbitrary string) : 
 %
-%       <SESSION>   
-%           (cell of string) each entry is a file name of one fMRI dataset.
+%   <SESSION>   
+%       (cell of string) each entry is a file name of one fMRI dataset.
 %
-% * OPT   
-%       (structure) with the following fields:
+% OPT   
+%   (structure) with the following fields:
 %
-%       LABEL
-%           (string, default '') an extra string which will be added in the
-%           output names.
+%   LABEL
+%       (string, default '') an extra string which will be added in the
+%       output names.
 %
-%       PSOM
-%           (structure, default from the PSOM configuration file) the
-%           options of the pipeline system, see PSOM_RUN_PIPELINE. The
-%           folder for logs is not optional though, it is 'logs' located in 
-%           OPT.FOLDER_OUT
+%   PSOM
+%       (structure, default from the PSOM configuration file) the options 
+%       of the pipeline system, see PSOM_RUN_PIPELINE. The folder for logs 
+%       is not optional though, it is 'logs' located in OPT.FOLDER_OUT
 %
-%       FOLDER_OUT 
-%           (string) The name of the folder to save all the outputs.
+%   FOLDER_OUT 
+%       (string) The name of the folder to save all the outputs.
 %
-%       VOL_REF 
-%           (vector, default 'median') VOL_REF is the number of the volume 
-%           that will be used as target in each run. If VOL_REF is a 
-%           string, the median volume of the run of reference in each 
-%           session will be used rather than an arbitrary volume. This
-%           option superseeds the contents of OPT.PARAMETERS
+%   VOL_REF 
+%       (vector, default 'median') VOL_REF is the number of the volume that 
+%       will be used as target in each run. If VOL_REF is a string, the 
+%       median volume of the run of reference in each session will be used 
+%       rather than an arbitrary volume. This option superseeds the 
+%       contents of OPT.PARAMETERS
 %
-%       RUN_REF 
-%           (vector, default 1) RUN_REF(NUM) is the number of the run that 
-%           will be used as target for session NUM.
-%           If RUN_REF is a single integer, the same number will be used 
-%           for all sessions.
+%   RUN_REF 
+%       (vector, default 1) RUN_REF(NUM) is the number of the run that will 
+%       be used as target for session NUM. If RUN_REF is a single integer, 
+%       the same number will be used for all sessions.
 %
-%       SESSION_REF 
-%           (string, default first session) name of the session of
-%           reference. By default, it is the first field found in FILES_IN.
+%   SESSION_REF 
+%       (string, default first session) name of the session of reference. 
+%       By default, it is the first field found in FILES_IN.
 %
-%       IGNORE_SLICE
-%           (integer, default 1) ignore the first and last IGNORE_SLICE
-%           slices of the volume in the coregistration process.
+%   IGNORE_SLICE
+%       (integer, default 1) ignore the first and last IGNORE_SLICE slices 
+%       of the volume in the coregistration process.
 %
-%       FWHM
-%           (real number, default 5 mm) the fwhm of the blurring kernel
-%           applied to all volumes before coregistration.
+%   FWHM
+%       (real number, default 5 mm) the fwhm of the blurring kernel applied 
+%       to all volumes before coregistration.
 %
-%       STEP
-%           (real number, default 10) The step argument for MINCTRACC.
+%   STEP
+%       (real number, default 10) The step argument for MINCTRACC.
 %
-%       TOL_WITH_RUN
-%           (real number, default 0.0005) The tolerance level for
-%           convergence in MINCTRACC in within-run motion correction.
+%   TOL_WITH_RUN
+%       (real number, default 0.0005) The tolerance level for convergence 
+%       in MINCTRACC for within-run motion correction.
 %
-%       TOL_BETWEEN_RUN
-%           (real number, default 0.00001) The tolerance level for
-%           convergence in MINCTRACC in between-run motion correction 
-%           (either intra- or inter-session).
+%   TOL_BETWEEN_RUN
+%       (real number, default 0.00001) The tolerance level for convergence 
+%       in MINCTRACC in between-run motion correction (either intra- or 
+%       inter-session).
 %
-%       SUPPRESS_VOL 
-%           (integer, default 0) the number of volumes that are suppressed 
-%           at the begining of the time series. This is a good stage to get 
-%           rid of "dummy scans" necessary to reach signal stabilization 
-%           (that takes about 10 seconds, usually 3 to 5 volumes depending 
-%           on the TR). Note that most brain imaging centers now 
-%           automatically discard dummy scans.
+%   SUPPRESS_VOL 
+%       (integer, default 0) the number of volumes that are suppressed at 
+%       the begining of the time series. This is a good stage to get rid of 
+%       "dummy scans" necessary to reach signal stabilization (that takes 
+%       about 10 seconds, usually 3 to 5 volumes depending on the TR). Note 
+%       that most brain imaging centers now automatically discard dummy 
+%       scans.
 %
-%       INTERPOLATION 
-%           (string, default 'sinc') the spatial interpolation method used 
-%           for resampling.
-%           Available options : 'trilinear', 'tricubic', 
-%           'nearest_neighbour', 'sinc'.
+%   INTERPOLATION 
+%       (string, default 'tricubic') the spatial interpolation method used 
+%       for resampling. Available options : 
+%       'trilinear', 'tricubic', 'nearest_neighbour', 'sinc'.
 %
-%       FLAG_SKIP
-%           (boolean, default 0) if FLAG_SKIP == 1, the flag does not 
-%           do anything, just copying the inputs to the outputs (note 
-%           that it is still possible to suppress volumes). The motion 
-%           parameters are still estimated and the quality control is
-%           still performed.
+%   FLAG_SKIP
+%       (boolean, default 0) if FLAG_SKIP == 1, the flag does not do 
+%       anything, just copying the inputs to the outputs (note that it is 
+%       still possible to suppress volumes). The motion parameters are 
+%       still estimated and the quality control is still performed.
 %
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN, FILES_OUT and OPT.
+%   FLAG_TEST 
+%       (boolean, default: 0) if FLAG_TEST equals 1, the brick does not do 
+%       anything but update the default values in FILES_IN, FILES_OUT and 
+%       OPT.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
-%           messages indicating progress.
+%   FLAG_VERBOSE 
+%       (boolean, default: 1) If FLAG_VERBOSE == 1, write messages 
+%       indicating progress.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-%   The structures FILES_IN, FILES_OUT and OPT are updated with default
-%   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
+%   PIPELINE
+%       (structure) each field describes one job of the pipeline.
 %
+%   OPT
+%       (structure) same as inputs, updated for default values.
+%
+%   FILES_OUT
+%       (structure) a list of the final (resampled) output files.
+%
+%   FILES_OUT_WITHIN_RUN
+%       (structure) a list of the within-run motion parameters.
 % _________________________________________________________________________
 % SEE ALSO:
-%  NIAK_BRICK_MOTION_PARAMETERS, NIAK_DEMO_PIPELINE_MOTION_CORRECTION
+% NIAK_BRICK_MOTION_PARAMETERS, NIAK_DEMO_PIPELINE_MOTION_CORRECTION
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % NOTE 1: The motion correction follows a hierachical strategy :
 % Rigid-body transforms are first estimated within each run 
@@ -262,6 +266,7 @@ for num_s = 1:nb_session
             files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
             files_in_tmp.target = pipeline.(name_job_target).files_out;
             files_out_tmp       = [opt.folder_out name_job '.mat'];
+            files_out_within_run.(session){num_r} = files_out_tmp;
             opt_tmp             = opt.parameters;
             opt_tmp.tol         = opt.tol_between_run;                
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_motion_parameters',files_in_tmp,files_out_tmp,opt_tmp);
@@ -299,7 +304,7 @@ for num_s = 1:nb_session
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
         clear files_in_tmp files_out_tmp opt_tmp
         name_job            = sprintf('motion_parameters_%s%s',label,name_f);
-        files_in_tmp{1} = pipeline.(sprintf('motion_within_run_%s%s',label,name_f)).files_out;
+        files_in_tmp{1}     = pipeline.(sprintf('motion_within_run_%s%s',label,name_f)).files_out;
         if num_r~=run_ref
             files_in_tmp{2} = pipeline.(sprintf('motion_within_session_%s%s',label,name_f)).files_out;
             nb_transf = 3;
@@ -310,8 +315,8 @@ for num_s = 1:nb_session
             [path_f,name_ref,ext_f] = niak_fileparts(files_in.(session){run_ref});
             files_in_tmp{nb_transf} = pipeline.(sprintf('motion_between_session_%s%s',label,name_ref)).files_out;
         end                
-        files_out_tmp       = [opt.folder_out name_job '.mat'];
-        opt_tmp.var_name    = 'transf';
+        files_out_tmp                     = [opt.folder_out name_job '.mat'];        
+        opt_tmp.var_name                  = 'transf';
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_combine_transf',files_in_tmp,files_out_tmp,opt_tmp);
     end
 end
@@ -327,9 +332,10 @@ for num_s = 1:nb_session
         if flag_skip
             name_job = sprintf('copy_%s%s',label,name_f);
             clear files_in_tmp files_out_tmp opt_tmp
-            files_in_tmp{1}     = files_in.(session){num_r};            
-            files_out_tmp       = [opt.folder_out name_f '_mc' ext_f];
-            opt_tmp.operation   = sprintf('vol = vol_in{1}(:,:,:,%i:end);',1+suppress_vol);
+            files_in_tmp{1}            = files_in.(session){num_r};            
+            files_out_tmp              = [opt.folder_out name_f '_mc' ext_f];
+            files_out.(session){num_r} = files_out_tmp;
+            opt_tmp.operation          = sprintf('vol = vol_in{1}(:,:,:,%i:end);',1+suppress_vol);
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
         else
             name_job = sprintf('resample_%s%s',label,name_f);
@@ -338,6 +344,7 @@ for num_s = 1:nb_session
             files_in_tmp.source         = files_in.(session){num_r};
             files_in_tmp.target         = pipeline.(sprintf('target_%s%s',label,name_target)).files_out;
             files_out_tmp               = [opt.folder_out name_f '_mc' ext_f];
+            files_out.(session){num_r}  = files_out_tmp;
             opt_tmp.interpolation       = opt.interpolation;
             opt_tmp.suppress_vol        = opt.suppress_vol;
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
