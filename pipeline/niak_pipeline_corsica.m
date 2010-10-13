@@ -1,4 +1,4 @@
-function pipeline = niak_pipeline_corsica(files_in,opt)
+function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 % Pipeline to run CORSICA (correction of the physiological noise) on fMRI
 %
 % PIPELINE = NIAK_PIPELINE_CORSICA(FILES_IN,OPT)
@@ -78,6 +78,15 @@ function pipeline = niak_pipeline_corsica(files_in,opt)
 % PIPELINE 
 %   (structure) describe all the jobs that need to be performed in the
 %   pipeline. 
+%
+% OPT
+%   (structure) same as input, but updated for default values.
+%
+% FILES_OUT
+%   (structure) with the following field :
+%       
+%       SUPPRESS_VOL
+%           (cell of strings) the outputs of NIAK_BRICK_SUPPRESS_VOL.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -269,6 +278,7 @@ end % subject
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 for num_s = 1:nb_subject
     subject = list_subject{num_s};   
+    files_out.suppress_vol.(subject) = cell([length(files_in.(subject).fmri) 1]);
     for num_r = 1:length(files_in.(subject).fmri)  
         run = cat(2,'run',num2str(num_r));        
         name_job           = cat(2,'component_supp_',subject,'_',run);                       
@@ -285,6 +295,7 @@ for num_s = 1:nb_subject
         opt_tmp                  = opt.component_supp;
         opt_tmp.folder_out       = cat(2,opt.folder_out,filesep,subject,filesep);
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_component_supp',files_in_tmp,files_out_tmp,opt_tmp);        
+        files_out.suppress_vol.(subject) = pipeline.(name_job).files_out;
     end % run
 end % subject
 
