@@ -203,6 +203,8 @@ if flag_skip
     if status~=0
         error(msg)
     end
+    return
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Convert the transformation %%
