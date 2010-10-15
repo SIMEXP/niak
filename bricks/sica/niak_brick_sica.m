@@ -1,5 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
-
 % Spatial independent component analysis (sICA) of an fMRI dataset.
 %
 % SYNTAX:
@@ -8,8 +7,16 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-%  FILES_IN
-%       (string) an fMRI dataset.
+% FILES_IN
+%   (structure) with the following fields :
+%
+%       FMRI
+%          (string) the file name of an fMRI dataset.
+%
+%       MASK
+%           (string, default 'gb_niak_omitted') the file name of a binary
+%           mask of the brain. If omitted, it is computed using
+%           NIAK_MASK_BRAIN.
 %
 %  FILES_OUT
 %       (structure) with the following fields.  Note that if a field is an
@@ -24,26 +31,12 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           source estimaed through ICA.
 %
 %       TIME
-%           (string, default <BASE_NAME>_sica_time.dat)
-%           a text file. Column Kth is the temporal distribution of the Kth
-%           ica source.
-%
-%       FIGURE
-%           (string, default <BASE_NAME>_sica_fig.pdf )
-%           a pdf figure showing the spatial distribution of the
-%           components on axial slices after robust correction to normal
-%           distribution, as well as the time, spectral and time frequency
-%           representation of the time component.
+%           (string, default <BASE_NAME>_sica_time.mat)
+%           a mat file with a variable TSERIES (2D array). TSERIES(:,K) is 
+%           the temporal distribution of the Kth ICA source. 
 %
 %  OPT
 %       (structure) with the following fields :
-%
-%       NORM
-%           (string, default 'mean')
-%           Correction of the time series, possible values :
-%           'none' : no correction at all
-%           'mean' : correction to zero mean
-%           'mean_var' : correction to zero mean and unit variance
 %
 %       ALGO
 %           (string, default 'Infomax')
@@ -54,11 +47,6 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %           (integer, default min(60,foor(0.95*T)))
 %           number of components to compute (for default : T is the number
 %           of time samples.
-%
-%       FWHM
-%           (real number, default 5)
-%           The fwhm of the Gaussian kernel use to spatially smooth the ICA
-%           maps in the pdf summary.
 %
 %       FOLDER_OUT
 %           (string, default: path of FILES_IN) If present,
@@ -83,6 +71,14 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
+% Core of this function is copied from the fMRlab toolbox developed at
+% Stanford :
+% http://www-stat.stanford.edu/wavelab/Wavelab_850/index_wavelab850.html
+% The code was mainly contributed by Scott Makeig under a GNU
+% license. See subfunctions of NIAK_SICA for details. 
+%
+% The FastICA methods require the installation of the fastICA toolbox.
+%
 % _________________________________________________________________________
 % REFERENCES:
 %
@@ -97,14 +93,15 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_BRICK_SICA, NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA
+% NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA, 
+% NIAK_PIPELINE_CORSICA, NIAK_BRICK_QC_CORSICA
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : pipeline, niak, preprocessing, fMRI
+% Keywords : fMRI, ICA
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -131,34 +128,29 @@ niak_gb_vars; % Importing NIAK global variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SICA(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_sica'' for more info.')
 end
 
-%% Options
-gb_name_structure = 'opt';
-gb_list_fields = {'fwhm','norm','algo','nb_comp','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {5,'mean','Infomax',60,1,0,''};
+%% Input files
+gb_name_structure = 'files_in';
+gb_list_fields    = {'fmri' , 'mask'            };
+gb_list_defaults  = {NaN     , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Output files
-if ~isstruct(files_out)
-    error('FILES_OUT should be a structure.');
-end
 gb_name_structure = 'files_out';
-gb_list_fields = {'space','time','figure'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'space'           , 'time'            };
+gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
-[path_f,name_f,ext_f] = fileparts(files_in(1,:));
-if isempty(path_f)
-    path_f = '.';
-end
+%% Options
+gb_name_structure = 'opt';
+gb_list_fields    = {'norm' , 'algo'    , 'nb_comp' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = {'mean' , 'Infomax' , 60        , 1              , 0           , ''           };
+niak_set_defaults
 
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in.fmri);
 
 if isempty(opt.folder_out)
     opt.folder_out = path_f;
@@ -169,11 +161,7 @@ if isempty(files_out.space)
 end
 
 if isempty(files_out.time)
-    files_out.time = cat(2,opt.folder_out,filesep,name_f,'_sica_time.dat');
-end
-
-if isempty(files_out.figure)
-    files_out.figure = cat(2,opt.folder_out,filesep,name_f,'_sica_figure.pdf');
+    files_out.time = cat(2,opt.folder_out,filesep,name_f,'_sica_time.mat');
 end
 
 if flag_test == 1
@@ -195,29 +183,36 @@ end
 
 %% Reading data
 if flag_verbose
-    fprintf('Reading data %s ...\n',files_in);
+    fprintf('Reading data %s ...\n',files_in.fmri);
 end
-[hdr,vol] = niak_read_vol(files_in);
+[hdr,vol] = niak_read_vol(files_in.fmri);
 
 %% Segmenting the brain
-if flag_verbose
-    fprintf('Brain segmentation ...\n');
+if ~strcmp(files_in.mask,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Reading brain mask %s ...\n',files_in.mask);
+    end
+    [hdr,mask] = niak_read_vol(files_in.mask);
+    mask = mask>0;
+else    
+    if flag_verbose
+        fprintf('Brain segmentation ...\n');
+    end
+    mean_vol = mean(abs(vol),4);
+    mask = niak_mask_brain(mean_vol);
+    mask = mask & (mean_vol>0);
 end
-mean_vol = mean(abs(vol),4);
-mask = niak_mask_brain(mean_vol);
-mask = mask & (mean_vol>0);
 
 %% Reshaping data
 [nx,ny,nz,nt]=size(vol);
-vol = reshape(vol,nx*ny*nz,nt);
-vol = vol(mask>0,:)';
+vol = niak_vol2tseries(vol,mask);
 
-%% Correcting the mean (and possibly variance) of the time series
+%% Correcting the mean of the time series
 if flag_verbose
-    fprintf('Correction of mean (possibly variance) of time series ...\n');
+    fprintf('Correction of the mean of time series ...\n');
 end
-vol = niak_correct_mean_var(vol,opt.norm);
-
+opt_norm.type = 'mean';
+vol = niak_normalize_tseries(vol,opt_norm);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% sica computation %%
@@ -248,106 +243,9 @@ if ~strcmp(files_out.space,'gb_niak_omitted')
 end
 
 %% Temporal sources
-A = res_ica.poids;
-
 if ~strcmp(files_out.time,'gb_niak_omitted')
-    [hf,mesg] = fopen(files_out.time,'w');
-    if hf == -1
-        error(mesg);
-    end
-    for  num_l = 1:size(A,1)
-        fprintf(hf,'%1.15f ',A(num_l,:));
-        fprintf(hf,'\n');
-    end
-    fclose(hf);
-end
-
-if ~strcmp(files_out.figure,'gb_niak_omitted')
-    
-    if flag_verbose
-        fprintf('Generating a pdf summary of the ICA ...\n');
-    end
-    %% Generating an output file name
-    file_fig = niak_file_tmp('.eps');
-    
-    %% Options for the montage
-    opt_visu.voxel_size = hdr.info.voxel_size;
-    opt_visu.fwhm = opt.fwhm;
-    opt_visu.vol_limits = [0 3];
-    opt_visu.type_slice = 'axial';
-    opt_visu.type_color = 'jet';        
-    
-    for num_c = 1:size(vol_space,4)
-                    
-        %% Spatial distribution
-        hf = figure;
-        subplot(1,1,1)
-        vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
-        niak_montage(abs(vol_c),opt_visu);
-        title(sprintf('Spatial component %i, file %s',num_c,name_f),'interpreter','none');        
-        
-        if num_c == 1
-            print(file_fig,'-dpsc2');
-        else
-            niak_append_ps(file_fig);
-        end        
-        close(hf)        
-        
-        %% temporal distribution
-        hf = figure;
-        nt = size(A,1);
-        subplot(3,1,1)
-        
-        if isfield(hdr.info,'tr')
-            if hdr.info.tr~=0
-                plot(hdr.info.tr*(1:nt),A(:,num_c));
-            else
-                plot(A(:,num_c));
-            end
-        else
-            plot(A(:,num_c));
-        end
-        
-        xlabel('time')
-        ylabel('a.u.')
-        title(sprintf('Time component %i, file %s',num_c,name_f),'interpreter','none');        
-        
-        %% Frequency distribution        
-        subplot(3,1,2)
-        if isfield(hdr.info,'tr')
-            if hdr.info.tr~=0
-                niak_visu_spectrum(A(:,num_c),hdr.info.tr);
-            else
-                niak_visu_spectrum(A(:,num_c),1);
-            end
-        else
-            niak_visu_spectrum(A(:,num_c),1);
-        end        
-        
-        %% Time-frequency distribution        
-        subplot(3,1,3)
-        if isfield(hdr.info,'tr')
-            if hdr.info.tr~=0
-                niak_visu_wft(A(:,num_c),hdr.info.tr);
-            else
-                niak_visu_wft(A(:,num_c),1);
-            end
-        else
-            niak_visu_wft(A(:,num_c),1);
-        end
-                
-        niak_append_ps(file_fig);
-        close(hf)
-    end    
-        
-    %% In octave, use ps2pdf to convert the result into PDF format
-    instr_ps2pdf = cat(2,'ps2pdf -dEPSCrop ',file_fig,' ',files_out.figure);
-    [succ,msg] = system(instr_ps2pdf);
-    if succ~=0
-        warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf : ',msg));
-    end
-    delete(file_fig)
-    
+    tseries = res_ica.poids;
+    save(files_out.time,'tseries');
 end
 
 if flag_verbose

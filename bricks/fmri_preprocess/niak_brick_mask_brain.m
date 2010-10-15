@@ -14,31 +14,30 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %   (string, default <NAME FILES_IN>_mask<EXT FILES_IN>) the name of a 4D
 %   file with a binary mask of the brain.
 %   
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+%   (structure) with the following fields :
 %
-%       FWHM 
-%           (real value, default 3) the FWHM of the blurring kernel in 
-%           the same unit as the voxel size. A value of 0 for FWHM will 
-%           skip the smoothing step.
+%   FWHM 
+%       (real value, default 3) the FWHM of the blurring kernel in the same 
+%       unit as the voxel size. A value of 0 for FWHM will skip the 
+%       smoothing step.
 %       
-%       FLAG_REMOVE_EYES 
-%           (boolean, default 0) if FLAG_REMOVE_EYES == 1, an
-%           attempt is done to remove the eyes from the mask.
+%   FLAG_REMOVE_EYES 
+%       (boolean, default 0) if FLAG_REMOVE_EYES == 1, an attempt is made 
+%       to remove the eyes from the mask.
 %           
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) 
-%           If present, the output will be created in the folder 
-%           FOLDER_OUT. The folder needs to be created beforehand.
+%   FOLDER_OUT 
+%       (string, default: path of FILES_IN) If present, the output will be 
+%       created in the folder FOLDER_OUT. 
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%   FLAG_VERBOSE 
+%       (boolean, default 1) if the flag is 1, then the function prints 
+%       some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%       (boolean, default 0) if FLAG_TEST equals 1, the brick does not do 
+%       anything but update the default values in FILES_IN, FILES_OUT and 
+%       OPT.
 %           
 % _________________________________________________________________________
 % OUTPUTS:
@@ -48,7 +47,7 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %              
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_MASK_BRAIN, NIAK_PIPELINE_MASK_BRAIN
+% NIAK_MASK_BRAIN
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -138,13 +137,13 @@ if flag_verbose
     fprintf('Masking brain in file %s ...\n',files_in);
 end
 
-[hdr,vol] = niak_read_vol(files_in{num_f});
+[hdr,vol] = niak_read_vol(files_in);
 opt_mask.voxel_size = hdr.info.voxel_size;
 mask = niak_mask_brain(vol,opt_mask);
 
 %% Saving outputs
 if flag_verbose
-    fprintf('Saving the mask in the file %s ...\n',files_out.mask);
+    fprintf('Saving the mask in the file %s ...\n',files_out);
 end
-hdr.file_name = files_out.mask;
-niak_write_vol(hdr,mask_all);
+hdr.file_name = files_out;
+niak_write_vol(hdr,mask);

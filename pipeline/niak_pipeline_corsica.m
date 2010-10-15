@@ -6,44 +6,42 @@ function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-% FILES_IN  
-%   (structure) with the following fields : 
+% FILES_IN
+%   (structure) with the following fields :
 %
-%   <SUBJECT>.FMRI 
-%       (cell of strings) a list of fMRI datasets. The field name 
-%       <SUBJECT> can be any arbitrary string. All data in 
+%   <SUBJECT>.FMRI
+%       (cell of strings) a list of fMRI datasets. The field name
+%       <SUBJECT> can be any arbitrary string. All data in
 %       FILES_IN.<SUBJECT> should come from the same subject.
 %
-%   <SUBJECT>.TRANSFORMATION 
-%       (string, default identity) a transformation from the functional 
+%   <SUBJECT>.MASK_SELECTION
+%       (cell of string) each entry is the name of a file with a binary
+%       mask coding for one spatial a priori which will be used in the
+%       selection.
+%
+%   <SUBJECT>.TRANSFORMATION
+%       (string, default identity) a transformation from the functional
 %       space to the "MNI152 non-linear" space.
 %
+%   <SUBJECT>.MASK_BRAIN
+%       (string, default 'gb_niak_omitted') a file name of a binary mask of
+%       the brain. If unspecified, NIAK_BRICK_MASK_BRAIN will be used to
+%       generate a mask of the brain.
+%
 %   <SUBJECT>.COMPONENT_TO_KEEP
-%       (string, default none) a text file, whose first line is a set of 
-%       string labels, and each column is otherwise a temporal component of 
-%       interest. The ICA component with highest correlation with each 
-%       signal of interest will be automatically attributed a selection 
+%       (string, default none) a text file, whose first line is a set of
+%       string labels, and each column is otherwise a temporal component of
+%       interest. The ICA component with highest correlation with each
+%       signal of interest will be automatically attributed a selection
 %       score of 0 (i.e. it will not be selected as physiological noise).
 %
-% OPT   
-%   (structure) with the following fields : 
+% OPT
+%   (structure) with the following fields :
 %
-%   SIZE_OUTPUT
-%       (string, default 'quality_control') possible values : 
-%       ‘minimum’, 'quality_control’, ‘all’.
-%       The quantity of intermediate results that are generated. 
-%           * With the option ‘minimum’, only the physiological-noise
-%           corrected data is written. 
-%           * With the option ‘quality_control’, in addition to the outputs 
-%           of the 'minimum' option, a pdf document recapitulating 
-%           the ICA components and the score of components in the stepwise 
-%           regression are generated.
-%           * With the option ‘all’, in addition to the outputs of the 
-%           'minimum' option, the space and time distributions of the ICA 
-%           are generated.
-%
-%   FOLDER_OUT 
-%       (string) where to write the results of the pipeline.
+%   THRESHOLD
+%       (scalar, default 0.15) a threshold to apply on the score for
+%       suppression (scores above the thresholds are selected). This option
+%       will be used both for QC_CORSICA and COMPONENT_SUPP.
 %
 %   PSOM
 %       (structure) the options of the pipeline manager. See the OPT
@@ -56,35 +54,71 @@ function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 %       process the data. Otherwise, PSOM_RUN_PIPELINE will be used to
 %       process the data.
 %
-%   SICA 
+%   FLAG_SKIP
+%       (boolean, default false) if FLAG_SKIP is true, the brick does not
+%       do anything, just copying the inputs to the outputs (the ICA
+%       decomposition will still be generated and the component selection
+%       will still be generated for quality control purposes).
+%
+%   LABELS_MASK
+%       (cell of string, default {'mask1','mask2',...}) labels that will be
+%       used in the name of the outputs in the selection of noise
+%       components with each entry of FILES_IN.MASK_SELECTION.
+%
+%   SIZE_OUTPUT
+%       (string, default 'quality_control') possible values :
+%       ‘minimum’, 'quality_control’, ‘all’.
+%       The quantity of intermediate results that are generated.
+%           * With the option ‘minimum’, only the physiological-noise
+%           corrected data is written.
+%           * With the option ‘quality_control’, in addition to the outputs
+%           of the 'minimum' option, a pdf document recapitulating
+%           the ICA components and the score of components in the stepwise
+%           regression are generated.
+%           * With the option ‘all’, in addition to the outputs of the
+%           'minimum' option, the space and time distributions of the ICA
+%           are generated.
+%
+%   FOLDER_OUT
+%       (string) folder to write the "denoised" datasets resulting of the
+%       pipeline.
+%
+%   FOLDER_SICA
+%       (string, default OPT.FOLDER_OUT) folder to write the results of
+%       SICA (the space and time components, the figures as well as the
+%       results of the component selection).
+%
+%   MASK_BRAIN
+%       (structure) options of NIAK_BRICK_MASK_BRAIN
+%
+%   SICA
 %       (structure) options of NIAK_BRICK_SICA
 %
-%       NB_COMP 
+%       NB_COMP
 %           (integer) the number of components (default 60).
 %
-%   COMPONENT_SEL 
+%   COMPONENT_SEL
 %       (structure) options of NIAK_BRICK_COMPONENT_SEL.
 %
-%   COMPONENT_SUPP 
-%       (structure) options of NIAK_BRICK_COMPONENT_SUPP.
+%   QC_CORSICA
+%       (structure) options of NIAK_BRICK_QC_CORSICA.
 %
-%   THRESHOLD 
-%       (scalar, default 0.15) a threshold to apply on the score for 
-%       suppression (scores above the thresholds are selected). 
+%   COMPONENT_SUPP
+%       (structure) options of NIAK_BRICK_COMPONENT_SUPP.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% PIPELINE 
+% PIPELINE
 %   (structure) describe all the jobs that need to be performed in the
-%   pipeline. 
+%   pipeline.
 %
 % OPT
 %   (structure) same as input, but updated for default values.
 %
 % FILES_OUT
 %   (structure) with the following field :
-%       
+%
 %       SUPPRESS_VOL
 %           (cell of strings) the outputs of NIAK_BRICK_SUPPRESS_VOL.
 %
@@ -92,28 +126,28 @@ function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 % COMMENTS:
 %
 % The steps of the pipeline are the following :
-%  
+%
 %   1.  Individual spatial independent component of each functional run.
 %
-%   2. Selection of independent component related to physiological noise, 
-%   using spatial priors (masks of the ventricle and a part of the brain 
+%   2. Selection of independent component related to physiological noise,
+%   using spatial priors (masks of the ventricle and a part of the brain
 %   stem).
 %
 %   3. Generation of a "physiological noise corrected" fMRI dataset for
-%   each run, where the effect of the selected independent components has 
-%   been removed. 
+%   each run, where the effect of the selected independent components has
+%   been removed.
 %
 % The PSOM pipeline manager is used to process the pipeline if
 % OPT.FLAG_TEST is false. PSOM has a number of interesting features to deal
 % with job failures or pipeline updates. You can read the following
-% tutorial for a review of its capabilities : 
+% tutorial for a review of its capabilities :
 % http://code.google.com/p/psom/wiki/HowToUsePsom
 % http://code.google.com/p/psom/wiki/ConfigurationPsom
 %
 % _________________________________________________________________________
 % REFERENCES:
 %
-% Perlbarg, V., Bellec, P., Anton, J.-L., Pelegrini-Issac, P., Doyon, J. and 
+% Perlbarg, V., Bellec, P., Anton, J.-L., Pelegrini-Issac, P., Doyon, J. and
 % Benali, H.; CORSICA: correction of structured noise in fMRI by automatic
 % identification of ICA components. Magnetic Resonance Imaging, Vol. 25,
 % No. 1. (January 2007), pp. 35-46.
@@ -123,7 +157,7 @@ function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 % spatial components. Hum Brain Mapp, Vol. 6, No. 3. (1998), pp. 160-188.
 %
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
+% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -168,169 +202,180 @@ end
 list_subject = fieldnames(files_in);
 nb_subject = length(list_subject);
 
-for num_s = 1:nb_subject    
-    subject = list_subject{num_s};    
+for num_s = 1:nb_subject
+    subject = list_subject{num_s};
     
     if ~isstruct(files_in.(subject))
         error('FILE_IN.%s should be a structure!',upper(subject));
     end
-    
-    if ~isfield(files_in.(subject),'fmri')
-        error(sprintf('I could not find the field FILE_IN.%s.FMRI!',upper(subject)));
-    end
         
+    gb_name_structure = ['files_in.' subject];
+    gb_list_fields    = {'fmri'            , 'mask_selection' , 'mask_brain'      , 'transformation'  , 'component_to_keep' };
+    gb_list_defaults  = {NaN               , NaN              , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'    };
+    niak_set_defaults
+
     if ~iscellstr(files_in.(subject).fmri)
         error(sprintf('FILE_IN.%s.fmri is not a cell of strings!',upper(subject)));
     end
-    
-    if ~isfield(files_in.(subject),'transformation')
-        files_in.(subject).transformation = 'gb_niak_omitted';
-    end
-    
+        
     if ~ischar(files_in.(subject).transformation)
         error(sprintf('FILE_IN.%s.TRANSFORMATION is not a string!',upper(subject)));
     end
-    
-    if ~isfield(files_in.(subject),'component_to_keep')
-        files_in.(subject).component_to_keep = 'gb_niak_omitted';
-    end                
+        
 end
 
 %% Options
 default_psom.path_logs = '';
 opt_tmp.flag_test = 1;
 gb_name_structure = 'opt';
-gb_list_fields    = {'size_output'     , 'psom'       , 'flag_test' , 'folder_out' , 'sica'  , 'component_sel' , 'component_supp' };
-gb_list_defaults  = {'quality_control' , default_psom , false       , NaN          , opt_tmp , opt_tmp         , opt_tmp          };
+gb_list_fields    = { 'threshold' , 'labels_mask' , 'flag_skip' , 'size_output'     , 'psom'       , 'flag_test' , 'folder_out' , 'folder_sica' , 'mask_brain' , 'sica'  , 'component_sel' , 'qc_corsica' , 'component_supp' };
+gb_list_defaults  = { 0.15        , {}            , false       , 'quality_control' , default_psom , false       , NaN          , ''            , opt_tmp      , opt_tmp , opt_tmp         , opt_tmp      , opt_tmp          };
 niak_set_defaults
+
+if isempty(opt.folder_sica)
+    opt.folder_sica = opt.folder_out;
+end
+
+if isempty(labels_mask)
+    labels_mask = cell([length(files_in.mask_selection) 1]);
+    for num_m = 1:length(files_in.mask_selection)
+        labels_mask{num_m} = ['mask' num2str(num_m)];
+    end
+end
+
+opt.psom.path_logs = [folder_sica 'logs' filesep];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pipeline = struct([]);
 
-%%%%%%%%%%
-%% SICA %%
-%%%%%%%%%%
 for num_s = 1:nb_subject
-    subject = list_subject{num_s};                      
-    for num_r = 1:length(files_in.(subject).fmri)        
-        clear files_in_tmp files_out_tmp opt_tmp
-        run = cat(2,'run',num2str(num_r));
-        name_job             = cat(2,'sica_',subject,'_',run);
-        files_in_tmp         = files_in.(subject).fmri{num_r};
-        files_out_tmp.space  = '';
-        files_out_tmp.time   = '';
-        files_out_tmp.figure = '';
-        opt_tmp              = opt.sica;
-        opt_tmp.folder_out   = cat(2,opt.folder_out,filesep,subject,filesep);
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_sica',files_in_tmp,files_out_tmp,opt_tmp);        
-    end % run
-end % subject
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%% COMPONENT SELECTION %%
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% with the ventricles
-for num_s = 1:nb_subject
-    subject = list_subject{num_s};   
-    for num_r = 1:length(files_in.(subject).fmri)                
-        run = cat(2,'run',num2str(num_r));
-        name_job = cat(2,'component_sel_ventricle_',subject,'_',run);               
-        name_job_in = cat(2,'sica_',subject,'_',run);        
-        clear files_in_tmp files_out_tmp opt_tmp
-        files_in_tmp.fmri              = files_in.(subject).fmri{num_r};        
-        files_in_tmp.component         = pipeline.(name_job_in).files_out.time;
-        files_in_tmp.mask              = cat(2,gb_niak_path_niak,'template',filesep,'roi_ventricle.mnc.gz');
-        files_in_tmp.transformation    = files_in.(subject).transformation;
-        files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;        
-        files_out_tmp                  = '';
-        opt_tmp                        = opt.component_sel;
-        opt_tmp.folder_out             = cat(2,opt.folder_out,filesep,subject,filesep);        
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);        
-    end % run
-end % subject
-
-%% with the brain stem
-for num_s = 1:nb_subject
-    subject = list_subject{num_s};   
-    for num_r = 1:length(files_in.(subject).fmri)                
-        run         = cat(2,'run',num2str(num_r));
-        name_job    = cat(2,'component_sel_stem_',subject,'_',run);               
-        name_job_in = cat(2,'sica_',subject,'_',run);        
-        clear files_in_tmp files_out_tmp opt_tmp
-        files_in_tmp.fmri              = files_in.(subject).fmri{num_r};        
-        files_in_tmp.component         = pipeline.(name_job_in).files_out.time;
-        files_in_tmp.mask              = cat(2,gb_niak_path_niak,'template',filesep,'roi_stem.mnc.gz');
-        files_in_tmp.transformation    = files_in.(subject).transformation;
-        files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;        
-        files_out_tmp                  = '';
-        opt_tmp                        = opt.component_sel;
-        opt_tmp.folder_out             = cat(2,opt.folder_out,filesep,subject,filesep);        
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);        
-    end % run
-end % subject
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% COMPONENT SUPPRESSION %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for num_s = 1:nb_subject
-    subject = list_subject{num_s};   
+    subject = list_subject{num_s};
+    if num_s == 1
+        [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).fmri{1});
+    end
     files_out.suppress_vol.(subject) = cell([length(files_in.(subject).fmri) 1]);
-    for num_r = 1:length(files_in.(subject).fmri)  
-        run = cat(2,'run',num2str(num_r));        
-        name_job           = cat(2,'component_supp_',subject,'_',run);                       
-        name_job_sica      = cat(2,'sica_',subject,'_',run);
-        name_job_comp_vent = cat(2,'component_sel_ventricle_',subject,'_',run);
-        name_job_comp_stem = cat(2,'component_sel_stem_',subject,'_',run);              
-        clear files_in_tmp files_out_tmp opt_tmp        
-        files_in_tmp.fmri        = files_in.(subject).fmri{num_r};        
-        files_in_tmp.space       = pipeline.(name_job_sica).files_out.space;
-        files_in_tmp.time        = pipeline.(name_job_sica).files_out.time;
-        files_in_tmp.compsel{1}  = pipeline.(name_job_comp_vent).files_out;
-        files_in_tmp.compsel{2}  = pipeline.(name_job_comp_stem).files_out;
-        files_out_tmp            = '';        
-        opt_tmp                  = opt.component_supp;
-        opt_tmp.folder_out       = cat(2,opt.folder_out,filesep,subject,filesep);
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_component_supp',files_in_tmp,files_out_tmp,opt_tmp);        
-        files_out.suppress_vol.(subject) = pipeline.(name_job).files_out;
-    end % run
-end % subject
-
-%%%%%%%%%%%%%%
-%% CLEANING %%
-%%%%%%%%%%%%%%
-if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')
-    for num_s = 1:nb_subject
-        subject = list_subject{num_s};                
-        for num_r = 1:length(files_in.(subject).fmri)  
-            run          = cat(2,'run',num2str(num_r));            
-            name_job     = cat(2,'clean_corsica_intermediate_',subject,'_',run);            
-            name_job_in0 = cat(2,'sica_',subject,'_',run);
-            name_job_in1 = cat(2,'component_sel_ventricle_',subject,'_',run);
-            name_job_in2 = cat(2,'component_sel_stem_',subject,'_',run);
-            name_job_in3 = cat(2,'component_supp_',subject,'_',run);
-            clear files_in_tmp files_out_tmp opt_tmp            
-            files_in_tmp         = pipeline.(name_job_in3).files_out;            
+    
+    for num_r = 1:length(files_in.(subject).fmri)        
+        run = cat(2,'run',num2str(num_r));
+        
+        %%%%%%%%%%%%%%%%
+        %% Brain Mask %%
+        %%%%%%%%%%%%%%%%
+        if strcmp(files_in.(subject).mask_brain,'gb_niak_omitted')
+            clear files_in_tmp files_out_tmp opt_tmp
+            name_job_mask  = ['corsica_mask_brain_' subject '_' run];
+            files_in_tmp   = files_in.(subject).fmri{num_r};
+            files_out_tmp  = [opt.folder_sica subject filesep 'mask_brain_' subject '_' run ext_f];
+            opt_tmp        = opt.mask_brain;
+            pipeline = psom_add_job(pipeline,name_job_mask,'niak_brick_mask_brain',files_in_tmp,files_out_tmp,opt_tmp);
+            files_in.(subject).mask_brain = pipeline.(name_job_mask).files_out;
+        end
+        
+        %%%%%%%%%%
+        %% SICA %%
+        %%%%%%%%%%
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_job_sica        = cat(2,'sica_',subject,'_',run);
+        files_in_tmp.fmri    = files_in.(subject).fmri{num_r};
+        files_in_tmp.mask    = files_in.(subject).mask_brain;
+        files_out_tmp.space  = '';
+        files_out_tmp.time   = '';        
+        opt_tmp              = opt.sica;
+        opt_tmp.folder_out   = cat(2,opt.folder_sica,filesep,subject,filesep);
+        pipeline = psom_add_job(pipeline,name_job_sica,'niak_brick_sica',files_in_tmp,files_out_tmp,opt_tmp);
+                
+        %%%%%%%%%%%%%%%%%%%%%%%%%
+        %% COMPONENT SELECTION %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%
+        name_job_sel = cell([length(files_in.(subject).mask_selection) 1]);
+        files_sel = cell([length(files_in.(subject).mask_selection) 1]);
+        for num_m = 1:length(files_in.(subject).mask_selection)
+            name_job_sel{num_m} = ['component_sel_' labels_mask{num_m} '_',subject,'_' run];
+            clear files_in_tmp files_out_tmp opt_tmp
+            files_in_tmp.fmri              = files_in.(subject).fmri{num_r};
+            files_in_tmp.component         = pipeline.(name_job_sica).files_out.time;
+            files_in_tmp.mask              = files_in.(subject).mask_selection{num_m};
+            files_in_tmp.transformation    = files_in.(subject).transformation;
+            files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;
+            files_out_tmp                  = '';
+            opt_tmp                        = opt.component_sel;
+            opt_tmp.folder_out             = cat(2,opt.folder_sica,filesep,subject,filesep);
+            pipeline = psom_add_job(pipeline,name_job_sel{num_m},'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);
+            files_sel{num_m} = pipeline.(name_job_sel{num_m}).files_out;
+        end
+        
+        %%%%%%%%
+        %% QC %%
+        %%%%%%%%
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_job_qc          = cat(2,'qc_corsica_',subject,'_',run);
+        files_in_tmp.space   = pipeline.(name_job_sica).files_out.space;
+        files_in_tmp.time    = pipeline.(name_job_sica).files_out.time;
+        files_in_tmp.score   = files_sel;        
+        files_in_tmp.mask    = files_in.(subject).mask_brain;
+        files_out_tmp        = '';        
+        opt_tmp              = opt.qc_corsica;
+        opt_tmp.threshold    = opt.threshold;
+        opt_tmp.folder_out   = cat(2,opt.folder_sica,filesep,subject,filesep);
+        pipeline = psom_add_job(pipeline,name_job_qc,'niak_brick_qc_corsica',files_in_tmp,files_out_tmp,opt_tmp);
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% COMPONENT SUPPRESSION %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if ~flag_skip
+            clear files_in_tmp files_out_tmp opt_tmp
+            name_job_supp            = ['component_supp_',subject,'_',run];
+            files_in_tmp.fmri        = files_in.(subject).fmri{num_r};
+            files_in_tmp.space       = pipeline.(name_job_sica).files_out.space;
+            files_in_tmp.time        = pipeline.(name_job_sica).files_out.time;
+            files_in_tmp.mask_brain  = files_in.(subject).mask_brain;
+            files_in_tmp.compsel     = files_sel;            
+            files_out_tmp            = '';
+            opt_tmp                  = opt.component_supp;
+            opt_tmp.threshold        = opt.threshold;
+            opt_tmp.folder_out       = cat(2,opt.folder_out,filesep);
+            pipeline = psom_add_job(pipeline,name_job_supp,'niak_brick_component_supp',files_in_tmp,files_out_tmp,opt_tmp);
+        else
+            clear files_in_tmp files_out_tmp opt_tmp
+            [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).fmri{num_r});
+            name_job_supp              = ['component_supp_',subject,'_',run];
+            files_in_tmp{1}            = files_in.(session){num_r};
+            files_out_tmp{1}           = [opt.folder_out name_f '_p' ext_f];
+            opt_tmp.flag_verbose       = true;
+            files_out.(session){num_r} = files_out_tmp;
+            pipeline = psom_add_job(pipeline,name_job_supp,'niak_brick_copy',files_in_tmp,files_out_tmp,opt_tmp);
+        end
+        files_out.suppress_vol.(subject) = pipeline.(name_job_supp).files_out;
+        
+        %%%%%%%%%%%%%%
+        %% CLEANING %%
+        %%%%%%%%%%%%%%
+        if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')            
+            clear files_in_tmp files_out_tmp opt_tmp
+            name_job_clean       = ['clean_corsica_intermediate_',subject,'_',run];
+            files_in_tmp         = pipeline.(name_job_supp).files_out;
             files_out_tmp        = '';
             opt_tmp.flag_verbose = 1;
             switch opt.size_output
                 case 'minimum'
-                    opt_tmp.clean.space      = pipeline.(name_job_in0).files_out.space;
-                    opt_tmp.clean.time       = pipeline.(name_job_in0).files_out.time;
-                    opt_tmp.clean.figure     = pipeline.(name_job_in0).files_out.figure;
-                    opt_tmp.clean.compsel{1} = pipeline.(name_job_in1).files_out;
-                    opt_tmp.clean.compsel{2} = pipeline.(name_job_in2).files_out;
+                    opt_tmp.clean.space      = pipeline.(name_job_sica).files_out.space;
+                    opt_tmp.clean.time       = pipeline.(name_job_sica).files_out.time;
+                    opt_tmp.clean.figure     = pipeline.(name_job_sica).files_out.figure;
+                    opt_tmp.clean.compsel    = files_sel;                    
+                    opt_tmp.clean.mask       = files_in.(subject).mask_brain;
                 case 'quality_control'
-                    opt_tmp.clean.space      = pipeline.(name_job_in0).files_out.space;
-                    opt_tmp.clean.time       = pipeline.(name_job_in0).files_out.time;                    
+                    opt_tmp.clean.space      = pipeline.(name_job_sica).files_out.space;
+                    opt_tmp.clean.time       = pipeline.(name_job_sica).files_out.time;
+                    opt_tmp.clean.compsel    = files_sel;
             end
-            pipeline = psom_add_job(pipeline,name_job,'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp);                    
-        end % run
-    end % subject
-end % size_output
+            pipeline = psom_add_job(pipeline,name_job_clean,'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp);
+        end % size_output
+        
+    end % run
+end % subject
+
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%

@@ -51,18 +51,21 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       will be used to resample the fMRI datasets. By default it uses
 %       a 2 mm isotropic space with a field of view adjusted on the brain.
 %
-%   FOLDER_PREPROCESSED
+%   FOLDER_OUT
 %       (string) where to write the preprocessed fMRI volumes.
 %
 %   FOLDER_ANAT
-%       (string) where to write the preprocessed anatomical volumes as well 
-%       as the results related to T1-T2 coregistration.
+%       (string, default FOLDER_OUT) where to write the preprocessed 
+%       anatomical volumes as well as the results related to T1-T2 
+%       coregistration.
 %
 %   FOLDER_QC
-%       (string) where to write the results of quality control.
+%       (string, default FOLDER_OUT) where to write the results of quality 
+%       control.
 %
 %   FOLDER_INTERMEDIATE
-%       (string) where to write the intermediate results.
+%       (string, default FOLDER_OUT) where to write the intermediate 
+%       results.
 %
 %   FLAG_TEST
 %       (boolean, default false) If FLAG_TEST is true, the pipeline will 
@@ -167,6 +170,12 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           (scalar, default 0.15) a threshold to apply on the score for 
 %           suppression (scores above the thresholds are selected, values
 %           from 0 to 1).
+%
+%       FLAG_SKIP
+%           (boolean, default false) if FLAG_SKIP is true, the brick does 
+%           not do anything, just copying the inputs to the outputs (the 
+%           ICA decomposition will still be generated and the component 
+%           selection will still be generated for quality control purposes)
 %
 %   TIME_FILTER 
 %       (structure) options of NIAK_BRICK_TIME_FILTER (temporal filtering).
@@ -316,13 +325,25 @@ default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_preprocessed' , 'folder_anat' , 'folder_qc' , 'folder_qc' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
-gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN                   , NaN           , NaN         , NaN         , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
+gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
+gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
 niak_set_defaults
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
+end
+
+if isempty(folder_anat)
+    opt.folder_anat = opt.folder_out;
+end
+
+if isempty(folder_qc)
+    opt.folder_qc = opt.folder_out;
+end
+
+if isempty(folder_intermediate)
+    opt.folder_intermediate = opt.folder_out;
 end
 
 %% Initialization of the pipeline 
@@ -510,6 +531,7 @@ files_in_tmp.(label).transformation     = pipeline.(name_job_transf).files_out;
 opt_tmp                                 = opt.corsica;
 opt_tmp.size_output                     = opt.size_output;
 opt_tmp.folder_out                      = [opt.folder_intermediate label filesep 'corsica' filesep];
+opt_tmp.folder_sica                     = [opt.folder_qc label filesep 'corsica' filesep];
 opt_tmp.flag_test                       = true;
 [pipeline_corsica,opt_tmp,files_co] = niak_pipeline_corsica(files_in_tmp,opt_tmp);
 pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
@@ -562,7 +584,7 @@ for num_r = 1:length(files_re);
     files_in_tmp = files_re{num_r};            
     files_out_tmp = '';            
     opt_tmp = opt.smooth_vol;
-    opt_tmp.folder_out = [opt.folder_fmri label filesep 'resample' filesep];
+    opt_tmp.folder_out = [opt.folder_out label filesep 'resample' filesep];
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
     files_sm{num_r} = pipeline.(name_job).files_out;
 end

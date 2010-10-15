@@ -1,8 +1,4 @@
 function [res_ica]=niak_sica(data,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_SICA
-%
 % ICA processing of 2D dataset
 %
 % SYNTAX:
@@ -86,7 +82,7 @@ function [res_ica]=niak_sica(data,opt)
 % The FastICA methods require the installation of the fastICA toolbox.
 %
 % Copyright (c) Vincent Perlbarg, U678, LIF, Inserm, UMR_S 678, Laboratoire
-% d'Imagerie Fonctionnelle, F-75634, Paris, France, 2005.
+% d'Imagerie Fonctionnelle, F-75634, Paris, France, 2005-2010.
 % Maintainer : vperlbar@imed.jussieu.fr
 % See licensing information in the code.
 % Keywords : NIAK, ICA, CORSICA

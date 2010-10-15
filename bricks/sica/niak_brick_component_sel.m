@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_COMPONENT_SEL
-%
 % Select independent components based on spatial priors.
 %
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SEL(FILES_IN,FILES_OUT,OPT)
@@ -34,9 +30,10 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %           attributed a selection score of 0.
 %
 %  * FILES_OUT 
-%       (string, default <base COMPONENT>_<base MASK>_compsel.dat) A text 
-%       file. First column gives the numbers of the selected components in 
-%       the order of selection, and the second column gives the score of selection.
+%       (string, default <base COMPONENT>_<base MASK>_compsel.mat) The name
+%       of a mat file with two variables SCORE and ORDER. SCORE(I) is the
+%       selection score of component ORDER(I). Components are ranked by 
+%       descending selection scores.
 %
 %  * OPT   
 %       (structure) with the following fields :
@@ -184,7 +181,7 @@ if isempty(opt.folder_out)
 end
 
 if isempty(files_out)
-    files_out = cat(2,opt.folder_out,filesep,name_s,'_',name_m,'_compsel.dat');
+    files_out = cat(2,opt.folder_out,filesep,name_s,'_',name_m,'_compsel.mat');
 end
 
 if ~strcmp(opt.type_score,'freq')&~strcmp(opt.type_score,'inertia')
@@ -253,7 +250,9 @@ clear vol_func
 sigs{1} = niak_correct_mean_var(tseries_roi,'mean_var');
 
 %% Temporal sica components
-A = load(files_in.component);
+tmp = load(files_in.component);
+A = tmp.tseries;
+clear tmp
 nb_comp = size(A,2);
 tseries_ica = niak_correct_mean_var(A,'mean_var');
 
@@ -312,21 +311,10 @@ else
         end
         selecVector(num_xoi(num_c)) = 0;
     end
-    [score,num_comp] = sort(selecVector',1,'descend');
+    [score,order] = sort(selecVector',1,'descend');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Writting the results of component selection %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[hf,msg] = fopen(files_out,'w');
-
-if hf == -1
-    error(msg);
-end
-
-for num_l = 1:length(score)
-    fprintf(hf,'%i %1.12f \n',num_comp(num_l),score(num_l));
-end
-
-fclose(hf);
+save(files_out,'score','order');

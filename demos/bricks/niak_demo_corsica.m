@@ -19,7 +19,7 @@ function [pipeline,opt] = niak_demo_corsica(path_demo,opt)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% PIPELINE,OPT : outputs of NIAK_PIPELINE_MOTION_CORRECTION.
+% PIPELINE,OPT : outputs of NIAK_PIPELINE_CORSICA
 %
 % _________________________________________________________________________
 % This script will apply corsica on the motor condition of subject 1. There
@@ -112,10 +112,14 @@ switch format_demo
 
         %% Subject 1
         files_in.subject1.fmri = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz')};
+        files_in.subject1.mask_selection{1} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_ventricle.mnc.gz');
+        files_in.subject1.mask_selection{2} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_stem.mnc.gz');
         files_in.subject1.transformation = 'gb_niak_omitted';
 
         %% Subject 2
         files_in.subject2.fmri = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc.gz')};
+        files_in.subject2.mask_selection{1} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_ventricle.mnc.gz');
+        files_in.subject2.mask_selection{2} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_stem.mnc.gz');       
         files_in.subject2.transformation = 'gb_niak_omitted';
 
         % Here, no transformation to the MNI152 space is specified. This is a disaster because the spatial apriori
@@ -133,25 +137,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
-opt.folder_out = cat(2,gb_niak_path_demo,filesep,'corsica',filesep);
-
-
-%%%%%%%%%%%%%%%%%%%%
-%% Bricks options %%
-%%%%%%%%%%%%%%%%%%%%
-
-%% These options correspond to the 'corsica' style of
-%% pipeline.
-
-%% 1. Individual spatial ICA (niak_brick_sica)
-
-%% 2. Component selection
-
-%% 3. Component suppression
+opt.folder_out  = cat(2,gb_niak_path_demo,filesep,'corsica',filesep);
+opt.labels_mask = {'ventricle','stem'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Building pipeline using the fmri_preprocess template  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-pipeline = niak_pipeline_corsica(files_in,opt);
+[pipeline,opt] = niak_pipeline_corsica(files_in,opt);
 

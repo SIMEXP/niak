@@ -22,6 +22,11 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 %           a 3D+t dataset. Volume K is the spatial distribution of the Kth
 %           source estimaed through ICA.
 %
+%       MASK_BRAIN
+%           (string)
+%           A file name of a binary mask of the brain that was used in
+%           NIAK_BRICK_SICA.
+%
 %       TIME 
 %           (string)
 %           a text file. Column Kth is the temporal distribution of the Kth
@@ -29,10 +34,11 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 %
 %       COMPSEL 
 %           (cell of strings)
-%           Each entry of COMPSEL is a file of component selection 
-%           (see NIAK_BRICK_COMPONENT_SEL). It is a text file where the
-%           first column is the number of the component, and optionally the
-%           second column is a score.
+%           The name of a mat file with two variables SCORE and ORDER. 
+%           SCORE(I) is the selection score of component ORDER(I). 
+%           Components are ranked by descending selection scores.
+%           If the variable SCORE cannot be found, every score will be set
+%           to 0.
 %
 %  * FILES_OUT 
 %           (string, default <BASE FMRI>_p.<EXT FMRI>) 
@@ -93,15 +99,14 @@ function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out
 %
 % _________________________________________________________________________
 % SEE ALSO : 
-% 
 % NIAK_BRICK_SICA, NIAK_COMPONENT_SEL, NIAK_BRICK_COMPONENT_SUPP, NIAK_SICA
-%
+% NIAK_PIPELINE_CORSICA
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, McGill University, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : pipeline, niak, preprocessing, fMRI
+% Keywords : preprocessing, fMRI, CORSICA, physiological noise, ICA
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -134,8 +139,8 @@ end
 
 %% Input files
 gb_name_structure = 'files_in';
-gb_list_fields = {'fmri','space','time','compsel'};
-gb_list_defaults = {NaN,NaN,NaN,NaN};
+gb_list_fields    = { 'fmri' , 'space' , 'mask_brain' , 'time' , 'compsel' };
+gb_list_defaults  = { NaN    , NaN     , NaN          , NaN    , NaN       };
 niak_set_defaults
 
 %% Output file
@@ -145,20 +150,12 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'threshold','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0.15,1,0,''};
+gb_list_fields    = {'threshold' , 'flag_verbose', 'flag_test' , 'folder_out' };
+gb_list_defaults  = {0.15        , 1             , 0           , ''           };
 niak_set_defaults
 
 %% Parsing the input names
-[path_s,name_s,ext_s] = fileparts(files_in.fmri(1,:));
-if isempty(path_s)
-    path_s = '.';
-end
-
-if strcmp(ext_s,gb_niak_zip_ext)
-    [tmp,name_s,ext_s] = fileparts(name_s);
-    ext_s = cat(2,ext_s,gb_niak_zip_ext);
-end
+[path_s,name_s,ext_s] = niak_fileparts(files_in.fmri);
 
 %% Setting up default output
 if isempty(opt.folder_out)
@@ -185,11 +182,11 @@ end
 list_supp = [];
 
 for num_s = 1:length(files_in.compsel)
-    mat_sel = load(files_in.compsel{num_s});
-    comps = round(mat_sel(:,1));
-    if size(mat_sel,2)>1
-        score = mat_sel(:,2);
-        comps = comps(score>threshold);
+    data = load(files_in.compsel{num_s});    
+    if isfield(data,'score')        
+        comps = data.order((data.score)>=threshold);
+    else
+        comps = data.order;
     end
     list_supp = union(list_supp,comps);
 end
@@ -203,37 +200,29 @@ end
 if flag_verbose
     fprintf('Reading functional data and sica results...\n')
 end
-[hdr_func,vol_func] = niak_read_vol(files_in.fmri);
-[hdr_sica,vol_space] = niak_read_vol(files_in.space);
-vec_time = load(files_in.time);
-
-%% Reshaping the functional data in a time*space array
-mask_brain = niak_mask_brain(mean(abs(vol_func),4));
-[nx,ny,nz,nt] = size(vol_func);
-vol_supp = reshape(vol_func,[nx*ny*nz nt]);
-clear vol_func
-tseries_func = vol_supp(mask_brain>0,:)';
+[hdr_func,vol_func]   = niak_read_vol(files_in.fmri);
+[hdr_sica,vol_space]  = niak_read_vol(files_in.space);
+[hdr_mask,mask_brain] = niak_read_vol(files_in.mask_brain);
+mask_brain = mask_brain>0;
+load(files_in.time,'tseries');
 
 %% Building the time*space array associated with the sica components
-vec_space = reshape(vol_space,[nx*ny*nz size(vol_space,4)]);
+vec_space    = niak_vol2tseries(vol_space,mask_brain);
 clear vol_space
-tseries_sica = vec_time(:,list_supp)*vec_space(mask_brain>0,list_supp)';
+tseries_sica = tseries(:,list_supp)*vec_space(list_supp,:);
 
-%% Removing the effect of sica component on fMRI data
+%% Removing the effect of noise components on fMRI data
 if flag_verbose
     fprintf('Removing the effect of components ...\n')
 end
-vol_supp(mask_brain>0,:) = (tseries_func-tseries_sica)';
-vol_supp = reshape(vol_supp,[nx ny nz nt]);
+[nx,ny,nz,nt]          = size(vol_func);
+vol_func               = reshape(vol_func,[nx*ny*nz nt]);
+vol_func(mask_brain,:) = vol_func(mask_brain,:)-(tseries_sica');
+vol_func               = reshape(vol_func,[nx ny nz nt]);
 
 %% Writting results
 if flag_verbose
     fprintf('Writting results ...\n')
 end
-opt_hist.command = 'niak_brick_component_supp';
-opt_hist.files_in = files_in;
-opt_hist.files_out = files_out;
-
-hdr_func = niak_set_history(hdr_func,opt_hist);
 hdr_func.file_name = files_out;
-niak_write_vol(hdr_func,vol_supp);
+niak_write_vol(hdr_func,vol_func);

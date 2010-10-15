@@ -80,7 +80,7 @@ function [pipeline,opt,files_out,files_out_within_run] = niak_pipeline_motion_co
 %       'trilinear', 'tricubic', 'nearest_neighbour', 'sinc'.
 %
 %   FLAG_SKIP
-%       (boolean, default 0) if FLAG_SKIP == 1, the flag does not do 
+%       (boolean, default 0) if FLAG_SKIP == 1, the brick does not do 
 %       anything, just copying the inputs to the outputs (note that it is 
 %       still possible to suppress volumes). The motion parameters are 
 %       still estimated and the quality control is still performed.
@@ -330,7 +330,7 @@ for num_s = 1:nb_session
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
         [path_f,name_target,ext_f] = niak_fileparts(files_in.(session_ref){run_ref});
         if flag_skip
-            name_job = sprintf('copy_%s%s',label,name_f);
+            name_job = sprintf('motion_copy_%s%s',label,name_f);
             clear files_in_tmp files_out_tmp opt_tmp
             files_in_tmp{1}            = files_in.(session){num_r};            
             files_out_tmp              = [opt.folder_out name_f '_mc' ext_f];

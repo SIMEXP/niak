@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_COPY
-%
 % Copy a bunch of files.
 %
 % SYNTAX:
@@ -11,30 +7,30 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN        
-%       (cell of strings) a list of file names
+% FILES_IN        
+%   (cell of strings) a list of file names
 %
-%  * FILES_OUT       
-%       (cell of strings, default OPT.FOLDER_OUT/<BASE FILES_IN>_copy.<EXT FILES_IN>) 
-%       File name for outputs. If FILES_OUT is an empty string, the default
-%       name is generated.
+% FILES_OUT       
+%   (cell of strings, default OPT.FOLDER_OUT/<BASE FILES_IN>_copy.<EXT FILES_IN>) 
+%   File name for outputs. If FILES_OUT is an empty string, the default
+%   name is generated.
 %
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+%   (structure) with the following fields.  
 %
-%       FOLDER_OUT 
-%           (string, default: same as FILES_IN{1}) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
+%   FOLDER_OUT 
+%       (string, default: same as FILES_IN{1}) If present, all default 
+%       outputs will be created in the folder FOLDER_OUT. The folder 
+%       needs to be created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%   FLAG_VERBOSE 
+%       (boolean, default 1) if the flag is 1, then the function prints 
+%       some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%       (boolean, default 0) if FLAG_TEST equals 1, the brick does not do 
+%       anything but update the default values in FILES_IN, FILES_OUT and 
+%       OPT.
 %           
 % _________________________________________________________________________
 % OUTPUTS
@@ -75,7 +71,7 @@ niak_gb_vars % Load some important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COPY(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_copy'' for more info.')
 end
 
