@@ -243,7 +243,7 @@ if isempty(labels_mask)
     end
 end
 
-opt.psom.path_logs = [folder_sica 'logs' filesep];
+opt.psom.path_logs = [opt.folder_sica 'logs' filesep];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%
