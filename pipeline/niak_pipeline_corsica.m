@@ -267,7 +267,7 @@ for num_s = 1:nb_subject
             clear files_in_tmp files_out_tmp opt_tmp
             name_job_mask  = ['corsica_mask_brain_' subject '_' run];
             files_in_tmp   = files_in.(subject).fmri{num_r};
-            files_out_tmp  = [opt.folder_sica subject filesep 'mask_brain_' subject '_' run ext_f];
+            files_out_tmp  = [opt.folder_sica 'mask_brain_' subject '_' run ext_f];
             opt_tmp        = opt.mask_brain;
             pipeline = psom_add_job(pipeline,name_job_mask,'niak_brick_mask_brain',files_in_tmp,files_out_tmp,opt_tmp);
             files_in.(subject).mask_brain = pipeline.(name_job_mask).files_out;
@@ -283,7 +283,7 @@ for num_s = 1:nb_subject
         files_out_tmp.space  = '';
         files_out_tmp.time   = '';        
         opt_tmp              = opt.sica;
-        opt_tmp.folder_out   = cat(2,opt.folder_sica,filesep,subject,filesep);
+        opt_tmp.folder_out   = opt.folder_sica;
         pipeline = psom_add_job(pipeline,name_job_sica,'niak_brick_sica',files_in_tmp,files_out_tmp,opt_tmp);
                 
         %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -301,7 +301,7 @@ for num_s = 1:nb_subject
             files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;
             files_out_tmp                  = '';
             opt_tmp                        = opt.component_sel;
-            opt_tmp.folder_out             = cat(2,opt.folder_sica,filesep,subject,filesep);
+            opt_tmp.folder_out             = opt.folder_sica;
             pipeline = psom_add_job(pipeline,name_job_sel{num_m},'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);
             files_sel{num_m} = pipeline.(name_job_sel{num_m}).files_out;
         end
@@ -318,7 +318,7 @@ for num_s = 1:nb_subject
         files_out_tmp        = '';        
         opt_tmp              = opt.qc_corsica;
         opt_tmp.threshold    = opt.threshold;
-        opt_tmp.folder_out   = cat(2,opt.folder_sica,filesep,subject,filesep);
+        opt_tmp.folder_out   = opt.folder_sica;
         pipeline = psom_add_job(pipeline,name_job_qc,'niak_brick_qc_corsica',files_in_tmp,files_out_tmp,opt_tmp);
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -337,17 +337,18 @@ for num_s = 1:nb_subject
             opt_tmp.threshold        = opt.threshold;
             opt_tmp.folder_out       = cat(2,opt.folder_out,filesep);
             pipeline = psom_add_job(pipeline,name_job_supp,'niak_brick_component_supp',files_in_tmp,files_out_tmp,opt_tmp);
+            files_out.suppress_vol.(subject){num_r} = pipeline.(name_job_supp).files_out;
         else
             clear files_in_tmp files_out_tmp opt_tmp
             [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).fmri{num_r});
             name_job_supp              = ['component_supp_',subject,'_',run];
             files_in_tmp{1}            = files_in.(session){num_r};
             files_out_tmp{1}           = [opt.folder_out name_f '_p' ext_f];
-            opt_tmp.flag_verbose       = true;
-            files_out.(session){num_r} = files_out_tmp;
+            opt_tmp.flag_verbose       = true;            
             pipeline = psom_add_job(pipeline,name_job_supp,'niak_brick_copy',files_in_tmp,files_out_tmp,opt_tmp);
+            files_out.suppress_vol.(subject){num_r} = pipeline.(name_job_supp).files_out{1};
         end
-        files_out.suppress_vol.(subject) = pipeline.(name_job_supp).files_out;
+        
         
         %%%%%%%%%%%%%%
         %% CLEANING %%

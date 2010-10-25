@@ -409,14 +409,14 @@ opt_tmp             = opt.motion_correction;
 opt_tmp.label       = opt.label;
 opt_tmp.flag_test   = true;
 opt_tmp.folder_out  = [opt.folder_intermediate,filesep,label,filesep,'motion_correction',filesep];
-[pipeline_mc,opt_tmp,files_mc,files_mp] = niak_pipeline_motion_correction(files_in_tmp,opt_tmp);
+[pipeline_mc,opt_tmp,files_motion] = niak_pipeline_motion_correction(files_in_tmp,opt_tmp);
 pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
 
 %% Clean-up
 if strcmp(size_output,'quality_control')    
     clear opt_tmp files_in_tmp files_out_tmp
     name_job = ['clean_slice_timing_',label];
-    files_in_tmp = files_mc;    
+    files_in_tmp = files_motion.motion_corrected;    
     files_out_tmp = {};
     opt_tmp.clean = files_a;
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp);        
@@ -427,8 +427,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 clear files_in_tmp files_out_tmp opt_tmp
 name_job                             = ['qc_motion_' label];
-files_in_tmp.vol                     = psom_files2cell(files_mc);
-files_in_tmp.motion_parameters       = psom_files2cell(files_mp);
+files_in_tmp.vol                     = psom_files2cell(files_motion.motion_corrected);
+files_in_tmp.motion_parameters       = psom_files2cell(files_motion.motion_parameters);
 files_out_tmp.fig_motion_parameters  = [opt.folder_qc label filesep 'motion_correction' filesep 'fig_motion_within_run.pdf'];
 files_out_tmp.mask_average           = [opt.folder_qc label filesep 'motion_correction' filesep 'mask_average' ext_f];
 files_out_tmp.mask_group             = [opt.folder_anat 'func_' label '_mask_nativefunc' ext_f];
@@ -444,20 +444,20 @@ pipeline = psom_add_job(pipeline,name_job,'niak_brick_qc_motion_correction_ind',
 %% T1 preprocess %%
 %%%%%%%%%%%%%%%%%%%
 clear files_in_tmp files_out_tmp opt_tmp
-name_job                              = ['t1_preprocess_',label];
+name_job_t1                           = ['t1_preprocess_',label];
 files_in_tmp                          = files_in.anat;
-files_out_tmp.transformation_lin      = [opt_tmp.folder_anat,filesep,'transf_',label,'_nativet1_to_stereolin.xfm'];
-files_out_tmp.transformation_nl       = [opt_tmp.folder_anat,filesep,'transf_',label,'_stereolin_to_stereonl.xfm'];
-files_out_tmp.transformation_nl_grid  = [opt_tmp.folder_anat,filesep,'transf_',label,'_stereolin_to_stereonl_grid.mnc'];
-files_out_tmp.anat_nuc                = [opt_tmp.folder_anat,filesep,'anat_',label,'_nuc_nativet1',ext_f];
-files_out_tmp.anat_nuc_stereolin      = [opt_tmp.folder_anat,filesep,'anat_',label,'_nuc_stereolin',ext_f];
-files_out_tmp.anat_nuc_stereonl       = [opt_tmp.folder_anat,filesep,'anat_',label,'_nuc_stereonl',ext_f];
-files_out_tmp.mask_stereolin          = [opt_tmp.folder_anat,filesep,'anat_',label,'_mask_stereolin',ext_f];
-files_out_tmp.mask_stereonl           = [opt_tmp.folder_anat,filesep,'anat_',label,'_mask_stereonl',ext_f];
-files_out_tmp.classify                = [opt_tmp.folder_anat,filesep,'anat_',label,'_classify_stereolin',ext_f];
+files_out_tmp.transformation_lin      = [opt.folder_anat,filesep,'transf_',label,'_nativet1_to_stereolin.xfm'];
+files_out_tmp.transformation_nl       = [opt.folder_anat,filesep,'transf_',label,'_stereolin_to_stereonl.xfm'];
+files_out_tmp.transformation_nl_grid  = [opt.folder_anat,filesep,'transf_',label,'_stereolin_to_stereonl_grid.mnc'];
+files_out_tmp.anat_nuc                = [opt.folder_anat,filesep,'anat_',label,'_nuc_nativet1',ext_f];
+files_out_tmp.anat_nuc_stereolin      = [opt.folder_anat,filesep,'anat_',label,'_nuc_stereolin',ext_f];
+files_out_tmp.anat_nuc_stereonl       = [opt.folder_anat,filesep,'anat_',label,'_nuc_stereonl',ext_f];
+files_out_tmp.mask_stereolin          = [opt.folder_anat,filesep,'anat_',label,'_mask_stereolin',ext_f];
+files_out_tmp.mask_stereonl           = [opt.folder_anat,filesep,'anat_',label,'_mask_stereonl',ext_f];
+files_out_tmp.classify                = [opt.folder_anat,filesep,'anat_',label,'_classify_stereolin',ext_f];
 opt_tmp                               = opt.t1_preprocess;
 opt_tmp.folder_out                    = opt.folder_anat;
-pipeline = psom_add_job(pipeline,name_job,'niak_brick_t1_preprocess',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,name_job_t1,'niak_brick_t1_preprocess',files_in_tmp,files_out_tmp,opt_tmp);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% T1-T2 coregistration %%
@@ -482,14 +482,14 @@ pipeline = psom_add_job(pipeline,['anat2func_',label],'niak_brick_anat2func',fil
 %% Concatenate T2-to-T1_stereo_lin and T1_stereo_lin-to-stereotaxic-nl spatial transformation %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear opt_tmp files_in_tmp files_out_tmp
-name_job            = ['concat_transf_nl_' label];
-name_job_anat2func  = ['anat2func_' label];
-name_job_anat       = ['t1_preprocess_',label];
-files_in_tmp{1}     = pipeline.(name_job_anat2func).files_out.transformation;
-files_in_tmp{2}     = pipeline.(name_job_anat).files_out.transformation_nl;
-files_out_tmp       = [opt.folder_anat 'transf_',label,'_nativefunc_to_stereonl.xfm'];
-opt_tmp.flag_test   = 0;
-pipeline = psom_add_job(pipeline,name_job,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
+name_job_concat_transf  = ['concat_transf_nl_' label];
+name_job_anat2func      = ['anat2func_' label];
+name_job_anat           = ['t1_preprocess_',label];
+files_in_tmp{1}         = pipeline.(name_job_anat2func).files_out.transformation;
+files_in_tmp{2}         = pipeline.(name_job_anat).files_out.transformation_nl;
+files_out_tmp           = [opt.folder_anat 'transf_',label,'_nativefunc_to_stereonl.xfm'];
+opt_tmp.flag_test       = 0;
+pipeline = psom_add_job(pipeline,name_job_concat_transf,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate functional brain masks/mean/std volumes in the stereotaxic (non-linear) space %%
@@ -536,12 +536,12 @@ for num_s = 1:nb_session
         run = ['run' num2str(num_r)];
         clear opt_tmp files_in_tmp files_out_tmp
         name_job                     = ['time_filter_',label,'_',session,'_',run];        
-        files_in_tmp                 = list_mc.(session){num_r};
+        files_in_tmp                 = files_motion.motion_corrected.(session){num_r};
         files_out_tmp.filtered_data  = '';                                    
         opt_tmp                      = opt.time_filter;
         opt_tmp.folder_out           = [opt.folder_intermediate filesep label filesep 'time_filter' filesep];
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
-        files_tf.(session){num_r}    = pipeline.(name_job).files_out;               
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
+        files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
     end
 end
 
@@ -550,7 +550,7 @@ if strcmp(size_output,'quality_control')
     clear opt_tmp files_in_tmp files_out_tmp
     files_in_tmp  = files_tf;
     files_out_tmp = {};
-    opt_tmp.clean = files_mc;
+    opt_tmp.clean = files_motion.motion_corrected;
     pipeline = psom_add_job(pipeline,['clean_motion_correction_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);        
 end
 
@@ -563,15 +563,16 @@ files_in_tmp.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ven
 files_in_tmp.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
 files_in_tmp.functional_space   = pipeline.(name_job_qc_motion).files_out.mask_group;
 files_in_tmp.transformation_lin = pipeline.(name_job_anat2func).files_out.transformation;
+files_in_tmp.transformation_nl  = pipeline.(name_job_concat_transf).files_out;
+files_in_tmp.segmentation       = pipeline.(name_job_t1).files_out.classify;
 files_out_tmp.mask_vent_ind     = [opt.folder_qc label filesep 'corsica' filesep label '_mask_vent_nativefunc' ext_f];
 files_out_tmp.mask_stem_ind     = [opt.folder_qc label filesep 'corsica' filesep label '_mask_stem_nativefunc' ext_f];
 opt_tmp.flag_test = false;
-pipeline = psom_add_job(pipeline,name_job_corsica,'niak_brick_mask_corsica',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,name_job_mask_corsica,'niak_brick_mask_corsica',files_in_tmp,files_out_tmp,opt_tmp);
 
 %%%%%%%%%%%%%
 %% CORSICA %%
 %%%%%%%%%%%%%
-name_job_transf = ['concat_transf_nl_' label];
 clear files_in_tmp files_out_tmp opt_tmp 
 files_in_tmp.(label).fmri               = psom_files2cell(files_tf);
 files_in_tmp.(label).component_to_keep  = files_in.component_to_keep;
@@ -585,6 +586,7 @@ opt_tmp.folder_sica                     = [opt.folder_qc label filesep 'corsica'
 opt_tmp.flag_test                       = true;
 opt_tmp.labels_mask                     = {'ventricles','stem'};
 [pipeline_corsica,opt_tmp,files_co] = niak_pipeline_corsica(files_in_tmp,opt_tmp);
+files_co = files_co.suppress_vol.(label);
 pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
 
 %% Clean up
@@ -603,16 +605,15 @@ files_re = cell([length(files_co) 1]);
 for num_r = 1:length(files_co);
     run = ['run',num2str(num_r)];
     clear files_in_tmp files_out_tmp opt_tmp     
-    name_job = ['resample_' label '_' run];
-    name_job_transf = ['concat_transf_nl_' label];      
+    name_job_resample = ['resample_' label '_' run];    
     files_in_tmp.source = files_co{num_r};            
     files_in_tmp.target = opt.template_fmri;
-    files_in_tmp.transformation = pipeline.(name_job_transf).files_out;
+    files_in_tmp.transformation = pipeline.(name_job_concat_transf).files_out;
     files_out_tmp = '';            
     opt_tmp = opt.resample_vol;
     opt_tmp.folder_out = [opt.folder_intermediate label filesep 'resample' filesep];
-    pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
-    files_re{num_r} = pipeline.(name_job).files_out;
+    pipeline = psom_add_job(pipeline,name_job_resample,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
+    files_re{num_r} = pipeline.(name_job_resample).files_out;
 end
 
 %% Clean up
@@ -636,7 +637,7 @@ for num_r = 1:length(files_re);
     files_out_tmp = '';            
     opt_tmp = opt.smooth_vol;
     opt_tmp.folder_out = [opt.folder_out label filesep 'resample' filesep];
-    pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
+    pipeline = psom_add_job(pipeline,name_job,'niak_brick_smooth_vol',files_in_tmp,files_out_tmp,opt_tmp);
     files_sm{num_r} = pipeline.(name_job).files_out;
 end
 

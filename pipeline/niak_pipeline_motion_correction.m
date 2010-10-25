@@ -1,9 +1,9 @@
-function [pipeline,opt,files_out,files_out_within_run] = niak_pipeline_motion_correction(files_in,opt)
+function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt)
 % Within-subject motion correction of fMRI data.
 % Correction is implemented via estimation of a rigid-body transform and 
 % spatial resampling.
 %
-% [PIPELINE,OPT] = NIAK_PIPELINE_MOTION_CORRECTION(FILES_IN,OPT)
+% [PIPELINE,OPT,FILES_OUT] = NIAK_PIPELINE_MOTION_CORRECTION(FILES_IN,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -104,10 +104,16 @@ function [pipeline,opt,files_out,files_out_within_run] = niak_pipeline_motion_co
 %       (structure) same as inputs, updated for default values.
 %
 %   FILES_OUT
-%       (structure) a list of the final (resampled) output files.
+%       (structure) with the following fields :
 %
-%   FILES_OUT_WITHIN_RUN
-%       (structure) a list of the within-run motion parameters.
+%       MOTION_CORRECTED
+%           (structure) a list of the final (motion corrected) output 
+%           files organized as FILES_IN.
+%
+%       MOTION_PARAMETERS
+%           (structure) a list of the within-run motion parameters
+%           organized as FILES_IN.
+%
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_BRICK_MOTION_PARAMETERS, NIAK_DEMO_PIPELINE_MOTION_CORRECTION
@@ -219,7 +225,7 @@ for num_s = 1:nb_session
     for num_r = 1:nb_run(num_s)        
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job        = sprintf('target_%s%s',label,name_f);
+        name_job        = sprintf('motion_target_%s%s',label,name_f);
         files_in_tmp{1} = files_in.(session){num_r};
         files_out_tmp   = [opt.folder_out name_job ext_f];
         if ischar(vol_ref)
@@ -239,11 +245,12 @@ for num_s = 1:nb_session
     for num_r = 1:nb_run(num_s)        
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job_target = sprintf('target_%s%s',label,name_f);
+        name_job_target = sprintf('motion_target_%s%s',label,name_f);
         name_job = sprintf('motion_within_run_%s%s',label,name_f);
         files_in_tmp.fmri   = files_in.(session){num_r};
         files_in_tmp.target = pipeline.(name_job_target).files_out;
         files_out_tmp       = [opt.folder_out name_job '.mat'];
+        files_out.motion_parameters.(session){num_r} = files_out_tmp;
         opt_tmp             = opt.parameters;
         opt_tmp.tol         = opt.tol_within_run;                
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_motion_parameters',files_in_tmp,files_out_tmp,opt_tmp);
@@ -259,14 +266,13 @@ for num_s = 1:nb_session
         if num_r~=run_ref
             [path_f,name_source,ext_f] = niak_fileparts(files_in.(session){num_r});
             [path_f,name_target,ext_f] = niak_fileparts(files_in.(session){run_ref});
-            name_job_source     = sprintf('target_%s%s',label,name_source);
-            name_job_target     = sprintf('target_%s%s',label,name_target);            
+            name_job_source     = sprintf('motion_target_%s%s',label,name_source);
+            name_job_target     = sprintf('motion_target_%s%s',label,name_target);            
             clear files_in_tmp files_out_tmp opt_tmp
             name_job            = sprintf('motion_within_session_%s%s',label,name_source);
             files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
             files_in_tmp.target = pipeline.(name_job_target).files_out;
-            files_out_tmp       = [opt.folder_out name_job '.mat'];
-            files_out_within_run.(session){num_r} = files_out_tmp;
+            files_out_tmp       = [opt.folder_out name_job '.mat'];            
             opt_tmp             = opt.parameters;
             opt_tmp.tol         = opt.tol_between_run;                
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_motion_parameters',files_in_tmp,files_out_tmp,opt_tmp);
@@ -282,8 +288,8 @@ for num_s = 1:nb_session
     if ~strcmp(session,session_ref)        
         [path_f,name_target,ext_f] = niak_fileparts(files_in.(session_ref){run_ref});
         [path_f,name_source,ext_f] = niak_fileparts(files_in.(session){run_ref});
-        name_job_target    = sprintf('target_%s%s',label,name_target);
-        name_job_source    = sprintf('target_%s%s',label,name_source);
+        name_job_target    = sprintf('motion_target_%s%s',label,name_target);
+        name_job_source    = sprintf('motion_target_%s%s',label,name_source);
         clear files_in_tmp files_out_tmp opt_tmp
         name_job            = sprintf('motion_between_session_%s%s',label,name_source);
         files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
@@ -334,17 +340,17 @@ for num_s = 1:nb_session
             clear files_in_tmp files_out_tmp opt_tmp
             files_in_tmp{1}            = files_in.(session){num_r};            
             files_out_tmp              = [opt.folder_out name_f '_mc' ext_f];
-            files_out.(session){num_r} = files_out_tmp;
+            files_out.motion_corrected.(session){num_r} = files_out_tmp;
             opt_tmp.operation          = sprintf('vol = vol_in{1}(:,:,:,%i:end);',1+suppress_vol);
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
         else
-            name_job = sprintf('resample_%s%s',label,name_f);
+            name_job = sprintf('motion_resample_%s%s',label,name_f);
             clear files_in_tmp files_out_tmp opt_tmp
             files_in_tmp.transformation = pipeline.(sprintf('motion_parameters_%s%s',label,name_f)).files_out;
             files_in_tmp.source         = files_in.(session){num_r};
-            files_in_tmp.target         = pipeline.(sprintf('target_%s%s',label,name_target)).files_out;
+            files_in_tmp.target         = pipeline.(sprintf('motion_target_%s%s',label,name_target)).files_out;
             files_out_tmp               = [opt.folder_out name_f '_mc' ext_f];
-            files_out.(session){num_r}  = files_out_tmp;
+            files_out.motion_corrected.(session){num_r}  = files_out_tmp;
             opt_tmp.interpolation       = opt.interpolation;
             opt_tmp.suppress_vol        = opt.suppress_vol;
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);

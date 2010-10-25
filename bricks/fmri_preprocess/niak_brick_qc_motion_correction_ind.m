@@ -255,11 +255,11 @@ end
 file_eps = cell([nb_file 1]);
 hfa = figure;
 for num_f = 1:nb_file
-    load(files_in.motion_parameters{num_f})
+    motion_params = load(files_in.motion_parameters{num_f})
     rot = zeros([size(transf,3) 3]);
     tsl = zeros([size(transf,3) 3]);
     for num_t = 1:size(transf,3)
-        [rot(num_t,:),tsl(num_t,:)] = niak_transf2param(transf(:,:,num_t));
+        [rot(num_t,:),tsl(num_t,:)] = niak_transf2param(motion_params.transf(:,:,num_t));
     end    
     subplot(2,1,1)
     plot(rot)

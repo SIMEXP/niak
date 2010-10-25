@@ -95,8 +95,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_edge','fwhm','flag_verbose','flag_test','folder_out','flag_zip'};
-gb_list_defaults = {true,6,1,0,'',0};
+gb_list_fields    = { 'flag_edge' , 'fwhm' , 'flag_verbose' , 'flag_test' , 'folder_out' , 'flag_skip' };
+gb_list_defaults  = { true        , 6      , 1              , 0           , ''           , 0           };
 niak_set_defaults
 
 if length(opt.fwhm) == 1
@@ -154,7 +154,7 @@ if flag_test == 1
     return
 end
 
-if opt.fwhm ~=0
+if (opt.fwhm ~=0)&&~flag_skip
 
     %% Blurring
     if flag_verbose
