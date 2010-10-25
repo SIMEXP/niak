@@ -108,6 +108,11 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %   MOTION_CORRECTION 
 %       (structure) options of NIAK_PIPELINE_MOTION_CORRECTION. 
 %
+%       SESSION_REF
+%           (string, default first session) name of the session of reference. 
+%           By default, it is the first field found in FILES_IN. Use the
+%           session corresponding to the acqusition of the T1 scan.
+%
 %       SUPPRESS_VOL 
 %           (integer, default 0) the number of volumes that are suppressed 
 %           at the begining of the time series. This is a good stage to get 
@@ -156,6 +161,17 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       registration of the T1 volume in stereotaxic space as well as the 
 %       coregistration between the anatomical and functional volumes.
 %
+%   TIME_FILTER 
+%       (structure) options of NIAK_BRICK_TIME_FILTER (temporal filtering).
+%
+%       HP 
+%           (real, default: 0.01) the cut-off frequency for high pass
+%           filtering. opt.hp = -Inf means no high-pass filtering.
+%
+%       LP 
+%           (real, default: Inf) the cut-off frequency for low pass 
+%           filtering. opt.lp = Inf means no low-pass filtering.
+%
 %   CORSICA
 %       (structure) options of NIAK_PIPELINE_CORSICA (correction of the
 %       physiological noise based on automatic component selection in an
@@ -177,16 +193,6 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           ICA decomposition will still be generated and the component 
 %           selection will still be generated for quality control purposes)
 %
-%   TIME_FILTER 
-%       (structure) options of NIAK_BRICK_TIME_FILTER (temporal filtering).
-%
-%       HP 
-%           (real, default: 0.01) the cut-off frequency for high pass
-%           filtering. opt.hp = -Inf means no high-pass filtering.
-%
-%       LP 
-%           (real, default: Inf) the cut-off frequency for low pass 
-%           filtering. opt.lp = Inf means no low-pass filtering.
 %
 %   RESAMPLE_VOL 
 %       (structure) options of NIAK_BRICK_RESAMPLE_VOL (spatial resampling 
@@ -330,7 +336,7 @@ for num_c = 1:nb_session
         error(sprintf('FILES_IN.FMRI.%s is not a cell of strings!',session));
     end
     if num_c==1
-        [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri.session{1});
+        [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri.(session){1});
     end
 end
 
@@ -380,7 +386,7 @@ pipeline = struct([]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for num_sess = 1:nb_session
     session = list_session{num_sess};
-    nb_run = length(files_session);
+    nb_run = length(files_in.fmri.(session));
     for num_r = 1:nb_run
         run      = ['run',num2str(num_r)];
         name_job = ['slice_timing_',label,'_',session,'_',run];
@@ -553,10 +559,14 @@ end
 %%%%%%%%%%%%%%%%%%%
 name_job_mask_corsica = ['mask_corsica_' label];
 clear files_in_tmp files_out_tmp opt_tmp 
-files_in.(label).mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
-files_in.(label).mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
-files_in.(label).functional_space   = pipeline.(name_job_qc_motion).files_out.mask_group;
-files_in.(label).transformation_lin = pipeline.(name_job_anat2func).files_out.transformation;
+files_in_tmp.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
+files_in_tmp.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
+files_in_tmp.functional_space   = pipeline.(name_job_qc_motion).files_out.mask_group;
+files_in_tmp.transformation_lin = pipeline.(name_job_anat2func).files_out.transformation;
+files_out_tmp.mask_vent_ind     = [opt.folder_qc label filesep 'corsica' filesep label '_mask_vent_nativefunc' ext_f];
+files_out_tmp.mask_stem_ind     = [opt.folder_qc label filesep 'corsica' filesep label '_mask_stem_nativefunc' ext_f];
+opt_tmp.flag_test = false;
+pipeline = psom_add_job(pipeline,name_job_corsica,'niak_brick_mask_corsica',files_in_tmp,files_out_tmp,opt_tmp);
 
 %%%%%%%%%%%%%
 %% CORSICA %%
