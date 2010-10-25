@@ -19,8 +19,11 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %           (string) a path to a binary mask (the spatial a priori).
 %
 %       TRANSFORMATION 
-%           (string, default identity) a transformation from the functional 
-%           space to the mask space.
+%           (string, default 'gb_niak_omitted') a transformation file from 
+%           the functional space to the mask space. If it is omitted, the
+%           original mask will be used. If 'identity' is used, the mask
+%           will be resampled at the resolution of the functional space,
+%           but no actual transformation of the space will be applied.
 %
 %       COMPONENT_TO_KEEP
 %           (string, default none) a text file, whose first line is a
@@ -217,10 +220,13 @@ if flag_verbose
 end
 
 file_mask_tmp = niak_file_tmp('_mask_roi.mnc');
-if strcmp(files_in.transformation,'gb_niak_omitted');
-    instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour',files_in.mask,file_mask_tmp,files_in.fmri);
-else
-    instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour -transform %s -invert_transformation',files_in.mask,file_mask_tmp,files_in.fmri,files_in.transformation);
+switch files_in.transformation
+    case 'identity'
+       instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour',files_in.mask,file_mask_tmp,files_in.fmri);
+    case 'gb_niak_omitted'
+        instr_res = ['cp ' files_in.mask ' ' file_mask_tmp];
+    otherwise
+        instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour -transform %s -invert_transformation',files_in.mask,file_mask_tmp,files_in.fmri,files_in.transformation);
 end
 
 [succ,msg] = system(instr_res);

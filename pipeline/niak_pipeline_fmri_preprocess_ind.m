@@ -114,12 +114,12 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           rid of "dummy scans" necessary to reach signal stabilization 
 %           (that takes about 10 seconds, usually 3 to 5 volumes depending 
 %           on the TR). Note that most brain imaging centers now 
-%           automatically discard dummy scans.
+%           automatically discard dummy scans.²
 %
 %       FLAG_SKIP
 %           (boolean, default 0) if FLAG_SKIP == 1, the flag does not do 
 %           anything, just copying the inputs to the outputs (note that it 
-%           is still possible to suppress volumes). The motion oarameters 
+%           is still possible to suppress volumes). The motion parameters 
 %           are still estimated and the quality control is still performed.
 %  
 %   QC_MOTION_CORRECTION_IND
@@ -180,6 +180,14 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %   TIME_FILTER 
 %       (structure) options of NIAK_BRICK_TIME_FILTER (temporal filtering).
 %
+%       HP 
+%           (real, default: 0.01) the cut-off frequency for high pass
+%           filtering. opt.hp = -Inf means no high-pass filtering.
+%
+%       LP 
+%           (real, default: Inf) the cut-off frequency for low pass 
+%           filtering. opt.lp = Inf means no low-pass filtering.
+%
 %   RESAMPLE_VOL 
 %       (structure) options of NIAK_BRICK_RESAMPLE_VOL (spatial resampling 
 %       in the stereotaxic space).
@@ -218,20 +226,37 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % NOTE 1:
 % The steps of the pipeline are the following :
 %       1.  Slice timing correction
+%           See NIAK_BRICK_SLICE_TIMING and OPT.SLICE_TIMING
 %       2.  Motion correction (within- and between-run for each label).
+%           See NIAK_PIPELINE_MOTION_CORRECTION and OPT.MOTION_CORRECTION
 %       3.  Quality control for motion correction.
+%           See NIAK_BRICK_QC_MOTION_CORRECTION and
+%           OPT.QC_MOTION_CORRECTION
 %       4.  Linear and non-linear spatial normalization of the anatomical 
 %           image (and many more anatomical stuff such as brain masking and
 %           CSF/GM/WM classification)
+%           See NIAK_BRICK_T1_PREPROCESS and OPT.T1_PREPROCESS
 %       5.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
+%           See NIAK_BRICK_ANAT2FUNC and OPT.ANAT2FUNC
 %       6.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
-%       7.  Quality control for 4 and 5.
-%       8.  Correction of slow time drifts.
-%       9.  Correction of physiological noise.
-%      10.  Resampling of the functional data in the stereotaxic space.
-%      11.  Spatial smoothing.
+%           See NIAK_BRICK_CONCAT_TRANSF, no option there.
+%       7.  Extraction of mean/std/mask for functional images, in various
+%           spaces (Linear and non-linear stereotaxic spaces).
+%           Uses the outputs of step 3, and NIAK_BRICK_RESAMPLE_VOL. 
+%           Options can be accessed through OPT.RESAMPLE_VOL
+%       8.  Quality control for 4 and 5.
+%           See NIAK_BRICK_QC_COREGISTER
+%       9.  Correction of slow time drifts.
+%           See NIAK_BRICK_TIME_FILTER
+%      10.  Correction of physiological noise.
+%           See NIAK_PIPELINE_CORSICA and OPT.CORSICA
+%           Also, see NIAK_BRICK_MASK_CORSICA (no option there)
+%      11.  Resampling of the functional data in the stereotaxic space.
+%           See NIAK_BRICK_RESAMPLE_VOL and OPT.RESAMPLE_VOL
+%      12.  Spatial smoothing.
+%           See NIAK_BRICK_SMOOTH_VOL and OPT.SMOOTH_VOL
 %
 % NOTE 2:
 %   The physiological & motion noise correction CORSICA is changing the
@@ -257,7 +282,8 @@ function pipeline = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
-% geriatrie de Montreal, 2010.
+% geriatrie de Montreal, Departement d'informatique et recherche 
+% operationnelle, Universite de Montreal, 2010.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
@@ -459,9 +485,9 @@ files_out_tmp       = [opt.folder_anat 'transf_',label,'_nativefunc_to_stereonl.
 opt_tmp.flag_test   = 0;
 pipeline = psom_add_job(pipeline,name_job,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Generate masks & mean volumes in the stereotaxic (non-linear) space %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate functional brain masks/mean/std volumes in the stereotaxic (non-linear) space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear opt_tmp files_in_tmp files_out_tmp
 name_job                          = ['mask_ind_stereonl_',label];
 name_job_concat                   = cat(2,'concat_transf_nl_',label);
@@ -474,6 +500,8 @@ files_in_tmp(2).source            = pipeline.(name_job_qc_motion).files_out.mask
 files_in_tmp(2).target            = opt.template_fmri;
 files_out_tmp{1}                  = [opt.folder_anat 'func_' label '_mean_stereonl' ext_f];
 files_out_tmp{2}                  = [opt.folder_anat 'func_' label '_mask_stereonl' ext_f];
+opt_tmp(1)                        = opt.resample_vol;
+opt_tmp(2)                        = opt.resample_vol;
 opt_tmp(1).interpolation          = 'tricubic';
 opt_tmp(2).interpolation          = 'nearest_neighbour';
 pipeline(1).(name_job).command    = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
@@ -481,9 +509,9 @@ pipeline(1).(name_job).files_in   = files_in_tmp;
 pipeline(1).(name_job).files_out  = files_out_tmp;
 pipeline(1).(name_job).opt        = opt_tmp;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Generate masks & mean volumes in the stereotaxic linear space %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate functional brain masks/mean/std volumes in the stereotaxic linear space %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 name_job                        = ['mask_ind_stereolin_' label];
 name_job_anat2func              = ['anat2func_' label];
 files_in_tmp(1).transformation  = pipeline.(name_job_anat2func).files_out.transformation;
@@ -519,7 +547,17 @@ if strcmp(size_output,'quality_control')
     opt_tmp.clean = files_mc;
     pipeline = psom_add_job(pipeline,['clean_motion_correction_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);        
 end
-        
+
+%%%%%%%%%%%%%%%%%%%
+%% CORSICA MASKS %%
+%%%%%%%%%%%%%%%%%%%
+name_job_mask_corsica = ['mask_corsica_' label];
+clear files_in_tmp files_out_tmp opt_tmp 
+files_in.(label).mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
+files_in.(label).mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
+files_in.(label).functional_space   = pipeline.(name_job_qc_motion).files_out.mask_group;
+files_in.(label).transformation_lin = pipeline.(name_job_anat2func).files_out.transformation;
+
 %%%%%%%%%%%%%
 %% CORSICA %%
 %%%%%%%%%%%%%
@@ -527,12 +565,15 @@ name_job_transf = ['concat_transf_nl_' label];
 clear files_in_tmp files_out_tmp opt_tmp 
 files_in_tmp.(label).fmri               = psom_files2cell(files_tf);
 files_in_tmp.(label).component_to_keep  = files_in.component_to_keep;
-files_in_tmp.(label).transformation     = pipeline.(name_job_transf).files_out;
+files_in_tmp.(label).mask_brain         = pipeline.(name_job_qc_motion).files_out.mask_group;
+files_in_tmp.(label).mask_selection{1}  = pipeline.(name_job_mask_corsica).files_out.mask_vent_ind;
+files_in_tmp.(label).mask_selection{2}  = pipeline.(name_job_mask_corsica).files_out.mask_stem_ind;
 opt_tmp                                 = opt.corsica;
 opt_tmp.size_output                     = opt.size_output;
 opt_tmp.folder_out                      = [opt.folder_intermediate label filesep 'corsica' filesep];
 opt_tmp.folder_sica                     = [opt.folder_qc label filesep 'corsica' filesep];
 opt_tmp.flag_test                       = true;
+opt_tmp.labels_mask                     = {'ventricles','stem'};
 [pipeline_corsica,opt_tmp,files_co] = niak_pipeline_corsica(files_in_tmp,opt_tmp);
 pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
 

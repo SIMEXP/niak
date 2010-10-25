@@ -6,6 +6,8 @@
 % NIAK commands will call this script to initialize the variables. If NIAK 
 % does not behave the way you want, this might be the place to fix that.
 %
+% IF a variable called FLAG_GB_NIAK_FAST_GB is found in memory and is true,
+% only a very limited number of global variables will be initialized.
 % _________________________________________________________________________
 % COMMENT:
 %

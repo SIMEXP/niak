@@ -244,7 +244,7 @@ for num_c = order
     subplot(1,1,1)
     vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
     niak_montage(abs(vol_c),opt_visu);    
-    title(sprintf('Component %i %s',num_c,title_score),'interpreter','none');        
+    title(sprintf('Component %i %s',num_c,title_score));        
     print(file_space{num_c},'-dpsc2');    
     close(hf)
     
@@ -265,7 +265,7 @@ for num_c = order
     
     xlabel('time')
     ylabel('a.u.')
-    title(sprintf('Time component %i, file %s',num_c,name_f),'interpreter','none');
+    title(sprintf('Time component %i, file %s',num_c,name_f));
     
     %% Frequency distribution
     subplot(3,1,2)

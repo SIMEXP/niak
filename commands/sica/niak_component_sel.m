@@ -1,9 +1,6 @@
 function [selection,selecvector,selecinfo] = niak_component_sel(tc_cell,regressors,thr_p_s,nbsamp,nbclass,indextype,selthres,is_verbose)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_COMPONENT_SEL
-%
-% Automatic selection of regressors explaining prior time courses using stepwise regression
+% Automatic selection of regressors explaining prior time courses 
+% using stepwise regression
 %
 % SYNTAX:
 % [SELECTION,SELECVECTOR,SELECINFO] = NIAK_COMPONENT_SEL(TC_CELL,REGRESSORS,THR_P_S,NB_SAMP,WW,NBCLASS,INDEXTYPE,SELTHRES,IS_VERBOSE)
@@ -328,13 +325,17 @@ while test == 0
         % backward
         n_r = length(liste_select);
         R1=[];
-        for k=1:n_r
-            reg_c = reg(:,1:n_r~=k);
-            Ychap(:,liste_select(k)) = reg_c*((reg_c'*reg_c)^(-1))*(reg_c'*Y);
-            R1(liste_select(k)) = (1/(nt-1))*Ychap(:,liste_select(k))'*Ychap(:,liste_select(k));
-            F(liste_select(k)) = (nt-taille-1)*(R2 - R1(liste_select(k)))/(1-R2);
-            p(liste_select(k)) = 1-sub_spm_Fcdf(F(liste_select(k)),1,nt-taille-1);
-            p(isnan(p))=Inf;
+        if n_r>1
+            for k=1:n_r
+                reg_c = reg(:,1:n_r~=k);
+                Ychap(:,liste_select(k)) = reg_c*((reg_c'*reg_c)^(-1))*(reg_c'*Y);
+                R1(liste_select(k)) = (1/(nt-1))*Ychap(:,liste_select(k))'*Ychap(:,liste_select(k));
+                F(liste_select(k)) = (nt-taille-1)*(R2 - R1(liste_select(k)))/(1-R2);
+                p(liste_select(k)) = 1-sub_spm_Fcdf(F(liste_select(k)),1,nt-taille-1);
+                p(isnan(p))=Inf;
+            end
+        else
+            R1 = [];
         end
         score_b = min(p(liste_select));
         if score_b>thr

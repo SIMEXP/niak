@@ -355,7 +355,8 @@ for num_s = 1:nb_subject
         if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')            
             clear files_in_tmp files_out_tmp opt_tmp
             name_job_clean       = ['clean_corsica_intermediate_',subject,'_',run];
-            files_in_tmp         = pipeline.(name_job_supp).files_out;
+            files_in_tmp{1}      = pipeline.(name_job_supp).files_out;
+            files_in_tmp{2}      = pipeline.(name_job_qc).files_out;
             files_out_tmp        = '';
             opt_tmp.flag_verbose = 1;
             switch opt.size_output
