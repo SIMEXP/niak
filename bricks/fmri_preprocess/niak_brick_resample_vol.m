@@ -388,8 +388,8 @@ if nt1 == 1
         fprintf('\n Resampling source on target ...\n');
     end
 
-    [path_f,name_f,ext_f,flag_zip] = niak_fileparts(files_out);        
-    files_out = [path_f,filesep,name_f,ext_f];
+    [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_out);        
+    files_out = [path_f,filesep,name_f,ext_short];
         
     instr_resample = ['mincresample ',instr_range,files_in.source,' ',files_out];    
     if ~isempty(files_in.transformation)
@@ -478,11 +478,11 @@ end
 %% Clean temporary stuff
 if flag_verbose
     fprintf('Cleaning temporary files\n')
-    instr_clean = sprintf('rm -rf %s',folder_tmp);
-    [status,msg] = system(instr_clean);
-    if status ~= 0
-        error(msg);
-    end    
+end
+instr_clean = sprintf('rm -rf %s',folder_tmp);
+[status,msg] = system(instr_clean);
+if status ~= 0
+    error(msg);
 end
 
 if flag_verbose

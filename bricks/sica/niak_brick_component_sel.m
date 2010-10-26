@@ -219,10 +219,16 @@ if flag_verbose
     fprintf('Reading (and eventually resampling) the mask of interest ...\n');
 end
 
-file_mask_tmp = niak_file_tmp('_mask_roi.mnc');
+[path_f,name_f,ext_f,flag_zip] = niak_fileparts(files_in.mask);
+if flag_zip
+    niak_gb_vars
+    file_mask_tmp = niak_file_tmp(['_mask_roi.mnc' gb_niak_zip_ext]);
+else
+    file_mask_tmp = niak_file_tmp('_mask_roi.mnc');
+end
 switch files_in.transformation
     case 'identity'
-       instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour',files_in.mask,file_mask_tmp,files_in.fmri);
+        instr_res = sprintf('mincresample %s %s -clobber -like %s -nearest_neighbour',files_in.mask,file_mask_tmp,files_in.fmri);
     case 'gb_niak_omitted'
         instr_res = ['cp ' files_in.mask ' ' file_mask_tmp];
     otherwise

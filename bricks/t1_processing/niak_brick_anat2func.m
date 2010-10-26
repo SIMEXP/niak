@@ -60,15 +60,15 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %   (structure) with the following fields:
 %
 %   LIST_FWHM
-%       (vector, default [16,8,4,8,4]) LIST_FWHM(I) is the FWHM of the
+%       (vector, default [8,4,8,4,3]) LIST_FWHM(I) is the FWHM of the
 %       Gaussian smoothing applied at iteration I.
 %
 %   LIST_STEP
-%       (vector, default [8,4,4,4,4]) LIST_STEP(I) is the step of MINCTRACC 
+%       (vector, default [4,4,4,2,1]) LIST_STEP(I) is the step of MINCTRACC 
 %       at iteration I.
 %
 %   LIST_SIMPLEX
-%       (vector, default [32,16,8,4,2]) LIST_SIMPLEX(I) is the simplex 
+%       (vector, default [8,4,2,2,1]) LIST_SIMPLEX(I) is the simplex 
 %       parameter of MINCTRACC at iteration I.
 %
 %   LIST_CROP
@@ -76,7 +76,7 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       parameter for the functional & anatomical masks at iteration I.
 %
 %   LIST_MES
-%       (cell of string, default {'xcorr','xcorr','xcorr','mi','mi'}) 
+%       (cell of string, default {'mi','mi','mi','mi','mi'}) 
 %       LIST_MES{I} is the measure (cost function) used to coregister the 
 %       two volumes in MINCTRACC at iteration I.
 %
@@ -132,25 +132,27 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %   rigid-body coregistration (lsq6).
 %
 % NOTE 2:
-%   The targets are coregistered first using a cross-correlation cost 
-%   function (robust to large displacement) and then mutual information 
-%   to account for different tissue-contrast properties in T1 and EPI
-%   sequences. Note that the T1 volume is "T2ified", i.e. its histogram is
-%   modified to fit the inverse histogram of the T2. This justifies to use
-%   "xcorr" in early steps, and improves the effect of blurring with MI.
-%
-% NOTE 3:
-%   The coregistration is done in an iterative way, using large-to-small
-%   blurring kernels, and corresponding step & simplex parameters. This
-%   approach as well as the default parameters of each iteration have been
+%   The procedure is iterative : at each iteration the level of blurring 
+%   and the refinement of the search grid is adapted. In the default 
+%   behavior, the blurring is slowly decreased from 8 to 1 mm FWHM. 
+%   Coregistration is based on mutual information. This approach has been
 %   very largely inspired by a PERL script by Andrew Janke and Claude
 %   Lepage, itself inspired by best1stepnlreg.pl by Steve Robinson. See
-%   NIAK_BESTLINREG.PL for more details.
+%   NIAK_BESTLINREG.PL for more details. The list of FWHM/step/spline as
+%   well as the cost function used at each iteration can be fully
+%   costumized (as well as the number of iterations).
+%
+% NOTE 3:
+%   The T1 volume is "T2ified", i.e. its histogram is modified to fit the 
+%   inverse histogram of the T2. This is done to improve the effect of 
+%   blurring with MI. Also, the values within the masks are centered around 
+%   the median. This is because otherwise MI can result in disastrous
+%   coregistration consisting in non-overlapping masks.
 %
 % NOTE 4:
 %   At each iteration, the brain masks of both images (anatomical and 
-%   functional) are cropped such that no voxel distant of more than 2 cm
-%   of the other mask interfer with the coregistration process. This
+%   functional) are cropped such that voxels that are too distant of the 
+%   other mask will not interfer with the coregistration process. This
 %   feature allows the coregistration to be robust to large differences
 %   between the fields of view. This cropping parameter can be changed
 %   using OPT.LIST_CROP
@@ -210,8 +212,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = {'flag_invert_transf_output' ,'flag_invert_transf_init' ,'list_mes'                          ,'list_fwhm'     ,'list_step'    ,'list_simplex' ,'list_crop'    ,'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
-gb_list_defaults    = {false                       ,false                     ,{'xcorr','xcorr','xcorr','mi','mi'} ,[16,8,4,8,4]    ,[8,4,4,4,4]    ,[32,16,8,4,2]  ,[20,10,5,5,5]  ,0              ,''             ,1              ,'identity'};
+gb_list_fields      = {'flag_invert_transf_output' ,'flag_invert_transf_init' ,'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'list_crop'     , 'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
+gb_list_defaults    = {false                       ,false                     ,{'mi','mi','mi','mi','mi'} , [8,4,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , [10,5,5,5,5]    , 0              ,''             ,1              ,'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
@@ -554,7 +556,8 @@ for num_i = 1:length(list_fwhm)
 
     % Smooth the anatomical volume
     clear files_in_tmp files_out_tmp opt_tmp
-    files_in_tmp = file_tmp;
+    files_in_tmp{1} = file_tmp;
+    files_in_tmp{2} = file_mask_anat_crop;
     files_out_tmp = file_tmp2;
     opt_tmp.fwhm = fwhm_val;
     opt_tmp.flag_verbose = false;
@@ -563,7 +566,8 @@ for num_i = 1:length(list_fwhm)
     
     % Crop the anatomical volume
     [hdr_anat,vol_anat] = niak_read_vol(file_tmp2);
-    vol_anat(~mask_anat_c) = 0;
+    vol_anat(~mask_anat_c) = 0;  
+    vol_anat(mask_anat_c) = vol_anat(mask_anat_c)-median(vol_anat(mask_anat_c));  
     hdr_anat.file_name = file_anat_crop;
     niak_write_vol(hdr_anat,vol_anat);
     
@@ -574,7 +578,8 @@ for num_i = 1:length(list_fwhm)
         
     % Smooth the functional volume
     clear files_in_tmp files_out_tmp opt_tmp
-    files_in_tmp = file_func_init;
+    files_in_tmp{1} = file_func_init;
+    files_in_tmp{2} = file_mask_func_crop;
     files_out_tmp = file_tmp;
     opt_tmp.fwhm = fwhm_val;
     opt_tmp.flag_verbose = false;
@@ -583,7 +588,8 @@ for num_i = 1:length(list_fwhm)
     
     % Crop the functional volume
     [hdr_func,vol_func] = niak_read_vol(file_tmp);
-    vol_func(~mask_func_c) = 0;
+    vol_func(~mask_func_c) = 0;    
+    vol_func(mask_func_c) = vol_func(mask_func_c) - median(vol_func(mask_func_c));
     hdr_func.file_name = file_func_crop;
     niak_write_vol(hdr_func,vol_func);        
 
@@ -591,7 +597,7 @@ for num_i = 1:length(list_fwhm)
     instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -',mes_val,' -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
 
     if flag_verbose
-        fprintf('Spatial coregistration using mutual information :\n     %s\n',instr_minctracc);
+        fprintf('Spatial coregistration using %s :\n     %s\n',mes_val,instr_minctracc);
     end
     if flag_verbose        
         system(instr_minctracc)
@@ -682,4 +688,3 @@ rmdir(path_tmp,'s');
 if flag_verbose
     fprintf('\nDone !\n');
 end
-

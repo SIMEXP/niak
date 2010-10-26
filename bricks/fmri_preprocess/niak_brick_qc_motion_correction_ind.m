@@ -255,20 +255,20 @@ end
 file_eps = cell([nb_file 1]);
 hfa = figure;
 for num_f = 1:nb_file
-    motion_params = load(files_in.motion_parameters{num_f})
-    rot = zeros([size(transf,3) 3]);
-    tsl = zeros([size(transf,3) 3]);
-    for num_t = 1:size(transf,3)
+    motion_params = load(files_in.motion_parameters{num_f});
+    rot = zeros([size(motion_params.transf,3) 3]);
+    tsl = zeros([size(motion_params.transf,3) 3]);
+    for num_t = 1:size(motion_params.transf,3)
         [rot(num_t,:),tsl(num_t,:)] = niak_transf2param(motion_params.transf(:,:,num_t));
     end    
     subplot(2,1,1)
     plot(rot)
     legend('rotation x','rotation y','rotation z')
-    title('Rotation parameters %s',labels_vol{num_f});
+    title(sprintf('Rotation parameters %s',labels_vol{num_f}));
     subplot(2,1,2)
     plot(tsl)
     legend('translation x','translation y','translation z')
-    title('Rotation parameters %s',labels_vol{num_f});
+    title(sprintf('Rotation parameters %s',labels_vol{num_f}));
     file_eps{num_f} = [folder_tmp 'motion_parameters_' labels_vol{num_f} '.eps'];
     print(hfa,'-dpsc','-r300',file_eps{num_f});
 end

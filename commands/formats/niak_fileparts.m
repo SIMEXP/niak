@@ -1,8 +1,8 @@
-function [path_f,name_f,ext_f,flag_zip] = niak_fileparts(file_name);
+function [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(file_name);
 % Extract the path, name and extension from a full path name
 %
 % SYNTAX:
-% [PATH_F,NAME_F,EXT_F,FLAG_ZIP] = NIAK_FILEPARTS(FILE_NAME)
+% [PATH_F,NAME_F,EXT_F,FLAG_ZIP,EXT_SHORT] = NIAK_FILEPARTS(FILE_NAME)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -26,9 +26,12 @@ function [path_f,name_f,ext_f,flag_zip] = niak_fileparts(file_name);
 %       in NIAK_GB_VARS.M), in which case two extensions will be extracted.
 %
 % FLAG_ZIP
-%       (boolen) FLAG_ZIP is true if the first extension of the file is 
+%       (boolean) FLAG_ZIP is true if the first extension of the file is 
 %       '.gz' (or actually the extension defined in GB_NIAK_ZIP_EXT defined
 %       in NIAK_GB_VARS.M)
+%
+% EXT_SHORT
+%       (string) same as EXT_F, but without the '.gz' at the end if any.
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -83,9 +86,10 @@ if isempty(path_f)
 end
                 
 if strcmp(ext_f,gb_niak_zip_ext)
-	[tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+	[tmp,name_f,ext_short] = fileparts(name_f);
+    ext_f = [ext_short gb_niak_zip_ext];
     flag_zip = true;
 else
-    flag_zip = false;
+    ext_short = ext_f;
+    flag_zip  = false;
 end

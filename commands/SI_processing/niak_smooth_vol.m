@@ -17,6 +17,12 @@ function vol_s = niak_smooth_vol(vol,opt)
 % OPT         
 %       (structure, optional) with the following fields :
 %
+%       MASK
+%           (binary volume, default true(size(VOL))) this volume should 
+%           have the same size as VOL and will be used to correct for 
+%           edges effects in the smoothing, assuming zero values outside 
+%           the mask if OPT.FLAG_EDGE is true (see below).
+%
 %       VOXEL_SIZE  
 %           (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
 %           in the respective dimensions, i.e. the space in mmm between 
@@ -80,8 +86,8 @@ function vol_s = niak_smooth_vol(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_edge','flag_verbose','voxel_size','fwhm'};
-gb_list_defaults = {true,true,[1 1 1]',[2 2 2]'};
+gb_list_fields    = {'mask' , 'flag_edge' , 'flag_verbose' , 'voxel_size' ,'fwhm'   };
+gb_list_defaults  = {[]     , true        , true           , [1 1 1]'     ,[2 2 2]' };
 niak_set_defaults
 
 if length(voxel_size)>3
@@ -116,10 +122,13 @@ hdr.type = 'minc1';
 hdr.info.voxel_size = voxel_size;
 
 if flag_edge
+    if isempty(mask)
+        mask = ones([nx ny nz]);
+    end
     opt_smooth = opt;
     opt_smooth.flag_edge = false;
     opt_smooth.flag_verbose = false;    
-    vol_corr = niak_smooth_vol(ones([nx ny nz]),opt_smooth);    
+    vol_corr = niak_smooth_vol(mask,opt_smooth);    
 end
 
 for num_t = 1:nt    
@@ -140,12 +149,13 @@ for num_t = 1:nt
     
     %% Read the smoothed volume
     [hdr_tmp,vol_tmp] = niak_read_vol(file_out_sm);
-    if flag_edge
-        vol_s(:,:,:,num_t) = vol_tmp./vol_corr;
-    else
-        vol_s(:,:,:,num_t) = vol_tmp;
-    end
     
+    %% Correct for edges effects
+    if flag_edge
+        vol_tmp(mask>0) = vol_tmp(mask>0)./vol_corr(mask>0);
+        vol_tmp(~mask)  = 0;
+    end
+    vol_s(:,:,:,num_t) = vol_tmp;        
 end
 
 if flag_verbose

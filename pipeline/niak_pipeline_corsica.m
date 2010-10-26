@@ -293,13 +293,14 @@ for num_s = 1:nb_subject
         files_sel = cell([length(files_in.(subject).mask_selection) 1]);
         for num_m = 1:length(files_in.(subject).mask_selection)
             name_job_sel{num_m} = ['component_sel_' labels_mask{num_m} '_',subject,'_' run];
+            [path_f,name_f] = niak_fileparts(files_in.(subject).fmri{num_r});
             clear files_in_tmp files_out_tmp opt_tmp
-            files_in_tmp.fmri              = files_in.(subject).fmri{num_r};
+            files_in_tmp.fmri              = files_in.(subject).fmri{num_r};            
             files_in_tmp.component         = pipeline.(name_job_sica).files_out.time;
             files_in_tmp.mask              = files_in.(subject).mask_selection{num_m};
             files_in_tmp.transformation    = files_in.(subject).transformation;
             files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;
-            files_out_tmp                  = '';
+            files_out_tmp                  = [path_f filesep name_f '_compsel_' labels_mask{num_m} '.mat'];
             opt_tmp                        = opt.component_sel;
             opt_tmp.folder_out             = opt.folder_sica;
             pipeline = psom_add_job(pipeline,name_job_sel{num_m},'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);

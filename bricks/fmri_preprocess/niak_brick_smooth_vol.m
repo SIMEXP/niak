@@ -7,7 +7,12 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % INPUTS:
 %
 %  FILES_IN        
-%       (string) a file name of a 3D+t dataset
+%       (string or cell of string) a file name of a 3D+t dataset. If
+%       FILES_IN is a cell of string, the first entry is the file name of a
+%       3D+t dataset, while the second entry is used as a binary mask to 
+%       correct the edges effects of the smoothing (note that 
+%       values outside the mask will be set to zero). This correction will
+%       only be applied if OPT.FLAG_EDGE = 1 (see below).
 %
 %  FILES_OUT       
 %       (string, default <BASE FILES_IN>.<EXT>) File name for outputs. 
@@ -57,7 +62,9 @@ function [files_in,files_out,opt] = niak_brick_smooth_vol(files_in,files_out,opt
 % NIAK_SMOOTH_VOL, NIAK_DEMO_SMOOTH_VOL
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
+% This is essentially a wraper of MINCBLUR. Major differences is that it
+% deals with 4D images, and corrects for edges effects in the smoothing.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -89,8 +96,16 @@ niak_gb_vars; % load important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SMOOTH_VOL(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_smooth_vol'' for more info.')
+end
+
+%% Input file
+if iscellstr(files_in)
+    file_mask = files_in{2};
+    files_in  = files_in{1};
+else
+    file_mask = 'gb_niak_omitted';
 end
 
 %% Options
@@ -110,16 +125,7 @@ end
 fwhm = opt.fwhm;
 
 %% Output files
-
-[path_f,name_f,ext_f] = fileparts(files_in(1,:));
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in);
 
 if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
@@ -154,7 +160,7 @@ if flag_test == 1
     return
 end
 
-if (opt.fwhm ~=0)&&~flag_skip
+if (min(opt.fwhm) ~=0) && (flag_skip~=1)
 
     %% Blurring
     if flag_verbose
@@ -167,16 +173,16 @@ if (opt.fwhm ~=0)&&~flag_skip
     opt_smooth.fwhm = opt.fwhm;
     opt_smooth.flag_verbose = opt.flag_verbose;
     opt_smooth.flag_edge = opt.flag_edge;
+    if ~strcmp(file_mask,'gb_niak_omitted')
+        [hdr_mask,mask] = niak_read_vol(file_mask);
+        opt_smooth.mask = mask>0;
+        clear mask
+    end
     vol_s = niak_smooth_vol(vol,opt_smooth);                    
 
     %% Updating the history and saving output
     hdr = hdr(1);
-    hdr.flag_zip = flag_zip;
     hdr.file_name = files_out;
-    opt_hist.command = 'niak_smooth_vol';
-    opt_hist.files_in = files_in;
-    opt_hist.files_out = files_out;
-    hdr = niak_set_history(hdr,opt_hist);
     niak_write_vol(hdr,vol_s);
 
 else
