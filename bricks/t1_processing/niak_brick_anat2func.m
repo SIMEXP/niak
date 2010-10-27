@@ -609,6 +609,7 @@ for num_i = 1:length(list_fwhm)
     end
     
     %% Updating the guess    
+    system(['rm ' file_transf_tmp]);
     [s,str_err] = system(['xfmconcat ' file_transf_guess ' ' file_transf_est ' ' file_transf_tmp]);
     if s~=0
         error('There was a problem with XFMCONCAT : %s',str_err);
