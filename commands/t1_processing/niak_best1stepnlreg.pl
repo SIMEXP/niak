@@ -65,12 +65,7 @@ my @conf = (
    'blur_fwhm'    => 2,
    'iterations'   => 10,
    },
-
-  {'step'         => 2,
-   'blur_fwhm'    => 1,
-   'iterations'   => 10,
-   },
- 
+  
    );
 
 my($Help, $Usage, $me);
