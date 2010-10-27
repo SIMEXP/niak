@@ -382,7 +382,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for num_s = 1:nb_subject
     opt_ind = opt;
-    opt_ind.label = list_subject{num_s}
+    opt_ind.label = list_subject{num_s};
     if num_s == 1
         pipeline = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
     else

@@ -273,7 +273,7 @@ for num_f = 1:nb_file
     print(hfa,'-dpsc','-r300',file_eps{num_f});
 end
 close(hfa)
-file_eps_final = niak_file_tmp('_fig_final.eps');
+file_eps_final = [folder_tmp 'fig_final.eps'];
 instr_concat = ['gs  -q -dNOPAUSE -dBATCH -dNOPLATFONTS -sOutputFile=' file_eps_final '  -sDEVICE=pswrite ' ];
 for num_e = 1:nb_file
     instr_concat = [instr_concat file_eps{num_e} ' '];
