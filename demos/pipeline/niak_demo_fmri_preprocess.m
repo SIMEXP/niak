@@ -190,4 +190,4 @@ opt.smooth_vol.flag_skip = 0;  % Turn on/off the spatial smoothing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess template  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt);
+[pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt);
