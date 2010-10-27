@@ -437,8 +437,8 @@ clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol  = cell([nb_subject 1]);
 files_in_tmp.mask = cell([nb_subject 1]);
 for num_s = 1:nb_subject
-    files_in_tmp.vol{num_s}  = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.mean_volume;
-    files_in_tmp.mask{num_s} = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.mask_group;
+    files_in_tmp.vol{num_s}  = pipeline.(['mask_ind_stereolin_' list_subject{num_s}]).files_out{1};
+    files_in_tmp.mask{num_s} = pipeline.(['mask_ind_stereolin_' list_subject{num_s}]).files_out{2};
 end
 files_out_tmp.mean_vol        = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_mean_average_stereolin' ext_f];
 files_out_tmp.std_vol         = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_mean_std_stereolin' ext_f];
@@ -457,18 +457,18 @@ clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol  = cell([nb_subject 1]);
 files_in_tmp.mask = cell([nb_subject 1]);
 for num_s = 1:nb_subject
-    files_in_tmp.vol{num_s}  = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.mean_volume;
-    files_in_tmp.mask{num_s} = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.mask_group;
+    files_in_tmp.vol{num_s}  = pipeline.(['mask_ind_stereonl_' list_subject{num_s}]).files_out{1};
+    files_in_tmp.mask{num_s} = pipeline.(['mask_ind_stereonl_' list_subject{num_s}]).files_out{2};
 end
-files_out_tmp.mean_vol        = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration_anat' filesep 'anat_mean_average_stereonl' ext_f];
-files_out_tmp.std_vol         = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration_anat' filesep 'anat_mean_std_stereonl' ext_f];
-files_out_tmp.mask_average    = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration_anat' filesep 'anat_mask_average_stereonl' ext_f];
-files_out_tmp.mask_group      = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration_anat' filesep 'anat_mask_group_stereonl' ext_f];
-files_out_tmp.fig_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration_anat' filesep 'fig_qc_coregister_anat_stereonl.pdf'];
-files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration_anat' filesep 'tab_qc_coregister_anat_stereonl.csv'];
+files_out_tmp.mean_vol        = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_mean_average_stereonl' ext_f];
+files_out_tmp.std_vol         = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_mean_std_stereonl' ext_f];
+files_out_tmp.mask_average    = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_mask_average_stereonl' ext_f];
+files_out_tmp.mask_group      = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_mask_group_stereonl' ext_f];
+files_out_tmp.fig_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_fig_qc_coregister_stereonl.pdf'];
+files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_tab_qc_coregister_stereonl.csv'];
 opt_tmp                       = opt.qc_coregister;
 opt_tmp.labels_subject        = list_subject;
-pipeline = psom_add_job(pipeline,['qc_coregister_group_anat_stereolin','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,['qc_coregister_group_func_stereonl','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%

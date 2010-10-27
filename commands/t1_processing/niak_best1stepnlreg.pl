@@ -36,21 +36,36 @@ my @def_minctracc_args = (
 
 my @conf = (
 
-   {'step'         => 16,
-    'blur_fwhm'    => 8,
-    'iterations'   => 10,
-    },
+  {'step'         => 32,
+   'blur_fwhm'    => 16,
+   'iterations'   => 20,
+   },
 
-   {'step'         => 12,
-    'blur_fwhm'    => 6,
-    'iterations'   => 10,
-    },
+  {'step'         => 16,
+   'blur_fwhm'    => 8,
+   'iterations'   => 20,
+   },
 
-   {'step'         => 8,
-    'blur_fwhm'    => 6,
-    'iterations'   => 10,
-    },
+  {'step'         => 12,
+   'blur_fwhm'    => 6,
+   'iterations'   => 20,
+   },
 
+  {'step'         => 8,
+   'blur_fwhm'    => 4,
+   'iterations'   => 20,
+   },
+
+  {'step'         => 6,
+   'blur_fwhm'    => 3,
+   'iterations'   => 20,
+   },
+
+  {'step'         => 4,
+   'blur_fwhm'    => 2,
+   'iterations'   => 10,
+   },
+ 
    );
 
 my($Help, $Usage, $me);

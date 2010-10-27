@@ -1,5 +1,5 @@
 function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
-% This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS.
+% This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % SYNTAX:
 % [PIPELINE,OPT] = NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO,OPT)
@@ -12,6 +12,7 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %       the full path to the NIAK demo dataset. The dataset can be found in 
 %       multiple file formats at the following address : 
 %       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+%
 % OPT
 %       (structure, optional) with the following fields : 
 %
@@ -20,22 +21,9 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %           just generate the PIPELINE and OPT structure, otherwise it will 
 %           process the pipeline.
 %
-%	FLAG_DEV
-%	    (boolean, default false) if FLAG_DEV == true, the demo will use 
-%	    the developpement version of the pipeline.
-%
-%       STYLE
-%           (string, default 'fmristat') the style of the pipeline. 
-%           Available choices : 'fmristat', 'standard-native',
-%           'standard-stereotaxic'.
-%
 %       SIZE_OUTPUT 
 %           (string, default 'quality_control') possible values : 
-%           ‘minimum’, 'quality_control’, ‘all’.
-%
-%       FLAG_CORSICA
-%           (boolean, default 1) if FLAG_CORSICA == 1, the CORSICA method
-%           will be applied to correct for physiological & motion noise.
+%           'quality_control’, ‘all’.
 %
 %       PSOM
 %           (structure) the options of the pipeline manager. See the OPT
@@ -51,25 +39,19 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %       PSOM_RUN_PIPELINE.
 %
 % OPT
-%       (structure) the option to call NIAK_PIPELINE_FMRI_PREPROCESS.
+%       (structure) the option to call NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
 % Note 1:
-% The demo will apply a 'standard-native' preprocessing pipeline on the 
-% functional data of subjects 1 and 2 (rest and motor conditions) as well 
-% as their anatomical image. This will take about 2 hours on a single 
-% machine. It is possible to configure the pipeline manager to use parallel
-% computing, see : 
-% http://code.google.com/p/psom/wiki/HowToUsePsom#PSOM_configuration
+% The demo will apply the full fMRI preprocessing pipeline on the 
+% functional data of subject 1 (rest and motor conditions) as well 
+% as their anatomical image. It is possible to configure the pipeline 
+% manager to use parallel computing using OPT.PSOM, see : 
+% http://code.google.com/p/psom/wiki/PsomConfiguration
 %
 % NOTE 2:
-% A more detailed description of NIAK_PIPELINE_FMRI_PREPROCESS can be found
-% on : 
-% http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing
-%
-% NOTE 3:
 % The demo database exists in multiple file formats. NIAK looks into the demo 
 % path and is supposed to figure out which format you are intending to use 
 % by himself. 
@@ -112,10 +94,10 @@ if ~strcmp(path_demo(end),filesep)
 end
 
 %% Set up defaults
-gb_name_structure = 'opt';
 default_psom.path_logs = '';
-gb_list_fields = {'flag_corsica','style','size_output','flag_test','psom','flag_dev'};
-gb_list_defaults = {1,'fmristat','quality_control',false,default_psom,false};
+gb_name_structure = 'opt';
+gb_list_fields    = {'size_output'     , 'flag_test' , 'psom'       };
+gb_list_defaults  = {'quality_control' , false       , default_psom };
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,42 +119,22 @@ end
 switch format_demo
     
     case 'minc1' % If data are in minc1 format
-        
-        %% Subject 1
-
-        % Structural scan
-        files_in.subject1.anat = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');
-
-        % fMRI runs
+                
+        files_in.subject1.anat             = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');        
         files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
         files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz');
-
-        %% Subject 2
-
-        % Structural scan
-        files_in.subject2.anat = cat(2,path_demo,filesep,'anat_subject2.mnc.gz');
-
-        % fMRI runs
+        
+        files_in.subject2.anat             = cat(2,path_demo,filesep,'anat_subject2.mnc.gz');        
         files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc.gz');
         files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc.gz');
-
+        
     case 'minc2' % If data are in minc2 format
         
-        %% Subject 1
-        
-        % Structural scan 
-        files_in.subject1.anat = cat(2,path_demo,filesep,'anat_subject1.mnc');       
-        
-        % fMRI runs
+        files_in.subject1.anat             = cat(2,path_demo,filesep,'anat_subject1.mnc');        
         files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
         files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc');
-                
-        %% Subject 2
         
-        % Structural scan 
-        files_in.subject2.anat = cat(2,path_demo,filesep,'anat_subject2.mnc');       
-        
-        % fMRI runs
+        files_in.subject2.anat             = cat(2,path_demo,filesep,'anat_subject2.mnc');        
         files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
         files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc');
         
@@ -186,60 +148,46 @@ end
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
 
-% Where to store the results
-opt.folder_out = cat(2,path_demo,filesep,'fmri_preprocess',filesep); 
+% General
+opt.folder_out          = cat(2,path_demo,filesep,'fmri_preprocess',filesep);            % Where to store the results
 
-%%%%%%%%%%%%%%%%%%%%
-%% Bricks options %%
-%%%%%%%%%%%%%%%%%%%%
+% Slice timing correction (niak_brick_slice_timing)
+opt.slice_timing.type_acquisition = 'interleaved ascending'; % Interleaved ascending (odd first by default)
+opt.slice_timing.type_scanner     = 'Bruker';                % Only the value 'Siemens' will actually have an impact
+opt.slice_timing.delay_in_tr      = 0;                       % The delay in TR ("blank" time between two volumes)
+opt.slice_timing.flag_skip        = 0;                       % Turn on/off the slice timing (here it is on)
 
-% These options correspond to the 'standard-native' style of
-% pipeline, but will also work with 'standard-stereotaxic' and 'fmristat'.
-% 
-% The options presented here are only the most important ones. A 
-% comprehensive list can be found in the help of the respective bricks.
+% Motion correction (niak_brick_motion_correction)
+opt.motion_correction.suppress_vol = 0;          % There is no dummy scan to supress.
+opt.motion_correction.session_ref  = 'session1'; % The session that is used as a reference. Use the session corresponding to the acqusition of the T1 scan.
+opt.motion_correction.flag_skip    = 0;          % Turn on/off the motion correction
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
 % space (niak_brick_t1_preprocess)
-opt.bricks.t1_preprocess.nu_correct.arg = '-distance 200'; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 25 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
+opt.t1_preprocess.nu_correct.arg = '-distance 50'; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 50 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
 
-% Motion correction (niak_brick_motion_correction)
-opt.bricks.motion_correction.suppress_vol = 0; % There is no dummy scan to supress.
-opt.bricks.motion_correction.vol_ref = 'median'; % Use the median volume of each run as a target.
-opt.bricks.motion_correction.run_ref = 1; % The first run of each session is used as a reference.
-opt.bricks.motion_correction.session_ref = 'session1'; % The first session is used as a reference.
-opt.bricks.motion_correction.flag_session = 0; % Correct for both within and between sessions motion
+% T1-T2 coregistration (niak_brick_anat2func)
+opt.anat2func.init = 'identity'; % The 'center' option usually does more harm than good. Use it only if you have very big misrealignement between the two images (say, > 2 cm).
 
-if ~strcmp(opt.style,'fmristat')
-
-    % Slice timing correction (niak_brick_slice_timing)
-    TR = 2.33; % Repetition time in seconds
-    nb_slices = 42; % Number of slices in a volume
-    opt.bricks.slice_timing.slice_order = [1:2:nb_slices 2:2:nb_slices]; % Interleaved acquisition of slices
-    opt.bricks.slice_timing.timing(1)=TR/nb_slices; % Time beetween slices
-    opt.bricks.slice_timing.timing(2)=TR/nb_slices; % Time between the last slice of a volume and the first slice of next volume
-    opt.bricks.slice_timing.suppress_vol = 0; % Do not remove volumes.
-    % Temporal filetring (niak_brick_time_filter)
-    opt.bricks.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
-    opt.bricks.time_filter.lp = Inf; % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
-
-end
-
+% Temporal filtering (niak_brick_time_filter)
+opt.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
+opt.time_filter.lp = Inf;  % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
 
 % Correction of physiological noise (niak_pipeline_corsica)
-if opt.flag_corsica
-    opt.bricks.sica.nb_comp = 20;
-    opt.bricks.component_supp.threshold = 0.15;
-end
+opt.corsica.sica.nb_comp             = 20;    % Number of components estimated during the ICA. 20 is a minimal number, 60 was used in the validation of CORSICA.
+opt.corsica.component_supp.threshold = 0.15;  % This threshold has been calibrated on a validation database as providing good sensitivity with excellent specificity.
+opt.corsica.flag_skip                = 0;     % Turn on/off the motion correction
+
+% resampling in stereotaxic space
+opt.resample_vol.interpolation       = 'tricubic'; % The resampling scheme. The most accurate is 'sinc' but it is awfully slow
+opt.resample_vol.voxel_size          = [3 3 3];    % The voxel size to use in the stereotaxic space
+opt.resample_vol.flag_skip           = 0;          % Turn on/off the resampling in stereotaxic space
 
 % Spatial smoothing (niak_brick_smooth_vol)
-opt.bricks.smooth_vol.fwhm = 6; % Apply an isotropic 6 mm gaussin smoothing.
+opt.smooth_vol.fwhm      = 6;  % Apply an isotropic 6 mm gaussin smoothing.
+opt.smooth_vol.flag_skip = 0;  % Turn on/off the spatial smoothing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess template  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if flag_dev
-    pipeline = niak_pipeline_fmri_preprocess_dev(files_in,opt);
-else
-    pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
-end
+[pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt);
