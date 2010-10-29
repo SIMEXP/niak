@@ -101,7 +101,7 @@ if ~exist('files_in','var')|~exist('files_out','var')
 end
 
 %% FILES_IN
-if ~struct(files_in)
+if ~isstruct(files_in)
     error('FILES_IN should be a structure');
 end
 list_subject = fieldnames(files_in);
@@ -190,13 +190,13 @@ for num_s = 1:nb_subject
     if flag_verbose
         fprintf('%s - ',subject);
     end
-    nb_run = length(files_in.(subject).motion_parameters_ind;
+    nb_run = length(files_in.(subject).motion_parameters_ind);
     for num_r = 1:nb_run
-        load(files_in.(subject).motion_parameters_ind);
-        rot = zeros([size(transf(3) 3]);
-        tsl = zeros([size(transf(3) 3]);
-        for num_v = 1:size(transf,3);
-            [rot(num_v,:),tsl(num_v,:)] = niak_transf2param(transf(:,:,num_v));
+        data = load(files_in.(subject).motion_parameters_ind);
+        rot = zeros([size(data.transf,3) 3]);
+        tsl = zeros([size(data.transf,3) 3]);
+        for num_v = 1:size(data.transf,3);
+            [rot(num_v,:),tsl(num_v,:)] = niak_transf2param(data.transf(:,:,num_v));
         end
         rot = diff(rot);
         tsl = diff(tsl);

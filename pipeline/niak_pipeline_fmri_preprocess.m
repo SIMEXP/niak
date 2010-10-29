@@ -388,7 +388,8 @@ end
 %% Build individual pipelines %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for num_s = 1:nb_subject
-    opt_ind = opt;
+    opt_ind = rmfield(opt,'bricks');
+    opt_ind = rmfield(opt_ind,'flag_corsica');
     subject = list_subject{num_s};
     opt_ind.label = subject;
     opt_ind.flag_test = true;
@@ -478,6 +479,22 @@ files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filese
 opt_tmp                       = opt.qc_coregister;
 opt_tmp.labels_subject        = list_subject;
 pipeline = psom_add_job(pipeline,'qc_coregister_group_func_stereonl','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% GROUP QC MOTION_CORRECTION %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear files_in_tmp files_out_tmp opt_tmp
+for num_s = 1:nb_subject
+    subject = list_subject{num_s};
+    files_in_tmp.(subject).tab_coregister_ind    = pipeline.(['qc_motion_' subject]).files_out.tab_coregister;
+    files_in_tmp.(subject).motion_parameters_ind = pipeline.(['qc_motion_' subject]).files_in.motion_parameters;
+end
+files_out_tmp.fig_coregister_group  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_coregister_between_runs_group.pdf'];
+files_out_tmp.tab_coregister_group  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_coregister_between_runs_group.csv'];
+files_out_tmp.fig_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.pdf'];
+files_out_tmp.tab_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.csv'];
+opt_tmp.flag_test                   = true;
+pipeline = psom_add_job(pipeline,'qc_motion_group','niak_brick_qc_motion_correction_group',files_in_tmp,files_out_tmp,opt_tmp);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%
