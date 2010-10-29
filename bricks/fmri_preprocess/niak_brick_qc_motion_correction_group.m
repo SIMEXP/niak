@@ -160,7 +160,7 @@ niak_write_csv(files_out.tab_coregister_group,tab_group,opt_csv);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    fprintf('Saving the group between-run coregistration quality measures as a figure %s ...\n',files_out.fig_coregister_group);
+    fprintf('Saving the group between-run coregistration quality measures as a figure.\n     %s\n',files_out.fig_coregister_group);
 end
 file_fig = niak_file_tmp('.eps');
 hf = figure;
@@ -192,7 +192,7 @@ for num_s = 1:nb_subject
     end
     nb_run = length(files_in.(subject).motion_parameters_ind);
     for num_r = 1:nb_run
-        data = load(files_in.(subject).motion_parameters_ind);
+        data = load(files_in.(subject).motion_parameters_ind{num_r});
         rot = zeros([size(data.transf,3) 3]);
         tsl = zeros([size(data.transf,3) 3]);
         for num_v = 1:size(data.transf,3);
