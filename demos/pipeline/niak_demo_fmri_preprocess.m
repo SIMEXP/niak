@@ -188,6 +188,6 @@ opt.smooth_vol.fwhm      = 6;  % Apply an isotropic 6 mm gaussin smoothing.
 opt.smooth_vol.flag_skip = 0;  % Turn on/off the spatial smoothing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Run the fmri_preprocess template  %%
+%% Run the fmri_preprocess pipeline  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt);

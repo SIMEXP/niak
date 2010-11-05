@@ -252,7 +252,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       2.  Group quality control for coregistration of T1 images in
 %           stereotaxic space
 %           See NIAK_BRICK_QC_COREGISTER
-%       3.  Group quality control for coregistration of fMRI in steretaxic
+%       3.  Group quality control for coregistration of fMRI in stereotaxic
 %           space.
 %
 % NOTE 2:

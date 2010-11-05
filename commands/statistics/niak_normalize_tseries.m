@@ -1,8 +1,4 @@
 function tseries_n = niak_normalize_tseries(tseries,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_NORMALIZE_TSERIES
-%
 % Apply some temporal normalization rule to time series.
 %
 % SYNTAX:
@@ -33,26 +29,11 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %               'median_mad'
 %                   Correct the time series to zero median and a
 %                   median-absolute-deviation (MAD) corresponding to a
-%                   standard-deviation of 1 for a Gaussian process (0.6764).
+%                   standard-deviation of 1 for a Gaussian process (MAD = 0.6764).
 %
 %               'grand_mean'
 %                   Express the time series as a percentage of the grand
 %                   mean of all time series.
-%
-%               'fir'
-%                   Correct the mean of the time samples OPT.IND_TIME to 
-%                   zero.
-%
-%               'fir_shape'
-%                   Same as 'fir', except that the average of the 
-%                   sum-of-squares2-norm of the time series are normalized 
-%                   to 1.
-%                   
-%       If OPT.TYPE = 'fir' or OPT.TYPE = 'fir_shape'
-%
-%           IND_TIME
-%               (vector of integers) the indices of the time samples
-%               considered in the shift to zero mean.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -69,8 +50,10 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %
 % time series with zero variance are left as constant zeros.
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de geriatrie 
+% de Montreal, Departement d'informatique et de recherche operationnelle, 
+% Universite de Montreal, 2008-2010.
+% Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : Statistics, Normalization, Variance
 
@@ -141,19 +124,7 @@ switch opt.type
         
         grand_mean = mean(tseries(:));
         tseries_n = tseries/grand_mean;
-        
-    case 'fir'
-        
-        mean_ts = mean(tseries(opt.ind_time,:),1);
-        tseries_n = tseries - ones([nt 1])*mean_ts;
-
-    case 'fir_shape'
-        
-        mean_ts = mean(tseries(opt.ind_time,:),1);
-        tseries_n = tseries - ones([nt 1])*mean_ts;
-        norm2_ts = sqrt(sum(tseries_n.^2,1)/nt);
-        tseries_n(:,norm2_ts~=0) = tseries_n(:,norm2_ts~=0) ./ (ones([nt 1])*norm2_ts(:,norm2_ts~=0));
-        
+                
     otherwise
 
         error('niak:statistics','%s: unknown type of correction',opt.type);
