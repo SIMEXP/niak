@@ -57,7 +57,7 @@ opt.size_output         = 'quality_control';                             %  The 
 
 % Slice timing correction (niak_brick_slice_timing)
 opt.slice_timing.type_acquisition = 'interleaved ascending'; % Slice timing order (available options : 'sequential ascending', 'sequential descending', 'interleaved ascending', 'interleaved descending')
-opt.slice_timing.type_scanner     = 'Bruker';                % Only the value 'Siemens' will actually have an impact
+opt.slice_timing.type_scanner     = 'Bruker';                % Scanner manufacturer. Only the value 'Siemens' will actually have an impact
 opt.slice_timing.delay_in_tr      = 0;                       % The delay in TR ("blank" time between two volumes)
 opt.slice_timing.flag_skip        = 0;                       % Skip the slice timing (0: don't skip, 1 : skip)
 
