@@ -207,10 +207,10 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %
 %   Regarding the ICBM MNI non-linear template :
 %
-%   VS Fonov, AC Evans, RC McKinstry, CR Almli and DL Collins Unbiased
-%   nonlinear average age-appropriate brain templates from birth to 
-%   adulthood NeuroImage, Volume 47, Supplement 1, July 2009, Page S102 
-%   Organization for Human Brain Mapping 2009 Annual Meeting 
+%   VS Fonov, AC Evans, K Botteron, CR Almli, RC McKinstry, DL Collins and 
+%   the brain development cooperative group. Unbiased average 
+%   age-appropriate atlases for pediatric studies. NeuroImage, Volume 54, 
+%   2011, pp. 313-327.
 %
 %   Regarding the pipeline flowchart :
 %

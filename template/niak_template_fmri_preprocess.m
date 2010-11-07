@@ -62,8 +62,8 @@ opt.slice_timing.delay_in_tr      = 0;                       % The delay in TR (
 opt.slice_timing.flag_skip        = 0;                       % Skip the slice timing (0: don't skip, 1 : skip)
 
 % Motion correction (niak_brick_motion_correction)
-opt.motion_correction.suppress_vol = 0;          % There is no dummy scan to supress.
-opt.motion_correction.session_ref  = 'session1'; % The session that is used as a reference. Use the session corresponding to the acqusition of the T1 scan.
+opt.motion_correction.suppress_vol = 0;          % Number of dummy scans to suppress.
+opt.motion_correction.session_ref  = 'session1'; % The session that is used as a reference. In general, use the session including the acqusition of the T1 scan.
 opt.motion_correction.flag_skip    = 0;          % Skip the motion correction (0: don't skip, 1 : skip)
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
@@ -71,11 +71,11 @@ opt.motion_correction.flag_skip    = 0;          % Skip the motion correction (0
 opt.t1_preprocess.nu_correct.arg = '-distance 50'; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 50 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
 
 % T1-T2 coregistration (niak_brick_anat2func)
-opt.anat2func.init = 'identity'; % The 'center' option usually does more harm than good. Use it only if you have very big misrealignement between the two images (say, > 2 cm).
+opt.anat2func.init = 'identity'; % An initial guess of the transform. Possible values 'identity', 'center'. 'identity' is self-explanatory. The 'center' option usually does more harm than good. Use it only if you have very big misrealignement between the two images (say, 2 cm).
 
 % Temporal filtering (niak_brick_time_filter)
-opt.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
-opt.time_filter.lp = Inf;  % Do not apply low-pass filter. Low-pass filter induce a big loss in degrees of freedom without sgnificantly improving the SNR.
+opt.time_filter.hp = 0.01; % Cut-off frequency for high-pass filtering, or removal of low frequencies (in Hz). A cut-off of -Inf will result in no high-pass filtering.
+opt.time_filter.lp = Inf;  % Cut-off frequency for low-pass filtering, or removal of high frequencies (in Hz). A cut-off of Inf will result in no low-pass filtering.
 
 % Correction of physiological noise (niak_pipeline_corsica)
 opt.corsica.sica.nb_comp             = 20;    % Number of components estimated during the ICA. 20 is a minimal number, 60 was used in the validation of CORSICA.

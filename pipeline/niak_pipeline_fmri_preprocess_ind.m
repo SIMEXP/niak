@@ -654,9 +654,8 @@ for num_r = 1:length(files_re);
     clear files_in_tmp files_out_tmp opt_tmp     
     name_job = ['smooth_',label,'_',run];    
     files_in_tmp = files_re{num_r};               
-    files_out_tmp = '';            
-    opt_tmp = opt.smooth_vol;
-    opt_tmp.folder_out = opt.folder_fmri;
+    files_out_tmp = [opt.folder_fmri filesep 'fmri_' label '_' session '_' run ext_f];            
+    opt_tmp = opt.smooth_vol;    
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_smooth_vol',files_in_tmp,files_out_tmp,opt_tmp);
     files_sm{num_r} = pipeline.(name_job).files_out;
 end
