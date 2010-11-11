@@ -359,13 +359,12 @@ opt_res.flag_tfm_space = 1;
 opt_res.flag_verbose = 0;
 opt_res.interpolation = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
+[hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);
 
 %% Copying the functional mask
 if flag_verbose
     fprintf('Creating temporary copies of the functional mask ...\n');
 end
-
-% The functional mask
 [hdr_func,mask_func] = niak_read_vol(files_in.mask_func);
 mask_func = round(mask_func)>0;
 hdr_func.file_name = file_mask_func;
@@ -382,35 +381,6 @@ files_out_tmp.vol_nu = file_func_init;
 opt_tmp.flag_verbose = false;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
 [hdr_func,vol_func] = niak_read_vol(file_func_init);
-
-%% "T2ify" the T1 volume
-if flag_verbose
-    fprintf('"T2ifying" the T1 volume ...\n');
-end
-% Read anatomical stuff
-[hdr_anat,vol_anat] = niak_read_vol(file_anat_init);
-[hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);
-mask_anat = round(mask_anat)>0;
-
-% Build a cumulative distribution function for the anat
-[ya,xa] = hist(vol_anat(mask_anat),100);
-ca = cumsum(ya)/sum(mask_anat(:));
-
-% Build a cumulative distribution function for the functional
-[yf,xf] = hist(vol_func(mask_func),100);
-cf = cumsum(yf)/sum(mask_func(:));
-[cf,ind] = unique(cf);
-xf = xf(ind);
-
-% Modify the intensity distribution of the T1 to make it more similar to
-% the functional
-vol_anat2 = zeros(size(vol_anat));
-vol_anat2(mask_anat) = interp1(xa,ca,vol_anat(mask_anat));
-vol_anat2(mask_anat) = interp1(1-cf,xf,vol_anat2(mask_anat));
-hdr_anat.file_name = file_anat_init;
-clear vol_anat 
-niak_write_vol(hdr_anat,vol_anat2);
-clear vol_anat2
 
 %% For large displacement, make a first guess of the transformation by
 %% matching the centers of mass
@@ -471,30 +441,8 @@ for num_i = 1:length(list_fwhm)
         fprintf('Cropping the functional brain mask ... \n');
     end
    
-    % resample anatomical mask in functional space
-    clear files_in_res files_out_res 
-    files_in_res.source         = file_mask_anat;
-    files_in_res.target         = file_func_init;
-    files_in_res.transformation = file_transf_guess;
-    files_out_res               = file_tmp;
-    opt_res.flag_tfm_space      = 0;
-    opt_res.interpolation       = 'nearest_neighbour';
-    niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
-    
-    % Dilate anatomical mask
-    [hdr_func,mask_anat] = niak_read_vol(file_tmp);       
-    opt_m.voxel_size = hdr_func.info.voxel_size;
-    opt_m.pad_size = 2*crop_val;
-    mask_anat = round(mask_anat)>0;
-    mask_anat_d = niak_morph(~mask_anat,'-successive F',opt_m);
-    mask_anat_d = mask_anat_d<=(crop_val/max(hdr_func.info.voxel_size));    
-    
-    % Crop functional mask
-    [hdr_func,mask_func] = niak_read_vol(file_mask_func);
-    mask_func_c = mask_anat_d & round(mask_func);
-    hdr_func.file_name = file_mask_func_crop;
-    niak_write_vol(hdr_func,mask_func_c);
-    
+    sub_crop_mask(file_mask_func,file_mask_anat,file_mask_func_crop,file_transf_guess,file_tmp,crop_val,true);
+      
     %% Crop anatomical mask
     if flag_verbose
         fprintf('Cropping the anatomical brain mask ... \n');
@@ -510,28 +458,7 @@ for num_i = 1:length(list_fwhm)
     opt_res.interpolation = 'nearest_neighbour';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
-    % resample functional mask in anatomical space
-    clear files_in_res files_out_res 
-    files_in_res.source = file_mask_func;
-    files_in_res.target = file_tmp;    
-    files_out_res = file_tmp2;
-    opt_res.flag_tfm_space = false;
-    opt_res.interpolation = 'nearest_neighbour';
-    niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
-    
-    % Dilate functional mask
-    [hdr_anat,mask_func] = niak_read_vol(file_tmp2);
-    opt_m.voxel_size = hdr_anat.info.voxel_size;
-    opt_m.pad_size = 2*crop_val;
-    mask_func = round(mask_func)>0;
-    mask_func_d = niak_morph(~mask_func,'-successive F',opt_m);
-    mask_func_d = mask_func_d<=(crop_val/max(hdr_anat.info.voxel_size));    
-    
-    % Crop anatomical mask
-    [hdr_anat,mask_anat] = niak_read_vol(file_tmp);
-    mask_anat_c = mask_func_d & round(mask_anat);
-    hdr_anat.file_name = file_mask_anat_crop;
-    niak_write_vol(hdr_anat,mask_anat_c);
+    sub_crop_mask(file_tmp,file_file_mask_func,file_mask_anat_crop,file_transf_guess,file_tmp2,crop_val,false);
     
     %% smooth & crop anat
     if flag_verbose
@@ -677,3 +604,35 @@ rmdir(path_tmp,'s');
 if flag_verbose
     fprintf('\nDone !\n');
 end
+
+%%%%%%%%%%%%%%%%%%
+%% SUBFUNCTIONS %%
+%%%%%%%%%%%%%%%%%%
+function [] = sub_crop_mask(file_target,file_source,file_transf,file_crop,crop_val,file_tmp,flag_tfm_space)
+
+% resample source map in target space
+clear files_in_res files_out_res 
+files_in_res.source         = file_source;
+files_in_res.target         = file_target;
+files_in_res.transformation = file_transf;
+files_out_res               = file_tmp;
+opt_res.flag_tfm_space      = flag_tfm_space;
+opt_res.voxel_size         = false;
+opt_res.flag_invert_transf = false;
+opt_res.flag_verbose       = false;
+opt_res.interpolation       = 'nearest_neighbour';
+niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
+    
+% Dilate source mask
+[hdr_target,mask_source] = niak_read_vol(file_tmp);       
+opt_m.voxel_size = hdr_target.info.voxel_size;
+opt_m.pad_size = 2*crop_val;
+mask_source = round(mask_source)>0;
+mask_source_d = niak_morph(~mask_source,'-successive F',opt_m);
+mask_source_d = mask_source_d<=(crop_val/max(hdr_target.info.voxel_size));    
+    
+% Crop functional mask
+[hdr_target,mask_target] = niak_read_vol(file_target);
+mask_target_c = mask_source_d & round(mask_target);
+hdr_target.file_name = file_crop;
+niak_write_vol(hdr_target,mask_crop);
