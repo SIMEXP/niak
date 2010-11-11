@@ -446,18 +446,24 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Iterative coregistration %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+opt_smooth.flag_verbose = false;
+opt_smooth.flag_edge    = true;
+    
+opt_res.voxel_size         = false;
+opt_res.flag_invert_transf = false;
+opt_res.flag_verbose       = false;
 
 for num_i = 1:length(list_fwhm)
 
     %% Setting up parameters value for this iteration
-    fwhm_val = list_fwhm(num_i);
-    step_val = list_step(num_i);
-    simplex_val = list_simplex(num_i);
-    crop_val = list_crop(num_i);
-    mes_val = list_mes{num_i};
+    opt_smooth.fwhm = list_fwhm(num_i);
+    step_val        = list_step(num_i);
+    simplex_val     = list_simplex(num_i);
+    crop_val        = list_crop(num_i);
+    mes_val         = list_mes{num_i};
     
     if flag_verbose
-        fprintf('\n***************\nIteration %i\nSmoothing %1.2f\nStep %1.2f\nSimplex %1.2f\nCropping %1.2f\n***************\n',num_i,fwhm_val,step_val,simplex_val,crop_val);
+        fprintf('\n***************\nIteration %i\nSmoothing %1.2f\nStep %1.2f\nSimplex %1.2f\nCropping %1.2f\n***************\n',num_i,opt_smooth.fwhm,step_val,simplex_val,crop_val);
     end
 
     %% Crop functional mask
@@ -466,16 +472,13 @@ for num_i = 1:length(list_fwhm)
     end
    
     % resample anatomical mask in functional space
-    clear files_in_res files_out_res opt_res
-    files_in_res.source = file_mask_anat;
-    files_in_res.target = file_func_init;
+    clear files_in_res files_out_res 
+    files_in_res.source         = file_mask_anat;
+    files_in_res.target         = file_func_init;
     files_in_res.transformation = file_transf_guess;
-    files_out_res = file_tmp;
-    opt_res.voxel_size = 0;
-    opt_res.flag_tfm_space = 0;
-    opt_res.flag_invert_transf = false;
-    opt_res.flag_verbose = 0;
-    opt_res.interpolation = 'nearest_neighbour';
+    files_out_res               = file_tmp;
+    opt_res.flag_tfm_space      = 0;
+    opt_res.interpolation       = 'nearest_neighbour';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
     % Dilate anatomical mask
@@ -498,27 +501,21 @@ for num_i = 1:length(list_fwhm)
     end
    
     % resample anatomical mask in functional space keeping FOV
-    clear files_in_res files_out_res opt_res
+    clear files_in_res files_out_res 
     files_in_res.source = file_mask_anat;
     files_in_res.target = file_mask_anat;
     files_in_res.transformation = file_transf_guess;
     files_out_res = file_tmp;
-    opt_res.voxel_size = 0;
     opt_res.flag_tfm_space = true;
-    opt_res.flag_invert_transf = false;
-    opt_res.flag_verbose = 0;
     opt_res.interpolation = 'nearest_neighbour';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
     % resample functional mask in anatomical space
-    clear files_in_res files_out_res opt_res
+    clear files_in_res files_out_res 
     files_in_res.source = file_mask_func;
     files_in_res.target = file_tmp;    
     files_out_res = file_tmp2;
-    opt_res.voxel_size = 0;
     opt_res.flag_tfm_space = false;
-    opt_res.flag_invert_transf = false;
-    opt_res.flag_verbose = 0;
     opt_res.interpolation = 'nearest_neighbour';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
@@ -542,15 +539,12 @@ for num_i = 1:length(list_fwhm)
     end
     
     % resample anatomical volume in functional space
-    clear files_in_res files_out_res opt_res
+    clear files_in_res files_out_res 
     files_in_res.source = file_anat_init;
     files_in_res.target = file_anat_init;
     files_in_res.transformation = file_transf_guess;
     files_out_res = file_tmp;
-    opt_res.voxel_size = 0;
     opt_res.flag_tfm_space = 1;
-    opt_res.flag_invert_transf = false;
-    opt_res.flag_verbose = 0;
     opt_res.interpolation = 'tricubic';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
@@ -559,10 +553,7 @@ for num_i = 1:length(list_fwhm)
     files_in_tmp{1} = file_tmp;
     files_in_tmp{2} = file_mask_anat_crop;
     files_out_tmp = file_tmp2;
-    opt_tmp.fwhm = fwhm_val;
-    opt_tmp.flag_verbose = false;
-    opt_tmp.flag_edge = true;
-    niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_tmp);
+    niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_smooth);
     
     % Crop the anatomical volume
     [hdr_anat,vol_anat] = niak_read_vol(file_tmp2);
@@ -581,10 +572,7 @@ for num_i = 1:length(list_fwhm)
     files_in_tmp{1} = file_func_init;
     files_in_tmp{2} = file_mask_func_crop;
     files_out_tmp = file_tmp;
-    opt_tmp.fwhm = fwhm_val;
-    opt_tmp.flag_verbose = false;
-    opt_tmp.flag_edge = true;
-    niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_tmp);
+    niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_smooth);
     
     % Crop the functional volume
     [hdr_func,vol_func] = niak_read_vol(file_tmp);

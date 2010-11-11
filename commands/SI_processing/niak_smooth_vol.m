@@ -125,6 +125,7 @@ if flag_edge
     if isempty(mask)
         mask = ones([nx ny nz]);
     end
+    mask = mask>0;
     opt_smooth = opt;
     opt_smooth.flag_edge = false;
     opt_smooth.flag_verbose = false;    
@@ -138,7 +139,13 @@ for num_t = 1:nt
     end
 
     %% Write a temporary volume    
-    niak_write_vol(hdr,vol(:,:,:,num_t));
+    if flag_edge
+      vol_tmp = vol(:,:,:,num_t);      
+      vol_tmp(~mask) = 0;
+      niak_write_vol(hdr,vol_tmp);
+    else
+      niak_write_vol(hdr,vol(:,:,:,num_t));
+    end
 
     %% Apply smoothing
     instr_smooth = cat(2,'mincblur -3dfwhm ',num2str(fwhm),' -no_apodize -clobber ',file_in_sm,' ',file_out_sm(1:end-9));
