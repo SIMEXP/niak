@@ -72,7 +72,7 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       parameter of MINCTRACC at iteration I.
 %
 %   LIST_CROP
-%       (vector, default [20 10 5 5 5]) LIST_CROP(I) is the cropping
+%       (vector, default [30 20 15 10 5]) LIST_CROP(I) is the cropping
 %       parameter for the functional & anatomical masks at iteration I.
 %
 %   LIST_MES
@@ -212,8 +212,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = {'flag_invert_transf_output' ,'flag_invert_transf_init' ,'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'list_crop'     , 'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
-gb_list_defaults    = {false                       ,false                     ,{'mi','mi','mi','mi','mi'} , [8,4,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , [10,5,5,5,5]    , 0              ,''             ,1              ,'identity'};
+gb_list_fields      = {'flag_invert_transf_output' ,'flag_invert_transf_init' ,'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
+gb_list_defaults    = {false                       ,false                     ,{'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              ,''             ,1              ,'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
@@ -372,15 +372,11 @@ niak_write_vol(hdr_func,mask_func);
 
 %% Applying non-uniformity correction on the functional volume
 if flag_verbose
-    fprintf('Applying non-uniformity correction on the functional volume ...\n');
+    fprintf('Copying the functional volume in the temporary folder ...\n');
 end
-clear files_in_tmp files_out_tmp opt_tmp
-files_in_tmp.vol = files_in.func;
-files_in_tmp.mask = file_mask_func;
-files_out_tmp.vol_nu = file_func_init;
-opt_tmp.flag_verbose = false;
-niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
-[hdr_func,vol_func] = niak_read_vol(file_func_init);
+[hdr_func,vol_func] = niak_read_vol(files_in.func);
+hdr_func.file_name = file_func_init;
+niak_write_vol(hdr_func,vol_func);
 
 %% For large displacement, make a first guess of the transformation by
 %% matching the centers of mass
@@ -438,14 +434,16 @@ for num_i = 1:length(list_fwhm)
 
     %% Crop functional mask
     if flag_verbose
-        fprintf('Cropping the functional brain mask ... \n');
+        fprintf('Copying the functional brain mask ... \n');
     end
    
-    sub_crop_mask(file_mask_func,file_mask_anat,file_mask_func_crop,file_transf_guess,file_tmp,crop_val,true);
+    [tmp,mask_func_c] = niak_read_vol(file_mask_func);
+    mask_func_c = round(mask_func_c)>0;
+    system(['cp ' file_mask_func ' ' file_mask_func_crop]);  
       
     %% Crop anatomical mask
     if flag_verbose
-        fprintf('Cropping the anatomical brain mask ... \n');
+        fprintf('Resampling the anatomical brain mask in funcitonal space... \n');
     end
    
     % resample anatomical mask in functional space keeping FOV
@@ -458,7 +456,9 @@ for num_i = 1:length(list_fwhm)
     opt_res.interpolation = 'nearest_neighbour';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
-    sub_crop_mask(file_tmp,file_file_mask_func,file_mask_anat_crop,file_transf_guess,file_tmp2,crop_val,false);
+    [tmp,mask_anat_c] = niak_read_vol(file_tmp);
+    mask_anat_c = round(mask_anat_c)>0;
+    system(['cp ' file_tmp ' ' file_mask_anat_crop]);    
     
     %% smooth & crop anat
     if flag_verbose
@@ -608,7 +608,7 @@ end
 %%%%%%%%%%%%%%%%%%
 %% SUBFUNCTIONS %%
 %%%%%%%%%%%%%%%%%%
-function [] = sub_crop_mask(file_target,file_source,file_transf,file_crop,crop_val,file_tmp,flag_tfm_space)
+function mask_target_c = sub_crop_mask(file_target,file_source,file_crop,file_transf,file_tmp,crop_val)
 
 % resample source map in target space
 clear files_in_res files_out_res 
@@ -616,23 +616,23 @@ files_in_res.source         = file_source;
 files_in_res.target         = file_target;
 files_in_res.transformation = file_transf;
 files_out_res               = file_tmp;
-opt_res.flag_tfm_space      = flag_tfm_space;
-opt_res.voxel_size         = false;
-opt_res.flag_invert_transf = false;
-opt_res.flag_verbose       = false;
+opt_res.flag_tfm_space      = false;
+opt_res.voxel_size          = false;
+opt_res.flag_invert_transf  = false;
+opt_res.flag_verbose        = false;
 opt_res.interpolation       = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
 % Dilate source mask
 [hdr_target,mask_source] = niak_read_vol(file_tmp);       
-opt_m.voxel_size = hdr_target.info.voxel_size;
-opt_m.pad_size = 2*crop_val;
 mask_source = round(mask_source)>0;
-mask_source_d = niak_morph(~mask_source,'-successive F',opt_m);
-mask_source_d = mask_source_d<=(crop_val/max(hdr_target.info.voxel_size));    
-    
+opt_m.voxel_size = hdr_target.info.voxel_size;
+opt_m.pad_size   = 2*crop_val;
+mask_source_d    = niak_morph(~mask_source,'-distance',opt_m);
+mask_source_d    = mask_source_d<=(crop_val/max(hdr_target.info.voxel_size));
+
 % Crop functional mask
 [hdr_target,mask_target] = niak_read_vol(file_target);
 mask_target_c = mask_source_d & round(mask_target);
 hdr_target.file_name = file_crop;
-niak_write_vol(hdr_target,mask_crop);
+niak_write_vol(hdr_target,mask_target_c);
