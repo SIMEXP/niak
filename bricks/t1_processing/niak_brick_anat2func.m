@@ -424,12 +424,11 @@ for num_i = 1:length(list_fwhm)
     %% Setting up parameters value for this iteration
     opt_smooth.fwhm = list_fwhm(num_i);
     step_val        = list_step(num_i);
-    simplex_val     = list_simplex(num_i);
-    crop_val        = list_crop(num_i);
+    simplex_val     = list_simplex(num_i);    
     mes_val         = list_mes{num_i};
     
     if flag_verbose
-        fprintf('\n***************\nIteration %i\nSmoothing %1.2f\nStep %1.2f\nSimplex %1.2f\nCropping %1.2f\n***************\n',num_i,opt_smooth.fwhm,step_val,simplex_val,crop_val);
+        fprintf('\n***************\nIteration %i\nSmoothing %1.2f\nStep %1.2f\nSimplex %1.2f\n***************\n',num_i,opt_smooth.fwhm,step_val,simplex_val);
     end
 
     %% Crop functional mask
@@ -604,35 +603,3 @@ rmdir(path_tmp,'s');
 if flag_verbose
     fprintf('\nDone !\n');
 end
-
-%%%%%%%%%%%%%%%%%%
-%% SUBFUNCTIONS %%
-%%%%%%%%%%%%%%%%%%
-function mask_target_c = sub_crop_mask(file_target,file_source,file_crop,file_transf,file_tmp,crop_val)
-
-% resample source map in target space
-clear files_in_res files_out_res 
-files_in_res.source         = file_source;
-files_in_res.target         = file_target;
-files_in_res.transformation = file_transf;
-files_out_res               = file_tmp;
-opt_res.flag_tfm_space      = false;
-opt_res.voxel_size          = false;
-opt_res.flag_invert_transf  = false;
-opt_res.flag_verbose        = false;
-opt_res.interpolation       = 'nearest_neighbour';
-niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
-    
-% Dilate source mask
-[hdr_target,mask_source] = niak_read_vol(file_tmp);       
-mask_source = round(mask_source)>0;
-opt_m.voxel_size = hdr_target.info.voxel_size;
-opt_m.pad_size   = 2*crop_val;
-mask_source_d    = niak_morph(~mask_source,'-distance',opt_m);
-mask_source_d    = mask_source_d<=(crop_val/max(hdr_target.info.voxel_size));
-
-% Crop functional mask
-[hdr_target,mask_target] = niak_read_vol(file_target);
-mask_target_c = mask_source_d & round(mask_target);
-hdr_target.file_name = file_crop;
-niak_write_vol(hdr_target,mask_target_c);
