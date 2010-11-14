@@ -325,6 +325,10 @@ if ~strcmp(files_out.tab_coregister,'gb_niak_omitted')
         
         % The volume
         [hdr,mean_f] = niak_read_vol(files_in.vol{num_f});
+        flag_4d = size(mean_f,4)>1;
+        if flag_4d
+            mean_f = mean(mean_f,4);
+        end
         mean_f = mean_f(mask_all);
         rmean = niak_build_correlation([mean_v,mean_f]);
         tab_coregister(num_f,2) = rmean(1,2);
