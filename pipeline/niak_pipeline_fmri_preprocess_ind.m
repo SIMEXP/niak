@@ -81,6 +81,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       the data. Otherwise, PSOM_RUN_PIPELINE will be used to process the 
 %       data.
 %
+%   FLAG_VERBOSE
+%           (boolean, default 1) if the flag is 1, then the function
+%           prints some infos during the processing.
+%
 %   PSOM
 %       (structure) the options of the pipeline manager. See the OPT 
 %       argument of PSOM_RUN_PIPELINE. Default values can be used here.
@@ -365,8 +369,8 @@ default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
-gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
+gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
+gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , true           , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
 niak_set_defaults
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
@@ -401,6 +405,10 @@ pipeline = struct([]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% slice-timing correction %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('slice timing (');
+end
 for num_sess = 1:nb_session
     session = list_session{num_sess};
     nb_run = length(files_in.fmri.(session));
@@ -416,10 +424,17 @@ for num_sess = 1:nb_session
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_slice_timing',files_in_tmp,files_out_tmp,opt_tmp);        
     end % run
 end % session
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Motion correction %%
 %%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('motion correction (');
+end
 clear opt_tmp files_in_tmp files_out_tmp
 files_in_tmp        = files_a;
 opt_tmp             = opt.motion_correction;
@@ -456,10 +471,17 @@ files_out_tmp.tab_coregister         = [opt.folder_qc 'motion_correction' filese
 opt_tmp                              = opt.qc_motion_correction_ind;
 [tmp1,opt_tmp.labels_vol]            = niak_fileparts(files_in_tmp.vol);
 pipeline = psom_add_job(pipeline,name_job_qc_motion,'niak_brick_qc_motion_correction_ind',files_in_tmp,files_out_tmp,opt_tmp);  
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%
 %% T1 preprocess %%
 %%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('T1 preprocess (');
+end
 clear files_in_tmp files_out_tmp opt_tmp
 name_job_t1                           = ['t1_preprocess_',label];
 files_in_tmp                          = files_in.anat;
@@ -475,10 +497,18 @@ files_out_tmp.classify                = [opt.folder_anat 'anat_' label '_classif
 opt_tmp                               = opt.t1_preprocess;
 opt_tmp.folder_out                    = opt.folder_anat;
 pipeline = psom_add_job(pipeline,name_job_t1,'niak_brick_t1_preprocess',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% T1-T2 coregistration %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('T1-T2 coregistration (');
+end
+
 clear opt_tmp files_in_tmp files_out_tmp
 name_job_qc_motion                  = ['qc_motion_' label];
 name_job_t1                         = ['t1_preprocess_' label];
@@ -507,10 +537,17 @@ files_in_tmp{2}         = pipeline.(name_job_anat).files_out.transformation_nl;
 files_out_tmp           = [opt.folder_anat 'transf_' label '_nativefunc_to_stereonl.xfm'];
 opt_tmp.flag_test       = 0;
 pipeline = psom_add_job(pipeline,name_job_concat_transf,'niak_brick_concat_transf',files_in_tmp,files_out_tmp,opt_tmp,false);    
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate functional brain masks/mean/std volumes in the stereotaxic (non-linear) space %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('Brain masks & average (');
+end
 clear opt_tmp files_in_tmp files_out_tmp
 name_job                          = ['mask_ind_stereonl_',label];
 name_job_concat                   = cat(2,'concat_transf_nl_',label);
@@ -545,10 +582,17 @@ pipeline(1).(name_job).command    = 'niak_brick_resample_vol(files_in(1),files_o
 pipeline(1).(name_job).files_in   = files_in_tmp;
 pipeline(1).(name_job).files_out  = files_out_tmp;
 pipeline(1).(name_job).opt        = opt_tmp;
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% temporal filtering %%
 %%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('time filter (');
+end
 for num_s = 1:nb_session
     session = list_session{num_s};
     for num_r = 1:nb_run
@@ -573,10 +617,17 @@ if strcmp(size_output,'quality_control')
     opt_tmp.clean = files_motion.motion_corrected;
     pipeline = psom_add_job(pipeline,['clean_motion_correction_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);        
 end
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%
 %% CORSICA MASKS %%
 %%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('corsica (');
+end
 name_job_mask_corsica = ['mask_corsica_' label];
 clear files_in_tmp files_out_tmp opt_tmp 
 files_in_tmp.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
@@ -618,9 +669,17 @@ if strcmp(size_output,'quality_control')
     pipeline = psom_add_job(pipeline,['clean_time_filter_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
 end
 
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Spatial resampling in stereotaxic space %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('resampling (');
+end
 files_re = cell([length(files_co) 1]);
 for num_r = 1:length(files_co);
     run = ['run',num2str(num_r)];
@@ -644,10 +703,17 @@ if strcmp(size_output,'quality_control')
     opt_tmp.clean = files_co;
     pipeline = psom_add_job(pipeline,['clean_corsica_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
 end
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% spatial smoothing (stereotaxic space) %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('smoothing (');
+end
 files_sm = cell([length(files_re) 1]);
 for num_r = 1:length(files_re);
     run = ['run',num2str(num_r)];
@@ -667,6 +733,9 @@ if strcmp(size_output,'quality_control')
     files_out_tmp = {};
     opt_tmp.clean = files_re;
     pipeline = psom_add_job(pipeline,['clean_resample_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
+end
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%

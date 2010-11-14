@@ -55,7 +55,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       the data. Otherwise, PSOM_RUN_PIPELINE will be used to process the 
 %       data.
 %
-%       FLAG_VERBOSE
+%   FLAG_VERBOSE
 %           (boolean, default 1) if the flag is 1, then the function
 %           prints some infos during the processing.
 %
