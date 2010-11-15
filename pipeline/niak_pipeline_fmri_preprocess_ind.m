@@ -82,7 +82,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       data.
 %
 %   FLAG_VERBOSE
-%           (boolean, default 1) if the flag is 1, then the function
+%           (boolean, default 0) if the flag is 1, then the function
 %           prints some infos during the processing.
 %
 %   PSOM
@@ -370,7 +370,7 @@ opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
 gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
-gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , true           , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
+gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
 niak_set_defaults
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
