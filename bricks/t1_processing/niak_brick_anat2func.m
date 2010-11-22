@@ -71,10 +71,6 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       (vector, default [8,4,2,2,1]) LIST_SIMPLEX(I) is the simplex 
 %       parameter of MINCTRACC at iteration I.
 %
-%   LIST_CROP
-%       (vector, default [30 20 15 10 5]) LIST_CROP(I) is the cropping
-%       parameter for the functional & anatomical masks at iteration I.
-%
 %   LIST_MES
 %       (cell of string, default {'mi','mi','mi','mi','mi'}) 
 %       LIST_MES{I} is the measure (cost function) used to coregister the 
@@ -143,28 +139,15 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %   costumized (as well as the number of iterations).
 %
 % NOTE 3:
-%   The T1 volume is "T2ified", i.e. its histogram is modified to fit the 
-%   inverse histogram of the T2. This is done to improve the effect of 
-%   blurring with MI. Also, the values within the masks are centered around 
-%   the median. This is because otherwise MI can result in disastrous
-%   coregistration consisting in non-overlapping masks.
-%
-% NOTE 4:
-%   At each iteration, the brain masks of both images (anatomical and 
-%   functional) are cropped such that voxels that are too distant of the 
-%   other mask will not interfer with the coregistration process. This
-%   feature allows the coregistration to be robust to large differences
-%   between the fields of view. This cropping parameter can be changed
-%   using OPT.LIST_CROP
-%
-% NOTE 5:
 %   The quality of this approach critically relies on the T1 brain mask. 
 %   This brick should therefore be used in conjunction with 
 %   NIAK_BRICK_T1_PREPROCESS (this is what's being done in 
 %   NIAK_PIPELINE_FMRI_PREPROCESS).
 %
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-10.
+% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
+% gériatrie de Montréal, département d'informatique et de recherche 
+% opérationnelle, Université de Montréal, 2008-10.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, coregistration, rigid-body motion, fMRI, T1
@@ -200,20 +183,20 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields = {'anat','func','mask_anat','mask_func','transformation_init'};
-gb_list_defaults = {NaN,NaN,NaN,'gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'anat' , 'func' , 'mask_anat' , 'mask_func'       , 'transformation_init'};
+gb_list_defaults  = {NaN    , NaN    , NaN         , 'gb_niak_omitted' , 'gb_niak_omitted'};
 niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation','anat_hires','anat_lowres'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'transformation'  , 'anat_hires'      , 'anat_lowres'};
+gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'};
 niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = {'flag_invert_transf_output' ,'flag_invert_transf_init' ,'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    ,'folder_out'   ,'flag_verbose' ,'init'};
-gb_list_defaults    = {false                       ,false                     ,{'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              ,''             ,1              ,'identity'};
+gb_list_fields      = {'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
+gb_list_defaults    = {false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
@@ -425,8 +408,7 @@ for num_i = 1:length(list_fwhm)
     opt_smooth.fwhm = list_fwhm(num_i);
     step_val        = list_step(num_i);
     simplex_val     = list_simplex(num_i);    
-    mes_val         = list_mes{num_i};
-    
+    mes_val         = list_mes{num_i};    
     if flag_verbose
         fprintf('\n***************\nIteration %i\nSmoothing %1.2f\nStep %1.2f\nSimplex %1.2f\n***************\n',num_i,opt_smooth.fwhm,step_val,simplex_val);
     end

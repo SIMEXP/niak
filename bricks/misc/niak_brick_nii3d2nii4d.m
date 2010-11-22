@@ -126,7 +126,7 @@ hdr_out.type = 'nii';
 %% Processing volumes %%
 %%%%%%%%%%%%%%%%%%%%%%%%
 
-vol_out = zeros([hdr.info.dimensions(1:3) length(files_in)]);
+vol_out = zeros([hdr.info.dimensions(1:3) length(files_in)],'single');
 if flag_verbose
     fprintf('Processing volume :\n')
 end
@@ -136,7 +136,7 @@ for num_v = 1:length(files_in)
         fprintf('   %i : %s\n',num_v,files_in{num_v});
     end
     [hdr,vol] = niak_read_vol(files_in{num_v});
-    vol_out(:,:,:,num_v) = vol;
+    vol_out(:,:,:,num_v) = single(vol);
 end
 
 %%%%%%%%%%%%%%%%%%%%%
