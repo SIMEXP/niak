@@ -183,7 +183,7 @@ if ~ischar(files_in.score)
         if num_s == 1
             score = zeros([length(tmp.score) length(files_in.score)]);
         end
-        score(:,tmp.order) = tmp.score;
+        score(tmp.order,num_s) = tmp.score;
     end
     score_max = max(score,[],2);
 else    
