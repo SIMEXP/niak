@@ -47,7 +47,7 @@ function [files_in,files_out,opt] = niak_brick_qc_corsica(files_in,files_out,opt
 %       in the title to refer to scores from FILES_IN.SCORE{I}.
 %
 %   FWHM
-%       (scalar, default 3) the FWHM of a Gaussian smoothing that will be
+%       (scalar, default 5) the FWHM of a Gaussian smoothing that will be
 %       applied on every spatial component.
 %
 %   THRESHOLD
@@ -132,7 +132,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields    = {'labels_score' , 'fwhm'      , 'threshold' , 'flag_verbose' , 'flag_test' , 'folder_out' };
-gb_list_defaults  = {''             , 3           , Inf         , true           , false       , ''           };
+gb_list_defaults  = {''             , 5           , Inf         , true           , false       , ''           };
 niak_set_defaults
 
 %% Default outputs
