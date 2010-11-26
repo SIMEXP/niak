@@ -304,7 +304,10 @@ if nb_vox <= 20
     %% There is no functional data in the mask, no component is selected...
     num_comp = 1:nb_comp;
     score = zeros(size(num_comp));
-    
+    order = 1:length(score);
+    score = score(:);
+    order = order(:);
+
 else
 
     %% Selecting number of spatial classes
