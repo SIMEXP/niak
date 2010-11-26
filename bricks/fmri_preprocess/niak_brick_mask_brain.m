@@ -18,7 +18,7 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %   (structure) with the following fields :
 %
 %   FWHM 
-%       (real value, default 5) the FWHM of the blurring kernel in the same 
+%       (real value, default 8) the FWHM of the blurring kernel in the same 
 %       unit as the voxel size. A value of 0 for FWHM will skip the 
 %       smoothing step.
 %       
@@ -109,7 +109,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields   = {'fwhm' , 'flag_remove_eyes' , 'flag_verbose' ,'flag_test' ,'folder_out' };
-gb_list_defaults = {5      , 0                  , true           ,false       ,''           };
+gb_list_defaults = {8      , 0                  , true           ,false       ,''           };
 niak_set_defaults
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in);
