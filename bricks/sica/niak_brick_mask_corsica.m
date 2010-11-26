@@ -79,7 +79,7 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
 % operationnelle, Universite de Montreal, 2010.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : CORSICA, fMRI, physiological noise
 
@@ -197,7 +197,7 @@ clear files_in_math files_out_math opt_math
 files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
 files_in_math{2}    = [folder_tmp 'mask_vent_ind.mnc'];
 files_out_math      = files_out.mask_vent_ind;
-opt_math.operation  = 'vol = (vol_in{2} > 0) & (round(vol_in{1}) == 1)';
+opt_math.operation  = 'vol = (vol_in{2} > 0) & (round(vol_in{1}) == 1);';
 niak_brick_math_vol(files_in_math,files_out_math,opt_math);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
@@ -212,7 +212,7 @@ clear files_in_math files_out_math opt_math
 files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
 files_in_math{2}    = [folder_tmp 'mask_stem_ind.mnc'];
 files_out_math      = files_out.mask_stem_ind;
-opt_math.operation  = 'vol = (vol_in{2} > 0) & (round(vol_in{1}) ~= 2)';
+opt_math.operation  = 'vol = (vol_in{2} > 0) & (round(vol_in{1}) ~= 2);';
 niak_brick_math_vol(files_in_math,files_out_math,opt_math);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
