@@ -183,12 +183,11 @@ if ~ischar(files_in.score)
         if num_s == 1
             score = zeros([length(tmp.score) length(files_in.score)]);
         end
-        [tmp2,order] = sort(tmp.order);
-        score(:,num_s) = tmp.score(order);        
+        score(:,tmp.order) = tmp.score;
     end
     score_max = max(score,[],2);
-else
-    score = (size(tseries,2):-1:1)';
+else    
+    score     = zeros([size(tseries,2) 1]);
     score_max = score;
     threshold = Inf;
 end
