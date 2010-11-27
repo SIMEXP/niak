@@ -199,18 +199,19 @@ if flag_verbose
     fprintf('Generating a pdf summary of the ICA ...\n');
 end
 
-%% Options
+%% Options & temporary folders
 folder_tmp = niak_path_tmp('_qc_corsica');
 file_space = cell([size(tseries,2) 1]);
-file_time = cell([size(tseries,2) 1]);
+file_time  = cell([size(tseries,2) 1]);
+
 opt_visu.voxel_size = hdr.info.voxel_size;
-opt_visu.fwhm = opt.fwhm;
+opt_visu.fwhm       = opt.fwhm;
 opt_visu.vol_limits = [0 3];
 opt_visu.type_slice = 'axial';
 opt_visu.type_color = 'jet';
+
 [tmp,order] = sort(score_max,'descend');
 order = order(:)';
-num_comp = 1;
 
 for num_c = order
     
@@ -290,27 +291,26 @@ for num_c = order
         niak_visu_wft(tseries(:,num_c),1);
     end    
     print(file_time{num_c},'-dpsc2');    
-    close(hf)
-    num_comp = num_comp + 1;
+    close(hf)    
 end
 
 %% Merge all eps figures into a single file
 file_eps_final = [folder_tmp 'fig_corsica.eps'];
 instr_concat = ['gs  -q -dNOPAUSE -dBATCH -dNOPLATFONTS -sOutputFile=' file_eps_final '  -sDEVICE=pswrite ' ];
-for num_e = 1:size(tseries,2)
-    instr_concat = [instr_concat file_space{num_e} ' ' file_time{num_e} ' '];
+for num_c = order
+    instr_concat = [instr_concat file_space{num_c} ' ' file_time{num_c} ' '];
 end
 instr_concat = [instr_concat 'quit.ps'];
 [status,msg] = system(instr_concat);
 if status~=0
-    error(['There was a problem concatenating the EPS figures : ',msg]);
+    error(['There was a problem concatenating the EPS figures with ghostscript (gs): ',msg]);
 end
 
 %% In octave, use ps2pdf to convert the result into PDF format
 instr_ps2pdf = cat(2,'ps2pdf -dEPSCrop ',file_eps_final,' ',files_out);
 [succ,msg] = system(instr_ps2pdf);
 if succ~=0
-    warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf : ',msg));
+    warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf with ps2pdf: ',msg));
 end
 
 %% Clean up
