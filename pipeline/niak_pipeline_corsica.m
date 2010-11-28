@@ -119,8 +119,11 @@ function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 % FILES_OUT
 %   (structure) with the following field :
 %
-%       SUPPRESS_VOL
+%       SUPPRESS_VOL.<SUBJECT>
 %           (cell of strings) the outputs of NIAK_BRICK_SUPPRESS_VOL.
+%
+%       QC_CORSICA.<SUBJECT>
+%           (cell of strings) the outputs of NIAK_BRICK_QC_CORSICA.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -256,6 +259,7 @@ for num_s = 1:nb_subject
         [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).fmri{1});
     end
     files_out.suppress_vol.(subject) = cell([length(files_in.(subject).fmri) 1]);
+    files_out.qc_corsica.(subject) = cell([length(files_in.(subject).fmri) 1]);
     
     for num_r = 1:length(files_in.(subject).fmri)        
         run = cat(2,'run',num2str(num_r));
@@ -300,9 +304,8 @@ for num_s = 1:nb_subject
             files_in_tmp.mask              = files_in.(subject).mask_selection{num_m};
             files_in_tmp.transformation    = files_in.(subject).transformation;
             files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;
-            files_out_tmp                  = [path_f filesep name_f '_compsel_' labels_mask{num_m} '.mat'];
+            files_out_tmp                  = [opt.folder_sica filesep name_f '_compsel_' labels_mask{num_m} '.mat'];
             opt_tmp                        = opt.component_sel;
-            opt_tmp.folder_out             = opt.folder_sica;
             pipeline = psom_add_job(pipeline,name_job_sel{num_m},'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);
             files_sel{num_m} = pipeline.(name_job_sel{num_m}).files_out;
         end
@@ -321,6 +324,7 @@ for num_s = 1:nb_subject
         opt_tmp.threshold    = opt.threshold;
         opt_tmp.folder_out   = opt.folder_sica;
         pipeline = psom_add_job(pipeline,name_job_qc,'niak_brick_qc_corsica',files_in_tmp,files_out_tmp,opt_tmp);
+        files_out.qc_corsica.(subject){num_r} = pipeline.(name_job_qc).files_out;
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% COMPONENT SUPPRESSION %%
@@ -366,7 +370,7 @@ for num_s = 1:nb_subject
                     opt_tmp.clean.space      = pipeline.(name_job_sica).files_out.space;
                     opt_tmp.clean.time       = pipeline.(name_job_sica).files_out.time;
                     opt_tmp.clean.figure     = pipeline.(name_job_sica).files_out.figure;
-                    opt_tmp.clean.compsel    = files_sel;                    
+                    opt_tmp.clean.compsel    = files_sel;
                     opt_tmp.clean.mask       = files_in.(subject).mask_brain;
                 case 'quality_control'
                     opt_tmp.clean.space      = pipeline.(name_job_sica).files_out.space;

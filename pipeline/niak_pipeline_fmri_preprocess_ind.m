@@ -657,7 +657,8 @@ opt_tmp.folder_sica                     = [opt.folder_out 'quality_control' file
 opt_tmp.flag_test                       = true;
 opt_tmp.labels_mask                     = {'ventricles','stem'};
 [pipeline_corsica,opt_tmp,files_co] = niak_pipeline_corsica(files_in_tmp,opt_tmp);
-files_co = files_co.suppress_vol.(label);
+files_qc_co = files_co.qc_corsica.(label);
+files_co    = files_co.suppress_vol.(label);
 pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
 
 %% Clean up
@@ -698,9 +699,10 @@ end
 %% Clean up
 if strcmp(size_output,'quality_control')
     clear files_in_tmp files_out_tmp opt_tmp 
-    files_in_tmp = files_re;
-    files_out_tmp = {};
-    opt_tmp.clean = files_co;
+    files_in_tmp.resample   = files_re;
+    files_in_tmp.qc_corsica = files_qc_co;
+    files_out_tmp           = {};
+    opt_tmp.clean           = files_co;    
     pipeline = psom_add_job(pipeline,['clean_corsica_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
 end
 if flag_verbose        
