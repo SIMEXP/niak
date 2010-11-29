@@ -222,6 +222,7 @@ file_fig = niak_file_tmp('.eps');
 hf = figure;
 ha = gca;
 barh(tab_group);
+set(ha,'ytick',1:length(list_subject));
 set(ha,'yticklabel',list_subject)
 legend({'max_rotation','max_translation'});
 print(file_fig,'-depsc2');
