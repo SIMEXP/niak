@@ -52,8 +52,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           scanner, the default will be 'odd' if the number of slices is
 %           odd, and 'even' otherwise.
 %       
-%       Z_STEP
-%           (integer, default []) the interval in z between the slices. 
+%       STEP
+%           (integer, default []) the interval between the slices. 
 %           If [], use the info from the header of FILES_IN.
 %       
 %       NB_SLICES
@@ -166,11 +166,11 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % Adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
 %
 % NOTE 4:
-% The step in z (z_step) is essential to determine the correct slice order.
-% It tells us if the slices were taken going from neck to top of head or 
-% inversely. Having a positive step in z means the slices were taken from 
-% neck to top of head and that the slice order determined by this function when
-% given a type_acquisition option other than manual is in the correct order.
+% The step in the last dimension (step) is essential to determine the correct 
+% slice order. It tells us if the slices were taken going from neck to top of 
+% head or inversely. Having a positive step in z means the slices were taken 
+% from neck to top of head and that the slice order determined by this function 
+% when given a type_acquisition option other than manual is in the correct order.
 % 
 % NOTE 5:
 % The type_acquisition option (opt.type_acquisition) can have the following 
@@ -180,14 +180,14 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % specified in the form of 'odd' or 'even'. By default, it is set to 'manual' 
 % mode in which case a slice_order needs to be input. If a mode other than 
 % 'manual' is input as well as a slice_order, the latter will be used.
-% 
+%
 % NOTE 6:
 % If the timing option is empty, a tr value and a delay_in_tr value may
 % be input, otherwise the tr and delay_in_tr values are ignored. If no values
 % are input for nb_slices and tr, they will be read from the file. 
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Sebastien Lavoie-Courchesne
-% Montreal Neurological Institute, 2008.
+% Montreal Neurological Institute, 2008-2010
 % Centre de recherche de l'institut de gériatrie de Montréal, 2010.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
@@ -224,7 +224,7 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = {'type_scanner','flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','z_step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
+gb_list_fields      = {'type_scanner','flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
 gb_list_defaults    = {''            ,0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
 niak_set_defaults;
 
@@ -306,8 +306,8 @@ end
 [mat,step,start] = niak_hdr_mat2minc(hdr.info.mat);
 
 % Z step
-if isempty(opt.z_step)
-    opt.z_step = step(3);
+if isempty(opt.step)
+    opt.step = step(3);
 end
 
 % First number
@@ -353,21 +353,21 @@ if isempty(opt.slice_order)
             end
             
         case 'sequential ascending'
-            if opt.z_step > 0
+            if opt.step > 0
                 opt.slice_order = 1:opt.nb_slices;
             else
                 opt.slice_order = opt.nb_slices:-1:1;
             end
             
         case 'sequential descending'
-            if opt.z_step > 0
+            if opt.step > 0
                 opt.slice_order = opt.nb_slices:-1:1;
             else
                 opt.slice_order = 1:opt.nb_slices;
             end
             
         case 'interleaved ascending'
-            if opt.z_step > 0
+            if opt.step > 0
                 if strcmp(opt.first_number,'odd')
                     opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
                 elseif strcmp(opt.first_number,'even')
@@ -386,7 +386,7 @@ if isempty(opt.slice_order)
             end
             
         case 'interleaved descending'
-            if opt.z_step > 0
+            if opt.step > 0
                 if strcmp(opt.first_number,'odd')
                     opt.slice_order = [opt.nb_slices:-2:1 opt.nb_slices-1:-2:1];
                 elseif strcmp(opt.first_number,'even')
@@ -439,7 +439,20 @@ end
 if flag_verbose
     msg = sprintf('Applying slice timing correction...');
     fprintf('\n%s\n',msg);
+    fprintf('Volume : %s\n',files_in);
+    fprintf('Number of slices : %i\n',opt.nb_slices);
+    fprintf('Slice of reference : %i\n',opt.ref_slice);
+    fprintf('Interpolation method : %s\n',opt.interpolation);
+    fprintf('Slice timing scheme : %s\n',opt.type_acquisition);
+    fprintf('Slices are defined along the %s axis\n',hdr.info.dimension_order(3));
+    fprintf('The step along this axis is : %1.2f\n',opt.step);
+    fprintf('The scanner type is : %s\n',opt.type_scanner);
+    fprintf('The resulting slice order is : ');
+    opt.slice_order
+    fprintf('The TR is : %1.2f\n',opt.tr);
+    fprintf('The delay in TR is : %1.2f\n',opt.delay_in_tr);
 end
+
 opt_a.slice_order = opt.slice_order;
 opt_a.timing = opt.timing;
 opt_a.ref_slice = opt.ref_slice;
