@@ -411,12 +411,12 @@ for num_i = 1:length(list_fwhm)
    
     % resample anatomical mask in functional space keeping FOV
     clear files_in_res files_out_res 
-    files_in_res.source = file_mask_anat;
-    files_in_res.target = file_mask_anat;
+    files_in_res.source         = file_mask_anat;
+    files_in_res.target         = file_mask_anat;
     files_in_res.transformation = file_transf_guess;
-    files_out_res = file_tmp;
-    opt_res.flag_tfm_space = true;
-    opt_res.interpolation = 'nearest_neighbour';
+    files_out_res               = file_tmp;
+    opt_res.flag_tfm_space      = true;
+    opt_res.interpolation       = 'nearest_neighbour';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);    
     
     [tmp,mask_anat_c] = niak_read_vol(file_tmp);
@@ -430,26 +430,26 @@ for num_i = 1:length(list_fwhm)
     
     % resample anatomical volume in functional space
     clear files_in_res files_out_res 
-    files_in_res.source = file_anat_init;
-    files_in_res.target = file_anat_init;
+    files_in_res.source         = file_anat_init;
+    files_in_res.target         = file_anat_init;
     files_in_res.transformation = file_transf_guess;
-    files_out_res = file_tmp;
-    opt_res.flag_tfm_space = 1;
-    opt_res.interpolation = 'tricubic';
+    files_out_res               = file_tmp;
+    opt_res.flag_tfm_space      = 1;
+    opt_res.interpolation       = 'tricubic';
     niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 
     % Smooth the anatomical volume
     clear files_in_tmp files_out_tmp opt_tmp
     files_in_tmp{1} = file_tmp;
     files_in_tmp{2} = file_mask_anat_crop;
-    files_out_tmp = file_tmp2;
+    files_out_tmp   = file_tmp2;
     niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_smooth);
     
     % Crop the anatomical volume
-    [hdr_anat,vol_anat] = niak_read_vol(file_tmp2);
+    [hdr_anat,vol_anat]    = niak_read_vol(file_tmp2);
     vol_anat(~mask_anat_c) = 0;  
-    vol_anat(mask_anat_c) = vol_anat(mask_anat_c)-median(vol_anat(mask_anat_c));  
-    hdr_anat.file_name = file_anat_crop;
+    vol_anat(mask_anat_c)  = vol_anat(mask_anat_c)-median(vol_anat(mask_anat_c));  
+    hdr_anat.file_name     = file_anat_crop;
     niak_write_vol(hdr_anat,vol_anat);
     
     %% smooth & crop func
@@ -461,14 +461,14 @@ for num_i = 1:length(list_fwhm)
     clear files_in_tmp files_out_tmp opt_tmp
     files_in_tmp{1} = file_func_init;
     files_in_tmp{2} = file_mask_func_crop;
-    files_out_tmp = file_tmp;
+    files_out_tmp   = file_tmp;
     niak_brick_smooth_vol(files_in_tmp,files_out_tmp,opt_smooth);
     
     % Crop the functional volume
-    [hdr_func,vol_func] = niak_read_vol(file_tmp);
+    [hdr_func,vol_func]    = niak_read_vol(file_tmp);
     vol_func(~mask_func_c) = 0;    
-    vol_func(mask_func_c) = vol_func(mask_func_c) - median(vol_func(mask_func_c));
-    hdr_func.file_name = file_func_crop;
+    vol_func(mask_func_c)  = vol_func(mask_func_c) - median(vol_func(mask_func_c));
+    hdr_func.file_name     = file_func_crop;
     niak_write_vol(hdr_func,vol_func);        
 
     %% applying MINCTRACC    
