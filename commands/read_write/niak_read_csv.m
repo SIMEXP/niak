@@ -1,4 +1,4 @@
-function [tab,labels_x,labels_y] = niak_read_tab(file_name,opt)
+function [tab,labels_x,labels_y] = niak_read_csv(file_name,opt)
 % Read a table from a text file with comma-separated values (csv). 
 % The first line and first columns are assumed to be string labels, while
 % the rest of the table is assumed to be a numerical array. 

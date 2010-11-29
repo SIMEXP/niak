@@ -204,16 +204,7 @@ if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
 end
 
 %% Building default output names
-[path_anat,name_anat,ext_anat] = fileparts(files_in.anat);
-
-if isempty(path_anat)
-    path_anat = '.';
-end
-
-if strcmp(ext_anat,gb_niak_zip_ext)
-    [tmp,name_anat,ext_anat] = fileparts(name_anat);
-    ext_anat = cat(2,ext_anat,gb_niak_zip_ext);
-end
+[path_anat,name_anat,ext_anat,flag_zip] = niak_fileparts(files_in.anat);
 
 if isempty(opt.folder_out)
     folder_anat = path_anat;
@@ -221,16 +212,7 @@ else
     folder_anat = opt.folder_out;
 end
 
-[path_func,name_func,ext_func] = fileparts(files_in.func);
-
-if isempty(path_func)
-    path_func = '.';
-end
-
-if strcmp(ext_func,gb_niak_zip_ext)
-    [tmp,name_func,ext_func] = fileparts(name_func);
-    ext_func = cat(2,ext_func,gb_niak_zip_ext);
-end
+[path_func,name_func,ext_func] = niak_fileparts(files_in.func);
 
 if isempty(opt.folder_out)
     folder_func = path_func;
