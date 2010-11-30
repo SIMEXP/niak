@@ -19,7 +19,7 @@ function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt
 %   (structure) with the following fields:
 %
 %   LABEL
-%       (string, default '') an extra string which will be added in the
+%       (string, default 'subject') an extra string which will be added in the
 %       output names.
 %
 %   PSOM
@@ -209,8 +209,8 @@ if ~strcmp(opt.folder_out(end),filesep)
     opt.folder_out = [opt.folder_out filesep];
 end
 opt.psom.path_logs = [folder_out,'logs',filesep];
-if ~isempty(label)
-    label = [label '_'];
+if isempty(label)
+   label = 'subject';
 end
 opt.parameters.ignore_slice = opt.ignore_slice;
 opt.parameters.fwhm         = opt.fwhm;
@@ -222,10 +222,12 @@ opt.parameters.step         = opt.step;
 pipeline = [];
 for num_s = 1:nb_session
     session = list_session{num_s};
-    for num_r = 1:nb_run(num_s)        
-        [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
+    for num_r = 1:nb_run(num_s)               
+        if (num_s==1)&&(num_r==1)
+             [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
+        end
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job        = sprintf('motion_target_%s%s',label,name_f);
+        name_job        = sprintf('motion_target_%s_%s_run%i',label,session,num_r);
         files_in_tmp{1} = files_in.(session){num_r};
         files_out_tmp   = [opt.folder_out name_job ext_f];
         if ischar(vol_ref)
@@ -242,17 +244,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for num_s = 1:nb_session
     session = list_session{num_s};
-    for num_r = 1:nb_run(num_s)        
-        [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
+    for num_r = 1:nb_run(num_s)               
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job_target = sprintf('motion_target_%s%s',label,name_f);
-        name_job = sprintf('motion_within_run_%s%s',label,name_f);
-        files_in_tmp.fmri   = files_in.(session){num_r};
-        files_in_tmp.target = pipeline.(name_job_target).files_out;
-        files_out_tmp       = [opt.folder_out name_job '.mat'];
+        name_job_target                              = sprintf('motion_target_%s_%s_run%i',label,session,num_r);
+        name_job                                     = sprintf('motion_Wrun_%s_%s_run%i',label,session,num_r);
+        files_in_tmp.fmri                            = files_in.(session){num_r};
+        files_in_tmp.target                          = pipeline.(name_job_target).files_out;
+        files_out_tmp                                = [opt.folder_out name_job '.mat'];
         files_out.motion_parameters.(session){num_r} = files_out_tmp;
-        opt_tmp             = opt.parameters;
-        opt_tmp.tol         = opt.tol_within_run;                
+        opt_tmp                                      = opt.parameters;
+        opt_tmp.tol                                  = opt.tol_within_run;                
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_motion_parameters',files_in_tmp,files_out_tmp,opt_tmp);
     end
 end
@@ -263,13 +264,11 @@ end
 for num_s = 1:nb_session
     session = list_session{num_s};    
     for num_r = 1:nb_run(num_s)
-        if num_r~=run_ref
-            [path_f,name_source,ext_f] = niak_fileparts(files_in.(session){num_r});
-            [path_f,name_target,ext_f] = niak_fileparts(files_in.(session){run_ref});
-            name_job_source     = sprintf('motion_target_%s%s',label,name_source);
-            name_job_target     = sprintf('motion_target_%s%s',label,name_target);            
+        if num_r~=run_ref            
             clear files_in_tmp files_out_tmp opt_tmp
-            name_job            = sprintf('motion_within_session_%s%s',label,name_source);
+            name_job_source     = sprintf('motion_target_%s_%s_run%i',label,session,num_r);
+            name_job_target     = sprintf('motion_target_%s_%s_run%i',label,session,run_ref);                        
+            name_job            = sprintf('motion_Wsession_%s_%s_run%i',label,session,num_r);
             files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
             files_in_tmp.target = pipeline.(name_job_target).files_out;
             files_out_tmp       = [opt.folder_out name_job '.mat'];            
@@ -286,12 +285,10 @@ end
 for num_s = 1:nb_session
     session = list_session{num_s};    
     if ~strcmp(session,session_ref)        
-        [path_f,name_target,ext_f] = niak_fileparts(files_in.(session_ref){run_ref});
-        [path_f,name_source,ext_f] = niak_fileparts(files_in.(session){run_ref});
-        name_job_target    = sprintf('motion_target_%s%s',label,name_target);
-        name_job_source    = sprintf('motion_target_%s%s',label,name_source);
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job            = sprintf('motion_between_session_%s%s',label,name_source);
+        name_job_target     = sprintf('motion_target_%s_%s_run%i',label,session_ref,run_ref);    
+        name_job_source     = sprintf('motion_target_%s_%s_run%i',label,session,run_ref);            
+        name_job            = sprintf('motion_Bsession_%s_%s',label,session);
         files_in_tmp.fmri   = pipeline.(name_job_source).files_out;
         files_in_tmp.target = pipeline.(name_job_target).files_out;
         files_out_tmp       = [opt.folder_out name_job '.mat'];
@@ -306,20 +303,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for num_s = 1:nb_session
     session = list_session{num_s};
-    for num_r = 1:nb_run(num_s)
-        [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
+    for num_r = 1:nb_run(num_s)        
         clear files_in_tmp files_out_tmp opt_tmp
-        name_job            = sprintf('motion_parameters_%s%s',label,name_f);
-        files_in_tmp{1}     = pipeline.(sprintf('motion_within_run_%s%s',label,name_f)).files_out;
+        name_job            = sprintf('motion_parameters_%s_%s_run%i',label,session,num_r);
+        files_in_tmp{1}     = pipeline.(sprintf('motion_Wrun_%s_%s_run%i',label,session,num_r)).files_out;
         if num_r~=run_ref
-            files_in_tmp{2} = pipeline.(sprintf('motion_within_session_%s%s',label,name_f)).files_out;
+            files_in_tmp{2} = pipeline.(sprintf('motion_Wsession_%s_%s_run%i',label,session,num_r)).files_out;
             nb_transf = 3;
         else
             nb_transf = 2;
         end
-        if ~strcmp(session,session_ref)
-            [path_f,name_ref,ext_f] = niak_fileparts(files_in.(session){run_ref});
-            files_in_tmp{nb_transf} = pipeline.(sprintf('motion_between_session_%s%s',label,name_ref)).files_out;
+        if ~strcmp(session,session_ref)            
+            files_in_tmp{nb_transf} = pipeline.(sprintf('motion_Bsession_%s_%s',label,session)).files_out;
         end                
         files_out_tmp                     = [opt.folder_out name_job '.mat'];        
         opt_tmp.var_name                  = 'transf';
@@ -333,24 +328,20 @@ end
 for num_s = 1:nb_session
     session = list_session{num_s};
     for num_r = 1:nb_run(num_s)
-        [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
-        [path_f,name_target,ext_f] = niak_fileparts(files_in.(session_ref){run_ref});
+        clear files_in_tmp files_out_tmp opt_tmp
+        [path_f,name_f,ext_f]                       = niak_fileparts(files_in.(session){num_r});
+        files_out_tmp                               = [opt.folder_out name_f '_mc' ext_f];
+        files_out.motion_corrected.(session){num_r} = files_out_tmp;
         if flag_skip
-            name_job = sprintf('motion_copy_%s%s',label,name_f);
-            clear files_in_tmp files_out_tmp opt_tmp
-            files_in_tmp{1}            = files_in.(session){num_r};            
-            files_out_tmp              = [opt.folder_out name_f '_mc' ext_f];
-            files_out.motion_corrected.(session){num_r} = files_out_tmp;
+            name_job = sprintf('motion_copy_%s_%s_run%i',label,session,num_r);            
+            files_in_tmp{1}            = files_in.(session){num_r};                        
             opt_tmp.operation          = sprintf('vol = vol_in{1}(:,:,:,%i:end);',1+suppress_vol);
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
         else
-            name_job = sprintf('motion_resample_%s%s',label,name_f);
-            clear files_in_tmp files_out_tmp opt_tmp
-            files_in_tmp.transformation = pipeline.(sprintf('motion_parameters_%s%s',label,name_f)).files_out;
+            name_job = sprintf('motion_resample_%s_%s_run%i',label,session,num_r);            
+            files_in_tmp.transformation = pipeline.(sprintf('motion_parameters_%s_%s_run%i',label,session,num_r)).files_out;
             files_in_tmp.source         = files_in.(session){num_r};
-            files_in_tmp.target         = pipeline.(sprintf('motion_target_%s%s',label,name_target)).files_out;
-            files_out_tmp               = [opt.folder_out name_f '_mc' ext_f];
-            files_out.motion_corrected.(session){num_r}  = files_out_tmp;
+            files_in_tmp.target         = pipeline.(sprintf('motion_Wrun_%s_%s_run%i',label,session,num_r)).files_out;            
             opt_tmp.interpolation       = opt.interpolation;
             opt_tmp.suppress_vol        = opt.suppress_vol;
             pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
