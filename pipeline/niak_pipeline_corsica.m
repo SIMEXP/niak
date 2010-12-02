@@ -347,11 +347,11 @@ for num_s = 1:nb_subject
             clear files_in_tmp files_out_tmp opt_tmp
             [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).fmri{num_r});
             name_job_supp              = ['component_supp_',subject,'_',run];
-            files_in_tmp{1}            = files_in.(session){num_r};
-            files_out_tmp{1}           = [opt.folder_out name_f '_p' ext_f];
+            files_in_tmp{1}            = files_in.(subject).fmri{num_r};
+            files_out_tmp{1}           = [opt.folder_out name_f '_p' ext_f]
             opt_tmp.flag_verbose       = true;            
             pipeline = psom_add_job(pipeline,name_job_supp,'niak_brick_copy',files_in_tmp,files_out_tmp,opt_tmp);
-            files_out.suppress_vol.(subject){num_r} = pipeline.(name_job_supp).files_out{1};
+            files_out.suppress_vol.(subject){num_r} = pipeline.(name_job_supp).files_out{1};            
         end
         
         
@@ -361,7 +361,7 @@ for num_s = 1:nb_subject
         if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')            
             clear files_in_tmp files_out_tmp opt_tmp
             name_job_clean       = ['clean_corsica_intermediate_',subject,'_',run];
-            files_in_tmp{1}      = pipeline.(name_job_supp).files_out;
+            files_in_tmp{1}      = files_out.suppress_vol.(subject){num_r};
             files_in_tmp{2}      = pipeline.(name_job_qc).files_out;
             files_out_tmp        = '';
             opt_tmp.flag_verbose = 1;
