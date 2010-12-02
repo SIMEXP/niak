@@ -335,7 +335,7 @@ mask_func = round(mask_func)>0;
 hdr_func.file_name = file_mask_func;
 niak_write_vol(hdr_func,mask_func);
 
-%% Applying non-uniformity correction on the functional volume
+%% Copying the functional volume
 if flag_verbose
     fprintf('Copying the functional volume in the temporary folder ...\n');
 end
