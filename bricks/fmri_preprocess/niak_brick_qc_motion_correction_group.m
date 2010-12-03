@@ -166,6 +166,7 @@ file_fig = niak_file_tmp('.eps');
 hf = figure;
 ha = gca;
 barh(tab_group);
+axis([min(tab_group(:)) max(tab_group(:) 1 length(list_subject))]);
 set(ha,'yticklabel',list_subject)
 legend({'perc_overlap_mask','xcorr_vol'});
 print(file_fig,'-depsc2');

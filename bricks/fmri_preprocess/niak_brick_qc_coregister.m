@@ -381,6 +381,7 @@ if ~strcmp(files_out.fig_coregister,'gb_niak_omitted')
     hf = figure;
     ha = gca;
     barh(tab_coregister);
+    axis([min(tab_coregister(:)) max(tab_coregister(:) 1 length(labels_subject))]);
     set(ha,'ytick',1:length(labels_subject));
     set(ha,'yticklabel',labels_subject);
     legend({'perc_overlap_mask','xcorr_vol'});
