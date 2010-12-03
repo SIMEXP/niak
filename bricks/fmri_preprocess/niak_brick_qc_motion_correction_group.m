@@ -224,7 +224,7 @@ ha = gca;
 barh(tab_group);
 set(ha,'ytick',1:length(list_subject));
 set(ha,'yticklabel',list_subject)
-legend({'max_rotation','max_translation'});
+legend({'max transition in rotation (degree)','max transition in translation (mm)'});
 print(file_fig,'-depsc2');
 
 instr_ps2pdf = cat(2,'ps2pdf -dEPSCrop ',file_fig,' ',files_out.fig_motion_group);

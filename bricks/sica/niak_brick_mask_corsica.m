@@ -218,3 +218,8 @@ if flag_verbose
     fprintf('%1.2f sec.\n',toc)
 end
     
+%% Clean up temporary files
+[status,msg] = eval(['rm -rf ' path_tmp]);
+if status ~= 0
+    error(sprintf('There was a problem cleaning up the temporary folder.\nThe command was : %s\n The feedback was: %s\n'),['rm -rf ' path_tmp],msg);
+end
