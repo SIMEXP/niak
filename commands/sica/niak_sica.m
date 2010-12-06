@@ -167,7 +167,7 @@ elseif type_nb_comp==0 %param=nbcomp
         nbcomp = param_nb_comp;
     end
 end
-nbcomp = min(nbcomp,rand(data));
+nbcomp = min(nbcomp,rank(data));
 varData = (1/(size(data,1)-1))*sum((data').^2,2);
 residus = [];
 
