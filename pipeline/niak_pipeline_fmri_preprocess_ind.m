@@ -644,7 +644,11 @@ files_in_tmp.(label).mask_brain         = pipeline.(name_job_qc_motion).files_ou
 files_in_tmp.(label).mask_selection{1}  = pipeline.(name_job_mask_corsica).files_out.mask_vent_ind;
 files_in_tmp.(label).mask_selection{2}  = pipeline.(name_job_mask_corsica).files_out.mask_stem_ind;
 opt_tmp                                 = opt.corsica;
-opt_tmp.size_output                     = opt.size_output;
+if isfield(opt.corsica,'size_output')
+  opt_tmp.size_output                   = opt.corsica.size_output;
+else
+  opt_tmp.size_output                   = opt.size_output;
+end
 opt_tmp.folder_out                      = [opt.folder_intermediate 'corsica' filesep];
 opt_tmp.folder_sica                     = [opt.folder_out 'quality_control' filesep label filesep 'corsica' filesep];
 opt_tmp.flag_test                       = true;
