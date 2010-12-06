@@ -367,22 +367,40 @@ else
     end    
 end
 
-%% Options
+%% This block is for backward compatibility
 if isfield(opt,'bricks')
     opt = psom_merge_pipeline(opt,opt.bricks);
+    opt = rmfield(opt,'bricks');
+    if isfield(opt,'flag_corsica');
+        opt.corsica.flag_skip = ~flag_corsica;
+        opt_ind = rmfield(opt_ind,'flag_corsica');
+    end
+    if isfield(opt,'sica');
+        opt.corsica.sica = opt.sica;
+        opt = rmfield(opt,'sica');
+    end
+    if isfield(opt,'component_sel');
+        opt.corsica.component_sel = opt.component_sel;
+        opt = rmfield(opt,'component_sel');
+    end
+    if isfield(opt,'component_supp');
+        opt.corsica.component_supp = opt.component_supp;
+        opt = rmfield(opt,'component_supp');
+        if isfield(opt.corsica.component_supp,'threshold')
+          opt.corsica.threshold = opt.corsica.component_supp.threshold;
+        end
+    end
 end
+
+%% Options
 default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_verbose' , 'flag_corsica' , 'bricks' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
-gb_list_defaults  = {true           , []             , opt_tmp  , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
+gb_list_fields    = {'flag_verbose' , 'bricks' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
+gb_list_defaults  = {true           , opt_tmp  , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
-
-if ~isempty(flag_corsica)
-    opt.corsica.flag_skip = ~flag_corsica;
-end
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
@@ -399,9 +417,7 @@ for num_s = 1:nb_subject
     if flag_verbose
         t1 = clock;
         fprintf('    %s ; ',subject);
-    end
-    opt_ind = rmfield(opt,'bricks');
-    opt_ind = rmfield(opt_ind,'flag_corsica');
+    end    
     opt_ind = rmfield(opt_ind,'flag_verbose');
     opt_ind.label = subject;
     opt_ind.flag_test = true;

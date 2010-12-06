@@ -79,7 +79,7 @@ opt.time_filter.lp = Inf;  % Cut-off frequency for low-pass filtering, or remova
 
 % Correction of physiological noise (niak_pipeline_corsica)
 opt.corsica.sica.nb_comp             = 20;    % Number of components estimated during the ICA. 20 is a minimal number, 60 was used in the validation of CORSICA.
-opt.corsica.component_supp.threshold = 0.15;  % This threshold has been calibrated on a validation database as providing good sensitivity with excellent specificity.
+opt.corsica.threshold                = 0.15;  % This threshold has been calibrated on a validation database as providing good sensitivity with excellent specificity.
 opt.corsica.flag_skip                = 0;     % Skip CORSICA (0: don't skip, 1 : skip)
 
 % resampling in stereotaxic space

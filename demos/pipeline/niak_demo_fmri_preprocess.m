@@ -175,7 +175,7 @@ opt.time_filter.lp = Inf;  % Do not apply low-pass filter. Low-pass filter induc
 
 % Correction of physiological noise (niak_pipeline_corsica)
 opt.corsica.sica.nb_comp             = 20;    % Number of components estimated during the ICA. 20 is a minimal number, 60 was used in the validation of CORSICA.
-opt.corsica.component_supp.threshold = 0.15;  % This threshold has been calibrated on a validation database as providing good sensitivity with excellent specificity.
+opt.corsica.threshold                = 0.15;  % This threshold has been calibrated on a validation database as providing good sensitivity with excellent specificity.
 opt.corsica.flag_skip                = 0;     % Turn on/off the motion correction
 
 % resampling in stereotaxic space
