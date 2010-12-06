@@ -268,7 +268,7 @@ for num_f = 1:nb_file
     subplot(2,1,2)
     plot(tsl)
     legend('translation x','translation y','translation z')
-    title(sprintf('Rotation parameters %s',labels_vol{num_f}));
+    title(sprintf('Translation parameters %s',labels_vol{num_f}));
     file_eps{num_f} = [folder_tmp 'motion_parameters_' labels_vol{num_f} '.eps'];
     print(hfa,'-dpsc','-r300',file_eps{num_f});
 end
