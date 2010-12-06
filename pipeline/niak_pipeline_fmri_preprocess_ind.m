@@ -421,7 +421,10 @@ for num_sess = 1:nb_session
         opt_tmp.folder_out          = [opt.folder_intermediate 'slice_timing' filesep];
         files_out_tmp               = [opt_tmp.folder_out filesep 'fmri_' label '_' session '_' run '_a' ext_f];        
         files_a.(session){num_r}    = files_out_tmp;
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_slice_timing',files_in_tmp,files_out_tmp,opt_tmp);        
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_slice_timing',files_in_tmp,files_out_tmp,opt_tmp);    
+        if strcmp(size_output,'quality_control') % Clean-up
+            pipeline = psom_add_clean(pipeline,['clean_' name_job],files_out_tmp);        
+        end
     end % run
 end % session
 if flag_verbose        
@@ -443,15 +446,11 @@ opt_tmp.flag_test   = true;
 opt_tmp.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
 [pipeline_mc,opt_tmp,files_motion] = niak_pipeline_motion_correction(files_in_tmp,opt_tmp);
 pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
-
-%% Clean-up
-if strcmp(size_output,'quality_control')    
-    clear opt_tmp files_in_tmp files_out_tmp
-    name_job = ['clean_slice_timing_',label];
-    files_in_tmp = files_motion.motion_corrected;    
-    files_out_tmp = {};
-    opt_tmp.clean = files_a;
-    pipeline = psom_add_job(pipeline,name_job,'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp);        
+if strcmp(size_output,'quality_control')
+    files_tmp = psom_files2cell(files_motion.motion_corrected);
+    for num_e = 1:length(files_tmp)
+        pipeline = psom_add_clean(pipeline,['clean_motion_correction_' label '_file' num2str(num_e)],files_tmp{num_e}); 
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -606,19 +605,6 @@ for num_s = 1:nb_session
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
         files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
     end
-end
-
-%% Clean-up
-if strcmp(size_output,'quality_control')
-    clear opt_tmp files_in_tmp files_out_tmp
-    files_in_tmp.time_filter  = files_tf;
-    files_in_tmp.qc_motion    = pipeline.(name_job_qc_motion).files_out;
-    files_out_tmp             = {};
-    opt_tmp.clean = files_motion.motion_corrected;
-    pipeline = psom_add_job(pipeline,['clean_motion_correction_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);        
-end
-if flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
 %%%%%%%%%%%%%%%%%%%
