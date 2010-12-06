@@ -81,6 +81,10 @@ function [res_ica]=niak_sica(data,opt)
 %
 % The FastICA methods require the installation of the fastICA toolbox.
 %
+% The number of components cannot exceed the inner dimension of the data, as 
+% indicated by the RANK function . This value is usually a couple of 
+% components less than the actual number of time samples of the data.
+%
 % Copyright (c) Vincent Perlbarg, U678, LIF, Inserm, UMR_S 678, Laboratoire
 % d'Imagerie Fonctionnelle, F-75634, Paris, France, 2005-2010.
 % Maintainer : vperlbar@imed.jussieu.fr
@@ -163,7 +167,7 @@ elseif type_nb_comp==0 %param=nbcomp
         nbcomp = param_nb_comp;
     end
 end
-
+nbcomp = min(nbcomp,rand(data));
 varData = (1/(size(data,1)-1))*sum((data').^2,2);
 residus = [];
 
