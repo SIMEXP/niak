@@ -359,25 +359,21 @@ for num_s = 1:nb_subject
         %% CLEANING %%
         %%%%%%%%%%%%%%
         if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')            
-            clear files_in_tmp files_out_tmp opt_tmp
+            clear files_clean_tmp files_out_tmp opt_tmp
             name_job_clean       = ['clean_corsica_intermediate_',subject,'_',run];
-            files_in_tmp{1}      = files_out.suppress_vol.(subject){num_r};
-            files_in_tmp{2}      = pipeline.(name_job_qc).files_out;
-            files_out_tmp        = '';
-            opt_tmp.flag_verbose = 1;
             switch opt.size_output
                 case 'minimum'
-                    opt_tmp.clean.space      = pipeline.(name_job_sica).files_out.space;
-                    opt_tmp.clean.time       = pipeline.(name_job_sica).files_out.time;
-                    opt_tmp.clean.figure     = pipeline.(name_job_sica).files_out.figure;
-                    opt_tmp.clean.compsel    = files_sel;
-                    opt_tmp.clean.mask       = files_in.(subject).mask_brain;
+                    files_clean_tmp.space      = pipeline.(name_job_sica).files_out.space;
+                    files_clean_tmp.time       = pipeline.(name_job_sica).files_out.time;
+                    files_clean_tmp.figure     = pipeline.(name_job_sica).files_out.figure;
+                    files_clean_tmp.compsel    = files_sel;
+                    files_clean_tmp.mask       = files_in.(subject).mask_brain;
                 case 'quality_control'
-                    opt_tmp.clean.space      = pipeline.(name_job_sica).files_out.space;
-                    opt_tmp.clean.time       = pipeline.(name_job_sica).files_out.time;
-                    opt_tmp.clean.compsel    = files_sel;
+                    files_clean_tmp.space      = pipeline.(name_job_sica).files_out.space;
+                    files_clean_tmp.time       = pipeline.(name_job_sica).files_out.time;
+                    files_clean_tmp.compsel    = files_sel;
             end
-            pipeline = psom_add_job(pipeline,name_job_clean,'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp);
+            pipeline = psom_add_clean(pipeline,name_job_clean,files_clean_tmp);
         end % size_output
         
     end % run

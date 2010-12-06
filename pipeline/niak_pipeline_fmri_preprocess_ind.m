@@ -571,10 +571,10 @@ pipeline(1).(name_job).opt        = opt_tmp;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate functional brain masks/mean/std volumes in the stereotaxic linear space %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-name_job                        = ['mask_ind_stereolin_' label];
-name_job_anat2func              = ['anat2func_' label];
-files_in_tmp(1).transformation  = pipeline.(name_job_anat2func).files_out.transformation;
-files_in_tmp(2).transformation  = pipeline.(name_job_anat2func).files_out.transformation;
+name_job                          = ['mask_ind_stereolin_' label];
+name_job_anat2func                = ['anat2func_' label];
+files_in_tmp(1).transformation    = pipeline.(name_job_anat2func).files_out.transformation;
+files_in_tmp(2).transformation    = pipeline.(name_job_anat2func).files_out.transformation;
 files_out_tmp{1}                  = [opt.folder_anat 'func_' label '_mean_stereolin' ext_f];
 files_out_tmp{2}                  = [opt.folder_anat 'func_' label '_mask_stereolin' ext_f];
 pipeline(1).(name_job).command    = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
@@ -604,7 +604,14 @@ for num_s = 1:nb_session
         opt_tmp.folder_out           = [opt.folder_intermediate 'time_filter' filesep];
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
         files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
+        if strcmp(size_output,'quality_control')
+          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
+        end    
     end
+end
+
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
 %%%%%%%%%%%%%%%%%%%
@@ -643,17 +650,13 @@ opt_tmp.folder_sica                     = [opt.folder_out 'quality_control' file
 opt_tmp.flag_test                       = true;
 opt_tmp.labels_mask                     = {'ventricles','stem'};
 [pipeline_corsica,opt_tmp,files_co] = niak_pipeline_corsica(files_in_tmp,opt_tmp);
-files_qc_co = files_co.qc_corsica.(label);
 files_co    = files_co.suppress_vol.(label);
 pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
-
-%% Clean up
 if strcmp(size_output,'quality_control')
-    clear files_in_tmp files_out_tmp opt_tmp 
-    files_in_tmp = files_co;
-    files_out_tmp = {};
-    opt_tmp.clean = files_tf;
-    pipeline = psom_add_job(pipeline,['clean_time_filter_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
+    files_tmp = psom_files2cell(files_co);
+    for num_e = 1:length(files_tmp)
+        pipeline = psom_add_clean(pipeline,['clean_corsica_' label '_file' num2str(num_e)],files_tmp{num_e}); 
+    end  
 end
 
 if flag_verbose        
@@ -680,17 +683,11 @@ for num_r = 1:length(files_co);
     opt_tmp.folder_out = [opt.folder_intermediate 'resample' filesep];
     pipeline = psom_add_job(pipeline,name_job_resample,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
     files_re{num_r} = pipeline.(name_job_resample).files_out;
+    if strcmp(size_output,'quality_control')
+        pipeline = psom_add_clean(pipeline,['clean_' name_job_resample],files_re{num_r});
+    end
 end
 
-%% Clean up
-if strcmp(size_output,'quality_control')
-    clear files_in_tmp files_out_tmp opt_tmp 
-    files_in_tmp.resample   = files_re;
-    files_in_tmp.qc_corsica = files_qc_co;
-    files_out_tmp           = {};
-    opt_tmp.clean           = files_co;    
-    pipeline = psom_add_job(pipeline,['clean_corsica_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
-end
 if flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
@@ -714,14 +711,6 @@ for num_r = 1:length(files_re);
     files_sm{num_r} = pipeline.(name_job).files_out;
 end
 
-%% Clean up
-if strcmp(size_output,'quality_control')
-    clear files_in_tmp files_out_tmp opt_tmp 
-    files_in_tmp = files_sm;
-    files_out_tmp = {};
-    opt_tmp.clean = files_re;
-    pipeline = psom_add_job(pipeline,['clean_resample_' label],'niak_brick_clean',files_in_tmp,files_out_tmp,opt_tmp,false);
-end
 if flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
