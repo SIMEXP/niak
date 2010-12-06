@@ -225,6 +225,7 @@ opt_sica.param_nb_comp = min(nb_comp,floor(0.95*nt));
 opt_sica.type_nb_comp = 0;
 opt_sica.verbose = 'off';
 res_ica = niak_sica(vol,opt_sica);
+opt_sica.param_nb_comp = res_ica.nbcomp;
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Generating outputs %%
