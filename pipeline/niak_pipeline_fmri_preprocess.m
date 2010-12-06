@@ -418,7 +418,7 @@ for num_s = 1:nb_subject
         t1 = clock;
         fprintf('    %s ; ',subject);
     end    
-    opt_ind = rmfield(opt_ind,'flag_verbose');
+    opt_ind = rmfield(opt,'flag_verbose');
     opt_ind.label = subject;
     opt_ind.flag_test = true;
     if num_s == 1
