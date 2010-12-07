@@ -382,7 +382,7 @@ anat_native_mask     = [path_tmp,name_anat,'_mask_native' type_anat];     % The 
 anat_stereolin_mask  = [path_tmp,name_anat,'_mask_stereolin' type_anat];  % The mask extracted by region growing in stereotaxic linear space
 anat_stereolin_head  = [path_tmp,name_anat,'_head_stereolin' type_anat];  % The head mask extracted in stereotaxic linear space
 anat_stereolin_mask2 = [path_tmp,name_anat,'_mask_stereolin2' type_anat]; % The mask extracted by region growing in stereotaxic linear space
-anat_stereonl_head   = [path_tmp,name_anat,'_head_stereonl' type_anat];   % The mask extracted by region growing in stereotaxic linear space
+anat_stereonl_head   = [path_tmp,name_anat,'_head_stereonl' type_anat];   % The mask extracted by region growing in stereotaxic non-linear space
 
 if strcmp(files_out.transformation_lin,'gb_niak_omitted')
     files_out.transformation_lin = cat(2,path_tmp,name_anat,'_native2stereolin.xfm');

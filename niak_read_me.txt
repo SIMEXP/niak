@@ -1,53 +1,54 @@
-﻿= Neuroimaging Analysis Kit (NIAK) v0.6.3 =
+﻿= Neuroimaging Analysis Kit (NIAK) v0.6.4 =
 
-The NIAK is a library of functions dedicated to process neuroimaging data within Octave or Matlab(r), with an emphasis on functional magnetic resonance images (fMRI). Tools have been implemented in a modular fashion following consistent coding guidelines, such that they would integrate easily into new projects. A generic pipeline system is available to handle complex multi-stage processing and support distributed computing. Please read niak_install.txt for download and installation instructions. The latest version of the user's guide can be found at http://wiki.bic.mni.mcgill.ca/index.php/NeuroImagingAnalysisKit.
+NIAK is a library of modules and pipelines for fMRI processing with Octave or Matlab(r) that can run in parallel either locally or in a supercomputing environment. Linux OS and MINC file format are supported. Developers interested in using NIAK as a development library or to contribute to the project can consult the [http://code.google.com/p/niak/ NIAK google code] webpage. The wiki http://www.nitrc.org/plugins/mwiki/index.php/niak:MainPage is a detailed user guide with the following resources : 
 
-----
-= What does NIAK exactly do ? =
+*[[http://www.nitrc.org/plugins/mwiki/index.php/niak:Installation|Installation]] instructions. 
+*[http://www.nitrc.org/frs/downloadlink.php/2726 Overview of NIAK] in pdf. 
+*List of [[http://www.nitrc.org/plugins/mwiki/index.php/niak:NiakContributions|contributions]] to NIAK development and testing. 
+*Tutorial of the [[http://www.nitrc.org/plugins/mwiki/index.php/niak:FmriPreprocessing|fMRI preprocessing]] pipeline;
 
-The current version of NIAK (0.6) features :
-* Reader/writer of medical image, supporting MINC1, MINC2, NIFTI and ANALYZE file formats.
-* The pipeline system PSOM.
-* Tools for T1 & fMRI preprocessing : slice timing correction, multi-session motion correction, coregistration between T1 and fMRI, non-linear spatial normalization to the MNI152 space, segmentation of T1 image, spatial and temporal filtering of fMRI data.
-* Tools for individual spatial principal or independent component analysis (PCA/ICA) of fMRI data.
-* Pipeline template for fMRI preprocessing, with multiple styles available, optimized for linear modeling or connectivity analysis. An optional correction of physiological noise based on ICA is available.
+Note that the most detailed and up-to-date documentation about NIAK functions can be invoked using standard matlab/octave (type "help ''function_name''").
 
-----
-= Documentation =
-
-There is a tutorial for the fMRI preprocessing pipeline :
-
-* [http://wiki.bic.mni.mcgill.ca/index.php/NiakFmriPreprocessing] : How to run an fMRI preprocessing pipeline
-
-Developers interested in integrating tools from the NIAK to their own project or to contribute to the NIAK can consult the [NIAK project webpage|http://code.google.com/p/niak/]. There is also an (outdated) pdf presentation you can [download|http://www.bic.mni.mcgill.ca/users/pbellec/data/niak.pdf].
-
-The most detailed and up-to-date documentation about NIAK functions can be invoked using standard matlab/octave help:
-
-<verbatim>
->> help niak_read_vol
-_________________________________________________________________________
-  SUMMARY NIAK_READ_VOL
-
-  Read 3D or 3D+t data. Currently supported formats are minc1 and minc2
-  (.mnc), nifti (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
-  The data can also be zipped (additional extension .gz, see the COMMENTS
-  section below).
-
-  SYNTAX :
-  [HDR,VOL] = NIAK_READ_VOL(FILE_NAME)
-  ...
-</verbatim>
-
-----
 =Contributions=
 
-The kit was initially designed and assembled by PierreBellec at the McConnell Brain Imaging Center, Montreal Neurological Institute, McGill University, Canada, 2008.
+The kit was originally designed by [http://simexp-lab.org/brainwiki/doku.php?id=pierrebellec Pierre Bellec]&nbsp;who is still the main person responsible for its maintenance and development. The project started in the lab of [http://www.bic.mni.mcgill.ca/~alan/ Alan C. Evans], Canada, 2008-10. The following people have directly helped to develop NIAK, either through code or ideas&nbsp;: 
 
-Many of the functions of the kit are actually simple overlays of software developed over the years my members and collaborators of the BIC. Specifically, the pipeline system is based on a project called [PSOM|http://code.google.com/p/psom/] derived from the [Poor Man's Pipeline|PoorMansPipeline] project. The MINC reader/writer, operations of motion correction and spatial normalization are based of the [MINC tools|MincToolsGuide]. The implementation of linear model analysis is just an overlay of the [fMRIstat|http://www.math.mcgill.ca/keith/fmristat/] package developed by Keith Worsley at the Mathematics & Statistics Department of McGill. The processing of T1 image is based on the [CIVET|http://wiki.bic.mni.mcgill.ca/index.php/CIVET] pipeline. Claude Lepage gave a very precious support to wrap all these tools in the NIAK. Benjamin D'Hont has been the first beta-tester of the project.
+*[http://felixmiguelc.googlepages.com Felix Carbonell] 
+*[http://www.imed.jussieu.fr/fr/outils/affiche_personne.php?pers_id=95 Vincent Perlbarg] 
+*[http://www.bic.mni.mcgill.ca/users/claude/ Claude Lepage] 
+*[http://www.dementia.unsw.edu.au/dcrcweb.nsf/page/Janke Andrew Janke] 
+*[http://www.bic.mni.mcgill.ca/~vfonov/ Vladimir Fonov] 
+*[http://www.cs.tut.fi/~jupeto/ Jussi Tohka] 
+*[http://www.bic.mni.mcgill.ca/~oliver/ Oliver Lytelton]
 
-Other functions have been based on existing open-source softwares. The NIFTI reader/writer is adapted from a code by Jimmy Shen. Some parts of the fMRI data preprocessing are ports from SPM. The NIAK logo was adapted from an original work by the artist [Mattahan|http://mattahan.deviantart.com/] under a [creative commons license|http://creativecommons.org/licenses/by-nc-sa/3.0/].
+=== Institutions  ===
 
-----
+The following institutions are involved in the development and diffusion of NIAK&nbsp;: 
+
+*[http://www.bic.mni.mcgill.ca/ McConnell Brain Imaging Center (BIC)], [http://www.mni.mcgill.ca/ Montreal Neurological Institute], [http://www.mcgill.ca/ Mcgill University], Montréal, Canada. Most of the tools provided in NIAK have been developed at this institution over the past 15 years. 
+*[http://www.unf-montreal.ca/siteweb/Home_fr.html Unité de neuroimagerie foncitonnelle], [http://www.criugm.qc.ca/ Centre de recherche de l'institut de gériatrie de Montréal (CRIUGM)], [http://www.umontreal.ca/ Université de Montréal], Montréal, Canada. This institution supports the lab of Pierre Bellec, and thereof the core of NIAK maintenance and development. 
+*[http://www.iro.umontreal.ca/ Département d'informatique et de recherche opérationnelle (DIRO)], [http://www.umontreal.ca/ Université de Montréal], Montréal, Canada. This institution supports the lab of Pierre Bellec, and thereof the core of NIAK maintenance and development. 
+*[http://www.imed.jussieu.fr/ Laboratoire d'Imagerie Fonctionnelle (LIF)], [http://www.inserm.fr/ Inserm], [http://www.upmc.fr/ Université Pierre et Marie Curie (UPMC)], Paris, France. This institution has contributed a number of tools to NIAK through the inputs of Vincent Perlbarg. 
+*[http://sp.cs.tut.fi/index.en.shtml Department of Signal Processing, Tampere University of Technology]. This institution has contributed a number of tools to NIAK through the inputs of Jussi Tohka. 
+*[http://www.anu.edu.au/index.php Australia National University]. This institution has contributed a number of tools to NIAK through the inputs of Andrew Janke. 
+*[http://www.nitrc.org/ The Neuroimaging Informatics Tools and Resources Clearinghouse (NITRC)] generously provides hosting of the NIAK user website. 
+*[http://code.google.com/ Google code] generously provides hosting of the NIAK developer's website.
+
+=== Opensource software  ===
+
+Many of the functions of the kit are based on software developed over the years by members and collaborators of the BIC and most notably fMRIstat developed by the late [http://www.math.mcgill.ca/keith/ Keith Worsley] and NIAKified by Felix Carbonnell, the [http://en.wikibooks.org/wiki/MINC MINC] tools and the [http://www.bic.mni.mcgill.ca/users/yaddab/Yasser-HBM2006-Poster.pdf CIVET] pipeline. Other codes came from opensource projects (the detailed licenses are in the respective codes): 
+
+*The pipeline system is a project called [http://code.google.com/p/psom/ PSOM] developed by Pierre Bellec (MIT license). 
+*The NIFTI reader/writer is adapted from a [http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8797&objectType=file code] by [http://www.rotman-baycrest.on.ca/~jimmy/ Jimmy Shen] (BSD license). 
+*The [http://www.mathworks.com/matlabcentral/fileexchange/956 conversion] between rotation/translation and matrix representations of rigid-body motion by Giampiero Campa (BSD license). 
+*The 'sinc' scheme for slice timing correction is a port from [http://www.fil.ion.ucl.ac.uk/spm/ SPM] (GPL license). 
+*The NIAK logo was adapted from an original work by the artist [http://mattahan.deviantart.com/ Mattahan] (creative commons license). 
+*The spatial independent component analysis was extracted from [http://sccn.ucsd.edu/fmrlab/ fMRlab] (GPL license). 
+*The windowed Fourier transfrom is from the [http://www-stat.stanford.edu/~wavelab/ WaveLab] toolbox (license&nbsp;: non-standard). 
+*The mutli-dimensional scaling algorithm and implementation was generously contributed by [http://pgrc-16.ipk-gatersleben.de/~stricker/ Marc Strickert] as part of the NIAK project (MIT license).
+
+Finally, a lot of people have been involved in beta-testing the project and gave very precious feedback over the past two years. A non-exhaustive list includes Benjamin D'hont, Pr Christophe Grova's lab, Pr Jean Gotman's lab, Pr Alain Dhager's lab, Pr Pedro Rosa-Neto's lab and Sébastien Lavoie-Courchesne.
+
 = License =
 
 NIAK is an opensource project under an MIT license, reproduced hereafter : 

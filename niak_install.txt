@@ -1,83 +1,38 @@
-!!! Installation of the NIAK package
+NIAK 0.6.4 INSTALLATION NOTES
 
-!! Contents
-* [Downloading and installing the NIAK library|#installing]
-* [Demo data|#Demo]
-* [CIVET|#CIVET]
-* [MINC|#MINC]
-* [Configuring NIAK|#Configuring]
-* [Notes|#Notes]
+=== Matlab/Octave, OS  ===
 
-!! Downloading and #[installing] the NIAK library
+NIAK can be used within a high-level programming environment called [http://www.mathworks.com/ Matlab], or its open-source (and free) equivalent [http://www.gnu.org/software/octave/index.html Octave]. More specifically, the library has been tested with Octave 3.2.4, Matlab 7.0.1 (R14), Matlab 7a; 7b, Matlab 2008b and Matlab 2009b. The package will '''not''' work with Matlab versions earlier than R14. NIAK has only been tested under Linux (Debian, Ubuntu and CentOS). In addition to Matlab/Octave, NIAK depends on the "image processing" toolbox. This comes by default with Matlab. In Octave, you have to download it from [http://octave.sourceforge.net/image/index.html Octave forge], and follow the [http://octave.sourceforge.net/index.html standard procedure] to install packages. If you are using Octave, note that you will also need [http://www.gnuplot.info/ gnuplot]. 
 
-The latest stable version can be found [here|http://code.google.com/p/niak/downloads/list] and the current version of the code is accessible through a subversion repository [here|http://code.google.com/p/niak/source/checkout]. Once the library has been decompressed on the hard drive, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path, example :
+In Octave, it may be a good idea to add the following lines to the ''.octaverc'' file in your home directory, to change its default behaviour : 
 
-<verbatim>
-path_niak = '/data/aces/aces1/pbellec/public/niak/';
-P = genpath(path_niak);
-addpath(P);
-</verbatim>
+ pkg load image                % Load the image processing package
+ more off                      % Verbose in real time, rather than wait for the end of the pipeline
+ default_save_options('-7');   % Use .mat files compatible with Matlab
+ ignore_function_time_stamp ('all') % This is a bit of a dangerous option, but it makes things run faster. You'll have to exit octave and start again if you want any change in the functions to be taken into account.
 
-This example will actually work at the BIC without downloading the package because =/data/aces/aces1/pbellec/public/niak/= has public access rights and (should) be up-to-date. At this stage you have access to all matlab/octave functions of the NIAK. The library has been tested with Matlab 7.0.1 (R14) and Matlab 7a & 7b, but is not compatible with Matlab 6.5. NIAK should also work with Octave 3.0+, but it is not compatible with Octave 2.x. The current release has only been tested with linux, but it should be compatible with Windows and Mac.
+=== The NIAK package  ===
 
-!! #[Demo] data
+The latest stable version can be found [[http://www.nitrc.org/frs/?group_id=411 here]] and the current version of the code is accessible through a subversion repository [[http://code.google.com/p/niak/source/checkout here]]. Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path, example: 
 
-There is also a small demo dataset you can download in various formats [here|http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/]. The main functions available in NIAK have demonstration scripts (starting by =niak_demo_=) that run on these data. You can either copy the demo data in the =~/niak/data_demo/= folder (default location) or, if for some reason you cannot write in that directory, you can manually specify the path to the data demo to the demo scripts.
+ path_niak = '/data/aces/aces1/pbellec/public/niak-0.6.3/'; 
+ P = genpath(path_niak); 
+ addpath(P); 
 
-!! #[MINC] tools
+At this stage you have access to all matlab/octave functions of the NIAK. 
 
-For most operations you will need to install a version of the MINC tools. MINC tools are publicly available for LINUX and MAC OSX here. There is a cygwin version for windows, but NIAK has not be tested in this environment. Future support for windows is not excluded in principle but, frankly, installing a Linux Ubuntu on your system will probably be much faster than configuring NIAK for windows.
+=== File formats  ===
 
-Within the BIC, the MINC tools are available by default, but only the MINC1 version. If you want to use MINC2, the easier is to source the CIVET quarantine before starting Matlab, see the section CIVET.
+The package reads and writes MINC files. Both MINC1 and MINC2 are supported (as long as the version of the MINC tools is MINC2). MINC1 files may in addition be compressed (extension .gz). NIAK will generate zipped outputs if the input is zipped. 
 
-!! #[CIVET]
+=== Demo data  ===
 
-The CIVET package is necessary to process T1 images, and is one part of the fMRI preprocessing pipeline. Hopefully, if you are associated with a brain imaging center which has some collaboration with the BIC, this package may already be installed on your workstation. If it is the case, the MINC tools are also available to you. All these resources are obviously available in the BIC network. Before starting Matlab or Octave, you will need to source the CIVET quarantines. Example (works at the BIC) :
+There is a small demo dataset you can download in [[http://www.nitrc.org/frs/download.php/2575/demo_niak_minc1.tar.gz minc1]] or [[http://www.nitrc.org/frs/download.php/2576/demo_niak_minc2.tar.gz minc2]] formats. The main functions available in NIAK have demonstrations (starting by "''niak_demo_''") that run on these data. 
 
-<verbatim>
-source /data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/init.csh
-</verbatim>
+=== MINC tools  ===
 
-If you are using a =sh= shell, replace =init.csh= by =init.sh=.
+NIAK has a single dependency on the opensource package called [[http://en.wikibooks.org/wiki/MINC MINC tools]]. MINC tools are publicly available for LINUX (packaged for Debian/Ubuntu), Windows and MAC OSX [[http://packages.bic.mni.mcgill.ca/ here]]. There is a tutorial for the installation [[http://en.wikibooks.org/wiki/MINC/Installation here]] (the easiest system by far for the installation is Linux Ubuntu). 
 
-A common issue with the CIVET initialization script is that it is messing up your terminal search path, so you may loose the access to matlab ! In this case, it is necessary to invoke matlab using the full path. The following example actually works at the BIC :
+=== Configuration of the pipeline manager  ===
 
-<verbatim>
-/export01/local/matlab7a/bin/matlab
-</verbatim>
-
-!! #[Configuring] NIAK
-If you are at the BIC and you are using the version of NIAK located at =/data/aces/aces1/pbellec/public/niak/', this section can be skipped. If you want to make the NIAK pipeline system in your local environment, then it is necessary to edit the NIAK configuration file `~/commands/misc/niak_gb_vars.m` and modify the following global variables :
-* =niak_gb_path_civet= : the path to your local CIVET quarantines. Example (will actually work at the BIC):
-<verbatim>
-gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/';
-</verbatim>
-* =gb_niak_folder_civet= : the folder of CIVET itself inside the quarantine. Example (will actually work at the BIC):
-<verbatim>
-gb_niak_folder_civet = 'CIVET-1.1.9';
-</verbatim>
-* =gb_niak_init_civet_local= : this is the name of the initialization script used to start the pipeline. NIAK is making shell calls. However, if you want to use a cluster of computers through an sge system, you need to use the `init-sge.sh` script, while if you want to run a pipeline locally, and do not have a sge qsub system available, you will use `init.sh` instead. Example (will actually work at the BIC):
-<verbatim>
-gb_niak_init_civet_local = 'init-sge.sh';
-</verbatim>
-* =gb_niak_init_civet= : this is the CIVET configuration script to run jobs inside the pipeline. This should always be the following :
-<verbatim>
-gb_niak_init_civet = 'init.sh';
-</verbatim>
-* =gb_niak_command_matlab= : the pipeline is starting a new matlab session for each job (in ='matlab'= mode). The following command usually works to start matlab :
-<verbatim>
-gb_niak_command_matlab = 'matlab -nojvm -nosplash';
-</verbatim>
-However, it maybe that you need to type `matlab-7.0.19.13` instead. Another common issue is that the CIVET configuration script may alter your current matlab environment, in which case you need to specify the path to access matlab, e.g. `/usr/local/matlab/bin/matlab`.
-* =gb_niak_command_octave= : same as `gb_niak_command_matlab`, but for octave (in `octave` mode).
-* =gb_niak_sge_options= : this variable can be used to specify options to the sge qsub command. Usually you can leave that string empty :
-<verbatim>
-gb_niak_sge_options = '';
-</verbatim>
-Note that you can still use that string to specify on which machines you want to run your jobs, e.g. :
-<verbatim>
-gb_niak_sge_options = '-q all.q@caius,all.q@silius,all.q@theseus,all.q@yeatman,all.q@zeus';
-</verbatim>
-
-!! #[Notes]
-Getting all NIAK functions to work outside the BIC is currently a bit tricky, as you probably understood if you had the courage to read this tutorial up until the end. The following [wiki page|http://code.google.com/p/niak/wiki/Distribution] discusses plans to simplify the dependencies and configuration of the NIAK for release 1.0.
+NIAK is using a pipeline system called [[http://code.google.com/p/psom/ PSOM]]. PSOM is bundled in the NIAK archive, in the folder "''extensions/psom-x.x/''". PSOM has many interesting features, such as running jobs in parallel, keeping track of the pipeline options and logs, restarting failed job or dealing with pipeline updates. By default, PSOM will process jobs in the background using two cores (this means for example that two subjects can be processed in parallel). The configuration can be adapted to use more/less CPUS, run in a single session or take advantage of supercomputers. Configuration can be changed when invoking a pipeline, but it may be simpler to adapt the configuration to your local computing environment once and for all through editing a configuration file. Details about PSOM configuration can be found in the dedicated [[http://code.google.com/p/psom/wiki/ConfigurationPsom tutorial]]. 
