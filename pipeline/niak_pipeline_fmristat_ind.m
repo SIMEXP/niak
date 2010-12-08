@@ -354,18 +354,14 @@ end
 %% Options
 gb_name_structure = 'opt';
 default_psom.path_logs = '';
-gb_list_fields = {'spatial_normalization','contrasts','which_stats','exclude','mask_thresh','folder_out','flag_test','psom','bricks'};
-gb_list_defaults = {'none',NaN,[],[],[],NaN,false,default_psom,struct([])};
+gb_list_fields         = {'spatial_normalization' , 'contrasts' , 'which_stats' , 'exclude' , 'mask_thresh' , 'folder_out' , 'flag_test' , 'psom'       , 'bricks' };
+gb_list_defaults       = {'none'                  , NaN         , []            , []        , []            , NaN          , false       , default_psom , struct() };
 niak_set_defaults
 
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
-switch opt.spatial_normalization % check that spatial_normalization is a valid option
-    case {'additive_glb_av','scaling_glb_av','all_glb_av','none'}
-        
-    otherwise
-        error(cat(2,opt.spatial_normalization,...
-            ': is an unknown option for OPT.SPATIAL_NORMALIZATION. Available options are ''additive_glb_av'', ''scaling_glb_av'', ''all_glb_av'',''none'''))
+if ~ismember(opt.spatial_normalization,{'additive_glb_av','scaling_glb_av','all_glb_av','none'})
+    error(cat(2,opt.spatial_normalization,': is an unknown option for OPT.SPATIAL_NORMALIZATION. Available options are ''additive_glb_av'', ''scaling_glb_av'', ''all_glb_av'',''none'''))
 end
 flag_spatial_av = ~strcmp(opt.spatial_normalization,'none');
 
@@ -385,11 +381,11 @@ niak_set_defaults
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pipeline = struct([]);
+pipeline = struct();
 
-%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%
 %% Spatial average %%
-%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%
 
 name_process = 'spatial_av';
 
@@ -514,13 +510,10 @@ for num_s = 1:nb_subject
         end % run
     end % session
 end % subject
-
-
-%     
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %% fmrilm %%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
+   
+%%%%%%%%%%%%
+%% fmrilm %%
+%%%%%%%%%%%%
 name_process = 'fmri_lm';    
 
 for num_s = 1:nb_subject
