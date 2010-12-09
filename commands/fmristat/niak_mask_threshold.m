@@ -1,9 +1,5 @@
 function mask_thresh = niak_mask_threshold(vol)
-
-% _________________________________________________________________________
-% SUMMARY NIAK_MASK_THRESHOLD
-%
-% Create spatial average from a volume
+% Find a threshold on an fMRI volume to define a brain mask.
 % 
 % SYNTAX:
 % MASK_THRESH = NIAK_MASK_THRESHOLD(VOL)
@@ -12,17 +8,18 @@ function mask_thresh = niak_mask_threshold(vol)
 % INPUTS:
 %
 % VOL         
-%       (3D array) A single time frame volume
+%       (3D array) A single brain volume.
 % 
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % MASK_THRESH
-%       a scalar value for thresholding a volumen and defininig a brain
-%       mask
+%       a scalar value for thresholding the volume to define a brain mask.
 %
 % _________________________________________________________________________
 % COMMENTS:
+%
+% This function is largely redundant with NIAK_MASK_BRAIN.
 %
 % This function is a NIAKIFIED port of a part of the FMRILM function of the
 % fMRIstat project. The original license of fMRIstat was : 
@@ -44,8 +41,8 @@ function mask_thresh = niak_mask_threshold(vol)
 %              express or implied warranty.
 %##########################################################################
 %
-% Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Copyright (c) Felix Carbonell, Montreal Neurological Institute, McGill 
+% University, 2009-2010.
 % Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
@@ -67,7 +64,6 @@ function mask_thresh = niak_mask_threshold(vol)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
 
 nbin=100;
 dbin=10;

@@ -1,9 +1,5 @@
 function [files_in,files_out,opt] = niak_brick_spatial_av(files_in,files_out,opt)
-
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_SPATIAL_AV
-%
-% Creates the spatial average time course. 
+% Creates a time course of spatial average for a 3D+t fMRI dataset 
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SPATIAL_AV(FILES_IN,FILES_OUT,OPT)
@@ -11,53 +7,59 @@ function [files_in,files_out,opt] = niak_brick_spatial_av(files_in,files_out,opt
 % _________________________________________________________________________
 % INPUTS:
 %
-%  FILES_IN  
-%       (structure) with the following field :
+% FILES_IN  
+%   (structure) with the following field :
 %
-%       FMRI 
-%           (string) the name of a file containing an fMRI dataset. 
+%   FMRI 
+%   	(string) the name of a file containing an fMRI dataset. 
 %
-%       MASK
-%           (string) the name of a 3D binary volume.
+%   MASK
+%   	(string, default 'gb_niak_omitted') the name of a 3D binary volume.
+%       If omitted, the mask will be derived from the fMRI volumes (see
+%       OPT.MASK_THRESH below).
 %
-%  FILES_OUT
-%       (string) the name a matlab file containing the following variable: 
+% FILES_OUT
+% 	(string, default <OPT.FOLDER_OUT>/<BASE FMRI>_spatial_av.mat) the 
+%   name a matlab file containing the following variable: 
 %
-%       SPATIAL_AV 
-%            column vector of the spatial average time courses.
+%   SPATIAL_AV 
+%       column vector of the spatial average time course.
 %
-%  OPT   
-%     (structure) with the following fields.
-%     Note that if a field is omitted, it will be set to a default
-%     value if possible, or will issue an error otherwise.
+% OPT   
+% 	(structure) with the following fields.
+%   Note that if a field is omitted, it will be set to a default value if 
+%   possible, or will issue an error otherwise.
 %
-%    MASK_THRESH
-%       a scalar value for thresholding a volumen and defininig a brain
-%       mask
+%   MASK_THRESH
+%       (vector 1*2, default [0 Inf])
+%       Scalar values for thresholding a volume to define a brain mask. The
+%       first number is the lower threshold the second one the upper. If
+%       MASK_THRESH is left empty, the function NIAK_MASK_THRESHOLD will be
+%       used to automatically determine the threshold.
 %
-%     FOLDER_OUT 
-%           (string, default: path of FILES_IN) 
-%           If present, all default outputs will be created in the folder 
-%           FOLDER_OUT. The folder needs to be created beforehand.
+%   FOLDER_OUT 
+%   	(string, default: path of FILES_IN) 
+%       If present, all default outputs will be created in the folder 
+%       FOLDER_OUT. The folder needs to be created beforehand.
 %
-%     FLAG_VERBOSE 
-%           (boolean, default 1) 
-%           if the flag is 1, then the function prints some infos during 
-%           the processing.
+%   FLAG_VERBOSE 
+%   	(boolean, default 1) 
+%       if the flag is 1, then the function prints some infos during 
+%       the processing.
 %
-%     FLAG_TEST 
-%           (boolean, default 0) 
-%           if FLAG_TEST equals 1, the brick does not do anything but 
-%           update the default values in FILES_IN, FILES_OUT and OPT.
+%   FLAG_TEST 
+%   	(boolean, default 0) 
+%       if FLAG_TEST equals 1, the brick does not do anything but update 
+%       the default values in FILES_IN, FILES_OUT and OPT.
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % This function is a NIAKIFIED port of a part of the FMRILM function of the
 % fMRIstat project. The original license of fMRIstat was : 
@@ -79,8 +81,8 @@ function [files_in,files_out,opt] = niak_brick_spatial_av(files_in,files_out,opt
 %              express or implied warranty.
 %##########################################################################
 %
-% Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Copyright (c) Felix Carbonell, Montreal Neurological Institute, McGill 
+% University, 2009-2010.
 % Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
@@ -103,7 +105,7 @@ function [files_in,files_out,opt] = niak_brick_spatial_av(files_in,files_out,opt
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-
+flag_gb_niak_fast_gb = true;
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,21 +113,21 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')|~exist('files_out','var')
     error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SPATIAL_AV(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_spatial_av'' for more info.')
 end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields = {'fmri','mask'};
-gb_list_defaults = {NaN,[]};
+gb_list_fields    = {'fmri' , 'mask'            };
+gb_list_defaults  = {NaN    , 'gb_niak_omitted' };
 niak_set_defaults
 
 if ~ischar(files_in.fmri)
     error('niak_brick_spatial_av: FILES_IN.FMRI should be a string');
 end
 
-if isempty(files_in.mask)
+if strcmp(files_in.mask,'gb_niak_omitted')||isempty(files_in.mask)
     files_in.mask = files_in.fmri;
     flag_mask = 0;
 else
@@ -138,30 +140,24 @@ end
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'exclude','mask_thresh','flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {[],[],0,'',1};
+gb_list_fields    = {'exclude' , 'mask_thresh' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {[]        , [0 Inf]       , 0           , ''           , 1              };
 niak_set_defaults
 
+if ~isempty(opt.mask_thresh)&&(length(opt.mask_thresh)<2)
+    opt.mask_thresh(2) = Inf;
+    mask_thresh(2)     = Inf;
+end
 
 %% FILES_OUT
-[path_f,name_f,ext_f] = fileparts(files_in.fmri);
-
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f] = fileparts(name_f);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in.fmri);
 
 if isempty(opt.folder_out)
-    folder_f = path_f;
-else
-    folder_f = opt.folder_out;
+    opt.folder_out = path_f;
 end
 
 if isempty(files_out)
-    files_out = cat(2,folder_f,filesep,name_f,'_spatial_av.mat');
+    files_out = cat(2,opt.folder_out,filesep,name_f,'_spatial_av.mat');
 end
 
 if flag_test 
@@ -178,23 +174,14 @@ keep = allpts( allpts > 0);
 
 %% Brain masking:
 if flag_mask
-    disp('Reading the brain mask ...')
-    [hdr_mask,mask] = niak_read_vol(files_in.mask);
-    if isempty(opt.mask_thresh)
-        mask_thresh1 = 0;
-        mask_thresh2 = Inf;
-    else
-        mask_thresh1 = opt.mask_thresh(1);
-        if length(opt.mask_thresh)>=2
-            mask_thresh2 = opt.mask_thresh(2);
-        else
-            mask_thresh2 = Inf;
-        end
+    if flag_verbose
+        fprintf('Reading the brain mask ...\n%s',files_in.mask);
     end
-else
-    disp('Defining a brain mask ...')
+    [hdr_mask,mask] = niak_read_vol(files_in.mask);      
+    mask            = mask>0;
+else      
     if isempty(opt.mask_thresh)
-        mask_thresh = niak_mask_threshold(vol);
+        mask_thresh = niak_mask_threshold(vol(:,:,:,keep(1)));
         mask_thresh1=mask_thresh(1);
         if length(mask_thresh)>=2
             mask_thresh2=mask_thresh(2);
@@ -202,17 +189,25 @@ else
             mask_thresh2=Inf;
         end
     else
-        mask_thresh1 = 0;
-        mask_thresh2 = Inf;
+        mask_thresh1 = opt.mask_thresh(1);
+        mask_thresh2 = opt.mask_thresh(2);
     end
+    if flag_verbose
+        fprintf('Defining a brain mask (lower threshold %1.2f, upper threshold %1.2f)...\n',mask_thresh1,mask_thresh2);
+    end  
     mask = squeeze(vol(:,:,:,keep(1)));
+    mask = (mask>mask_thresh1)&(mask<=mask_thresh2);
 end
-mask = (mask>mask_thresh1)&(mask<=mask_thresh2);
 weighted_mask = squeeze(vol(:,:,:,keep(1))).*mask ;
 
 %% Creates spatial_av:
+if flag_verbose
+    fprintf('Computing the spatial average at each time point ...\n');
+end  
 spatial_av = niak_spatial_av(vol,weighted_mask);
 
-if ~strcmp(files_out,'gb_niak_omitted');
-    save(files_out,'spatial_av');
-end
+%% Save the result
+if flag_verbose
+    fprintf('Saving results in %s ...\n',files_out);
+end  
+save(files_out,'spatial_av');

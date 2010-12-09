@@ -27,7 +27,6 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           internally.
 %
 %       DESIGN
-%
 %           (string) the name a matlab file containing a description of the
 %           design matrix. See the help of NIAK_BRICK_FMRI_DESIGN. 
 %
@@ -101,11 +100,11 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %            with fields x,c,t,s for the contrast associated to the responses,
 %            confounds, temporal trends and spatial trends, respectively.
 %
-%     SPATIAL_AV
+%       SPATIAL_AV
 %           (vector, default [] and NB_TRENDS_SPATIAL = 0)
 %           colum vector of the spatial average time courses.
 %
-%     CONFOUNDS 
+%       CONFOUNDS 
 %           (matrix, default [] i.e. no confounds)
 %           A matrix or array of extra columns for the design matrix
 %           that are not convolved with the HRF, e.g. movement artifacts. 
@@ -116,7 +115,7 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           times, or apply NIAK_BRICK_SLICE_TIMING to the fMRI data as a
 %           preprocessing.
 %
-%     EXCLUDE 
+%       EXCLUDE 
 %           (vector, default []) 
 %           A list of frames that should be excluded from the
 %           analysis. This must be used with Siemens EPI scans to remove the
@@ -124,12 +123,12 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           If OPT.NUMLAGS=1, the excluded frames can be arbitrary, 
 %           otherwise they should be from the beginning and/or end.
 %
-%     NB_TRENDS_SPATIAL 
+%       NB_TRENDS_SPATIAL 
 %           (scalar, default 0 will remove no spatial trends) 
 %           order of the polynomial in the spatial average (SPATIAL_AV)  
 %           weighted by first non-excluded frame; 
 %          
-%     NB_TRENDS_TEMPORAL 
+%       NB_TRENDS_TEMPORAL 
 %           (scalar, default 0)
 %           number of cubic spline temporal trends to be removed per 6 
 %           minutes of scanner time. 
@@ -142,14 +141,14 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           N_TEMPORAL=-1 will not remove anything, in which case the design matrix 
 %           is completely determined by X_CACHE.X.
 %
-%     NUM_HRF_BASES 
+%       NUM_HRF_BASES 
 %           (row vector; default [1; ... ;1]) 
 %           number of basis functions for the hrf for each response, 
 %           either 1 or 2 at the moment. At least one basis functions is 
 %           needed to estimate the magnitude, but two basis functions are 
 %           needed to estimate the delay.
 %
-%     BASIS_TYPE 
+%       BASIS_TYPE 
 %           (string, 'spectral') 
 %           basis functions for the hrf used for delay estimation, or 
 %           whenever NUM_HRF_BASES = 2. 
@@ -161,15 +160,15 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           Ignored if NUM_HRF_BASES = 1, in which case it always uses 
 %           component 1, i.e. the hrf is convolved with the stimulus.
 %
-%     NUMLAGS
+%       NUMLAGS
 %           (integer, default 1) The order (p) of the autoregressive model.
 %
-%     PCNT
+%       PCNT
 %           (boolean, default 0)
 %           if PCNT=1, then the data is converted to percentages 
 %           before analysis by dividing each frame by its spatial average,* 100%.
 %
-%     FWHM
+%       FWHM
 %           (default [], which corresponds to achieving 100 df, but if
 %           CONTRAST is empty then the default is 0 i.e. no smoothing.)
 %           It is the fwhm in mm of a 3D Gaussian kernel used to smooth the
@@ -189,7 +188,7 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           If df.cor cannot be found in the header or _cor_df.txt file, 
 %           Inf is used.           
 %
-%     DF_LIMIT 
+%       DF_LIMIT 
 %           (scalar, default 4)
 %           Controls which method is used for estimating FWHM. 
 %           If DF > DF_LIMIT, then the FWHM is calculated assuming the 
@@ -198,17 +197,17 @@ function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
 %           calculated assuming that the axes of the Gaussian filter are 
 %           aligned with the x, y and z axes of the data. 
 %
-%     FOLDER_OUT 
+%       FOLDER_OUT 
 %           (string, default: path of FILES_IN) 
 %           If present, all default outputs will be created in the folder 
 %           FOLDER_OUT. The folder needs to be created beforehand.
 %
-%     FLAG_VERBOSE 
+%       FLAG_VERBOSE 
 %           (boolean, default 1) 
 %           if the flag is 1, then the function prints some infos during 
 %           the processing.
 %
-%     FLAG_TEST 
+%       FLAG_TEST 
 %           (boolean, default 0) 
 %           if FLAG_TEST equals 1, the brick does not do anything but 
 %           update the default values in FILES_IN, FILES_OUT and OPT.
@@ -304,10 +303,8 @@ else
 end
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'mask_thresh','contrast','contrast_names','spatial_av','confounds','exclude','nb_trends_spatial',...
-    'nb_trends_temporal','num_hrf_bases','basis_type','numlags','pcnt','fwhm','df_limit',...
-    'flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {[],NaN,[],[],[],[],0,3,[],'spectral',1,0,[],4,0,'',1};
+gb_list_fields    = {'mask_thresh' , 'contrast' , 'contrast_names' , 'spatial_av' , 'confounds' , 'exclude' , 'nb_trends_spatial' , 'nb_trends_temporal' , 'num_hrf_bases' , 'basis_type' , 'numlags' , 'pcnt' , 'fwhm' , 'df_limit' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {[]            , NaN        , []               , []           , []          , []        , 0                   , 3                    , []              , 'spectral'   , 1         , 0      , []     , 4          , 0           , ''           , 1              };
 niak_set_defaults
 
 if ((nb_trends_spatial>=1)||(opt.pcnt)) && isempty(opt.spatial_av)
@@ -493,7 +490,6 @@ if fwhm.cor>0 && fwhm.cor<Inf
 end
 
 %% Second step to get final estimates
-
 disp('Estimating whitened model...')
 opt_whiten.matrix_x = matrix_x;
 opt_whiten.spatial_av = opt.spatial_av;

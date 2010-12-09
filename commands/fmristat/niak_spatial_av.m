@@ -1,7 +1,4 @@
 function spatial_av = niak_spatial_av(vol,mask)
-% _________________________________________________________________________
-% SUMMARY NIAK_SPATIAL_AV
-%
 % Create spatial average from a volume
 % 
 % SYNTAX:
@@ -46,8 +43,8 @@ function spatial_av = niak_spatial_av(vol,mask)
 %              express or implied warranty.
 %##########################################################################
 %
-% Copyright (c) Felix Carbonell, Montreal Neurological Institute, 2009.
-%               Pierre Bellec, McConnell Brain Imaging Center, 2009.
+% Copyright (c) Felix Carbonell, Montreal Neurological Institute, McGill 
+% University, 2009.
 % Maintainers : felix.carbonell@mail.mcgill.ca, pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : fMRIstat, linear model
@@ -69,7 +66,6 @@ function spatial_av = niak_spatial_av(vol,mask)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
 [nx,ny,nz,nt] = size(vol);
 tot = sum(mask(:));
 for i=1:nt

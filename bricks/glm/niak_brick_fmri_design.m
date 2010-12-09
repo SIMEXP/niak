@@ -233,9 +233,9 @@ end
  
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'tr','spatial_av','confounds','exclude','nb_trends_spatial','nb_trends_temporal','num_hrf_bases','basis_type','flag_test','folder_out','flag_verbose'};
-gb_list_defaults = {[],[],[],[],0,3,[],'spectral',0,'',1};
-niak_set_defaults
+gb_list_fields    = {'tr' , 'spatial_av' , 'confounds' , 'exclude' , 'nb_trends_spatial' , 'nb_trends_temporal' , 'num_hrf_bases' , 'basis_type' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {[]   , []           , []          , []        , 0                   , 3                    , []              , 'spectral'   , 0           , ''           , 1              };
+niak_set_defaults 
 
 if (nb_trends_spatial>=1) && isempty(opt.spatial_av)
     error('Please provide a non empty value for SPATIAL_AV.\n Type ''help niak_brick_fmri_design'' for more info.')
