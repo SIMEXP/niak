@@ -1,5 +1,5 @@
 function pipeline = niak_pipeline_fmristat_ind(files_in,opt)
-% Individual level linear model analysis of fMRI data.
+% Individual-level linear model analysis of fMRI data.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRISTAT_IND(FILES_IN,OPT)
@@ -22,15 +22,23 @@ function pipeline = niak_pipeline_fmristat_ind(files_in,opt)
 %       FILES_IN.EVENTS in NIAK_BRICK_FMRI_DESIGN
 %
 %   SLICING
-%       (string, default 'gb_niak_omitted') a file describing the events. 
+%       (string, default 'gb_niak_omitted') the name of a file containing
+%       relative slice acquisition times i.e. absolute acquisition time of 
+%       a slice is FRAME_TIMES+SLICE_TIMES. If omitted, the differences in 
+%       slice timing will be ignored.
 %       See the description of FILES_IN.SLICING in NIAK_BRICK_FMRI_DESIGN
 %
 % OPT   
 %   (structure) with the following fields : 
 %
+%   LABEL
+%       (string) a string that will be used to name the outputs.
+%
+%   CONTRAST
+%       (structure)
 %
 %   FOLDER_OUT 
-%   (string) where to write the results of the pipeline. 
+%       (string) where to write the results of the pipeline. 
 %
 %   FLAG_TEST
 %       (boolean, default false) If FLAG_TEST is true, the pipeline will 
@@ -94,63 +102,22 @@ niak_gb_vars
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Input files
+%% Syntax
 if ~exist('files_in','var')||~exist('opt','var')
     error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_FMRISTAT_IND(FILES_IN,OPT).\n Type ''help niak_pipeline_fmristat_ind'' for more info.')
 end
 
-%% Checking that FILES_IN is in the correct format
-if ~isstruct(files_in)
-
-    error('FILES_IN should be a struture!')
-    
-else
-   
-    list_subject = fieldnames(files_in);
-    nb_subject   = length(list_subject);
-    flag_mask    = false([nb_subject 1]);
-    flag_events  = false([nb_subject 1]);
-    flag_slicing = false([nb_subject 1]);
-    list_session = cell([nb_subject 1]);
-    
-    for num_s = 1:nb_subject
-        
-        subject = list_subject{num_s};
-        data_subject = files_in.(subject);
-        
-        if ~isstruct(data_subject)
-            error('FILES_IN.%s should be a structure!',upper(subject));
-        end
-        
-        if ~isfield(data_subject,'fmri')
-            error('I could not find the field FILES_IN.%s.FMRI!',upper(subject));
-        end
-        
-        flag_mask(num_s)    = isfield(data_subject,'mask');
-        flag_events(num_s)  = isfield(data_subject,'events');
-        flag_slicing(num_s) = isfield(data_subject,'slicing');
-                      
-        data_fmri = data_subject.fmri;        
-            
-        list_session{num_s} = fieldnames(data_fmri);
-        
-        for num_c = 1:length(list_session{num_s})
-            session = list_session{num_s}{num_c};
-            data_session = data_fmri.(session);
-            if ~iscellstr(data_session)
-                error('FILES_IN.%s.fmri.%s is not a cell of strings!',upper(subject),upper(session));
-            end                                
-        end                
-    end    
-end
+%% Input files
+gb_name_structure      = 'files_in';
+gb_list_fields         = {'fmri' , 'events' , 'slicing'         , 'mask'            };
+gb_list_defaults       = {NaN    , NaN      , 'gb_niak_omitted' , 'gb_niak_omitted' };
+niak_set_defaults
 
 %% Options
 gb_name_structure      = 'opt';
-default_psom.path_logs = '';
-gb_list_fields         = {'spatial_av' , 'fmri_design' , 'fmri_lm' , 'spatial_normalization' , 'contrasts' , 'which_stats' , 'exclude' , 'mask_thresh' , 'folder_out' , 'flag_test' , 'psom'       };
-gb_list_defaults       = {struct()     , struct()      , struct()  , 'none'                  , NaN         , []            , []        , []            , NaN          , false       , default_psom };
+gb_list_fields         = {'spatial_av' , 'fmri_design' , 'fmri_lm' , 'spatial_normalization' , 'contrasts' , 'which_stats' , 'exclude' , 'mask_thresh' , 'folder_out' , 'flag_test' , 'psom'   };
+gb_list_defaults       = {struct()     , struct()      , struct()  , 'none'                  , NaN         , []            , []        , []            , NaN          , false       , struct() };
 niak_set_defaults
-
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
 if ~ismember(opt.spatial_normalization,{'additive_glb_av','scaling_glb_av','all_glb_av','none'})
@@ -162,211 +129,70 @@ if ~isstruct(opt.contrasts)
      error('OPT.CONTRASTS should be a struture!')
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Initialization of the pipeline %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pipeline = struct();
-
 %%%%%%%%%%%%%%%%%%%%%
 %% Spatial average %%
 %%%%%%%%%%%%%%%%%%%%%
-
-name_process = 'spatial_av';
-
+pipeline = struct();
 if flag_spatial_av % If the user requested a correction for spatial_av
-    
-    for num_s = 1:nb_subject               
-        subject      = list_subject{num_s};
-        list_session = fieldnames(files_in.(subject).fmri);                
-        
-        for num_sess = 1:length(list_session)      
-            session       = list_session{num_sess};
-            files_session = files_in.(subject).fmri.(list_session{num_sess});
-            
-            for num_r = 1:length(files_session)                
-                run      = cat(2,'run',num2str(num_r));
-                name_job = cat(2,'spatial_av_',subject,'_',session,'_',run);
-                
-                %% Bulding inputs for NIAK_BRICK_SPATIAL_AV
-                files_in_tmp.fmri = files_session{num_r};
-                if flag_mask(num_s)
-                    files_in_tmp.mask = files_in.(subject).mask;
-                else
-                    files_in_tmp.mask = [];
-                end
-                files_out_tmp      = [folder_out name_job '.mat'];
-                opt_tmp            = opt.spatial_av;
-                opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-
-                %% Setting up defaults of the spatial_av
-                opt_tmp.exclude = opt.exclude;
-                opt_tmp.mask_thresh = opt.mask_thresh;
-                
-                pipeline = psom_add_job(pipeline,name_job,
-                opt_tmp.flag_test = 1;
-                [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_spatial_av(files_in_tmp,files_out_tmp,opt_tmp);
-                opt_tmp.flag_test = 0;
-                
-                %% Keeping track of the file names
-                files_sav.(subject).(session){num_r} = files_out_tmp;
-
-                %% Adding the stage to the pipeline
-                pipeline(1).(name_stage).command = 'niak_brick_spatial_av(files_in,files_out,opt)';
-                pipeline(1).(name_stage).files_in = files_in_tmp;
-                pipeline(1).(name_stage).files_out = files_out_tmp;
-                pipeline(1).(name_stage).opt = opt_tmp;
-
-            end % run
-        end % session
-    end % subject
-    
+    name_job_av         = cat(2,'spatial_av_',label);                            
+    files_in_tmp.fmri   = files_session{num_r};
+    files_in_tmp.mask   = files_in.mask;
+    files_out_tmp       = [opt.folder_out name_job_av '.mat'];
+    opt_tmp             = opt.spatial_av;
+    opt_tmp.exclude     = opt.exclude;
+    opt_tmp.mask_thresh = opt.mask_thresh;
+    pipeline            = psom_add_job(pipeline,name_job_av,'niak_brick_spatial_av',files_in_tmp,files_out_tmp,opt_tmp);                
 end % if flag_spatial_av
-
 
 %%%%%%%%%%%%%%%%%
 %% fmri design %%
 %%%%%%%%%%%%%%%%%
-
-name_process = 'fmri_design';
-
-for num_s = 1:nb_subject
-    
-    subject = list_subject{num_s};
-    clear opt_tmp files_in_tmp files_out_tmp
-    list_session = fieldnames(files_in.(subject).fmri);
-    nb_session = length(list_session);
-    
-    for num_sess = 1:nb_session
-        
-        session = list_session{num_sess};
-        files_session = files_in.(subject).fmri.(session);
-        files_session_slicing = files_in.(subject).slicing.(session);
-        files_session_events = files_in.(subject).events.(session);
-        nb_run = length(files_session);
-        
-        for num_r = 1:nb_run
+clear files_in_tmp files_out_tmp opt_tmp
+name_job_design   = ['fmri_design_' label];
+files_in_tmp.fmri = rmfield(files_in,'mask');
+if flag_spatial_av
+    files_in_tmp.spatial_av = pipeline.(name_job_av).files_out;
+end
+files_out_tmp     = [opt.folder_out name_job_design '.mat'];
+opt_tmp           = opt.bricks.fmri_design;
+opt_tmp.exclude   = opt.exclude;
+if (~isfield(opt_tmp,'nb_trends_spatial'))&&ismember(opt.spatial_normalization,{'additive_glb_av','all_glb_av'})
+    opt_tmp.nb_trends_spatial = 1;
+end
+pipeline = psom_add_job(pipeline,name_job_design,'niak_brick_fmri_design',files_in_tmp,files_out_tmp,opt_tmp);
             
-            run = cat(2,'run',num2str(num_r));
-            name_stage = cat(2,'fmri_design_',subject,'_',session,'_',run);
-            
-            %% Bulding inputs for NIAK_BRICK_FMRI_DESIGN
-            files_in_tmp.fmri = files_session{num_r};
-            if flag_slicing(num_s)
-                files_in_tmp.slicing = files_session_slicing{num_r};
-            end
-            if flag_events(num_s)
-                files_in_tmp.events = files_session_events{num_r};
-            end
-            files_out_tmp = '';
-            
-            %% Setting up options
-            opt_tmp = opt.bricks.fmri_design;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-            
-            %% Setting up defaults of the fmri_design
-            opt_tmp.exclude = opt.exclude;
-            if flag_spatial_av
-                spatial_av_tmp = importdata(files_sav.(subject).(session){num_r});
-                opt_tmp.spatial_av = spatial_av_tmp;
-                if (~isfield(opt_tmp,'nb_trends_spatial'))&&any(strcmp(opt.spatial_normalization,{'additive_glb_av','all_glb_av'}))
-                    opt_tmp.nb_trends_spatial = 1;
-                end
-            end
-                       
-            opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_fmri_design(files_in_tmp,files_out_tmp,opt_tmp);
-            opt_tmp.flag_test = 0;
-            
-            %% Keeping track of the file names
-            files_des.(subject).(session){num_r} = files_out_tmp;
-            
-            %% Adding the stage to the pipeline
-            pipeline(1).(name_stage).command = 'niak_brick_fmri_design(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-        end % run
-    end % session
-end % subject
-   
 %%%%%%%%%%%%
 %% fmrilm %%
 %%%%%%%%%%%%
-name_process = 'fmri_lm';    
-
-for num_s = 1:nb_subject
-    
-    subject = list_subject{num_s};
-    clear opt_tmp files_in_tmp files_out_tmp
-    list_session = fieldnames(files_in.(subject).fmri);
-    nb_session = length(list_session);
-    
-    for num_sess = 1:nb_session
-        
-        session = list_session{num_sess};
-        files_session = files_in.(subject).fmri.(session);
-        nb_run = length(files_session);
-        
-        for num_r = 1:nb_run
-            
-            run = cat(2,'run',num2str(num_r));
-            name_stage = cat(2,'fmri_lm_',subject,'_',session,'_',run);
-            
-            %% Bulding inputs for NIAK_BRICK_FMRI_LM
-            files_in_tmp.fmri = files_session{num_r};
-            files_in_tmp.design = files_des.(subject).(session){num_r};
-            if flag_mask(num_s)
-                files_in_tmp.mask = files_in.(subject).mask;
-            else
-                files_in_tmp.mask = [];
-            end
-            files_out_tmp = '';
-            
-            %% Setting up options
-            opt_tmp = opt.bricks.fmri_lm;
-            opt_tmp.folder_out = cat(2,opt.folder_out,filesep,name_process,filesep,subject,filesep);
-            if ~isempty(opt.which_stats)
-                nf_which = length(opt.which_stats);
-                for i=1:nf_which
-                    files_out_tmp.(opt.which_stats{i}) = '';
-                end
-            end
-            
-            %% Setting up defaults of the fmrilm
-            if isfield(opt.contrasts,'name')
-                opt_tmp.contrast_names = opt.contrasts.name;
-            end
-            opt_tmp.contrast = opt.contrasts.weight;
-            opt_tmp.exclude = opt.exclude;
-            opt_tmp.mask_thresh = opt.mask_thresh;
-            if flag_spatial_av
-                spatial_av_tmp = importdata(files_sav.(subject).(session){num_r});
-                opt_tmp.spatial_av = spatial_av_tmp;
-                if (~isfield(opt_tmp,'nb_trends_spatial'))&&any(strcmp(opt.spatial_normalization,{'additive_glb_av','all_glb_av'}))
-                    opt_tmp.nb_trends_spatial = 1;
-                end
-                if (~isfield(opt_tmp,'pcnt'))&&any(strcmp(opt.spatial_normalization,{'scaling_glb_av','all_glb_av'}))
-                    opt_tmp.pcnt = 1;
-                end
-            end
-                      
-            opt_tmp.flag_test = 1;
-            [files_in_tmp,files_out_tmp,opt_tmp] = niak_brick_fmri_lm(files_in_tmp,files_out_tmp,opt_tmp);
-            opt_tmp.flag_test = 0;
-            
-            %% Keeping track of the file names
-            %files_a.(subject).(session){num_r} = files_out_tmp;
-            
-            %% Adding the stage to the pipeline
-            pipeline(1).(name_stage).command = 'niak_brick_fmri_lm(files_in,files_out,opt)';
-            pipeline(1).(name_stage).files_in = files_in_tmp;
-            pipeline(1).(name_stage).files_out = files_out_tmp;
-            pipeline(1).(name_stage).opt = opt_tmp;
-        
-        end % run
-    end % session
-end % subject
-
+clear files_in_tmp files_out_tmp opt_tmp
+name_job_lm = ['fmri_lm_' label];
+files_in_tmp.fmri = files_in.fmri;
+files_in_tmp.design = pipeline.(name_job_design).files_out;
+files_in_tmp.mask = files_in.mask;
+if flag_spatial_av
+    files_in_tmp.spatial_av = pipeline.(name_job_av).files_out;
+end
+if ~isempty(opt.which_stats)
+    nf_which = length(opt.which_stats);
+    for num_i=1:nf_which
+        files_out_tmp.(opt.which_stats{num_i}) = '';
+    end
+end
+opt_tmp = opt.bricks.fmri_lm;
+opt_tmp.folder_out = opt.folder_out;
+if isfield(opt.contrasts,'name')
+    opt_tmp.contrast_names = opt.contrasts.name;
+end
+opt_tmp.contrast = opt.contrasts.weight;
+opt_tmp.exclude = opt.exclude;
+opt_tmp.mask_thresh = opt.mask_thresh;
+if (~isfield(opt_tmp,'nb_trends_spatial'))&&ismember(opt.spatial_normalization,{'additive_glb_av','all_glb_av'})
+    opt_tmp.nb_trends_spatial = 1;
+end
+if (~isfield(opt_tmp,'pcnt'))&&ismember(opt.spatial_normalization,{'scaling_glb_av','all_glb_av'})
+    opt_tmp.pcnt = 1;
+end
+pipeline = psom_add_job(pipeline,name_job_design,'niak_brick_fmri_lm',files_in_tmp,files_out_tmp,opt_tmp);                                  
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%
