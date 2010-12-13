@@ -55,6 +55,10 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 %           (integer, default 5) the number of partitions kept in memory to
 %           check for cycles.
 %
+%       FLAG_MEX
+%           (boolean, default false) Use a mex implementation of k-means. 
+%           See the NOTES section below.
+%
 %       FLAG_VERBOSE
 %           (boolean, default 0) if the flag is 1, then the function prints
 %           some infos during the processing.
@@ -77,6 +81,12 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 %
 % _________________________________________________________________________
 % COMMENTS:
+%
+% The mex implementation requires to install and compile the mex in the "sparse
+% coding neural gas" toolbox : 
+% http://www.inb.uni-luebeck.de/tools-demos/scng
+% In this mode, OPT.P, OPT.TYPE_DEATH, OPT.TYPE_INIT and OPT.INIT are ignored. The 
+% iteration of the algorithm will still work.
 %
 % Copyright (c) partierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -126,6 +136,9 @@ if nb_iter > 1
 else
     
     data = data';    
+    if flag_mex
+        [gi,part] = Kmeans(data,opt.nb_classes,0);
+    else
     [N,T] = size(data);
     if isempty(p)
         p = ones([N 1]);
@@ -233,7 +246,7 @@ else
     % save the final results
     part = part(:,part_curr);
     gi = centre_gravite(data,part,p,nb_classes);
-    
+    end
     % Final inter-class inertia
     p_classe = zeros([nb_classes 1]);
     for i = 1:nb_classes
