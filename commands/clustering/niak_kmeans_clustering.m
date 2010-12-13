@@ -135,118 +135,115 @@ if nb_iter > 1
 
 else
     
-    data = data';    
     if flag_mex
         [gi,part,tmp] = Kmeans(data,opt.nb_classes,0);
         part = part(:);
-    else
+        gi = gi';
+    end
+    data = data';    
     [N,T] = size(data);
     if isempty(p)
         p = ones([N 1]);
     end
+    if ~flag_mex
+        %% Initialization
+        part = zeros([N nb_tests_cycle]);
+        changement = 1;
+        N_iter = 1;
+        part_curr = 1;
 
-    % Parameters
-    %warning off
+        %% Initialization of cluster centers
+        gi = zeros([nb_classes T]);
 
+        switch type_init
 
-    %% Initialization
-    part = zeros([N nb_tests_cycle]);
-    changement = 1;
-    N_iter = 1;
-    part_curr = 1;
+            case 'random_point'
 
-    %% Initialization of cluster centers
-    gi = zeros([nb_classes T]);  
+                %% Initialization using random points
+                perm_init = randperm(N);
+                gi = data(perm_init(1:nb_classes),:);
 
-    switch type_init
+            case 'random_partition'
 
-        case 'random_point'
+                %% Initialization using random partition
+                part(:,part_curr) = ceil(nb_classes*rand([N 1]));
+                gi = centre_gravite(data,part(:,1),p,nb_classes);
 
-            %% Initialization using random points
-            perm_init = randperm(N);
-            gi = data(perm_init(1:nb_classes),:);
+            case 'pca'
 
-        case 'random_partition'
+                %% Initialization using eigen vectors
+                [eig_val,eig_vec] = niak_pca(data);
+                gi = eig_vec(:,1:nb_classes)';
 
-            %% Initialization using random partition            
-            part(:,part_curr) = ceil(nb_classes*rand([N 1]));
-            gi = centre_gravite(data,part(:,1),p,nb_classes);
+            case 'user-specified'
 
-        case 'pca'
+                %% Initialization used the user-specified centroids
+                gi = init';
+                clear init
 
-            %% Initialization using eigen vectors
-            [eig_val,eig_vec] = niak_pca(data);
-            gi = eig_vec(:,1:nb_classes)';
+            otherwise
 
-        case 'user-specified'
-            
-            %% Initialization used the user-specified centroids
-            gi = init';
-            clear init
-            
-        otherwise
+                error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',type_init);
+        end
 
-            error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',type_init);
-    end
-
-    if flag_verbose
-        fprintf('Number of displacements : ');
-    end
-
-    while ( changement == 1 ) && ( N_iter < nb_iter_max )
-
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% Build the partition matching the centers %%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        A = attraction(data,gi,p);
-
-        %% look for maximal attraction points
-        [A_min,part_bis] = min(A,[],2);
-        deplacements = sum(part(:,part_curr)~=part_bis);
         if flag_verbose
-            fprintf(' %d -',deplacements);
+            fprintf('Number of displacements : ');
         end
 
-        %% Update partition and gravity center
-        if part_curr == nb_tests_cycle
-            part_curr = 1;
-        else
-            part_curr = part_curr+1;
-        end
-        part(:,part_curr) = part_bis;
-        gi = centre_gravite(data,part_bis,p,nb_classes);
-               
-        %% Deal with empty clusters
-        if ~strcmp(type_death,'none')                                    
-            if length(unique(part(:,part_curr)))~=nb_classes
-                switch type_death
-                    
-                    case 'singleton'
-                        ind_dead = find(~ismember(1:nb_classes,part(:,part_curr)));
-                        ind_dead = ind_dead(1);
-                        [val_max,ind_max] = max(A_min);
-                        gi(ind_dead,:) = data(ind_max(1),:);                                                
+        while ( changement == 1 ) && ( N_iter < nb_iter_max )
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Build the partition matching the centers %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            A = attraction(data,gi,p);
+
+            %% look for maximal attraction points
+            [A_min,part_bis] = min(A,[],2);
+            deplacements = sum(part(:,part_curr)~=part_bis);
+            if flag_verbose
+                fprintf(' %d -',deplacements);
+            end
+
+            %% Update partition and gravity center
+            if part_curr == nb_tests_cycle
+                part_curr = 1;
+            else
+                part_curr = part_curr+1;
+            end
+            part(:,part_curr) = part_bis;
+            gi = centre_gravite(data,part_bis,p,nb_classes);
+
+            %% Deal with empty clusters
+            if ~strcmp(type_death,'none')
+                if length(unique(part(:,part_curr)))~=nb_classes
+                    switch type_death
+
+                        case 'singleton'
+                            ind_dead = find(~ismember(1:nb_classes,part(:,part_curr)));
+                            ind_dead = ind_dead(1);
+                            [val_max,ind_max] = max(A_min);
+                            gi(ind_dead,:) = data(ind_max(1),:);
+                    end
                 end
             end
-        end      
-         %% Check we're not in a cycle
-        changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
-        N_iter = N_iter + 1;
-        
-    end
-    
-    if flag_verbose
-        if N_iter < nb_iter_max
-            fprintf('\n')
-        else
-            fprintf('The maximal number of iteration was reached.\n')
-        end
-    end
-    %warning on
+            %% Check we're not in a cycle
+            changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
+            N_iter = N_iter + 1;
 
-    % save the final results
-    part = part(:,part_curr);
-    gi = centre_gravite(data,part,p,nb_classes);
+        end
+
+        if flag_verbose
+            if N_iter < nb_iter_max
+                fprintf('\n')
+            else
+                fprintf('The maximal number of iteration was reached.\n')
+            end
+        end
+        %warning on
+
+        % save the final results
+        part = part(:,part_curr);
+        gi = centre_gravite(data,part,p,nb_classes);
     end
     % Final inter-class inertia
     p_classe = zeros([nb_classes 1]);
@@ -255,7 +252,7 @@ else
     end
     mask_OK = p_classe~=0;
     gi_OK = gi(mask_OK,:);
-    p_classe_OK = p_classe(mask_OK);        
+    p_classe_OK = p_classe(mask_OK);
     g = (1/sum(p_classe_OK))*sum(gi_OK.*(p_classe_OK*ones([1,T])),1);
     i_inter = sum(sum(p_classe_OK.*sum((gi_OK-(ones([sum(mask_OK) 1])*g)).^2,2)))/sum(p_classe_OK);
 
