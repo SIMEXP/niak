@@ -113,8 +113,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'init','type_init','type_death','nb_classes','p','nb_iter','flag_verbose','nb_iter_max','nb_tests_cycle'};
-gb_list_defaults = {[],'random_partition','none',NaN,[],1,0,100,5};
+gb_list_fields    = {'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
+gb_list_defaults  = {[]     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
 niak_set_defaults
 
 if nb_iter > 1
