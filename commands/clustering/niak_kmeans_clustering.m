@@ -137,7 +137,7 @@ else
     
     data = data';    
     if flag_mex
-        [gi,part] = Kmeans(data,opt.nb_classes,0);
+        [gi,part,tmp] = Kmeans(data,opt.nb_classes,0);
     else
     [N,T] = size(data);
     if isempty(p)
