@@ -1,75 +1,68 @@
 function [files_in,files_out,opt] = niak_template_brick(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_TEMPLATE_BRICK
-%
-% This is a dummy .m files to show how to format a "brick" function in
-% NIAK.
+% This is a template file for "brick" functions in NIAK.
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_TEMPLATE_BRICK(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN        
-%       (string) a file name of a 3D+t fMRI dataset .
+% FILES_IN        
+%   (string) a file name of a 3D+t fMRI dataset .
 %
 %
-%  * FILES_OUT
-%       (structure) with the following fields:
+% FILES_OUT
+%   (structure) with the following fields:
 %       
-%       CORRECTED_DATA
-%           (string, default <BASE NAME FMRI>_c.<EXT>) File name for 
-%           processed data.
-%           If FILES_OUT is an empty string, the name of the outputs will 
-%           be the same as the inputs, with a '_c' suffix added at the end.
+%   CORRECTED_DATA
+%       (string, default <BASE NAME FMRI>_c.<EXT>) File name for processed 
+%       data.
+%       If FILES_OUT is an empty string, the name of the outputs will be 
+%       the same as the inputs, with a '_c' suffix added at the end.
 %
-%       MASK
-%           (string, default <BASE NAME FMRI>_mask.<EXT>) File name for 
-%           a mask of the data.
-%           If FILES_OUT is an empty string, the name of the outputs will 
-%           be the same as the inputs, with a '_mask' suffix added at the 
-%           end.
+%   MASK
+%       (string, default <BASE NAME FMRI>_mask.<EXT>) File name for a mask 
+%       of the data. If FILES_OUT is an empty string, the name of the 
+%       outputs will be the same as the inputs, with a '_mask' suffix added 
+%       at the end.
 %
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+% 	(structure) with the following fields.  
 %
-%       TYPE_CORRECTION       
-%           (string, default 'mean_var') possible values :
-%               'none' : no correction at all                       
-%               'mean' : correction to zero mean.
-%               'mean_var' : correction to zero mean and unit variance
-%               'mean_var2' : same as 'mean_var' but slower, yet does not use 
-%                   as much memory).
+%   TYPE_CORRECTION       
+%   	(string, default 'mean_var') possible values :
+%       'none' : no correction at all                       
+%       'mean' : correction to zero mean.
+%       'mean_var' : correction to zero mean and unit variance
+%       'mean_var2' : same as 'mean_var' but slower, yet does not use as 
+%       much memory).
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
+%	FOLDER_OUT 
+%   	(string, default: path of FILES_IN) If present, all default outputs 
+%       will be created in the folder FOLDER_OUT. The folder needs to be 
+%       created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%   FLAG_VERBOSE 
+%   	(boolean, default 1) if the flag is 1, then the function prints 
+%       some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%       (boolean, default 0) if FLAG_TEST equals 1, the brick does not do 
+%       anything but update the default values in FILES_IN, FILES_OUT and 
+%       OPT.
 %           
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % _________________________________________________________________________
-% SEE ALSO
-%
+% SEE ALSO:
 % NIAK_CORRECT_MEAN_VAR
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % That code is just to demonstrate the guidelines for NIAK bricks. It is
 % also a good idea to start a new command project by editing this file and
@@ -82,8 +75,8 @@ function [files_in,files_out,opt] = niak_template_brick(files_in,files_out,opt)
 % still a good brick example.
 %
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) <NAME>, <INSTITUTION>, <START DATE>-<END DATE>.
+% Maintainer : <EMAIL ADDRESS>
 % See licensing information in the code.
 % Keywords : NIAK, documentation, template, brick
 
@@ -126,27 +119,19 @@ end
     
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'type_correction','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {'mean_var',true,false,''};
+gb_list_fields    = {'type_correction' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = {'mean_var'        , true           , false       , ''           };
 niak_set_defaults
 
 
 %% Check the output files structure
 gb_name_structure = 'files_out';
-gb_list_fields = {'corrected_data','mask'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'corrected_data'  , 'mask'            };
+gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Building default output names
-[path_f,name_f,ext_f] = fileparts(files_in(1,:)); % parse the folder, file name and extension of the input
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext) % if the file was zipped, the actual extension still needs to be extracted
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in(1,:)); % parse the folder, file name and extension of the input
 
 if strcmp(opt.folder_out,'') % if the output folder is left empty, use the same folder as the input
     opt.folder_out = path_f;
