@@ -82,7 +82,7 @@ niak_gb_vars
 
 [path_f,name_f,ext_f] = fileparts(file_name);
 if isempty(path_f)
-    path_f = '.';
+    path_f = ['.' filesep];
 end
                 
 if strcmp(ext_f,gb_niak_zip_ext)
