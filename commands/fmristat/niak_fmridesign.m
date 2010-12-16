@@ -46,7 +46,23 @@ function x_cache = niak_fmridesign(opt)
 %           time to the next frame, and a height equal to the value of S 
 %           for that row and column. Note that a constant term is not 
 %           usually required, since it is removed by the polynomial 
-%           temporal trend terms. 
+%           temporal trend terms.
+%
+%       HRF_PARAMETERS
+%           (vector, default [5.4 5.2 10.8 7.35 0.35] choosen by 
+%           Glover, NeuroImage, 9:416-429 for auditory stimulus ) 
+%           The hrf is modeled as the difference of two gamma density functions 
+%           The components of HRF_PARAMETERS are:
+%           1. PEAK1: time to the peak of the first gamma density;
+%           2. FWHM1: approximate FWHM of the first gamma density;
+%           3. PEAK2: time to the peak of the second gamma density;
+%           4. FWHM2: approximate FWHM of the second gamma density;
+%           5. DIP: coefficient of the second gamma density;
+%           Final hrf is:   gamma1/max(gamma1)-DIP*gamma2/max(gamma2)
+%           scaled so that its total integral is 1. 
+%          If PEAK1=0 then there is no smoothing of that event type with the hrf.
+%          If PEAK1>0 but FWHM1=0 then the design is simply lagged by PEAK1.
+%
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -123,12 +139,12 @@ function x_cache = niak_fmridesign(opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'frame_times','slice_times','events','s'};
-gb_list_defaults = {NaN,0,[1 0],[]};
+gb_list_fields = {'frame_times','slice_times','events','s','hrf_parameters'};
+gb_list_defaults = {NaN,0,[1 0],[],[5.4 5.2 10.8 7.35 0.35]};
 niak_set_defaults
 
 
-hrf_parameters = [5.4 5.2 10.8 7.35 0.35];
+hrf_parameters = opt.hrf_parameters;
 shift = [-4.5 4.5];
 
 n = length(opt.frame_times);

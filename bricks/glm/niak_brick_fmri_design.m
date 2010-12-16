@@ -124,6 +124,21 @@ function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,op
 %           Ignored if NUM_HRF_BASES = 1, in which case it always uses 
 %           component 1, i.e. the hrf is convolved with the stimulus.
 %
+%       HRF_PARAMETERS
+%           (vector, default [5.4 5.2 10.8 7.35 0.35] choosen by 
+%           Glover, NeuroImage, 9:416-429 for auditory stimulus ) 
+%           The hrf is modeled as the difference of two gamma density functions 
+%           The components of HRF_PARAMETERS are:
+%           1. PEAK1: time to the peak of the first gamma density;
+%           2. FWHM1: approximate FWHM of the first gamma density;
+%           3. PEAK2: time to the peak of the second gamma density;
+%           4. FWHM2: approximate FWHM of the second gamma density;
+%           5. DIP: coefficient of the second gamma density;
+%           Final hrf is:   gamma1/max(gamma1)-DIP*gamma2/max(gamma2)
+%           scaled so that its total integral is 1. 
+%          If PEAK1=0 then there is no smoothing of that event type with the hrf.
+%          If PEAK1>0 but FWHM1=0 then the design is simply lagged by PEAK1.
+%
 %     FOLDER_OUT 
 %           (string, default: path of FILES_IN) 
 %           If present, all default outputs will be created in the folder 
@@ -233,8 +248,10 @@ end
  
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields    = {'tr' , 'spatial_av' , 'confounds' , 'exclude' , 'nb_trends_spatial' , 'nb_trends_temporal' , 'num_hrf_bases' , 'basis_type' , 'flag_test' , 'folder_out' , 'flag_verbose' };
-gb_list_defaults  = {[]   , []           , []          , []        , 0                   , 3                    , []              , 'spectral'   , 0           , ''           , 1              };
+gb_list_fields    = {'tr' , 'spatial_av' , 'confounds' , 'exclude' , 'nb_trends_spatial' ,...
+    'nb_trends_temporal' , 'num_hrf_bases' , 'basis_type' , 'hrf_parameters' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {[]   , []           , []          , []        , 0                   ,...
+    3                    ,  []           , 'spectral'     , [5.4 5.2 10.8 7.35 0.35], 0    , ''           , 1              };
 niak_set_defaults 
 
 if (nb_trends_spatial>=1) && isempty(opt.spatial_av)
@@ -303,6 +320,7 @@ clear opt.trends
 opt_cache.frame_times = (0:(numframes-1))*tr;
 opt_cache.slice_times = slice_times;
 opt_cache.events = events;
+opt_cache.hrf_parameters = opt.hrf_parameters;
 x_cache = niak_fmridesign(opt_cache);
 clear opt_cache
 
