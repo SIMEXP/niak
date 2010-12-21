@@ -18,6 +18,9 @@ function [tab,labels_x,labels_y] = niak_read_csv(file_name,opt)
 %   SEPARATOR
 %       (string, default ',') The character used to separate values. 
 %
+%   FLAG_STRING
+%       (boolean, default true) remove the ' and " characters in strings.
+%
 %   FLAG_TRIM
 %       (boolean, default true) trim leading and trailing spaces in labels.
 %
@@ -69,8 +72,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields   = {'separator' , 'flag_trim' };
-gb_list_defaults = {','         , true        };
+gb_list_fields   = {'separator' , 'flag_trim' , 'flag_string' };
+gb_list_defaults = {','         , true        , true          };
 niak_set_defaults
 
 %% Reading the table
@@ -109,6 +112,14 @@ for num_x = 2:length(cell_tab)
 end
 if flag_trim
     labels_x = strtrim(labels_x);
+end
+if flag_string
+    for num_e = 1:length(labels_x)
+        labels_x{num_e} = regexprep(labels_x{num_e},'[''"]','');
+    end
+    for num_e = 1:length(labels_y)
+        labels_y{num_e} = regexprep(labels_y{num_e},'[''"]','');
+    end
 end
 if isempty(labels_y{1})
     labels_y = labels_y(2:end);
