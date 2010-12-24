@@ -372,8 +372,8 @@ if isfield(opt,'bricks')
     opt = psom_merge_pipeline(opt,opt.bricks);
     opt = rmfield(opt,'bricks');
     if isfield(opt,'flag_corsica');
-        opt.corsica.flag_skip = ~flag_corsica;
-        opt_ind = rmfield(opt_ind,'flag_corsica');
+        opt.corsica.flag_skip = ~opt.flag_corsica;
+        opt = rmfield(opt,'flag_corsica');
     end
     if isfield(opt,'sica');
         opt.corsica.sica = opt.sica;
