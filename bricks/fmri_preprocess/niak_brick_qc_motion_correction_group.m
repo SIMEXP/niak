@@ -166,7 +166,7 @@ file_fig = niak_file_tmp('.eps');
 hf = figure;
 ha = gca;
 barh(tab_group);
-axis([min(tab_group(:)) max(min(tab_group(:))+0.01,max(tab_group(:))) 1 max(length(list_subject),2)]);
+axis([min(tab_group(:)) max(min(tab_group(:))+0.01,max(tab_group(:))) 0 max(length(list_subject),2)+1]);
 set(ha,'yticklabel',list_subject)
 legend({'perc_overlap_mask','xcorr_vol'});
 print(file_fig,'-depsc2');
@@ -223,7 +223,7 @@ file_fig = niak_file_tmp('.eps');
 hf = figure;
 ha = gca;
 barh(tab_group);
-axis([min(tab_group(:)) max(min(tab_group(:))+0.01,max(tab_group(:))) 1 max(length(list_subject),2)]);
+axis([min(tab_group(:)) max(min(tab_group(:))+0.01,max(tab_group(:))) 0 max(length(list_subject),2)+1]);
 set(ha,'ytick',1:length(list_subject));
 set(ha,'yticklabel',list_subject)
 legend({'max transition in rotation (degree)','max transition in translation (mm)'});
