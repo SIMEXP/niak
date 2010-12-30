@@ -216,7 +216,7 @@ folder_tmp = niak_path_tmp('_res');
 
 if strcmp(ext_t,'.mat')
     if flag_verbose
-        fprintf('\n Converting transformation %s into XFM format ...\n',files_in.source);
+        fprintf('\n Converting transformation %s into XFM format ...\n',files_in.transformation);
     end
     
     data = load(files_in.transformation);
@@ -422,7 +422,7 @@ else
     file_func_tmp = [folder_tmp 'func.mnc']; % temporary file for input
     file_func_tmp2 = [folder_tmp 'func2.mnc']; % temporary file for output
     [hdr_source,vol_source] = niak_read_vol(files_in.source); % read the source
-    vol_resampled = zeros([nx2,ny2,nz2,nt1]); % initialize a resampled space
+    vol_resampled = zeros([nx2,ny2,nz2,nt1-suppress_vol]); % initialize a resampled space
     hdr_source.file_name = file_func_tmp;
     
     for num_t = min(suppress_vol+1,nt1):nt1
@@ -452,7 +452,7 @@ else
         end
         
         [hdr_target,vol_tmp] = niak_read_vol(file_func_tmp2);
-        vol_resampled(:,:,:,num_t) = vol_tmp;
+        vol_resampled(:,:,:,num_t-suppress_vol) = vol_tmp;
         
     end
     clear vol_source
