@@ -18,7 +18,7 @@ function scales_mat = niak_scales2mat(scales,neigh);
 % OUTPUTS:
 %
 % SCALES_MAT           
-%   (array) For each row, SCALES_MAT(I,1) is a scale and SCALES_MAT(I,2) a
+%   (array) For each row, SCALES_MAT(I,2) is a scale and SCALES_MAT(I,1) a
 %   neighbour of this scale. All possible pairs of scales/neighbours are
 %   listed.
 %
@@ -69,8 +69,8 @@ num_p = 0;
 scales_mat = zeros([nb_points 2]);
 for num_s = 1:length(scales)
     for num_g = 1:length(scales2{num_s})
-        scales_mat(num_p+1:num_p+length(scales2{num_s}),1) = scales(num_s);
-        scales_mat(num_p+1:num_p+length(scales2{num_s}),2) = scales2{num_s};        
+        scales_mat(num_p+1:num_p+length(scales2{num_s}),2) = scales(num_s);
+        scales_mat(num_p+1:num_p+length(scales2{num_s}),1) = scales2{num_s};        
     end    
     num_p = num_p+length(scales2{num_s});
 end

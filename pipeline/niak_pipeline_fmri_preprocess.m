@@ -285,7 +285,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
 % operationnelle, Universite de Montreal, 2010.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
 
