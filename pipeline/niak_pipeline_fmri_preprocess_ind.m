@@ -594,6 +594,7 @@ if flag_verbose
 end
 for num_s = 1:nb_session
     session = list_session{num_s};
+    nb_run = length(files_in.fmri.(session));
     for num_r = 1:nb_run
         run = ['run' num2str(num_r)];
         clear opt_tmp files_in_tmp files_out_tmp
@@ -704,15 +705,21 @@ if flag_verbose
     fprintf('smoothing (');
 end
 files_sm = cell([length(files_re) 1]);
-for num_r = 1:length(files_re);
-    run = ['run',num2str(num_r)];
-    clear files_in_tmp files_out_tmp opt_tmp     
-    name_job = ['smooth_',label,'_',run];    
-    files_in_tmp = files_re{num_r};               
-    files_out_tmp = [opt.folder_fmri filesep 'fmri_' label '_' session '_' run ext_f];            
-    opt_tmp = opt.smooth_vol;    
-    pipeline = psom_add_job(pipeline,name_job,'niak_brick_smooth_vol',files_in_tmp,files_out_tmp,opt_tmp);
-    files_sm{num_r} = pipeline.(name_job).files_out;
+num_r = 0;
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    nb_run = length(files_in.fmri.(session));
+    for num_run = 1:nb_run
+        num_r = num_r+1;
+        run = ['run',num2str(num_run)];
+        clear files_in_tmp files_out_tmp opt_tmp     
+        name_job = ['smooth_' label '_' session '_' run];    
+        files_in_tmp = files_re{num_r};               
+        files_out_tmp = [opt.folder_fmri filesep 'fmri_' label '_' session '_' run ext_f];            
+        opt_tmp = opt.smooth_vol;    
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_smooth_vol',files_in_tmp,files_out_tmp,opt_tmp);
+        files_sm{num_r} = pipeline.(name_job).files_out;
+    end
 end
 
 if flag_verbose        

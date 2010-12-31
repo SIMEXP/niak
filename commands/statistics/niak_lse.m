@@ -1,27 +1,34 @@
 function [beta,e] = niak_lse(y,x)
-
-% Least-square estimates of regression coefficients BETA and residuals E in
-% a linear model Y = X*BETA + E
+% Least-square estimates in a linear model Y = X*BETA + E 
 %
 % [BETA,E] = NIAK_LSE(Y,X)
 %
+% _________________________________________________________________________
 % INPUTS:
-% Y                     (2D array size T*N) each column of Y is a time series.
-% X                     (2D array size T*K) each column of X is a time series with
-%                       the same number of time samples as Y.
 %
+% Y
+%   (2D array size T*N) each column of Y are samples of one variable.
+%
+% X
+%   (2D array size T*K) each column of X is a explaining factor with the 
+%   same number of rows as Y.
+%
+% _________________________________________________________________________
 % OUTPUTS:
-% BETA                  (vector size K*N) BETA(k,n) is the estimated 
-%                       coefficient regresion estimate of X(:,k) on Y(:,n),
-%                       using the least-square criterion
-% E                     (2D array, size T*N) residuals of the regression
+% BETA
+%   (vector size K*N) BETA(k,n) is the estimated coefficient regression 
+%   estimate of X(:,k) on Y(:,n), using the least-square criterion.
 %
+% E
+%   (2D array, size T*N) residuals of the regression
+%
+% _________________________________________________________________________
 % COMMENTS
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : Statistics, Normalization, Variance
+% Keywords : Statistics, General Linear Model
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
