@@ -1,18 +1,18 @@
-function ind = niak_sub2ind_3d(siz,subx,suby,subz)
+function ind = niak_sub2ind_2d(siz,subx,suby)
 %
 % _________________________________________________________________________
-% SUMMARY NIAK_SUB2IND_3D
+% SUMMARY NIAK_SUB2IND_2D
 %
-% Convert 3D coordinates into linear indices
+% Convert 2D coordinates into linear indices
 %
 % SYNTAX :
-% IND = NIAK_SUB2IND_3D(SIZ,SUB)
+% IND = NIAK_SUB2IND_2D(SIZ,SUB)
 %
 % _________________________________________________________________________
 % INPUTS :
 %
 % SIZ
-%       (vector 1*3) the size of the 3D array
+%       (vector 1*2) the size of the 2D array
 %
 % SUBX
 %       (vector N*1) SUBX(M) is the X coordinate of the Mth element
@@ -20,15 +20,12 @@ function ind = niak_sub2ind_3d(siz,subx,suby,subz)
 % SUBY
 %       (vector N*1) SUBY(M) is the Y coordinate of the Mth element
 %
-% SUBZ
-%       (vector N*1) SUBZ(M) is the Z coordinate of the Mth element
-%
 % _________________________________________________________________________
 % OUTPUTS :
 %
 % IND
 %       (vector N*1) IND(M) is the linear index corresponding to 
-%       [SUBX(M) SUBY(M) SUBZ(M)]
+%       [SUBX(M) SUBY(M)].
 %
 % _________________________________________________________________________
 % COMMENTS : 
@@ -37,8 +34,8 @@ function ind = niak_sub2ind_3d(siz,subx,suby,subz)
 % because it notably avoids to check that the coordinates are valid (i.e. 
 % within bounds). At least it used to be the case on Matlab 6.5.
 %
-% SUBX can also be a M*3 array. In that case, the first column corresponds
-% to SUBX, the second to SUBY and the third to SUBZ.
+% SUBX can also be a M*2 array. In that case, the first column corresponds
+% to SUBX and the second to SUBY.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -63,7 +60,7 @@ function ind = niak_sub2ind_3d(siz,subx,suby,subz)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 if nargin == 2
-    ind = subx(:,1) + (subx(:,2)-1)*siz(1) + (subx(:,3)-1)*siz(1)*siz(2);
+    ind = subx(:,1) + (subx(:,2)-1)*siz(1);
 else
-    ind = subx + (suby-1)*siz(1) + (subz-1)*siz(1)*siz(2);
+    ind = subx + (suby-1)*siz(1);
 end
