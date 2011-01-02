@@ -84,10 +84,14 @@ fclose(hf);
 
 %% Extracting the labels
 labels_y = sub_csv(cell_tab{1},separator);
+if flag_string    
+    for num_e = 1:length(labels_y)
+        labels_y{num_e} = regexprep(labels_y{num_e},'[''"]','');
+    end
+end
 if flag_trim
     labels_y = strtrim(labels_y);
 end
-
 %% Extracting the numerical data
 nb_col = length(labels_y);
 labels_x = cell([length(cell_tab)-1 1]);
@@ -99,6 +103,9 @@ for num_x = 2:length(cell_tab)
         end
         labels_x{num_x-1} = line_tmp{1};
         for num_y = 2:length(line_tmp)
+            if flag_string
+                line_tmp{num_y} = regexprep(line_tmp{num_y},'[''"]','');                
+            end
             tab(num_x-1,num_y-1) = str2double(line_tmp{num_y});
         end        
     else
@@ -110,17 +117,15 @@ for num_x = 2:length(cell_tab)
         end        
     end
 end
-if flag_trim
-    labels_x = strtrim(labels_x);
-end
 if flag_string
     for num_e = 1:length(labels_x)
         labels_x{num_e} = regexprep(labels_x{num_e},'[''"]','');
-    end
-    for num_e = 1:length(labels_y)
-        labels_y{num_e} = regexprep(labels_y{num_e},'[''"]','');
-    end
+    end    
 end
+if flag_trim
+    labels_x = strtrim(labels_x);
+end
+
 if isempty(labels_y{1})
     labels_y = labels_y(2:end);
 end
