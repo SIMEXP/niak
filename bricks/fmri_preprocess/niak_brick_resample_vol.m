@@ -154,8 +154,8 @@ niak_gb_vars
 
 % Setting up inputs
 gb_name_structure = 'files_in';
-gb_list_fields = {'source','target','transformation'};
-gb_list_defaults = {NaN,NaN,''};
+gb_list_fields    = {'source', 'target' , 'transformation' };
+gb_list_defaults  = {NaN     , NaN      , ''               };
 niak_set_defaults
 
 % Setting up options
@@ -171,16 +171,7 @@ else
 end
     
 %% Generating default ouputs
-[path_f,name_f,ext_f] = fileparts(files_in.source);
-
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in.source);
 
 if isempty(opt.folder_out)
     folder_write = path_f;
@@ -212,24 +203,26 @@ end
 
 folder_tmp = niak_path_tmp('_res');
 
-[path_t,name_t,ext_t] = niak_fileparts(files_in.transformation);
-
-if strcmp(ext_t,'.mat')
-    if flag_verbose
-        fprintf('\n Converting transformation %s into XFM format ...\n',files_in.transformation);
-    end
+if ~isempty(files_in.transformation)
+    [path_t,name_t,ext_t] = niak_fileparts(files_in.transformation);
     
-    data = load(files_in.transformation);
-    transf = data.(transf_name);
-    nb_transf = size(transf,3);
-    file_transf = cell([nb_transf 1]);
-    for num_t = 1:nb_transf        
-        file_transf{num_t} = [folder_tmp 'tranf_num' num2str(num_t) '.xfm'];        
-        niak_write_transf(transf(:,:,num_t),file_transf{num_t});
-    end
-    files_in.transformation = file_transf;
-end
+    if strcmp(ext_t,'.mat')
+        if flag_verbose
+            fprintf('\n Converting transformation %s into XFM format ...\n',files_in.transformation);
+        end
         
+        data = load(files_in.transformation);
+        transf = data.(transf_name);
+        nb_transf = size(transf,3);
+        file_transf = cell([nb_transf 1]);
+        for num_t = 1:nb_transf
+            file_transf{num_t} = [folder_tmp 'tranf_num' num2str(num_t) '.xfm'];
+            niak_write_transf(transf(:,:,num_t),file_transf{num_t});
+        end
+        files_in.transformation = file_transf;
+    end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Reading the source space information %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

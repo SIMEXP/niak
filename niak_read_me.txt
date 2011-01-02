@@ -1,4 +1,4 @@
-﻿= Neuroimaging Analysis Kit (NIAK) v0.6.4 =
+﻿= Neuroimaging Analysis Kit (NIAK) v0.6.4.1 =
 
 NIAK is a library of modules and pipelines for fMRI processing with Octave or Matlab(r) that can run in parallel either locally or in a supercomputing environment. Linux OS and MINC file format are supported. Developers interested in using NIAK as a development library or to contribute to the project can consult the [http://code.google.com/p/niak/ NIAK google code] webpage. The wiki http://www.nitrc.org/plugins/mwiki/index.php/niak:MainPage is a detailed user guide with the following resources : 
 

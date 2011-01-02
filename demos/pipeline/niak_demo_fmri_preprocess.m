@@ -132,7 +132,7 @@ switch format_demo
         
         files_in.subject1.anat             = cat(2,path_demo,filesep,'anat_subject1.mnc');        
         files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
-        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc');       
+        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc');          
         
         files_in.subject2.anat             = cat(2,path_demo,filesep,'anat_subject2.mnc');        
         files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
