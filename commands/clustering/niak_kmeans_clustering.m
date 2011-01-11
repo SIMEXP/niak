@@ -181,6 +181,23 @@ else
                 gi = init';
                 clear init
 
+            case 'hierarchical'
+
+                if flag_verbose
+                    fprintf('Initialization using hierarchical clustering\n')
+                end
+                dist_mat = niak_build_distance(data');
+                opt_h.nb_classes = nb_classes;
+                opt_h.flag_verbose = flag_verbose;
+                [hier,order] = niak_hierarchical_clustering(dist_mat);
+                clear dist_mat
+                opt_t.thresh = nb_classes;
+                part_init = niak_threshold_hierarchy(hier,opt_t);
+                gi = zeros([T nb_classes]);
+                for num_i = 1:nb_classes
+                    gi(:,num_i) = mean(data(part_init==num_i,:),1);
+                end
+
             otherwise
 
                 error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',type_init);
