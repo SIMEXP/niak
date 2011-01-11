@@ -193,9 +193,9 @@ else
                 clear dist_mat
                 opt_t.thresh = nb_classes;
                 part_init = niak_threshold_hierarchy(hier,opt_t);
-                gi = zeros([T nb_classes]);
+                gi = zeros([nb_classes T]);
                 for num_i = 1:nb_classes
-                    gi(:,num_i) = mean(data(part_init==num_i,:),1);
+                    gi(num_i,:) = mean(data(part_init==num_i,:),1);
                 end
 
             otherwise
@@ -240,6 +240,14 @@ else
                             ind_dead = ind_dead(1);
                             [val_max,ind_max] = max(A_min);
                             gi(ind_dead,:) = data(ind_max(1),:);
+
+                        case 'split'
+                            size_part = niak_build_size_roi(part(:,part_curr));
+                            [val,order] = sort(size_part);
+                            list_ind = find(val==0);
+                            list_ind = list_ind(:)';
+                            for num_i = ind
+                            end
                     end
                 end
             end
@@ -292,8 +300,8 @@ function A = attraction(data,gi,p);
 nb_classes = size(gi,1);
 N = size(data,1);
 A = zeros([length(p) nb_classes]);
-for i = 1:nb_classes
-    A(:,i) = p.*sum((data-ones([N,1])*gi(i,:)).^2,2);
+for num_i = 1:nb_classes
+    A(:,num_i) = p.*sum((data-ones([N,1])*gi(num_i,:)).^2,2);
 end
 return
 
