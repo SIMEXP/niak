@@ -288,7 +288,11 @@ gi = zeros([nb_classes T]);
 
 for i = 1:nb_classes;
     mask_i = (part == i);
-    ind = data(mask_i,:);
-    g = (1/sum(p(mask_i)))*sum(ind.*(p(mask_i)*ones([1 T])),1);
-    gi(i,:) = g;
+    if ~any(mask_i)
+        gi(i,:) = 0;
+    else
+        ind = data(mask_i,:);
+        g = (1/sum(p(mask_i)))*sum(ind.*(p(mask_i)*ones([1 T])),1);
+        gi(i,:) = g;
+    end
 end
