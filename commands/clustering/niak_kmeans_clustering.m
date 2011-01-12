@@ -1,4 +1,4 @@
-function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
+function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 % k-means clustering.
 %
 % SYNTAX :
@@ -13,6 +13,13 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 % OPT
 %       (structure) with the following fields (absent fields will be
 %       assigned a default value):
+%
+%       FLAG_BISECTING
+%           (boolean, default false) if FLAG_BISECTING is true, the k-means
+%           will follow a bisecting approach. The data is first partitioned
+%           in two clusters with k-means, then the biggest cluster is
+%           further partitioned in two subclusters, etc until NB_CLASSES
+%           clusters have been created.
 %
 %       NB_CLASSES
 %           (integer) number of classes
@@ -113,8 +120,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt);
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields    = {'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
-gb_list_defaults  = {[]     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
+gb_list_fields    = {'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
+gb_list_defaults  = {false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
 niak_set_defaults
 
 if nb_iter > 1
@@ -135,7 +142,29 @@ if nb_iter > 1
 
 else
     
-    if flag_mex
+    if (flag_bisecting)
+        part = ones([1 size(data,2)]);        
+        size_part = zeros([size(data,2) 1]);
+        size_part(1) = size(data,2);
+        opt.nb_classes = 2;
+        opt.flag_bisecting = false;
+        for num_i = 1:(nb_classes-1)
+            [val,ind] = max(size_part);
+            part_tmp = niak_kmeans_clustering(data(:,part==ind),opt);
+            part_tmp2 = part_tmp;
+            part_tmp2(part_tmp==1) = ind;
+            part_tmp2(part_tmp==2) = 1+num_i;
+            size_part(ind) = sum(part_tmp==1);
+            size_part(1+num_i) = sum(part_tmp==2);
+            part(part==ind) = part_tmp2;            
+        end        
+        gi = zeros([nb_classes size(data,1)]);
+        for num_i = 1:nb_classes
+            gi(num_i,:) = mean(data(:,part==num_i),2);
+        end        
+    end
+        
+    if (flag_mex)&&(~flag_bisecting)
         [gi,part,tmp] = Kmeans(data,opt.nb_classes,0);
         part = part(:);
         gi = gi';
@@ -145,7 +174,7 @@ else
     if isempty(p)
         p = ones([N 1]);
     end
-    if ~flag_mex
+    if ~flag_mex&&(~flag_bisecting)
         %% Initialization
         part = zeros([N nb_tests_cycle]);
         changement = 1;
