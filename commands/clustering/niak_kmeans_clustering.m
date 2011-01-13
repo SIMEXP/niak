@@ -148,7 +148,18 @@ else
         size_part(1) = size(data,2);
         opt.nb_classes = 2;
         opt.flag_bisecting = false;
+        opt.flag_verbose = false;
+	if flag_verbose
+	    fprintf('     Percentage done : 0');
+	    perc_verb = 0.05;
+	end
+
         for num_i = 1:(nb_classes-1)
+	    if flag_verbose
+		if floor(perc_verb^(-1)*num_i/(nb_classes-1))>floor(perc_verb^(-1)*(num_i-1)/(nb_classes-1))
+	            fprintf(' %1.0f',100*(num_i/(nb_classes-1)));
+        	end
+	    end
             [val,ind] = max(size_part);
             part_tmp = niak_kmeans_clustering(data(:,part==ind),opt);
             part_tmp2 = part_tmp;
@@ -158,9 +169,15 @@ else
             size_part(1+num_i) = sum(part_tmp==2);
             part(part==ind) = part_tmp2;            
         end        
+        if flag_verbose
+            fprintf(' Done ! \n');
+	end
+
         gi = zeros([nb_classes size(data,1)]);
         for num_i = 1:nb_classes
-            gi(num_i,:) = mean(data(:,part==num_i),2);
+            if any(part==num_i)
+            	gi(num_i,:) = mean(data(:,part==num_i),2);
+            end
         end        
     end
         
