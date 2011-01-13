@@ -143,44 +143,49 @@ if nb_iter > 1
 else
     
     if (flag_bisecting)
-        part = ones([1 size(data,2)]);        
+        part = ones([1 size(data,2)]);
         size_part = zeros([size(data,2) 1]);
         size_part(1) = size(data,2);
         opt.nb_classes = 2;
         opt.flag_bisecting = false;
         opt.flag_verbose = false;
-	if flag_verbose
-	    fprintf('     Percentage done : 0');
-	    perc_verb = 0.05;
-	end
+        if flag_verbose
+            fprintf('     Percentage done : 0');
+            perc_verb = 0.05;
+        end
 
         for num_i = 1:(nb_classes-1)
-	    if flag_verbose
-		if floor(perc_verb^(-1)*num_i/(nb_classes-1))>floor(perc_verb^(-1)*(num_i-1)/(nb_classes-1))
-	            fprintf(' %1.0f',100*(num_i/(nb_classes-1)));
-        	end
-	    end
-            [val,ind] = max(size_part);
-            part_tmp = niak_kmeans_clustering(data(:,part==ind),opt);
+            if flag_verbose
+                if floor(perc_verb^(-1)*num_i/(nb_classes-1))>floor(perc_verb^(-1)*(num_i-1)/(nb_classes-1))
+                    fprintf(' %1.0f',100*(num_i/(nb_classes-1)));
+                end
+            end
+            [val,order] = sort(size_part);
+            num_t = length(order);
+            part_tmp = ones(size(part));
+            while length(unique(part_tmp))==1
+                part_tmp = niak_kmeans_clustering(data(:,part==order(num_t)),opt);
+                num_t = num_t-1;
+            end
             part_tmp2 = part_tmp;
-            part_tmp2(part_tmp==1) = ind;
+            part_tmp2(part_tmp==1) = order(num_t+1);
             part_tmp2(part_tmp==2) = 1+num_i;
-            size_part(ind) = sum(part_tmp==1);
+            size_part(order(num_t+1)) = sum(part_tmp==1);
             size_part(1+num_i) = sum(part_tmp==2);
-            part(part==ind) = part_tmp2;            
-        end        
+            part(part==order(num_t+1)) = part_tmp2;
+        end
         if flag_verbose
             fprintf(' Done ! \n');
-	end
+        end
 
         gi = zeros([nb_classes size(data,1)]);
         for num_i = 1:nb_classes
             if any(part==num_i)
-            	gi(num_i,:) = mean(data(:,part==num_i),2);
+                gi(num_i,:) = mean(data(:,part==num_i),2);
             end
-        end        
+        end
     end
-        
+
     if (flag_mex)&&(~flag_bisecting)
         [gi,part,tmp] = Kmeans(data,opt.nb_classes,0);
         part = part(:);
@@ -292,13 +297,22 @@ else
                             [val,order] = sort(size_part);
                             list_ind = find(val==0);
                             list_ind = list_ind(:)';
-                            for num_i = ind
+                            nb_rep = 0;
+                            for num_i = list_ind
+                                ind_rep = find(part(:,part_curr)==order(end-nb_rep));
+                                ind_rep = indrep(randperm(length(ind_rep)));
+                                gi(num_i,:) = mean(ind_rep(1:floor(length(ind_rep)),:),1);
+                                gi(end-nb_rep,:) = mean(ind_rep(ceil(length(ind_rep)):end,:),1);
+                                nb_rep = nb_rep+1;
                             end
                     end
+                    changement = true;
+                else
+                    changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
                 end
+            else
+                changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
             end
-            %% Check we're not in a cycle
-            changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
             N_iter = N_iter + 1;
 
         end
@@ -307,10 +321,9 @@ else
             if N_iter < nb_iter_max
                 fprintf('\n')
             else
-                fprintf('The maximal number of iteration was reached.\n')
+                fprintf('The maximal number of iteration was reached.\n')		
             end
         end
-        %warning on
 
         % save the final results
         part = part(:,part_curr);
