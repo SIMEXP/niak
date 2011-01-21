@@ -56,5 +56,6 @@ N = round((1+sqrt(1+8*M))/2);
 
 mat = zeros([N N]);
 mat(tril(true(N),-1)) = vec;
-mat(triu(true(N),1))  = vec;
+mat = mat';
+mat(tril(true(N),-1)) = vec;
 mat(eye(N)==1) = 1;
