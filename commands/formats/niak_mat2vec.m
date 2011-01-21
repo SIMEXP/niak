@@ -50,9 +50,4 @@ function vec = niak_mat2vec(mat);
 % THE SOFTWARE.
 
 N = size(mat,1);
-
-mask_l = tril(ones(N));
-mask_l(eye(N)==1) = 0;
-mask_l = mask_l>0;
-
-vec = mat(mask_l);
+vec = mat(tril(true(N),-1));

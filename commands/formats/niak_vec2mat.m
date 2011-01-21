@@ -55,11 +55,6 @@ M = length(vec);
 N = round((1+sqrt(1+8*M))/2);
 
 mat = zeros([N N]);
-
-mask_l = tril(ones(N));
-mask_l(eye(N)==1) = 0;
-mask_l = mask_l>0;
-
-mat(mask_l) = vec;
-mat = mat+mat';
+mat(tril(true(N),-1)) = vec;
+mat(triu(true(N),1))  = vec;
 mat(eye(N)==1) = 1;

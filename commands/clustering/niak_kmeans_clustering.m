@@ -49,6 +49,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 %           'none' let them be empty.
 %           'singleton' iteratively replace every empty cluster by the one
 %           singleton which is further away from its centroid.
+%           'split' iteratively splits the largest cluster in two randomly
+%           until the number of clusters is back to the one specified.
 %       
 %       NB_ITER
 %           (integer, default 1) number of iterations of the kmeans (the 
@@ -119,17 +121,16 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 % THE SOFTWARE.
 
 %% Options
-gb_name_structure = 'opt';
-gb_list_fields    = {'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
-gb_list_defaults  = {false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
-niak_set_defaults
+list_fields    = {'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
+list_defaults  = {false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
+opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
-if nb_iter > 1
+if opt.nb_iter > 1
     i_inter = 0;
     opt_kmeans = opt;
     opt_kmeans.nb_iter = 1;
 
-    for num_i = 1:nb_iter
+    for num_i = 1:opt.nb_iter
 
         [part_tmp,gi_tmp,i_intra_tmp,i_inter_tmp] = niak_kmeans_clustering(data,opt_kmeans);
         if (i_inter_tmp > i_inter)|~exist('part','var')
@@ -142,29 +143,30 @@ if nb_iter > 1
 
 else
     
-    if (flag_bisecting)
+    if (opt.flag_bisecting)
         part = ones([1 size(data,2)]);
         size_part = zeros([size(data,2) 1]);
         size_part(1) = size(data,2);
-        opt.nb_classes = 2;
-        opt.flag_bisecting = false;
-        opt.flag_verbose = false;
-        if flag_verbose
+        opt_b                = opt;
+        opt_b.nb_classes     = 2;
+        opt_b.flag_bisecting = false;
+        opt_b.flag_verbose   = false;
+        if opt.flag_verbose
             fprintf('     Percentage done : 0');
             perc_verb = 0.05;
         end
 
-        for num_i = 1:(nb_classes-1)
-            if flag_verbose
-                if floor(perc_verb^(-1)*num_i/(nb_classes-1))>floor(perc_verb^(-1)*(num_i-1)/(nb_classes-1))
-                    fprintf(' %1.0f',100*(num_i/(nb_classes-1)));
+        for num_i = 1:(opt.nb_classes-1)
+            if opt.flag_verbose
+                if floor(perc_verb^(-1)*num_i/(opt.nb_classes-1))>floor(perc_verb^(-1)*(num_i-1)/(opt.nb_classes-1))
+                    fprintf(' %1.0f',100*(num_i/(opt.nb_classes-1)));
                 end
             end
             [val,order] = sort(size_part);
             num_t = length(order);
             part_tmp = ones(size(part));
             while length(unique(part_tmp))==1
-                part_tmp = niak_kmeans_clustering(data(:,part==order(num_t)),opt);
+                part_tmp = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b);
                 num_t = num_t-1;
             end
             part_tmp2 = part_tmp;
@@ -174,120 +176,120 @@ else
             size_part(1+num_i) = sum(part_tmp==2);
             part(part==order(num_t+1)) = part_tmp2;
         end
-        if flag_verbose
+        if opt.flag_verbose
             fprintf(' Done ! \n');
         end
 
-        gi = zeros([nb_classes size(data,1)]);
-        for num_i = 1:nb_classes
+        gi = zeros([opt.nb_classes size(data,1)]);
+        for num_i = 1:opt.nb_classes
             if any(part==num_i)
                 gi(num_i,:) = mean(data(:,part==num_i),2);
             end
         end
     end
 
-    if (flag_mex)&&(~flag_bisecting)
+    if (opt.flag_mex)&&(~opt.flag_bisecting)
         [gi,part,tmp] = Kmeans(data,opt.nb_classes,0);
         part = part(:);
         gi = gi';
     end
     data = data';    
     [N,T] = size(data);
-    if isempty(p)
-        p = ones([N 1]);
+    if isempty(opt.p)
+        opt.p = ones([N 1]);
     end
-    if ~flag_mex&&(~flag_bisecting)
+    if ~opt.flag_mex&&(~opt.flag_bisecting)
         %% Initialization
-        part = zeros([N nb_tests_cycle]);
+        part = zeros([N opt.nb_tests_cycle]);
         changement = 1;
         N_iter = 1;
         part_curr = 1;
 
         %% Initialization of cluster centers
-        gi = zeros([nb_classes T]);
+        gi = zeros([opt.nb_classes T]);
 
-        switch type_init
+        switch opt.type_init
 
             case 'random_point'
 
                 %% Initialization using random points
                 perm_init = randperm(N);
-                gi = data(perm_init(1:nb_classes),:);
+                gi = data(perm_init(1:opt.nb_classes),:);
 
             case 'random_partition'
 
                 %% Initialization using random partition
-                part(:,part_curr) = ceil(nb_classes*rand([N 1]));
-                gi = centre_gravite(data,part(:,1),p,nb_classes);
+                part(:,part_curr) = ceil(opt.nb_classes*rand([N 1]));
+                gi = centre_gravite(data,part(:,1),opt.p,opt.nb_classes);
 
             case 'pca'
 
                 %% Initialization using eigen vectors
                 [eig_val,eig_vec] = niak_pca(data);
-                gi = eig_vec(:,1:nb_classes)';
+                gi = eig_vec(:,1:opt.nb_classes)';
 
             case 'user-specified'
 
                 %% Initialization used the user-specified centroids
-                gi = init';
+                gi = opt.init';
                 clear init
 
             case 'hierarchical'
 
-                if flag_verbose
+                if opt.flag_verbose
                     fprintf('Initialization using hierarchical clustering\n')
                 end
                 dist_mat = niak_build_distance(data');
-                opt_h.nb_classes = nb_classes;
-                opt_h.flag_verbose = flag_verbose;
+                opt_h.nb_classes = opt.nb_classes;
+                opt_h.flag_verbose = opt.flag_verbose;
                 [hier,order] = niak_hierarchical_clustering(dist_mat);
                 clear dist_mat
-                opt_t.thresh = nb_classes;
+                opt_t.thresh = opt.nb_classes;
                 part_init = niak_threshold_hierarchy(hier,opt_t);
-                gi = zeros([nb_classes T]);
-                for num_i = 1:nb_classes
+                gi = zeros([opt.nb_classes T]);
+                for num_i = 1:opt.nb_classes
                     gi(num_i,:) = mean(data(part_init==num_i,:),1);
                 end
 
             otherwise
 
-                error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',type_init);
+                error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',opt.type_init);
         end
 
-        if flag_verbose
+        if opt.flag_verbose
             fprintf('Number of displacements : ');
         end
 
-        while ( changement == 1 ) && ( N_iter < nb_iter_max )
+        while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Build the partition matching the centers %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            A = attraction(data,gi,p);
+            A = attraction(data,gi,opt.p);
 
             %% look for maximal attraction points
             [A_min,part_bis] = min(A,[],2);
             deplacements = sum(part(:,part_curr)~=part_bis);
-            if flag_verbose
+            if opt.flag_verbose
                 fprintf(' %d -',deplacements);
             end
 
             %% Update partition and gravity center
-            if part_curr == nb_tests_cycle
+            if part_curr == opt.nb_tests_cycle
                 part_curr = 1;
             else
                 part_curr = part_curr+1;
             end
             part(:,part_curr) = part_bis;
-            gi = centre_gravite(data,part_bis,p,nb_classes);
+            gi = centre_gravite(data,part_bis,opt.p,opt.nb_classes);
 
             %% Deal with empty clusters
-            if ~strcmp(type_death,'none')
-                if length(unique(part(:,part_curr)))~=nb_classes
-                    switch type_death
+            if ~strcmp(opt.type_death,'none')
+                if length(unique(part(:,part_curr)))~=opt.nb_classes
+                    switch opt.type_death
 
                         case 'singleton'
-                            ind_dead = find(~ismember(1:nb_classes,part(:,part_curr)));
+                            ind_dead = find(~ismember(1:opt.nb_classes,part(:,part_curr)));
                             ind_dead = ind_dead(1);
                             [val_max,ind_max] = max(A_min);
                             gi(ind_dead,:) = data(ind_max(1),:);
@@ -308,17 +310,17 @@ else
                     end
                     changement = true;
                 else
-                    changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
+                    changement = min(max(abs(part(:,(1:opt.nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 opt.nb_tests_cycle-1])),[],1))>0;
                 end
             else
-                changement = min(max(abs(part(:,(1:nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 nb_tests_cycle-1])),[],1))>0;
+                changement = min(max(abs(part(:,(1:opt.nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 opt.nb_tests_cycle-1])),[],1))>0;
             end
             N_iter = N_iter + 1;
 
         end
 
-        if flag_verbose
-            if N_iter < nb_iter_max
+        if opt.flag_verbose
+            if N_iter < opt.nb_iter_max
                 fprintf('\n')
             else
                 fprintf('The maximal number of iteration was reached.\n')		
@@ -327,25 +329,27 @@ else
 
         % save the final results
         part = part(:,part_curr);
-        gi = centre_gravite(data,part,p,nb_classes);
+        gi = centre_gravite(data,part,opt.p,opt.nb_classes);
     end
-    % Final inter-class inertia
-    p_classe = zeros([nb_classes 1]);
-    for i = 1:nb_classes
-        p_classe(i) = sum(p(part==i));
+    if nargout>2
+        % Final inter-class inertia
+        p_classe = zeros([opt.nb_classes 1]);
+        for i = 1:opt.nb_classes
+            p_classe(i) = sum(opt.p(part==i));
+        end
+        mask_OK = p_classe~=0;
+        gi_OK = gi(mask_OK,:);
+        p_classe_OK = p_classe(mask_OK);
+        g = (1/sum(p_classe_OK))*sum(gi_OK.*(p_classe_OK*ones([1,T])),1);
+        i_inter = sum(sum(p_classe_OK.*sum((gi_OK-(ones([sum(mask_OK) 1])*g)).^2,2)))/sum(p_classe_OK);
+        
+        % Final intra-class inertia
+        i_intra = zeros([opt.nb_classes 1]);
+        for num_c = 1:opt.nb_classes
+            i_intra(num_c) = sum(opt.p(part==num_c).*sum((data(part==num_c,:)-(ones([sum((part==num_c)) 1])*gi(num_c,:))).^2,2));
+        end
+        i_intra = i_intra/sum(p_classe);
     end
-    mask_OK = p_classe~=0;
-    gi_OK = gi(mask_OK,:);
-    p_classe_OK = p_classe(mask_OK);
-    g = (1/sum(p_classe_OK))*sum(gi_OK.*(p_classe_OK*ones([1,T])),1);
-    i_inter = sum(sum(p_classe_OK.*sum((gi_OK-(ones([sum(mask_OK) 1])*g)).^2,2)))/sum(p_classe_OK);
-
-    % Final intra-class inertia
-    i_intra = zeros([nb_classes 1]);
-    for num_c = 1:nb_classes
-        i_intra(num_c) = sum(p(part==num_c).*sum((data(part==num_c,:)-(ones([sum((part==num_c)) 1])*gi(num_c,:))).^2,2));
-    end
-    i_intra = i_intra/sum(p_classe);
 
 end
 
