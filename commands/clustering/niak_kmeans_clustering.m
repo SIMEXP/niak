@@ -150,8 +150,10 @@ else
     
     if (opt.flag_bisecting)
         part = ones([1 size(data,2)]);
-        size_part = zeros([size(data,2) 1]);
-        size_part(1) = size(data,2);
+        %size_part = zeros([size(data,2) 1]);
+        se = zeros([size(data,2) 1]);
+        %size_part(1) = size(data,2);
+        se(1) = Inf;
         opt_b                = opt;
         opt_b.nb_classes     = 2;
         opt_b.flag_bisecting = false;
@@ -167,12 +169,13 @@ else
                     fprintf(' %1.0f',100*(num_i/(opt.nb_classes-1)));
                 end
             end
-            [val,order] = sort(size_part);
+            %[val,order] = sort(size_part);
+            [val,order] = sort(se);
             num_t = length(order);
             part_tmp = ones(size(part));
             nb_attempts = 1;
             while (length(unique(part_tmp))==1)
-                part_tmp = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b);
+                [part_tmp,gi_tmp] = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b);
                 if nb_attempts <= opt.nb_attempts_max
                     nb_attempts = nb_attempts + 1;
                 else
@@ -181,27 +184,32 @@ else
                     end
                 end
             end
+            se_tmp = sub_se(data(:,part==order(num_t)),gi_tmp,part_tmp);
             part_tmp2 = part_tmp;
             part_tmp2(part_tmp==1) = order(num_t);
             part_tmp2(part_tmp==2) = 1+num_i;
-            size_part(order(num_t)) = sum(part_tmp==1);
-            size_part(1+num_i) = sum(part_tmp==2);
+            %size_part(order(num_t)) = sum(part_tmp==1);
+            se(order(num_t)) = se_tmp(1);
+            %size_part(1+num_i) = sum(part_tmp==2);
+            se(1+num_i) = se_tmp(2);
             part(part==order(num_t)) = part_tmp2;
         end
         if opt.flag_verbose
             fprintf(' Done ! \n');
         end
-
-        gi = zeros([opt.nb_classes size(data,1)]);
-        for num_i = 1:opt.nb_classes
-            if any(part==num_i)
-                gi(num_i,:) = mean(data(:,part==num_i),2);
+        
+        if nargout>1
+            gi = zeros([opt.nb_classes size(data,1)]);
+            for num_i = 1:opt.nb_classes
+                if any(part==num_i)
+                    gi(num_i,:) = mean(data(:,part==num_i),2);
+                end
             end
         end
     end
 
     if (opt.flag_mex)&&(~opt.flag_bisecting)
-        [gi,part,tmp] = Kmeans(data,opt.nb_classes,0);
+        [gi,part,mse] = Kmeans(data,opt.nb_classes,0);
         part = part(:);
         gi = gi';
     end
@@ -362,7 +370,9 @@ else
         end
         i_intra = i_intra/sum(p_classe);
     end
-
+    if nargout>1
+        gi = gi';
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -394,5 +404,15 @@ for i = 1:nb_classes;
         ind = data(mask_i,:);
         g = (1/sum(p(mask_i)))*sum(ind.*(p(mask_i)*ones([1 T])),1);
         gi(i,:) = g;
+    end
+end
+
+%% Squared error
+function se = sub_se(tseries,gi,part)
+
+se = zeros([max(part) 1]);
+for num_p = 1:max(part)
+    if any(part==num_p)
+        se(num_p) = sum(sum((tseries(:,part==num_p)-repmat(gi(:,num_p),[1 sum(part==num_p)])).^2));
     end
 end
