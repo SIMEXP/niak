@@ -60,6 +60,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 %           (integer, default 100) Maximal number of iterations of the
 %           k-means algorithm.
 %
+%       NB_ATTEMPTS_MAX
+%           (integer, default 5) In bisecting mode, the number of times the
+%           algorithm will try to bisect a cluster before moving on to the
+%           next one on the list (in decreasing size order).
+%
 %       NB_TESTS_CYCLE
 %           (integer, default 5) the number of partitions kept in memory to
 %           check for cycles.
@@ -121,8 +126,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 % THE SOFTWARE.
 
 %% Options
-list_fields    = {'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
-list_defaults  = {false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
+list_fields    = {'nb_attempts_max' , 'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
+list_defaults  = {5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if opt.nb_iter > 1
@@ -165,16 +170,23 @@ else
             [val,order] = sort(size_part);
             num_t = length(order);
             part_tmp = ones(size(part));
-            while length(unique(part_tmp))==1
+            nb_attempts = 1;
+            while (length(unique(part_tmp))==1)
                 part_tmp = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b);
-                num_t = num_t-1;
+                if nb_attempts <= opt.nb_attempts_max
+                    nb_attempts = nb_attempts + 1;
+                else
+                    if (length(unique(part_tmp))==1)
+                        num_t = num_t-1;
+                    end
+                end
             end
             part_tmp2 = part_tmp;
-            part_tmp2(part_tmp==1) = order(num_t+1);
+            part_tmp2(part_tmp==1) = order(num_t);
             part_tmp2(part_tmp==2) = 1+num_i;
-            size_part(order(num_t+1)) = sum(part_tmp==1);
+            size_part(order(num_t)) = sum(part_tmp==1);
             size_part(1+num_i) = sum(part_tmp==2);
-            part(part==order(num_t+1)) = part_tmp2;
+            part(part==order(num_t)) = part_tmp2;
         end
         if opt.flag_verbose
             fprintf(' Done ! \n');
