@@ -1,4 +1,4 @@
-function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
+function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 % k-means clustering.
 %
 % SYNTAX :
@@ -17,9 +17,9 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 %       FLAG_BISECTING
 %           (boolean, default false) if FLAG_BISECTING is true, the k-means
 %           will follow a bisecting approach. The data is first partitioned
-%           in two clusters with k-means, then the biggest cluster is
-%           further partitioned in two subclusters, etc until NB_CLASSES
-%           clusters have been created.
+%           in two clusters with k-means, then the cluster with largest 
+%           sum-of-square error is further partitioned in two subclusters, 
+%           etc until NB_CLASSES clusters have been created.
 %
 %       NB_CLASSES
 %           (integer) number of classes
@@ -63,7 +63,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 %       NB_ATTEMPTS_MAX
 %           (integer, default 5) In bisecting mode, the number of times the
 %           algorithm will try to bisect a cluster before moving on to the
-%           next one on the list (in decreasing size order).
+%           next one on the list.
 %
 %       NB_TESTS_CYCLE
 %           (integer, default 5) the number of partitions kept in memory to
@@ -99,11 +99,15 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 % The mex implementation requires to install and compile the mex in the "sparse
 % coding neural gas" toolbox : 
 % http://www.inb.uni-luebeck.de/tools-demos/scng
-% In this mode, OPT.P, OPT.TYPE_DEATH, OPT.TYPE_INIT and OPT.INIT are ignored. The 
-% iteration of the algorithm will still work.
+% In this mode, OPT.P, OPT.TYPE_DEATH, OPT.TYPE_INIT and OPT.INIT are 
+% ignored. The iteration and bisecting version of the algorithm will still 
+% work.
 %
-% Copyright (c) partierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
+% Centre de recherche de l'institut de Gériatrie de Montréal
+% Département d'informatique et de recherche opérationnelle
+% Université de Montréal, 2010-2011
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : kmeans, clustering
 
@@ -126,9 +130,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,part);
 % THE SOFTWARE.
 
 %% Options
-list_fields    = {'nb_attempts_max' , 'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
-list_defaults  = {5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
-opt = psom_struct_defaults(opt,list_fields,list_defaults);
+if (nargin < 3)||(flag_opt)
+    list_fields    = {'nb_attempts_max' , 'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
+    list_defaults  = {5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 100           , 5                , false      };
+    opt = psom_struct_defaults(opt,list_fields,list_defaults);
+end
 
 if opt.nb_iter > 1
     i_inter = 0;
@@ -137,7 +143,7 @@ if opt.nb_iter > 1
 
     for num_i = 1:opt.nb_iter
 
-        [part_tmp,gi_tmp,i_intra_tmp,i_inter_tmp] = niak_kmeans_clustering(data,opt_kmeans);
+        [part_tmp,gi_tmp,i_intra_tmp,i_inter_tmp] = niak_kmeans_clustering(data,opt_kmeans,false);
         if (i_inter_tmp > i_inter)|~exist('part','var')
             part = part_tmp;
             i_inter = i_inter_tmp;
@@ -149,10 +155,9 @@ if opt.nb_iter > 1
 else
     
     if (opt.flag_bisecting)
-        part = ones([1 size(data,2)]);
-        %size_part = zeros([size(data,2) 1]);
-        se = zeros([size(data,2) 1]);
-        %size_part(1) = size(data,2);
+        part = ones([1 size(data,2)]);        
+        se_data = sum(data.^2,1);
+        se = zeros([size(data,2) 1]);        
         se(1) = Inf;
         opt_b                = opt;
         opt_b.nb_classes     = 2;
@@ -168,29 +173,31 @@ else
                 if floor(perc_verb^(-1)*num_i/(opt.nb_classes-1))>floor(perc_verb^(-1)*(num_i-1)/(opt.nb_classes-1))
                     fprintf(' %1.0f',100*(num_i/(opt.nb_classes-1)));
                 end
-            end
-            %[val,order] = sort(size_part);
+            end            
             [val,order] = sort(se);
             num_t = length(order);
             part_tmp = ones(size(part));
             nb_attempts = 1;
-            while (length(unique(part_tmp))==1)
-                [part_tmp,gi_tmp] = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b);
-                if nb_attempts <= opt.nb_attempts_max
-                    nb_attempts = nb_attempts + 1;
-                else
-                    if (length(unique(part_tmp))==1)
+            flag_bisect = false;
+            while (~flag_bisect)&&(num_t>0)
+                [part_tmp,gi_tmp] = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b,false);
+                flag_bisect = (any(part_tmp==1)&&any(part_tmp==2));
+                if (~flag_bisect)
+                    if nb_attempts <= opt.nb_attempts_max
+                        nb_attempts = nb_attempts + 1;
+                    else                    
                         num_t = num_t-1;
                     end
                 end
             end
-            se_tmp = sub_se(data(:,part==order(num_t)),gi_tmp,part_tmp);
+            if num_t == 0
+                num_t = 1;
+            end
+            se_tmp = sub_se(se_data,gi_tmp,part_tmp);
             part_tmp2 = part_tmp;
             part_tmp2(part_tmp==1) = order(num_t);
-            part_tmp2(part_tmp==2) = 1+num_i;
-            %size_part(order(num_t)) = sum(part_tmp==1);
-            se(order(num_t)) = se_tmp(1);
-            %size_part(1+num_i) = sum(part_tmp==2);
+            part_tmp2(part_tmp==2) = 1+num_i;            
+            se(order(num_t)) = se_tmp(1);            
             se(1+num_i) = se_tmp(2);
             part(part==order(num_t)) = part_tmp2;
         end
@@ -408,11 +415,9 @@ for i = 1:nb_classes;
 end
 
 %% Squared error
-function se = sub_se(tseries,gi,part)
+function se = sub_se(se_data,gi,part)
 
-se = zeros([max(part) 1]);
-for num_p = 1:max(part)
-    if any(part==num_p)
-        se(num_p) = sum(sum((tseries(:,part==num_p)-repmat(gi(:,num_p),[1 sum(part==num_p)])).^2));
-    end
+se = zeros([2 1]);
+for num_p = 1:2
+    se(num_p) = sum(se_data(part==num_p))-sum(part==num_p)*sum(gi(:,num_p).^2);
 end
