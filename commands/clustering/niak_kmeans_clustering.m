@@ -154,9 +154,13 @@ if opt.nb_iter > 1
 
 else
     
+    if isempty(opt.p)
+        opt.p = ones([size(data,2) 1]);
+    end
+    
     if (opt.flag_bisecting)
         part = ones([1 size(data,2)]);        
-        se_data = sum(data.^2,1);
+        se_data = sum(repmat(opt.p',[size(data,1) 1]).*data.^2,1);
         se = zeros([size(data,2) 1]);        
         se(1) = Inf;
         opt_b                = opt;
@@ -180,6 +184,7 @@ else
             nb_attempts = 1;
             flag_bisect = false;
             while (~flag_bisect)&&(num_t>0)
+                opt_b.p = opt.p(part==order(num_t));                
                 [part_tmp,gi_tmp] = niak_kmeans_clustering(data(:,part==order(num_t)),opt_b,false);
                 flag_bisect = (any(part_tmp==1)&&any(part_tmp==2));
                 if (~flag_bisect)
@@ -193,7 +198,8 @@ else
             if num_t == 0
                 num_t = 1;
             end
-            se_tmp = sub_se(se_data,gi_tmp,part_tmp);
+            gi_tmp = centre_gravite(data(:,part==order(num_t))',part_tmp,opt.p,2)';
+            se_tmp = sub_se(se_data,gi_tmp,part_tmp,opt.p);
             part_tmp2 = part_tmp;
             part_tmp2(part_tmp==1) = order(num_t);
             part_tmp2(part_tmp==2) = 1+num_i;            
@@ -222,9 +228,7 @@ else
     end
     data = data';    
     [N,T] = size(data);
-    if isempty(opt.p)
-        opt.p = ones([N 1]);
-    end
+    
     if ~opt.flag_mex&&(~opt.flag_bisecting)
         %% Initialization
         part = zeros([N opt.nb_tests_cycle]);
@@ -415,9 +419,9 @@ for i = 1:nb_classes;
 end
 
 %% Squared error
-function se = sub_se(se_data,gi,part)
+function se = sub_se(se_data,gi,part,p)
 
 se = zeros([2 1]);
 for num_p = 1:2
-    se(num_p) = sum(se_data(part==num_p))-sum(part==num_p)*sum(gi(:,num_p).^2);
+    se(num_p) = sum((se_data(part==num_p)))-sum(p(part==num_p))*sum(gi(:,num_p).^2);    
 end
