@@ -1,4 +1,4 @@
-function mat = niak_vec2mat(vec);
+function mat = niak_vec2mat(vec,val_diag);
 % Convert a vectorized symmetric matrix (without diagonal elements) into 
 % a matrix form with ones on the diagonal.
 %
@@ -12,6 +12,9 @@ function mat = niak_vec2mat(vec);
 % VEC           
 %       (vector) a vectorized version of a symmetric matrix (without 
 %       diagonal elements).
+%
+% VAL_DIAG
+%		(scalar or vector) the value(s) to put on the diagonal.
 %
 % _________________________________________________________________________
 % OUTPUTS:
