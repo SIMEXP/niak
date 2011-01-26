@@ -41,7 +41,13 @@ function [] = niak_montage(vol,opt)
 %           color scaling.
 %
 %       TYPE_COLOR 
-%           (string, default 'jet') colormap name.
+%           (string, default 'jet') colormap name. Any regular type of 
+%			matlab colormap can be used. Additional options : 
+%				'jet_rev' a revert jet color map (red for low values, 
+%					blue for high values). Good for representing 
+%					distances.
+%				'hotcold' designed for maps with both positive & 
+%					negative matrices.					
 %
 %       FWHM 
 %           (double, default 0) smooth the image with a isotropic Gaussian 
@@ -100,18 +106,23 @@ function [] = niak_montage(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'type_slice','vol_limits','type_color','fwhm','type_flip','flag_colorbar','nb_rows','nb_columns','voxel_size','comment'};
-gb_list_defaults = {'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90',1,0,0,[1 1 1],''};
+gb_list_fields    = {'type_slice' ,'vol_limits','type_color','fwhm','type_flip','flag_colorbar','nb_rows','nb_columns','voxel_size','comment'};
+gb_list_defaults  = {'axial'      ,[min(vol(:)) max(vol(:))],'jet',0,'rot90',1,0,0,[1 1 1],''};
 niak_set_defaults
 
-if strcmp(type_color,'hot_cold')
-    c1 = hot(128);
-    c1 = c1(1:100,:);
-    c2 = c1(:,[3 2 1]);
-    c= [c2(size(c2,1):-1:1,:) ; c1];
-    colormap(c)   
-else
-    colormap(type_color)
+switch type_color
+	case 'hot_cold'
+		c1 = hot(128);
+		c1 = c1(1:100,:);
+		c2 = c1(:,[3 2 1]);
+		c= [c2(size(c2,1):-1:1,:) ; c1];
+		colormap(c)   
+	case 'jet_rev'
+		c = jet(256);
+		c = c(end:-1:1,:);
+		colormap(c)
+	otherwise
+		colormap(type_color)
 end
 
 switch type_slice
