@@ -173,6 +173,13 @@ residus = [];
 
 if strcmp(algo,'Infomax')
     %[weights,sphere,residus] = runica(data,'sphering','off','ncomps',nbcomp,'pca',nbcomp,'verbose','on','maxsteps',300);
+    %switch is_verbose
+    %    case 'on'
+    %        is_verbose = 1;
+    %    case 'off'
+    %        is_verbose = 0;
+    %end            
+            
     [weights,sphere] = niak_sub_runica(data,'sphering','off','ncomps',nbcomp,'pca',nbcomp,'verbose',is_verbose,'maxsteps',300);
     W=weights*sphere;
     a = pinv(W);
@@ -775,9 +782,7 @@ end;
 
 
 
-if verbose,
-    h = waitbar(0,'Performing sica...Please wait...');
-    waitbar(1/(maxsteps+2),h)
+if verbose,    
     fprintf( ...
         '\nInput data size [%d,%d] = %d channels, %d frames.\n', ...
         chans,frames,chans,frames);
@@ -833,7 +838,9 @@ end
 %%%%%%%%%%%%%%%%%%% Perform PCA reduction %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 if strcmp(pcaflag,'on')
-    fprintf('    Reducing the data to %d principal dimensions...\n',ncomps);
+    if verbose
+        fprintf('    Reducing the data to %d principal dimensions...\n',ncomps);
+    end
 
     covarianceMatrix = cov(data');
     [E, D] = eig(covarianceMatrix);
@@ -975,7 +982,7 @@ oldweights = startweights;
 prevwtchange = zeros(chans,ncomps);
 oldwtchange = zeros(chans,ncomps);
 lrates = zeros(1,maxsteps);
-onesrow = ones(1,block);
+onesrow = ones(1,floor(block));
 bias = zeros(ncomps,1);
 signs = ones(1,ncomps);    % initialize signs to nsub -1, rest +1
 for k=1:nsub
@@ -1008,9 +1015,6 @@ step=0;
 laststep=0;
 blockno = 1;  % running block counter for kurtosis interrupts
 
-if verbose
-    waitbar(2/(maxsteps+2),h)
-end
 while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     permute=randperm(datalength); % shuffle data order at each step
 
@@ -1020,9 +1024,9 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             close; error('USER ABORT');
         end;
         if biasflag
-            u=weights*data(:,permute(t:t+block-1)) + bias*onesrow;
+            u=weights*data(:,permute(floor(t):floor(t+block-1))) + bias*onesrow;
         else
-            u=weights*data(:,permute(t:t+block-1));
+            u=weights*data(:,permute(floor(t):floor(t+block-1)));
         end
         if ~extended
             %%%%%%%%%%%%%%%%%%% Logistic ICA weight update %%%%%%%%%%%%%%%%%%%
@@ -1117,7 +1121,9 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%% Restart if weights blow up %%%%%%%%%%%%%%%%%%%%
     %
     if wts_blowup | isnan(change)|isinf(change),  % if weights blow up,
-        fprintf('');
+        if verbose
+            fprintf('');
+        end
         step = 0;                          % start again
         change = nochange;
         wts_blowup = 0;                    % re-initialize variables
@@ -1184,10 +1190,7 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     step,lrate,change,(ncomps-sum(diag(signs)))/2);
             end % step > 2
         end; % if verbose
-        if verbose
-            waitbar((2+step)/(maxsteps+2),h)
-        end
-
+        
         %
         %%%%%%%%%%%%%%%%%%%% Save current values %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %
@@ -1238,9 +1241,11 @@ end
 %%%%%%%%%%%%%% If pcaflag, compose PCA and ICA matrices %%%%%%%%%%%%%%%
 %
 if strcmp(pcaflag,'on')
+    if verbose
     fprintf('    Composing the eigenvector, weights, and sphere matrices\n');
     fprintf('        into a single rectangular weights matrix; sphere=eye(%d)\n'...
         ,chans);
+    end
     %weights= weights*sphere*eigenvectors(:,1:ncomps)';
     weights= weights*sphere*eigenvectors(:,1:ncomps)';
     sphere = eye(urchans);
@@ -1260,7 +1265,9 @@ if wts_passed == 0
     if ncomps == urchans % if weights are square . . .
         winv = inv(weights*sphere);
     else
-        fprintf('    Using pseudo-inverse of weight matrix to rank order component projections.\n');
+        if verbose
+            fprintf('    Using pseudo-inverse of weight matrix to rank order component projections.\n');
+        end
         winv = pinv(weights*sphere);
     end
     for s=1:ncomps
@@ -1298,17 +1305,15 @@ if wts_passed == 0
     signs = signs(windex);      % reorder them
 
 else
-    fprintf('Components not ordered by variance.\n');
+    if verbose
+        fprintf('Components not ordered by variance.\n');
+    end
 end
 
 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% end %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-if verbose
-    waitbar(1,h)
-    close(h);
-end
 return
 
 if nargout > 6
@@ -1398,20 +1403,16 @@ end
 actout = activations;
 winvout = winv;
 
-fprintf('    Inverting negative activations: ');
 for r=1:rows,
         pos = find(activations(r,:)>=0);
         posrms = sqrt(sum(activations(r,pos).*activations(r,pos))/length(pos));
         neg = find(activations(r,:)<0);
         negrms = sqrt(sum(activations(r,neg).*activations(r,neg))/length(neg));
         if negrms>posrms
-            fprintf('-');   
             actout(r,:) = -1*activations(r,:);
             winvout(:,r) = -1*winv(:,r);
         end
-        fprintf('%d ',r);
 end
-fprintf('\n');
 
 if nargout>2
   if r==c,
