@@ -49,8 +49,12 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 %           'none' let them be empty.
 %           'singleton' iteratively replace every empty cluster by the one
 %           singleton which is further away from its centroid.
-%           'split' iteratively splits the largest cluster in two randomly
-%           until the number of clusters is back to the one specified.
+%           'split' iteratively splits the cluster with largest inertia
+%			in two random subclusters until the number of clusters is 
+%			back to the one specified.
+%           'bisect' iteratively splits the cluster with largest inertia
+%			in two subclusters using k-means until the number of 
+%			clusters is back to the one specified.
 %       
 %       NB_ITER
 %           (integer, default 1) number of iterations of the kmeans (the 
