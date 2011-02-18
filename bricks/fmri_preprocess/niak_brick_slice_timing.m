@@ -31,8 +31,8 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %           (string, default 'manual') the type of acquisition used by the
 %           scanner. If 'manual', SLICE_ORDER needs to be specified, 
 %           otherwise it will be calculated. Possible choices are
-%           'manual','sequential ascending','sequential descending',
-%           'interleaved ascending','interleaved descending'. For
+%           'manual','sequential','sequential ascending','sequential descending',
+%           'interleaved','interleaved ascending','interleaved descending'. For
 %           interleaved modes, FIRST_NUMBER needs to be specified.
 %       
 %       TYPE_SCANNER
@@ -174,9 +174,11 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % 
 % NOTE 5:
 % The type_acquisition option (opt.type_acquisition) can have the following 
-% values : 'manual','sequential ascending','sequential descending',
-% 'interleaved ascending' or 'interleaved descending'. Any other value will 
-% return an error. If using 'interleaved' modes, first_number must be 
+% values : 'manual','sequential','sequential ascending','sequential descending',
+% 'interleaved','interleaved ascending' or 'interleaved descending'. Any other 
+% value will return an error. 'sequential' mode is equivalent to 
+% 'sequential ascending' mode and 'interleaved' mode is equivalent to 
+% 'interleaved ascending' mode. If using 'interleaved' modes, first_number must be 
 % specified in the form of 'odd' or 'even'. By default, it is set to 'manual' 
 % mode in which case a slice_order needs to be input. If a mode other than 
 % 'manual' is input as well as a slice_order, the latter will be used.
@@ -351,8 +353,8 @@ if isempty(opt.slice_order)
             if ~exist(opt.slice_order,'var')
                 error('niak:brick', 'opt: slice_order must be specified when using type_acquisition manual.\n Type ''help niak_brick_slice_timing'' for more info.');
             end
-            
-        case 'sequential ascending'
+
+        case {'sequential','sequential ascending'}
             if opt.step > 0
                 opt.slice_order = 1:opt.nb_slices;
             else
@@ -366,7 +368,7 @@ if isempty(opt.slice_order)
                 opt.slice_order = 1:opt.nb_slices;
             end
             
-        case 'interleaved ascending'
+        case {'interleaved','interleaved ascending'}
             if opt.step > 0
                 if strcmp(opt.first_number,'odd')
                     opt.slice_order = [1:2:opt.nb_slices 2:2:opt.nb_slices];
