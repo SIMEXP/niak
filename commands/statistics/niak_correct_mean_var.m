@@ -84,7 +84,7 @@ switch type_correction
     case 'mean_var2'
         
         mean_ts = mean(tseries,1);
-        data_n = zeros(size(tseries));
+        tseries_n = zeros(size(tseries));
         
         for num_n = 1:nn
             tseries_n(:,num_n) = tseries(:,num_n) - mean_ts(num_n);

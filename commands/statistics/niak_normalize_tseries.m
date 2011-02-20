@@ -26,6 +26,9 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %               'mean_var'          
 %                   Correct the time series to zero mean and unit variance.
 %
+%              'mean_var2' : same as 'mean_var' but slower, yet does not 
+%                   use as much memory.
+%
 %               'median_mad'
 %                   Correct the time series to zero median and a
 %                   median-absolute-deviation (MAD) corresponding to a
