@@ -143,7 +143,7 @@ for numRoi=1:length(tc_cell)
             OK(i_max) = 1;
         end        
                 
-        [selection,num_comp_cell,Freq_tmp,nbRegions,Inert_tmp]=niak_sub_get_stepwise_comp(Y(OK,:)',regressors,thr_p_s,inertia);
+        [selection,num_comp_cell,Freq_tmp,nbRegions,Inert_tmp]=niak_sub_get_stepwise_comp(Y(:,OK),regressors,thr_p_s,inertia);
         
         FreqSel(s,:) =  Freq_tmp/nbRegions;
         nbClust = nbClust + nbRegions;
