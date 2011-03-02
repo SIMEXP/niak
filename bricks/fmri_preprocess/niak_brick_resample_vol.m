@@ -77,7 +77,8 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           to 0, the resolution for resampling will be the same as the 
 %           target space. If VOXEL_SIZE is set to -1, the resolution will 
 %           be the same as source space. Otherwise, the specified 
-%           resolution will be used. 
+%           resolution will be used. If VOXEL_SIZE is a scalar, an isotropic 
+%           voxel size will be used.
 %
 %       TRANSF_NAME
 %           (string, default TRANSF) the name of the variable for affine 
@@ -163,6 +164,10 @@ gb_name_structure = 'opt';
 gb_list_fields    = {'flag_skip' , 'suppress_vol' ,'transf_name' ,'interpolation' ,'flag_tfm_space' ,'voxel_size' ,'folder_out' ,'flag_test' ,'flag_invert_transf' ,'flag_verbose' ,'flag_adjust_fov' ,'flag_keep_range'};
 gb_list_defaults  = {0           , 0              ,'transf'      ,'tricubic'      ,0                ,0            ,''           ,0           ,0                    ,1              ,0                 ,0};
 niak_set_defaults
+
+if (length(voxel_size)==1)&&(voxel_size~=0)&&(voxel_size~=1)
+    voxel_size = repmat(voxel_size,[1 3]);
+end
 
 if flag_keep_range
     instr_range = '-keep_real_range ';
