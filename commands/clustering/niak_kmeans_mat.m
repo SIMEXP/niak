@@ -191,17 +191,16 @@ if opt.flag_verbose
     fprintf('Number of displacements : ');
 end
 
-while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
-    
+while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )    
     
     %% Build the centers and the attraction to the centers 
     if N_iter ~= 1
-        gi = centre_gravite(data,part_bis,opt.p,K,ind_change,gi);
+        gi = centre_gravite(data,part(:,part_curr),opt.p,K,ind_change,gi);
     end
     A = attraction(data,gi,opt.p,ind_change,A);
     
     %% Update partition
-    [A_min,part_bis] = min(A,[],2);    
+    [A_min,part_bis] = min(A,[],2);     
     part_old = part_curr;
     part_curr = mod(part_curr,opt.nb_tests_cycle)+1;
     part(:,part_curr) = part_bis;    
@@ -219,19 +218,23 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
                                  
             case 'bisect'
                 
-                part(:,part_curr) = sub_bisect(data,A,part(:,part_curr),K,opt.p,opt_rep);
-                
-        end
+                part(:,part_curr) = sub_bisect(data,A,part(:,part_curr),K,opt.p,opt_rep);                              
+        end    
     end
     
     %% Check for cycles and list the clusters that have changed
-    deplacements = sum(part(:,part_curr)~=part(:,part_old));
-    if opt.flag_verbose
-        fprintf(' %d -',deplacements);
-    end
-    changement = min(max(abs(part(:,(1:opt.nb_tests_cycle)~=part_curr) - part(:,part_curr)*ones([1 opt.nb_tests_cycle-1])),[],1))>0;
+    %deplacements = sum(part(:,part_curr)~=part(:,part_old));
+    mat_curr = niak_part2mat(part(:,part_curr),true);
+    mat_old = niak_part2mat(part(:,part_old),true);
+    diff = sum(mat_curr~=mat_old);
+    deplacements = sum(diff)/(sum(sum(mat_curr|mat_old))-N);
+    changement = deplacements>0.01;        
     N_iter = N_iter + 1;
-    ind_change = unique(part(part(:,part_curr)~=part(:,part_old),part_curr));
+    ind_change = unique(part(diff>0,part_curr));
+    if opt.flag_verbose
+        %fprintf(' %d -',deplacements);
+        fprintf(' %d -',length(ind_change));
+    end
 end
 
 if opt.flag_verbose
