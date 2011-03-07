@@ -50,7 +50,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %			clusters is back to the one specified.
 %
 %       NB_ITER_MAX
-%           (integer, default 100) Maximal number of iterations of the
+%           (integer, default 50) Maximal number of iterations of the
 %           k-means algorithm.
 %
 %       NB_TESTS_CYCLE
@@ -109,7 +109,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %% Options
 if (nargin < 3)||(flag_opt)
     list_fields    = {'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
-    list_defaults  = {[]     , 'random_partition' , 'none'       , NaN          , []  , 0              , 100           , 5                };
+    list_defaults  = {[]     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
@@ -237,8 +237,8 @@ end
 if opt.flag_verbose
     fprintf('\n')
 end
-if N_iter == opt.nb_iter_max
-    warning('The maximal number of iterations was reached.')
+if (N_iter == opt.nb_iter_max)&&opt.flag_verbose
+    fprintf('The maximal number of iterations was reached.\n')
 end
 
 % save the final results
@@ -325,12 +325,15 @@ function part = sub_split(A,part,K,p);
 
 % Compute the sum of squares per cluster
 list_sum = zeros([K 1]);
+siz_rois = zeros([K 1]);
+[siz_rois_tmp,labels_tmp] = niak_build_size_roi(part);
+siz_rois(labels_tmp) = siz_rois_tmp;
 for num_k = 1:K
-    if any(part==num_k)
+    if siz_rois(num_k)>0
         if isempty(p)
-            list_sum(num_k) = mean(A(:,num_k));
+            list_sum(num_k) = siz_rois(num_k)*sum(A(part==num_k,num_k));
         else
-            list_sum(num_k) = sum(A(:,num_k).*p(:))/sum(p);
+            list_sum(num_k) = siz_rois(num_k)*sum(A(:,num_k).*p(:));
         end
     end
 end
@@ -341,7 +344,6 @@ list_ind = order(val==0);
 list_ind = list_ind(:)';
 num_target = length(order);
 nb_rep = 0;
-nb_rep_final = 0;
 num_r = length(list_ind);
 while num_r>0
     ind_rep = find(part==order(num_target));
@@ -350,27 +352,24 @@ while num_r>0
         part(ind_rep(1:floor(length(ind_rep)/2))) = list_ind(num_r);        
         nb_rep = nb_rep+1;
         num_r = num_r-1;
-    end
-    
-    if num_target > length(list_ind)+1-nb_rep_final
-        num_target = num_target-1;
-    else
-        num_target = length(order);
-        nb_rep_final = nb_rep_final+nb_rep;
-        nb_rep = 0;
-    end
+    end    
+    num_target = num_target-1;
 end
 
+%% Resurrection : bisect
 function part = sub_bisect(data,A,part,K,p,opt_rep)
 
 % Compute the sum of squares per cluster
 list_sum = zeros([K 1]);
+siz_rois = zeros([K 1]);
+[siz_rois_tmp,labels_tmp] = niak_build_size_roi(part);
+siz_rois(labels_tmp) = siz_rois_tmp;
 for num_k = 1:K
-    if any(part==num_k)
+    if siz_rois(num_k)>0
         if isempty(p)
-            list_sum(num_k) = mean(A(:,num_k));
+            list_sum(num_k) = siz_rois(num_k)*sum(A(part==num_k,num_k));
         else
-            list_sum(num_k) = sum(A(:,num_k).*p(:))/sum(p);
+            list_sum(num_k) = siz_rois(num_k)*sum(A(:,num_k).*p(:));
         end
     end
 end
@@ -382,24 +381,15 @@ list_ind = order(val==0);
 list_ind = list_ind(:)';
 num_target = length(order);
 nb_rep = 0;
-nb_rep_final = 0;
 num_r = length(list_ind);
-while num_r>0
-    ind_rep = find(part==order(num_target));
-    
+while (num_r>0)&&(num_target>0)
+    ind_rep = find(part==order(num_target));    
     if length(ind_rep)>2
         opt_rep.p = p(part==order(num_target));
         part_tmp = niak_kmeans_clustering(data(part==order(num_target),:)',opt_rep);
         part(ind_rep(part_tmp==2)) = list_ind(num_r);
         nb_rep = nb_rep+1;
         num_r = num_r-1;
-    end
-    
-    if num_target > length(list_ind)+1-nb_rep_final
-        num_target = num_target-1;
-    else
-        num_target = length(order);
-        nb_rep_final = nb_rep_final+nb_rep;
-        nb_rep = 0;
-    end
+    end    
+    num_target = num_target-1;    
 end
