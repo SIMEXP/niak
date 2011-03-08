@@ -49,6 +49,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %			in two subclusters using k-means until the number of
 %			clusters is back to the one specified.
 %
+%       CONVERGENCE_RATE
+%           (scalat, 0.01) the rate of changes in the adjacency matrix
+%           representation of the clustering to decide on convergence of
+%           the algorithm.
+%
 %       NB_ITER_MAX
 %           (integer, default 50) Maximal number of iterations of the
 %           k-means algorithm.
@@ -108,8 +113,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 
 %% Options
 if (nargin < 3)||(flag_opt)
-    list_fields    = {'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
-    list_defaults  = {[]     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
+    list_fields    = {'convergence_rate' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
+    list_defaults  = {0.01               , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
