@@ -31,6 +31,27 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %           'user-specified' : use OPT.INIT as inial centroids of the
 %           partition.
 %
+%       HIERARCHICAL
+%           (structure, default struct()) option of 
+%           NIAK_HIERARCHICAL_CLUSTERING, if that procedure is used for 
+%           initialization (see OPT.TYPE_INIT above).
+%
+%       TYPE_SIMILARITY
+%           (string, default 'product') the similarity measure used to 
+%           perform the hierarchical clustering. Available option :
+%
+%           'euclidian' : use the opposite of the euclidian distance (see
+%                 NIAK_BUILD_DISTANCE).
+%
+%           'correlation' : use the correlation matrix.
+%
+%           'product' : euclidian product. This is useful if the data has
+%               been corrected for the mean and/or variance, in which case
+%               the 'product' option is equivalent to the covariance or
+%               correlation between observations.
+%
+%           'manual' : consider DATA as a similarity matrix.
+%
 %       INIT
 %           (2D array T*K) each column is used as initial centroid of a
 %           cluster. Note that this value will be used only if
@@ -113,8 +134,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 
 %% Options
 if (nargin < 3)||(flag_opt)
-    list_fields    = {'convergence_rate' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
-    list_defaults  = {0.01               , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
+    list_fields    = {'hierarchical' , 'type_similarity' , 'convergence_rate' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
+    list_defaults  = {struct()       , 'product'         , 0.01               , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
@@ -172,11 +193,20 @@ switch opt.type_init
         if opt.flag_verbose
             fprintf('Initialization using hierarchical clustering\n')
         end
-        dist_mat = niak_build_distance(data');
-        opt_h.nb_classes = K;
-        opt_h.flag_verbose = opt.flag_verbose;
-        [hier,order] = niak_hierarchical_clustering(dist_mat);
-        clear dist_mat
+        switch opt.type_similarity
+            case 'euclidian'
+                sim_mat = -niak_build_distance(data');
+            case 'correlation'
+                sim_mat = niak_build_correlation(data');
+            case 'product'
+                sim_mat = data*data';
+            case 'manual'
+                sim_mat = data;
+        end
+        opt.hierarchical.nb_classes = K;
+        opt.hierarchical.flag_verbose = opt.flag_verbose;
+        hier = niak_hierarchical_clustering(sim_mat,opt.hierarchical);
+        clear sim_mat
         opt_t.thresh = K;
         part_init = niak_threshold_hierarchy(hier,opt_t);
         gi = zeros([K T]);
@@ -184,6 +214,19 @@ switch opt.type_init
             gi(num_i,:) = mean(data(part_init==num_i,:),1);
         end
         
+    case 'kmeans++'
+        for num_k = 1:K
+            if num_k==1
+                gi(num_k,:) = data(1+floor(N*rand(1)),:);
+            else
+                A_min = min(A(:,1:(num_k-1)),[],2);
+                [val,order] = sort(A_min/sum(A_min));
+                p = cumsum(val)/sum(val);
+                ind = find(p>rand(1));
+                gi(num_k,:) = data(order(ind(1+floor(length(ind)*rand(1)))),:);
+            end
+            A = attraction(data,gi(1:num_k,:),opt.p,num_k,A);
+        end
     otherwise
         
         error('%s is an unknwon type of initialisation. Please check the value of OPT.TYPE_INIT',opt.type_init);
@@ -202,7 +245,9 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     if N_iter ~= 1
         gi = centre_gravite(data,part(:,part_curr),opt.p,K,ind_change,gi);
     end
-    A = attraction(data,gi,opt.p,ind_change,A);
+    if (N_iter>1)||~strcmp(opt.type_init,'kmeans++')
+        A = attraction(data,gi,opt.p,ind_change,A);
+    end
     
     %% Update partition
     [A_min,part_bis] = min(A,[],2);     
@@ -227,8 +272,7 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
         end    
     end
     
-    %% Check for cycles and list the clusters that have changed
-    %deplacements = sum(part(:,part_curr)~=part(:,part_old));
+    %% Check for cycles and list the clusters that have changed    
     mat_curr = niak_part2mat(part(:,part_curr),true);
     mat_old = niak_part2mat(part(:,part_old),true);
     diff = sum(mat_curr~=mat_old);
@@ -237,8 +281,7 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     N_iter = N_iter + 1;
     ind_change = unique(part(diff>0,part_curr));
     if opt.flag_verbose
-        %fprintf(' %d -',deplacements);
-        fprintf(' %d -',length(ind_change));
+        fprintf(' %d -',deplacements);        
     end
 end
 

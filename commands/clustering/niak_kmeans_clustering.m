@@ -31,12 +31,42 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 %       TYPE_INIT
 %           (string, default 'random_partition') the strategy to 
 %           initialize the kmeans. Available options are :
-%           'random_partition' : self-explanatory
+%
+%           'random_partition' : self-explanatory. 
+%
 %           'random_point' : randomly select some data points as
 %               centroids.
+%
 %           'pca' : use the first principal components as centroids.
+%
+%           'hierarchical' : use a hierarchical clustering to find the
+%               initial partition. The procedure that is used is
+%               NIAK_HIERARCHICAL_CLUSTERING. See OPT.HIERARCHICAL below as
+%               well as OPT.TYPE_SIMILARITY.
+%
 %           'user-specified' : use OPT.INIT as inial centroids of the
-%           partition.
+%               partition.
+%
+%       HIERARCHICAL
+%           (structure, default struct()) option of 
+%           NIAK_HIERARCHICAL_CLUSTERING, if that procedure is used for 
+%           initialization (see OPT.TYPE_INIT above).
+%
+%       TYPE_SIMILARITY
+%           (string, default 'euclidian') the similarity measure used to 
+%           perform the hierarchical clustering. Available option :
+%
+%           'euclidian' : use the opposite of the euclidian distance (see
+%                 NIAK_BUILD_DISTANCE).
+%
+%           'correlation' : use the correlation matrix.
+%
+%           'product' : euclidian product. This is useful if the data has
+%               been corrected for the mean and/or variance, in which case
+%               the 'product' option is equivalent to the covariance or
+%               correlation between observations.
+%
+%           'manual' : consider DATA as a similarity matrix.
 %
 %       INIT
 %           (2D array T*K) each column is used as initial centroid of a
@@ -135,8 +165,8 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 
 %% Options
 if (nargin < 3)||(flag_opt)
-    list_fields    = {'convergence_rate' , 'nb_attempts_max' , 'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
-    list_defaults  = {0.01               , 5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 50            , 5                , false      };
+    list_fields    = {'hierarchical' , 'type_similarity' , 'convergence_rate' , 'nb_attempts_max' , 'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
+    list_defaults  = {struct()       , 'product'         , 0.01               , 5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 50            , 5                , false      };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
