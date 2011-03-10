@@ -3,7 +3,7 @@ function mat = niak_vec2mat(vec,val_diag);
 % a matrix form with ones on the diagonal.
 %
 % SYNTAX:
-% MAT = NIAK_VEC2MAT(VEC)
+% MAT = NIAK_VEC2MAT(VEC,VAL_DIAG)
 %
 % _________________________________________________________________________
 %
@@ -53,6 +53,17 @@ function mat = niak_vec2mat(vec,val_diag);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+if size(vec,2)>1
+   nb_m = size(vec,2);
+   for num_m = 1:nb_m
+       mat_tmp = niak_vec2mat(vec(:,num_m));
+       if num_m == 1
+           mat = zeros([size(mat_tmp) nb_m]);
+       end
+       mat(:,:,num_m) = mat_tmp;
+   end
+   return
+end
 
 M = length(vec);
 N = round((1+sqrt(1+8*M))/2);
