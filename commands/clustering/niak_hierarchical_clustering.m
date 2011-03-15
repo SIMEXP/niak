@@ -21,7 +21,7 @@ function hier = niak_hierarchical_clustering(S,opt)
 %
 %       TYPE_SIM
 %           (string, default 'average') the type of similarity between 
-%           clusters:
+%           clusters (see COMMENTS below) :
 %               
 %               'single'
 %                   single linkage (maximal similarity)
@@ -30,9 +30,11 @@ function hier = niak_hierarchical_clustering(S,opt)
 %                   complete linkage (minimal similarity)
 %
 %               'average'
-%                   unweighted average of similarity between clusters 
+%                   unweighted average of similarity between clusters.
 %                   (UPGMA).
 %               
+%               'Ward'
+%                   The Ward criterion of similarity between clusters.
 %
 %       NB_CLASSES
 %           (integer, default 1) if non-empty, the clustering will stop
@@ -59,8 +61,19 @@ function hier = niak_hierarchical_clustering(S,opt)
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_VISU_DENDROGRAM, NIAK_THRESHOLD_HIERARCHY, NIAK_HIER2ORDER
+%
 % _________________________________________________________________________
 % COMMENTS:
+%
+% The Ward criterion is applied on an arbitrary similarity as it is on
+% arbitrary dissimilarities (which is meaningful as long as the similarity 
+% can be seen as A-d, where A is a constant and d a dissimilarity). For the
+% generalization of Ward's criterion (a.k.a. minimal inertia) to arbitrary
+% dissimilarities, see : 
+%
+% Batagelj, V. Generalized ward and related clustering problems. In 
+% Classification and Related Methods of Data Analysis (1988), pp. 67-74. 
+% Edited by H.H. Bock, North-Holland, Amsterdam.
 %
 % The so-called hierarchical clustering is more precisely an homogeneity 
 % based sequential, agglomerative, hierarchical and non-overlapping 
@@ -70,8 +83,13 @@ function hier = niak_hierarchical_clustering(S,opt)
 % János Podani, New Combinatorial Clustering Methods, Vegetatio, Vol. 81, 
 % No. 1/2 (Jul. 1, 1989), pp. 61-77 
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% If symmetric, the matrix can be "vectorized" using NIAK_VEC2MAT.
+%
+% Copyright (c) Pierre Bellec, 
+% Centre de recherche de l'institut de Gériatrie de Montréal
+% Département d'informatique et de recherche opérationnelle
+% Université de Montréal, 2010-2011
+% Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : hierarchical clustering
 
@@ -101,7 +119,7 @@ N = size(S,1);
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields    = {'p'         , 'type_sim' , 'flag_verbose' , 'nb_classes' };
-gb_list_defaults  = {ones([N,1]) , 'average'  , true           , 1            };
+gb_list_defaults  = {ones([N,1]) , 'ward'     , true           , 1            };
 niak_set_defaults
 
 perc_verb = 0.05;
@@ -152,7 +170,15 @@ for num_i = 1:nb_iter
             
         case 'average'
             
-            S(cx,:) = (p(cx)./(p(cy)+p(cx))).*S(cx,:) + (p(cy)./(p(cx)+p(cy)).*S(cy,:));                    
+            S(cx,:) = (p(cx)./(p(cy)+p(cx))).*S(cx,:) + (p(cy)./(p(cx)+p(cy)).*S(cy,:));         
+            
+        case 'ward'
+            
+            S(cx,:) = ((p+p(cx))'.*S(cx,:) + (p+p(cy))'.*S(cy,:) - p'*S(cx,cy))./(p+p(cy)+p(cx))';
+            
+        otherwise
+            
+            error('%s is an unknown type of cluster-level similarity',type_sim);
             
     end
     S(:,cx) = S(cx,:)';
