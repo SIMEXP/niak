@@ -45,11 +45,10 @@ function stab = niak_stability_tseries(tseries,opt)
 %       argument in NIAK_BOOTSTRAP_TSERIES.
 %
 %   CLUSTERING
-%       (structure, default kmeans with 5 iterations) with the following
-%       fields :
+%       (structure, optional) with the following fields :
 %
 %       TYPE
-%           (string, default 'kmeans') the clustering algorithm
+%           (string, default 'hierarchical') the clustering algorithm
 %           Available options : 'kmeans', 'hierarchical'
 %
 %       OPT
@@ -150,9 +149,8 @@ for num_s = 1:opt.nb_samps
     if ismember(opt.clustering.type,'hierarchical') % for methodes that produce a hierarchy
         switch opt.clustering.type
             case 'hierarchical'
-
-                D    = niak_build_distance(tseries_boot);
-                hier = niak_hierarchical_clustering(-D,opt.clustering.opt);
+                R    = niak_build_correlation(tseries_boot);
+                hier = niak_hierarchical_clustering(R,opt.clustering.opt);
         end
         opt_t.thresh = opt.nb_classes;
         part = niak_threshold_hierarchy(hier,opt_t);
