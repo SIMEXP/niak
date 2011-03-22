@@ -39,10 +39,21 @@ function stab = niak_stability_tseries(tseries,opt)
 %       normalization to apply on the individual time series before
 %       clustering. See OPT in NIAK_NORMALIZE_TSERIES.
 %
-%   BOOTSTRAP
-%   	(structure, default circular block bootstrap) specify the
-%       parameters of the bootstrap. See the description of the OPT
-%       argument in NIAK_BOOTSTRAP_TSERIES.
+%   SAMPLING
+%
+%       TYPE
+%           (string, default 'bootstrap') how to resample the time series.
+%           Available options : 'bootstrap' , 'mplm'
+%
+%       OPT
+%           (structure) the options of the sampling. Depends on
+%           OPT.SAMPLING.TYPE : 
+%               'bootstrap' : see the description of the OPT
+%                   argument in NIAK_BOOTSTRAP_TSERIES. Default is 
+%                   OPT.TYPE = 'CBB' (a circular block bootstrap is
+%                   applied).
+%               'mplm' : see the description of the OPT argument in
+%                   NIAK_SAMPLE_MPLM.
 %
 %   CLUSTERING
 %       (structure, optional) with the following fields :
@@ -111,12 +122,13 @@ function stab = niak_stability_tseries(tseries,opt)
 % THE SOFTWARE.
 
 %% Options
-opt_normalize.type  = 'mean_var';
-opt_clustering.type = 'hierarchical';
-opt_clustering.opt  = struct();
-opt_bootstrap.type  = 'cbb';
-list_fields   = {'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'bootstrap'   , 'flag_verbose' };
-list_defaults = {opt_normalize , 100        , NaN          , opt_clustering , opt_bootstrap , true           };
+opt_normalize.type    = 'mean_var';
+opt_clustering.type   = 'hierarchical';
+opt_clustering.opt    = struct();
+opt_sampling.type     = 'boostrap';
+opt_sampling.opt.type = 'cbb';
+list_fields   = {'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'sampling'   , 'flag_verbose' };
+list_defaults = {opt_normalize , 100        , NaN          , opt_clustering , opt_sampling  , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -143,7 +155,12 @@ for num_s = 1:opt.nb_samps
         end
     end
 
-    tseries_boot = niak_bootstrap_tseries(tseries,opt.bootstrap);
+    switch opt.sampling.type
+        case 'bootstrap'
+            tseries_boot = niak_bootstrap_tseries(tseries,opt.sampling.opt);
+        case 'mplm'
+            tseries_boot = niak_sample_mplm(opt.sampling.opt);
+    end
     tseries_boot = niak_normalize_tseries(tseries_boot,opt.normalize);
 
     if ismember(opt.clustering.type,'hierarchical') % for methodes that produce a hierarchy
