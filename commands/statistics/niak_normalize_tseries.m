@@ -11,7 +11,8 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %       (2D array) each column of TSERIES is a time series.
 %
 % OPT
-%       (structure) with the following fields :
+%       (structure or string) If string, see TYPE below. If structure, 
+%       the following fields are supported :
 %
 %       TYPE
 %           (string, default 'mean_var') 
@@ -85,6 +86,16 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 %% Syntax 
 if ~exist('tseries','var')
     error('Syntax : TSERIES_N = NIAK_NORMALIZE_TSERIES(TSERIES,OPT) ; for more infos, type ''help niak_normalize_tseries''.')
+end
+
+if nargin < 2
+    opt = 'mean_var';
+end
+
+if ischar(opt)
+    opt2.type = opt;
+    opt = opt2;
+    clear opt2;
 end
 
 %% Setting up default values for the 'info' part of the header
