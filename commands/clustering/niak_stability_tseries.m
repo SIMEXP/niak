@@ -43,7 +43,7 @@ function stab = niak_stability_tseries(tseries,opt)
 %
 %       TYPE
 %           (string, default 'bootstrap') how to resample the time series.
-%           Available options : 'bootstrap' , 'mplm'
+%           Available options : 'bootstrap' , 'mplm', 'scenario'
 %
 %       OPT
 %           (structure) the options of the sampling. Depends on
@@ -54,6 +54,8 @@ function stab = niak_stability_tseries(tseries,opt)
 %                   applied).
 %               'mplm' : see the description of the OPT argument in
 %                   NIAK_SAMPLE_MPLM.
+%               'scenario' : see the description of the OPT argument in
+%                   NIAK_SIMUS_SCENARIO
 %
 %   CLUSTERING
 %       (structure, optional) with the following fields :
@@ -160,10 +162,15 @@ for num_s = 1:opt.nb_samps
             tseries_boot = niak_bootstrap_tseries(tseries,opt.sampling.opt);
         case 'mplm'
             tseries_boot = niak_sample_mplm(opt.sampling.opt);
+        case 'scenario'
+            tseries_boot = niak_simus_scenario(opt.sampling.opt);
+        otherwise
+            error('%s is not a suppported sampling scheme',opt.sampling.type)
     end
     tseries_boot = niak_normalize_tseries(tseries_boot,opt.normalize);
 
     if ismember(opt.clustering.type,'hierarchical') % for methodes that produce a hierarchy
+        
         switch opt.clustering.type
             case 'hierarchical'
                 R    = niak_build_correlation(tseries_boot);
@@ -174,6 +181,7 @@ for num_s = 1:opt.nb_samps
         for num_sc = 1:nb_s
             stab(:,num_sc) = stab(:,num_sc) + niak_mat2vec(niak_part2mat(part(:,num_sc),true));
         end
+        
     else % for clustering methods
 
         for num_sc = 1:nb_s
