@@ -130,7 +130,7 @@ opt_clustering.opt    = struct();
 opt_sampling.type     = 'boostrap';
 opt_sampling.opt.type = 'cbb';
 list_fields   = {'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'sampling'   , 'flag_verbose' };
-list_defaults = {opt_normalize , 100        , NaN          , opt_clustering , opt_sampling  , true           };
+list_defaults = {opt_normalize , 100        , NaN          , opt_clustering , opt_sampling , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -169,12 +169,12 @@ for num_s = 1:opt.nb_samps
     end
     tseries_boot = niak_normalize_tseries(tseries_boot,opt.normalize);
 
-    if ismember(opt.clustering.type,'hierarchical') % for methodes that produce a hierarchy
+    if ismember(opt.clustering.type,'hierarchical') % for methods that produce a hierarchy
         
         switch opt.clustering.type
             case 'hierarchical'
-                R    = niak_build_correlation(tseries_boot);
-                hier = niak_hierarchical_clustering(R,opt.clustering.opt);
+                D    = niak_build_distance(tseries_boot).^2;
+                hier = niak_hierarchical_clustering(-D,opt.clustering.opt);
         end
         opt_t.thresh = opt.nb_classes;
         part = niak_threshold_hierarchy(hier,opt_t);
