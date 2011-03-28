@@ -1,8 +1,4 @@
 function ind = niak_sub2ind_3d(siz,subx,suby,subz)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_SUB2IND_3D
-%
 % Convert 3D coordinates into linear indices
 %
 % SYNTAX :

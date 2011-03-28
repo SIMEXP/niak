@@ -1,11 +1,7 @@
 function decxyz = niak_build_neighbour_mat(type_neig)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BUILD_NEIGHBOUR_MAT
-%
-% Build a translation matrix to derive spatial neighbour of 3D voxels. Each
-% row of the matrix is a translation that applies to the 3D coordinates of
-% a voxel
+% Build a translation matrix to derive spatial neighbour of 3D voxels. 
+% Each row of the matrix is a translation that applies to the 3D 
+% coordinates of a voxel
 %
 % SYNTAX :
 % DECXYZ = NIAK_BUILD_NEIGHBOUR_MAT(TYPE_NEIG)

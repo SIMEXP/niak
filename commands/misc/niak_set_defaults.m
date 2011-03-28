@@ -1,7 +1,3 @@
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_SET_DEFAULTS
-%
 % Upload fields of a structure as variables of the workspace, with default
 % values.
 %

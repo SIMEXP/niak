@@ -1,8 +1,4 @@
 function [neig,ind] = niak_build_neighbour(mask,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BUILD_NEIGHBOUR
-%
 % Generate a list of linear indices of spatial neighbours of all voxels in
 % a 3D binary mask.
 %

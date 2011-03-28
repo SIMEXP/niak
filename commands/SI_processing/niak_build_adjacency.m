@@ -1,8 +1,4 @@
 function adj = niak_build_adjacency(mask,neig)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BUILD_ADJACENCY
-%
 % Compute the adjacency matrix of voxels within a region of interest in a
 % 3D volume.
 %

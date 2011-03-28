@@ -1,9 +1,5 @@
 function tseries_n = niak_correct_mean_var(tseries,type_correction)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_CORRECT_MEAN_VAR
-%
-% Correction time series to zero mean and unit variance
+% Correct time series to zero mean and unit variance
 %
 % SYNTAX:
 % TSERIES_N = NIAK_CORRECT_MEAN_VAR(TSERIES,TYPE_CORRECTION)
