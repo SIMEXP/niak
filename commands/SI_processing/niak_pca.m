@@ -1,9 +1,4 @@
 function [eig_val,eig_vec,weights] = niak_pca(data,nb_comp)
-
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_PCA
-%
 % Perform a principal component analysis on a 2D data array.
 %
 % SYNTAX:
@@ -12,44 +7,42 @@ function [eig_val,eig_vec,weights] = niak_pca(data,nb_comp)
 % _________________________________________________________________________
 % INPUTS
 %
-%  *  DATA
-%       (2D array, size N*T) samples*variables data array. If data is a
-%       time series array, the time would be the second dimension for a
-%       spatial PCA (the variables here are the volumes), which corresponds
-%       to TSERIES' for the usual NIAK conventions for array of time
-%       series.
+% DATA
+%   (2D array, size N*T) samples*variables data array. If data is a time 
+%   series array, the time would be the second dimension for a spatial PCA 
+%   (the variables here are the volumes), which corresponds to TSERIES' for 
+%   the usual NIAK conventions for array of time series.
 %
-%  *  NB_COMP 
-%       (real number, default rank of TSERIES) 
-%       If NB_COMP is comprised between 0 and 1, NB_COMP is assumed to be
-%       the percentage of the total variance that needs to be kept.
-%       If NB_COMP is an integer, greater than 1, NB_COMP is the number of
-%       components that will be generated (the procedure always consider
-%       the principal components ranked according to the energy they
-%       explain in the data. 
-%           
+% NB_COMP 
+%   (real number, default rank of TSERIES) 
+%   If NB_COMP is comprised between 0 and 1, NB_COMP is assumed to be the 
+%   percentage of the total variance that needs to be kept. If NB_COMP is 
+%   an integer, greater than 1, NB_COMP is the number of components that 
+%   will be generated (the procedure always consider the principal 
+%   components ranked according to the energy they explain in the data). 
 %           
 % _________________________________________________________________________
 % OUTPUTS
 %
-% *  EIG_VAL 
-%       (vector, size NB_COMP*1) eigen values, which is also the energy
-%       explained by each of the corresponding principal components.
+% EIG_VAL 
+%   (vector, size NB_COMP*1) eigen values, which is also the energy
+%   explained by each of the corresponding principal components.
 %
-% *  EIG_VEC 
-%       (array, size T*NB_COMP) eigen vectors (in columns)
+% EIG_VEC 
+%   (array, size T*NB_COMP) eigen vectors (in columns)
 %
-% *  WEIGHTS 
-%       (array, size N*NB_COMP) the weights, i.e. the matrix such that
-%       TSERIES = WEIGHT*EIG_VEC' in the case where NB_COMP == T, and
-%       otherwise EIG_VEC*WEIGHT is simply the projection of TSERIES in the
-%       PCA space of dimension NB_COMP with maximal energy.
+% WEIGHTS 
+%   (array, size N*NB_COMP) the weights, i.e. the matrix such that
+%   TSERIES = WEIGHT*EIG_VEC' in the case where NB_COMP == T, and
+%   otherwise EIG_VEC*WEIGHT is simply the projection of TSERIES in the
+%   PCA space of dimension NB_COMP with maximal energy.
 %
 % _________________________________________________________________________
-% SEE ALSO
+% SEE ALSO:
 % NIAK_BRICK_SPCA
+%
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % The PCA is done on the matrix of scalar products in the second
 % dimension, i.e. DATA'*DATA.
