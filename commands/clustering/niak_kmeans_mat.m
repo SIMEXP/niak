@@ -24,12 +24,26 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %       TYPE_INIT
 %           (string, default 'random_partition') the strategy to
 %           initialize the kmeans. Available options are :
-%           'random_partition' : self-explanatory
+%
+%           'random_partition' : self-explanatory. 
+%
 %           'random_point' : randomly select some data points as
 %               centroids.
+%
 %           'pca' : use the first principal components as centroids.
+%
+%           'hierarchical' : use a hierarchical clustering to find the
+%               initial partition. The procedure that is used is
+%               NIAK_HIERARCHICAL_CLUSTERING. See OPT.HIERARCHICAL below as
+%               well as OPT.TYPE_SIMILARITY.
+%
+%           'kmeans++' : use the k-means++ method. See  Arthur, D. and
+%               Vassilvitskii, S. (2007). "k-means++: the advantages of 
+%               careful seeding". Proceedings of the eighteenth annual 
+%               ACM-SIAM symposium on Discrete algorithms. pp. 1027–1035.
+%
 %           'user-specified' : use OPT.INIT as inial centroids of the
-%           partition.
+%               partition.
 %
 %       HIERARCHICAL
 %           (structure, default struct()) option of 
@@ -236,7 +250,7 @@ end
 %% The big loop %%
 %%%%%%%%%%%%%%%%%%
 if opt.flag_verbose
-    fprintf('Number of displacements : ');
+    fprintf('Relative change (perc) : ');
 end
 
 while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )    
@@ -281,7 +295,7 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     N_iter = N_iter + 1;
     ind_change = unique(part(diff>0,part_curr));
     if opt.flag_verbose
-        fprintf(' %d -',deplacements);        
+        fprintf(' %1.2f -',deplacements);        
     end
 end
 

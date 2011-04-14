@@ -44,6 +44,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 %               NIAK_HIERARCHICAL_CLUSTERING. See OPT.HIERARCHICAL below as
 %               well as OPT.TYPE_SIMILARITY.
 %
+%           'kmeans++' : use the k-means++ method. See  Arthur, D. and
+%               Vassilvitskii, S. (2007). "k-means++: the advantages of 
+%               careful seeding". Proceedings of the eighteenth annual 
+%               ACM-SIAM symposium on Discrete algorithms. pp. 1027–1035.
+%
 %           'user-specified' : use OPT.INIT as inial centroids of the
 %               partition.
 %
