@@ -1,5 +1,5 @@
 function scales_mat = niak_scales2mat(scales,neigh);
-% from a list of scales to an array scales*(neighbourhood of scales)
+% Convert a list of scales into an array scales*(neighbourhood of scales)
 %
 % SYNTAX:
 % SCALES_MAT = NIAK_SCALES2MAT(SCALES,NEIGH)
@@ -69,8 +69,8 @@ num_p = 0;
 scales_mat = zeros([nb_points 2]);
 for num_s = 1:length(scales)
     for num_g = 1:length(scales2{num_s})
-        scales_mat(num_p+1:num_p+length(scales2{num_s}),2) = scales(num_s);
-        scales_mat(num_p+1:num_p+length(scales2{num_s}),1) = scales2{num_s};        
+        scales_mat(num_p+1:num_p+length(scales2{num_s}),1) = scales(num_s);
+        scales_mat(num_p+1:num_p+length(scales2{num_s}),2) = scales2{num_s};        
     end    
     num_p = num_p+length(scales2{num_s});
 end
