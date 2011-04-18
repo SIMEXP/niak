@@ -97,13 +97,17 @@ function [] = niak_visu_motion(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'speed','type_slice','vol_limits','type_color','fwhm','type_flip','vol_limits'};
-gb_list_defaults = {0.2,'axial',[min(vol(:)) max(vol(:))],'jet',0,'rot90',[min(vol(:)) max(vol(:))]};
+gb_list_fields    = {'speed' , 'type_slice' , 'vol_limits'              , 'type_color' , 'fwhm' , 'type_flip' };
+gb_list_defaults  = {0.2     , 'axial'      , [min(vol(:)) max(vol(:))] , 'jet'        , 0      , 'rot90'     };
 niak_set_defaults
 
 opt = rmfield(opt,'speed');
 
-nt = size(vol,4);
+if ndims(vol)==2
+    nt = size(vol,2);
+else
+    nt = size(vol,4);
+end
 
 fprintf('Volume : ')
 num_t = 1;
@@ -111,7 +115,11 @@ flag_exit = 0;
 flag_play = 0;
 
 while ~flag_exit
-    niak_montage(vol(:,:,:,num_t),opt);
+    if ndims(vol)==2
+        niak_visu_matrix(vol(:,num_t));
+    else
+        niak_montage(vol(:,:,:,num_t),opt);
+    end
     if ~flag_play
         uk = input('Press a key (w : rewind, x : exit, '' : forward, p : play)','s');
     end
