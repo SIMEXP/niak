@@ -296,7 +296,7 @@ end
 
 %% Merge all eps figures into a single file
 file_eps_final = [folder_tmp 'fig_corsica.eps'];
-instr_concat = ['gs  -q -dNOPAUSE -dBATCH -dNOPLATFONTS -sOutputFile=' file_eps_final '  -sDEVICE=pswrite ' ];
+instr_concat = ['gs  -q -dNOPAUSE -dBATCH -sOutputFile=' file_eps_final '  -sDEVICE=pswrite ' ];
 for num_c = order
     instr_concat = [instr_concat file_space{num_c} ' ' file_time{num_c} ' '];
 end
