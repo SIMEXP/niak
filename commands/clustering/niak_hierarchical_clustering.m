@@ -20,7 +20,7 @@ function hier = niak_hierarchical_clustering(S,opt)
 %           individual.
 %
 %       TYPE_SIM
-%           (string, default 'average') the type of similarity between 
+%           (string, default 'Ward') the type of similarity between 
 %           clusters (see COMMENTS below) :
 %               
 %               'single'
@@ -33,7 +33,7 @@ function hier = niak_hierarchical_clustering(S,opt)
 %                   unweighted average of similarity between clusters.
 %                   (UPGMA).
 %               
-%               'Ward'
+%               'ward'
 %                   The Ward criterion of similarity between clusters.
 %
 %       NB_CLASSES
