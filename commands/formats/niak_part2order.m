@@ -73,6 +73,12 @@ function [order,part_order,order_c] = niak_part2order(part,S);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+if max(part)==1
+    order = 1:length(part);
+    return
+end
+
 if length(unique(part(part>0)))~=max(part(part>0))
     tmp = zeros([max(part) 1]);
     ind = 1:length(unique(part));
