@@ -174,7 +174,11 @@ end
 if flag_m
     part = zeros(size(part_final));
     for num_s = 1:length(thresh)
-       [tmp1,tmp2,part(:,num_s)] = unique(part_final(:,num_s));
+       if thresh(num_s)>=size(part_final,1)
+           part(:,num_s) = 1:size(part,1);
+       else
+           [tmp1,tmp2,part(:,num_s)] = unique(part_final(:,num_s));
+       end
     end
 else
     [tmp1,tmp2,part] = unique(part);
