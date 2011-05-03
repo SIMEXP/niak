@@ -76,6 +76,8 @@ function [order,part_order,order_c] = niak_part2order(part,S);
 
 if max(part)==1
     order = 1:length(part);
+    order_c = 1;    
+    part_order = part;
     return
 end
 
