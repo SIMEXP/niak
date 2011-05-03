@@ -1,8 +1,4 @@
 function [] = niak_write_nifti(hdr,vol)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_WRITE_NIFTI
-%
 % Write a 3D or 3D+t dataset into a NIFTI file (.NII or .IMG/.HDR) or an
 % Analyze 7.5 file (.IMG/.HDR/.MAT).
 % See http://nifti.nimh.nih.gov/nifti-1
@@ -153,14 +149,24 @@ hdr.details.srow_z = hdr.info.mat(3,1:4);
 switch hdr.info.precision
     case 'uint8'
         hdr.details.datatype = 2;
+        hdr.details.bitpix = int16(8);
+        vol = uint8(vol);
     case 'int16' 
         hdr.details.datatype = 4;
+        hdr.details.bitpix = int16(16);
+        vol = int16(vol);
     case 'int32'
         hdr.details.datatype = 8;
+        hdr.details.bitpix = int16(32);
+        vol = int32(vol);
     case 'float32'
         hdr.details.datatype = 16;
+        hdr.details.bitpix = int16(32);        
+    	vol = single(vol);
     case 'double'
         hdr.details.datatype = 64;
+        hdr.details.bitpix = int16(64);
+        vol = double(vol);
 end
 
 hdr.details.glmax = round(double(max(vol(:))));
