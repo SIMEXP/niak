@@ -91,6 +91,12 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 %			in two subclusters using k-means until the number of 
 %			clusters is back to the one specified.
 %       
+%       CONVERGENCE_RATE
+%           (scalar, 0) the rate of changes to decide on convergence of
+%           the algorithm. The rate of change is defined as the proportion of
+%           regions whose associated cluster changed between two
+%           iterations.
+%
 %       NB_ITER
 %           (integer, default 1) number of iterations of the kmeans (the 
 %           best clustering, i.e. with lowest I_INTRA, will be selected).
@@ -171,7 +177,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_clustering(data,opt,flag_opt);
 %% Options
 if (nargin < 3)||(flag_opt)
     list_fields    = {'hierarchical' , 'type_similarity' , 'convergence_rate' , 'nb_attempts_max' , 'flag_bisecting' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'nb_iter' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' , 'flag_mex' };
-    list_defaults  = {struct()       , 'product'         , 0.01               , 5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 50            , 5                , false      };
+    list_defaults  = {struct()       , 'product'         , 0                  , 5                 , false            , []     , 'random_partition' , 'none'       , NaN          , []  , 1         , 0              , 50            , 5                , false      };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
