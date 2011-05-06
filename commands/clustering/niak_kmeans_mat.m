@@ -85,9 +85,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %			clusters is back to the one specified.
 %
 %       CONVERGENCE_RATE
-%           (scalat, 0.01) the rate of changes in the adjacency matrix
+%           (scalar, 0) the rate of changes in the adjacency matrix
 %           representation of the clustering to decide on convergence of
-%           the algorithm.
+%           the algorithm. The rate of change is defined as the proportion of
+%           regions whose associated cluster changed between two
+%           iterations.
 %
 %       NB_ITER_MAX
 %           (integer, default 50) Maximal number of iterations of the
@@ -149,7 +151,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %% Options
 if (nargin < 3)||(flag_opt)
     list_fields    = {'hierarchical' , 'type_similarity' , 'convergence_rate' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
-    list_defaults  = {struct()       , 'product'         , 0.01               , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
+    list_defaults  = {struct()       , 'product'         , 0                  , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
@@ -289,10 +291,8 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     %% Check for cycles and list the clusters that have changed    
     mat_curr = niak_part2mat(part(:,part_curr),true);
     mat_old = niak_part2mat(part(:,part_old),true);
-    %diff = sum(mat_curr~=mat_old);
     diff = any(mat_curr~=mat_old);
     deplacements = sum(diff)/length(diff);
-    %deplacements = sum(diff)/(sum(sum(mat_curr|mat_old))-N);
     changement = deplacements>0.01;        
     N_iter = N_iter + 1;
     ind_change = unique(part(diff>0,part_curr));
