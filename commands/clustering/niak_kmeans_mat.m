@@ -289,8 +289,10 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     %% Check for cycles and list the clusters that have changed    
     mat_curr = niak_part2mat(part(:,part_curr),true);
     mat_old = niak_part2mat(part(:,part_old),true);
-    diff = sum(mat_curr~=mat_old);
-    deplacements = sum(diff)/(sum(sum(mat_curr|mat_old))-N);
+    %diff = sum(mat_curr~=mat_old);
+    diff = any(mat_curr~=mat_old);
+    deplacements = sum(diff)/length(diff);
+    %deplacements = sum(diff)/(sum(sum(mat_curr|mat_old))-N);
     changement = deplacements>0.01;        
     N_iter = N_iter + 1;
     ind_change = unique(part(diff>0,part_curr));

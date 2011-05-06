@@ -20,7 +20,7 @@ function hier = niak_hierarchical_clustering(S,opt)
 %           individual.
 %
 %       TYPE_SIM
-%           (string, default 'Ward') the type of similarity between 
+%           (string, default 'ward') the type of similarity between 
 %           clusters (see COMMENTS below) :
 %               
 %               'single'
