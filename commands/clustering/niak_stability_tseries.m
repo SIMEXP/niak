@@ -62,7 +62,12 @@ function stab = niak_stability_tseries(tseries,opt)
 %
 %       TYPE
 %           (string, default 'hierarchical') the clustering algorithm
-%           Available options : 'kmeans', 'hierarchical'
+%           Available options : 
+%               'kmeans': k-means (euclidian distance)
+%               'hierarchical': a HAC based on the eta-square distance
+%                   (see NIAK_BUILD_ETA2)
+%               'hierarchical_euclidian' : a HAC based on a squared
+%                   euclidian distance.
 %
 %       OPT
 %           (structure, optional) options that will be  sent to the
@@ -172,8 +177,12 @@ for num_s = 1:opt.nb_samps
     if ismember(opt.clustering.type,'hierarchical') % for methods that produce a hierarchy
         
         switch opt.clustering.type
-            case 'hierarchical'
+            case 'hierarchical_euclidian'
                 D    = niak_build_distance(tseries_boot).^2;
+                hier = niak_hierarchical_clustering(-D,opt.clustering.opt);
+            case 'hierarchical'
+                D    = niak_build_correlation(tseries_boot);
+                D    = 1-niak_build_eta2(R);
                 hier = niak_hierarchical_clustering(-D,opt.clustering.opt);
         end
         opt_t.thresh = opt.nb_classes;
