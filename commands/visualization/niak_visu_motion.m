@@ -45,6 +45,10 @@ function [] = niak_visu_motion(vol,opt)
 %           (vector 1*2, default [min(vol(:)) max(vol(:))]) limits of the 
 %           color scaling.
 %
+%       ORDER
+%           (vector, default []) it VOL is a set of vectorized matrices,
+%           set an order on the regions.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -97,8 +101,8 @@ function [] = niak_visu_motion(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields    = {'speed' , 'type_slice' , 'vol_limits'              , 'type_color' , 'fwhm' , 'type_flip' };
-gb_list_defaults  = {0.2     , 'axial'      , [min(vol(:)) max(vol(:))] , 'jet'        , 0      , 'rot90'     };
+gb_list_fields    = {'speed' , 'type_slice' , 'vol_limits'              , 'type_color' , 'fwhm' , 'type_flip' , 'order' };
+gb_list_defaults  = {0.2     , 'axial'      , [min(vol(:)) max(vol(:))] , 'jet'        , 0      , 'rot90'     , []      };
 niak_set_defaults
 
 opt = rmfield(opt,'speed');
@@ -116,7 +120,12 @@ flag_play = 0;
 
 while ~flag_exit
     if ndims(vol)==2
-        niak_visu_matrix(vol(:,num_t));
+        if ~isempty(order)
+            mat = niak_vec2mat(vol(:,num_t));
+            niak_visu_matrix(mat(order,order));
+        else
+            niak_visu_matrix(vol(:,num_t));
+        end
     else
         niak_montage(vol(:,:,:,num_t),opt);
     end
