@@ -182,7 +182,7 @@ for num_s = 1:opt.nb_samps
                 hier = niak_hierarchical_clustering(-D,opt.clustering.opt);
             case 'hierarchical'
                 D    = niak_build_correlation(tseries_boot);
-                D    = 1-niak_build_eta2(R);
+                D    = 1-niak_build_eta2(D);
                 hier = niak_hierarchical_clustering(-D,opt.clustering.opt);
         end
         opt_t.thresh = opt.nb_classes;
