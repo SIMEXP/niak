@@ -61,6 +61,9 @@ if ~exist('mask','var')
     mask = ones([nx,ny,nz]);
 end
 mask = mask > 0;
-
+[nx2,ny2,nz2] = size(mask);
+if (nx~=nx2)||(ny~=ny2)||(nz~=nz2)
+    error('The mask should have the same spatial dimensions as the space-time dataset');
+end
 tseries = reshape(vol,[nx*ny*nz nt]);
 tseries = tseries(mask,:)';
