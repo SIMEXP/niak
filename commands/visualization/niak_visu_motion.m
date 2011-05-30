@@ -118,6 +118,10 @@ num_t = 1;
 flag_exit = 0;
 flag_play = 0;
 
+if ndims(vol)~=2
+    opt = rmfield(opt,'order');
+end
+
 while ~flag_exit
     if ndims(vol)==2
         if ~isempty(order)
@@ -126,7 +130,7 @@ while ~flag_exit
         else
             niak_visu_matrix(vol(:,num_t));
         end
-    else
+    else        
         niak_montage(vol(:,:,:,num_t),opt);
     end
     if ~flag_play
