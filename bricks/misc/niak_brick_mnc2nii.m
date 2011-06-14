@@ -144,6 +144,7 @@ for num_f = 1:length(list_files)
                 error(err_msg)
             end
         end
+    end
 end
 
 if flag_recursive
