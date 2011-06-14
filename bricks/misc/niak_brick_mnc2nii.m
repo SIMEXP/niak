@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_mnc2nii(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MNC2NII
-%
 % Copy the content of a directory and convert all the minc files into the 
 % nifti format.
 %
@@ -11,25 +7,31 @@ function [files_in,files_out,opt] = niak_brick_mnc2nii(files_in,files_out,opt)
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN  
-%       (string) a full path.
+% FILES_IN  
+%   (string) a full path.
 %
-%  * FILES_OUT 
-%       (string, default FILES_IN) a full path
+% FILES_OUT 
+%   (string, default FILES_IN) a full path
 %
-%  * OPT   
-%       (structure) with the following fields :
+% OPT   
+%   (structure) with the following fields :
 %
-%       FLAG_RECURSIVE
-%           (boolean, default true) recursively copy subfolders.
+%   FLAG_RECURSIVE
+%       (boolean, default true) recursively copy subfolders.
 %
-%       ARG_MNC2NII
-%           (string, default '') an argument that will be added in
-%           the system call to the MNC2NII function.
+%   ARG_MNC2NII
+%       (string, default '') an argument that will be added in
+%       the system call to the MNC2NII function.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function prints 
-%           some infos during the processing.
+%   FLAG_ZIP
+%       (boolean, default true) if FLAG_ZIP is true, the nii files are 
+%       zipped. The tools used to zip files is 'gzip -f'. This setting 
+%       can be changed by editing the variable GB_NIAK_ZIP in the file 
+%       NIAK_GB_VARS.
+%
+%   FLAG_VERBOSE 
+%       (boolean, default 1) if the flag is 1, then the function prints 
+%       some infos during the processing.
 %
 % _________________________________________________________________________
 % OUTPUTS
@@ -79,10 +81,18 @@ if ~exist('files_out','var')||isempty(files_out)
     files_out = files_in;
 end
 
+if ~strcmp(files_in(end),filesep)
+    files_in = [files_in filesep];
+end
+
+if ~strcmp(files_out(end),filesep)
+    files_out = [files_out filesep];
+end
+
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_recursive','flag_verbose','arg_mnc2nii'};
-gb_list_defaults = {true,true,''};
+gb_list_fields    = { 'flag_zip' , 'flag_recursive' , 'flag_verbose' , 'arg_mnc2nii' };
+gb_list_defaults  = { true       , true             , true           , ''            };
 niak_set_defaults
 
 dir_files = dir(files_in);
@@ -112,7 +122,7 @@ for num_f = 1:length(list_files)
     if strcmp(ext,'.mnc')
         target_file = [files_out filesep name_tmp '.nii'];
         instr_cp = ['mnc2nii ',arg_mnc2nii,' ',source_file,' ',target_file];       
-        msg = sprintf('Convert %s to %s\n',source_file,target_file);
+        msg = sprintf('Convert %s to %s\n',source_file,target_file);            
     else
         target_file = [files_out filesep file_name];
         instr_cp = ['cp -f ' source_file ' ' target_file];        
@@ -127,8 +137,13 @@ for num_f = 1:length(list_files)
         if flag_err
             error(err_msg)
         end
-    end
-
+        if strcmp(ext,'.mnc')&flag_zip
+            instr_zip = [gb_niak_zip ' ' target_file];
+            [flag_err,err_msg] = system(instr_zip);
+            if flag_err
+                error(err_msg)
+            end
+        end
 end
 
 if flag_recursive
