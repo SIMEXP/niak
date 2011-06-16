@@ -1,8 +1,4 @@
-function  [err,msg] = niak_read_tab(file_name,tab,labels_line,labels_col)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_WRITE_TAB
-%
+function  [err,msg] = niak_write_tab(file_name,tab,labels_line,labels_col)
 % Write a table into a text file. 
 % The first line and first columns are string labels, while
 % the rest of the table is a numerical array. 
