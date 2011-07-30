@@ -124,16 +124,15 @@ nx = length(labels_x);
 ny = length(labels_y);
 
 % Reorder the model using labels_x and labels_m
-X = zeros([nx ny]);
 [mask_x,ind_m] = ismember(labels_x,labels_m);
 [mask_y,ind_n] = ismember(labels_y,labels_n);
 ind_err = find(mask_x == 0);
 if ~isempty(ind_err)
-    error('The following specified entry was not found in the model : %s',labels_x(ind_err(1)));
+    error('The following specified entry was not found in the model : %s',labels_x{ind_err(1)});
 end
 ind_err = find(mask_y == 0);
 if ~isempty(ind_err)
-    error('The following specified covariate was not found in the model : %s',labels_y(ind_err(1)));
+    error('The following specified covariate was not found in the model : %s',labels_y{ind_err(1)});
 end
 model = model_m(ind_m,ind_n); 
 
@@ -148,7 +147,6 @@ if opt.flag_intercept
     model = [ones([size(model,1) 1]) model];
     labels_y = [{'intercept'} ; labels_y(:)];
 end
-return
 
 % Optional orthogonalization of covariates
 if ~isempty(opt.projection)
@@ -156,7 +154,7 @@ if ~isempty(opt.projection)
         mask_space = ismember(labels_y,opt.projection(num_e).space);
         mask_ortho = ismember(labels_y,opt.projection(num_e).ortho);
         [B,E] = niak_lse(model(:,mask_ortho),model(:,mask_space));
-        model(:,mask_to_ortho) = E;
+        model(:,mask_ortho) = E;
     end
 
     % Optional normalization of covariates
