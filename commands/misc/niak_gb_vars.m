@@ -1,7 +1,3 @@
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_GB_VARS
-%
 % This is a script to define important NIAK variables. Whenever needed, 
 % NIAK commands will call this script to initialize the variables. If NIAK 
 % does not behave the way you want, this might be the place to fix that.
@@ -11,8 +7,11 @@
 % _________________________________________________________________________
 % COMMENT:
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
+% Département d'informatique et de recherche opérationnelle
+% Centre de recherche de l'institut de Gériatrie de Montréal
+% Université de Montréal, 2010-2011
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : NIAK
 
@@ -79,7 +78,7 @@ gb_niak_ps2pdf = 'ps2pdf';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-gb_niak_version = '0.6.4.1'; 
+gb_niak_version = '0.6.4.3'; 
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION','builtin')    
