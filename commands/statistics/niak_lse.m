@@ -85,7 +85,7 @@ function [beta,e,std_e,ttest] = niak_lse(y,x,c,flag_james_stein)
 
 [N,S] = size(y);
 K = size(x,2);
-if nargin < 3
+if (nargin < 3) || isempty(c)
     c = ones([K 1]);
 end
 if nargin < 4
@@ -94,11 +94,15 @@ end
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
-beta  = (x'*x)^(-1)*x'*y;        % Regression coefficients
-e     = y-x*beta;                % Residuals
-std_e = sqrt(sum(E.^2,1)/(N-K)); % Standard deviation of the noise
-d     = sqrt(c'*(X'*X)^(-1)*c);  % Intermediate result for the t-test
-ttest = (c'*B)./(std_e*d);       % t-test
+beta = (x'*x)^(-1)*x'*y; % Regression coefficients
+if nargout > 1
+    e = y-x*beta; % Residuals
+end
+if (nargout > 2) || flag_james_stein
+    std_e = sqrt(sum(e.^2,1)/(N-K)); % Standard deviation of the noise
+end
+d     = sqrt(c'*(x'*x)^(-1)*c);  % Intermediate result for the t-test
+ttest = (c'*beta)./(std_e*d);       % t-test
 if (K>=3) && flag_james_stein
     % If there are more than 3 covariates and the user specified so, apply a James-Stein correction
     a = 1-((K-2)*(N-K)*std_e.^2)./((N-K+2)*sum(beta.*(x'*x*beta),1));
