@@ -1,15 +1,15 @@
-function [model,labels_x,labels_y] = niak_read_model(file_name,opt)
+function [model,labels_x,labels_y,contrast_vec] = niak_read_model(file_name,opt)
 % Read a model from a CSV file and apply a number of preprocessing,
 % such as centering covariates, adding an intercept, or othogonalizing
 % parts of the model
 %
 % SYNTAX:
-% [MODEL,LABELS_X,LABELS_Y] = NIAK_READ_MODEL(FILE_NAME,OPT)
+% [MODEL,LABELS_X,LABELS_Y,CONTRAST_VEC] = NIAK_READ_MODEL(FILE_NAME,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% FILE_NAME     
+% FILE_NAME
 %    (string) the name of one or multiple CSV file. 
 %    Example :
 %              , SEX , HANDENESS
@@ -38,7 +38,7 @@ function [model,labels_x,labels_y] = niak_read_model(file_name,opt)
 %
 %   PROJECTION
 %       (structure, optional) with multiple entries and the following 
-%	fields :
+%	    fields :
 %
 %       SPACE
 %           (cell of strings) a list of the covariates that define the
@@ -48,6 +48,16 @@ function [model,labels_x,labels_y] = niak_read_model(file_name,opt)
 %       ORTHO
 %           (cell of strings) a list of the covariates to project in
 %           the space orthogonal to SPACE (see above).
+%
+%   CONTRAST
+%       (structure, with the same fields as LABELS_Y)
+%       OPT.CONTRAST is not used to build the model but it will be
+%       re-arranged into a vector form compatible with MODEL (see
+%       CONTRAST_VEC in the list of outputs below)
+%
+%       <NAME>
+%          (scalar, default 0) the weight of the covariate NAME in the
+%          contrast.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -63,8 +73,13 @@ function [model,labels_x,labels_y] = niak_read_model(file_name,opt)
 %	(cell of strings 1*N) LABELS_Y{Y} is the label of covariate Y in 
 % 	the model
 %
+% CONTRAST_VEC
+%   (vector, 1*K) CONTRAST_VEC(k) defines the weight of covariate number k in
+%   the contrast of interest (see OPT.CONTRAST above).
+%
 % _________________________________________________________________________
 % SEE ALSO:
+% NIAK_BRICK_GLM_CONNECTOME
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -100,8 +115,8 @@ if ~exist(file_name,'file')
 end
 
 %% Options
-list_fields   = {'labels_x' , 'labels_y' , 'projection' , 'flag_intercept' , 'flag_normalize' };
-list_defaults = {{}         , {}         , struct([])   , true             , true          };
+list_fields   = { 'contrast' , 'labels_x' , 'labels_y' , 'projection' , 'flag_intercept' , 'flag_normalize' };
+list_defaults = { {}         , {}         , {}         , struct([])   , true             , true             };
 if nargin > 1
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -136,19 +151,31 @@ if ~isempty(ind_err)
 end
 model = model_m(ind_m,ind_n); 
 
-% Optional normalization of covariates
-if opt.flag_normalize
-    opt_n.type = 'mean_var';
-    model = niak_normalize_tseries(model,opt_n);
-end
-
-% Optional additional intercept covariate
+% Optional: additional intercept covariate
 if opt.flag_intercept
     model = [ones([size(model,1) 1]) model];
     labels_y = [{'intercept'} ; labels_y(:)];
 end
 
-% Optional orthogonalization of covariates
+%% Optional: build the contrast vector
+contrast_vec = zeros([length(labels_y) 1]);
+for num_c = 1:length(labels_y)
+    if isempty(opt.contrast)
+        contrast_vec(num_c) = 1;
+    else
+        if isfield(opt.contrast,labels_y{num_c})
+            contrast_vec(num_c) = opt.contrast.(labels_y{num_c});
+        end
+    end
+end
+
+% Optional: normalization of covariates
+if opt.flag_normalize
+    opt_n.type = 'mean_var';
+    model = niak_normalize_tseries(model,opt_n);
+end
+
+% Optional: orthogonalization of covariates
 if ~isempty(opt.projection)
     for num_e = 1:length(opt.projection);
         mask_space = ismember(labels_y,opt.projection(num_e).space);
@@ -157,10 +184,9 @@ if ~isempty(opt.projection)
         model(:,mask_ortho) = E;
     end
 
-    % Optional normalization of covariates
+    % Optional: normalization of covariates (again)
     if opt.flag_normalize
         opt_n.type = 'mean_var';
         model(:,mask_ortho) = niak_normalize_tseries(model(:,mask_ortho),opt_n);
     end
 end
-
