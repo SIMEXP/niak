@@ -1,7 +1,7 @@
-function [beta,e] = niak_lse(y,x)
+function [beta,e,std_e,ttest] = niak_lse(y,x,c,flag_james_stein)
 % Least-square estimates in a linear model Y = X*BETA + E 
 %
-% [BETA,E] = NIAK_LSE(Y,X)
+% [BETA,E,STD_E,TTEST] = NIAK_LSE(Y,X,C)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -13,8 +13,18 @@ function [beta,e] = niak_lse(y,x)
 %   (2D array size T*K) each column of X is a explaining factor with the 
 %   same number of rows as Y.
 %
+% C
+%   (vector, size K*1, default ones([K 1])) C(K) is the weight of
+%   X(:,K) in the t-test (see TTEST below).
+%
+% FLAG_JAMES_STEIN
+%   (boolean, default false) if FLAG_JAMES_STEIN is true and the number
+%   of covariates is larger (or equal) than 3, a James-Stein correction
+%   will be applied on the regression coefficients.
+%
 % _________________________________________________________________________
 % OUTPUTS:
+%
 % BETA
 %   (vector size K*N) BETA(k,n) is the estimated coefficient regression 
 %   estimate of X(:,k) on Y(:,n), using the least-square criterion.
@@ -22,8 +32,33 @@ function [beta,e] = niak_lse(y,x)
 % E
 %   (2D array, size T*N) residuals of the regression
 %
+% STD_E
+%   (vector, size [1 N]) STD_E(n) is an estimate of the standard deviation of
+%   the noise Y(:,n). It is simply derived from the residual sum-of-squares
+%   after correction for the number of degrees of freedom in the model.
+%
+% TTEST
+%   (vector, size [1 N]) TTEST(n) is a t-test associated with the estimated
+%   weights and the specified contrast (see C above).
+%
 % _________________________________________________________________________
-% COMMENTS
+% REFERENCES:
+%
+% On the estimation of coefficients and the t-test:
+%
+%   Statistical Parametric Mapping: The Analysis of Functional Brain Image.
+%   Edited By William D. Penny, Karl J. Friston, John T. Ashburner,
+%   Stefan J. Kiebel  &  Thomas E. Nichols. Springer, 2007.
+%   Chapter 7: "The general linear model", S.J. Kiebel, A.P. Holmes.
+%
+% On the James-Stein shrinkage correction:
+%
+%   Judge GG, Hill CR, Bock ME. An adaptive empirical Bayes estimator
+%   of the multivariate normal mean under quadratic loss. J Econom
+%   1990;44:189–213.
+%
+% _________________________________________________________________________
+% COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
 % Maintainer : pierre.bellec@criugm.qc.ca
@@ -48,5 +83,25 @@ function [beta,e] = niak_lse(y,x)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-beta = (x'*x)^(-1)*x'*y;
-e = y-x*beta;
+[N,S] = size(y);
+K = size(x,2);
+if nargin < 3
+    c = ones([K 1]);
+end
+if nargin < 4
+    flag_james_stein = false;
+end
+if size(x,1)~=N
+    error('X should have the same number of rows as Y');
+end
+beta  = (x'*x)^(-1)*x'*y;        % Regression coefficients
+e     = y-x*beta;                % Residuals
+std_e = sqrt(sum(E.^2,1)/(N-K)); % Standard deviation of the noise
+d     = sqrt(c'*(X'*X)^(-1)*c);  % Intermediate result for the t-test
+ttest = (c'*B)./(std_e*d);       % t-test
+if (K>=3) && flag_james_stein
+    % If there are more than 3 covariates and the user specified so, apply a James-Stein correction
+    a = 1-((K-2)*(N-K)*std_e.^2)./((N-K+2)*sum(beta.*(x'*x*beta),1));
+    a = max(0,a);
+    beta = repmat(a,[K 1]).*beta;
+end
