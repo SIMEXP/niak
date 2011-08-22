@@ -153,7 +153,7 @@ model = model_m(ind_m,ind_n);
 
 % Optional: additional intercept covariate
 if opt.flag_intercept
-    model = [ones([size(model,1) 1]) model];
+    model = [ones([size(model,1) 1])/sqrt(size(model,1)) model];
     labels_y = [{'intercept'} ; labels_y(:)];
 end
 
@@ -173,6 +173,9 @@ end
 if opt.flag_normalize
     opt_n.type = 'mean_var';
     model = niak_normalize_tseries(model,opt_n);
+    if opt.flag_intercept
+        model(:,1) = 1/sqrt(size(model,1));
+    end
 end
 
 % Optional: orthogonalization of covariates
@@ -188,5 +191,8 @@ if ~isempty(opt.projection)
     if opt.flag_normalize
         opt_n.type = 'mean_var';
         model(:,mask_ortho) = niak_normalize_tseries(model(:,mask_ortho),opt_n);
+        if opt.flag_intercept
+            model(:,1) = 1/sqrt(size(model,1));
+        end
     end
 end
