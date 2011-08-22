@@ -101,8 +101,10 @@ end
 if (nargout > 2) || flag_james_stein
     std_e = sqrt(sum(e.^2,1)/(N-K)); % Standard deviation of the noise
 end
-d     = sqrt(c'*(x'*x)^(-1)*c);  % Intermediate result for the t-test
-ttest = (c'*beta)./(std_e*d);       % t-test
+if (nargout > 3)
+    d     = sqrt(c'*(x'*x)^(-1)*c);  % Intermediate result for the t-test
+    ttest = (c'*beta)./(std_e*d);       % t-test
+end
 if (K>=3) && flag_james_stein
     % If there are more than 3 covariates and the user specified so, apply a James-Stein correction
     a = 1-((K-2)*(N-K)*std_e.^2)./((N-K+2)*sum(beta.*(x'*x*beta),1));
