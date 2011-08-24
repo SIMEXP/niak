@@ -92,38 +92,44 @@ end
 if flag_trim
     labels_y = strtrim(labels_y);
 end
+
 %% Extracting the numerical data
 nb_col = length(labels_y);
 labels_x = cell([length(cell_tab)-1 1]);
+
 for num_x = 2:length(cell_tab)
-    line_tmp = sub_csv(cell_tab{num_x},separator);    
-    if isempty(labels_y{1})        
-        if num_x == 2            
-            tab = zeros([length(cell_tab)-1 nb_col-1]);
-        end
-        labels_x{num_x-1} = line_tmp{1};
-        for num_y = 2:length(line_tmp)
-            if flag_string
-                line_tmp{num_y} = regexprep(line_tmp{num_y},'[''"]','');                
-            end
-            tab(num_x-1,num_y-1) = str2double(line_tmp{num_y});
-        end        
+    line_tmp = sub_csv(cell_tab{num_x},separator);  
+    if num_x == 2
+        lines = cell([length(cell_tab)-1 length(line_tmp)]);
+        lines(1,:) = line_tmp;
     else
-        if num_x == 2
-            tab = zeros([length(cell_tab)-1 nb_col]);
-        end            
-        for num_y = 1:length(line_tmp)
-            tab(num_x-1,num_y) = str2double(line_tmp{num_y});
-        end        
+        if length(line_tmp)~=size(lines,2)
+            error('All lines do not have the same number of elements!')
+        end
+        lines(num_x-1,:) = line_tmp;
     end
 end
+
+if isempty(labels_y{1})
+    labels_x = lines(:,1);
+    tab = str2double(lines(:,2:end));
+else
+    tab = str2double(lines);
+end
+
 if flag_string
     for num_e = 1:length(labels_x)
-        labels_x{num_e} = regexprep(labels_x{num_e},'[''"]','');
+        if ~isempty(labels_x{num_e})
+            labels_x{num_e} = regexprep(labels_x{num_e},'[''"]','');
+        end
     end    
 end
 if flag_trim
-    labels_x = strtrim(labels_x);
+    for num_e = 1:length(labels_x)
+        if ~isempty(labels_x{num_e})
+            labels_x{num_e} = strtrim(labels_x{num_e});
+        end
+    end
 end
 
 if isempty(labels_y{1})
