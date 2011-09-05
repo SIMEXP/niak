@@ -98,6 +98,10 @@ nb_col = length(labels_y);
 labels_x = cell([length(cell_tab)-1 1]);
 
 for num_x = 2:length(cell_tab)
+    if flag_string
+        cell_tab{num_x} = regexprep(cell_tab{num_x},'[''"]','');
+    end
+    
     line_tmp = sub_csv(cell_tab{num_x},separator);  
     if num_x == 2
         lines = cell([length(cell_tab)-1 length(line_tmp)]);
@@ -117,13 +121,6 @@ else
     tab = str2double(lines);
 end
 
-if flag_string
-    for num_e = 1:length(labels_x)
-        if ~isempty(labels_x{num_e})
-            labels_x{num_e} = regexprep(labels_x{num_e},'[''"]','');
-        end
-    end    
-end
 if flag_trim
     for num_e = 1:length(labels_x)
         if ~isempty(labels_x{num_e})
