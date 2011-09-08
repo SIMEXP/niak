@@ -1,8 +1,4 @@
 function [tseries,std_tseries] = niak_build_tseries(vol,mask,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BUILD_TSERIES
-%
 % Extract the mean and std of time series of in multiple ROI 
 % from a 3D+t dataset.
 %
