@@ -94,7 +94,7 @@ if nargout >3
     P = U./sqrt(diag(U)*diag(U)');
     P(~eye(size(P,1))) = - P(~eye(size(P,1)));
     if flag_vec
-        P = niak_matvec(P);
+        P = niak_mat2vec(P);
     end
 end
 
