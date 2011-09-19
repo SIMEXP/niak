@@ -61,7 +61,7 @@ end
 nb_points = 0;
 scales2 = cell([length(scales) 1]);
 for num_s = 1:length(scales)    
-    scales2{num_s} = ceil(neigh(1)*scales(num_s)):max(floor(neigh(2)*scales(num_s)),1):ceil(neigh(3)*scales(num_s));
+    scales2{num_s} = unique(ceil(scales(num_s)*neigh));
     nb_points = nb_points + length(scales2{num_s});   
 end
 
