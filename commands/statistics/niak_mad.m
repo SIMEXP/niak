@@ -1,11 +1,8 @@
 function std_mad = niak_mad(tseries);
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_MAD
-%
-% Compute the median absolute deviation to the median to time series, and
-% applies a correction factor to derive an estimate of the standard
-% deviation for a Gaussian process
+% Median absolute deviation to the median.
+% This function was designed for time series, and applies a correction 
+% factor to derive an estimate of the standard deviation for a Gaussian 
+% process
 %
 % SYNTAX:
 % STD_MAD = NIAK_MAD(TSERIES)
