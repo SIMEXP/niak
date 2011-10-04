@@ -1,9 +1,6 @@
 function [hdr,vol] = niak_read_vol(file_name)
-% Read brain image in 3D or 3D+t volumes in various formats. 
-% Currently supported formats are minc1 and minc2 (.mnc), nifti 
-% (.nii or .img/.hdr) and analyze (.img/.hdr/.mat).
-% The data can also be zipped (additional extension .gz, see the COMMENTS
-% section below).
+% Read brain image in 3D or 3D+t files (analyze, nifti, minc) 
+% The data can also be zipped (see the COMMENTS section below)
 %
 % SYNTAX :
 % [HDR,VOL] = NIAK_READ_VOL(FILE_NAME)
@@ -11,75 +8,75 @@ function [hdr,vol] = niak_read_vol(file_name)
 % _________________________________________________________________________
 % INPUTS :
 %
-% * FILE_NAME
-%       (string) a single 3D or 3D+t image file, or a matrix of image file 
-%       names, each with a single 3D frame.
-%       Supported formats are either NIFIT (*.nii,*.img/hdr), ANALYZE 
-%       (.img/.hdr/.mat) or MINC1/MINC2 (.mnc). Extra blanks are ignored. 
-%       File separator can be / or \ on Windows. Gzipped files (with an 
-%       additional .gz) are supported. Frames must be equally spaced in 
-%       time. For single file names, wild cards are supported (mutliple 
-%       files are treated in the same way as a matrix of image files 
-%       names).
+% FILE_NAME
+%    (string) a single 3D or 3D+t image file, or a matrix of image file 
+%    names, each with a single 3D frame.
+%    Supported formats are either NIFIT (*.nii,*.img/hdr), ANALYZE 
+%    (.img/.hdr/.mat) or MINC1/MINC2 (.mnc). Extra blanks are ignored. 
+%    File separator can be / or \ on Windows. Gzipped files (with an 
+%    additional .gz) are supported. Frames must be equally spaced in 
+%    time. For single file names, wild cards are supported (mutliple 
+%    files are treated in the same way as a matrix of image files 
+%    names).
 %
 % _________________________________________________________________________
 % OUTPUTS :
 %
-% * VOL           
-%       (3D+t or 3D array of double) the 3d or 3d+t raw data.
+% VOL           
+%    (3D+t or 3D array of double) the 3d or 3d+t raw data.
 %
-% * HDR
-%       a structure containing a description of meta-information on the 
-%       data, with the following fields :
+% HDR
+%    a structure containing a description of meta-information on the 
+%    data, with the following fields :
 %
-%       FILE_NAME   
-%           (empty string '') name of the file currently associated with the 
-%           header.
+%    FILE_NAME   
+%        (empty string '') name of the file currently associated with the 
+%        header.
 %
-%       TYPE   
-%           (string) the file format (either 'minc1', 'minc2','nii','img' 
-%           or 'analyze').
+%    TYPE   
+%        (string) the file format (either 'minc1', 'minc2','nii','img' 
+%        or 'analyze').
 %
-%       INFO 
-%           (structure) with the following subfields:
+%    INFO 
+%        (structure) with the following subfields:
 %
-%           FILE_PARENT 
-%               (string) name of the file that was read.
+%        FILE_PARENT 
+%            (string) name of the file that was read.
 %
-%           DIMENSIONS 
-%               (vector 3*1) the number of elements in each dimensions of the 
-%               data array. Warning : the first dimension is not necessarily 
-%               the "x" axis. See the DIMENSION_ORDER field below.
+%        DIMENSIONS 
+%            (vector 3*1) the number of elements in each dimensions of the 
+%            data array. Warning : the first dimension is not necessarily 
+%            the "x" axis. See the DIMENSION_ORDER field below.
 %   
-%           PRECISION 
-%               (string, default 'float') the precision of data 
-%               ('int', 'float' or 'double').
+%        PRECISION 
+%            (string, default 'float') the precision of data 
+%            ('int', 'float' or 'double').
 %
-%           VOXEL_SIZE  
-%               (vector 1*3, default [1 1 1]) the size of voxels along each 
-%               spatial dimension in the same order as in VOL.
+%        VOXEL_SIZE  
+%            (vector 1*3, default [1 1 1]) the size of voxels along each 
+%            spatial dimension in the same order as in VOL.
 %
-%           TR  
-%               (double, default 1) the time between two volumes (in second). 
-%               This field is present only for 3D+t data.
+%        TR  
+%            (double, default 1) the time between two volumes (in second). 
+%            This field is present only for 3D+t data.
 %
-%           MAT 
-%               (2D array 4*4) an affine transform from voxel to world space.
+%        MAT 
+%            (2D array 4*4) an affine transform from voxel to world space.
 %
-%           DIMENSION_ORDER 
-%               (string) describes the dimensions of vol. Letter 'x' is for 
-%               'left to right, 'y' for 'posterior to anterior', 
-%               'z' for 'ventral to dorsal' and 't' is time. 
-%               Example : 'xzyt' means that dimension 1 of vol is 'x', 
-%               dimension 2 is 'z', etc.
+%        DIMENSION_ORDER 
+%            (string) describes the dimensions of vol. Letter 'x' is for 
+%            'left to right, 'y' for 'posterior to anterior', 
+%            'z' for 'ventral to dorsal' and 't' is time. 
+%            Example : 'xzyt' means that dimension 1 of vol is 'x', 
+%            dimension 2 is 'z', etc.
 %
-%           HISTORY 
-%               (string) the history of the file.
+%        HISTORY 
+%            (string) the history of the file.
 %
-%       DETAILS 
-%           (structure) Additional information, specific to the format 
-%           of the data. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
-%           for more information.
+%    DETAILS 
+%        (structure) Additional information, specific to the format 
+%        of the data. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
+%        for more information.
 %
 % _________________________________________________________________________
 % SEE ALSO :
@@ -176,10 +173,22 @@ else
 
         %% The file does not exist ... check for wild cards !
         cell_name = dir(file_name);
+        [path_f,name_f,ext_f] = niak_fileparts(file_name);
         if isempty(cell_name)
             error('Couldn''t find any file fitting the description %s\n',file_name)
         end
-        file_name2 = char(cell_name.name);
+        if length(cell_name) > 1
+            file_name2 = char({cell_name.name});
+            file_name2 = [repmat(path_f,[size(file_name,1) 1]) file_name2];
+            if nargout == 2
+                [hdr,vol] = niak_read_vol(file_name2);
+            else
+                hdr = niak_read_vol(file_name2);
+            end
+            return
+        end
+            
+        file_name2 = [path_f char(cell_name.name)];
         if length(file_name2)==0
             error('Couldn''t find any file fitting the description %s\n',file_name)
         else
