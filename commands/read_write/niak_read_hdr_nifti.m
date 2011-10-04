@@ -1,8 +1,4 @@
 function hdr = niak_read_hdr_nifti(file_name)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_READ_HDR_NIFTI
-%
 % Read the header of a NIFTI file (.NII or .HDR). 
 % The old Analyze 7.5 is also supported, and if a .MAT file is present, the
 % affine transformation information will be included.
@@ -15,18 +11,18 @@ function hdr = niak_read_hdr_nifti(file_name)
 % INPUT:
 %
 % FILE_NAME     
-%       (string) name of a single 3D+t minc file or a 3D minc file.
+%    (string) name of a single 3D+t minc file or a 3D minc file.
 %
 % _________________________________________________________________________
 % OUTPUT:
 %
 % HDR           
-%       (structure) contain a description of the data. For a list of fields 
-%       common to all data types, see NIAK_READ_VOL.
+%    (structure) contain a description of the data. For a list of fields 
+%    common to all data types, see NIAK_READ_VOL.
 %
-%       HDR.DETAILS 
-%           (structure) contains the standard fields of a nifti file. 
-%           See http://nifti.nimh.nih.gov/nifti-1.
+%    HDR.DETAILS 
+%        (structure) contains the standard fields of a nifti file. 
+%        See http://nifti.nimh.nih.gov/nifti-1.
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -270,11 +266,11 @@ else
 end
 
 %% hdr.info.file_parent
-path_f = fileparts(file_name);
+[path_f,name_f,ext_f] = fileparts(file_name);
 if isempty(path_f)
-    hdr.info.file_parent = cat(2,pwd,filesep,file_name);
+    hdr.info.file_parent = cat(2,pwd,filesep,name_f,'.img');
 else
-    hdr.info.file_parent = file_name;
+    hdr.info.file_parent = [path_f name_f '.img'];
 end
 
 %% hdr.info.precision

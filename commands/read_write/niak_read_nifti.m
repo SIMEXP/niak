@@ -1,8 +1,4 @@
 function [hdr,vol] = niak_read_nifti(file_name)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_READ_NIFTI
-%
 % Read a NIFTI file (.NII or .IMG).
 % The old Analyze 7.5 is also supported, and if a .MAT file is present, the
 % affine transformation information will be included.
@@ -15,17 +11,17 @@ function [hdr,vol] = niak_read_nifti(file_name)
 % INPUT:
 %
 % FILE_NAME         
-%       (string) a 3D+t or 3D minc file.
+%    (string) a 3D+t or 3D minc file.
 %
 % _________________________________________________________________________
 % OUTPUT:
 %
 % VOL           
-%       (3D+t or 3D array of double) the fMRI or MRI data.
+%    (3D+t or 3D array of double) the fMRI or MRI data.
 %
 % HDR           
-%       a structure containing a description of the data. See NIAK_READ_VOL 
-%       and NIAK_READ_HDR_NIFTI for details.
+%    a structure containing a description of the data. See NIAK_READ_VOL 
+%    and NIAK_READ_HDR_NIFTI for details.
 %
 % _________________________________________________________________________
 % SEE ALSO:

@@ -156,12 +156,7 @@ if nb_file > 1
             hdr_tmp = niak_read_vol(file_name{num_f});
         end
         
-        if num_f == 1
-            hdr = hdr_tmp;
-        else
-            hdr.info.file_parent = char(hdr.info.file_parent,hdr_tmp.info.file_parent);
-        end
-        
+        hdr(num_f) = hdr_tmp;
     end
 
 else
