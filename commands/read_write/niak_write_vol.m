@@ -1,9 +1,5 @@
 function [] = niak_write_vol(hdr,vol)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_WRITE_VOL
-%
-% Write a 3D or 3D+t dataset into a file
+% Write a 3D or 3D+t dataset into a file (analyze, nifti or minc)
 %
 % SYNTAX:
 % [] = NIAK_WRITE_VOL(HDR,VOL)
@@ -11,66 +7,66 @@ function [] = niak_write_vol(hdr,vol)
 % _________________________________________________________________________
 % INPUTS:
 %
-% * VOL          
-%       (3D or 4D array) a 3D or 3D+t dataset
+% VOL          
+%    (3D or 4D array) a 3D or 3D+t dataset
 %
-% * HDR           
-%       (structure) a header structure (usually modified from the
-%       output of NIAK_READ_VOL). The following fields are of
-%       particular importance :
+% HDR           
+%    (structure) a header structure (usually modified from the
+%    output of NIAK_READ_VOL). The following fields are of
+%    particular importance :
 %
-%       FILE_NAME   
-%           (string) a single 4D fMRI image file with multiple frames, or 
-%           a matrix of image file names, each with a single 3D frame,
-%           either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC 
-%           (.mnc) format. 
-%           Extra blanks are ignored. Frames are assumed to be equally 
-%           spaced in time.
-%           If the file name contains an additional extension '.gz', the 
-%           output will be zipped using 'gzip'.
+%    FILE_NAME   
+%        (string) a single 4D fMRI image file with multiple frames, or 
+%        a matrix of image file names, each with a single 3D frame,
+%        either NIFIT (*.nii,*.img/hdr) ANALYZE (.img/hdr) or MINC 
+%        (.mnc) format. 
+%        Extra blanks are ignored. Frames are assumed to be equally 
+%        spaced in time.
+%        If the file name contains an additional extension '.gz', the 
+%        output will be zipped using 'gzip'.
 %
-%       TYPE   
-%           (string) the output format (either 'minc1', 'minc2', 'nii', 
-%           'img' or 'analyze').
+%    TYPE   
+%        (string) the output format (either 'minc1', 'minc2', 'nii', 
+%        'img' or 'analyze').
 %
-%       INFO 
-%           (structure, optional) with the following (optional) fields :
+%    INFO 
+%        (structure, optional) with the following (optional) fields :
 %           
-%               PRECISION      
-%                   (string, default 'float') the
-%                   precision for writting data ('int', 'float' or
-%                   'double').
+%        PRECISION      
+%            (string, default 'float') the
+%            precision for writting data ('int', 'float' or
+%            'double').
 %
-%               VOXEL_SIZE     
-%                   (vector 1*3, default [1 1 1]) the
-%                   size of voxels along each spatial dimension in the same
-%                   order as in vol.
+%        VOXEL_SIZE     
+%            (vector 1*3, default [1 1 1]) the
+%            size of voxels along each spatial dimension in the same
+%            order as in vol.
 %
-%               TR     
-%                   (double, default 1) the time between two
-%                   volumes (in second)
+%        TR     
+%            (double, default 1) the time between two volumes (in 
+%            second)
 %
-%               MAT 
-%                   (2D array 4*4, default identity) an affine transform from voxel to
-%                   world space.
+%        MAT 
+%            (2D array 4*4, default identity) an affine transform 
+%            from voxel to world space.
 %
-%               DIMENSION_ORDER 
-%                   (string, default 'xyz') describes the dimensions of
-%                   VOL. Letter 'x' is for 'left to right, 'y' for
-%                   'posterior to anterior', 'z' for 'ventral to dorsal' and
-%                   't' is time. Example : 'xzyt' means that dimension 1 of
-%                   VOL is 'x', dimension 2 is 'z', etc.
+%        DIMENSION_ORDER 
+%            (string, default 'xyz') describes the dimensions of
+%            VOL. Letter 'x' is for 'left to right, 'y' for
+%            'posterior to anterior', 'z' for 'ventral to dorsal' and
+%            't' is time. Example : 'xzyt' means that dimension 1 of
+%            VOL is 'x', dimension 2 is 'z', etc.
 %
-%               HISTORY 
-%                   (string, default '') history of the operations applied to
-%                  the data.
+%        HISTORY 
+%            (string, default '') history of the operations applied to
+%            the data.
 %
-%       DETAILS 
-%           (structure, optional in minc format) This field contains some 
-%           format-specific information, but is not necessary to write a 
-%           file. If present, the information will be inserted in the new 
-%           file. Note that the fields of HDR.INFO override HDR.DETAILS. 
-%           See NIAK_WRITE_MINC for more information under the minc format.
+%    DETAILS 
+%        (structure, optional in minc format) This field contains some 
+%        format-specific information, but is not necessary to write a 
+%        file. If present, the information will be inserted in the new 
+%        file. Note that the fields of HDR.INFO override HDR.DETAILS. 
+%        See NIAK_WRITE_MINC for more information under the minc format.
 %
 % _________________________________________________________________________
 % OUTPUTS:
