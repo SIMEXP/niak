@@ -174,6 +174,7 @@ else
         %% The file does not exist ... check for wild cards !
         cell_name = dir(file_name);
         [path_f,name_f,ext_f] = niak_fileparts(file_name);
+        path_f = [path_f filesep];
         if isempty(cell_name)
             error('Couldn''t find any file fitting the description %s\n',file_name)
         end
