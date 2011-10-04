@@ -179,7 +179,7 @@ else
         end
         if length(cell_name) > 1
             file_name2 = char({cell_name.name});
-            file_name2 = [repmat(path_f,[size(file_name,1) 1]) file_name2];
+            file_name2 = [repmat(path_f,[size(file_name2,1) 1]) file_name2];
             if nargout == 2
                 [hdr,vol] = niak_read_vol(file_name2);
             else
