@@ -153,7 +153,7 @@ if nb_file > 1
             end
             vol(:,:,:,num_f) = vol_tmp;
         else
-            hdr_tmp = niak_read_vol(file_name{num_f});
+            hdr_tmp = niak_read_vol(deblank(file_name(num_f,:)));
         end
         
         hdr(num_f) = hdr_tmp;
