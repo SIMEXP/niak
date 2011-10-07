@@ -1,8 +1,4 @@
 function [y,Ybis] = niak_gaussian_fit(par)
-%
-%_________________________________________________________________________
-% SUMMARY NIAK_GAUSSIAN_FIT(PAR)
-% 
 % This function is used by NIAK_CORRECT_VOL, and is not supposed to be used
 % independently.
 %

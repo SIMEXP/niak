@@ -1,6 +1,5 @@
 function mat = niak_vec2mat(vec,val_diag);
-% Convert a vectorized symmetric matrix (without diagonal elements) into 
-% a matrix form with ones on the diagonal.
+% Convert a vectorized symmetric matrix back into matrix form.
 %
 % SYNTAX:
 % MAT = NIAK_VEC2MAT(VEC,VAL_DIAG)
@@ -14,7 +13,7 @@ function mat = niak_vec2mat(vec,val_diag);
 %       diagonal elements).
 %
 % VAL_DIAG
-%		(scalar or vector) the value(s) to put on the diagonal.
+%	(scalar or vector, default 1) the value(s) to put on the diagonal.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -65,6 +64,10 @@ if size(vec,2)>1
    return
 end
 
+if nargin < 2
+    val_diag = 1;
+end
+
 M = length(vec);
 N = round((1+sqrt(1+8*M))/2);
 
@@ -72,4 +75,4 @@ mat = zeros([N N]);
 mat(tril(true(N),-1)) = vec;
 mat = mat';
 mat(tril(true(N),-1)) = vec;
-mat(eye(N)==1) = 1;
+mat(eye(N)==1) = val_diag;
