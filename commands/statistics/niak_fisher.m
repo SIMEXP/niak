@@ -47,4 +47,4 @@ function z = niak_fisher(r);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-z = 0.5 * log( (1+R)./(1-R) );
+z = 0.5 * log( (1+r)./(1-r) );
