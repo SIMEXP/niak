@@ -52,7 +52,7 @@ function mat = niak_vec2mat(vec,val_diag);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-if size(vec,2)>1
+if (size(vec,1)>1) && (size(vec,2)>1)
    nb_m = size(vec,2);
    for num_m = 1:nb_m
        mat_tmp = niak_vec2mat(vec(:,num_m));
