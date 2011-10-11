@@ -1,8 +1,4 @@
 function D = niak_build_distance(tseries,type,tseries_std)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BUILD_DISTANCE
-%
 % Compute a distance matrix between time series
 %
 % SYNTAX:
