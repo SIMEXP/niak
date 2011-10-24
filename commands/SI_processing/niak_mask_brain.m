@@ -91,7 +91,11 @@ niak_set_defaults
 
 
 %% Getting the mean of absolute values for all volumes
-abs_vol_mean = mean(abs(vol),4);
+if size(vol,4)>1
+    abs_vol_mean = mean(abs(vol),4);
+else
+    abs_vol_mean = abs(vol);
+end
 mask_nan = isnan(abs_vol_mean);
 abs_vol_mean(mask_nan) = 0;
 

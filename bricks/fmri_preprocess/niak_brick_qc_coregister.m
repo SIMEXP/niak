@@ -7,74 +7,74 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 % _________________________________________________________________________
 % INPUTS
 %
-%  FILES_IN
+% FILES_IN
 %
-%       VOL
-%           (cell of string) multiple file names of 3D dataset in the same
-%           space.
+%    VOL
+%        (cell of string) multiple file names of 3D dataset in the same
+%        space.
 %
-%       MASK
-%           (string or cell of strings) one or multiple brain masks. If
-%           only one mask is specified, this mask is used for computing all
-%           indices. Otherwise, a "group" mask is defined by thresholding
-%           the average of all masks. See OPT and COMMENTS below.
+%    MASK
+%        (string or cell of strings) one or multiple brain masks. If
+%        only one mask is specified, this mask is used for computing all
+%        indices. Otherwise, a "group" mask is defined by thresholding
+%        the average of all masks. See OPT and COMMENTS below.
 %
-%  FILES_OUT
-%       (structure) with the following fields :
+% FILES_OUT
+%    (structure) with the following fields :
 %
-%       MASK_AVERAGE
-%           (string, default <path of FILES_IN.VOL{1}>_mask_average.<EXT>)
-%           the average of binary mask of the brain for all files in
-%           FILES_IN.MASK
+%    MASK_AVERAGE
+%        (string, default <path of FILES_IN.VOL{1}>_mask_average.<EXT>)
+%        the average of binary mask of the brain for all files in
+%        FILES_IN.MASK
 %
-%       MASK_GROUP
-%           (string, default <path of FILES_IN.VOL{1}>_mask_group.<EXT>)
-%           A binary version of MASK_AVERAGE after a threshold has been
-%           applied.
+%    MASK_GROUP
+%        (string, default <path of FILES_IN.VOL{1}>_mask_group.<EXT>)
+%        A binary version of MASK_AVERAGE after a threshold has been
+%        applied.
 %
-%       MEAN_VOL
-%           (string, default <path of FILES_IN.VOL{1}>_mean.<EXT>)
-%           the average of the volumes for all files in FILES_IN.VOL
+%    MEAN_VOL
+%        (string, default <path of FILES_IN.VOL{1}>_mean.<EXT>)
+%        the average of the volumes for all files in FILES_IN.VOL
 %
-%       STD_VOL
-%           (string, default <path of FILES_IN.VOL{1}>_std.<EXT>)
-%           the standard deviation of the volumes for all files in
-%           FILES_IN.VOL
+%    STD_VOL
+%        (string, default <path of FILES_IN.VOL{1}>_std.<EXT>)
+%        the standard deviation of the volumes for all files in
+%        FILES_IN.VOL
 %
-%       FIG_COREGISTER
-%           (string, default <path of FILES_IN.VOL{1}>_qc_coregister.pdf)
-%           A histogram representation of TAB_COREGISTER.
+%    FIG_COREGISTER
+%        (string, default <path of FILES_IN.VOL{1}>_qc_coregister.pdf)
+%        A histogram representation of TAB_COREGISTER.
 %
-%       TAB_COREGISTER
-%           (string, default <path of FILES_IN.VOL{1}>_qc_coregister.csv)
-%           A text table of comma separated values. First line is a label
-%           and subsequent lines are for each entry of FILES_IN. See the
-%           NOTES below for a list of quality control measures.
+%    TAB_COREGISTER
+%        (string, default <path of FILES_IN.VOL{1}>_qc_coregister.csv)
+%        A text table of comma separated values. First line is a label
+%        and subsequent lines are for each entry of FILES_IN. See the
+%        NOTES below for a list of quality control measures.
 %
-%  OPT
-%       (structure) with the following fields.
+% OPT
+%    (structure) with the following fields.
 %
-%       LABELS_SUBJECT
-%           (cell of strings, default FILES_IN.VOL) the labels used for
-%           each volume in the tables.
+%    LABELS_SUBJECT
+%        (cell of strings, default FILES_IN.VOL) the labels used for
+%        each volume in the tables.
 %
-%       THRESH
-%           (real number, default 0.5) the threshold used to define a group
-%           mask based on the average of all individual masks.
+%    THRESH
+%        (real number, default 0.5) the threshold used to define a group
+%        mask based on the average of all individual masks.
 %
-%       FOLDER_OUT
-%           (string, default: path of FILES_IN)
-%           If present, the output will be created in the folder
-%           FOLDER_OUT. The folder needs to be created beforehand.
+%    FOLDER_OUT
+%        (string, default: path of FILES_IN)
+%        If present, the output will be created in the folder
+%        FOLDER_OUT. The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE
-%           (boolean, default 1) if the flag is 1, then the function
-%           prints some infos during the processing.
+%    FLAG_VERBOSE
+%        (boolean, default 1) if the flag is 1, then the function
+%        prints some infos during the processing.
 %
-%       FLAG_TEST
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not
-%           do anything but update the default values in FILES_IN,
-%           FILES_OUT and OPT.
+%    FLAG_TEST
+%        (boolean, default 0) if FLAG_TEST equals 1, the brick does not
+%        do anything but update the default values in FILES_IN,
+%        FILES_OUT and OPT.
 %
 % _________________________________________________________________________
 % OUTPUTS
@@ -89,32 +89,29 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 % _________________________________________________________________________
 % COMMENTS:
 %
-%   NOTE 1:
+% NOTE 1:
+%    The individual masks are averaged, resutling in a volume with
+%    values between 0 and 1. 0 corresponds to voxels that were in no
+%    individual brain mask, while 1 corresponds to voxels that were in
+%    all invidual brain masks.
 %
-%       The individual masks are averaged, resutling in a volume with
-%       values between 0 and 1. 0 corresponds to voxels that were in no
-%       individual brain mask, while 1 corresponds to voxels that were in
-%       all invidual brain masks.
+%    The group mask is this average brain mask after threshold
+%    (OPT.THRESH).
 %
-%       The group mask is this average brain mask after threshold
-%       (OPT.THRESH).
+% NOTE 2:
+%    The first column ('perc_overlap_mask') is the percentage of overlap
+%    of the group mask and each individual mask, relative to the size of
+%    the individual masks. This is to check the consistency of the field
+%    of views across masks.
 %
-%   NOTE 2:
+%    The second column ('xcorr_vol') is a spatial cross-correlation of
+%    the individual volume with the average volume, restricted to the
+%    group brain mask.
 %
-%       The first column ('perc_overlap_mask') is the percentage of overlap
-%       of the group mask and each individual mask, relative to the size of
-%       the individual masks. This is to check the consistency of the field
-%       of views across masks.
-%
-%       The second column ('xcorr_vol') is a spatial cross-correlation of
-%       the individual volume with the average volume, restricted to the
-%       group brain mask.
-%
-%   NOTE 3:
-%       
-%       If the datasets are 3D+t, the brick will work on the average
-%       volumes. The STD volume will then be the average of std volumes
-%       generated within each 3D+t dataset.
+% NOTE 3:   
+%    If the datasets are 3D+t, the brick will work on the average
+%    volumes. The STD volume will then be the average of std volumes
+%    generated within each 3D+t dataset.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -147,7 +144,7 @@ niak_gb_vars % Load some important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_QC_COREGISTER(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_qc_coregister'' for more info.')
 end
 

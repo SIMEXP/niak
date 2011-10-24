@@ -1,77 +1,78 @@
 function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,opt)
 % Select independent components based on spatial priors.
 %
+% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SEL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN  
-%       (structure) with the following fields :
+% FILES_IN  
+%    (structure) with the following fields :
 %
-%       FMRI 
-%           (string) the original fMRI 3D+t data
+%    FMRI 
+%        (string) the original fMRI 3D+t data
 %
-%       COMPONENT 
-%           (string) a 2D text array with the temporal distribution of sICA.
+%    COMPONENT 
+%        (string) a 2D text array with the temporal distribution of sICA.
 %
-%       MASK 
-%           (string) a path to a binary mask (the spatial a priori).
+%    MASK 
+%        (string) a path to a binary mask (the spatial a priori).
 %
-%       TRANSFORMATION 
-%           (string, default 'gb_niak_omitted') a transformation file from 
-%           the functional space to the mask space. If it is omitted, the
-%           original mask will be used. If 'identity' is used, the mask
-%           will be resampled at the resolution of the functional space,
-%           but no actual transformation of the space will be applied.
+%    TRANSFORMATION 
+%        (string, default 'gb_niak_omitted') a transformation file from 
+%        the functional space to the mask space. If it is omitted, the
+%        original mask will be used. If 'identity' is used, the mask
+%        will be resampled at the resolution of the functional space,
+%        but no actual transformation of the space will be applied.
 %
-%       COMPONENT_TO_KEEP
-%           (string, default none) a text file, whose first line is a
-%           a set of string labels, and each column is otherwise a temporal
-%           component of interest. The ICA component with higher
-%           correlation with each signal of interest will be automatically
-%           attributed a selection score of 0.
+%    COMPONENT_TO_KEEP
+%        (string, default none) a text file, whose first line is a
+%        a set of string labels, and each column is otherwise a temporal
+%        component of interest. The ICA component with higher
+%        correlation with each signal of interest will be automatically
+%        attributed a selection score of 0.
 %
-%  * FILES_OUT 
-%       (string, default <base COMPONENT>_<base MASK>_compsel.mat) The name
-%       of a mat file with two variables SCORE and ORDER. SCORE(I) is the
-%       selection score of component ORDER(I). Components are ranked by 
-%       descending selection scores.
+% FILES_OUT 
+%    (string, default <base COMPONENT>_<base MASK>_compsel.mat) The name
+%    of a mat file with two variables SCORE and ORDER. SCORE(I) is the
+%    selection score of component ORDER(I). Components are ranked by 
+%    descending selection scores.
 %
-%  * OPT   
-%       (structure) with the following fields :
+% OPT   
+%    (structure) with the following fields :
 %
-%       NB_CLUSTER 
-%           (default 0). The number of spatial clusters used in stepwise 
-%           regression. If NB_CLUSTER == 0, the number of clusters is set 
-%           to (nb_vox/10), where nb_vox is the number of voxels in the 
-%           region.
+%    NB_CLUSTER 
+%        (default 0). The number of spatial clusters used in stepwise 
+%        regression. If NB_CLUSTER == 0, the number of clusters is set 
+%        to (nb_vox/10), where nb_vox is the number of voxels in the 
+%        region.
 %
-%       P 
-%           (real number, 0<P<1, default 0.0001) the p-value of the stepwise
-%           regression.
+%    P 
+%        (real number, 0<P<1, default 0.0001) the p-value of the stepwise
+%        regression.
 %
-%       NB_SAMPS 
-%           (default 50) the number of kmeans repetition.
+%    NB_SAMPS 
+%        (default 50) the number of kmeans repetition.
 %
-%       TYPE_SCORE 
-%           (string, default 'freq') Score function. 'freq' for the
-%           frequency of selection of the regressor and 'inertia' for the
-%           relative part of inertia explained by the clusters "selecting"
-%           the regressor.
+%    TYPE_SCORE 
+%        (string, default 'freq') Score function. 'freq' for the
+%        frequency of selection of the regressor and 'inertia' for the
+%        relative part of inertia explained by the clusters "selecting"
+%        the regressor.
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN.SPACE) If present,
-%           all default outputs will be created in the folder FOLDER_OUT.
-%           The folder needs to be created beforehand.
+%    FOLDER_OUT 
+%        (string, default: path of FILES_IN.SPACE) If present,
+%        all default outputs will be created in the folder FOLDER_OUT.
+%        The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) gives progression infos
+%    FLAG_VERBOSE 
+%        (boolean, default 1) gives progression infos
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN, FILES_OUT and OPT.
+%    FLAG_TEST 
+%        (boolean, default 0) if FLAG_TEST equals 1, the
+%        brick does not do anything but update the default
+%        values in FILES_IN, FILES_OUT and OPT.
 %
 % _________________________________________________________________________
 % OUTPUTS
@@ -136,7 +137,7 @@ niak_gb_vars
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SEL(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_component_sel'' for more info.')
 end
 
@@ -187,7 +188,7 @@ if isempty(files_out)
     files_out = cat(2,opt.folder_out,filesep,name_s,'_',name_m,'_compsel.mat');
 end
 
-if ~strcmp(opt.type_score,'freq')&~strcmp(opt.type_score,'inertia')
+if ~strcmp(opt.type_score,'freq')&&~strcmp(opt.type_score,'inertia')
     error(sprintf('%s is an unknown score function type',opt.type_score));
 end
 

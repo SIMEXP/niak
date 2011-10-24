@@ -1,8 +1,4 @@
 function [] = niak_write_minc(hdr,vol)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_WRITE_MINC
-%
 % Write a 3D or 3D+t dataset into a MINC file
 % http://www.bic.mni.mcgill.ca/software/minc/
 %
@@ -13,52 +9,52 @@ function [] = niak_write_minc(hdr,vol)
 % INPUTS:
 %
 % VOL
-%       (3D or 4D array) a 3D or 3D+t dataset
+%    (3D or 4D array) a 3D or 3D+t dataset
 %
 % HDR
-%       (structure) a header structure (usually modified from the output of
-%       NIAK_READ_VOL). The relevant fields of HDR are :
+%    (structure) a header structure (usually modified from the output of
+%    NIAK_READ_VOL). The relevant fields of HDR are :
 %
-%       FILE_NAME
-%           (string) the name of the file that will be written.
+%    FILE_NAME
+%        (string) the name of the file that will be written.
 %
-%       TYPE
-%           (string, default 'minc2') the output format (either 'minc1' or
-%           'minc2').
+%    TYPE
+%        (string, default 'minc2') the output format (either 'minc1' or
+%        'minc2').
 %
-%       INFO
-%           (structure) The subfields are optional, yet they give control
-%           on critical space information. See NIAK_WRITE_VOL for more
-%           info.
+%    INFO
+%        (structure) The subfields are optional, yet they give control
+%        on critical space information. See NIAK_WRITE_VOL for more
+%        info.
 %
-%       DETAILS
-%           (structure) The subfields are also optional, and specific to
-%           the minc format. Note that a minc file with correct space
-%           information can be created without it.
+%    DETAILS
+%        (structure) The subfields are also optional, and specific to
+%        the minc format. Note that a minc file with correct space
+%        information can be created without it.
 %
-%           <VAR_NAME>
-%               where VAR_NAME is a string. Such field will define a new
-%               variable called <VAR_NAME> in the minc file. <VAR_NAME> is
-%               a structure with the following fields :
+%        <VAR_NAME>
+%         where VAR_NAME is a string. Such field will define a new
+%         variable called <VAR_NAME> in the minc file. <VAR_NAME> is
+%         a structure with the following fields :
 %
-%               VARATTS
-%                   (cell of strings) Each string will define a new
-%                   attribute in variable <VAR_NAME>.
+%         VARATTS
+%             (cell of strings) Each string will define a new
+%             attribute in variable <VAR_NAME>.
 %
-%               ATTVALUES
-%                   (cell of double array and/or strings) Each entry
-%                   defines the value of the corresponding attribute.
+%         ATTVALUES
+%             (cell of double array and/or strings) Each entry
+%             defines the value of the corresponding attribute.
 %
-%       LIKE
-%           (string, default '') the name of a model file. The header of
-%           the new file will be identical to the model. If left empty, the
-%           info in the header structure is used. Using a model file is
-%           much faster than writting the header.
+%    LIKE
+%        (string, default '') the name of a model file. The header of
+%        the new file will be identical to the model. If left empty, the
+%        info in the header structure is used. Using a model file is
+%        much faster than writting the header.
 %
-%       RAW
-%           (string, default temporary file) the name of a temporary file
-%           to store raw data. If that field is specified, the raw data
-%           will not be flushed after writting the minc file.
+%    RAW
+%        (string, default temporary file) the name of a temporary file
+%        to store raw data. If that field is specified, the raw data
+%        will not be flushed after writting the minc file.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -303,7 +299,7 @@ else
                 att = list_att{num_a};
                 att_val = struct_var.attvalue{num_a};
 
-                if ~strcmp(att,'length')&~isempty(att_val)
+                if ~strcmp(att,'length')&&~isempty(att_val)
                     if ischar(att_val)
                         att_val = niak_replace_str(att_val,'''','"');
                         str_hdr = [str_hdr ' -sinsert ' var ':' att '=''' att_val ''''];

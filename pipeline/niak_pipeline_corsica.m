@@ -193,7 +193,7 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Input files
-if ~exist('files_in','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('opt','var')
     error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_CORSICA(FILES_IN,OPT).\n Type ''help niak_pipeline_corsica'' for more info.')
 end
 
@@ -358,7 +358,7 @@ for num_s = 1:nb_subject
         %%%%%%%%%%%%%%
         %% CLEANING %%
         %%%%%%%%%%%%%%
-        if strcmp(opt.size_output,'minimum')|strcmp(opt.size_output,'quality_control')            
+        if strcmp(opt.size_output,'minimum')||strcmp(opt.size_output,'quality_control')            
             clear files_clean_tmp files_out_tmp opt_tmp
             name_job_clean       = ['clean_corsica_intermediate_',subject,'_',run];
             switch opt.size_output

@@ -96,7 +96,7 @@ niak_gb_vars % Load some important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_QC_COREGISTER(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_qc_coregister'' for more info.')
 end
 

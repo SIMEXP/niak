@@ -10,109 +10,109 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % _________________________________________________________________________
 % INPUTS:
 %
-%   FILES_IN        
-%       (string) the file name of a T1 volume.
+% FILES_IN        
+%    (string) the file name of a T1 volume.
 %
-%   FILES_OUT  
-%       (structure) with the following fields. Note that if a field is an 
-%       empty string, a default value will be used to name the outputs. If 
-%       a field is ommited, the output won't be saved at all (this is 
-%       equivalent to setting up the output file names to 
-%       'gb_niak_omitted').
+% FILES_OUT  
+%    (structure) with the following fields. Note that if a field is an 
+%    empty string, a default value will be used to name the outputs. If 
+%    a field is ommited, the output won't be saved at all (this is 
+%    equivalent to setting up the output file names to 
+%    'gb_niak_omitted').
 %
 %
-%       TRANSFORMATION_LIN 
-%           (string, default <BASE_ANAT>_native2stereolin.xfm)
-%           Linear transformation from native to stereotaxic space (lsq9).
+%    TRANSFORMATION_LIN 
+%        (string, default <BASE_ANAT>_native2stereolin.xfm)
+%        Linear transformation from native to stereotaxic space (lsq9).
 %
-%       TRANSFORMATION_NL 
-%           (string, default <BASE_ANAT>_stereolin2stereonl.xfm)
-%           Non-linear transformation from linear stereotaxic space to
-%           non-linear stereotaxic space.
+%    TRANSFORMATION_NL 
+%        (string, default <BASE_ANAT>_stereolin2stereonl.xfm)
+%        Non-linear transformation from linear stereotaxic space to
+%        non-linear stereotaxic space.
 %
-%       TRANSFORMATION_NL_GRID 
-%           (string, default <BASE_ANAT>_stereolin2stereonl_grid.mnc)
-%           Deformation field for the non-linear transformation.
+%    TRANSFORMATION_NL_GRID 
+%        (string, default <BASE_ANAT>_stereolin2stereonl_grid.mnc)
+%        Deformation field for the non-linear transformation.
 %
-%       ANAT_NUC 
-%           (string, default <BASE_ANAT>_nuc_native.<EXT>)
-%           t1 image partially corrected for non-uniformities (without
-%           mask), in native space. Intensities have not been normalized.
-%       
-%       ANAT_NUC_STEREOLIN 
-%           (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
-%           original t1 image transformed in stereotaxic space using the 
-%           lsq9 transformation, fully corrected for non-uniformities (with mask)
-%           and with intensities normalized to match the MNI template.
+%    ANAT_NUC 
+%        (string, default <BASE_ANAT>_nuc_native.<EXT>)
+%        t1 image partially corrected for non-uniformities (without
+%        mask), in native space. Intensities have not been normalized.
+%    
+%    ANAT_NUC_STEREOLIN 
+%        (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
+%        original t1 image transformed in stereotaxic space using the 
+%        lsq9 transformation, fully corrected for non-uniformities (with mask)
+%        and with intensities normalized to match the MNI template.
 %
-%       ANAT_NUC_STEREONL 
-%           (string, default <BASE_ANAT>_nuc_stereonl.<EXT>)
-%           original t1 image transformed in stereotaxic space using the 
-%           non-linear transformation, fully corrected for non-uniformities (with
-%           mask) and with intensities normalized to match the MNI template.
-%       
-%       MASK_STEREOLIN 
-%           (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
-%           brain mask in stereotaxic (linear) space.
+%    ANAT_NUC_STEREONL 
+%        (string, default <BASE_ANAT>_nuc_stereonl.<EXT>)
+%        original t1 image transformed in stereotaxic space using the 
+%        non-linear transformation, fully corrected for non-uniformities (with
+%        mask) and with intensities normalized to match the MNI template.
+%    
+%    MASK_STEREOLIN 
+%        (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
+%        brain mask in stereotaxic (linear) space.
 %
-%       MASK_STEREONL
-%           (string, default <BASE_ANAT>_mask_stereonl.<EXT>)
-%           brain mask in stereotaxic (non-linear) space.
+%    MASK_STEREONL
+%        (string, default <BASE_ANAT>_mask_stereonl.<EXT>)
+%        brain mask in stereotaxic (non-linear) space.
 %
-%       CLASSIFY 
-%           (string, default <BASE_ANAT>_classify_stereolin.<EXT>)
-%           final masked discrete tissue classification in stereotaxic
-%           (linear) space.
+%    CLASSIFY 
+%        (string, default <BASE_ANAT>_classify_stereolin.<EXT>)
+%        final masked discrete tissue classification in stereotaxic
+%        (linear) space.
 %
-%   OPT           
-%       (structure) with the following fields:
+% OPT        
+%    (structure) with the following fields:
 %
-%       TYPE_TEMPLATE
-%           (string, default 'ICBM_152_nlin_sym_2009') the template that 
-%           will be used as a target. Available choices (see also the 
-%           "NOTE 5" in the COMMENTS section below) : 
+%    TYPE_TEMPLATE
+%        (string, default 'ICBM_152_nlin_sym_2009') the template that 
+%        will be used as a target. Available choices (see also the 
+%        "NOTE 5" in the COMMENTS section below) : 
 %
-%               'mni_icbm152_nlin_sym_09a' : an adult template 
-%                   (18.5 - 43 y.o., 40 iterations of non-linear fit). 
+%         'mni_icbm152_nlin_sym_09a' : an adult template 
+%             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
 %
-%               'nihpd_sym_04.5-18.5' : a pediatric template 
-%                   generated from a representative sample of the 
-%                   american population (4.5 - 18.5 y.o.), the so-called 
-%                   NIHPD database. 
+%         'nihpd_sym_04.5-18.5' : a pediatric template 
+%             generated from a representative sample of the 
+%             american population (4.5 - 18.5 y.o.), the so-called 
+%             NIHPD database. 
 %
-%       MASK_BRAIN_T1
-%           (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
-%           for an exact list of options.
+%    MASK_BRAIN_T1
+%        (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
+%        for an exact list of options.
 %
-%       MASK_HEAD_T1
-%           (structure) See the OPT structure of NIAK_BRICK_MASK_HEAD_T1
-%           for an exact list of options.
+%    MASK_HEAD_T1
+%        (structure) See the OPT structure of NIAK_BRICK_MASK_HEAD_T1
+%        for an exact list of options.
 %
-%       NU_CORRECT
-%           (structure) See the OPT structure of NIAK_BRICK_NU_CORRECT
-%           for an exact list of options. The most usefull option is the
-%           following :
+%    NU_CORRECT
+%        (structure) See the OPT structure of NIAK_BRICK_NU_CORRECT
+%        for an exact list of options. The most usefull option is the
+%        following :
 %
-%           ARG
-%               (string, default '-distance 200') any argument that will be 
-%               passed to the NU_CORRECT command. The '-distance' option 
-%               sets the N3 spline distance in mm (suggested values: 200 
-%               for 1.5T scan; 50 for 3T scan). 
+%        ARG
+%         (string, default '-distance 200') any argument that will be 
+%         passed to the NU_CORRECT command. The '-distance' option 
+%         sets the N3 spline distance in mm (suggested values: 200 
+%         for 1.5T scan; 50 for 3T scan). 
 %
-%       FLAG_VERBOSE 
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
-%           messages indicating progress.
+%    FLAG_VERBOSE 
+%        (boolean, default: 1) If FLAG_VERBOSE == 1, write
+%        messages indicating progress.
 %
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%    FLAG_TEST 
+%        (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%        do anything but update the default values in FILES_IN, 
+%        FILES_OUT and OPT.
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
-%               
+%    FOLDER_OUT 
+%        (string, default: path of FILES_IN) If present, all default 
+%        outputs will be created in the folder FOLDER_OUT. The folder 
+%        needs to be created beforehand.
+%         
 % _________________________________________________________________________
 % OUTPUT:
 %
@@ -159,38 +159,38 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % NOTE 4:
 %   The flowchart of the brick is as follows :
 %
-%       1.  Non-uniformity correction in native space (without mask):
-%           NIAK_BRICK_NU_CORRECT
+%    1.  Non-uniformity correction in native space (without mask):
+%        NIAK_BRICK_NU_CORRECT
 %
-%       2.  Brain extraction in native space:
-%           NIAK_BRICK_MASK_BRAIN_T1
+%    2.  Brain extraction in native space:
+%        NIAK_BRICK_MASK_BRAIN_T1
 %
-%       3.  Linear coregistration in stereotaxic space (with mask from 2).
-%           NIAK_BRICK_ANAT2STEREOLIN
+%    3.  Linear coregistration in stereotaxic space (with mask from 2).
+%        NIAK_BRICK_ANAT2STEREOLIN
 %
-%       4.  Non-uniformity correction based on the template mask
-%           NIAK_BRICK_NU_CORRECT
+%    4.  Non-uniformity correction based on the template mask
+%        NIAK_BRICK_NU_CORRECT
 %
-%       5.  Brain extraction, combined with the template mask
-%           NIAK_BRICK_MASK_BRAIN_T1
+%    5.  Brain extraction, combined with the template mask
+%        NIAK_BRICK_MASK_BRAIN_T1
 %
-%       6.  Intensity normalization
-%           NIAK_BRICK_INORMALIZE
+%    6.  Intensity normalization
+%        NIAK_BRICK_INORMALIZE
 %
-%       7.  Non-linear coregistration in template space (with mask from 5)
-%           NIAK_BRICK_ANAT2STEREONL
+%    7.  Non-linear coregistration in template space (with mask from 5)
+%        NIAK_BRICK_ANAT2STEREONL
 %
-%       8.  Generation of the brain mask in the non-linear stereotaxic
-%           space by intersection of the template mask with a head mask.
-%           NIAK_BRICK_MASK_HEAD_T1, NIAK_BRICK_MATH_VOL
+%    8.  Generation of the brain mask in the non-linear stereotaxic
+%        space by intersection of the template mask with a head mask.
+%        NIAK_BRICK_MASK_HEAD_T1, NIAK_BRICK_MATH_VOL
 %
-%       9.  Generation of the mask in the stereotaxic linear space by 
-%           application of the inverse non-linear transform from 7 and the 
-%           brain mask from 8.
-%           NIAK_BRICK_RESAMPLE_VOL
+%    9.  Generation of the mask in the stereotaxic linear space by 
+%        application of the inverse non-linear transform from 7 and the 
+%        brain mask from 8.
+%        NIAK_BRICK_RESAMPLE_VOL
 %
-%       10. Tissue classification
-%           NIAK_BRICK_CLASSIFY
+%    10. Tissue classification
+%        NIAK_BRICK_CLASSIFY
 %
 % NOTE 5:
 %   The adult template is the so-called "mni-models_icbm152-nl-2009-1.0"

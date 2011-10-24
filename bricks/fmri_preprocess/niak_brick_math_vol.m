@@ -5,53 +5,51 @@ function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MATH_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN        
-%       (cell of strings) each entry is a file name of a volume. All
-%       datasets need to be in the same space (either one individual, or
-%       stereotaxic space).
+% FILES_IN        
+%    (cell of strings) each entry is a file name of a volume. All
+%    datasets need to be in the same space (either one individual, or
+%    stereotaxic space).
 %
-%  * FILES_OUT       
-%       (string) the name for the resulting volume.
+% FILES_OUT    
+%    (string) the name for the resulting volume.
 %   
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT        
+%    (structure) with the following fields.  
 %
-%       OPT_OPERATION
-%           (any type, default [])
+%    OPT_OPERATION
+%        (any type, default [])
 %
-%       OPERATION
-%           (string) An operation that will be submitted to EVAL in order
-%           to generate the resulting volume. Note that the data in
-%           FILES_IN{I} is accessible in a variable VOL_IN{I}. 
-%           The final result should be stored in a variable called VOL. 
-%           The variable OPT_OPERATION is also available in memory.
+%    OPERATION
+%        (string) An operation that will be submitted to EVAL in order
+%        to generate the resulting volume. Note that the data in
+%        FILES_IN{I} is accessible in a variable VOL_IN{I}. 
+%        The final result should be stored in a variable called VOL. 
+%        The variable OPT_OPERATION is also available in memory.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%    FLAG_VERBOSE 
+%        (boolean, default 1) if the flag is 1, then the function 
+%        prints some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%    FLAG_TEST 
+%        (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%        do anything but update the default values in FILES_IN, 
+%        FILES_OUT and OPT.
 %           
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %              
 % _________________________________________________________________________
-% SEE ALSO
-%
+% SEE ALSO:
 % NIAK_MASK_BRAIN
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
-% _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
@@ -81,7 +79,7 @@ niak_gb_vars % Load some important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MATH_VOL(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_math_vol'' for more info.')
 end
 

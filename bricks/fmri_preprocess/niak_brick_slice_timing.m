@@ -7,129 +7,129 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN        
-%       (string) a file name of a 3D+t dataset .
+% FILES_IN        
+%    (string) a file name of a 3D+t dataset .
 %
-%  * FILES_OUT       
-%       (string, default <BASE_NAME>_a.<EXT>) File name for outputs. 
-%       If FILES_OUT is an empty string, the name of the outputs will be 
-%       the same as the inputs, with a '_a' suffix added at the end.
+% FILES_OUT       
+%    (string, default <BASE_NAME>_a.<EXT>) File name for outputs. 
+%    If FILES_OUT is an empty string, the name of the outputs will be 
+%    the same as the inputs, with a '_a' suffix added at the end.
 %
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+%    (structure) with the following fields.  
 %
-%       SUPPRESS_VOL 
-%           (integer, default 0) the number of volumes that are suppressed 
-%           at the begining and the end of the time series. This can be 
-%           usefull to limit the edges effects in the sinc interpolation.
+%    SUPPRESS_VOL 
+%        (integer, default 0) the number of volumes that are suppressed 
+%        at the begining and the end of the time series. This can be 
+%        usefull to limit the edges effects in the sinc interpolation.
 %
-%       INTERPOLATION
-%           (string, default 'spline') the method for temporal interpolation,
-%           Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
+%    INTERPOLATION
+%        (string, default 'spline') the method for temporal interpolation,
+%        Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
 %
-%       TYPE_ACQUISITION
-%           (string, default 'manual') the type of acquisition used by the
-%           scanner. If 'manual', SLICE_ORDER needs to be specified, 
-%           otherwise it will be calculated. Possible choices are
-%           'manual','sequential','sequential ascending','sequential descending',
-%           'interleaved','interleaved ascending','interleaved descending'. For
-%           interleaved modes, FIRST_NUMBER needs to be specified.
-%       
-%       TYPE_SCANNER
-%           (string, default '') the type of MR scanner. The only value
-%           that will change something to the processing here is 'Siemens',
-%           which has different conventions for interleaved acquisitions.
-%           This will change the default for OPT.FIRST_NUMBER. For every
-%           MR scanner type, interleaved acquisition will start with odd
-%           slices. On Siemens scanners, it will start with odd slices if
-%           the number of slices is odd, and even slices if the number of
-%           slices is even. 
+%    TYPE_ACQUISITION
+%        (string, default 'manual') the type of acquisition used by the
+%        scanner. If 'manual', SLICE_ORDER needs to be specified, 
+%        otherwise it will be calculated. Possible choices are
+%        'manual','sequential','sequential ascending','sequential descending',
+%        'interleaved','interleaved ascending','interleaved descending'. For
+%        interleaved modes, FIRST_NUMBER needs to be specified.
+%    
+%    TYPE_SCANNER
+%        (string, default '') the type of MR scanner. The only value
+%        that will change something to the processing here is 'Siemens',
+%        which has different conventions for interleaved acquisitions.
+%        This will change the default for OPT.FIRST_NUMBER. For every
+%        MR scanner type, interleaved acquisition will start with odd
+%        slices. On Siemens scanners, it will start with odd slices if
+%        the number of slices is odd, and even slices if the number of
+%        slices is even. 
 %
-%       FIRST_NUMBER
-%           (string, default see description) the first number when using 
-%           interleaved mode of TYPE_ACQUISITION. The default is 'odd' if
-%           OPT.TYPE_SCANNER is different of 'Siemens'. For Siemens
-%           scanner, the default will be 'odd' if the number of slices is
-%           odd, and 'even' otherwise.
-%       
-%       STEP
-%           (integer, default []) the interval between the slices. 
-%           If [], use the info from the header of FILES_IN.
-%       
-%       NB_SLICES
-%           (integer) the number of slices to use to calculate the
-%           SLICE_ORDER. If not defined, uses the header number from
-%           FILES_IN.
-%       
-%       TR
-%           (integer) the time between slices in a volume. If not defined, 
-%           uses the header number from FILES_IN.
-%       
-%       DELAY_IN_TR
-%           (integer, default 0) the delay between the last slice of the
-%           first volume and the first slice of the following volume.
-%       
-%       SLICE_ORDER 
-%           (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
-%           was acquired in ith position. The order of the slices is 
-%           assumed to be the same in all volumes.
-%           ex : slice_order = [1 3 5 2 4 6] for 6 slices acquired in 
-%           'interleaved' mode, starting by odd slices(slice 5 was acquired 
-%           in 3rd position). Note that the slices are assumed to be axial,
-%           i.e. slice z at time t is vol(:,:,z,t).
+%    FIRST_NUMBER
+%        (string, default see description) the first number when using 
+%        interleaved mode of TYPE_ACQUISITION. The default is 'odd' if
+%        OPT.TYPE_SCANNER is different of 'Siemens'. For Siemens
+%        scanner, the default will be 'odd' if the number of slices is
+%        odd, and 'even' otherwise.
+%    
+%    STEP
+%        (integer, default []) the interval between the slices. 
+%        If [], use the info from the header of FILES_IN.
+%    
+%    NB_SLICES
+%        (integer) the number of slices to use to calculate the
+%        SLICE_ORDER. If not defined, uses the header number from
+%        FILES_IN.
+%    
+%    TR
+%        (integer) the time between slices in a volume. If not defined, 
+%        uses the header number from FILES_IN.
+%    
+%    DELAY_IN_TR
+%        (integer, default 0) the delay between the last slice of the
+%        first volume and the first slice of the following volume.
+%    
+%    SLICE_ORDER 
+%        (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
+%        was acquired in ith position. The order of the slices is 
+%        assumed to be the same in all volumes.
+%        ex : slice_order = [1 3 5 2 4 6] for 6 slices acquired in 
+%        'interleaved' mode, starting by odd slices(slice 5 was acquired 
+%        in 3rd position). Note that the slices are assumed to be axial,
+%        i.e. slice z at time t is vol(:,:,z,t).
 %
-%       REF_SLICE	
-%           (integer, default middle slice in acquisition time) slice for 
-%           time 0
+%    REF_SLICE	
+%        (integer, default middle slice in acquisition time) slice for 
+%        time 0
 %
-%       TIMING		
-%           (vector 2*1) TIMING(1) time between two slices
-%           TIMING(2) : time between last slice and next volume
+%    TIMING		
+%        (vector 2*1) TIMING(1) time between two slices
+%        TIMING(2) : time between last slice and next volume
 %
-%       FLAG_VARIANCE
-%           (boolean, default 1) if FLAG_VARIANCE == 1, the mean and 
-%           variance of the time series at each voxel is preserved.
+%    FLAG_VARIANCE
+%        (boolean, default 1) if FLAG_VARIANCE == 1, the mean and 
+%        variance of the time series at each voxel is preserved.
 %
-%       FLAG_REGULAR
-%           (boolean, default 1) if FLAG_REGULAR == 1, the spacing of all axis 
-%           will be set to regular in MINC files. This is done to avoid bugs in 
-%           latter stage of the analysis (MINCRESAMPLE cannot handle files with 
-%           irregular spacing.
+%    FLAG_REGULAR
+%        (boolean, default 1) if FLAG_REGULAR == 1, the spacing of all axis 
+%        will be set to regular in MINC files. This is done to avoid bugs in 
+%        latter stage of the analysis (MINCRESAMPLE cannot handle files with 
+%        irregular spacing.
 %
-%       FLAG_HISTORY
-%           (boolean, default 0) if FLAG_HISTORY == 1, the brick will preserve 
-%           the history of MINC files. It is often a good idea to get rid of it, 
-%           as the conversion from DICOM creates huge history that can even crash 
-%           MINC tools and are in any case too long to be useful. On top of that
-%           the NIAK tools do not set the history consistently, so in any case it 
-%           does not matter to preserve it as it is not accurate. 
+%    FLAG_HISTORY
+%        (boolean, default 0) if FLAG_HISTORY == 1, the brick will preserve 
+%        the history of MINC files. It is often a good idea to get rid of it, 
+%        as the conversion from DICOM creates huge history that can even crash 
+%        MINC tools and are in any case too long to be useful. On top of that
+%        the NIAK tools do not set the history consistently, so in any case it 
+%        does not matter to preserve it as it is not accurate. 
 %
-%       FLAG_SKIP
-%           (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing
-%           anything, just copying the input to the output. This flag is
-%           useful if you want to get rid of the slice timing correction in
-%           the pipeline. 
+%    FLAG_SKIP
+%        (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing
+%        anything, just copying the input to the output. This flag is
+%        useful if you want to get rid of the slice timing correction in
+%        the pipeline. 
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
+%    FOLDER_OUT 
+%        (string, default: path of FILES_IN) If present, all default 
+%        outputs will be created in the folder FOLDER_OUT. The folder 
+%        needs to be created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%    FLAG_VERBOSE 
+%        (boolean, default 1) if the flag is 1, then the function 
+%        prints some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
-%           
+%    FLAG_TEST 
+%        (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%        do anything but update the default values in FILES_IN, 
+%        FILES_OUT and OPT.
+%        
 % _________________________________________________________________________
 % OUTPUTS
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%              
+%           
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_SLICE_TIMING, NIAK_DEMO_SLICE_TIMING
@@ -220,7 +220,7 @@ niak_gb_vars % Load some important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SLICE_TIMING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_slice_timing'' for more info.')
 end
 

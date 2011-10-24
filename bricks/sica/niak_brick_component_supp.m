@@ -1,84 +1,81 @@
 function [files_in,files_out,opt] = niak_brick_component_supp(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_COMPONENT_SUPP
-%
 % Suppress some ica components from an fMRI dataset.
 %
+% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SUPP(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUT
+% INPUTS:
 %
-%  * FILES_IN  
-%       (structure) with the following fields :
+% FILES_IN  
+%    (structure) with the following fields :
 %
-%       FMRI 
-%           (string) 
-%           the original fMRI 3D+t data
+%    FMRI 
+%        (string) 
+%        the original fMRI 3D+t data
 %
-%       SPACE 
-%           (string)
-%           a 3D+t dataset. Volume K is the spatial distribution of the Kth
-%           source estimaed through ICA.
+%    SPACE 
+%        (string)
+%        a 3D+t dataset. Volume K is the spatial distribution of the Kth
+%        source estimaed through ICA.
 %
-%       MASK_BRAIN
-%           (string)
-%           A file name of a binary mask of the brain that was used in
-%           NIAK_BRICK_SICA.
+%    MASK_BRAIN
+%        (string)
+%        A file name of a binary mask of the brain that was used in
+%        NIAK_BRICK_SICA.
 %
-%       TIME 
-%           (string)
-%           a text file. Column Kth is the temporal distribution of the Kth
-%           ica source.
+%    TIME 
+%        (string)
+%        a text file. Column Kth is the temporal distribution of the Kth
+%        ica source.
 %
-%       COMPSEL 
-%           (cell of strings)
-%           The name of a mat file with two variables SCORE and ORDER. 
-%           SCORE(I) is the selection score of component ORDER(I). 
-%           Components are ranked by descending selection scores.
-%           If the variable SCORE cannot be found, every score will be set
-%           to 0.
+%    COMPSEL 
+%        (cell of strings)
+%        The name of a mat file with two variables SCORE and ORDER. 
+%        SCORE(I) is the selection score of component ORDER(I). 
+%        Components are ranked by descending selection scores.
+%        If the variable SCORE cannot be found, every score will be set
+%        to 0.
 %
-%  * FILES_OUT 
-%           (string, default <BASE FMRI>_p.<EXT FMRI>) 
-%           file name for the fMRI data after component suppression.
+% FILES_OUT 
+%    (string, default <BASE FMRI>_p.<EXT FMRI>) 
+%    file name for the fMRI data after component suppression.
 %
-%  * OPT   
-%       (structure) with the following fields (any omitted field will be
-%       set to default value if possible, and will produce an error
-%       otherwise) :
+% OPT   
+%    (structure) with the following fields (any omitted field will be
+%    set to default value if possible, and will produce an error
+%    otherwise) :
 %
-%       THRESHOLD 
-%           (scalar, default 0.15) 
-%           a threshold to apply on the score for suppression (scores 
-%           above the thresholds are selected). If the threshold is -Inf, 
-%           all components will be suppressed. If the threshold is Inf, no
-%           component will be suppressed (the algorithm is basically
-%           copying the file, expect that the data is masked inside the 
-%           brain).
+%    THRESHOLD 
+%        (scalar, default 0.15) 
+%        a threshold to apply on the score for suppression (scores 
+%        above the thresholds are selected). If the threshold is -Inf, 
+%        all components will be suppressed. If the threshold is Inf, no
+%        component will be suppressed (the algorithm is basically
+%        copying the file, expect that the data is masked inside the 
+%        brain).
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN.SPACE) 
-%           If present, all default outputs will be created in the folder 
-%           FOLDER_OUT. The folder needs to be created beforehand.
+%    FOLDER_OUT 
+%        (string, default: path of FILES_IN.SPACE) 
+%        If present, all default outputs will be created in the folder 
+%        FOLDER_OUT. The folder needs to be created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) gives progression infos
+%    FLAG_VERBOSE 
+%        (boolean, default 1) gives progression infos
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN, FILES_OUT and OPT.
+%    FLAG_TEST 
+%        (boolean, default 0) if FLAG_TEST equals 1, the
+%        brick does not do anything but update the default
+%        values in FILES_IN, FILES_OUT and OPT.
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
-% COMMENTS :
+% COMMENTS:
 %
 % This brick is using multiple functions from the SICA toolbox, developped
 % by Vincent Perlbarg, LIF Inserm U678, Faculte de medecine
@@ -133,7 +130,7 @@ niak_gb_vars % Importing important NIAK variables
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COMPONENT_SUPP(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_component_supp'' for more info.')
 end
 

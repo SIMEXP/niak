@@ -332,7 +332,7 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Input files
-if ~exist('files_in','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('opt','var')
     error('niak:brick','syntax: PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS_IND(FILES_IN,OPT).\n Type ''help niak_pipeline_fmri_preprocess_ind'' for more info.')
 end
 

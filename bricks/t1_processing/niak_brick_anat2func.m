@@ -177,7 +177,7 @@ flag_gb_niak_fast_gb = true;
 niak_gb_vars
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak_brick_anat2func, SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_ANAT2FUNC(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_anat2func'' for more info.')
 end
 
@@ -199,7 +199,7 @@ gb_list_fields      = {'flag_invert_transf_output' , 'flag_invert_transf_init' ,
 gb_list_defaults    = {false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
 niak_set_defaults
 
-if ~strcmp(opt.init,'center')&~strcmp(opt.init,'identity')
+if ~strcmp(opt.init,'center')&&~strcmp(opt.init,'identity')
     error('OPT.INIT should be either ''center'' or ''identity''');
 end
 
@@ -525,7 +525,7 @@ if ~strcmp(files_out.transformation,'gb_niak_omitted')
     end
 end
 
-if ~strcmp(files_out.anat_hires,'gb_niak_omitted')|~strcmp(files_out.anat_lowres,'gb_niak_omitted')
+if ~strcmp(files_out.anat_hires,'gb_niak_omitted')||~strcmp(files_out.anat_lowres,'gb_niak_omitted')
 
     %% Resample the anat at hi-res
     if ~strcmp(files_out.anat_hires,'gb_niak_omitted')
