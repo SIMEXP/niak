@@ -74,8 +74,8 @@ function [res_ica]=niak_sica(data,opt)
 % COMMENTS
 %
 % Core of this function is copied from the fMRlab toolbox developed at
-% Stanford :
-% http://www-stat.stanford.edu/wavelab/Wavelab_850/index_wavelab850.html
+% UCSD:
+% http://sccn.ucsd.edu/fmrlab/
 % The code was mainly contributed by Scott Makeig under a GNU
 % license. See subfunctions for details. 
 %
