@@ -52,7 +52,7 @@ function versions = niak_version()
 %%     SVN     %%
 %%%%%%%%%%%%%%%%%
 
-    versions = psom_version_svn();
+    versions.svn = psom_version_svn();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%     Release number     %%
@@ -62,7 +62,7 @@ function versions = niak_version()
     % Look for the PSOM version release
     if exist('psom_gb_vars') == 2
         k=k+1;
-        psom_gb_vars
+        psom_gb_vars;
         versions.release(k).name = 'psom';
         versions.release(k).release = gb_psom_version;
     end
@@ -70,7 +70,7 @@ function versions = niak_version()
     % Look for the NIAK version release
     if exist('niak_gb_vars') == 2
         k=k+1;
-        niak_gb_vars
+        niak_gb_vars;
         versions.release(k).name = 'niak';
         versions.release(k).release = gb_niak_version;
     end
