@@ -41,7 +41,7 @@ function [order,part_order,order_c] = niak_part2order(part,S);
 % Then, for each cluster D and for each point x in D, let s(x,C1) and 
 % s(x,C2) be the average similarity between x and the points in C1 and 
 % C2 respecitvely, where C1, C2 are the "neighbours" of cluster D. The 
-% values s(x,C2)-s(x,C2) are sorted (ascending order) and define the 
+% values s(x,C1)-s(x,C2) are sorted (ascending order) and define the 
 % order of points within D. Note that if C1 or C2 are undefined (D is 
 % the first or the last cluster), y1 or y2 is defined as 0.
 %
