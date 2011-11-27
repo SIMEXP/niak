@@ -176,7 +176,7 @@ end
 
 for num_s = 1:opt.nb_samps
     if opt.flag_verbose
-        new_perc = 5*floor(20*num_s/nb_samps);
+        new_perc = 5*floor(20*num_s/opt.nb_samps);
         if curr_perc~=new_perc
             fprintf(' %1.0f',new_perc);
             curr_perc = new_perc;
@@ -197,11 +197,13 @@ for num_s = 1:opt.nb_samps
     mean_v = mean_v + mes;
     std_v = std_v + mes.^2;
 end
-mean_v = mean_v / nb_samps;
-std_v = std_v / nb_samps - mean_v.^2;
+mean_v = mean_v / opt.nb_samps;
+std_v = std_v / opt.nb_samps - mean_v.^2;
 std_v = sqrt(std_v);      
+p_left = p_left/opt.nb_samps;
+p_right = p_right/opt.nb_samps;
 if opt.flag_verbose
-    fprintf('Done \n');
+    fprintf(' Done \n');
 end
 
 switch opt.side
@@ -219,13 +221,13 @@ end
 if opt.flag_verbose
     fprintf('FDR estimation ...\n')
 end
+[val,order] = sort(pce,'ascend');
+fdr = zeros(size(pce));
 switch opt.type_fdr    
-    [val,order] = sort(pce,'ascend');
-    fdr = zeros(size(pce));
     case 'BY'
-       fdr(order) = sum((1:length(pce)).^(-1))*(length(pce)./(1:length(pce))).*val;
+       fdr(order) = sum((1:length(pce)).^(-1))*(length(pce)./(1:length(pce)))'.*val;
     case 'BH'
-       fdr(order) = (length(pce)./(1:length(pce))).*val;
+       fdr(order) = (length(pce)./(1:length(pce)))'.*val;
     otherwise
         error('%s is an unkown procedure for FDR estimation')
 end
