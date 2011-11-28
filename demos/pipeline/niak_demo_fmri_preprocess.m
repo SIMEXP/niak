@@ -187,6 +187,9 @@ opt.resample_vol.flag_skip           = 0;          % Turn on/off the resampling 
 opt.smooth_vol.fwhm      = 6;  % Apply an isotropic 6 mm gaussin smoothing.
 opt.smooth_vol.flag_skip = 0;  % Turn on/off the spatial smoothing
 
+% Region growing
+opt.region_growing.flag_skip = 0; % Turn on/off the region growing
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

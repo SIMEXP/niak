@@ -176,11 +176,13 @@ else
         error('FILES_IN.FMRI should be a cell of strings!');
     end
 
-    if ~isfield(files_in,'areas')||isempty(files_in.areas)||strcmp(files_in.areas,'gb_niak_omitted')
-        flag_areas = false;
-        files_in.areas = [gb_niak_path_template 'roi_aal.mnc.gz'];
-    end
-
+%     if ~isfield(files_in,'areas')||isempty(files_in.areas)||strcmp(files_in.areas,'gb_niak_omitted')
+%         flag_areas = false;
+%         files_in.areas = [];
+%     end
+    %force the AAL template
+    flag_areas = false;
+    
     if ~isfield(files_in,'mask')||isempty(files_in.mask)||strcmp(files_in.mask,'gb_niak_omitted')
         files_in.mask = files_in.areas;
     end
@@ -198,8 +200,8 @@ opt_norm_group.type    = 'mean_var';
 opt_norm_average.type  = 'mean';
 
 gb_name_structure = 'opt';
-gb_list_fields    = { 'flag_tseries' , 'labels' , 'ind_rois' , 'thre_size' , 'thre_sim' , 'thre_nb_rois' , 'sim_measure' , 'correction_ind' , 'correction_group' , 'correction_average' , 'flag_size' , 'folder_out' , 'psom'       , 'flag_test' };
-gb_list_defaults  = { true           , {}       , []         , 1000        , []         , 0              , 'afc'         , opt_norm_ind     , opt_norm_group     , opt_norm_average     , true        , NaN          , default_psom , false       };
+gb_list_fields    = { 'flag_tseries' , 'labels' , 'ind_rois' , 'thre_size' , 'thre_sim' , 'thre_nb_rois' , 'sim_measure' , 'correction_ind' , 'correction_group' , 'correction_average' , 'flag_size' , 'folder_out' , 'psom'       , 'flag_test', 'flag_skip' };
+gb_list_defaults  = { true           , {}       , []         , 1000        , []         , 0              , 'afc'         , opt_norm_ind     , opt_norm_group     , opt_norm_average     , true        , NaN          , default_psom , false      , true };
 niak_set_defaults
 
 if isempty(opt.thre_sim)
@@ -208,6 +210,9 @@ if isempty(opt.thre_sim)
 end
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
+if flag_skip
+    return; 
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%
@@ -219,6 +224,22 @@ if isempty(opt.labels)
         opt.labels{num_f} = sprintf('file%i',num_f);
     end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Resampling of the AAL template  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% name_job = 'resamp_aal';
+% clear files_in_tmp files_out_tmp opt_tmp
+
+
+
+% files_in_tmp.source      = files_in.areas;
+% files_in_tmp.target      = files_in.fmri{1};
+% [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in_tmp.target);
+% files_out_tmp            = [opt.folder_out filesep 'template_aal' ext_f];
+% pipeline = psom_add_job(struct(),name_job,'niak_brick_resample_aal',files_in_tmp,files_out_tmp,[],false);
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Mask the areas with the brain mask  %%

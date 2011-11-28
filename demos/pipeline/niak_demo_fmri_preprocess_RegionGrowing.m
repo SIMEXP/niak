@@ -1,4 +1,4 @@
-function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
+function [pipeline,opt] = niak_demo_fmri_preprocess_RegionGrowing(path_demo,opt)
 % This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % SYNTAX:
