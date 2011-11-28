@@ -163,7 +163,7 @@ if ~exist('files_in','var')|~exist('opt','var')
 end
 
 %% Checking that FILES_IN is in the correct format
-flag_areas = true;
+flag_areas = false;
 if ~isstruct(files_in)
     error('FILES_IN should be a struture!')
 else
@@ -176,12 +176,9 @@ else
         error('FILES_IN.FMRI should be a cell of strings!');
     end
 
-%     if ~isfield(files_in,'areas')||isempty(files_in.areas)||strcmp(files_in.areas,'gb_niak_omitted')
-%         flag_areas = false;
-%         files_in.areas = [];
-%     end
-    %force the AAL template
-    flag_areas = false;
+    if isfield(files_in,'areas_in')&&~isempty(files_in.areas_in)
+        flag_areas = true;
+    end
     
     if ~isfield(files_in,'mask')||isempty(files_in.mask)||strcmp(files_in.mask,'gb_niak_omitted')
         files_in.mask = files_in.areas;
@@ -281,7 +278,7 @@ pipeline = psom_add_job(pipeline,'neighbourhood_areas','niak_brick_neighbour',fi
 %% Region growing  %%
 %%%%%%%%%%%%%%%%%%%%%
 if flag_areas || ~isempty(opt.ind_rois)
-    [hdr,mask] = niak_read_vol(files_in.areas); 
+    [hdr,mask] = niak_read_vol(files_in.areas_in); 
     mask = round(mask);
     if ~isempty(opt.ind_rois)
         mask = mask(ismember(mask,opt.ind_rois));

@@ -189,6 +189,7 @@ opt.smooth_vol.flag_skip = 0;  % Turn on/off the spatial smoothing
 
 % Region growing
 opt.region_growing.flag_skip = 0; % Turn on/off the region growing
+opt.template_fmri = '/home/cdansereau/svn/niak/trunk/template/roi_aal.mnc.gz';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
