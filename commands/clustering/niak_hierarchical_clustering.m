@@ -186,14 +186,20 @@ for num_i = 1:nb_iter
     S(cy,:) = -Inf;
     S(cx,cx) = -Inf;        
     
-    % Update the 'maximal similarity' vector
+    % Update the 'maximal similarity' vector 
+    % case 1, the nearest neighbour was cx or cy, but (cx U cy) is not the nearest neighbour anymore
     [max_sim(list_nn==cy),list_nn(list_nn==cy)] = max(S(:,list_nn==cy),[],1);    
     [max_sim(list_nn==cx),list_nn(list_nn==cx)] = max(S(:,list_nn==cx),[],1);
     max_sim(cy) = -Inf;
     list_nn(cy) = NaN;
     
+    % Update the 'maximal similarity' vector 
+    % case 2, the nearest neighbour was not cx or cy, but (cx U cy) is the nearest neighbour     
     [max_sim,ind_x] = max([max_sim ; S(cx,:)],[],1);
     list_nn(ind_x==2) = cx;       
+
+    % Update the 'maximal similarity' vector 
+    % case 3, look for the nearest neighbour of (cx U cy)
     [max_sim(cx),list_nn(cx)] = max(S(cx,:));    
     
     % Update the size vector
