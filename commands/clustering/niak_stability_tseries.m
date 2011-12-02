@@ -151,6 +151,12 @@ if opt.flag_verbose
     curr_perc = -1;
 end
 
+if strcmp(opt.sampling.type,'subsampling')
+    L = max(floor(T*opt.sampling.opt),1);
+    opt.nb_samps = min(opt.nb_samps,T-L+1);
+    delta = (T-L)/(opt.nb_samps-1);
+end
+
 % Generate samples
 for num_s = 1:opt.nb_samps
 
@@ -163,6 +169,10 @@ for num_s = 1:opt.nb_samps
     end
 
     switch opt.sampling.type
+        case 'subsampling'
+            t1 = floor(1+(num_s-1)*delta);
+            t2 = t1+L-1;
+            tseries_boot = tseries(t1:t2,:);
         case 'bootstrap'
             tseries_boot = niak_bootstrap_tseries(tseries,opt.sampling.opt);
         case 'mplm'
