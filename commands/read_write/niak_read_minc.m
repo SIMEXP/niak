@@ -1,8 +1,4 @@
 function [hdr,vol] = niak_read_minc(file_name,precision_data)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_READ_MINC
-%
 % Read 3D or 3D+t data in MINC format.
 % http://www.bic.mni.mcgill.ca/software/minc/
 %
