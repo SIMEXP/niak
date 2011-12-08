@@ -7,11 +7,14 @@ function file_name = niak_file_tmp(ext)
 % _________________________________________________________________________
 % INPUTS:
 %
-% EXT             (string) An extension for the file name
+% EXT             
+%   (string) An extension for the file name
 %
+% _________________________________________________________________________
 % OUTPUTS:
 % 
-% A (full path) name for a temporary file.
+% FILE_NAME 
+%   (string) A (full path) name for a temporary file.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -19,6 +22,9 @@ function file_name = niak_file_tmp(ext)
 % The temporary files live in the temporary directory. This directory is by 
 % default '/tmp/', but this can be changed using the variable GB_NIAK_TMP
 % in the file NIAK_GB_VARS.
+%
+% If this function is called using the pipeline system for Octave and Matlab,
+% it will use the job name as part of the temporary file name.
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
