@@ -398,7 +398,7 @@ opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
 gb_list_fields    = {'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {true           , ''   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp          };
+gb_list_defaults  = {true           , ''   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
@@ -440,14 +440,10 @@ for num_s = 1:nb_subject
     opt_ind = rmfield(opt,'flag_verbose');
     opt_ind.label = subject;
     
-    %opt_ind.template_fmri = file_template; %[opt.folder_out filesep 'region_growing' filesep ''];
-    opt_ind.flag_test = true;
+     opt_ind.flag_test = true;
     
-%     if num_s == 1
-%         pipeline = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
-%     else
-        pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
-%     end
+     pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
+
     if flag_verbose        
         fprintf('%1.2f sec\n',etime(clock,t1));
     end
@@ -587,41 +583,44 @@ end
 %%%%%%%%%%%%%%%%%%%%
 %% Region Growing %%
 %%%%%%%%%%%%%%%%%%%%
+if isfield(opt.region_growing,'flag_skip')
+    if ~opt.region_growing.flag_skip
+        if flag_verbose
+            t1 = clock;
+            fprintf('Generating pipeline for the region growing ; ');
+        end
+        clear files_in_tmp files_out_tmp opt_tmp
+        opt_tmp                     = opt.region_growing;
+        opt_tmp.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
+        opt_tmp.flag_test           = true;
+        opt_tmp.labels              = list_subject;
+        k=0;
+        for num_s = 1:nb_subject
+            subject = list_subject{num_s};
 
-if ~opt.region_growing.flag_skip
-    if flag_verbose
-        t1 = clock;
-        fprintf('Generating pipeline for the region growing ');
-    end
-    clear files_in_tmp files_out_tmp opt_tmp
-    k=0;
-    for num_s = 1:nb_subject
-        subject = list_subject{num_s};
+            for num_session = 1:size(list_session{num_s})
+                session = list_session{num_s}{num_session};
 
-        for num_session = 1:size(list_session{num_s})
-            session = list_session{num_s}{num_session};
-
-            for num_r = 1:size(files_in.(subject).fmri.(session),2)
-                k=k+1;
-                run_name = ['run' num2str(num_r)];
-                files_in_tmp.fmri{k}        = pipeline.(['smooth_' subject '_' session '_' run_name]).files_out;
+                for num_r = 1:size(files_in.(subject).fmri.(session),2)
+                    k=k+1;
+                    run_name = ['run' num2str(num_r)];
+                    files_in_tmp.fmri{k}        = pipeline.(['smooth_' subject '_' session '_' run_name]).files_out;
+                    [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in_tmp.fmri{k});
+                    opt_tmp.labels{k} = name_f(6:end);
+                end
             end
         end
-    end
-    
-    files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
-    files_in_tmp.areas          = pipeline.resamp_aal.files_out;
-    files_in_tmp.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 
-    opt_tmp                     = opt.region_growing;
-    opt_tmp.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
-    opt_tmp.flag_test           = true;
+        files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
+        files_in_tmp.areas          = pipeline.resamp_aal.files_out;
+        files_in_tmp.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 
-    [pipeline_rg] = niak_pipeline_region_growing(files_in_tmp,opt_tmp);
-    [pipeline] = psom_merge_pipeline(pipeline,pipeline_rg);
+        [pipeline_rg] = niak_pipeline_region_growing(files_in_tmp,opt_tmp);
+        [pipeline] = psom_merge_pipeline(pipeline,pipeline_rg);
 
-    if flag_verbose        
-        fprintf('%1.2f sec\n',etime(clock,t1));
+        if flag_verbose        
+            fprintf('%1.2f sec\n',etime(clock,t1));
+        end
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%
