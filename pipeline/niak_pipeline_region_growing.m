@@ -197,8 +197,8 @@ opt_norm_group.type    = 'mean_var';
 opt_norm_average.type  = 'mean';
 
 gb_name_structure = 'opt';
-gb_list_fields    = { 'flag_tseries' , 'labels' , 'ind_rois' , 'thre_size' , 'thre_sim' , 'thre_nb_rois' , 'sim_measure' , 'correction_ind' , 'correction_group' , 'correction_average' , 'flag_size' , 'folder_out' , 'psom'       , 'flag_test', 'flag_skip' };
-gb_list_defaults  = { true           , {}       , []         , 1000        , []         , 0              , 'afc'         , opt_norm_ind     , opt_norm_group     , opt_norm_average     , true        , NaN          , default_psom , false      , false       };
+gb_list_fields    = { 'flag_tseries' , 'labels' , 'ind_rois' , 'thre_size' , 'thre_sim' , 'thre_nb_rois' , 'sim_measure' , 'correction_ind' , 'correction_group' , 'correction_average' , 'flag_size' , 'folder_out' , 'psom'       , 'flag_test'};
+gb_list_defaults  = { true           , {}       , []         , 1000        , []         , 0              , 'afc'         , opt_norm_ind     , opt_norm_group     , opt_norm_average     , true        , NaN          , default_psom , false      };
 niak_set_defaults
 
 if isempty(opt.thre_sim)
@@ -206,10 +206,6 @@ if isempty(opt.thre_sim)
     thre_sim = NaN;
 end
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
-
-if flag_skip
-    return; 
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialization of the pipeline %%

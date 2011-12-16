@@ -204,6 +204,77 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
 %           anything, just copy the input on the output. 
 %
+%   REGION_GROWING 
+%       (structure) options of NIAK_PIPELINE_REGION_GROWING.
+%
+%       LABELS
+%           (cell of strings, default {'file1','files2',...}) LABELS{I} will be 
+%           used as part of the name of the job for masking the brain of 
+%           dataset FILES_IN{I}.
+%     
+%       FOLDER_OUT 
+%           (string) where to write the results of the pipeline. 
+%     
+%       PSOM
+%           (structure) the options of the pipeline manager. See the OPT
+%           argument of PSOM_RUN_PIPELINE. Default values can be used here.
+%           Note that the field PSOM.PATH_LOGS will be set up by the pipeline.
+%     
+%       FLAG_TEST
+%           (boolean, default false) If FLAG_TEST is true, the pipeline
+%           will just produce a pipeline structure, and will not actually
+%           process the data. Otherwise, PSOM_RUN_PIPELINE will be used to
+%           process the data.
+%     
+%       THRE_SIZE 
+%           (integer,default 1000 mm3) threshold on the region size (maximum). 
+%     
+%       THRE_SIM
+%           (real value, default NaN) threshold on the similarity between
+%           regions (minimum). If the value is NaN, no test is applied.
+%     
+%       THRE_NB_ROIS 
+%           (integer, default 0) the minimum number of homogeneous
+%           regions (if no threshold are fixed on size and similarity,
+%           THRE_NB_ROIS will be the actual number of homogeneous regions).
+%     
+%       SIM_MEASURE 
+%           (string, default 'afc') the similarity measure between regions.
+%     
+%       CORRECTION_IND
+%           (structure, default CORRECTION.TYPE = 'mean') the temporal 
+%           normalization to apply on the individual time series before 
+%           concatenation. See OPT in NIAK_NORMALIZE_TSERIES.
+%     
+%       CORRECTION_GROUP
+%           (structure, default CORRECTION.TYPE = 'mean_var') the temporal 
+%           normalization to apply on the individual time series before 
+%           region growing. See OPT in NIAK_NORMALIZE_TSERIES.
+%     
+%       CORRECTION_AVERAGE
+%           (structure, default CORRECTION.TYPE = 'mean') the temporal 
+%           normalization to apply on the individual time series before 
+%           averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
+%     
+%       IND_ROIS
+%           (vector of integer, default all) list of ROIs index that will 
+%           be included in the analysis. By default, the brick is processing 
+%           all the ROIs found in FILES_IN.MASK
+%     
+%       FLAG_SIZE 
+%           (boolean, default 1) if FLAG_SIZE == 1, all regions that
+%           are smaller than THRE_SIZE at the end of the growing process
+%           are merged into the most functionally close neighbour iteratively
+%           unless all the regions are larger than THRE_SIZE
+%     
+%       FLAG_TSERIES
+%           (boolean, default 1) if FLAG_TSERIES == 1, the average time series 
+%           within each ROI will be generated.
+%
+%       FLAG_SKIP
+%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
+%           anything. 
+%
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -402,6 +473,10 @@ gb_list_defaults  = {true           , ''   , 'quality_control' , NaN          , 
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
+if ~isfield(opt.region_growing,'flag_skip')
+    opt.region_growing.flag_skip = false;
+end
+
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
 end
@@ -583,46 +658,45 @@ end
 %%%%%%%%%%%%%%%%%%%%
 %% Region Growing %%
 %%%%%%%%%%%%%%%%%%%%
-if isfield(opt.region_growing,'flag_skip')
-    if ~opt.region_growing.flag_skip
-        if flag_verbose
-            t1 = clock;
-            fprintf('Generating pipeline for the region growing ; ');
-        end
-        clear files_in_tmp files_out_tmp opt_tmp
-        opt_tmp                     = opt.region_growing;
-        opt_tmp.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
-        opt_tmp.flag_test           = true;
-        opt_tmp.labels              = list_subject;
-        k=0;
-        for num_s = 1:nb_subject
-            subject = list_subject{num_s};
+if ~opt.region_growing.flag_skip
+    if flag_verbose
+        t1 = clock;
+        fprintf('Generating pipeline for the region growing ; ');
+    end
+    clear files_in_tmp files_out_tmp opt_tmp
+    opt_tmp                     = opt.region_growing;
+    opt_tmp.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
+    opt_tmp.flag_test           = true;
+    opt_tmp.labels              = list_subject;
+    k=0;
+    for num_s = 1:nb_subject
+        subject = list_subject{num_s};
 
-            for num_session = 1:size(list_session{num_s})
-                session = list_session{num_s}{num_session};
+        for num_session = 1:size(list_session{num_s})
+            session = list_session{num_s}{num_session};
 
-                for num_r = 1:size(files_in.(subject).fmri.(session),2)
-                    k=k+1;
-                    run_name = ['run' num2str(num_r)];
-                    files_in_tmp.fmri{k}        = pipeline.(['smooth_' subject '_' session '_' run_name]).files_out;
-                    [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in_tmp.fmri{k});
-                    opt_tmp.labels{k} = name_f(6:end);
-                end
+            for num_r = 1:size(files_in.(subject).fmri.(session),2)
+                k=k+1;
+                run_name = ['run' num2str(num_r)];
+                files_in_tmp.fmri{k}        = pipeline.(['smooth_' subject '_' session '_' run_name]).files_out;
+                [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in_tmp.fmri{k});
+                opt_tmp.labels{k} = name_f(6:end);
             end
         end
+    end
 
-        files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
-        files_in_tmp.areas          = pipeline.resamp_aal.files_out;
-        files_in_tmp.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
+    files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
+    files_in_tmp.areas          = pipeline.resamp_aal.files_out;
+    files_in_tmp.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 
-        [pipeline_rg] = niak_pipeline_region_growing(files_in_tmp,opt_tmp);
-        [pipeline] = psom_merge_pipeline(pipeline,pipeline_rg);
+    [pipeline_rg] = niak_pipeline_region_growing(files_in_tmp,opt_tmp);
+    [pipeline] = psom_merge_pipeline(pipeline,pipeline_rg);
 
-        if flag_verbose        
-            fprintf('%1.2f sec\n',etime(clock,t1));
-        end
+    if flag_verbose        
+        fprintf('%1.2f sec\n',etime(clock,t1));
     end
 end
+
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%
