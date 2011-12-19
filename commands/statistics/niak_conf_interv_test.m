@@ -221,16 +221,7 @@ end
 if opt.flag_verbose
     fprintf('FDR estimation ...\n')
 end
-[val,order] = sort(pce,'ascend');
-fdr = zeros(size(pce));
-switch opt.type_fdr    
-    case 'BY'
-       fdr(order) = sum((1:length(pce)).^(-1))*(length(pce)./(1:length(pce)))'.*val;
-    case 'BH'
-       fdr(order) = (length(pce)./(1:length(pce)))'.*val;
-    otherwise
-        error('%s is an unkown procedure for FDR estimation')
-end
+fdr = niak_fdr(pce,opt.type_fdr);
 
 %% Format outputs
 tests.pce = pce;
