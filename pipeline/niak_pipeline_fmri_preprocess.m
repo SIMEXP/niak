@@ -206,51 +206,15 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 %   REGION_GROWING 
 %       (structure) options of NIAK_PIPELINE_REGION_GROWING.
-%
-%       LABELS
-%           (cell of strings, default {'file1','files2',...}) LABELS{I} will be 
-%           used as part of the name of the job for masking the brain of 
-%           dataset FILES_IN{I}.
-%     
-%       FOLDER_OUT 
-%           (string) where to write the results of the pipeline. 
-%     
-%       PSOM
-%           (structure) the options of the pipeline manager. See the OPT
-%           argument of PSOM_RUN_PIPELINE. Default values can be used here.
-%           Note that the field PSOM.PATH_LOGS will be set up by the pipeline.
-%     
-%       FLAG_TEST
-%           (boolean, default false) If FLAG_TEST is true, the pipeline
-%           will just produce a pipeline structure, and will not actually
-%           process the data. Otherwise, PSOM_RUN_PIPELINE will be used to
-%           process the data.
 %     
 %       THRE_SIZE 
 %           (integer,default 1000 mm3) threshold on the region size (maximum). 
-%     
-%       THRE_SIM
-%           (real value, default NaN) threshold on the similarity between
-%           regions (minimum). If the value is NaN, no test is applied.
 %     
 %       THRE_NB_ROIS 
 %           (integer, default 0) the minimum number of homogeneous
 %           regions (if no threshold are fixed on size and similarity,
 %           THRE_NB_ROIS will be the actual number of homogeneous regions).
-%     
-%       SIM_MEASURE 
-%           (string, default 'afc') the similarity measure between regions.
-%     
-%       CORRECTION_IND
-%           (structure, default CORRECTION.TYPE = 'mean') the temporal 
-%           normalization to apply on the individual time series before 
-%           concatenation. See OPT in NIAK_NORMALIZE_TSERIES.
-%     
-%       CORRECTION_GROUP
-%           (structure, default CORRECTION.TYPE = 'mean_var') the temporal 
-%           normalization to apply on the individual time series before 
-%           region growing. See OPT in NIAK_NORMALIZE_TSERIES.
-%     
+%
 %       CORRECTION_AVERAGE
 %           (structure, default CORRECTION.TYPE = 'mean') the temporal 
 %           normalization to apply on the individual time series before 
@@ -260,16 +224,6 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (vector of integer, default all) list of ROIs index that will 
 %           be included in the analysis. By default, the brick is processing 
 %           all the ROIs found in FILES_IN.MASK
-%     
-%       FLAG_SIZE 
-%           (boolean, default 1) if FLAG_SIZE == 1, all regions that
-%           are smaller than THRE_SIZE at the end of the growing process
-%           are merged into the most functionally close neighbour iteratively
-%           unless all the regions are larger than THRE_SIZE
-%     
-%       FLAG_TSERIES
-%           (boolean, default 1) if FLAG_TSERIES == 1, the average time series 
-%           within each ROI will be generated.
 %
 %       FLAG_SKIP
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
@@ -319,6 +273,8 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           See NIAK_BRICK_RESAMPLE_VOL and OPT.RESAMPLE_VOL
 %      12.  Spatial smoothing.
 %           See NIAK_BRICK_SMOOTH_VOL and OPT.SMOOTH_VOL
+%      13.  Region growing.
+%           See NIAK_PIUPELINE_REGION_GROWING and OPT.REGION_GROWING
 %
 % In addition job the following jobs are performed at the group level:
 %       1.  Group quality control for motion correction.
@@ -664,7 +620,7 @@ if ~opt.region_growing.flag_skip
         fprintf('Generating pipeline for the region growing ; ');
     end
     clear files_in_tmp files_out_tmp opt_tmp
-    opt_tmp                     = opt.region_growing;
+    opt_tmp                     = rmfield(opt.region_growing,'flag_skip');
     opt_tmp.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
     opt_tmp.flag_test           = true;
     opt_tmp.labels              = list_subject;
