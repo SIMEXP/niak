@@ -2,7 +2,7 @@ function fdr = niak_fdr(pce,method)
 % Estimate the false-discovery rate in a family of tests with known per-comparison error
 %
 % SYNTAX:
-% FDR = NIAK_FDR(PCE)
+% FDR = NIAK_FDR( PCE , [METHOD] )
 %
 % _________________________________________________________________________
 % INPUTS:

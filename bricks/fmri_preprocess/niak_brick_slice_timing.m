@@ -226,8 +226,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = {'type_scanner','flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step','ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out'};
-gb_list_defaults    = {''            ,0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''};
+gb_list_fields      = {'type_scanner','flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
+gb_list_defaults    = {''            ,0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
