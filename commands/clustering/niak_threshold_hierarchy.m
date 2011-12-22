@@ -154,7 +154,7 @@ switch opt.type
     case 'size'
         
         %% Merge clusters until a certain cluster size is reached
-        while ((~isempty(hier))&(max(taille)<thresh))
+        while ((~isempty(hier))&&(max(taille)<thresh))
             x = find(objets == hier(1,2));
             y = find(objets == hier(1,3));
             part(:,x) = part(:,x) | part(:,y);
