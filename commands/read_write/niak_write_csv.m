@@ -73,7 +73,7 @@ function  [err,msg] = niak_write_csv(file_name,tab,opt)
 % THE SOFTWARE.
 
 %% Default inputs
-if ~exist('tab','var')|~exist('file_name','var')
+if ~exist('tab','var')||~exist('file_name','var')
     error('Please specify FILE_NAME and TAB as inputs');
 end
 
