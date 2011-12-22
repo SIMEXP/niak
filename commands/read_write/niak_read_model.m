@@ -186,15 +186,14 @@ if ~isempty(opt.projection)
             mask_ortho = ismember(labels_y,opt.projection(num_e).ortho);
             [B,E] = niak_lse(model(:,mask_ortho),model(:,mask_space));
             model(:,mask_ortho) = E;
-        end
-    end
-
-    % Optional: normalization of covariates (again)
-    if opt.flag_normalize
-        opt_n.type = 'mean_var';
-        model(:,mask_ortho) = niak_normalize_tseries(model(:,mask_ortho),opt_n);
-        if opt.flag_intercept
-            model(:,1) = 1/sqrt(size(model,1));
+            % Optional: normalization of covariates (again)
+            if opt.flag_normalize
+                opt_n.type = 'mean_var';
+                model(:,mask_ortho) = niak_normalize_tseries(model(:,mask_ortho),opt_n);
+                if opt.flag_intercept
+                    model(:,1) = 1/sqrt(size(model,1));
+                end
+            end
         end
     end
 end
