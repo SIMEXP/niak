@@ -181,10 +181,12 @@ end
 % Optional: orthogonalization of covariates
 if ~isempty(opt.projection)
     for num_e = 1:length(opt.projection);
-        mask_space = ismember(labels_y,opt.projection(num_e).space);
-        mask_ortho = ismember(labels_y,opt.projection(num_e).ortho);
-        [B,E] = niak_lse(model(:,mask_ortho),model(:,mask_space));
-        model(:,mask_ortho) = E;
+        if isfield(opt.projection,'space')
+            mask_space = ismember(labels_y,opt.projection(num_e).space);
+            mask_ortho = ismember(labels_y,opt.projection(num_e).ortho);
+            [B,E] = niak_lse(model(:,mask_ortho),model(:,mask_space));
+            model(:,mask_ortho) = E;
+        end
     end
 
     % Optional: normalization of covariates (again)
