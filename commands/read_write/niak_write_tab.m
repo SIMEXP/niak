@@ -64,7 +64,7 @@ function  [err,msg] = niak_write_tab(file_name,tab,labels_line,labels_col)
 % THE SOFTWARE.
 
 %% Default inputs
-if ~exist('tab','var')|~exist('file_name','var')
+if ~exist('tab','var')||~exist('file_name','var')
     error('Please specify FILE_NAME and TAB as inputs');
 end
 
