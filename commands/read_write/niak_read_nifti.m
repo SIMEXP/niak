@@ -121,12 +121,12 @@ if nargout > 1
 
     %%  For complex float32 or complex float64, voxel values
     %%  include [real, imag]
-    if hdr.details.datatype == 32 | hdr.details.datatype == 1792
+    if (hdr.details.datatype == 32) || (hdr.details.datatype == 1792)
         vol_siz = vol_siz * 2;
     end
 
     %% MPH: For RGB24, voxel values include 3 separate color planes
-    if hdr.details.datatype == 128 | hdr.details.datatype == 511
+    if (hdr.details.datatype == 128) || (hdr.details.datatype == 511)
         vol_siz = vol_siz * 3;
     end
 
@@ -134,7 +134,7 @@ if nargout > 1
 
     %%  For complex float32 or complex float64, voxel values
     %%  include [real, imag]
-    if hdr.details.datatype == 32 | hdr.details.datatype == 1792
+    if (hdr.details.datatype == 32) || (hdr.details.datatype == 1792)
         vol = reshape(vol, [2, length(vol)/2]);
         vol = complex(vol(1,:)', vol(2,:)');
     end
