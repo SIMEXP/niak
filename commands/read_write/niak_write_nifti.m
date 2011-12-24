@@ -81,7 +81,7 @@ function [] = niak_write_nifti(hdr,vol)
 % THE SOFTWARE.
 
 %% Checking for the syntax
-if ~exist('vol','var') | ~exist('hdr','var') 
+if ~exist('vol','var') || ~exist('hdr','var') 
     error('niak:write','Usage: niak_write_nifti(hdr,vol)');
 end
 
@@ -192,7 +192,7 @@ switch hdr.type
         hdr.details.magic = 'ni1';
 end
 
-if hdr.details.qform_code == 0 & hdr.details.sform_code == 0
+if (hdr.details.qform_code == 0) && (hdr.details.sform_code == 0)
     hdr.details.sform_code = 1;
     hdr.details.srow_x(1) = hdr.details.pixdim(2);
     hdr.details.srow_x(2) = 0;
