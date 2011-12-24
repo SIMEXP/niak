@@ -39,7 +39,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % where to store temporary files
-gb_niak_tmp = [tempdir filesep]; 
+gb_niak_tmp = '/localscratch/'; 
 
 % The command to zip files
 gb_niak_zip = 'gzip -f'; 

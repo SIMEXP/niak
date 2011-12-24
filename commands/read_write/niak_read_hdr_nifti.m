@@ -83,7 +83,7 @@ fid = -1;
 tag_OK = 0;
 num_f = 1;
 
-while ((tag_OK == 0)|(fid < 0))&(num_f <= length(list_formats))
+while ((tag_OK == 0)||(fid < 0))&&(num_f <= length(list_formats))
     fid = fopen(file_name,'r',list_formats{num_f});
     if ~(fid<0)
         fseek(fid,0,'bof');
@@ -225,7 +225,7 @@ hdr.details.magic       = deblank(fread(fid,4,'*char')');
 fseek(fid,253,'bof');
 hdr.details.originator  = fread(fid, 5,'int16')';
 %%  For Analyze data format
-if ~strcmp(hdr.details.magic, 'n+1') & ~strcmp(hdr.details.magic, 'ni1')
+if ~strcmp(hdr.details.magic, 'n+1') && ~strcmp(hdr.details.magic, 'ni1')
     hdr.details.qform_code = 0;
     hdr.details.sform_code = 0;
 end
@@ -333,7 +333,7 @@ if length(hdr.details.srow_z)~=4
     hdr.detais.srow_z = [hdr.details.pixdim(4) 0 0 -hdr.details.dim(4)*hdr.details.pixdim(4)];
 end
 
-if any(hdr.details.srow_x)&any(hdr.details.srow_y)&any(hdr.details.srow_z)
+if any(hdr.details.srow_x)&&any(hdr.details.srow_y)&&any(hdr.details.srow_z)
     hdr.info.mat = [hdr.details.srow_x ; hdr.details.srow_y ; hdr.details.srow_z ; [0 0 0 1]];
 else
     hdr.info.mat = [[diag(hdr.info.voxel_size) [0;0;0]]; [0 0 0 1]];
