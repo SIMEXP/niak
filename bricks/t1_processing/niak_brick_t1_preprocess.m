@@ -99,6 +99,11 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %         sets the N3 spline distance in mm (suggested values: 200 
 %         for 1.5T scan; 50 for 3T scan). 
 %
+%    FLAG_ALL
+%        (boolean, default false) if FLAG_ALL is true, by default 
+%        the brick will generate all outputs with default output 
+%        names.
+%
 %    FLAG_VERBOSE 
 %        (boolean, default: 1) If FLAG_VERBOSE == 1, write
 %        messages indicating progress.
@@ -299,17 +304,21 @@ if ~ischar(files_in)
     error('FILES_IN should be a string !\n')
 end
 
-%% FILES_OUT
-gb_name_structure = 'files_out';
-gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask_stereolin'  , 'mask_stereonl'   , 'classify'        };
-gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
-niak_set_defaults
-
 %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields    = {'type_template'            , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
-gb_list_defaults  = {'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
+gb_list_fields    = {'flag_all' , 'type_template'            , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
+niak_set_defaults
+
+%% FILES_OUT
+gb_name_structure = 'files_out';
+gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask_stereolin'  , 'mask_stereonl'   , 'classify'        };
+if flag_all 
+    gb_list_defaults  = {'' , '' , '' , '' , '' , '' , '' , '' , '' };
+else
+    gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+end
 niak_set_defaults
 
 %% Building default output names
