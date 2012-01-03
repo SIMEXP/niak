@@ -425,7 +425,7 @@ opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
 gb_list_fields    = {'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {true           , ''   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
+gb_list_defaults  = {true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
@@ -437,21 +437,22 @@ if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
 end
 
+if isempty(template_fmri)
+    template_fmri = [gb_niak_path_template 'roi_aal.mnc.gz'];
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Resample the AAL template %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 name_job = 'resamp_aal';
 clear files_in_tmp files_out_tmp opt_tmp
-
-%force the AAL template
-
 files_in_tmp.source      = template_fmri;
 files_in_tmp.target      = template_fmri;
 [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in.(list_subject{1}).fmri.(list_session{1}{1}){1});
 files_out_tmp            = [opt.folder_out 'region_growing' filesep 'template_aal' ext_f];
 opt_tmp                  = opt.resample_vol;
 opt_tmp.interpolation    = 'nearest_neighbour';
-pipeline = psom_add_job(struct(),name_job,'niak_brick_resample_aal',files_in_tmp,files_out_tmp,opt_tmp,false);
+pipeline = psom_add_job(struct(),name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
 
 opt.template_fmri = pipeline.resamp_aal.files_out;
 template_fmri = opt.template_fmri;
