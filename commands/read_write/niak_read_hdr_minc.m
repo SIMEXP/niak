@@ -121,7 +121,7 @@ hdr.details.image = {};
 %% Parsing the header into HDR.DETAILS  %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-while ~isempty(cell_header)&~flag_end
+while ~isempty(cell_header)&&~flag_end
 
     str_line = cell_header{1};
 
