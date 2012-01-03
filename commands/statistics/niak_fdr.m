@@ -8,8 +8,8 @@ function fdr = niak_fdr(pce,method)
 % INPUTS:
 %
 % PCE
-%   (vector) A family of tests. PCE(n) is the per-comparison error of the 
-%   nth test (aka the uncorrected p-value).
+%   (array) A set of family of tests. PCE(i,j) is the per-comparison error of the 
+%   ith test in the j-th family (aka the uncorrected p-value).
 %
 % METHOD
 %   (string, default 'BY') the method to estimate the false-discovery rate.
@@ -22,7 +22,8 @@ function fdr = niak_fdr(pce,method)
 % OUTPUTS:
 %
 % FDR
-%   (vector) The false-discovery rate for each test. 
+%   (array) FDR(i,j) is the false-discovery rate associated with a threshold of 
+%   PCE(i,j) in the j-th family.
 %
 % _________________________________________________________________________
 % REFERENCES:
@@ -40,12 +41,10 @@ function fdr = niak_fdr(pce,method)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% PCE_THRE = -Inf means that the requested FDR level cannot be achieved for
-% any threshold on the per-comparison error.
-%
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, Montreal 
-%               Neurological Institute, McGill University, 2007.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
+% Gériatrie de Montréal, Département d'informatique et de recherche 
+% opérationnelle, Université de Montréal, 2011-2012.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : false-discovery rate, false-positive rate
 
@@ -70,13 +69,18 @@ if nargin < 2
     method = 'BY';
 end
 
-[val,order] = sort(pce,'ascend');
+[val,order] = sort(pce,1,'ascend');
+n = size(pce,1);
 fdr = zeros(size(pce));
-switch method
-    case 'BY'
-       fdr(order) = sum((1:length(pce)).^(-1))*(length(pce)./(1:length(pce)))'.*val;
-    case 'BH'
-       fdr(order) = (length(pce)./(1:length(pce)))'.*val;
-    otherwise
-        error('%s is an unkown procedure for FDR estimation')
+ind = n./(1:n)';
+w = sum((1:n).^(-1));
+for num_c = 1:size(pce,2)
+    switch method
+        case 'BY'
+           fdr(order(:,num_c),num_c) = w * ind.*val(:,num_c);
+        case 'BH'
+           fdr(order(:,num_c),num_c) = ind.*val(:,num_c);
+        otherwise
+            error('%s is an unkown procedure for FDR estimation')
+    end
 end
