@@ -158,7 +158,7 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Input files
-if ~exist('files_in','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('opt','var')
     error('niak:pipeline','syntax: PIPELINE = NIAK_PIPELINE_REGION_GROWING(FILES_IN,OPT).\n Type ''help niak_pipeline_region_growing'' for more info.')
 end
 

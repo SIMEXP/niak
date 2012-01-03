@@ -170,7 +170,7 @@ function [files_in,files_out,opt] = niak_brick_tseries(files_in,files_out,opt)
 niak_gb_vars
 
 %% Syntax
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('fnak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_TSERIES(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_tseries'' for more info.')
 end
 
@@ -225,7 +225,7 @@ if isempty(files_out.tseries_avg)
     end
 end
 
-if flag_all & ~strcmp(files_in.atoms,'gb_niak_omitted')
+if flag_all && ~strcmp(files_in.atoms,'gb_niak_omitted')
     error('The FLAG_ALL option is not supported with time series');
 end
 
