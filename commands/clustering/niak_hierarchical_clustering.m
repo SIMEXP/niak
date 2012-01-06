@@ -125,7 +125,7 @@ niak_set_defaults
 perc_verb = 0.05;
 list_objects = 1:N;             % Initialization of the object list
 S(eye(size(S))==1) = -Inf; 
-[max_sim,list_nn] = max(S,[],1); % Initializaton of the maximal similarity list
+[max_sim,list_nn] = max(S,[],1); % Initialization of the maximal similarity list
 nb_iter = N-nb_classes;
 hier = zeros([nb_iter 4]); % Initialization of the hierarchy
 
@@ -144,12 +144,13 @@ for num_i = 1:nb_iter
     end
     
     % Get the couple of nearest neighbours    
-    max_sx = max(max_sim);   
-    cx = find(max_sim==max_sx);
+    max_sx = max(max_sim);
+    [cx,cy] = find(S==max_sx);
     if length(cx)>1
-        cx = cx(ceil(rand(1)*length(cx)));
+        ind_tmp = ceil(rand(1)*length(cx));
+        cx = cx(ind_tmp);
+        cy = cy(ind_tmp);
     end
-    cy = list_nn(cx);
     tmp = [cx cy];
     cx = min(tmp);
     cy = max(tmp);
