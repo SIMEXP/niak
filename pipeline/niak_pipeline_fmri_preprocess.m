@@ -438,7 +438,7 @@ if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of
 end
 
 if isempty(template_fmri)
-    template_fmri = [gb_niak_path_template filessep 'roi_aal.mnc.gz'];
+    template_fmri = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
