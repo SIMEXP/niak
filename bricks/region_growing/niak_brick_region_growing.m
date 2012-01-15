@@ -154,7 +154,7 @@ flag_gb_niak_fast_gb = true; % Only load the most important global variables for
 niak_gb_vars
 
 %% Check syntax
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_REGION_GROWING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_region_growing'' for more info.')
 end
 

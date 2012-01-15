@@ -1,9 +1,4 @@
 function  [files_in,files_out,opt] = niak_brick_merge_part(files_in,files_out,opt)
-
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MERGE_PART
-%
 % Merge multiple partitions into one. This brick is used by
 % NIAK_PIPELINE_REGION_GROWING, and is not that usefull by itself.
 %
@@ -84,9 +79,13 @@ function  [files_in,files_out,opt] = niak_brick_merge_part(files_in,files_out,op
 % If the variables cannot be found, the partition will be created, but
 % empty.
 %
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
-%               Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+% McConnell Brain Imaging Center,Montreal
+% Neurological Institute, McGill University, 2008-2010.
+% Research Centre of the Montreal Geriatric Institute
+% Department of Computer Science and Operations Research
+% University of Montreal, 2010-2012
+% Maintainer : pierre.bellec@cirugm.qc.ca
 % See licensing information in the code.
 % Keywords : spatial neighbour, adjacency matrix, connexity, graph
 
@@ -117,7 +116,7 @@ flag_gb_niak_fast_gb = true; % Only load the most important global variables for
 niak_gb_vars
 
 %% Check syntax
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('fnak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MERGE_PART(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_merge_part'' for more info.')
 end
 
