@@ -413,7 +413,7 @@ for num_sess = 1:nb_session
     session = list_session{num_sess};
     nb_run = length(files_in.fmri.(session));
     for num_r = 1:nb_run
-        run      = ['run',num2str(num_r)];
+        run      = sprintf('run%i',num_r);
         name_job = ['slice_timing_',label,'_',session,'_',run];
         clear files_in_tmp files_out_tmp opt_tmp        
         files_in_tmp                = files_in.fmri.(session){num_r};        
@@ -449,7 +449,7 @@ pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
 if strcmp(size_output,'quality_control')
     files_tmp = psom_files2cell(files_motion.motion_corrected);
     for num_e = 1:length(files_tmp)
-        pipeline = psom_add_clean(pipeline,['clean_motion_correction_' label '_file' num2str(num_e)],files_tmp{num_e}); 
+        pipeline = psom_add_clean(pipeline,sprintf('clean_motion_correction_%s_file%i',label,num_e),files_tmp{num_e}); 
     end
 end
 
@@ -596,7 +596,7 @@ for num_s = 1:nb_session
     session = list_session{num_s};
     nb_run = length(files_in.fmri.(session));
     for num_r = 1:nb_run
-        run = ['run' num2str(num_r)];
+        run = sprintf('run%i',num_r);
         clear opt_tmp files_in_tmp files_out_tmp
         name_job                     = ['time_filter_',label,'_',session,'_',run];        
         files_in_tmp                 = files_motion.motion_corrected.(session){num_r};
@@ -660,7 +660,7 @@ pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
 if strcmp(size_output,'quality_control')
     files_tmp = psom_files2cell(files_co);
     for num_e = 1:length(files_tmp)
-        pipeline = psom_add_clean(pipeline,['clean_corsica_' label '_file' num2str(num_e)],files_tmp{num_e}); 
+        pipeline = psom_add_clean(pipeline,sprintf('clean_corsica_%s_file%i',label,num_e),files_tmp{num_e}); 
     end  
 end
 
@@ -677,7 +677,7 @@ if flag_verbose
 end
 files_re = cell([length(files_co) 1]);
 for num_r = 1:length(files_co);
-    run = ['run',num2str(num_r)];
+    run = sprintf('run%i',num_r);
     clear files_in_tmp files_out_tmp opt_tmp     
     name_job_resample = ['resample_' label '_' run];    
     files_in_tmp.source = files_co{num_r};            
@@ -711,7 +711,7 @@ for num_s = 1:nb_session
     nb_run = length(files_in.fmri.(session));
     for num_run = 1:nb_run
         num_r = num_r+1;
-        run = ['run',num2str(num_run)];
+        run = sprintf('run%i',num_run);
         clear files_in_tmp files_out_tmp opt_tmp     
         name_job = ['smooth_' label '_' session '_' run];    
         files_in_tmp = files_re{num_r};               
