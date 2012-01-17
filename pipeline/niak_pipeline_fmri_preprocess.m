@@ -289,7 +289,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % NOTE 2:
 %   The physiological & motion noise correction CORSICA is changing the
 %   degrees of freedom of the data. It is usullay negligible for 
-%   intra-label analysis, and will have no impact on the between-label 
+%   intra-subject analysis, and will have no impact on the between-subject
 %   variance estimate (except those should be less noisy). However, the 
 %   purist may consider to take that into account in the linear model 
 %   analysis. This will be taken care of in the (yet to come) 
