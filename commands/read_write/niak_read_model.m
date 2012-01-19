@@ -1,4 +1,4 @@
-function [model,labels_x,labels_y,contrast_vec] = niak_read_model(file_name,opt)
+function [model,labels_m,labels_y,contrast_vec] = niak_read_model(file_name,opt)
 % Read a model from a CSV file and apply a number of preprocessing,
 % such as centering covariates, adding an intercept, or othogonalizing
 % parts of the model
@@ -139,11 +139,14 @@ nx = length(labels_x);
 ny = length(labels_y);
 
 % Reorder the model using labels_x and labels_m
-[mask_x,ind_m] = ismember(labels_x,labels_m);
+% [mask_x,ind_m] = ismember(labels_x,labels_m);
+% [mask_y,ind_n] = ismember(labels_y,labels_n);
+[mask_x,ind_m] = ismember(labels_m,labels_x);
 [mask_y,ind_n] = ismember(labels_y,labels_n);
+
 ind_err = find(mask_x == 0);
 if ~isempty(ind_err)
-    error('The following specified entry was not found in the model : %s',labels_x{ind_err(1)});
+    error('The following model specified entry was not found : %s',labels_m{ind_err(1)});
 end
 ind_err = find(mask_y == 0);
 if ~isempty(ind_err)
