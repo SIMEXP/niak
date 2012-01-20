@@ -21,6 +21,10 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %           just generate the PIPELINE and OPT structure, otherwise it will 
 %           process the pipeline.
 %
+%       FLAG_REGION_GROWING
+%           (boolean, default true) if this flag is true, the region growing
+%           step of the pipeline will be performed.
+%
 %       SIZE_OUTPUT 
 %           (string, default 'quality_control') possible values : 
 %           'quality_control’, ‘all’.
@@ -96,8 +100,8 @@ end
 %% Set up defaults
 default_psom.path_logs = '';
 gb_name_structure = 'opt';
-gb_list_fields    = {'size_output'     , 'flag_test' , 'psom'       };
-gb_list_defaults  = {'quality_control' , false       , default_psom };
+gb_list_fields    = {'flag_region_growing' , 'size_output'     , 'flag_test' , 'psom'       };
+gb_list_defaults  = {true                  , 'quality_control' , false       , default_psom };
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,7 +192,7 @@ opt.smooth_vol.fwhm      = 6;  % Apply an isotropic 6 mm gaussin smoothing.
 opt.smooth_vol.flag_skip = 0;  % Turn on/off the spatial smoothing
 
 % Region growing
-opt.region_growing.flag_skip = 0; % Turn on/off the region growing
+opt.region_growing.flag_skip = ~flag_region_growing; % Turn on/off the region growing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
