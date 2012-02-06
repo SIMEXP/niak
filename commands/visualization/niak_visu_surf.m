@@ -31,13 +31,24 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 %      'r'==[1 0 0], [1 0.4 0.6] (pink) etc.
 %      Letter and line colours are inverted if background is dark (mean<0.5).
 %
-%   FLAG_INTERP
-%      (boolean, default false) turn on/off "shading interp" for the visualization
-%      of the surface.
+%   SHADING
+%      (string, default 'flat') The type of shading for rendering.
+%      Available options: 'faceted', 'flat', 'interp'
+%      Type "help shading" for more info.
 %
-%   FLAG_SHINY
-%      (boolean, deafult true) turn on/off "material shiny" option for the 
-%      visualization of the surface.
+%   MATERIAL
+%      (string, default 'shiny') The type of material for rendering.
+%      Available options: 'shiny', 'dull', 'metal'
+%      Type "help material" for more info. 
+%
+%   LIGHTING
+%      (string, default 'phong') The type of light for rendering.
+%      Available options: 'flat', 'gouraud', 'phong', 'none'
+%      Type "help lighting" for more info.
+%
+%   COLORMAP
+%      (string or matrix, default jet(256) with white associated with 
+%      the minimum) any acceptable argument for colormap.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -59,9 +70,12 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : surface, visualization
+cm = jet(256);
+cm(1,:) = 0.8;
 
-list_fields   = { 'title'      , 'background' , 'flag_interp' , 'flag_shiny' };
-list_defaults = { inputname(1) , 'white'      , false         , true         };
+list_fields   = { 'title'      , 'background' , 'lighting' , 'material' , 'shading' , 'colormap' };
+list_defaults = { inputname(1) , 'white'      , 'phong'  , 'shiny'      'flat'    , cm         };
+
 if nargin<3 
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 else
@@ -96,7 +110,7 @@ if clim(1)==clim(2)
 end
 
 clf;
-colormap(spectral(256));
+colormap(opt.colormap);
 
 h=0.39;
 w=0.4;
@@ -110,26 +124,18 @@ trisurf(surf.tri(tl,:),surf.coord(1,vl),surf.coord(2,vl),surf.coord(3,vl),...
     double(data(vl)),'EdgeColor','none');
 view(-90,0); 
 daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting phong;  
-if opt.flag_shiny
-    material shiny; 
-end; 
-if opt.flag_interp
-    shading interp
-end
+lighting(opt.lighting)
+material(opt.material)
+shading(opt.shading) 
 
 a(2)=axes('position',[0.3 0.58 w h]);
 trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
     double(data),'EdgeColor','none');
 view(0,90); 
 daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting phong; 
-if opt.flag_shiny
-    material shiny; 
-end
-if opt.flag_interp
-    shading interp
-end
+lighting(opt.lighting)
+material(opt.material)       
+shading(opt.shading)
 
 if cut<t
     a(3)=axes('position',[1-0.055-h*3/4 0.62 h*3/4 w]);
@@ -137,26 +143,18 @@ if cut<t
         double(data(vr)),'EdgeColor','none');
     view(90,0);
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting phong;  
-    if opt.flag_shiny
-        material shiny; 
-    end; 
-    if opt.flag_interp
-        shading interp
-    end
+    lighting(opt.lighting)
+    material(opt.material)       
+    shading(opt.shading)
 else
     a(3)=axes('position',[1-0.055-h*3/4 0.62 h/r(2)*r(1)*3/4 w]);
     trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
         double(data),'EdgeColor','none');
     view(180,0);
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting phong;  
-    if opt.flag_shiny
-        material shiny; 
-    end;
-    if opt.flag_interp
-        shading interp
-    end
+    lighting(opt.lighting)
+    material(opt.material)       
+    shading(opt.shading)
 end
 
 a(4)=axes('position',[0.055 0.29 h*3/4 w]);
@@ -164,26 +162,18 @@ trisurf(surf.tri(tl,:),surf.coord(1,vl),surf.coord(2,vl),surf.coord(3,vl),...
     double(data(vl)),'EdgeColor','none');
 view(90,0); 
 daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting phong;  
-if opt.flag_shiny
-    material shiny; 
-end; 
-if opt.flag_interp
-    shading interp
-end
+lighting(opt.lighting)
+material(opt.material)       
+shading(opt.shading)
 
 a(5)=axes('position',[0.3 0.18 w h]);
 trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
     double(data),'EdgeColor','none');
 view(0,-90); 
 daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting phong;  
-if opt.flag_shiny
-    material shiny; 
-end; 
-if opt.flag_interp
-    shading interp
-end
+lighting(opt.lighting)
+material(opt.material)       
+shading(opt.shading)
 
 if cut<t
     a(6)=axes('position',[1-0.055-h*3/4 0.29 h*3/4 w]);
@@ -191,39 +181,27 @@ if cut<t
         double(data(vr)),'EdgeColor','none');
     view(-90,0);
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting phong;  
-    if opt.flag_shiny
-        material shiny; 
-    end; 
-if opt.flag_interp
-    shading interp
-end
+    lighting(opt.lighting)
+    material(opt.material)       
+    shading(opt.shading)
 
     a(7)=axes('position',[0.055 0.02 w1 h1]);
     trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
         double(data),'EdgeColor','none');
     view(180,0);
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting phong;  
-    if opt.flag_shiny
-        material shiny; 
-    end; 
-    if opt.flag_interp
-        shading interp
-    end
+    lighting(opt.lighting)
+    material(opt.material)       
+    shading(opt.shading)
 
     a(8)=axes('position',[1-0.055-w1 0.03 w1 h1]);
     trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
         double(data),'EdgeColor','none');
     view(0,0);
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting phong;  
-    if opt.flag_shiny
-        material shiny; 
-    end; 
-    if opt.flag_interp
-        shading interp
-    end
+    lighting(opt.lighting)
+    material(opt.material)       
+    shading(opt.shading)
 
 else
     a(6)=axes('position',[1-0.055-h*3/4 0.29 h/r(2)*r(1)*3/4 w]);
@@ -231,14 +209,9 @@ else
         double(data),'EdgeColor','none');
     view(0,0);
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting phong;  
-    if opt.flag_shiny
-        material shiny; 
-    end; 
-    if opt.flag_interp
-        shading interp
-    end
-
+    lighting(opt.lighting)
+    material(opt.material)       
+    shading(opt.shading)
 end    
     
 id0=[0 0 cuv 0 0 cuv 0 0];
