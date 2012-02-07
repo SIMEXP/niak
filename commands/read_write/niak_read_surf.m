@@ -1,4 +1,4 @@
-function ssurf = niak_read_surf(file_name,numfields)
+function ssurf = niak_read_surf(file_name)
 % Read a surface in the MNI .obj or Freesurfer format
 %
 % SYNTAX:
@@ -10,10 +10,6 @@ function ssurf = niak_read_surf(file_name,numfields)
 % FILE_NAME
 %    (string or cell of strings) string: a single surface file. cell of 
 %    strings : all the surfaces are concatenated.
-%
-% NUMFIELDS
-%    (integer, default 2) the number of fields to read in SSURF (in the 
-%    order sepcified below, only for .obj files).
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -69,10 +65,6 @@ function ssurf = niak_read_surf(file_name,numfields)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if nargin < 2
-    numfields = 2;
-end
-
 %% Multiple surfaces
 if iscellstr(file_name)
     k = length(file_name);
@@ -106,6 +98,7 @@ end
 
 %% Single surface
 ab='a';
+numfields = 4;
 [pathstr,name,ext] = fileparts(file_name);
 if strcmp(ext,'.obj')
     % It's a .obj file
