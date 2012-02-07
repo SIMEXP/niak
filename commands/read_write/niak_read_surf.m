@@ -74,7 +74,7 @@ if iscellstr(file_name)
     ssurf.normal = [];
     for j=1:k
         s = niak_read_surf(file_name{j});
-        ssurf.tri=[ssurf.tri; int32(s.tri)+size(c,2)];
+        ssurf.tri=[ssurf.tri; int32(s.tri)+size(ssurf.coord,2)];
         ssurf.coord = [ssurf.coord s.coord];
         if isfield(s,'colr') 
             if size(s.colr,2)==1
