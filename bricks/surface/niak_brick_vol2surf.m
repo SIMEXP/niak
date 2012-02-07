@@ -147,33 +147,39 @@ end
 [hdr,vol] = niak_read_vol(files_in.vol);
 
 %% Loop over volumes
+if opt.flag_verbose
+    fprintf('Interpolating volumetric data on the surface(s) ...\n')
+end
 vol_tmp = niak_file_tmp(['_interp_surf.mnc']);
 data_tmp = niak_file_tmp(['_interp_surf.dat']);
-for num_t = 1;size(vol,4)
+for num_t = 1:size(vol,4)
     hdr.file_name = vol_tmp;
     niak_write_vol(hdr,vol(:,:,:,num_t));
     for num_s = 1:size(files_in.surf,1)
         for num_k = 1:size(files_in.surf,2)
-            instr_interp = ['volume_object_evaluate -' opt.interpolate ' ' vol_tmp ' ' files_in.surf{num_s,num_k} ' ' data_tmp];
+            instr_interp = ['volume_object_evaluate -' opt.interpolation ' ' vol_tmp ' ' files_in.surf{num_s,num_k} ' ' data_tmp];
             [failed,msg] = system(instr_interp);
             if failed~=0
                 error('The system call to VOLUME_OBJECT_EVALUATE failed : %s',msg)
             end
             if num_k == 1
-                data_tmp = load(data_tmp);
+                tmp = load(data_tmp);
             else
-                data_tmp = [data_tmp ; load(data_tmp)];
+                tmp = [tmp ; load(data_tmp)];
             end
         end
         if num_s == 1
-            data = data_tmp;
+            data = tmp;
         else
-            data(abs(data)<=abs(data_tmp)) = data_tmp(abs(data)<=abs(data_tmp));
+            data(abs(data)<=abs(tmp)) = tmp(abs(data)<=abs(tmp));
         end
     end
 end
 
 %% Write results
+if opt.flag_verbose
+    fprintf('Saving results in %s ...\n',files_out);
+end
 save(files_out,'data');
 delete(vol_tmp);
 delete(data_tmp);
