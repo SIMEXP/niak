@@ -74,12 +74,16 @@ cm = jet(256);
 cm(1,:) = 0.8;
 
 list_fields   = { 'title'      , 'background' , 'lighting' , 'material' , 'shading' , 'colormap' };
-list_defaults = { inputname(1) , 'white'      , 'phong'  , 'shiny'      'flat'    , cm         };
+list_defaults = { inputname(1) , 'white'      , 'phong'    , 'dull'     , 'flat'    , cm         };
 
 if nargin<3 
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 else
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
+end
+
+if isempty(data)
+    data = ones(size(surf.coord,2),1);
 end
 
 % find cut between hemispheres, assuming they are concatenated
