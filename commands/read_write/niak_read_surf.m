@@ -81,7 +81,7 @@ if iscellstr(file_name)
     ssurf.colr = [];
     ssurf.normal = [];
     for j=1:k
-        s = niak_read_surf(filenames{j});
+        s = niak_read_surf(file_name{j});
         ssurf.tri=[ssurf.tri; int32(s.tri)+size(c,2)];
         ssurf.coord = [ssurf.coord s.coord];
         if isfield(s,'colr') 
@@ -110,7 +110,7 @@ ab='a';
 if strcmp(ext,'.obj')
     % It's a .obj file
     if ab(1)=='a'
-        fid=fopen(filename);
+        fid=fopen(file_name);
         FirstChar=fscanf(fid,'%1s',1);
         if FirstChar=='P' % ASCII
             fscanf(fid,'%f',5);
@@ -135,7 +135,7 @@ if strcmp(ext,'.obj')
             fclose(fid);
         else
             fclose(fid);
-            fid=fopen(filename,'r','b');
+            fid=fopen(file_name,'r','b');
             FirstChar=fread(fid,1);
             if FirstChar==uint8(112) % binary
                 fread(fid,5,'float');
@@ -160,11 +160,11 @@ if strcmp(ext,'.obj')
                 fclose(fid);
                 ab='b';
             else
-                fprintf(1,'%s\n',['Unable to read ' filename ', first character ' char(FirstChar)]);
+                fprintf(1,'%s\n',['Unable to read ' file_name ', first character ' char(FirstChar)]);
             end
         end
     else
-        fid=fopen(filename,'r','b');
+        fid=fopen(file_name,'r','b');
         FirstChar=fread(fid,1);
         if FirstChar==uint8(112) % binary
             fread(fid,5,'float');
@@ -189,7 +189,7 @@ if strcmp(ext,'.obj')
             fclose(fid);
         else
             fclose(fid);
-            fid=fopen(filename);
+            fid=fopen(file_name);
             FirstChar=fscanf(fid,'%1s',1);
             if FirstChar=='P' %ASCII
                 fscanf(fid,'%f',5);
@@ -214,13 +214,13 @@ if strcmp(ext,'.obj')
                 fclose(fid);
                 ab='a';
             else
-                fprintf(1,'%s\n',['Unable to read ' filename ', first character ' char(FirstChar)]);
+                fprintf(1,'%s\n',['Unable to read ' file_name ', first character ' char(FirstChar)]);
             end
         end
     end
 else
     % Assume it's a FreeSurfer file
-    fid = fopen(filename, 'rb', 'b') ;
+    fid = fopen(file_name, 'rb', 'b') ;
     b1 = fread(fid, 1, 'uchar') ;
     b2 = fread(fid, 1, 'uchar') ;
     b3 = fread(fid, 1, 'uchar') ;
@@ -236,7 +236,7 @@ else
         end
         fclose(fid) ;
     else
-        fprintf(1,'%s\n',['Unable to read ' filename ', magic = ' num2str(magic)]);
+        fprintf(1,'%s\n',['Unable to read ' file_name ', magic = ' num2str(magic)]);
     end
     ab='b';
 end
