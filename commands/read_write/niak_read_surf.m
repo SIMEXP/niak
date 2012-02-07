@@ -90,7 +90,7 @@ if iscellstr(file_name)
     if isempty(ssurf.colr)
         ssurf = rmfield(ssurf,'colr');
     end
-    if isempty(ssurf,'normal')
+    if isempty(ssurf.normal)
         ssurf = rmfield(ssurf,'normal');
     end
     return
