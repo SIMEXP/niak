@@ -76,37 +76,37 @@ end
 %% Multiple surfaces
 if iscellstr(file_name)
     k = length(file_name);
-    surf.tri=[];
-    surf.coord = [];
-    surf.colr = [];
-    surf.normal = [];
+    ssurf.tri=[];
+    ssurf.coord = [];
+    ssurf.colr = [];
+    ssurf.normal = [];
     for j=1:k
         s = niak_read_surf(filenames{j});
-        surf.tri=[surf.tri; int32(s.tri)+size(c,2)];
-        surf.coord = [surf.coord s.coord];
+        ssurf.tri=[ssurf.tri; int32(s.tri)+size(c,2)];
+        ssurf.coord = [ssurf.coord s.coord];
         if isfield(s,'colr') 
             if size(s.colr,2)==1
-                surf.colr = s.colr;
+                ssurf.colr = s.colr;
             else
-                surf.colr = [surf.colr s.colr];
+                ssurf.colr = [ssurf.colr s.colr];
             end
         end
         if isfield(s,'normal')
-            surf.normal = [surf.normal s.normal];
+            ssurf.normal = [ssurf.normal s.normal];
         end
     end
-    if isempty(surf.colr)
-        surf = rmfield(surf,'colr');
+    if isempty(ssurf.colr)
+        ssurf = rmfield(ssurf,'colr');
     end
-    if isempty(surf,'normal')
-        surf = rmfield(surf,'normal');
+    if isempty(ssurf,'normal')
+        ssurf = rmfield(ssurf,'normal');
     end
     return
 end
 
 %% Single surface
 ab='a';
-[pathstr,name,ext] = fileparts(filename);
+[pathstr,name,ext] = fileparts(file_name);
 if strcmp(ext,'.obj')
     % It's a .obj file
     if ab(1)=='a'
@@ -115,20 +115,20 @@ if strcmp(ext,'.obj')
         if FirstChar=='P' % ASCII
             fscanf(fid,'%f',5);
             v=fscanf(fid,'%f',1);
-            surf.coord=fscanf(fid,'%f',[3,v]);
+            ssurf.coord=fscanf(fid,'%f',[3,v]);
             if numfields>=2
-                surf.normal=fscanf(fid,'%f',[3,v]);
+                ssurf.normal=fscanf(fid,'%f',[3,v]);
                 if numfields>=3
                     ntri=fscanf(fid,'%f',1);
                     ind=fscanf(fid,'%f',1);
                     if ind==0
-                        surf.colr=fscanf(fid,'%f',4);
+                        ssurf.colr=fscanf(fid,'%f',4);
                     else
-                        surf.colr=fscanf(fid,'%f',[4,v]);
+                        ssurf.colr=fscanf(fid,'%f',[4,v]);
                     end
                     if numfields>=4
                         fscanf(fid,'%f',ntri);
-                        surf.tri=fscanf(fid,'%f',[3,ntri])'+1;
+                        ssurf.tri=fscanf(fid,'%f',[3,ntri])'+1;
                     end
                 end
             end
@@ -140,20 +140,20 @@ if strcmp(ext,'.obj')
             if FirstChar==uint8(112) % binary
                 fread(fid,5,'float');
                 v=fread(fid,1,'int');
-                surf.coord=fread(fid,[3,v],'float');
+                ssurf.coord=fread(fid,[3,v],'float');
                 if numfields>=2
-                    surf.normal=fread(fid,[3,v],'float');
+                    ssurf.normal=fread(fid,[3,v],'float');
                     if numfields>=3
                         ntri=fread(fid,1,'int');
                         ind=fread(fid,1,'int');
                         if ind==0
-                            surf.colr=uint8(fread(fid,4,'uint8'));
+                            ssurf.colr=uint8(fread(fid,4,'uint8'));
                         else
-                            surf.colr=uint8(fread(fid,[4,v],'uint8'));
+                            ssurf.colr=uint8(fread(fid,[4,v],'uint8'));
                         end
                         if numfields>=4
                             fread(fid,ntri,'int');
-                            surf.tri=fread(fid,[3,ntri],'int')'+1;
+                            ssurf.tri=fread(fid,[3,ntri],'int')'+1;
                         end
                     end
                 end
@@ -169,20 +169,20 @@ if strcmp(ext,'.obj')
         if FirstChar==uint8(112) % binary
             fread(fid,5,'float');
             v=fread(fid,1,'int');
-            surf.coord=fread(fid,[3,v],'float');
+            ssurf.coord=fread(fid,[3,v],'float');
             if numfields>=2
-                surf.normal=fread(fid,[3,v],'float');
+                ssurf.normal=fread(fid,[3,v],'float');
                 if numfields>=3
                     ntri=fread(fid,1,'int');
                     ind=fread(fid,1,'int');
                     if ind==0
-                        surf.colr=uint8(fread(fid,4,'uint8'));
+                        ssurf.colr=uint8(fread(fid,4,'uint8'));
                     else
-                        surf.colr=uint8(fread(fid,[4,v],'uint8'));
+                        ssurf.colr=uint8(fread(fid,[4,v],'uint8'));
                     end
                     if numfields>=4
                         fread(fid,ntri,'int');
-                        surf.tri=fread(fid,[3,ntri],'int')'+1;
+                        ssurf.tri=fread(fid,[3,ntri],'int')'+1;
                     end
                 end
             end
@@ -194,20 +194,20 @@ if strcmp(ext,'.obj')
             if FirstChar=='P' %ASCII
                 fscanf(fid,'%f',5);
                 v=fscanf(fid,'%f',1);
-                surf.coord=fscanf(fid,'%f',[3,v]);
+                ssurf.coord=fscanf(fid,'%f',[3,v]);
                 if numfields>=2
-                    surf.normal=fscanf(fid,'%f',[3,v]);
+                    ssurf.normal=fscanf(fid,'%f',[3,v]);
                     if numfields>=3
                         ntri=fscanf(fid,'%f',1);
                         ind=fscanf(fid,'%f',1);
                         if ind==0
-                            surf.colr=fscanf(fid,'%f',4);
+                            ssurf.colr=fscanf(fid,'%f',4);
                         else
-                            surf.colr=fscanf(fid,'%f',[4,v]);
+                            ssurf.colr=fscanf(fid,'%f',[4,v]);
                         end
                         if numfields>=4
                             fscanf(fid,'%f',ntri);
-                            surf.tri=fscanf(fid,'%f',[3,ntri])'+1;
+                            ssurf.tri=fscanf(fid,'%f',[3,ntri])'+1;
                         end
                     end
                 end
@@ -230,9 +230,9 @@ else
         fgets(fid);
         v = fread(fid, 1, 'int32') ;
         t = fread(fid, 1, 'int32') ;
-        surf.coord = fread(fid, [3 v], 'float32') ;
+        ssurf.coord = fread(fid, [3 v], 'float32') ;
         if numfields==4
-            surf.tri = fread(fid, [3 t], 'int32')' + 1 ;
+            ssurf.tri = fread(fid, [3 t], 'int32')' + 1 ;
         end
         fclose(fid) ;
     else
