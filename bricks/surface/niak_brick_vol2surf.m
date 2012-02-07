@@ -168,10 +168,11 @@ for num_t = 1:size(vol,4)
                 tmp = [tmp ; load(data_tmp)];
             end
         end
-        if num_s == 1
-            data = tmp;
+        if (num_s == 1)&&(num_t==1)
+            data = zeros(length(tmp),size(vol,4));
+            data(:,num_t) = tmp;
         else
-            data(abs(data)<=abs(tmp)) = tmp(abs(data)<=abs(tmp));
+            data(abs(data(:,num_t))<=abs(tmp),num_t) = tmp(abs(data(:,num_t))<=abs(tmp));
         end
     end
 end
