@@ -25,6 +25,10 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 %   TITLE
 %      (string, default: name of DATA) title to be included in the figure.
 %
+%   LIMIT
+%      (vector 1 x 2, default [min(DATA) max(DATA)]) Min/Max for the scale 
+%      associated with DATA.
+% 
 %   BACKGROUND
 %      (string or vector 1 x 3, default 'white') background colour, 
 %      any matlab ColorSpec, such as 'white' (default), 'black'=='k', 
@@ -73,8 +77,13 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 cm = jet(256);
 cm(1,:) = 0.8;
 
-list_fields   = { 'title'      , 'background' , 'lighting' , 'material' , 'shading' , 'colormap' };
-list_defaults = { inputname(1) , 'white'      , 'phong'    , 'dull'     , 'flat'    , cm         };
+clim=[min(data),max(data)];
+if clim(1)==clim(2)
+    clim=clim(1)+[-1 0];
+end
+
+list_fields   = { 'limit' , 'title'      , 'background' , 'lighting' , 'material' , 'shading' , 'colormap' };
+list_defaults = { clim    , inputname(1) , 'white'      , 'phong'    , 'dull'     , 'flat'    , cm         };
 
 if nargin<3 
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
@@ -107,11 +116,6 @@ tl=1:cut;
 tr=(cut+1):t;
 vl=1:cuv;
 vr=(cuv+1):v;
-
-clim=[min(data),max(data)];
-if clim(1)==clim(2)
-    clim=clim(1)+[-1 0];
-end
 
 clf;
 colormap(opt.colormap);
@@ -220,7 +224,7 @@ end
     
 id0=[0 0 cuv 0 0 cuv 0 0];
 for i=1:length(a)
-    set(a(i),'CLim',clim);
+    set(a(i),'CLim',opt.limit);
     set(a(i),'Tag',['SurfStatView ' num2str(i) ' ' num2str(id0(i))]);
 end
 
