@@ -25,6 +25,15 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 %   TITLE
 %      (string, default: name of DATA) title to be included in the figure.
 %
+%   STYLE
+%      (string, default: 'two_hemispheres_full') defines the organization 
+%      of the montage. Available options:
+%         'two_hemispheres_full': show left/right bottom/top back/front
+%            for two hemispheres.
+%         'one_hemisphere_full': show left/right bottom/top back/front
+%            for one hemisphere.
+%         'two_hemispheres_left_right': show left/right for two hemispheres.
+%       
 %   LIMIT
 %      (vector 1 x 2, default [min(DATA) max(DATA)]) Min/Max for the scale 
 %      associated with DATA.
@@ -116,7 +125,12 @@ tl=1:cut;
 tr=(cut+1):t;
 vl=1:cuv;
 vr=(cuv+1):v;
+flag_cut = cut < t;
+if flag_cut
+    surf.tri(tr,:) = surf.tri(tr,:) - cuv;
+end
 
+%% Init window
 clf;
 colormap(opt.colormap);
 
@@ -127,101 +141,50 @@ r=max(surf.coord,[],2)-min(surf.coord,[],2);
 w1=h/r(2)*r(1)*3/4;
 h1=h/r(2)*r(1); % h/r(2)*r(3)
 
-a(1)=axes('position',[0.055 0.62 h*3/4 w]);
-trisurf(surf.tri(tl,:),surf.coord(1,vl),surf.coord(2,vl),surf.coord(3,vl),...
-    double(data(vl)),'EdgeColor','none');
-view(-90,0); 
-daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting(opt.lighting)
-material(opt.material)
-shading(opt.shading) 
+switch opt.style
+    case 'two_hemispheres_full'
+        list_positions = { [0.055         0.62 h*3/4 w ] , ...
+                           [0.3           0.58 w     h ] , ...
+                           [1-0.055-h*3/4 0.62 h*3/4 w ] , ...
+                           [0.055         0.29 h*3/4 w ] , ...
+                           [0.3           0.18 w     h ] , ...
+                           [1-0.055-h*3/4 0.29 h*3/4 w ] , ...
+                           [0.055         0.02 w1    h1] , ...
+                           [1-0.055-w1    0.03 w1    h1] };
+        list_ind = { [ tl  vl   ] , ...
+                     [ 1:t 1:v  ] , ...
+                     [ tr  vr   ] , ... 
+                     [ tl  vl   ] , ...
+                     [ 1:t 1:v  ] , ...
+                     [ tr  vr   ] , ... 
+                     [ 1:t 1:v  ] , ...
+                     [ 1:t 1:v  ]};
+        list_view = { [ -90 0   ] , ...
+                      [ 0   90  ] , ...
+                      [ 90  0   ] , ...
+                      [ 90  0   ] , ...
+                      [ 0   -90 ] , ...
+                      [ -90 0   ] , ...                      
+                      [ 180 0   ] , ...                      
+                      [ 0   0   ]};                     
 
-a(2)=axes('position',[0.3 0.58 w h]);
-trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
-    double(data),'EdgeColor','none');
-view(0,90); 
-daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting(opt.lighting)
-material(opt.material)       
-shading(opt.shading)
+    case 'one_hemisphere_full'
+    case 'two_hemispheres_left_right'
+    otherwise
+        error('%s is an unknown style',opt.style);
+end
 
-if cut<t
-    a(3)=axes('position',[1-0.055-h*3/4 0.62 h*3/4 w]);
-    trisurf(surf.tri(tr,:)-cuv,surf.coord(1,vr),surf.coord(2,vr),surf.coord(3,vr),...
-        double(data(vr)),'EdgeColor','none');
-    view(90,0);
-    daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting(opt.lighting)
-    material(opt.material)       
-    shading(opt.shading)
-else
-    a(3)=axes('position',[1-0.055-h*3/4 0.62 h/r(2)*r(1)*3/4 w]);
-    trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
-        double(data),'EdgeColor','none');
-    view(180,0);
+for num_v = 1:list_view   
+    a(num_v)=axes('position',list_positions{num_v});
+    trisurf(surf.tri(list_ind{num_v}(1),:),surf.coord(1,list_ind{num_v}(2)),surf.coord(2,list_ind{num_v}(2)),surf.coord(3,list_ind{num_v}(2)),...
+        double(data(list_ind{num_v}(2))),'EdgeColor','none');
+    view(list_view{num_v}(1),list_view{num_v}(2));
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
     lighting(opt.lighting)
     material(opt.material)       
     shading(opt.shading)
 end
-
-a(4)=axes('position',[0.055 0.29 h*3/4 w]);
-trisurf(surf.tri(tl,:),surf.coord(1,vl),surf.coord(2,vl),surf.coord(3,vl),...
-    double(data(vl)),'EdgeColor','none');
-view(90,0); 
-daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting(opt.lighting)
-material(opt.material)       
-shading(opt.shading)
-
-a(5)=axes('position',[0.3 0.18 w h]);
-trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
-    double(data),'EdgeColor','none');
-view(0,-90); 
-daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting(opt.lighting)
-material(opt.material)       
-shading(opt.shading)
-
-if cut<t
-    a(6)=axes('position',[1-0.055-h*3/4 0.29 h*3/4 w]);
-    trisurf(surf.tri(tr,:)-cuv,surf.coord(1,vr),surf.coord(2,vr),surf.coord(3,vr),...
-        double(data(vr)),'EdgeColor','none');
-    view(-90,0);
-    daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting(opt.lighting)
-    material(opt.material)       
-    shading(opt.shading)
-
-    a(7)=axes('position',[0.055 0.02 w1 h1]);
-    trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
-        double(data),'EdgeColor','none');
-    view(180,0);
-    daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting(opt.lighting)
-    material(opt.material)       
-    shading(opt.shading)
-
-    a(8)=axes('position',[1-0.055-w1 0.03 w1 h1]);
-    trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
-        double(data),'EdgeColor','none');
-    view(0,0);
-    daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting(opt.lighting)
-    material(opt.material)       
-    shading(opt.shading)
-
-else
-    a(6)=axes('position',[1-0.055-h*3/4 0.29 h/r(2)*r(1)*3/4 w]);
-    trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
-        double(data),'EdgeColor','none');
-    view(0,0);
-    daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting(opt.lighting)
-    material(opt.material)       
-    shading(opt.shading)
-end    
-    
+ 
 id0=[0 0 cuv 0 0 cuv 0 0];
 for i=1:length(a)
     set(a(i),'CLim',opt.limit);
