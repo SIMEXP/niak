@@ -123,9 +123,6 @@ tr=(cut+1):t;
 vl=1:cuv;
 vr=(cuv+1):v;
 flag_cut = cut < t;
-if flag_cut
-    surf.tri(tr,:) = surf.tri(tr,:) - cuv;
-end
 
 %% Init window
 clf;
@@ -214,7 +211,8 @@ end
 
 for num_v = 1:length(list_view)   
     a(num_v)=axes('position',list_positions{num_v});
-    trisurf(surf.tri(list_tri{num_v},:),surf.coord(1,list_ver{num_v}),surf.coord(2,list_ver{num_v}),surf.coord(3,list_ver{num_v}),...
+    w = (length(list_tri{num_v})==length(tr))&&flag_cut&&(list_tri{num_v}(end)==tr(end));
+    trisurf(surf.tri(list_tri{num_v},:)-double(w)*cuv,surf.coord(1,list_ver{num_v}),surf.coord(2,list_ver{num_v}),surf.coord(3,list_ver{num_v}),...
         double(data(list_ver{num_v})),'EdgeColor','none');
     view(list_view{num_v}(1),list_view{num_v}(2));
     daspect([1 1 1]); axis tight; camlight; axis vis3d off;
