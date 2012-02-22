@@ -1,32 +1,30 @@
-function path_name = niak_path_tmp(ext)
-% Suggest a name for a temporary folder.
+function path_name_f = niak_full_path(path_name)
+% convert a path name (either relative or absolute) into a full path name
 %
 % SYNTAX:
-% PATH_NAME = NIAK_PATH_TMP(EXT)
+% PATH_NAME_F = NIAK_FULL_PATH(PATH_NAME)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% EXT             
-%       (string) An extension for the path name
+% PATH_NAME
+%    (string) a relative or absolute path name.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% PATH_NAME 
-%       (string) A (full path) name for a temporary file.
+% PATH_NAME_F 
+%       (string) same as PATH_NAME, but in a absolute form and with a
+%       filesep appended at the end.
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% The directory is created.
-% 
-% The temporary paths live in the temporary directory. This directory is by 
-% default '/tmp/', but this can be changed using the variable GB_NIAK_TMP
-% in the file NIAK_GB_VARS.
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+% Centre de recherche de l'institut de Gériatrie de Montréal,
+% Département d'informatique et de recherche opérationnelle,
+% Université de Montréal, 2012.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords :
 
@@ -47,17 +45,16 @@ function path_name = niak_path_tmp(ext)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-global gb_psom_name_job
-niak_gb_vars
-flag_tmp = 1;
 
-while flag_tmp == 1
-    if ~isempty(gb_psom_name_job)
-        path_name = sprintf('%sniak_tmp_%s_%i%s%s',gb_niak_tmp,gb_psom_name_job,floor(1000000000*rand(1)),ext,filesep);   
-    else
-        path_name = sprintf('%sniak_tmp_%i%s%s',gb_niak_tmp,floor(1000000000*rand(1)),ext,filesep);   
-    end
-    flag_tmp = exist(path_name)>0;
+%% convert relative into full path
+if isempty(strfind(path_name,[':' filesep]))&&~strcmp(path_name(1),filesep)
+    path_name_f = [ pwd filesep path_name ] ;
+else
+    path_name_f = path_name;
 end
 
-niak_mkdir(path_name);
+%% Append filesep at the end
+if ~strcmp(path_name_f(end),filesep)
+    path_name_f = [path_name_f filesep];
+end
+

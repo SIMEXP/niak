@@ -81,13 +81,8 @@ if ~exist('files_out','var')||isempty(files_out)
     files_out = files_in;
 end
 
-if ~strcmp(files_in(end),filesep)
-    files_in = [files_in filesep];
-end
-
-if ~strcmp(files_out(end),filesep)
-    files_out = [files_out filesep];
-end
+files_in = niak_full_path(files_in);
+files_out = niak_full_path(files_out);
 
 %% Options
 gb_name_structure = 'opt';
