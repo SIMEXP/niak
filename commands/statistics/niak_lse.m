@@ -1,7 +1,7 @@
-function [beta,e,std_e,ttest] = niak_lse(y,x,c,flag_james_stein)
-% Least-square estimates in a linear model Y = X*BETA + E 
+function [beta,e,std_e,ttest,pce] = niak_lse(y,x,c,flag_james_stein)
+% Least-square estimates in a linear model Y = X.BETA + E 
 %
-% [BETA,E,STD_E,TTEST] = NIAK_LSE(Y,X,C)
+% [BETA,E,STD_E,TTEST,PCE] = NIAK_LSE(Y,X,C)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -16,11 +16,6 @@ function [beta,e,std_e,ttest] = niak_lse(y,x,c,flag_james_stein)
 % C
 %   (vector, size K*1, default ones([K 1])) C(K) is the weight of
 %   X(:,K) in the t-test (see TTEST below).
-%
-% FLAG_JAMES_STEIN
-%   (boolean, default false) if FLAG_JAMES_STEIN is true and the number
-%   of covariates is larger (or equal) than 3, a James-Stein correction
-%   will be applied on the regression coefficients.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -41,6 +36,10 @@ function [beta,e,std_e,ttest] = niak_lse(y,x,c,flag_james_stein)
 %   (vector, size [1 N]) TTEST(n) is a t-test associated with the estimated
 %   weights and the specified contrast (see C above).
 %
+% PCE
+%   (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
+%   TTEST(n) (bilateral test).
+%
 % _________________________________________________________________________
 % REFERENCES:
 %
@@ -50,12 +49,6 @@ function [beta,e,std_e,ttest] = niak_lse(y,x,c,flag_james_stein)
 %   Edited By William D. Penny, Karl J. Friston, John T. Ashburner,
 %   Stefan J. Kiebel  &  Thomas E. Nichols. Springer, 2007.
 %   Chapter 7: "The general linear model", S.J. Kiebel, A.P. Holmes.
-%
-% On the James-Stein shrinkage correction:
-%
-%   Judge GG, Hill CR, Bock ME. An adaptive empirical Bayes estimator
-%   of the multivariate normal mean under quadratic loss. J Econom
-%   1990;44:189–213.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -88,9 +81,7 @@ K = size(x,2);
 if (nargin < 3) || isempty(c)
     c = ones([K 1]);
 end
-if nargin < 4
-    flag_james_stein = false;
-end
+
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
@@ -98,16 +89,16 @@ beta = (x'*x)^(-1)*x'*y; % Regression coefficients
 if nargout > 1
     e = y-x*beta; % Residuals
 end
-if (nargout > 2) || flag_james_stein
+
+if (nargout > 2) 
     std_e = sqrt(sum(e.^2,1)/(N-K)); % Standard deviation of the noise
 end
+
 if (nargout > 3)
     d     = sqrt(c'*(x'*x)^(-1)*c);  % Intermediate result for the t-test
     ttest = (c'*beta)./(std_e*d);       % t-test
 end
-if (K>=3) && flag_james_stein
-    % If there are more than 3 covariates and the user specified so, apply a James-Stein correction
-    a = 1-((K-2)*(N-K)*std_e.^2)./((N-K+2)*sum(beta.*(x'*x*beta),1));
-    a = max(0,a);
-    beta = repmat(a,[K 1]).*beta;
+
+if (nargout > 4) % two-tailed p-value
+    pce = 2*(1-niak_cdf_t(abs(ttest),size(x,1)-size(x,2)));
 end
