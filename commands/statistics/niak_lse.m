@@ -1,7 +1,7 @@
-function [beta,e,std_e,ttest,pce] = niak_lse(y,x,c,flag_james_stein)
+function [beta,e,std_e,ttest,pce,eff,std_eff] = niak_lse(y,x,c)
 % Least-square estimates in a linear model Y = X.BETA + E 
 %
-% [BETA,E,STD_E,TTEST,PCE] = NIAK_LSE(Y,X,C)
+% [BETA,E,STD_E,TTEST,PCE] = NIAK_LSE( Y , X , [C] )
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -39,6 +39,14 @@ function [beta,e,std_e,ttest,pce] = niak_lse(y,x,c,flag_james_stein)
 % PCE
 %   (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
 %   TTEST(n) (bilateral test).
+%
+% EFF
+%   (vector, size [1 N]) the effect associated with the contrast and the 
+%   regression coefficients.
+%
+% STD_EFF
+%   (vector, size [1 N]) STD_EFF(n) is the standard deviation of the effect
+%   EFF(n).
 %
 % _________________________________________________________________________
 % REFERENCES:
@@ -101,4 +109,12 @@ end
 
 if (nargout > 4) % two-tailed p-value
     pce = 2*(1-niak_cdf_t(abs(ttest),size(x,1)-size(x,2)));
+end
+
+if (nargout > 5) % The effect matrix
+    eff = c'*beta;
+end
+
+if (nargout > 6) % The standard deviation of effect
+    std_eff = std_noise*sqrt(c'*(x'*x)^(-1)*c);
 end
