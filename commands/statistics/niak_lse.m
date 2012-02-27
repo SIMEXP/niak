@@ -1,7 +1,7 @@
 function [beta,e,std_e,ttest,pce,eff,std_eff] = niak_lse(y,x,c)
 % Least-square estimates in a linear model Y = X.BETA + E 
 %
-% [BETA,E,STD_E,TTEST,PCE] = NIAK_LSE( Y , X , [C] )
+% [BETA,E,STD_E,TTEST,PCE,EFF,STD_EFF] = NIAK_LSE( Y , X , [C] )
 %
 % _________________________________________________________________________
 % INPUTS:
