@@ -2,7 +2,7 @@ function fdr = niak_fdr(pce,method)
 % Estimate the false-discovery rate in a family of tests with known per-comparison error
 %
 % SYNTAX:
-% FDR = NIAK_FDR( PCE , [METHOD] )
+% [FDR,TEST] = NIAK_FDR( PCE , [METHOD] , [Q] )
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -17,14 +17,23 @@ function fdr = niak_fdr(pce,method)
 %       'BY' : The Benjamini-Yekutieli procedure, appropriate for dependent tests
 %       'BH' : The Benjamini-Hochberg procedure, appropriate for independent tests 
 %              (or positively correlated tests).
+%       'GBH' : The two-stage adaptative Group BH procedure.
+%
+% Q
+%   (scalar, default 0.05) the threshold on an acceptable level of false-discovery
+%   rate.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % FDR
 %   (array) FDR(i,j) is the false-discovery rate associated with a threshold of 
-%   PCE(i,j) in the j-th family.
+%   PCE(i,j) in the j-th family (for 'BY' and 'BH'), or a global FDR after 
+%   weighting each family by the number of potential discoveries ('TST')
 %
+% TEST
+%   (array) TEST(i,j) is 1 if FDR(i,j)<=Q, and 0 otherwise.
+% 
 % _________________________________________________________________________
 % REFERENCES:
 %
@@ -37,6 +46,11 @@ function fdr = niak_fdr(pce,method)
 %   Benjamini, Y., Yekutieli, D., 2001. The control of the false discovery 
 %   rate in multiple testing under dependency. 
 %   The Annals of Statistics 29 (4), 1165-1188.
+%
+% On the two-stage adaptative group Benjamini-Hochberg procedure:
+%   Benjamini, Y., Krieger, M. A., and Yekutieli, D. (2006), “Adaptive Linear 
+%   Step-up Pocedures That Control the False Discovery Rate,” 
+%   Biometrika, 93, 3, 491-507.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -69,18 +83,59 @@ if nargin < 2
     method = 'BY';
 end
 
+if nargin < 3
+    q = 0.05;
+end
+
+if strcmp(method,'GBH')
+    q = q/(1+q);
+    [fdr_bh,test_bh] = niak_fdr(pce,'BH',q);
+    n = size(pce,1);
+    pi_g_0 = (n-sum(test_bh,1))/n;
+    pi_g_1 = 1-pi_g_0;
+    w = zeros(1,n);
+    w(pi_g_0~=1) = pi_g_0./pi_g_1;
+    w(pi_g_0==1) = Inf;
+    pce = pce.*repmat(w,[n 1]);
+    pce2 = pce(:);
+    n2 = length(pce);
+    ind = n2./(1:n2)';
+    pi_0 = sum(pi_g_0)/n;
+    qw = q/(1-pi0);
+    [val,order] = sort(pce2,1,'ascend');
+    fdr_c = ind.*val;
+    fdr(order) = fdr_c;
+    test = zeros(size(fdr));
+    ind_c = find(fdr_c>qw,1);
+    test(order(1:ind_c)) = 1;
+    fdr = reshape(fdr,size(pce));
+    test = reshape(test,size(pce));
+    return
+end
+
 [val,order] = sort(pce,1,'ascend');
 n = size(pce,1);
 fdr = zeros(size(pce));
 ind = n./(1:n)';
 w = sum((1:n).^(-1));
+if nargout>1
+    test = zeros(size(fdr));
+end
 for num_c = 1:size(pce,2)
     switch method
         case 'BY'
-           fdr(order(:,num_c),num_c) = w * ind.*val(:,num_c);
+           fdr_c = w * ind.*val(:,num_c);
+           fdr(order(:,num_c),num_c) = tmp;
         case 'BH'
+           fdr_c = ind.*val(:,num_c);
            fdr(order(:,num_c),num_c) = ind.*val(:,num_c);
         otherwise
             error('%s is an unkown procedure for FDR estimation')
+    end
+    if nargout>1
+        ind_c = find(fdr_c>q,1);
+        if ind_c>1
+            test(order(1:ind_c,num_c),num_c) = 1;
+        end
     end
 end
