@@ -116,5 +116,5 @@ if (nargout > 5) % The effect matrix
 end
 
 if (nargout > 6) % The standard deviation of effect
-    std_eff = std_noise*sqrt(c'*(x'*x)^(-1)*c);
+    std_eff = std_e*sqrt(c'*(x'*x)^(-1)*c);
 end
