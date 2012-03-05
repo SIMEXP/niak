@@ -1,4 +1,4 @@
-function fdr = niak_fdr(pce,method)
+function [fdr,test] = niak_fdr(pce,method,q)
 % Estimate the false-discovery rate in a family of tests with known per-comparison error
 %
 % SYNTAX:
@@ -125,17 +125,17 @@ for num_c = 1:size(pce,2)
     switch method
         case 'BY'
            fdr_c = w * ind.*val(:,num_c);
-           fdr(order(:,num_c),num_c) = tmp;
+           fdr(order(:,num_c),num_c) = fdr_c;
         case 'BH'
            fdr_c = ind.*val(:,num_c);
-           fdr(order(:,num_c),num_c) = ind.*val(:,num_c);
+           fdr(order(:,num_c),num_c) = fdr_c;
         otherwise
             error('%s is an unkown procedure for FDR estimation')
     end
     if nargout>1
         ind_c = find(fdr_c>q,1);
         if ind_c>1
-            test(order(1:ind_c,num_c),num_c) = 1;
+            test(order(1:(ind_c-1),num_c),num_c) = 1;
         end
     end
 end
