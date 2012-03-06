@@ -1,5 +1,5 @@
 function [fdr,test] = niak_fdr(pce,method,q)
-% Estimate the false-discovery rate in a family of tests with known per-comparison error
+% Estimate the false-discovery rate in multiple families of tests 
 %
 % SYNTAX:
 % [FDR,TEST] = NIAK_FDR( PCE , [METHOD] , [Q] )
@@ -38,19 +38,26 @@ function [fdr,test] = niak_fdr(pce,method,q)
 % REFERENCES:
 %
 % On the estimation of the false-discovery rate for independent tests (BH):
+%
 %   Benjamini, Y., Hochberg, Y., 1995. Controlling the false-discovery rate: 
 %   a practical and powerful approach to multiple testing. 
 %   J. Roy. Statist. Soc. Ser. B 57, 289-300.
 %
 % On the estimation of the false-discovery rate for dependent tests (BY):
+%
 %   Benjamini, Y., Yekutieli, D., 2001. The control of the false discovery 
 %   rate in multiple testing under dependency. 
 %   The Annals of Statistics 29 (4), 1165-1188.
 %
 % On the two-stage adaptative group Benjamini-Hochberg procedure:
+%
 %   Benjamini, Y., Krieger, M. A., and Yekutieli, D. (2006), “Adaptive Linear 
 %   Step-up Pocedures That Control the False Discovery Rate,” 
 %   Biometrika, 93, 3, 491-507.
+%
+%   Hu, J. X., Zhao, H., Zhou, H. H. (2010), "False discovery rate control 
+%   with groups". Journal of the American Statistical Association 105 (491), 
+%   1215-1227. URL http://dx.doi.org/10.1198/jasa.2010.tm09329
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -94,16 +101,17 @@ if strcmp(method,'GBH')
     pi_g_0 = (n-sum(test_bh,1))/n;
     pi_g_1 = 1-pi_g_0;
     w = zeros(1,n);
-    w(pi_g_0~=1) = pi_g_0./pi_g_1;
+    w(pi_g_0~=1) = pi_g_0(pi_g_0~=1)./pi_g_1(pi_g_0~=1);
     w(pi_g_0==1) = Inf;
     pce = pce.*repmat(w,[n 1]);
     pce2 = pce(:);
-    n2 = length(pce);
+    n2 = length(pce2);
     ind = n2./(1:n2)';
     pi_0 = sum(pi_g_0)/n;
-    qw = q/(1-pi0);
+    qw = q/(1-pi_0);
     [val,order] = sort(pce2,1,'ascend');
     fdr_c = ind.*val;
+    fdr = zeros(size(fdr_c));
     fdr(order) = fdr_c;
     test = zeros(size(fdr));
     ind_c = find(fdr_c>qw,1);
