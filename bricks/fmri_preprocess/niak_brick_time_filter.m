@@ -156,8 +156,8 @@ end
 
 %% Output files
 gb_name_structure = 'files_out';
-gb_list_fields = {'filtered_data','var_high','var_low','beta_high','beta_low','dc_high','dc_low'};
-gb_list_defaults = {'','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'filtered_data'   , 'var_high'        , 'var_low'         , 'beta_high'       , 'beta_low'        , 'dc_high'         , 'dc_low'          };
+gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Options
@@ -317,19 +317,21 @@ clear tseries_f
 vol_f = reshape(vol_f,[nx ny nz nt]);
 
 %% Writting the filtered data
-if flag_verbose
-    fprintf('Writting the filtered data in %s ...\n',files_out.filtered_data);
+if ~strcmp(files_out.filtered_data,'gb_niak_omitted')
+    if flag_verbose
+        fprintf('Writting the filtered data in %s ...\n',files_out.filtered_data);
+    end
+    hdr = hdr(1);
+    hdr_out = hdr;
+    hdr_out.file_name = files_out.filtered_data;
+    opt_hist.command = 'niak_brick_time_filter';
+    opt_hist.files_in = files_in;
+    opt_hist.files_out = files_out.filtered_data;
+    opt_hist.comment = sprintf('Filtered data, high-pass filter cut-off= %1.2f Hz, low pass filter cut-off=%1.2f Hz, TR=%1.2f',opt.hp,opt.lp,opt.tr);
+    hdr_out = niak_set_history(hdr_out,opt_hist);
+    niak_write_vol(hdr_out,vol_f);
+    clear vol_f
 end
-hdr = hdr(1);
-hdr_out = hdr;
-hdr_out.file_name = files_out.filtered_data;
-opt_hist.command = 'niak_brick_time_filter';
-opt_hist.files_in = files_in;
-opt_hist.files_out = files_out.filtered_data;
-opt_hist.comment = sprintf('Filtered data, high-pass filter cut-off= %1.2f Hz, low pass filter cut-off=%1.2f Hz, TR=%1.2f',opt.hp,opt.lp,opt.tr);
-hdr_out = niak_set_history(hdr_out,opt_hist);
-niak_write_vol(hdr_out,vol_f);
-clear vol_f
 
 %% Writting the regression coefficients for high frequencies
 if ~strcmp(files_out.beta_high,'gb_niak_omitted')

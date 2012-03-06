@@ -585,36 +585,6 @@ if flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%
-%% temporal filtering %%
-%%%%%%%%%%%%%%%%%%%%%%%%
-if flag_verbose
-    t1 = clock;
-    fprintf('time filter (');
-end
-for num_s = 1:nb_session
-    session = list_session{num_s};
-    nb_run = length(files_in.fmri.(session));
-    for num_r = 1:nb_run
-        run = sprintf('run%i',num_r);
-        clear opt_tmp files_in_tmp files_out_tmp
-        name_job                     = ['time_filter_',label,'_',session,'_',run];        
-        files_in_tmp                 = files_motion.motion_corrected.(session){num_r};
-        files_out_tmp.filtered_data  = '';                                    
-        opt_tmp                      = opt.time_filter;
-        opt_tmp.folder_out           = [opt.folder_intermediate 'time_filter' filesep];
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
-        files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
-        if strcmp(size_output,'quality_control')
-          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
-        end    
-    end
-end
-
-if flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
 %%%%%%%%%%%%%%%%%%%
 %% CORSICA MASKS %%
 %%%%%%%%%%%%%%%%%%%
@@ -635,6 +605,72 @@ files_out_tmp.mask_stem_ind     = [opt.folder_qc 'corsica' filesep label '_mask_
 files_out_tmp.white_matter_ind  = [opt.folder_qc 'corsica' filesep label '_mask_wm_nativefunc' ext_f];
 opt_tmp.flag_test = false;
 pipeline = psom_add_job(pipeline,name_job_mask_corsica,'niak_brick_mask_corsica',files_in_tmp,files_out_tmp,opt_tmp);
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% temporal filtering %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('time filter (');
+end
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    nb_run = length(files_in.fmri.(session));
+    for num_r = 1:nb_run
+        run = sprintf('run%i',num_r);
+        clear opt_tmp files_in_tmp files_out_tmp
+        name_job               = ['time_filter_',label,'_',session,'_',run];        
+        files_in_tmp           = files_motion.motion_corrected.(session){num_r};
+        files_out_tmp.dc_high  = '';
+        files_out_tmp.dc_low   = '';                                                                        
+        opt_tmp                = opt.time_filter;
+        opt_tmp.folder_out     = [opt.folder_intermediate 'time_filter' filesep];
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
+        files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
+        if strcmp(size_output,'quality_control')
+          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
+        end    
+    end
+end
+
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Regress Confounds %%
+%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('regress confounds (');
+end
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    nb_run = length(files_in.fmri.(session));
+    for num_r = 1:nb_run
+        run = sprintf('run%i',num_r);
+        clear opt_tmp files_in_tmp files_out_tmp
+        name_job               = ['time_filter_',label,'_',session,'_',run];        
+        files_in_tmp.dc_high   = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_high;
+        files_in_tmp.dc_low    = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_low;
+        files_in_tmp.mask_vent = pipeline.(['mask_corsica_' label]).mask_vent_ind;
+        files_in_tmp.mask_wm   = pipeline.(['mask_corsica_' label]).white_matter_ind;
+
+%          files_out_tmp.dc_high  = '';
+%          files_out_tmp.dc_low   = '';                                                                        
+%          opt_tmp                = opt.time_filter;
+%          opt_tmp.folder_out     = [opt.folder_intermediate 'time_filter' filesep];
+%          pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
+%          files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
+%          if strcmp(size_output,'quality_control')
+%            pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
+%          end    
+    end
+end
+
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%
 %% CORSICA %%

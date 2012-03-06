@@ -45,6 +45,10 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 %   MASK_STEM_IND
 %       (string) the file name of a binary mask of brain stem in native 
 %       functional space.
+%
+%   WHITE_MATTER_IND
+%       (string) the file name of a binary mask of white matter in native 
+%       functional space.
 %       
 % OPT           
 % 	(structure) with the following fields.  
@@ -117,8 +121,8 @@ niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields    = {'mask_vent_ind' , 'mask_stem_ind' };
-gb_list_defaults  = {NaN             , NaN             };
+gb_list_fields    = {'white_matter_ind' , 'mask_vent_ind' , 'mask_stem_ind' };
+gb_list_defaults  = {NaN                , NaN             , NaN             };
 niak_set_defaults
 
 %% Options
@@ -206,7 +210,7 @@ end
 %% Combining brain and gray matter masks
 if flag_verbose
     tic;
-    fprintf('Combining brain stem and gray matter masks - ')
+    fprintf('Excluding gray matter from brain stem mask - ')
 end
 clear files_in_math files_out_math opt_math
 files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
@@ -217,7 +221,21 @@ niak_brick_math_vol(files_in_math,files_out_math,opt_math);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
 end
-    
+
+%% Generating white matter mask
+if flag_verbose
+    tic;
+    fprintf('Generating white matter mask - ')
+end
+clear files_in_math files_out_math opt_math
+files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
+files_out_math      = files_out.white_matter_ind;
+opt_math.operation  = '(round(vol_in{1}) == 3);';
+niak_brick_math_vol(files_in_math,files_out_math,opt_math);
+if flag_verbose    
+    fprintf('%1.2f sec.\n',toc)
+end
+        
 %% Clean up temporary files
 [status,msg] = system(['rm -rf ' folder_tmp]);
 if status ~= 0

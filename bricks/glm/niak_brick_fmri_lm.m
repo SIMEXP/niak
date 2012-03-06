@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_fmri_lm(files_in,files_out,opt)
-
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_FMRI_LM
-%
 % Fits a linear model to fMRI time series data.
 %
 % The method is based on linear models with correlated AR(p) errors:

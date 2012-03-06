@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_fmri_design(files_in,files_out,opt)
-
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_FMRI_DESIGN
-%
 % Creates the design matrix for an fMRI general linear model analysis. 
 %
 % SYNTAX:
