@@ -14,18 +14,18 @@ function [rot,tsl] = niak_transf2param(transf)
 % INPUT:
 %
 % TRANSF   
-%       (4*4 array) An lsq6 transformation, usually seen as a 
-%       "voxel-to-world" space transform.
+%       (4*4*N array) TRANSF(:,:,n) is an lsq6 transformation, usually seen 
+%       as a "voxel-to-world" space transform.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % ROT 
-%       (array 3*1) the rotation parameters (in x, y and z planes). 
+%       (array 3*N) the rotation parameters (in x, y and z planes). 
 %       Unit is degrees.
 %
 % TSL 
-%       (array 3*1) the translation parameters.
+%       (array 3*N) the translation parameters.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -64,6 +64,16 @@ function [rot,tsl] = niak_transf2param(transf)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+N = size(transf,3);
+if N>1
+    rot = zeros([3 N]);
+    tsl = zeros([3 N]);
+    for num_n = 1:N
+        [rot(:,num_n),tsl(:,num_n)] = niak_transf2param(transf(:,:,num_n));
+    end
+    return
+end
 
 O=transf(1:3,4);
 R=transf(1:3,1:3);
