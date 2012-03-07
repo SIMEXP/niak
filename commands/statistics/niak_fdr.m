@@ -17,7 +17,7 @@ function [fdr,test] = niak_fdr(pce,method,q)
 %       'BY' : The Benjamini-Yekutieli procedure, appropriate for dependent tests
 %       'BH' : The Benjamini-Hochberg procedure, appropriate for independent tests 
 %              (or positively correlated tests).
-%       'GBH' : The two-stage adaptative Group BH procedure.
+%       'GBH' : The two-stage adaptative group BH procedure.
 %
 % Q
 %   (scalar, default 0.05) the threshold on an acceptable level of false-discovery
@@ -29,7 +29,7 @@ function [fdr,test] = niak_fdr(pce,method,q)
 % FDR
 %   (array) FDR(i,j) is the false-discovery rate associated with a threshold of 
 %   PCE(i,j) in the j-th family (for 'BY' and 'BH'), or a global FDR after 
-%   weighting each family by the number of potential discoveries ('TST')
+%   weighting each family by the number of potential discoveries ('GBH')
 %
 % TEST
 %   (array) TEST(i,j) is 1 if FDR(i,j)<=Q, and 0 otherwise.
