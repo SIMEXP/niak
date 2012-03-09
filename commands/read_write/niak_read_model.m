@@ -59,6 +59,25 @@ function [model,labels_x,labels_y,contrast_vec] = niak_read_model(file_name,opt)
 %          (scalar, default 0) the weight of the covariate NAME in the
 %          contrast.
 %
+%   SELECT
+%      (structure, optional) with multiple entries and the following
+%      fields:
+%
+%      LABEL
+%         (string) the covariate used to select entries.
+%
+%      VALUES
+%         (vector, default []) a list of values to select (if empty, all
+%         entries are retained).
+%
+%      MIN
+%         (scalar, default []) only values higher (or equal) than MIN are 
+%         retained.
+%
+%      MAX
+%         (scalar, default []) only values lower (or equal) than MAX are 
+%         retained. 
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -83,6 +102,10 @@ function [model,labels_x,labels_y,contrast_vec] = niak_read_model(file_name,opt)
 %
 % _________________________________________________________________________
 % COMMENTS:
+%
+% The selection of entries by OPT.SELECT is applied iteratively, starting by
+% OPT.SELECT(1), then OPT.SELECT(2), etc. Selection is performed on the raw
+% values of the CSV file, not on normalized values.
 %
 % Copyright (c) Pierre Bellec, 
 % Département d'informatique et de recherche opérationnelle
@@ -115,8 +138,8 @@ if ~exist(file_name,'file')
 end
 
 %% Options
-list_fields   = { 'contrast' , 'labels_x' , 'labels_y' , 'projection' , 'flag_intercept' , 'flag_normalize' };
-list_defaults = { {}         , {}         , {}         , struct([])   , true             , true             };
+list_fields   = { 'select' , 'contrast' , 'labels_x' , 'labels_y' , 'projection' , 'flag_intercept' , 'flag_normalize' };
+list_defaults = { {}       , {}         , {}         , {}         , struct([])   , true             , true             };
 if nargin > 1
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -150,6 +173,26 @@ if ~isempty(ind_err)
     error('The following specified covariate was not found in the model : %s',labels_y{ind_err(1)});
 end
 model = model_m(ind_m,ind_n); 
+
+% Optional : select a subset of entries
+if ~isempty(opt.select)
+    for num_s = 1:length(opt.select)
+        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max'},{NaN,[],[],[]});
+        mask = true([size(model,1) 1]);
+        ind = find(ismember(labels_y,opt_s.label));
+        if ~isempty(opt_s.values)
+            mask = ismember(model(:,ind),opt_s.values);
+        end
+        if ~isempty(opt_s.min)
+            mask = mask&(model(:,ind)>opt_s.min);
+        end
+        if ~isempty(opt_s.max)
+            mask = mask&(model(:,ind)<opt_s.max);
+        end
+        model = model(mask,:);
+        labels_x = labels_x(mask);
+    end
+end
 
 % Optional: additional intercept covariate
 if opt.flag_intercept
