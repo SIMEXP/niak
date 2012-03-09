@@ -170,7 +170,9 @@ if ~isempty(ind_err)
 end
 ind_err = find(mask_y == 0);
 if ~isempty(ind_err)
-    error('The following specified covariate was not found in the model : %s',labels_y{ind_err(1)});
+    if (length(ind_err)>1)||~strcmp(labels_y{ind_err},'intercept')||~flag_intercept
+        error('The following specified covariate was not found in the model : %s',labels_y{ind_err(1)});
+    end
 end
 model = model_m(ind_m,ind_n); 
 
