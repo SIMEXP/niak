@@ -148,6 +148,28 @@ end
 
 %% Read the model in CSV
 [model_m,labels_m,labels_n] = niak_read_csv(file_name);
+
+% Optional : select a subset of entries
+if ~isempty(opt.select)
+    for num_s = 1:length(opt.select)
+        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max'},{NaN,[],[],[]});
+        mask = true([size(model_m,1) 1]);
+        ind = find(ismember(labels_n,opt_s.label));
+        if ~isempty(opt_s.values)
+            mask = ismember(model_m(:,ind),opt_s.values);
+        end
+        if ~isempty(opt_s.min)
+            mask = mask&(model_m(:,ind)>opt_s.min);
+        end
+        if ~isempty(opt_s.max)
+            mask = mask&(model_m(:,ind)<opt_s.max);
+        end
+        model_m = model_m(mask,:);
+        labels_m = labels_m(mask);
+    end
+end
+
+% Default covariates/entries list
 if isempty(opt.labels_x)
     labels_x = labels_m;
 else
@@ -176,27 +198,7 @@ if ~isempty(ind_err)
 end
 ind_n = ind_n(ind_n~=0);
 labels_y = labels_y(mask_y~=0);
-model = model_m(ind_m,ind_n); 
-
-% Optional : select a subset of entries
-if ~isempty(opt.select)
-    for num_s = 1:length(opt.select)
-        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max'},{NaN,[],[],[]});
-        mask = true([size(model,1) 1]);
-        ind = find(ismember(labels_y,opt_s.label));
-        if ~isempty(opt_s.values)
-            mask = ismember(model(:,ind),opt_s.values);
-        end
-        if ~isempty(opt_s.min)
-            mask = mask&(model(:,ind)>opt_s.min);
-        end
-        if ~isempty(opt_s.max)
-            mask = mask&(model(:,ind)<opt_s.max);
-        end
-        model = model(mask,:);
-        labels_x = labels_x(mask);
-    end
-end
+model = model_m(ind_m,ind_n);
 
 % Optional: additional intercept covariate
 if opt.flag_intercept
