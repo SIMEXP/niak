@@ -27,7 +27,7 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %           (integer, default 1) the minimal acceptable size of ROIs.
 %
 %       FLAG_INT
-%           (boolean, default 1) the mask of connected components is 
+%           (boolean, default 0) the mask of connected components is 
 %           generated in the 'uint32' type. Otherwise it is a double array.
 %
 % _________________________________________________________________________
@@ -81,8 +81,8 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_int','type_neig','thre_size'};
-gb_list_defaults = {true,6,1};
+gb_list_fields    = {'flag_int' , 'type_neig' , 'thre_size' };
+gb_list_defaults  = {false       , 6           , 1           };
 niak_set_defaults
 
 mask = mask>0;
@@ -133,9 +133,9 @@ if ismember(type_neig,[4,6,8,10]);
                 end
             end
         end
+        [tmp1,tmp2,part] = unique(part);
+        mask_c(mask) = part(mask_c(mask));
     end
-    [tmp1,tmp2,part] = unique(part);
-    mask_c(mask) = part(mask_c(mask));
     if nargout>1
         size_roi = niak_build_size_roi(mask_c);
     end
