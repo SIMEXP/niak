@@ -56,7 +56,7 @@ function [mask_c,size_roi] = niak_find_connex_roi(mask,opt)
 %   The order of the ROIs is completely arbitrary.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
-%               Neurological Institute, McGill University, 2008.
+%               Neurological Institute, McGill University, 2008-2012.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : spatial neighbour, adjacency matrix, connexity, graph
