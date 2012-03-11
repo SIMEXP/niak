@@ -122,21 +122,21 @@ end
 
 %% Inputs
 gb_name_structure = 'files_in';
-gb_list_fields = {'areas','part','tseries'};
-gb_list_defaults = {NaN,NaN,'gb_niak_omitted'};
+gb_list_fields    = { 'areas' , 'part' , 'tseries'         };
+gb_list_defaults  = { NaN     , NaN    , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Outputs
 gb_name_structure = 'files_out';
-gb_list_fields = {'space','tseries'};
-gb_list_defaults = {NaN,'gb_niak_omitted'};
+gb_list_fields    = {'space' , 'tseries'         };
+gb_list_defaults  = {NaN     , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Options
 opt_norm.type = 'mean';
 gb_name_structure = 'opt';
-gb_list_fields = {'folder_out','correction','ind_rois','flag_verbose','flag_test'};
-gb_list_defaults = {'',opt_norm,[],true,false};
+gb_list_fields    = {'folder_out' , 'correction' , 'ind_rois' , 'flag_verbose' , 'flag_test' };
+gb_list_defaults  = {''           , opt_norm     , []         , true           , false       };
 niak_set_defaults
 
 %% Building default output names
