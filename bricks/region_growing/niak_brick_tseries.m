@@ -265,7 +265,7 @@ for num_f = 1:length(files_in.fmri)
     
     if ~strcmp(files_in.atoms,'gb_niak_omitted')
         data = load(files_in.fmri{num_f});
-        atoms_tseries = data.(opt.name_tseries);
+        atoms_tseries = niak_normalize_tseries(data.(opt.name_tseries),opt.normalization);
         if isfield(data,'timing')
             timing = data.timing;
         else
@@ -302,9 +302,9 @@ for num_f = 1:length(files_in.fmri)
                 for num_r = 1:max(mask(:))
                     ind = unique(atoms_v(mask_v==num_r));
                     ind = ind(ind~=0);
-		    if ~isempty(ind)
-	                tseries(:,num_r) = mean(atoms_tseries(:,ind),2);
-        	        tseries_std(:,num_r) = std(atoms_tseries(:,ind),[],2);
+                    if ~isempty(ind)
+                        tseries(:,num_r) = mean(atoms_tseries(:,ind),2);
+                        tseries_std(:,num_r) = std(atoms_tseries(:,ind),[],2);
                     else
                         tseries(:,num_r) = NaN;
                         tseries_std(:,num_r) = NaN;
