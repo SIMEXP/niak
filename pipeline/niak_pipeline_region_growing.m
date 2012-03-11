@@ -218,22 +218,6 @@ if isempty(opt.labels)
     end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Resampling of the AAL template  %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% name_job = 'resamp_aal';
-% clear files_in_tmp files_out_tmp opt_tmp
-
-
-
-% files_in_tmp.source      = files_in.areas;
-% files_in_tmp.target      = files_in.fmri{1};
-% [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in_tmp.target);
-% files_out_tmp            = [opt.folder_out filesep 'template_aal' ext_f];
-% pipeline = psom_add_job(struct(),name_job,'niak_brick_resample_aal',files_in_tmp,files_out_tmp,[],false);
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Mask the areas with the brain mask  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
