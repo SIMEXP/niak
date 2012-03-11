@@ -265,7 +265,7 @@ for num_f = 1:length(files_in.fmri)
     
     if ~strcmp(files_in.atoms,'gb_niak_omitted')
         data = load(files_in.fmri{num_f});
-        atoms_tseries = niak_normalize_tseries(data.(opt.name_tseries),opt.normalization);
+        atoms_tseries = niak_normalize_tseries(data.(opt.name_tseries),opt.correction);
         if isfield(data,'timing')
             timing = data.timing;
         else
