@@ -17,7 +17,10 @@ function [fdr,test] = niak_fdr(pce,method,q)
 %       'BY' : The Benjamini-Yekutieli procedure, appropriate for dependent tests
 %       'BH' : The Benjamini-Hochberg procedure, appropriate for independent tests 
 %              (or positively correlated tests).
-%       'GBH' : The two-stage adaptative group BH procedure.
+%       'GBH' : The two-stage adaptative group BH procedure, with the two stage 
+%               (TST) estimator of the number of discoveries.
+%       'LSL' : The two-stage adaptative group BH procedure, with the least-slope
+%               (LSL) estimator of the number of discoveries.
 %
 % Q
 %   (scalar, default 0.05) the threshold on an acceptable level of false-discovery
@@ -39,21 +42,29 @@ function [fdr,test] = niak_fdr(pce,method,q)
 %
 % On the estimation of the false-discovery rate for independent tests (BH):
 %
-%   Benjamini, Y., Hochberg, Y., 1995. Controlling the false-discovery rate: 
-%   a practical and powerful approach to multiple testing. 
+%   Benjamini, Y., Hochberg, Y., (1995), "Controlling the false-discovery rate: 
+%   a practical and powerful approach to multiple testing." 
 %   J. Roy. Statist. Soc. Ser. B 57, 289-300.
 %
 % On the estimation of the false-discovery rate for dependent tests (BY):
 %
-%   Benjamini, Y., Yekutieli, D., 2001. The control of the false discovery 
-%   rate in multiple testing under dependency. 
+%   Benjamini, Y., Yekutieli, D., (2001), "The control of the false discovery 
+%   rate in multiple testing under dependency." 
 %   The Annals of Statistics 29 (4), 1165-1188.
 %
-% On the two-stage adaptative group Benjamini-Hochberg procedure:
+% On the least-slope estimator of the number of discoveries:
+%
+%   Benjamini, Y., Hochberg, Y., (2000), “On the Adaptive Control of the 
+%   False Discovery Rate in Multiple Testing with Independent Statistics,” 
+%   Journal of Educational and Behavioral Statistics, 25, 60-83.
+% 
+% On the two-stage estimator of the number of discoveries:
 %
 %   Benjamini, Y., Krieger, M. A., and Yekutieli, D. (2006), “Adaptive Linear 
 %   Step-up Pocedures That Control the False Discovery Rate,” 
 %   Biometrika, 93, 3, 491-507.
+%
+% On the group Benjamini-Hochberg procedure:
 %
 %   Hu, J. X., Zhao, H., Zhou, H. H. (2010), "False discovery rate control 
 %   with groups". Journal of the American Statistical Association 105 (491), 
@@ -94,30 +105,52 @@ if nargin < 3
     q = 0.05;
 end
 
-if strcmp(method,'GBH')
-    q = q/(1+q);
-    [fdr_bh,test_bh] = niak_fdr(pce,'BH',q);
+if strcmp(method,'GBH')||strcmp(method,'LSL')
+
     n = size(pce,1);
-    pi_g_0 = (n-sum(test_bh,1))/n;
+    % estimate the number of discoveries
+
+    switch method
+        case 'GBH'
+
+            % The two-stage method: family-wise BH procedure
+            q = q/(1+q);
+            [fdr_bh,test_bh] = niak_fdr(pce,'BH',q); 
+            pi_g_0 = (n-sum(test_bh,1))/n;        
+
+        case 'LSL'
+
+            % The least-slope method
+            [val,order] = sort(pce,1,'ascend');            
+            l = repmat((n+1-(1:n)'),[1 n])./(1-val);
+            dl = l(2:end,:) - l(1:(end-1),:);
+            pi_g_0 = zeros(n,1);
+            for num_c = 1:n
+                ind_c = find(dl(:,num_c)>0,1);
+                if isempty(ind_c)
+                    ind_c = n;
+                end
+                pi_g_0(num_c) = min((floor(l(ind_c))+1)/n,1);
+            end
+    end
     pi_g_1 = 1-pi_g_0;
+    pi_0 = mean(pi_g_0);
+
+    % weight the p-values based on the estimated number of discoveries
     w = zeros(1,n);
     w(pi_g_0~=1) = pi_g_0(pi_g_0~=1)./pi_g_1(pi_g_0~=1);
     w(pi_g_0==1) = Inf;
     pce = pce.*repmat(w,[n 1]);
-    pce2 = pce(:);
-    n2 = length(pce2);
-    ind = n2./(1:n2)';
-    pi_0 = sum(pi_g_0)/n;
-    qw = q/(1-pi_0);
-    [val,order] = sort(pce2,1,'ascend');
-    fdr_c = ind.*val;
-    fdr = zeros(size(fdr_c));
-    fdr(order) = fdr_c;
-    test = zeros(size(fdr));
-    ind_c = find(fdr_c>qw,1);
-    test(order(1:ind_c)) = 1;
-    fdr = reshape(fdr,size(pce));
-    test = reshape(test,size(pce));
+    
+    % run a standard (global) BH procedure, with weighted p-values and modified FDR threshold
+    if pi_0 == 1
+       fdr = ones(size(pce));
+       test = zeros(size(pce));
+    else
+       [fdr,test] = niak_fdr(pce(:),'BH',q/(1-pi_0));
+       fdr = reshape(fdr,size(pce));
+       test = reshape(test,size(pce));
+    end
     return
 end
 
