@@ -8,8 +8,9 @@ function ssurf = niak_read_surf(file_name)
 % INPUTS :
 %
 % FILE_NAME
-%    (string or cell of strings) string: a single surface file. cell of 
-%    strings : all the surfaces are concatenated.
+%    (string or cell of strings, default mid surface in MNI 2009 space) 
+%    string: a single surface file. cell of strings : all the surfaces are 
+%    concatenated.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -64,6 +65,12 @@ function ssurf = niak_read_surf(file_name)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+if (nargin<1)||isempty(file_name)
+    niak_gb_vars
+    path_surf = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0_surface' filesep];
+    file_name = {[path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_mid_left.obj'],[path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_mid_right.obj']};
+end
 
 %% Multiple surfaces
 if iscellstr(file_name)
