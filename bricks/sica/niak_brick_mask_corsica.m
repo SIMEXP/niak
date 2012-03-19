@@ -230,7 +230,7 @@ end
 clear files_in_math files_out_math opt_math
 files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
 files_out_math      = files_out.white_matter_ind;
-opt_math.operation  = '(round(vol_in{1}) == 3);';
+opt_math.operation  = 'vol = (round(vol_in{1}) == 3);';
 niak_brick_math_vol(files_in_math,files_out_math,opt_math);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
