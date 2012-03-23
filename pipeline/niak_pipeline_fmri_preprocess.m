@@ -229,6 +229,26 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
 %           anything. 
 %
+%   SUBJECT
+%       (structure) can be used to set different parameters for one specific 
+%       subject or a set of subjects. OPT.SUBJECT can have multiple entries
+%       with the following fields:
+%       
+%       LABEL
+%          (string) the name of a subject OR a pattern that will be used to
+%          match a group of subject (see OPT.SUBJECT.TYPE below)
+%
+%       TYPE
+%          (string, default 'exact') it TYPE is 'exact', the options will 
+%          apply only to a subject ID that exactly match LABEL. If TYPE
+%          equals 'regexpr', then any subject ID that matches LABEL with 
+%          a call to REGEXP will be included.
+%
+%       PARAM
+%          (structure) same as OPT (without the SUBJECT field). Any field 
+%          present in PARAM will override the fields of OPT of the subject
+%          or group of subjects that fit with LABEL.
+%
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -424,8 +444,8 @@ default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
+gb_list_fields    = {'subject' , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+gb_list_defaults  = {struct()  , true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
@@ -469,12 +489,19 @@ for num_s = 1:nb_subject
         t1 = clock;
         fprintf('    %s ; ',subject);
     end    
-    opt_ind = rmfield(opt,'flag_verbose');
-    opt_ind.label = subject;
+    opt_ind = rmfield(opt,'subject');
+    if isfield(opt.subject,'label')
+        for num_e = 1:length(opt.subject)
+            switch opt.subject(num_e).type
+                case 'exact'
+                    if strcml
+        end
+    end
+    opt_ind = rmfield(opt_ind,'flag_verbose');    
+    opt_ind.label = subject;    
+    opt_ind.flag_test = true;
     
-     opt_ind.flag_test = true;
-    
-     pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
+    pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
 
     if flag_verbose        
         fprintf('%1.2f sec\n',etime(clock,t1));
