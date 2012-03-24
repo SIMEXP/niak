@@ -209,17 +209,17 @@ end
 
 if ~strcmp(files_out.pve_wm,'gb_niak_omitted')
     hdr.file_name = files_out.pve_wm;
-    niak_write_vol(hdr,tfe(:,3));
+    niak_write_vol(hdr,tfe.wm);
 end
 
 if ~strcmp(files_out.pve_gm,'gb_niak_omitted')
     hdr.file_name = files_out.pve_gm;
-    niak_write_vol(hdr,tfe(:,2));
+    niak_write_vol(hdr,tfe.gm);
 end
 
 if ~strcmp(files_out.pve_csf,'gb_niak_omitted')
     hdr.file_name = files_out.pve_csf;
-    niak_write_vol(hdr,tfe(:,1));
+    niak_write_vol(hdr,tfe.csf);
 end
 
 if ~strcmp(files_out.pve_disc,'gb_niak_omitted')
@@ -661,7 +661,7 @@ function seg = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params)
 
   for t = 1:50
 
-    if flag_verbose
+    if opt.flag_verbose
         disp(['ICM iteration ' num2str(t) ' Changes ' num2str(changed)]);  
     end
  
