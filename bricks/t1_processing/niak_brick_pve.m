@@ -433,7 +433,7 @@ function [tfe,pve_disc] = sub_pvemri(img,brain_mask,tissue_class,class_params,vo
   if flag_verbose
       disp('Computing partial volume classification')
   end
-  pve_disc = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params);
+  pve_disc = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params,flag_verbose);
 
   % maximum likelihood based tissue fraction estimation
 
@@ -536,7 +536,7 @@ function [tfe,pve_disc] = sub_pvemri(img,brain_mask,tissue_class,class_params,vo
 
 
 
-function seg = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params)
+function seg = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params,flag_verbose)
 
 
 
@@ -661,7 +661,7 @@ function seg = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params)
 
   for t = 1:50
 
-    if opt.flag_verbose
+    if flag_verbose
         disp(['ICM iteration ' num2str(t) ' Changes ' num2str(changed)]);  
     end
  
