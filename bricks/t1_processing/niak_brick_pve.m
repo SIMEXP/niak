@@ -200,7 +200,7 @@ else
     tissue_class = [];
 end
 
-[tfe,pve_disc] = sub_pvemri(img,brain_mask,tissue_class,opt.class_params,hdr.info.voxel_size,opt.beta,opt.flag_verbose)
+[tfe,pve_disc] = sub_pvemri(img,brain_mask,tissue_class,opt.class_params,hdr.info.voxel_size,opt.beta,opt.flag_verbose);
 
 %% Write results
 if opt.flag_verbose
