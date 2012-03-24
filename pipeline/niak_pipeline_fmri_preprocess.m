@@ -226,7 +226,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           all the ROIs found in FILES_IN.MASK
 %
 %       FLAG_SKIP
-%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
+%           (boolean, default true) if FLAG_SKIP==1, the brick does not do
 %           anything. 
 %
 %   SUBJECT
@@ -294,7 +294,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %      12.  Spatial smoothing.
 %           See NIAK_BRICK_SMOOTH_VOL and OPT.SMOOTH_VOL
 %      13.  Region growing.
-%           See NIAK_PIUPELINE_REGION_GROWING and OPT.REGION_GROWING
+%           See NIAK_PIPELINE_REGION_GROWING and OPT.REGION_GROWING
 %
 % In addition job the following jobs are performed at the group level:
 %       1.  Group quality control for motion correction.
@@ -332,7 +332,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
 % operationnelle, Universite de Montreal, 2010.
-% Maintainer : pbellec@criugm.qc.ca
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
 
@@ -450,7 +450,7 @@ niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
 if ~isfield(opt.region_growing,'flag_skip')
-    opt.region_growing.flag_skip = false;
+    opt.region_growing.flag_skip = true;
 end
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
@@ -494,7 +494,14 @@ for num_s = 1:nb_subject
         for num_e = 1:length(opt.subject)
             switch opt.subject(num_e).type
                 case 'exact'
-                    if strcml
+                    if strcmp(opt.subject(num_e).label,subject)
+                        opt_ind = psom_merge_pipeline(opt_ind,opt.subject(num_e).param);
+                    end
+                case 'regexp'
+                    if any(regexp(subject,opt.subject(num_e).label))
+                        opt_ind = psom_merge_pipeline(opt_ind,opt.subject(num_e).param);
+                    end  
+                end
         end
     end
     opt_ind = rmfield(opt_ind,'flag_verbose');    

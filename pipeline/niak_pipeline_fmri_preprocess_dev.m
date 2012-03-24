@@ -55,6 +55,10 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       the data. Otherwise, PSOM_RUN_PIPELINE will be used to process the 
 %       data.
 %
+%   FLAG_VERBOSE
+%           (boolean, default 1) if the flag is 1, then the function
+%           prints some infos during the processing.
+%
 %   PSOM
 %       (structure) the options of the pipeline manager. See the OPT 
 %       argument of PSOM_RUN_PIPELINE. Default values can be used here.
@@ -200,6 +204,51 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
 %           anything, just copy the input on the output. 
 %
+%   REGION_GROWING 
+%       (structure) options of NIAK_PIPELINE_REGION_GROWING.
+%     
+%       THRE_SIZE 
+%           (integer,default 1000 mm3) threshold on the region size (maximum). 
+%     
+%       THRE_NB_ROIS 
+%           (integer, default 0) the minimum number of homogeneous
+%           regions (if no threshold are fixed on size and similarity,
+%           THRE_NB_ROIS will be the actual number of homogeneous regions).
+%
+%       CORRECTION_AVERAGE
+%           (structure, default CORRECTION.TYPE = 'mean') the temporal 
+%           normalization to apply on the individual time series before 
+%           averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
+%     
+%       IND_ROIS
+%           (vector of integer, default all) list of ROIs index that will 
+%           be included in the analysis. By default, the brick is processing 
+%           all the ROIs found in FILES_IN.MASK
+%
+%       FLAG_SKIP
+%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
+%           anything. 
+%
+%   SUBJECT
+%       (structure) can be used to set different parameters for one specific 
+%       subject or a set of subjects. OPT.SUBJECT can have multiple entries
+%       with the following fields:
+%       
+%       LABEL
+%          (string) the name of a subject OR a pattern that will be used to
+%          match a group of subject (see OPT.SUBJECT.TYPE below)
+%
+%       TYPE
+%          (string, default 'exact') it TYPE is 'exact', the options will 
+%          apply only to a subject ID that exactly match LABEL. If TYPE
+%          equals 'regexpr', then any subject ID that matches LABEL with 
+%          a call to REGEXP will be included.
+%
+%       PARAM
+%          (structure) same as OPT (without the SUBJECT field). Any field 
+%          present in PARAM will override the fields of OPT of the subject
+%          or group of subjects that fit with LABEL.
+%
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -244,6 +293,8 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %           See NIAK_BRICK_RESAMPLE_VOL and OPT.RESAMPLE_VOL
 %      12.  Spatial smoothing.
 %           See NIAK_BRICK_SMOOTH_VOL and OPT.SMOOTH_VOL
+%      13.  Region growing.
+%           See NIAK_PIPELINE_REGION_GROWING and OPT.REGION_GROWING
 %
 % In addition job the following jobs are performed at the group level:
 %       1.  Group quality control for motion correction.
@@ -252,13 +303,13 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 %       2.  Group quality control for coregistration of T1 images in
 %           stereotaxic space
 %           See NIAK_BRICK_QC_COREGISTER
-%       3.  Group quality control for coregistration of fMRI in steretaxic
+%       3.  Group quality control for coregistration of fMRI in stereotaxic
 %           space.
 %
 % NOTE 2:
 %   The physiological & motion noise correction CORSICA is changing the
 %   degrees of freedom of the data. It is usullay negligible for 
-%   intra-label analysis, and will have no impact on the between-label 
+%   intra-subject analysis, and will have no impact on the between-subject
 %   variance estimate (except those should be less noisy). However, the 
 %   purist may consider to take that into account in the linear model 
 %   analysis. This will be taken care of in the (yet to come) 
@@ -281,7 +332,7 @@ function pipeline = niak_pipeline_fmri_preprocess(files_in,opt)
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
 % operationnelle, Universite de Montreal, 2010.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
 
@@ -340,11 +391,11 @@ else
         
         for num_c = 1:length(list_session{num_s})
             session = list_session{num_s}{num_c};            
-            if ~iscellstr(files_in.(subject).(session){num_c})
+            if ~iscellstr(files_in.(subject).fmri.(session))
                 error('FILES_IN.%s.fmri.%s is not a cell of strings!',upper(subject),upper(session));
             end
             if (num_s == 1)&&(num_c==1)
-                [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).(session){1});                
+                [path_f,name_f,ext_f] = niak_fileparts(files_in.(subject).fmri.(session){1});                
             end
             
         end
@@ -363,36 +414,114 @@ else
     end    
 end
 
+%% This block is for backward compatibility
+if isfield(opt,'bricks')
+    opt = psom_merge_pipeline(opt,opt.bricks);
+    opt = rmfield(opt,'bricks');
+    if isfield(opt,'flag_corsica');
+        opt.corsica.flag_skip = ~opt.flag_corsica;
+        opt = rmfield(opt,'flag_corsica');
+    end
+    if isfield(opt,'sica');
+        opt.corsica.sica = opt.sica;
+        opt = rmfield(opt,'sica');
+    end
+    if isfield(opt,'component_sel');
+        opt.corsica.component_sel = opt.component_sel;
+        opt = rmfield(opt,'component_sel');
+    end
+    if isfield(opt,'component_supp');
+        opt.corsica.component_supp = opt.component_supp;
+        opt = rmfield(opt,'component_supp');
+        if isfield(opt.corsica.component_supp,'threshold')
+          opt.corsica.threshold = opt.corsica.component_supp.threshold;
+        end
+    end
+end
+
 %% Options
 default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' };
-gb_list_defaults  = {file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      };
+gb_list_fields    = {'subject' , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+gb_list_defaults  = {struct()  , true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
+
+if ~isfield(opt.region_growing,'flag_skip')
+    opt.region_growing.flag_skip = false;
+end
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
 end
 
+if isempty(template_fmri)
+    template_fmri = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Resample the AAL template %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+name_job = 'resamp_aal';
+clear files_in_tmp files_out_tmp opt_tmp
+files_in_tmp.source      = template_fmri;
+files_in_tmp.target      = template_fmri;
+[path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in.(list_subject{1}).fmri.(list_session{1}{1}){1});
+files_out_tmp            = [opt.folder_out 'region_growing' filesep 'template_aal' ext_f];
+opt_tmp                  = opt.resample_vol;
+opt_tmp.interpolation    = 'nearest_neighbour';
+pipeline = psom_add_job(struct(),name_job,'niak_brick_resample_vol',files_in_tmp,files_out_tmp,opt_tmp);
+
+opt.template_fmri = pipeline.resamp_aal.files_out;
+template_fmri = opt.template_fmri;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Build individual pipelines %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    fprintf('Generating pipeline for individual fMRI preprocessing :\n')
+end
 for num_s = 1:nb_subject
-    opt_ind = opt;
-    opt_ind.label = list_subject{num_s}
-    if num_s == 1
-        pipeline = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
-    else
-        pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
+    subject = list_subject{num_s};
+    if flag_verbose
+        t1 = clock;
+        fprintf('    %s ; ',subject);
+    end    
+    opt_ind = rmfield(opt,'subject');
+    if isfield(opt.subject,'label')
+        for num_e = 1:length(opt.subject)
+            switch opt.subject(num_e).type
+                case 'exact'
+                    if strcmp(opt.subject(num_e).label,subject)
+                        opt_ind = psom_merge_pipeline(opt_ind,opt.subject(num_e).param);
+                    end
+                case 'regexp'
+                    if any(regexp(subject,opt.subject(num_e).label))
+                        opt_ind = psom_merge_pipeline(opt_ind,opt.subject(num_e).param);
+                    end  
+                end
+        end
+    end
+    opt_ind = rmfield(opt_ind,'flag_verbose');    
+    opt_ind.label = subject;    
+    opt_ind.flag_test = true;
+    
+    pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
+
+    if flag_verbose        
+        fprintf('%1.2f sec\n',etime(clock,t1));
     end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GROUP QC COREGISTER ANAT STEREOLIN %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of coregistration in anatomical space (linear stereotaxic space) ; ');
+end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol  = cell([nb_subject 1]);
 files_in_tmp.mask = cell([nb_subject 1]);
@@ -408,11 +537,18 @@ files_out_tmp.fig_coregister  = [opt.folder_out filesep 'quality_control' filese
 files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'anat_tab_qc_coregister_stereolin.csv'];
 opt_tmp                       = opt.qc_coregister;
 opt_tmp.labels_subject        = list_subject;
-pipeline = psom_add_job(pipeline,['qc_coregister_group_anat_stereolin','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,'qc_coregister_group_anat_stereolin','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GROUP QC COREGISTER ANAT STEREONL %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of coregistration in anatomical space (non-linear stereotaxic space) ; ');
+end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol  = cell([nb_subject 1]);
 files_in_tmp.mask = cell([nb_subject 1]);
@@ -428,11 +564,18 @@ files_out_tmp.fig_coregister  = [opt.folder_out filesep 'quality_control' filese
 files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'anat_tab_qc_coregister_stereonl.csv'];
 opt_tmp                       = opt.qc_coregister;
 opt_tmp.labels_subject        = list_subject;
-pipeline = psom_add_job(pipeline,['qc_coregister_group_anat_stereonl','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,'qc_coregister_group_anat_stereonl','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GROUP QC COREGISTER FUNC STEREOLIN %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of coregistration in functional space (linear stereotaxic space) ; ');
+end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol  = cell([nb_subject 1]);
 files_in_tmp.mask = cell([nb_subject 1]);
@@ -448,11 +591,18 @@ files_out_tmp.fig_coregister  = [opt.folder_out filesep 'quality_control' filese
 files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_tab_qc_coregister_stereolin.csv'];
 opt_tmp                       = opt.qc_coregister;
 opt_tmp.labels_subject        = list_subject;
-pipeline = psom_add_job(pipeline,['qc_coregister_group_func_stereolin','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,'qc_coregister_group_func_stereolin','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% GROUP QC COREGISTER FUNC STEREONL %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of coregistration in functional space (non-linear stereotaxic space) ; ');
+end
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol  = cell([nb_subject 1]);
 files_in_tmp.mask = cell([nb_subject 1]);
@@ -468,7 +618,75 @@ files_out_tmp.fig_coregister  = [opt.folder_out filesep 'quality_control' filese
 files_out_tmp.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_coregistration' filesep 'func_tab_qc_coregister_stereonl.csv'];
 opt_tmp                       = opt.qc_coregister;
 opt_tmp.labels_subject        = list_subject;
-pipeline = psom_add_job(pipeline,['qc_coregister_group_func_stereonl','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+pipeline = psom_add_job(pipeline,'qc_coregister_group_func_stereonl','niak_brick_qc_coregister',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% GROUP QC MOTION_CORRECTION %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of motion correction ; ');
+end
+clear files_in_tmp files_out_tmp opt_tmp
+for num_s = 1:nb_subject
+    subject = list_subject{num_s};
+    files_in_tmp.(subject).tab_coregister_ind    = pipeline.(['qc_motion_' subject]).files_out.tab_coregister;
+    files_in_tmp.(subject).motion_parameters_ind = pipeline.(['qc_motion_' subject]).files_in.motion_parameters;
+end
+files_out_tmp.fig_coregister_group  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_coregister_between_runs_group.pdf'];
+files_out_tmp.tab_coregister_group  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_coregister_between_runs_group.csv'];
+files_out_tmp.fig_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.pdf'];
+files_out_tmp.tab_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.csv'];
+opt_tmp.flag_test                   = true;
+pipeline = psom_add_job(pipeline,'qc_motion_group','niak_brick_qc_motion_correction_group',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
+%%%%%%%%%%%%%%%%%%%%
+%% Region Growing %%
+%%%%%%%%%%%%%%%%%%%%
+if ~opt.region_growing.flag_skip
+    if flag_verbose
+        t1 = clock;
+        fprintf('Generating pipeline for the region growing ; ');
+    end
+    clear files_in_tmp files_out_tmp opt_tmp
+    opt_tmp                     = rmfield(opt.region_growing,'flag_skip');
+    opt_tmp.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
+    opt_tmp.flag_test           = true;
+    opt_tmp.labels              = list_subject;
+    k=0;
+    for num_s = 1:nb_subject
+        subject = list_subject{num_s};
+
+        for num_session = 1:size(list_session{num_s})
+            session = list_session{num_s}{num_session};
+
+            for num_r = 1:size(files_in.(subject).fmri.(session),2)
+                k=k+1;
+                run_name = ['run' num2str(num_r)];
+                files_in_tmp.fmri{k}        = pipeline.(['smooth_' subject '_' session '_' run_name]).files_out;
+                [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in_tmp.fmri{k});
+                opt_tmp.labels{k} = name_f(6:end);
+            end
+        end
+    end
+
+    files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
+    files_in_tmp.areas          = pipeline.resamp_aal.files_out;
+    files_in_tmp.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
+
+    [pipeline_rg] = niak_pipeline_region_growing(files_in_tmp,opt_tmp);
+    [pipeline] = psom_merge_pipeline(pipeline,pipeline_rg);
+
+    if flag_verbose        
+        fprintf('%1.2f sec\n',etime(clock,t1));
+    end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%
