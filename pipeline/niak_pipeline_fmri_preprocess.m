@@ -445,7 +445,7 @@ opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
 gb_list_fields    = {'subject' , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {struct()  , true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp ,          opt_tmp  };
+gb_list_defaults  = {struct()  , true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp          };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
@@ -492,6 +492,9 @@ for num_s = 1:nb_subject
     opt_ind = rmfield(opt,'subject');
     if isfield(opt.subject,'label')
         for num_e = 1:length(opt.subject)
+            if ~isfield(opt.subject(num_e),'type')||isempty(opt.subject(num_e).type)
+                opt.subject(num_e).type = 'exact';
+            end
             switch opt.subject(num_e).type
                 case 'exact'
                     if strcmp(opt.subject(num_e).label,subject)

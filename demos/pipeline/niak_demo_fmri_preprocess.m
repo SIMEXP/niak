@@ -22,7 +22,7 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %           process the pipeline.
 %
 %       FLAG_REGION_GROWING
-%           (boolean, default true) if this flag is true, the region growing
+%           (boolean, default false) if this flag is true, the region growing
 %           step of the pipeline will be performed.
 %
 %       SIZE_OUTPUT 
@@ -101,7 +101,7 @@ end
 default_psom.path_logs = '';
 gb_name_structure = 'opt';
 gb_list_fields    = {'flag_region_growing' , 'size_output'     , 'flag_test' , 'psom'       };
-gb_list_defaults  = {true                  , 'quality_control' , false       , default_psom };
+gb_list_defaults  = {false                 , 'quality_control' , false       , default_psom };
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -172,6 +172,8 @@ opt.t1_preprocess.nu_correct.arg = '-distance 50'; % Parameter for non-uniformit
 
 % T1-T2 coregistration (niak_brick_anat2func)
 opt.anat2func.init = 'identity'; % The 'center' option usually does more harm than good. Use it only if you have very big misrealignement between the two images (say, > 2 cm).
+opt.subject.label = 'subject1';
+opt.subject.param.anat2func.init = 'center'; % Just to show case how to specify a different parameter for one subject
 
 % Temporal filtering (niak_brick_time_filter)
 opt.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
