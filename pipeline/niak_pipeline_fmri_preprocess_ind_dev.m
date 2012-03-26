@@ -1,8 +1,8 @@
 function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % Run a pipeline to preprocess individual fMRI datasets. 
 % The flowchart of the pipeline is flexible (steps can be skipped using 
-% flags), and the various steps of the analysis can be further customized 
-% by changing virtually any parameter.
+% flags), and the analysis can be further customized by changing the 
+% parameters of any step.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS_IND(FILES_IN,OPT)
@@ -308,7 +308,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
 % operationnelle, Universite de Montreal, 2010.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
 
@@ -516,9 +516,9 @@ end
 clear files_in_tmp files_out_tmp opt_tmp
 name_job_t1               = ['t1_preprocess_',label];
 name_job_pve              = ['pve_',label];
-files_in_tmp.vol          = pipeline.(name_job_t1).anat_nuc_stereolin;
-files_in_tmp.mask         = pipeline.(name_job_t1).mask_stereolin;
-files_in_tmp.segmentation = pipeline.(name_job_t1).classify;
+files_in_tmp.vol          = pipeline.(name_job_t1).files_out.anat_nuc_stereolin;
+files_in_tmp.mask         = pipeline.(name_job_t1).files_out.mask_stereolin;
+files_in_tmp.segmentation = pipeline.(name_job_t1).files_out.classify;
 files_out_tmp.pve_wm      = [opt.folder_anat 'anat_' label '_pve_wm_stereolin'   ext_f];
 files_out_tmp.pve_gm      = [opt.folder_anat 'anat_' label '_pve_gm_stereolin'   ext_f];
 files_out_tmp.pve_csf     = [opt.folder_anat 'anat_' label '_pve_csf_stereolin'  ext_f];
@@ -682,8 +682,8 @@ for num_s = 1:nb_session
         name_job               = ['time_filter_',label,'_',session,'_',run];        
         files_in_tmp.dc_high   = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_high;
         files_in_tmp.dc_low    = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_low;
-        files_in_tmp.mask_vent = pipeline.(['mask_corsica_' label]).mask_vent_ind;
-        files_in_tmp.mask_wm   = pipeline.(['mask_corsica_' label]).white_matter_ind;
+        files_in_tmp.mask_vent = pipeline.(['mask_corsica_' label]).files_out.mask_vent_ind;
+        files_in_tmp.mask_wm   = pipeline.(['mask_corsica_' label]).files_out.white_matter_ind;
 
 %          files_out_tmp.dc_high  = '';
 %          files_out_tmp.dc_low   = '';                                                                        
