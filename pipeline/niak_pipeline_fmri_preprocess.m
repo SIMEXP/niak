@@ -517,7 +517,9 @@ for num_s = 1:nb_subject
     opt_ind.label = subject;    
     opt_ind.flag_test = true;
     
-    pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
+     opt_ind.flag_test = true;
+    
+     pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind_dev(files_in.(subject),opt_ind));
 
     if flag_verbose        
         fprintf('%1.2f sec\n',etime(clock,t1));
@@ -685,7 +687,7 @@ if ~opt.region_growing.flag_skip
         end
     end
 
-    files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
+%     files_in_tmp.areas_in       = pipeline.resamp_aal.files_in.source;
     files_in_tmp.areas          = pipeline.resamp_aal.files_out;
     files_in_tmp.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 

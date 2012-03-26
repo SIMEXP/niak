@@ -229,11 +229,11 @@ if isempty(files_out.beta_low)
 end
 
 if isempty(files_out.dc_high)
-    files_out.dc_high = cat(2,opt.folder_out,filesep,name_f,'_dc_high.dat');
+    files_out.dc_high = cat(2,opt.folder_out,filesep,name_f,'_dc_high.mat');
 end
 
 if isempty(files_out.dc_low)
-    files_out.dc_low = cat(2,opt.folder_out,filesep,name_f,'_dc_low.dat');
+    files_out.dc_low = cat(2,opt.folder_out,filesep,name_f,'_dc_low.mat');
 end
 
 
@@ -381,15 +381,18 @@ if ~strcmp(files_out.dc_low,'gb_niak_omitted')
     if flag_verbose
         fprintf('Writting the (low frequency) discrete cosines in %s ...\n',files_out.dc_low);
     end
-    fid = fopen(files_out.dc_low,'w');    
-    fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_low) ; extras.freq_dc_low']);
-    fprintf(fid,'\n');
-    
-    for num_l = 1:size(extras.tseries_dc_low,1)
-        fprintf(fid,'%1.5f ',extras.tseries_dc_low(num_l,:));
-        fprintf(fid,'\n');
-    end
-    fclose(fid);
+%     fid = fopen(files_out.dc_low,'w');    
+%     fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_low) ; extras.freq_dc_low']);
+%     fprintf(fid,'\n');
+%     
+%     for num_l = 1:size(extras.tseries_dc_low,1)
+%         fprintf(fid,'%1.5f ',extras.tseries_dc_low(num_l,:));
+%         fprintf(fid,'\n');
+%     end
+%     fclose(fid);
+    freq_dc_low = extras.freq_dc_low;
+    tseries_dc_low = extras.tseries_dc_low;
+    save(files_out.dc_low,'freq_dc_low','tseries_dc_low');
 end
 
 %% Writting the discrete cosine basis for high frequencies
@@ -397,15 +400,18 @@ if ~strcmp(files_out.dc_high,'gb_niak_omitted')
     if flag_verbose
         fprintf('Writting the (high frequency) discrete cosines in %s ...\n',files_out.dc_high);
     end
-    fid = fopen(files_out.dc_high,'w');    
-    fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_high)'; extras.freq_dc_high']);
-    fprintf(fid,'\n');
-    
-    for num_l = 1:size(extras.tseries_dc_high,1)
-        fprintf(fid,'%1.5f ',extras.tseries_dc_high(num_l,:));
-        fprintf(fid,'\n');
-    end
-    fclose(fid);
+%     fid = fopen(files_out.dc_high,'w');    
+%     fprintf(fid,'Component %i (frequency %1.5f); ',[1:length(extras.freq_dc_high)'; extras.freq_dc_high']);
+%     fprintf(fid,'\n');
+%     
+%     for num_l = 1:size(extras.tseries_dc_high,1)
+%         fprintf(fid,'%1.5f ',extras.tseries_dc_high(num_l,:));
+%         fprintf(fid,'\n');
+%     end
+%     fclose(fid);
+    freq_dc_high = extras.freq_dc_high;
+    tseries_dc_high = extras.tseries_dc_high;
+    save(files_out.dc_high,'freq_dc_high','tseries_dc_high');
 end
 
 %% Writting the relative variance for low frequencies

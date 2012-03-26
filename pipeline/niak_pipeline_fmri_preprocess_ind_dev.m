@@ -29,6 +29,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       attributed a selection score of 0, i.e. will *not* be identified as
 %       physiological noise.
 %
+%   REGRESS_CONFOUNDS (optional)
+%       Take a .mat file with the variable 'covar'(TxK). the preprossesing
+%       will regress the confounds specified in the file.
+%
 % OPT   
 %   (structure) with the following fields : 
 %
@@ -370,6 +374,11 @@ if ~isfield(files_in,'component_to_keep')
     files_in.component_to_keep = 'gb_niak_omitted';
 end
 
+if ~isfield(files_in,'custom_confounds')
+    files_in.custom_confounds = [];
+end
+
+
 %% Options
 default_psom.path_logs = '';
 opt_tmp.flag_test = false;
@@ -679,21 +688,24 @@ for num_s = 1:nb_session
     for num_r = 1:nb_run
         run = sprintf('run%i',num_r);
         clear opt_tmp files_in_tmp files_out_tmp
-        name_job               = ['time_filter_',label,'_',session,'_',run];        
-        files_in_tmp.dc_high   = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_high;
-        files_in_tmp.dc_low    = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_low;
-        files_in_tmp.mask_vent = pipeline.(['mask_corsica_' label]).files_out.mask_vent_ind;
-        files_in_tmp.mask_wm   = pipeline.(['mask_corsica_' label]).files_out.white_matter_ind;
+        name_job                    = ['regress_confounds_',label,'_',session,'_',run];
+        files_in_tmp.fmri           = files_motion.motion_corrected.(session){num_r};
+        files_in_tmp.dc_high        = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_high;
+        files_in_tmp.dc_low         = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_low;
+        files_in_tmp.mask_vent      = pipeline.(['mask_corsica_' label]).files_out.mask_vent_ind;
+        files_in_tmp.mask_wm        = pipeline.(['mask_corsica_' label]).files_out.white_matter_ind;
+        files_in_tmp.mask_brain     = pipeline.(name_job_qc_motion).files_out.mask_group;
+        files_in_tmp.motion_param   = pipeline.(['motion_parameters_' label '_' session '_' run]).files_out;
+        files_in_tmp.custom_param   = files_in.custom_confounds;
 
-%          files_out_tmp.dc_high  = '';
-%          files_out_tmp.dc_low   = '';                                                                        
-%          opt_tmp                = opt.time_filter;
-%          opt_tmp.folder_out     = [opt.folder_intermediate 'time_filter' filesep];
-%          pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
-%          files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
-%          if strcmp(size_output,'quality_control')
-%            pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
-%          end    
+        opt_tmp.folder_out          = [opt.folder_intermediate 'regress_confounds' filesep];
+        files_out_tmp.filtered_data = [opt_tmp.folder_out filesep 'fmri_' label '_' session '_' run '_cor' ext_f]; 
+        files_out_tmp.confounds     = [opt_tmp.folder_out filesep 'confounds_gs_' label '_' session '_' run '_cor.mat']; 
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_regress_confounds',files_in_tmp,files_out_tmp,opt_tmp);    
+        files_tf.(session){num_r}   = pipeline.(name_job).files_out.filtered_data;               
+        if strcmp(size_output,'quality_control')
+          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
+        end    
     end
 end
 
