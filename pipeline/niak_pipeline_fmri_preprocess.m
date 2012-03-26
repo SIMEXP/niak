@@ -129,6 +129,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           corrections. The '-distance' option sets the N3 spline distance 
 %           in mm (suggested values: 200 for 1.5T scan; 50 for 3T scan).
 %
+%   PVE
+%       (structure) option for the estimation of partial volume effects of 
+%       tissue types (grey matter, white matter, cerbrospinal fluid) on the 
+%       anatomical scan.
+%
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
 %       between T1 and T2).
@@ -272,6 +277,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           image (and many more anatomical stuff such as brain masking and
 %           CSF/GM/WM classification)
 %           See NIAK_BRICK_T1_PREPROCESS and OPT.T1_PREPROCESS
+%           See NIAK_BRICK_PVE and OPT.PVE
 %       5.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
 %           See NIAK_BRICK_ANAT2FUNC and OPT.ANAT2FUNC
@@ -444,8 +450,8 @@ default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'subject' , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {struct()  , true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp          };
+gb_list_fields    = {'subject' , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+gb_list_defaults  = {struct()  , true           , ''              , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp          };
 niak_set_defaults
 opt.psom(1).path_logs = [opt.folder_out 'logs' filesep];
 
