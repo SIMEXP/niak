@@ -155,6 +155,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           corrections. The '-distance' option sets the N3 spline distance 
 %           in mm (suggested values: 200 for 1.5T scan; 50 for 3T scan).
 %
+%   PVE
+%       (structure) option for the estimation of partial volume effects of 
+%       tissue types (grey matter, white matter, cerbrospinal fluid) on the 
+%       anatomical scan.
+%
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
 %       between T1 and T2).
@@ -254,6 +259,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           image (and many more anatomical stuff such as brain masking and
 %           CSF/GM/WM classification)
 %           See NIAK_BRICK_T1_PREPROCESS and OPT.T1_PREPROCESS
+%           See NIAK_BRICK_PVE and OPT.PVE
 %       5.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
 %           See NIAK_BRICK_ANAT2FUNC and OPT.ANAT2FUNC
@@ -369,8 +375,8 @@ default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp};
+gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp};
 niak_set_defaults
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
@@ -496,6 +502,29 @@ files_out_tmp.classify                = [opt.folder_anat 'anat_' label '_classif
 opt_tmp                               = opt.t1_preprocess;
 opt_tmp.folder_out                    = opt.folder_anat;
 pipeline = psom_add_job(pipeline,name_job_t1,'niak_brick_t1_preprocess',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
+%%%%%%%%%
+%% PVE %%
+%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('PVE (');
+end
+clear files_in_tmp files_out_tmp opt_tmp
+name_job_t1               = ['t1_preprocess_',label];
+name_job_pve              = ['pve_',label];
+files_in_tmp.vol          = pipeline.(name_job_t1).anat_nuc_stereolin;
+files_in_tmp.mask         = pipeline.(name_job_t1).mask_stereolin;
+files_in_tmp.segmentation = pipeline.(name_job_t1).classify;
+files_out_tmp.pve_wm      = [opt.folder_anat 'anat_' label '_pve_wm_stereolin'   ext_f];
+files_out_tmp.pve_gm      = [opt.folder_anat 'anat_' label '_pve_gm_stereolin'   ext_f];
+files_out_tmp.pve_csf     = [opt.folder_anat 'anat_' label '_pve_csf_stereolin'  ext_f];
+files_out_tmp.pve_disc    = [opt.folder_anat 'anat_' label '_pve_disc_stereolin' ext_f];
+opt_tmp                   = opt.pve;
+pipeline = psom_add_job(pipeline,name_job_pve,'niak_brick_pve',files_in_tmp,files_out_tmp,opt_tmp);
 if flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
