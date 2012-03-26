@@ -224,12 +224,12 @@ hdr.details.intent_name = deblank(fread(fid,16,'*char')');
 hdr.details.magic       = deblank(fread(fid,4,'*char')');
 fseek(fid,253,'bof');
 hdr.details.originator  = fread(fid, 5,'int16')';
+
 %%  For Analyze data format
 if ~strcmp(hdr.details.magic, 'n+1') && ~strcmp(hdr.details.magic, 'ni1')
     hdr.details.qform_code = 0;
     hdr.details.sform_code = 0;
 end
-
 fclose(fid);
 
 %% Check for the existence of a .mat file, in case this is ANALYZE 7.5
@@ -248,9 +248,9 @@ if exist(file_mat)
         warning('A mat file %s was found but the affine transform could not be parsed',file_mat);
     end
 end
-    
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% converting details into the informative part of the reader %%
+%% converting details into the informative part of the header %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% file_name
@@ -323,20 +323,21 @@ if length(hdr.details.pixdim)>=5
 end
 
 %% hdr.info.mat
-if length(hdr.details.srow_x)~=4
-    hdr.detais.srow_x = [hdr.details.pixdim(2) 0 0 -hdr.details.dim(2)*hdr.details.pixdim(2)];
-end
-if length(hdr.details.srow_y)~=4
-    hdr.detais.srow_y = [hdr.details.pixdim(3) 0 0 -hdr.details.dim(3)*hdr.details.pixdim(3)];
-end
-if length(hdr.details.srow_z)~=4
-    hdr.detais.srow_z = [hdr.details.pixdim(4) 0 0 -hdr.details.dim(4)*hdr.details.pixdim(4)];
-end
-
-if any(hdr.details.srow_x)&&any(hdr.details.srow_y)&&any(hdr.details.srow_z)
+if (hdr.details.qform_code == 0) && (hdr.details.sform_code == 0)
+    %% This is analyze 7.5
+    hdr.details.sform_code = 1;
+    if length(hdr.details.srow_x)<4
+        hdr.details.srow_x = [hdr.details.pixdim(2) 0 0 (1-hdr.details.originator(2))*hdr.details.pixdim(2)];
+        hdr.details.srow_y = [0 hdr.details.pixdim(3) 0 (1-hdr.details.originator(3))*hdr.details.pixdim(3)];
+        hdr.details.srow_z = [0 0 hdr.details.pixdim(4) (1-hdr.details.originator(4))*hdr.details.pixdim(4)];
+    end
+    hdr.info.mat = [hdr.details.srow_x ; hdr.details.srow_y ; hdr.details.srow_z ; [0 0 0 1]];
+elseif (hdr.details.sform_code > 0)
+    %% The volume coordinates are specified through sform
     hdr.info.mat = [hdr.details.srow_x ; hdr.details.srow_y ; hdr.details.srow_z ; [0 0 0 1]];
 else
-    hdr.info.mat = [[diag(hdr.info.voxel_size) [0;0;0]]; [0 0 0 1]];
+    %% The volume coordinates are specified through qform
+    hdr.info.mat = niak_quat2mat(hdr.details);
 end
 
 %% hdr.info.dimension_order
@@ -344,4 +345,3 @@ hdr.info.dimension_order = '';
 
 %% hdr.info.history
 hdr.info.history = hdr.details.descrip;
-

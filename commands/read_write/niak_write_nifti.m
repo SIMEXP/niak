@@ -87,18 +87,22 @@ end
 
 %% Setting up default values for the header
 gb_name_structure = 'hdr';
-gb_list_fields = {'file_name','type','info','details','flag_zip'};
-gb_list_defaults = {NaN,'nii',struct(),struct([]),0};
+gb_list_fields    = { 'file_name' , 'type' , 'info'   , 'details'  , 'flag_zip' };
+gb_list_defaults  = { NaN         , 'nii'  , struct() , struct([]) , false      };
 niak_set_defaults
 
 %% Setting up default values for the 'info' part of the header
 hdr.info.dimensions = size(vol);
 gb_name_structure = 'hdr.info';
-gb_list_fields = {'file_parent','precision','voxel_size','mat','dimension_order','tr','history','machine','dimensions'};
-gb_list_defaults = {'','float',[1 1 1],[eye(3) ones([3 1]) ; zeros([1 3]) 1],'xyzt','',1,'','native',size(vol)};
+gb_list_fields    = { 'file_parent' , 'precision' , 'voxel_size' , 'mat'                                 , 'dimension_order' , 'tr' , 'history' , 'machine', 'dimensions' };
+gb_list_defaults  = { ''            , 'double'    , [1 1 1]      , [eye(3) ones([3 1]) ; zeros([1 3]) 1] , 'xyzt'            , 1    , ''        , 'native' , size(vol)    };
 niak_set_defaults
 
-%% Seting up the name of the header
+%% Avoid trouble with type : convert everything to double. Ugly but safe.
+hdr.info.type = 'double';
+vol = double(vol);
+
+%% Setting up the name of the header
 file_name = hdr.file_name;
 [path_f,name_f,ext_f] = fileparts(file_name);
 if isempty(path_f)
@@ -145,6 +149,7 @@ end
 hdr.details.srow_x = hdr.info.mat(1,1:4);
 hdr.details.srow_y = hdr.info.mat(2,1:4);
 hdr.details.srow_z = hdr.info.mat(3,1:4);
+hdr.details.sform_code = 1;
 
 switch hdr.info.precision
     case 'uint8'

@@ -1,8 +1,4 @@
 function [rot,tsl] = niak_transf2param(transf)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_TRANSF2PARAM
-%
 % Convert a lsq6 transformation (3 rotations, 3 translations) from the standard
 % 4*4 matrix array (y=M*x+T) to the x/y/z rotation and translation
 % parameters.
