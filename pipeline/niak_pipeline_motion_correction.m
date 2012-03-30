@@ -349,6 +349,32 @@ for num_s = 1:nb_session
     end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% QC variance explained %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    for num_r = 1:nb_run(num_s) 
+        if (num_s==1)&&(num_r==1)
+             [path_f,name_f,ext_f] = niak_fileparts(files_in.(session){num_r});
+        end
+        clear files_in_tmp files_out_tmp opt_tmp
+        name_job        = sprintf('qc_motion_var_exp_%s_%s_run%i',label,session,num_r);
+        
+        if flag_skip
+            files_in_tmp{1} = pipeline.(sprintf('motion_copy_%s_%s_run%i',label,session_ref,run_ref)).files_out;
+        else
+            files_in_tmp{1} = pipeline.(sprintf('motion_resample_%s_%s_run%i',label,session_ref,run_ref)).files_out;
+        end
+        files_in_tmp{2} = files_in.(session){num_r};
+        files_out_tmp   = [opt.folder_out name_job ext_f];
+        
+        opt_tmp.operation = 'var1 = sum(vol_in{1},4);var2 = sum(vol_in{2},4);';
+        opt_tmp.operation = [opt_tmp.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>2);']; 
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
+    end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%
 %% Run the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%

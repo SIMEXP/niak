@@ -746,6 +746,21 @@ if flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% QC variance explained %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear files_in_tmp files_out_tmp opt_tmp
+name_job        = sprintf('qc_corsica_var_exp_%s_%s_run%i',label,session,num_r);
+files_in_tmp{1} = files_co;
+files_in_tmp{2} = psom_files2cell(files_tf);
+
+files_out_tmp   = [opt.folder_out name_job ext_f];
+
+opt_tmp.operation = 'var1 = sum(vol_in{1},4);var2 = sum(vol_in{2},4);';
+opt_tmp.operation = [opt_tmp.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>2);']; 
+pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Spatial resampling in stereotaxic space %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

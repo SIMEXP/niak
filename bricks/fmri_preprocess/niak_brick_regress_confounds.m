@@ -344,34 +344,11 @@ x = [];
 %% Brain masking:
 
 % Doing PCA
-
-%% version of FELIX for the PCA
-opt_pca.iscov = opt.iscov;
-
-if isempty(opt.X_remove)
-   opt_pca.X_remove = ones(numframes,1);
-else
-   opt_pca.X_remove = opt.X_remove;
-end
-if isempty(opt.X_interest)
-   opt_pca.X_interest = eye(numframes);
-else
-   opt_pca.X_interest = opt.X_interest;
-end
-opt_pca.exclude = opt.exclude;
-
-if opt.flag_verbose
-    fprintf('Doing Principal Components Analysis ...\n');
-end  
-[eigenvariates,eigenvalues] = niak_pca_fmristat(vol,mask,opt_pca);
-
-%% this is my proposition 
 space = size(vol,1)*size(vol,2)*size(vol,3);
 t_size = size(vol,4);
 vol_matrix = reshape(vol,t_size,space);
 mask_vec = reshape(mask,1,space);
-[eig_val,eig_vec,weights] = niak_pca((vol_matrix.*repmat(mask_vec,t_size,1))');
-%% end proposition
+[eigenvalues,eigenvariates,weights] = niak_pca((vol_matrix.*repmat(mask_vec,t_size,1))');
 
 % Computing Spatial Average
 tot = sum(mask(:));

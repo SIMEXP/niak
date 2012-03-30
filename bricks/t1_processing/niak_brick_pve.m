@@ -676,9 +676,7 @@ function seg = icm_trans(img,brain_mask,lim,beta,voxel_size,class_params,flag_ve
 
 	  if brain_mask(x - 1,y - 1,z - 1) > 0
 
-	    seg_tmp = seg((x - 1):(x + 1),(y - 1):(y + 1),(z - 1):(z + ...
-
-		 1)) + 1; 
+	    seg_tmp = seg((x - 1):(x + 1),(y - 1):(y + 1),(z - 1):(z + 1)) + 1; 
 
             cval = squeeze(cvalpdf((x - seglim(1,1) + 1),(y - seglim(2,1) + 1),(z - seglim(3,1) + 1),:))'.*exp(beta*(sum(d2.*inter(seg_tmp(:),2:7))));
 
