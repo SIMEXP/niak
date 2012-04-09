@@ -126,9 +126,10 @@ end
 if ~isfield(files_out,'qc_motion') || isempty(files_out.qc_motion)
     files_out.qc_motion = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_motion',ext_f);
 end
-
-if ~isfield(files_out,'qc_customparam') || isempty(files_out.qc_customparam)
-    files_out.qc_customparam = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_customparam',ext_f);
+if isfield(files_in,'custom_param') && ~isempty(files_in.custom_param)
+    if ~isfield(files_out,'qc_customparam') || isempty(files_out.qc_customparam)
+        files_out.qc_customparam = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_customparam',ext_f);
+    end
 end
 
 if ~isfield(files_out,'qc_gse') || isempty(files_out.qc_gse)
@@ -362,9 +363,9 @@ spatial_av = spatial_av/tot;
 spatial_av = spatial_av(:);
 
 % Determining PC to be removed
-Z = opt_pca.X_remove;
+Z = ones(length(spatial_av),1);
 spatial_av_remove = spatial_av - Z*(pinv(Z)*spatial_av);
-spatial_av_remove = spatial_av_remove(keep);
+% spatial_av_remove = spatial_av_remove(keep);
 spatial_av_remove = spatial_av_remove/norm(spatial_av_remove);
 % tmp = spatial_av_remove'*V;
 tmp = spatial_av_remove'*eigenvariates;
