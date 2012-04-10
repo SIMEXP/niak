@@ -519,7 +519,7 @@ for num_s = 1:nb_subject
     
      opt_ind.flag_test = true;
     
-     pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind_dev(files_in.(subject),opt_ind));
+     pipeline = psom_merge_pipeline(pipeline,niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind));
 
     if flag_verbose        
         fprintf('%1.2f sec\n',etime(clock,t1));

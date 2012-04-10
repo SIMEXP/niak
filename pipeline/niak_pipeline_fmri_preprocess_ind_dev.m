@@ -417,6 +417,8 @@ opt.psom.path_logs = opt.folder_logs;
 %% Initialization of the pipeline 
 pipeline = struct([]);
 
+
+%niak_log_preprocessing(opt,opt.folder_out);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% slice-timing correction %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%

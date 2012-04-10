@@ -1,8 +1,8 @@
 function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % Run a pipeline to preprocess individual fMRI datasets. 
 % The flowchart of the pipeline is flexible (steps can be skipped using 
-% flags), and the various steps of the analysis can be further customized 
-% by changing virtually any parameter.
+% flags), and the analysis can be further customized by changing the 
+% parameters of any step.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS_IND(FILES_IN,OPT)
@@ -28,6 +28,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       correlation with each signal of interest will be automatically
 %       attributed a selection score of 0, i.e. will *not* be identified as
 %       physiological noise.
+%
+%   REGRESS_CONFOUNDS (optional)
+%       Take a .mat file with the variable 'covar'(TxK). the preprossesing
+%       will regress the confounds specified in the file.
 %
 % OPT   
 %   (structure) with the following fields : 
@@ -155,6 +159,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           corrections. The '-distance' option sets the N3 spline distance 
 %           in mm (suggested values: 200 for 1.5T scan; 50 for 3T scan).
 %
+%   PVE
+%       (structure) option for the estimation of partial volume effects of 
+%       tissue types (grey matter, white matter, cerbrospinal fluid) on the 
+%       anatomical scan.
+%
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
 %       between T1 and T2).
@@ -254,6 +263,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           image (and many more anatomical stuff such as brain masking and
 %           CSF/GM/WM classification)
 %           See NIAK_BRICK_T1_PREPROCESS and OPT.T1_PREPROCESS
+%           See NIAK_BRICK_PVE and OPT.PVE
 %       5.  Coregistration of the anatomical volume with the mean 
 %           functional volume.
 %           See NIAK_BRICK_ANAT2FUNC and OPT.ANAT2FUNC
@@ -302,7 +312,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
 % operationnelle, Universite de Montreal, 2010.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
 
@@ -364,13 +374,18 @@ if ~isfield(files_in,'component_to_keep')
     files_in.component_to_keep = 'gb_niak_omitted';
 end
 
+if ~isfield(files_in,'custom_confounds')
+    files_in.custom_confounds = [];
+end
+
+
 %% Options
 default_psom.path_logs = '';
 opt_tmp.flag_test = false;
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 gb_name_structure = 'opt';
-gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp};
+gb_list_fields    = {'label' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'       , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+gb_list_defaults  = {NaN     , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , default_psom , opt_tmp        , opt_tmp             , opt_tmp                    , opt_tmp         , opt_tmp , opt_tmp     , opt_tmp         , opt_tmp   , opt_tmp       , opt_tmp        , opt_tmp      , opt_tmp};
 niak_set_defaults
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
@@ -402,6 +417,8 @@ opt.psom.path_logs = opt.folder_logs;
 %% Initialization of the pipeline 
 pipeline = struct([]);
 
+
+%niak_log_preprocessing(opt,opt.folder_out);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% slice-timing correction %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -500,6 +517,29 @@ if flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
+%%%%%%%%%
+%% PVE %%
+%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('PVE (');
+end
+clear files_in_tmp files_out_tmp opt_tmp
+name_job_t1               = ['t1_preprocess_',label];
+name_job_pve              = ['pve_',label];
+files_in_tmp.vol          = pipeline.(name_job_t1).files_out.anat_nuc_stereolin;
+files_in_tmp.mask         = pipeline.(name_job_t1).files_out.mask_stereolin;
+files_in_tmp.segmentation = pipeline.(name_job_t1).files_out.classify;
+files_out_tmp.pve_wm      = [opt.folder_anat 'anat_' label '_pve_wm_stereolin'   ext_f];
+files_out_tmp.pve_gm      = [opt.folder_anat 'anat_' label '_pve_gm_stereolin'   ext_f];
+files_out_tmp.pve_csf     = [opt.folder_anat 'anat_' label '_pve_csf_stereolin'  ext_f];
+files_out_tmp.pve_disc    = [opt.folder_anat 'anat_' label '_pve_disc_stereolin' ext_f];
+opt_tmp                   = opt.pve;
+pipeline = psom_add_job(pipeline,name_job_pve,'niak_brick_pve',files_in_tmp,files_out_tmp,opt_tmp);
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %% T1-T2 coregistration %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -585,36 +625,6 @@ if flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%
-%% temporal filtering %%
-%%%%%%%%%%%%%%%%%%%%%%%%
-if flag_verbose
-    t1 = clock;
-    fprintf('time filter (');
-end
-for num_s = 1:nb_session
-    session = list_session{num_s};
-    nb_run = length(files_in.fmri.(session));
-    for num_r = 1:nb_run
-        run = sprintf('run%i',num_r);
-        clear opt_tmp files_in_tmp files_out_tmp
-        name_job                     = ['time_filter_',label,'_',session,'_',run];        
-        files_in_tmp                 = files_motion.motion_corrected.(session){num_r};
-        files_out_tmp.filtered_data  = '';                                    
-        opt_tmp                      = opt.time_filter;
-        opt_tmp.folder_out           = [opt.folder_intermediate 'time_filter' filesep];
-        pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
-        files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
-        if strcmp(size_output,'quality_control')
-          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
-        end    
-    end
-end
-
-if flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
 %%%%%%%%%%%%%%%%%%%
 %% CORSICA MASKS %%
 %%%%%%%%%%%%%%%%%%%
@@ -635,6 +645,75 @@ files_out_tmp.mask_stem_ind     = [opt.folder_qc 'corsica' filesep label '_mask_
 files_out_tmp.white_matter_ind  = [opt.folder_qc 'corsica' filesep label '_mask_wm_nativefunc' ext_f];
 opt_tmp.flag_test = false;
 pipeline = psom_add_job(pipeline,name_job_mask_corsica,'niak_brick_mask_corsica',files_in_tmp,files_out_tmp,opt_tmp);
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% temporal filtering %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('time filter (');
+end
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    nb_run = length(files_in.fmri.(session));
+    for num_r = 1:nb_run
+        run = sprintf('run%i',num_r);
+        clear opt_tmp files_in_tmp files_out_tmp
+        name_job               = ['time_filter_',label,'_',session,'_',run];        
+        files_in_tmp           = files_motion.motion_corrected.(session){num_r};
+        files_out_tmp.dc_high  = '';
+        files_out_tmp.dc_low   = '';                                                                        
+        opt_tmp                = opt.time_filter;
+        opt_tmp.folder_out     = [opt.folder_intermediate 'time_filter' filesep];
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_time_filter',files_in_tmp,files_out_tmp,opt_tmp);    
+        files_tf.(session){num_r}    = pipeline.(name_job).files_out.filtered_data;               
+        if strcmp(size_output,'quality_control')
+          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
+        end    
+    end
+end
+
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Regress Confounds %%
+%%%%%%%%%%%%%%%%%%%%%%%
+if flag_verbose
+    t1 = clock;
+    fprintf('regress confounds (');
+end
+for num_s = 1:nb_session
+    session = list_session{num_s};
+    nb_run = length(files_in.fmri.(session));
+    for num_r = 1:nb_run
+        run = sprintf('run%i',num_r);
+        clear opt_tmp files_in_tmp files_out_tmp
+        name_job                    = ['regress_confounds_',label,'_',session,'_',run];
+        files_in_tmp.fmri           = files_motion.motion_corrected.(session){num_r};
+        files_in_tmp.dc_high        = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_high;
+        files_in_tmp.dc_low         = pipeline.(['time_filter_',label,'_',session,'_',run]).files_out.dc_low;
+        files_in_tmp.mask_vent      = pipeline.(['mask_corsica_' label]).files_out.mask_vent_ind;
+        files_in_tmp.mask_wm        = pipeline.(['mask_corsica_' label]).files_out.white_matter_ind;
+        files_in_tmp.mask_brain     = pipeline.(name_job_qc_motion).files_out.mask_group;
+        files_in_tmp.motion_param   = pipeline.(['motion_parameters_' label '_' session '_' run]).files_out;
+        files_in_tmp.custom_param   = files_in.custom_confounds;
+
+        opt_tmp.folder_out          = [opt.folder_intermediate 'regress_confounds' filesep];
+        files_out_tmp.filtered_data = [opt_tmp.folder_out filesep 'fmri_' label '_' session '_' run '_cor' ext_f]; 
+        files_out_tmp.confounds     = [opt_tmp.folder_out filesep 'confounds_gs_' label '_' session '_' run '_cor.mat']; 
+        pipeline = psom_add_job(pipeline,name_job,'niak_brick_regress_confounds',files_in_tmp,files_out_tmp,opt_tmp);    
+        files_tf.(session){num_r}   = pipeline.(name_job).files_out.filtered_data;               
+        if strcmp(size_output,'quality_control')
+          pipeline = psom_add_clean(pipeline,['clean_' name_job],files_tf.(session){num_r});
+        end    
+    end
+end
+
+if flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 
 %%%%%%%%%%%%%
 %% CORSICA %%
@@ -668,6 +747,32 @@ end
 if flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% QC variance explained %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for num_r = 1:size(files_co,1)
+    [path,name,ext] = fileparts(files_co{num_r});
+    if isequal(ext,'.gz')
+        [tmp_path,name,ext] = fileparts(name);
+    end
+    run = sprintf('run%i',num_r);
+    clear files_in_tmp files_out_tmp opt_tmp
+    name_job          = sprintf('qc_corsica_var_exp_%s',name);
+    files_in_tmp{1}   = files_co{num_r};
+    tmp_tf = psom_files2cell(files_tf);
+    files_in_tmp{2}   = tmp_tf{num_r};
+
+    files_out_tmp     = [path name_job ext_f];
+
+    opt_tmp.operation = 'var1 = sum(vol_in{1},4);var2 = sum(vol_in{2},4);';
+    opt_tmp.operation = [opt_tmp.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>0);']; 
+    pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
+
+end
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Spatial resampling in stereotaxic space %%
