@@ -764,7 +764,7 @@ for num_r = 1:size(files_co,1)
     files_out_tmp     = [path name_job ext_f];
 
     opt_tmp.operation = 'var1 = sum(vol_in{1},4);var2 = sum(vol_in{2},4);';
-    opt_tmp.operation = [opt_tmp.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>2);']; 
+    opt_tmp.operation = [opt_tmp.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>0);']; 
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',files_in_tmp,files_out_tmp,opt_tmp);
 
 end

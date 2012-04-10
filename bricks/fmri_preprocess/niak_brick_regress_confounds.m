@@ -95,8 +95,8 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % THE SOFTWARE.
 
 %% OPTIONS
-list_fields    = { 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'exclude', 'iscov', 'X_remove' , 'X_interest' , 'pct_var_explained'};
-list_defaults  = { ''           , true          , false                , true     , true      , true             , false      , []       , true   , []         , []           , 0.95               };
+list_fields    = { 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { ''           , true          , true                , true     , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
