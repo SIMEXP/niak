@@ -1,8 +1,8 @@
-function fmri_s = niak_fmri2struct(fmri);
+function fmri_s = niak_fmri2struct(fmri,label,flag_cell);
 % Convert a set of fMRI files into a structure form
 %
 % SYNTAX:
-% FMRI_S = NIAK_FMRI2STRUCT(FMRI)
+% FMRI_S = NIAK_FMRI2STRUCT( FMRI , [LABEL] , [FLAG_CELL] )
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -15,13 +15,26 @@ function fmri_s = niak_fmri2struct(fmri);
 %       a default label is used (RUN1, RUN2, etc for runs).
 %       If a fmri field is present for one subject, it is assumed to contain
 %       the <SESSION> fields and all other fields are ignored.
+%    Another possible form for FMRI is a cell of strings, where each entry
+%    is an fMRI dataset. In this case, the second argument LABEL is 
+%    mandatory.
+%
+% LABEL
+%    (structure, necessary if FMRI is a cell of strings) LABEL(I) is a 
+%    structure with fields SUBJECT / SESSION / RUN, indicating the labels
+%    associated with FMRI{I}
+%
+% FLAG_CELL
+%    (boolean, default false) if FLAG_CELL is true, the run level is a cell
+%    of string rather than a structure.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % FMRI_S
-%    Same as FMRI, except that every level (SUBJECT, SESSION, RUN) is
-%    present (i.e. FILES_IN does not include any .
+%    Same as FMRI, organized in the form of a structure (except for the RUN
+%    level, which can be either a structure or a cell of strings, depending 
+%    on FLAG_CELL).
 %    
 % _________________________________________________________________________
 % SEE ALSO:
@@ -56,6 +69,29 @@ function fmri_s = niak_fmri2struct(fmri);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if (nargin < 2) && iscellstr(fmri)
+     error('Please specify LABEL if FMRI is a cell of strings')
+end
+
+if nargin < 3
+   flag_cell = false;
+end
+
+if iscellstr(fmri)
+    for num_e = 1:length(fmri)
+        fmri_s.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = fmri{num_e};
+    end
+    if flag_cell
+        list_subject = fieldnames(fmri_s);
+        for num_s = 1:length(list_subject)
+            list_session = fieldnames(fmri_s.(list_subject{num_s}));
+            for num_sess = 1:length(list_session)
+                fmri_s.(list_subject{num_s}).(list_session{num_sess}) = psom_files2cell(fmri_s.(list_subject{num_s}).(list_session{num_sess}));
+            end
+        end
+    end
+    return
+end
 list_subject = fieldnames(fmri);
 
 for num_s = 1:length(list_subject)
@@ -69,15 +105,19 @@ for num_s = 1:length(list_subject)
         session = list_session{num_sess};
         files_sess = files_sub.(session);
         if iscellstr(files_sess)
-            for num_r = 1:length(files_sess)
-                run = sprintf('run%i',num_r);
-                fmri_s.(subject).(session).(run) = files_sess{num_r};
+            if flag_cell
+                fmri_s.(subject).(session) = files_sess;
+            else
+                for num_r = 1:length(files_sess)
+                    run = sprintf('run%i',num_r);
+                    fmri_s.(subject).(session).(run) = files_sess{num_r};
+                 end
             end
         else
-            list_run = fieldnames(files_sess);
-            for num_r = 1:length(list_run) 
-                run = list_run{num_r};
-                fmri_s.(subject).(session).(run) = files_sess.(run);
+            if flag_cell
+                fmri_s.(subject).(session) = psom_files2cell(files_sess);
+            else
+                fmri_s.(subject).(session) = files_sess;
             end
         end
     end
