@@ -24,7 +24,7 @@ function [results,opt] = niak_glm(model,opt)
 %   (structure, optional) with the following fields:
 %
 %   TEST 
-%      (string, default 'ttest') the type of test to be applied.
+%      (string, default 'none') the type of test to be applied.
 %      Available options: 'ttest' , 'ftest', 'none'
 %
 %   FLAG_RESIDUALS 
@@ -119,8 +119,8 @@ if isempty(opt)
 end
 
 %% Default options
-list_fields    = { 'flag_residuals' , 'flag_beta', 'test'};
-list_defaults  = {  false           , false      , ''    };
+list_fields    = { 'flag_residuals' , 'flag_beta', 'test' };
+list_defaults  = {  false           , false      , 'none' };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 y = model.y;
