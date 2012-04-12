@@ -135,7 +135,7 @@ function [files_in,files_out,opt] = niak_brick_pve(files_in,files_out,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Syntax
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_PVE(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_nu_correct'' for more info.')
 end
 
@@ -911,7 +911,7 @@ function tissue_class = kmeansinc(img,brain_mask);
 
    datalabels = zeros(n,1);
 
-   while (iter < max_iter) & changes
+   while (iter < max_iter) && changes
 
      iter = iter + 1;
 
