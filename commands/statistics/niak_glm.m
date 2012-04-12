@@ -131,12 +131,12 @@ if isfield(opt,'test')
                 c=ones(size(x,2),1);
             end
             
-            std_e = sqrt(sum(e.^2,1)/(N-K)); % Standard deviation of the noise
+            std_e = sqrt(sum(e.^2,1)/(N-K));        % Standard deviation of the noise
 
-            d     = sqrt(c'*(x'*x)^(-1)*c);  % Intermediate result for the t-test
-            ttest = (c'*beta)./(std_e*d);    % t-test
+            d     = sqrt(c'*(x'*x)^(-1)*c);         % Intermediate result for the t-test
+            ttest = (c'*beta)./(std_e*d);           % t-test
             pce = 2*(1-niak_cdf_t(abs(ttest),size(x,1)-size(x,2))); % two-tailed p-value
-            eff = c'*beta;                   % The effect matrix
+            eff = c'*beta;                          % The effect matrix
 
             std_eff = std_e*sqrt(c'*(x'*x)^(-1)*c); % The standard deviation of effect
             
@@ -153,17 +153,19 @@ if isfield(opt,'test')
             x0 = x*c';
             [p0]=size(x0,2);
 
-            beta0 = (x0'*x0)^(-1)*x0'*y;     % Regression coefficients
-            e0 = y-x0*beta0;                 % Residuals
-            s0 = sqrt(sum(e0.^2,1)/(N-p0));  % Estimate of the std0
-            s = sqrt(sum(e.^2,1)/(N-K));     % Estimate of the std
+            beta0 = (x0'*x0)^(-1)*x0'*y;       % Regression coefficients
+            e0 = y-x0*beta0;                   % Residuals
+            s0 = sqrt(sum(e0.^2,1)/(N-p0))+eps;    % Estimate of the std0
+            s = sqrt(sum(e.^2,1)/(N-K))+eps;       % Estimate of the std
             
-%             s0 = sqrt(e0'*e0/(N-p0));        % Estimate of the std0
-%             s = sqrt(e'*e/(N-K));            % Estimate of the std
+%            s0 = sqrt(e0'*e0/(N-p0));         % Estimate of the std0
+%            s = sqrt(e'*e/(N-K));             % Estimate of the std
         
-            results.ftest=(s0-s)./(s.^2);                % F-Test
+            results.ftest=(s0-s)./(s.^2);      % F-Test
+            
 
         case '',
+            
             % Do nothing
             
         otherwise,
@@ -174,7 +176,7 @@ end
 
 %% flags
 if opt.flag_residuals
-    results.e = e; % Residuals
+    results.e = e;       % Residuals
 end
 
 if opt.flag_beta

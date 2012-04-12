@@ -169,7 +169,7 @@ mask = (mask_brain & ~mask_vent)>0;
 x = [];
 
 % reshape y
-y = reshape(vol,size(vol,4),size(vol,1)*size(vol,2)*size(vol,3));
+y = reshape(vol,size(vol,1)*size(vol,2)*size(vol,3),size(vol,4))';
 
 %% Add Time filter dc high and low
 slow_drift = [];
@@ -299,7 +299,7 @@ niak_write_vol(hdr_qc,reshape(results_wm.ftest,size(mask_brain)));
 
 % f-test motion
 f_test_x = [slow_drift,wm_av,motion_pca];
-n_p0 = size(wm_av,2);
+n_p0 = size(motion_pca,2);
 
 intercept = ones([size(f_test_x,1) 1])/sqrt(size(f_test_x,1));
 model.x = [intercept, f_test_x];
