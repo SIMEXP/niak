@@ -1,65 +1,82 @@
 function [results,opt] = niak_glm(model,opt)
 % Least-square estimates in a linear model Y = X.BETA + E 
 %
-% [RESULTS,OPT] = NIAK_GLM( MODEL,OPT)
+% [RESULTS,OPT] = NIAK_GLM( MODEL , [OPT] )
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-%   MODEL
+% MODEL
+%   (structure) with the following fields:
 %
-%       Y
-%           (2D array size T*N) each column of Y are samples of one variable.
+%   Y
+%      (2D array size T*N) each column of Y are samples of one variable.
 %
-%       X
-%           (2D array size T*K) each column of X is a explaining factor with the 
-%           same number of rows as Y.
+%   X
+%      (2D array size T*K) each column of X is a explaining factor with the 
+%      same number of rows as Y.
 %
-%       C
-%           (vector, size K*1) is a contrast matrix for the f-test and a
-%           vector for the t-test.
+%   C
+%      (vector, size K*1) is a contrast vector (necessary unless OPT.TEST
+%      is 'none').
+%
+% OPT
+%   (structure, optional) with the following fields:
+%
+%   TEST 
+%      (string, default 'ttest') the type of test to be applied.
+%      Available options: 'ttest' , 'ftest', 'none'
+%
+%   FLAG_RESIDUALS 
+%      (boolean, default false) if the flag is true, the residuals E of the 
+%      regression are added to RESULTS (see below).
+%
+%   FLAG_BETA 
+%      (boolean, default false) if the flag is true, the regression coefficients
+%      BETA are added to RESULTS (see below).
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % RESULTS
+%   (stucture) with the following fields:
 %
-%    BETA
-%        (vector size K*N) BETA(k,n) is the estimated coefficient regression 
-%        estimate of X(:,k) on Y(:,n), using the least-square criterion.
+%   BETA
+%      (vector size K*N) BETA(k,n) is the estimated coefficient regression 
+%      estimate of X(:,k) on Y(:,n), using the least-square criterion.
+%      See OPT.FLAG_BETA above.
 %
-%    E
-%        (2D array, size T*N) residuals of the regression
+%   E
+%      (2D array, size T*N) residuals of the regression
+%      See OPT.FLAG_RESIDUALS above.
 %
-%    STD_E
-%        (vector, size [1 N]) STD_E(n) is an estimate of the standard deviation of
-%        the noise Y(:,n). It is simply derived from the residual sum-of-squares
-%        after correction for the number of degrees of freedom in the model.
+%   STD_E
+%      (vector, size [1 N]) STD_E(n) is an estimate of the standard deviation of
+%      the noise Y(:,n). It is simply derived from the residual sum-of-squares
+%      after correction for the number of degrees of freedom in the model.
+%      (only available if OPT.TEST is 'ttest')
 %
-%    TTEST
-%        (vector, size [1 N]) TTEST(n) is a t-test associated with the estimated
-%        weights and the specified contrast (see C above).
+%   TTEST
+%      (vector, size [1 N]) TTEST(n) is a t-test associated with the estimated
+%      weights and the specified contrast (see C above). (only available if 
+%      OPT.TEST is 'ttest')
 %
-%    PCE
-%        (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
-%        TTEST(n) (bilateral test).
+%   FTEST
+%      (vector, size [1 N]) TTEST(n) is a F test associated with the estimated
+%      weights and the specified contrast (see C above). (only available if 
+%      OPT.TEST is 'ftest')
 %
-%    EFF
-%        (vector, size [1 N]) the effect associated with the contrast and the 
-%        regression coefficients.
+%   PCE
+%      (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
+%      TTEST(n) (bilateral test). (only available if OPT.TEST is 'ttest')
 %
-%    STD_EFF
-%        (vector, size [1 N]) STD_EFF(n) is the standard deviation of the effect
-%        EFF(n).
+%   EFF
+%      (vector, size [1 N]) the effect associated with the contrast and the 
+%      regression coefficients (only available if OPT.TEST is 'ttest')
 %
-% _________________________________________________________________________
-% OPT:
-%
-%   TEST (default, ttest) specify the test to be applied (ttest,ftest)
-%
-%   FLAG_RESIDUALS (default, false)
-%
-%   FLAG_BETA (default, false)
+%   STD_EFF
+%      (vector, size [1 N]) STD_EFF(n) is the standard deviation of the effect
+%      EFF(n).
 % 
 % _________________________________________________________________________
 % REFERENCES:
@@ -74,7 +91,7 @@ function [results,opt] = niak_glm(model,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Christian L. Dansereau, 
+% Copyright (c) Pierre Bellec, Christian L. Dansereau, 
 % Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
@@ -101,21 +118,15 @@ if isempty(opt)
     opt = struct([]);
 end
 
+%% Default options
 list_fields    = { 'flag_residuals' , 'flag_beta', 'test'};
 list_defaults  = {  false           , false      , ''    };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
-
-
 y = model.y;
 x = model.x;
-
 [N,S] = size(y);
 K = size(x,2);
-if isfield(model,'c') && ~isempty(model.c)
-    c = model.c;
-end
-
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
@@ -126,11 +137,13 @@ e = y-x*beta;                    % Residuals
 if isfield(opt,'test')
     switch opt.test
 
-        case 'ttest',
-            if ~isfield(model,'c') || isempty(model.c)
-                c=ones(size(x,2),1);
+        case 'ttest'
+
+            %% Perform a t-test
+            if ~isfield(model,'c')
+                error('Please specify MODEL.C for performing a t-test')
             end
-            
+            c = model.c;
             std_e = sqrt(sum(e.^2,1)/(N-K));        % Standard deviation of the noise
 
             d     = sqrt(c'*(x'*x)^(-1)*c);         % Intermediate result for the t-test
@@ -145,26 +158,23 @@ if isfield(opt,'test')
             results.pce = pce;
             results.eff = eff;
 
-        case 'ftest',
-            if ~isfield(model,'c') || isempty(model.c)
-                c = [zeros(K-1,1),eye(K-1)];
+        case 'ftest'
+
+            %% Perform a F test
+            if ~isfield(model,'c')
+                error('Please specify MODEL.C for performing a F test')
             end
-            
-            x0 = x*c';
-            [p0]=size(x0,2);
+            c = model.c;
+            x0 = x(:,~model.c);
+            p0 = size(x0,2);
 
-            beta0 = (x0'*x0)^(-1)*x0'*y;       % Regression coefficients
-            e0 = y-x0*beta0;                   % Residuals
-            s0 = sqrt(sum(e0.^2,1)/(N-p0))+eps;    % Estimate of the std0
-            s = sqrt(sum(e.^2,1)/(N-K))+eps;       % Estimate of the std
+            beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
+            e0 = y-x0*beta0;             % Residuals (restricted model)
+            s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
+            s  = sum(e.^2,1);  % Estimate of the residual sum-of-square of the full model
+            results.ftest=((s0-s)/(K-p0))./(s/(N-K)); % F-Test
             
-%            s0 = sqrt(e0'*e0/(N-p0));         % Estimate of the std0
-%            s = sqrt(e'*e/(N-K));             % Estimate of the std
-        
-            results.ftest=(s0-s)./(s.^2);      % F-Test
-            
-
-        case '',
+        case 'none'
             
             % Do nothing
             
