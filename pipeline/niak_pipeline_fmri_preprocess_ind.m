@@ -653,7 +653,7 @@ else
   job_opt.size_output = opt.size_output;
 end
 job_opt.folder_out  = [opt.folder_intermediate 'corsica' filesep];
-job_opt.folder_sica = [opt.folder_qc subject filesep 'corsica' filesep];
+job_opt.folder_sica = [opt.folder_qc 'corsica' filesep];
 job_opt.flag_test   = true;
 job_opt.labels_mask = {'ventricles','stem'};
 [pipeline_corsica,job_opt,files_co] = niak_pipeline_corsica(job_in,job_opt);
@@ -673,7 +673,7 @@ for num_e = 1:size(files_co,1)
     name_job = ['qc_corsica_var_' label(num_e).name];
     job_in{1}   = files_co{num_e};
     job_in{2}   = pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data;;
-    job_out     = [path name_job ext_f];
+    job_out     = [opt.folder_qc 'corsica' filesep name_job ext_f];
     job_opt.operation = 'var1 = sum(vol_in{1}.^2,4);var2 = sum(vol_in{2}.^2,4);';
     job_opt.operation = [job_opt.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>0);']; 
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
@@ -758,5 +758,5 @@ if ~isfield(files_in,'component_to_keep')
 end
 
 if ~isfield(files_in,'custom_confounds')
-    files_in.custom_confounds = [];
+    files_in.custom_confounds = 'gb_niak_omitted';
 end

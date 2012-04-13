@@ -647,7 +647,7 @@ function files_in = sub_check_format(files_in)
 
 if ~isstruct(files_in)
 
-    error('FILES_IN should be a struture!')   
+    error('FILES_IN should be a structure!')   
 
 else   
 

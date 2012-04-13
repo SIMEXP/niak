@@ -200,24 +200,24 @@ end
 
 %% Read spatial inputs
 if opt.flag_verbose
-    fprintf('Reading the fMRI dataset ...\n%s',files_in.fmri);
+    fprintf('Reading the fMRI dataset ...\n%s\n',files_in.fmri);
 end
 [hdr_vol,vol] = niak_read_vol(files_in.fmri); % fMRI dataset
 y = reshape(vol,[size(vol,1)*size(vol,2)*size(vol,3) size(vol,4)])'; % organize the fMRI dataset as a time x space array
 
 if opt.flag_verbose
-    fprintf('Reading the brain mask ventricle ...\n%s',files_in.mask_vent);
+    fprintf('Reading the brain mask ventricle ...\n%s\n',files_in.mask_vent);
 end
 [hdr_mask,mask_vent] = niak_read_vol(files_in.mask_vent); % mask of the ventricles
 
 if opt.flag_verbose
-    fprintf('Reading the brain mask ...\n%s',files_in.mask_brain);
+    fprintf('Reading the brain mask ...\n%s\n',files_in.mask_brain);
 end
 [hdr_mask,mask_brain] = niak_read_vol(files_in.mask_brain); % mask of the brain
 mask = mask_brain>0;
 
 if opt.flag_verbose
-    fprintf('Reading the white matter mask ...\n%s',files_in.mask_wm);
+    fprintf('Reading the white matter mask ...\n%s\n',files_in.mask_wm);
 end
 [hdr_mask,mask_wm] = niak_read_vol(files_in.mask_wm); % mask of the white matter
 
@@ -339,7 +339,7 @@ end
 
 %% Custom parameters to be regressed
 covar=[];
-if ~strcmp(files_in.custom_param,'gb_niak_omitted')&&~strcmp(files_in.custom_param)
+if ~strcmp(files_in.custom_param,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Regress custom parameters ...\n')
     end
