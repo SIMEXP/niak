@@ -93,7 +93,7 @@ eig_vec = V(:,order);
 
 if nb_comp < 1
     cum_energy = cumsum(eig_val)/sum(eig_val);
-    nb_comp = min(find((1-cum_energy)<nb_comp));
+    nb_comp = find(cum_energy>nb_comp,1);
 end
 
 eig_vec = eig_vec(:,1:nb_comp);
