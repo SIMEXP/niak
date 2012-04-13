@@ -16,7 +16,7 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   DC_LOW 
 %      (string) cosine basis of slow time drifts to be removed
 %
-%   CUSTOM_PARAMS 
+%   CUSTOM_PARAM
 %      (string, optional) a .mat file with one variable 'covar'(TxK)
 %
 %   MOTION_PARAM 
@@ -70,7 +70,7 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      the name of a volume file with the f-test of the global signal PCA
 %      estimate.
 %
-%   QC_CUSTOMPARAM
+%   QC_CUSTOM_PARAM
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_customparam.<ext FMRI>)  
 %      the name of a volume with the f-test of the custom params
 %
@@ -145,12 +145,12 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % THE SOFTWARE.
 
 %% FILES_IN
-list_fields    = { 'fmri' , 'dc_low' , 'custom_params'   , 'motion_param' , 'mask_brain' , 'mask_vent' , 'mask_wm' };
+list_fields    = { 'fmri' , 'dc_low' , 'custom_param'    , 'motion_param' , 'mask_brain' , 'mask_vent' , 'mask_wm' };
 list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN          , NaN         , NaN       };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slowdrift'    , 'qc_wm'           , 'qc_motion'       , 'qc_customparam'  , 'qc_gse'          };
+list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slowdrift'    , 'qc_wm'           , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
 list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
@@ -186,8 +186,8 @@ if isempty(files_out.qc_motion)
     files_out.qc_motion = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_motion',ext_f);
 end
 
-if isempty(files_out.qc_customparam)
-    files_out.qc_customparam = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_customparam',ext_f);
+if isempty(files_out.qc_custom_param)
+    files_out.qc_custom_param = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_customparam',ext_f);
 end
 
 if isempty(files_out.qc_gse)
@@ -339,11 +339,11 @@ end
 
 %% Custom parameters to be regressed
 covar=[];
-if ~strcmp(files_in.custom_params,'gb_niak_omitted')
+if ~strcmp(files_in.custom_param,'gb_niak_omitted')&&~strcmp(files_in.custom_param)
     if opt.flag_verbose
         fprintf('Regress custom parameters ...\n')
     end
-    covar = load(files_in.custom_params);
+    covar = load(files_in.custom_param);
     covar = covar.covar;
     model_covar.y = covar;
     model_covar.x = x;
@@ -367,7 +367,7 @@ model.x = [pc_spatial_av covar];
 labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(covar,2)]) ];
 
 %% The custom covariates
-if ~strcmp(files_out.qc_customparam,'gb_niak_omitted')
+if ~strcmp(files_out.qc_custom_param,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the custom covariates ...\n')
     end
@@ -378,7 +378,7 @@ if ~strcmp(files_out.qc_customparam,'gb_niak_omitted')
     else
         qc = zeros(size(mask_brain));
     end
-    hdr_qc.file_name = files_out.qc_customparam;
+    hdr_qc.file_name = files_out.qc_custom_param;
     niak_write_vol(hdr_qc,qc);
 end
 
