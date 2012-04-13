@@ -572,11 +572,10 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
-
-%% GROUP QC MOTION_CORRECTION 
+%% GROUP QC MOTION CORRECTION : PART 1, MOTION PARAMETERS
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of motion correction ; ');
+    fprintf('Adding group-level quality of motion correction (motion parameters) ; ');
 end
 clear job_in job_out job_opt
 for num_s = 1:length(list_subject)
@@ -595,6 +594,35 @@ job_out.fig_motion_group      = [opt.folder_out filesep 'quality_control' filese
 job_out.tab_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.csv'];
 job_opt.flag_test                   = true;
 pipeline = psom_add_job(pipeline,'qc_motion_group','niak_brick_qc_motion_correction_group',job_in,job_out,job_opt);
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
+%% GROUP QC MOTION CORRECTION : PART 2, VARIANCE MAPS
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of motion correction (ratio of variance maps) ; ');
+end
+clear job_in job_out job_opt
+job_in.vol  = cell([length(fmri_c) 1]);
+job_in.mask = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
+num_e = 0;
+for num_s = 1:length(list_subject)
+    if strcmp(opt.granularity,'subject')
+        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_qc_motion_' list_subject{num_s}]).files_out;
+    else
+        tmp  = pipeline.(['resample_qc_motion_' list_subject{num_s}]).files_out;
+    end 
+    job_in.vol((num_e+1):(num_e+length(tmp))) = tmp;
+    num_e = num_e+length(tmp);
+end
+job_out.mean_vol        = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'func_ratio_var_mc_stereonl_mean' ext_f];
+job_out.std_vol         = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'func_ratio_var_mc_stereonl_std'  ext_f];
+job_out.fig_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'func_ratio_var_mc_stereonl_fit.pdf'];
+job_out.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'func_ratio_var_mc_stereonl_fit.csv'];
+job_opt                 = opt.qc_coregister;
+job_opt.labels_subject  = {label.name};
+pipeline = psom_add_job(pipeline,'qc_motion_group_var_stereonl','niak_brick_qc_coregister',job_in,job_out,job_opt);
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
