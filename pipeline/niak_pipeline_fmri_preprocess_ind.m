@@ -671,11 +671,11 @@ end
 for num_e = 1:size(files_co,1)
     clear job_in job_out job_opt
     name_job = ['qc_corsica_var_' label(num_e).name];
-    job_in{1}   = files_co{num_e};
-    job_in{2}   = pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data;;
+    job_in{1} = files_co{num_e};
+    job_in{2} = pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data;
     job_out     = [opt.folder_qc 'corsica' filesep name_job ext_f];
     job_opt.operation = 'var1 = sum(vol_in{1}.^2,4);var2 = sum(vol_in{2}.^2,4);';
-    job_opt.operation = [job_opt.operation, 'vol = zeros(size(var1));vol(var2>0)=var1(var2>0)./var2(var2>0);']; 
+    job_opt.operation = [job_opt.operation, 'vol = zeros(size(var1));vol(var2>0)=1-(var1(var2>0)./var2(var2>0));']; 
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 

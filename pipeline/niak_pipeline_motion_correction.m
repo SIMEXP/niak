@@ -323,9 +323,7 @@ for num_s = 1:length(list_session)
     end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% QC variance explained %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% QC variance explained 
 for num_e = 1:length(fmri)
     clear job_in job_out job_opt
     name_job        = ['qc_motion_var_' label(num_e).name];
@@ -336,7 +334,7 @@ for num_e = 1:length(fmri)
     job_opt.operation = [ 'var1 = sum(vol_in{1}.^2,4); ' ...
                           'var2 = sum(vol_in{2}.^2,4); ' ...
                           'vol = zeros(size(var1)); '    ...
-                          'vol(var2>0)=var1(var2>0)./var2(var2>2);'];
+                          'vol(var2>0)=1-(var1(var2>0)./var2(var2>2));'];
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 
