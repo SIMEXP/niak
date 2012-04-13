@@ -33,9 +33,10 @@ function [eig_val,eig_vec,weights] = niak_pca(data,nb_comp)
 %
 % WEIGHTS 
 %   (array, size N*NB_COMP) the weights, i.e. the matrix such that
-%   TSERIES = WEIGHT*EIG_VEC' in the case where NB_COMP == T, and
-%   otherwise EIG_VEC*WEIGHT is simply the projection of TSERIES in the
-%   PCA space of dimension NB_COMP with maximal energy.
+%   DATA = EIG_VEC*WEIGHTS' in the case where NB_COMP == T, and
+%   otherwise EIG_VEC(:,1:NB_COMP)*WEIGHT(:,1:NB_COMP)' is simply the 
+%   projection of TSERIES in the PCA space of dimension NB_COMP with 
+%   maximal energy.
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -47,15 +48,10 @@ function [eig_val,eig_vec,weights] = niak_pca(data,nb_comp)
 % The PCA is done on the matrix of scalar products in the second
 % dimension, i.e. DATA'*DATA.
 %
-% _________________________________________________________________________
-% Adapted from a code by Scott Makeig with contributions from Tony Bell, 
-% Te-Won Lee, Tzyy-Ping Jung, Sigurd Enghoff, Michael Zibulevsky, 
-% CNL/The Salk Institute, La Jolla, 1996-
-%
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
-% Keywords : medical imaging, slice timing, fMRI
+% Keywords : Principal Component Analysis
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
