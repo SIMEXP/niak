@@ -620,12 +620,12 @@ for num_e = 1:length(fmri)
     job_opt.folder_out     = [opt.folder_intermediate 'regress_confounds' filesep];
     job_out.filtered_data  = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
     job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
-    job_out.qc_wm          = [job_opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_wm' ext_f]; 
-    job_out.qc_slow_drift  = [job_opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_slowdrift' ext_f]; 
-    job_out.qc_motion      = [job_opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_motion' ext_f]; 
-    job_out.qc_gse         = [job_opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
+    job_out.qc_wm          = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_wm' ext_f]; 
+    job_out.qc_slow_drift  = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_slowdrift' ext_f]; 
+    job_out.qc_motion      = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_motion' ext_f]; 
+    job_out.qc_gse         = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
     if ~strcmp(job_in.custom_param,'gb_niak_omitted')
-        job_out.qc_custom_param = [job_opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
+        job_out.qc_custom_param = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
     end
     pipeline = psom_add_job(pipeline,['confounds_' label(num_e).name],'niak_brick_regress_confounds',job_in,job_out,job_opt);    
     if strcmp(opt.size_output,'quality_control')
