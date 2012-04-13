@@ -118,8 +118,10 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % of global and system-specific resting state activity reveals anti-correlated 
 % networks.  To appear in Brain Connectivity.
 %
-% Copyright (c) Christian L. Dansereau, Felix Carbonell 2012.
-% Centre de recherche de l'Institut universitaire de gériatrie de Montréal.
+% Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
+% Research Centre of the Montreal Geriatric Institute
+% & Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2012
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pca, glm, confounds, motion parameters
@@ -246,7 +248,7 @@ if opt.flag_pca_motion
 end
 if opt.flag_motion_params
     x = [x motion_param];
-    labels = [labels repmat({'motion'},[1 size(motion_param,2)]);
+    labels = [labels repmat({'motion'},[1 size(motion_param,2)])];
 end
 
 %% Add white matter average
@@ -256,7 +258,7 @@ end
 wm_av = mean(y(:,mask_wm>0),2);
 if opt.flag_wm   
     x = [x,wm_av];
-    labels = [labels {'wm_av'}]);
+    labels = [labels {'wm_av'}];
 end
 
 %% Generate F-TEST maps for all components of the model for quality control purposes
@@ -327,7 +329,7 @@ pc_spatial_av = res.e;
 
 if opt.flag_gsc
     x2 = pc_spatial_av;
-    labels2 = repmat({'pc_spatial_av',[1 size(x2,2)]);
+    labels2 = repmat({'pc_spatial_av'},[1 size(x2,2)]);
 else
     x2 = [];
     labels2 = {};
@@ -357,7 +359,7 @@ end
 
 %% F-TEST stage 2 (global signal + custom covariates)
 model.x = [pc_spatial_av covar];
-labels_all2 = [ repmat({'pc_spatial_av',[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(custom_covar,2)]) ];
+labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(custom_covar,2)]) ];
 
 %% The custom covariates
 if ~strcmp(files_out.qc_customparam,'gb_niak_omitted')
@@ -414,8 +416,6 @@ end
 %% Save the confounds
 if ~strcmp(files_out.confounds,'gb_niak_omitted')
     save(files_out.confounds, 'x' , 'x2' , 'labels' , 'labels2');
-end
-
 end
 
 %%%%%%%%%%%%%%%%%%
