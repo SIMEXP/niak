@@ -147,6 +147,8 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %% FILES_IN
 list_fields    = { 'fmri' , 'dc_low' , 'custom_params'   , 'motion_param' , 'mask_brain' , 'mask_vent' , 'mask_wm' };
 list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN          , NaN         , NaN       };
+files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
+
 %% FILES_OUT
 list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slowdrift'    , 'qc_wm'           , 'qc_motion'       , 'qc_customparam'  , 'qc_gse'          };
 list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
@@ -212,7 +214,7 @@ if opt.flag_verbose
     fprintf('Reading the brain mask ...\n%s',files_in.mask_brain);
 end
 [hdr_mask,mask_brain] = niak_read_vol(files_in.mask_brain); % mask of the brain
-mask = (mask_brain & ~mask_vent)>0;
+mask = mask_brain>0;
 
 if opt.flag_verbose
     fprintf('Reading the white matter mask ...\n%s',files_in.mask_wm);
@@ -235,7 +237,7 @@ mask_i = std(slow_drift,[],1)~=0;
 slow_drift = slow_drift(:,mask_i); % get rid of the intercept in the slow time drifts
 if opt.flag_slow
     x = [x slow_drift];
-    labels = [labels repmat({'slowdrift'},[1 size(x,2)])];
+    labels = [labels repmat({'slowdrift'},[1 size(slow_drift,2)])];
 end
 
 %% Motion parameters
@@ -244,8 +246,8 @@ if opt.flag_verbose
 end
 transf = load(files_in.motion_param);
 [rot,tsl] = niak_transf2param(transf.transf);
-rot = niak_normalize_tseries(rot')';
-tsl = niak_normalize_tseries(tsl')';
+rot = niak_normalize_tseries(rot');
+tsl = niak_normalize_tseries(tsl');
 motion_param = [rot,tsl,rot.^2,tsl.^2];
 if opt.flag_pca_motion
     [eig_val,motion_param] = niak_pca(motion_param',opt.pct_var_explained);
@@ -269,7 +271,7 @@ end
 hdr_qc = hdr_mask;
 model.y = niak_normalize_tseries(y);
 model.x = niak_normalize_tseries([slow_drift motion_param wm_av]);
-labels_all = [repmat({'slowdrift'},[1 size(x,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av'}];
+labels_all = [repmat({'slowdrift'},[1 size(slow_drift,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av'}];
 opt_qc.test ='ftest';
 
 %% F-test slow drift
@@ -277,8 +279,8 @@ if ~strcmp(files_out.qc_slowdrift,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the slow time drifts ...\n')
     end
-    opt_qc.c = ismember(labels_all,'slowdrift');
-    if any(opt_qc.c)
+    model.c = ismember(labels_all,'slowdrift');
+    if any(model.c)
         res = niak_glm(model,opt_qc);
         qc = reshape(res.ftest,size(mask_brain));
     else
@@ -293,7 +295,7 @@ if ~strcmp(files_out.qc_wm,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the average signal in the white matter ...\n')
     end
-    opt_qc.c = ismember(labels_all,'wm_av');
+    model.c = ismember(labels_all,'wm_av');
     res = niak_glm(model,opt_qc);
     hdr_qc.file_name = files_out.qc_wm;
     niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
@@ -304,7 +306,7 @@ if ~strcmp(files_out.qc_motion,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the motion parameters ...\n')
     end
-    opt_qc.c = ismember(labels_all,'motion');
+    model.c = ismember(labels_all,'motion');
     res = niak_glm(model,opt_qc);
     hdr_qc.file_name = files_out.qc_motion;
     niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
@@ -317,7 +319,7 @@ if ~isempty(x)
     end
     model.x = niak_normalize_tseries(x);
     res = niak_glm(model,opt_glm);
-    y   = results1.e;
+    y   = res.e;
     vol = reshape(y',size(vol));
 end
 
@@ -326,21 +328,17 @@ if opt.flag_verbose
     fprintf('Generate a PCA-based estimation of the global signal ...\n')
 end
 pc_spatial_av = sub_pc_spatial_av(vol,mask);
-model_pc.y = pc_spatial_av;
-model_pc.x = x;
-res = niak_glm(model_pc,opt_glm);
-pc_spatial_av = res.e;
 
 if opt.flag_gsc
     x2 = pc_spatial_av;
-    labels2 = repmat({'pc_spatial_av'},[1 size(x2,2)]);
+    labels2 = {'pc_spatial_av'};
 else
     x2 = [];
     labels2 = {};
 end
 
 %% Custom parameters to be regressed
-custom_covar=[];
+covar=[];
 if ~strcmp(files_in.custom_params,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Regress custom parameters ...\n')
@@ -364,6 +362,7 @@ else
 end
 
 %% F-TEST stage 2 (global signal + custom covariates)
+model.y = y;
 model.x = [pc_spatial_av covar];
 labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(covar,2)]) ];
 
@@ -372,8 +371,8 @@ if ~strcmp(files_out.qc_customparam,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the custom covariates ...\n')
     end
-    opt_qc.c = ismember(labels_all2,'custom');
-    if any(opt_qc.c)
+    model.c = ismember(labels_all2,'custom');
+    if any(model.c)
         res = niak_glm(model,opt_qc);
         qc = reshape(res.ftest,size(mask_brain));
     else
@@ -388,7 +387,7 @@ if ~strcmp(files_out.qc_gse,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the global signal estimate ...\n')
     end
-    opt_qc.c = ismember(labels_all2,'pc_spatial_av');
+    model.c = ismember(labels_all2,'pc_spatial_av');
     res = niak_glm(model,opt_qc);
     hdr_qc.file_name = files_out.qc_gse;
     niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
@@ -400,10 +399,8 @@ if ~isempty(x2)
         fprintf('Regress the confounds stage 2 (global signal + custom covariates)...\n')
     end
     model.x=x2;
-    opt_glm.flag_residuals = true;
-    opt_glm.test = 'none';
-    [results2,opt_glm] = niak_glm(model,opt_glm);
-    y   = results2.e;
+    res = niak_glm(model,opt_glm);
+    y = res.e;
     vol_denoised = reshape(y',size(vol));
 else
     % there is nothing to regress we put the input in the output
