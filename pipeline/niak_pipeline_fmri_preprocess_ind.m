@@ -621,7 +621,7 @@ for num_e = 1:length(fmri)
     job_out.filtered_data  = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
     job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
     job_out.qc_wm          = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_wm' ext_f]; 
-    job_out.qc_slow_drift  = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_slowdrift' ext_f]; 
+    job_out.qc_slow_drift  = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_slow_drift' ext_f]; 
     job_out.qc_motion      = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_motion' ext_f]; 
     job_out.qc_gse         = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
     if ~strcmp(job_in.custom_param,'gb_niak_omitted')
