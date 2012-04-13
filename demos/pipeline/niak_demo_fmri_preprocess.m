@@ -124,23 +124,23 @@ switch format_demo
     
     case 'minc1' % If data are in minc1 format
                 
-        files_in.subject1.anat             = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');        
-        files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
-        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz');     
+        files_in.subject1.anat                = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');        
+        files_in.subject1.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_in.subject1.fmri.session2.rest  = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz');     
         
-        files_in.subject2.anat             = cat(2,path_demo,filesep,'anat_subject2.mnc.gz');        
-        files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc.gz');
-        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc.gz');
+        files_in.subject2.anat                = cat(2,path_demo,filesep,'anat_subject2.mnc.gz');        
+        files_in.subject2.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject2.mnc.gz');
+        files_in.subject2.fmri.session2.rest  = cat(2,path_demo,filesep,'func_rest_subject2.mnc.gz');
         
     case 'minc2' % If data are in minc2 format
         
-        files_in.subject1.anat             = cat(2,path_demo,filesep,'anat_subject1.mnc');        
-        files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
-        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc');          
+        files_in.subject1.anat                = cat(2,path_demo,filesep,'anat_subject1.mnc');        
+        files_in.subject1.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
+        files_in.subject1.fmri.session2.rest  = cat(2,path_demo,filesep,'func_rest_subject1.mnc');          
         
-        files_in.subject2.anat             = cat(2,path_demo,filesep,'anat_subject2.mnc');        
-        files_in.subject2.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
-        files_in.subject2.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject2.mnc');
+        files_in.subject2.anat                = cat(2,path_demo,filesep,'anat_subject2.mnc');        
+        files_in.subject2.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
+        files_in.subject2.fmri.session2.rest  = cat(2,path_demo,filesep,'func_rest_subject2.mnc');
         
     otherwise 
         
@@ -172,8 +172,8 @@ opt.t1_preprocess.nu_correct.arg = '-distance 50'; % Parameter for non-uniformit
 
 % T1-T2 coregistration (niak_brick_anat2func)
 opt.anat2func.init = 'identity'; % The 'center' option usually does more harm than good. Use it only if you have very big misrealignement between the two images (say, > 2 cm).
-opt.subject.label = 'subject1';
-opt.subject.param.anat2func.init = 'center'; % Just to show case how to specify a different parameter for one subject
+opt.tune.subject = 'subject1';
+opt.tune.param.anat2func.init = 'center'; % Just to show case how to specify a different parameter for one subject (here subject1)
 
 % Temporal filtering (niak_brick_time_filter)
 opt.time_filter.hp = 0.01; % Apply a high-pass filter at cut-off frequency 0.01Hz (slow time drifts)
