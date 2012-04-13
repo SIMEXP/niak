@@ -51,8 +51,8 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      average, and X2, LABELS2 for stage 2, including custom covariates
 %      and global signal).
 %
-%   QC_SLOWDRIFT 
-%      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_slowdrift.<ext FMRI>) 
+%   QC_SLOW_DRIFT 
+%      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_slow_drift.<ext FMRI>) 
 %      the name of a volume file with the f-test of the slow time drifts
 %
 %   QC_WM 
@@ -150,7 +150,7 @@ list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN 
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slowdrift'    , 'qc_wm'           , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
+list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_wm'           , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
 list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
@@ -174,8 +174,8 @@ if isempty(files_out.filtered_data)
     files_out.filtered_data = cat(2,opt.folder_out,filesep,name_f,'_cor',ext_f);
 end
 
-if isempty(files_out.qc_slowdrift)
-    files_out.qc_slowdrift = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_slowdrift',ext_f);
+if isempty(files_out.qc_slow_drift)
+    files_out.qc_slow_drift = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_slow_drift',ext_f);
 end
 
 if isempty(files_out.qc_wm)
@@ -237,7 +237,7 @@ mask_i = std(slow_drift,[],1)~=0;
 slow_drift = slow_drift(:,mask_i); % get rid of the intercept in the slow time drifts
 if opt.flag_slow
     x = [x slow_drift];
-    labels = [labels repmat({'slowdrift'},[1 size(slow_drift,2)])];
+    labels = [labels repmat({'slow_drift'},[1 size(slow_drift,2)])];
 end
 
 %% Motion parameters
@@ -271,22 +271,22 @@ end
 hdr_qc = hdr_mask;
 model.y = niak_normalize_tseries(y);
 model.x = niak_normalize_tseries([slow_drift motion_param wm_av]);
-labels_all = [repmat({'slowdrift'},[1 size(slow_drift,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av'}];
+labels_all = [repmat({'slow_drift'},[1 size(slow_drift,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av'}];
 opt_qc.test ='ftest';
 
 %% F-test slow drift
-if ~strcmp(files_out.qc_slowdrift,'gb_niak_omitted')
+if ~strcmp(files_out.qc_slow_drift,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the slow time drifts ...\n')
     end
-    model.c = ismember(labels_all,'slowdrift');
+    model.c = ismember(labels_all,'slow_drift');
     if any(model.c)
         res = niak_glm(model,opt_qc);
         qc = reshape(res.ftest,size(mask_brain));
     else
         qc = zeros(size(mask_brain));
     end
-    hdr_qc.file_name = files_out.qc_slowdrift;
+    hdr_qc.file_name = files_out.qc_slow_drift;
     niak_write_vol(hdr_qc,qc);
 end
 
