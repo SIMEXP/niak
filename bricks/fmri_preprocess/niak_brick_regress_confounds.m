@@ -16,12 +16,12 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   DC_LOW 
 %      (string) cosine basis of slow time drifts to be removed
 %
-%   CUSTOM_PARAM 
+%   CUSTOM_PARAMS 
 %      (string, optional) a .mat file with one variable 'covar'(TxK)
 %
 %   MOTION_PARAM 
-%      (string, optional) a .mat file with motion parameters (see
-%      NIAK_PIPELINE_MOTION_CORRECTION
+%      (string) a .mat file with motion parameters (see
+%      NIAK_PIPELINE_MOTION_CORRECTION)
 %
 %   MASK_WM 
 %      (string) the name of a 3D volume file with a binary mask of 
@@ -144,15 +144,19 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+%% FILES_IN
+list_fields    = { 'fmri' , 'dc_low' , 'custom_params'   , 'motion_param' , 'mask_brain' , 'mask_vent' , 'mask_wm' };
+list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN          , NaN         , NaN       };
+%% FILES_OUT
+list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slowdrift'    , 'qc_wm'           , 'qc_motion'       , 'qc_customparam'  , 'qc_gse'          };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
+
 %% OPTIONS
 list_fields    = { 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
 list_defaults  = { true        , ''           , true          , true                , true     , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
-%% FILES_OUT
-list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slowdrift'    , 'qc_wm'           , 'qc_motion'       , 'qc_customparam'  , 'qc_gse'          };
-list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
-opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri);
 
@@ -337,7 +341,7 @@ end
 
 %% Custom parameters to be regressed
 custom_covar=[];
-if isfield(files_in,'custom_params') && ~isempty(files_in.custom_params)
+if ~strcmp(files_in.custom_params,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Regress custom parameters ...\n')
     end
@@ -355,11 +359,13 @@ if isfield(files_in,'custom_params') && ~isempty(files_in.custom_params)
     else
         error('The dimensions of the user-specified covariates are inappropriate (%i samples, functional datasets has %i time points)',size(covar,1),size(y,1))
     end
+else
+    covar = [];
 end
 
 %% F-TEST stage 2 (global signal + custom covariates)
 model.x = [pc_spatial_av covar];
-labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(custom_covar,2)]) ];
+labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(covar,2)]) ];
 
 %% The custom covariates
 if ~strcmp(files_out.qc_customparam,'gb_niak_omitted')
