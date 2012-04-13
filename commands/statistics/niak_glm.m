@@ -165,13 +165,16 @@ if isfield(opt,'test')
                 error('Please specify MODEL.C for performing a F test')
             end
             c = model.c;
+            s  = sum(e.^2,1);  % Estimate of the residual sum-of-square of the full model
             x0 = x(:,~model.c);
             p0 = size(x0,2);
-
-            beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
-            e0 = y-x0*beta0;             % Residuals (restricted model)
-            s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
-            s  = sum(e.^2,1);  % Estimate of the residual sum-of-square of the full model
+            if p0>0
+                beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
+                e0 = y-x0*beta0;             % Residuals (restricted model)
+                s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
+            else 
+                s0 = sum(y.^2,1);
+            end
             results.ftest=((s0-s)/(K-p0))./(s/(N-K)); % F-Test
             
         case 'none'
