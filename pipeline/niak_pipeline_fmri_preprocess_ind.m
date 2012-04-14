@@ -732,6 +732,29 @@ for num_e = 1:size(files_co,1)
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 
+%% Resample the map of ratio of variance after/before motion correction in the stereotaxic (non-linear) space 
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Resample var map of CORSICA (');
+end
+clear job_in job_out job_opt
+for num_e = 1:length(fmri)
+    job_in(num_e).source  = pipeline.(['qc_corsica_var_' label(num_e).name]).files_out;
+    [path_t,name_t,ext_t] = niak_fileparts(job_in(num_e).source);
+    job_out{num_e}        = [path_t filesep name_t '_stereonl' ext_t];
+    job_in(num_e).transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
+    job_in(num_e).target         = opt.template_fmri;
+end
+job_opt               = opt.resample_vol;
+job_opt.interpolation = 'tricubic';
+pipeline.(['resample_qc_corsica_var_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
+pipeline.(['resample_qc_corsica_var_' subject]).files_in   = job_in;
+pipeline.(['resample_qc_corsica_var_' subject]).files_out  = job_out;
+pipeline.(['resample_qc_corsica_var_' subject]).opt        = job_opt;
+
+if opt.flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
 %% Spatial resampling in stereotaxic space
 if opt.flag_verbose
     t1 = clock;

@@ -319,6 +319,20 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           See NIAK_BRICK_QC_COREGISTER
 %       3.  Group quality control for coregistration of fMRI in stereotaxic
 %           space.
+%       4.  Group quality control for the change in variance following 
+%           motion correction.
+%       5.  Group quality control for the variance explained by slow time
+%           drifts.
+%       6.  Group quality control for the variance explained by the regression
+%           of motion parameters (F-test).
+%       7.  Group quality control for the variance explained by the regression
+%           of the average signal in the white matter (F-test).
+%       8.  Group quality control for the variance explained by the regression
+%           of the global signal estimate (using PCA, F-test).
+%       9.  Group quality control for the variance explained by custom confound
+%           covariates (F-test).
+%       10. Group quality control for the explained explained by the selection of 
+%           physiological noise components in an ICA (CORSICA).
 %
 % NOTE 2:
 %   The physiological & motion noise correction CORSICA is changing the
@@ -452,7 +466,7 @@ end
 %% GROUP QC COREGISTER ANAT STEREOLIN 
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of coregistration in anatomical space (linear stereotaxic space) ; ');
+    fprintf('Adding group-level quality control of coregistration in anatomical space (linear stereotaxic space) ; ');
 end
 clear job_in job_out job_opt
 job_in.vol  = cell([length(list_subject) 1]);
@@ -479,11 +493,10 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
-
 %% GROUP QC COREGISTER ANAT STEREONL 
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of coregistration in anatomical space (non-linear stereotaxic space) ; ');
+    fprintf('Adding group-level quality control of coregistration in anatomical space (non-linear stereotaxic space) ; ');
 end
 clear job_in job_out job_opt
 job_in.vol  = cell([length(list_subject) 1]);
@@ -510,11 +523,10 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
-
 %% GROUP QC COREGISTER FUNC STEREOLIN 
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of coregistration in functional space (linear stereotaxic space) ; ');
+    fprintf('Adding group-level quality control of coregistration in functional space (linear stereotaxic space) ; ');
 end
 clear job_in job_out job_opt
 job_in.vol  = cell([length(list_subject) 1]);
@@ -545,7 +557,7 @@ end
 %% GROUP QC COREGISTER FUNC STEREONL 
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of coregistration in functional space (non-linear stereotaxic space) ; ');
+    fprintf('Adding group-level quality control of coregistration in functional space (non-linear stereotaxic space) ; ');
 end
 clear job_in job_out job_opt
 job_in.vol  = cell([length(list_subject) 1]);
@@ -575,7 +587,7 @@ end
 %% GROUP QC MOTION CORRECTION : PART 1, MOTION PARAMETERS
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of motion correction (motion parameters) ; ');
+    fprintf('Adding group-level quality control of motion correction (motion parameters) ; ');
 end
 clear job_in job_out job_opt
 for num_s = 1:length(list_subject)
@@ -601,7 +613,7 @@ end
 %% GROUP QC MOTION CORRECTION : PART 2, VARIANCE MAPS
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of motion correction (ratio of variance maps) ; ');
+    fprintf('Adding group-level quality control of motion correction (ratio of variance maps) ; ');
 end
 clear job_in job_out job_opt
 job_in.vol  = cell([length(fmri_c) 1]);
@@ -630,7 +642,7 @@ end
 %% GROUP QC CONFOUNDS : regression of slow time drifts, white matter average, motion parameters, global signal and (optional) custom parameters
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Adding group-level quality of confound regression (slow time drifts, motion parameters, etc) ; ');
+    fprintf('Adding group-level quality control of confound regression (slow time drifts, motion parameters, etc; F-test) ; ');
 end
 list_maps = { 'qc_wm' , 'qc_slow_drift' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
 for num_m = 1:length(list_maps)
@@ -658,6 +670,35 @@ for num_m = 1:length(list_maps)
     job_opt.labels_subject  = {label.name};
     pipeline = psom_add_job(pipeline,[list_maps{num_m} '_group_stereonl'],'niak_brick_qc_coregister',job_in,job_out,job_opt);
 end
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
+%% GROUP QC CORSICA
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality control of CORSICA (ratio of variance maps) ; ');
+end
+clear job_in job_out job_opt
+job_in.vol  = cell([length(fmri_c) 1]);
+job_in.mask = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
+num_e = 0;
+for num_s = 1:length(list_subject)
+    if strcmp(opt.granularity,'subject')
+        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_qc_corsica_var_' list_subject{num_s}]).files_out;
+    else
+        tmp  = pipeline.(['resample_qc_corsica_var_' list_subject{num_s}]).files_out;
+    end 
+    job_in.vol((num_e+1):(num_e+length(tmp))) = tmp;
+    num_e = num_e+length(tmp);
+end
+job_out.mean_vol        = [opt.folder_out filesep 'quality_control' filesep 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_mean' ext_f];
+job_out.std_vol         = [opt.folder_out filesep 'quality_control' filesep 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_std'  ext_f];
+job_out.fig_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.pdf'];
+job_out.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.csv'];
+job_opt                 = opt.qc_coregister;
+job_opt.labels_subject  = {label.name};
+pipeline = psom_add_job(pipeline,'qc_corsica_var_group_stereonl','niak_brick_qc_coregister',job_in,job_out,job_opt);
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
