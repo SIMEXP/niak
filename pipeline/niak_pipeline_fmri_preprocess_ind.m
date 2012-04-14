@@ -578,10 +578,10 @@ for num_e = 1:length(fmri)
 end
 job_opt               = opt.resample_vol;
 job_opt.interpolation = 'tricubic';
-pipeline.(['resample_qc_motion_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
-pipeline.(['resample_qc_motion_' subject]).files_in   = job_in;
-pipeline.(['resample_qc_motion_' subject]).files_out  = job_out;
-pipeline.(['resample_qc_motion_' subject]).opt        = job_opt;
+pipeline.(['resample_qc_var_motion_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
+pipeline.(['resample_qc_var_motion_' subject]).files_in   = job_in;
+pipeline.(['resample_qc_var_motion_' subject]).files_out  = job_out;
+pipeline.(['resample_qc_var_motion_' subject]).opt        = job_opt;
 
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
@@ -655,6 +655,35 @@ for num_e = 1:length(fmri)
     if strcmp(opt.size_output,'quality_control')
         pipeline = psom_add_clean(pipeline,['clean_confounds_' label(num_e).name],pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data);
     end    
+end
+if opt.flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
+%% Resample the maps of F-tests for the confound in the stereotaxic (non-linear) space 
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Resample var map of motion correction (');
+end
+list_maps = { 'qc_wm' , 'qc_slow_drift' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
+job_opt = opt.resample_vol;
+job_opt.interpolation = 'tricubic';
+for num_m = 1:length(list_maps)
+    clear job_in job_out 
+    if strcmp(list_maps{num_m},'qc_custom_param')&&strcmp(pipeline.(['confounds_' label(num_e).name]).files_out.qc_custom_param,'gb_niak_omitted')
+        continue
+    end
+    for num_e = 1:length(fmri)
+        job_in(num_e).source  = pipeline.(['confounds_' label(num_e).name]).files_out.(list_maps{num_m});
+        [path_t,name_t,ext_t] = niak_fileparts(job_in(num_e).source);
+        job_out{num_e}        = [path_t filesep name_t '_stereonl' ext_t];
+        job_in(num_e).transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
+        job_in(num_e).target         = opt.template_fmri;
+    end
+    pipeline.(['resample_' list_maps{num_m} '_' subject]).command   = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
+    pipeline.(['resample_' list_maps{num_m} '_' subject]).files_in  = job_in;
+    pipeline.(['resample_' list_maps{num_m} '_' subject]).files_out = job_out;
+    pipeline.(['resample_' list_maps{num_m} '_' subject]).opt       = job_opt;
 end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));

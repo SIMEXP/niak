@@ -593,7 +593,7 @@ job_out.tab_coregister_group  = [opt.folder_out filesep 'quality_control' filese
 job_out.fig_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.pdf'];
 job_out.tab_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.csv'];
 job_opt.flag_test                   = true;
-pipeline = psom_add_job(pipeline,'qc_motion_group','niak_brick_qc_motion_correction_group',job_in,job_out,job_opt);
+pipeline = psom_add_job(pipeline,'qc_param_motion_group','niak_brick_qc_motion_correction_group',job_in,job_out,job_opt);
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
@@ -609,9 +609,9 @@ job_in.mask = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 num_e = 0;
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_qc_motion_' list_subject{num_s}]).files_out;
+        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_qc_var_motion_' list_subject{num_s}]).files_out;
     else
-        tmp  = pipeline.(['resample_qc_motion_' list_subject{num_s}]).files_out;
+        tmp  = pipeline.(['resample_qc_var_motion_' list_subject{num_s}]).files_out;
     end 
     job_in.vol((num_e+1):(num_e+length(tmp))) = tmp;
     num_e = num_e+length(tmp);
@@ -622,7 +622,42 @@ job_out.fig_coregister  = [opt.folder_out filesep 'quality_control' filesep 'gro
 job_out.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'func_ratio_var_mc_stereonl_fit.csv'];
 job_opt                 = opt.qc_coregister;
 job_opt.labels_subject  = {label.name};
-pipeline = psom_add_job(pipeline,'qc_motion_group_var_stereonl','niak_brick_qc_coregister',job_in,job_out,job_opt);
+pipeline = psom_add_job(pipeline,'qc_var_motion_group_stereonl','niak_brick_qc_coregister',job_in,job_out,job_opt);
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
+%% GROUP QC CONFOUNDS : regression of slow time drifts, white matter average, motion parameters, global signal and (optional) custom parameters
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality of confound regression (slow time drifts, motion parameters, etc) ; ');
+end
+list_maps = { 'qc_wm' , 'qc_slow_drift' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
+for num_m = 1:length(list_maps)
+    clear job_in job_out job_opt
+    job_in.vol  = cell([length(fmri_c) 1]);
+    job_in.mask = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
+    num_e = 0;
+    if strcmp(list_maps{num_m},'qc_custom_param')&&~isfield(pipeline,['resample_' list_maps{num_m} '_' list_subject{1}])
+        continue
+    end
+    for num_s = 1:length(list_subject)
+        if strcmp(opt.granularity,'subject')
+            tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_' list_maps{num_m} '_' list_subject{num_s}]).files_out;
+        else
+            tmp  = pipeline.(['resample_' list_maps{num_m} '_' list_subject{num_s}]).files_out;
+        end 
+        job_in.vol((num_e+1):(num_e+length(tmp))) = tmp;
+        num_e = num_e+length(tmp);
+    end
+    job_out.mean_vol        = [opt.folder_out filesep 'quality_control' filesep 'group_confounds' filesep 'func_' list_maps{num_m} '_stereonl_mean' ext_f];
+    job_out.std_vol         = [opt.folder_out filesep 'quality_control' filesep 'group_confounds' filesep 'func_' list_maps{num_m} '_stereonl_std'  ext_f];
+    job_out.fig_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_confounds' filesep 'func_' list_maps{num_m} '_stereonl_fit.pdf'];
+    job_out.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_confounds' filesep 'func_' list_maps{num_m} '_stereonl_fit.csv'];
+    job_opt                 = opt.qc_coregister;
+    job_opt.labels_subject  = {label.name};
+    pipeline = psom_add_job(pipeline,[list_maps{num_m} '_group_stereonl'],'niak_brick_qc_coregister',job_in,job_out,job_opt);
+end
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
