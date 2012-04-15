@@ -8,55 +8,55 @@ function [files_in,files_out,opt] = niak_brick_nu_correct(files_in,files_out,opt
 % _________________________________________________________________________
 % INPUTS
 %
-%  * FILES_IN        
-%       (structure) with the following fields :
+% FILES_IN        
+%   (structure) with the following fields :
 %
-%       VOL
-%           (string) the file name of an MR volume (typically T1 or T2).
+%   VOL
+%      (string) the file name of an MR volume (typically T1 or T2).
 %
-%       MASK
-%           (string, default 'gb_niak_omitted') the file name of a binary 
-%           mask of a region of interest. If unspecified (or equal to 
-%           'gb_niak_omitted'), no mask is used.
+%   MASK
+%      (string, default 'gb_niak_omitted') the file name of a binary 
+%      mask of a region of interest. If unspecified (or equal to 
+%     'gb_niak_omitted'), no mask is used.
 %
-%  * FILES_OUT
-%       (structure) with the following fields.  Note that if a field is an 
-%       empty string, a default value will be used to name the outputs. 
-%       If a field is ommited, the output won't be saved at all (this is 
-%       equivalent to setting up the output file names to 
-%       'gb_niak_omitted'). 
+% FILES_OUT
+%   (structure) with the following fields.  Note that if a field is an 
+%   empty string, a default value will be used to name the outputs. 
+%   If a field is ommited, the output won't be saved at all (this is 
+%   equivalent to setting up the output file names to 
+%   'gb_niak_omitted'). 
 %                       
-%       VOL_NU
-%           (string, default <FILES_IN.VOL>_NU.<EXT>) The non-uniformity
-%           corrected T1 scan.
+%   VOL_NU
+%      (string, default <FILES_IN.VOL>_NU.<EXT>) The non-uniformity
+%      corrected T1 scan.
 %
-%       VOL_IMP
-%           (string, default <FILES_IN.VOL>_NU.IMP) The estimated
-%           intensity mapping.
+%   VOL_IMP
+%      (string, default <FILES_IN.VOL>_NU.IMP) The estimated
+%      intensity mapping.
 %
-%  * OPT           
-%       (structure) with the following fields:
+% OPT           
+%   (structure) with the following fields:
 %
-%       ARG
-%           (string, default '-distance 200') any argument that will be 
-%           passed to the NU_CORRECT command (see comments below). The 
-%           '-distance' option sets the N3 spline distance in mm (suggested 
-%           values: 200 for 1.5T scan; 50 for 3T scan). 
+%   ARG
+%     (string, default '-distance 200') any argument that will be 
+%     passed to the NU_CORRECT command (see comments below). The 
+%     '-distance' option sets the N3 spline distance in mm (suggested 
+%     values: 200 for 1.5T scan; 50 for 3T scan). 
 %
-%       FLAG_VERBOSE 
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
-%           messages indicating progress.
+%   FLAG_VERBOSE 
+%     (boolean, default: 1) If FLAG_VERBOSE == 1, write
+%     messages indicating progress.
 %
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%     (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%     do anything but update the default values in FILES_IN, 
+%     FILES_OUT and OPT.
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
-%               
+%   FOLDER_OUT 
+%     (string, default: path of FILES_IN) If present, all default 
+%     outputs will be created in the folder FOLDER_OUT. The folder 
+%     needs to be created beforehand.
+%             
 % _________________________________________________________________________
 % OUTPUTS
 %
@@ -117,7 +117,7 @@ niak_gb_vars; % load important NIAK variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Syntax
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_NU_CORRECT(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_nu_correct'' for more info.')
 end
 
