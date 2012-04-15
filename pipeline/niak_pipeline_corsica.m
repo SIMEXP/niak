@@ -43,6 +43,14 @@ function [pipeline,opt,files_out] = niak_pipeline_corsica(files_in,opt)
 %       suppression (scores above the thresholds are selected). This option
 %       will be used both for QC_CORSICA and COMPONENT_SUPP.
 %
+%   RAND_SEED
+%       (scalar, default []) The specified value is used to seed the random
+%       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
+%       the generator is not initialized by the bricks. As PSOM features an 
+%       initialization based on the clock, the results will be slightly 
+%       different due to random variations in bootstrap sampling if the 
+%       pipeline is executed twice.
+%
 %   PSOM
 %       (structure) the options of the pipeline manager. See the OPT
 %       argument of PSOM_RUN_PIPELINE. Default values can be used here.
@@ -231,8 +239,8 @@ end
 default_psom.path_logs = '';
 opt_tmp.flag_test = 1;
 gb_name_structure = 'opt';
-gb_list_fields    = { 'threshold' , 'labels_mask' , 'flag_skip' , 'size_output'     , 'psom'       , 'flag_test' , 'folder_out' , 'folder_sica' , 'mask_brain' , 'sica'  , 'component_sel' , 'qc_corsica' , 'component_supp' };
-gb_list_defaults  = { 0.15        , {}            , false       , 'quality_control' , default_psom , false       , NaN          , ''            , opt_tmp      , opt_tmp , opt_tmp         , opt_tmp      , opt_tmp          };
+gb_list_fields    = { 'rand_seed' , 'threshold' , 'labels_mask' , 'flag_skip' , 'size_output'     , 'psom'       , 'flag_test' , 'folder_out' , 'folder_sica' , 'mask_brain' , 'sica'  , 'component_sel' , 'qc_corsica' , 'component_supp' };
+gb_list_defaults  = { []          , 0.15        , {}            , false       , 'quality_control' , default_psom , false       , NaN          , ''            , opt_tmp      , opt_tmp , opt_tmp         , opt_tmp      , opt_tmp          };
 niak_set_defaults
 
 if isempty(opt.folder_sica)
@@ -252,7 +260,7 @@ opt.psom.path_logs = [opt.folder_sica 'logs' filesep];
 %% Initialization of the pipeline %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pipeline = struct([]);
-
+nb_seed = 0;
 for num_s = 1:nb_subject
     subject = list_subject{num_s};
     if num_s == 1
@@ -287,6 +295,12 @@ for num_s = 1:nb_subject
         files_out_tmp.space  = '';
         files_out_tmp.time   = '';        
         opt_tmp              = opt.sica;
+        if isempty(opt.rand_seed);
+            opt_tmp.rand_seed = opt.rand_seed;
+        else
+            opt_tmp.rand_seed = opt.rand_seed + nb_seed;
+            nb_seed = nb_seed + 1;
+        end
         opt_tmp.folder_out   = opt.folder_sica;
         pipeline = psom_add_job(pipeline,name_job_sica,'niak_brick_sica',files_in_tmp,files_out_tmp,opt_tmp);
                 
@@ -306,6 +320,12 @@ for num_s = 1:nb_subject
             files_in_tmp.component_to_keep = files_in.(subject).component_to_keep;
             files_out_tmp                  = [opt.folder_sica filesep name_f '_compsel_' labels_mask{num_m} '.mat'];
             opt_tmp                        = opt.component_sel;
+            if isempty(opt.rand_seed);
+                opt_tmp.rand_seed = opt.rand_seed;
+            else
+                opt_tmp.rand_seed = opt.rand_seed + nb_seed;
+                nb_seed = nb_seed + 1;
+            end
             pipeline = psom_add_job(pipeline,name_job_sel{num_m},'niak_brick_component_sel',files_in_tmp,files_out_tmp,opt_tmp);
             files_sel{num_m} = pipeline.(name_job_sel{num_m}).files_out;
         end

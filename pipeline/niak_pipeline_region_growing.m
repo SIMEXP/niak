@@ -9,8 +9,14 @@ function pipeline = niak_pipeline_region_growing(files_in,opt)
 %
 % FILES_IN  
 %
-%   FMRI
-%       (cell of strings) a list of fMRI datasets, all in the same space.
+%   FMRI.<SUBJECT>.<SESSION>.<RUN>
+%       (string) a list of fMRI datasets, acquired in the same 
+%       session (small displacements). 
+%       The field names <SUBJECT>, <SESSION> and <RUN> can be any arbitrary 
+%       strings.
+%       All data in FILES_IN.<SUBJECT> should be from the same subject.
+%       Note that FMRI can also be a cell of strings, in 
+%       which case the label OPT.LABELS{I} will be used for FMRI{I}
 %
 %   AREAS
 %       (string, default AAL template from NIAK) the name of the brain 
@@ -27,7 +33,7 @@ function pipeline = niak_pipeline_region_growing(files_in,opt)
 %   LABELS
 %       (cell of strings, default {'file1','files2',...}) LABELS{I} will be 
 %       used as part of the name of the job for masking the brain of 
-%       dataset FILES_IN{I}.
+%       dataset FILES_IN.FMRI{I} if FMRI is a cell of strings.
 %
 %   FOLDER_OUT 
 %       (string) where to write the results of the pipeline. 
@@ -173,7 +179,12 @@ else
     end
 
     if ~iscellstr(files_in.fmri)
-        error('FILES_IN.FMRI should be a cell of strings!');
+        if isstruct(files_in.fmri)
+            [files_in.fmri,opt.labels] = niak_fmri2cell(files_in.fmri);
+            opt.labels = {opt.labels.name};
+        else
+            error('FILES_IN.FMRI should be a structure subject.session.run, or a cell of strings!');
+        end
     end
 
     if isfield(files_in,'areas_in')&&~isempty(files_in.areas_in)

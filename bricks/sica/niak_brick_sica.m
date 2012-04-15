@@ -10,57 +10,62 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % FILES_IN
 %   (structure) with the following fields :
 %
-%       FMRI
-%          (string) the file name of an fMRI dataset.
+%   FMRI
+%      (string) the file name of an fMRI dataset.
 %
-%       MASK
-%           (string, default 'gb_niak_omitted') the file name of a binary
-%           mask of the brain. If omitted, it is computed using
-%           NIAK_MASK_BRAIN.
+%   MASK
+%      (string, default 'gb_niak_omitted') the file name of a binary
+%      mask of the brain. If omitted, it is computed using
+%      NIAK_MASK_BRAIN.
 %
-%  FILES_OUT
-%       (structure) with the following fields.  Note that if a field is an
-%       empty string, a default value will be used to name the outputs.
-%       If a field is ommited, the output won't be saved at all (this is
-%       equivalent to setting up the output file names to
-%       'gb_niak_omitted').
+% FILES_OUT
+%   (structure) with the following fields.  Note that if a field is an
+%   empty string, a default value will be used to name the outputs.
+%   If a field is ommited, the output won't be saved at all (this is
+%   equivalent to setting up the output file names to
+%   'gb_niak_omitted').
 %
-%       SPACE
-%           (string, default <BASE_NAME>_sica_space.<EXT>)
-%           a 3D+t dataset. Volume K is the spatial distribution of the Kth
-%           source estimaed through ICA.
+%   SPACE
+%      (string, default <BASE_NAME>_sica_space.<EXT>)
+%      a 3D+t dataset. Volume K is the spatial distribution of the Kth
+%      source estimaed through ICA.
 %
-%       TIME
-%           (string, default <BASE_NAME>_sica_time.mat)
-%           a mat file with a variable TSERIES (2D array). TSERIES(:,K) is 
-%           the temporal distribution of the Kth ICA source. 
+%   TIME
+%      (string, default <BASE_NAME>_sica_time.mat)
+%      a mat file with a variable TSERIES (2D array). TSERIES(:,K) is 
+%      the temporal distribution of the Kth ICA source. 
 %
-%  OPT
-%       (structure) with the following fields :
+% OPT
+%   (structure) with the following fields :
 %
-%       ALGO
-%           (string, default 'Infomax')
-%           the type of algorithm to be used for the sica decomposition.
-%           Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
+%   ALGO
+%      (string, default 'Infomax')
+%      the type of algorithm to be used for the sica decomposition.
+%      Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
-%       NB_COMP
-%           (integer, default min(60,foor(0.95*T)))
-%           number of components to compute (for default : T is the number
-%           of time samples.
+%   NB_COMP
+%      (integer, default min(60,foor(0.95*T)))
+%      number of components to compute (for default : T is the number
+%      of time samples.
 %
-%       FOLDER_OUT
-%           (string, default: path of FILES_IN) If present,
-%           all default outputs will be created in the folder FOLDER_OUT.
-%           The folder needs to be created beforehand.
+%   RAND_SEED
+%      (scalar, default []) The specified value is used to seed the random
+%      number generator with PSOM_SET_RAND_SEED for each job. If left empty,
+%      the generator is not initialized.
 %
-%       FLAG_VERBOSE
-%           (boolean, default 1) if the flag is 1, then
-%           the function prints some infos during the processing.
+%   FOLDER_OUT
+%      (string, default: path of FILES_IN) If present,
+%      all default outputs will be created in the folder FOLDER_OUT.
+%      The folder needs to be created beforehand.
 %
-%       FLAG_TEST
-%           (boolean, default 0) if FLAG_TEST equals 1, the
-%           brick does not do anything but update the default
-%           values in FILES_IN, FILES_OUT and OPT.
+%   FLAG_VERBOSE
+%      (boolean, default 1) if the flag is 1, then
+%      the function prints some infos during the processing.
+%
+%   FLAG_TEST
+%      (boolean, default 0) if FLAG_TEST equals 1, the
+%      brick does not do anything but update the default
+%      values in FILES_IN, FILES_OUT and OPT.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -97,9 +102,12 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 % NIAK_PIPELINE_CORSICA, NIAK_BRICK_QC_CORSICA
 %
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
-% Montreal Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+% Montreal Neurological Institute, McGill University, 2008-2010.
+% Research Centre of the Montreal Geriatric Institute
+% & Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2011-2012
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : fMRI, ICA
 
@@ -146,8 +154,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields    = {'norm' , 'algo'    , 'nb_comp' , 'flag_verbose' , 'flag_test' , 'folder_out' };
-gb_list_defaults  = {'mean' , 'Infomax' , 60        , 1              , 0           , ''           };
+gb_list_fields    = { 'rand_seed' , 'norm' , 'algo'    , 'nb_comp' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = { []          , 'mean' , 'Infomax' , 60        , 1              , 0           , ''           };
 niak_set_defaults
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri);
@@ -176,6 +184,9 @@ if flag_verbose
     stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);
 end
+
+%% Seeding the random number generator
+psom_set_rand_seed(opt.rand_seed);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Reading and pre-processing data %%

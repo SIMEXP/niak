@@ -57,6 +57,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           'cleanup' : group together clean-up jobs for each subject
 %           'subject' : bundle all jobs associated with a specific subject
 %
+%   FLAG_RAND
+%      (boolean, default false) if the flag is false, the pipeline is 
+%      deterministic. Otherwise, the random number generator is initialized
+%      based on the clock for each job.
+%
 %   FLAG_TEST
 %       (boolean, default false) If FLAG_TEST is true, the pipeline will 
 %       just produce a pipeline structure, and will not actually process 
@@ -402,8 +407,8 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 template_fmri = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = { 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-list_defaults  = { 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         };
+list_fields    = { 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+list_defaults  = { false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
@@ -441,9 +446,13 @@ for num_s = 1:length(list_subject)
     subject = list_subject{num_s};
     if opt.flag_verbose
         t1 = clock;
-        fprintf('    %s ; ',subject);
+        fprintf('    Adding %s ; ',subject);
     end
     opt_ind = sub_tune(opt,subject); % Tune the pipeline parameters for this subject    
+    if ~opt.flag_rand
+        opt_ind.rand_seed = double(md5sum(subject,true));
+        opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
+    end
     pipeline_ind = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
 
     %% aggregate jobs
@@ -453,7 +462,7 @@ for num_s = 1:length(list_subject)
        case 'cleanup'
            pipeline = psom_merge_pipeline(pipeline,psom_bundle_cleanup(pipeline_ind,['clean_' subject]));
        case 'subject'
-           [pipeline.(['preproc_' subject]),pipeline.(['clean_' subject])] = psom_pipeline2job(pipeline,[opt.psom.path_logs subject]);
+           [pipeline.(['preproc_' subject]),pipeline.(['clean_' subject])] = psom_pipeline2job(pipeline_ind,[opt.psom.path_logs subject]);
        otherwise
            error('%s is not a supported level of granularity for the pipeline',opt.granularity)
     end     
@@ -710,27 +719,23 @@ if ~opt.region_growing.flag_skip
         fprintf('Generating pipeline for the region growing ; ');
     end
     clear job_in job_out job_opt
-    job_opt                    = rmfield(opt.region_growing,'flag_skip');
-    job_opt.folder_out          = [opt.folder_out filesep 'region_growing' filesep];
-    job_opt.flag_test           = true;
-    job_opt.labels              = list_subject;
-    for num_s = 1:length(list_subject)
-        subject = list_subject{num_s};
-        list_session = fieldnames(files_in.(subject));
-        for num_session = 1:size(list_session)
-            session = list_session{num_session};
-            list_run = fieldnames(files_in.(subject).(session));
-            for num_r = 1:length(list_run)
-                run = list_run{num_r};
-                job_in.fmri.(subject).(session).(run) = pipeline.(['smooth_' subject '_' session '_' run]).files_out;
-            end
+    job_opt            = rmfield(opt.region_growing,'flag_skip');
+    job_opt.folder_out = [opt.folder_out filesep 'region_growing' filesep];
+    job_opt.flag_test  = true;
+    for num_e = 1:length(fmri_c)
+        if strcmp(opt.granularity,'subject')
+            job_in.fmri.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline.(['smooth_' label(num_e).name]).files_out;
+        else
+            job_in.fmri.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = pipeline.(['smooth_' label(num_e).name]).files_out;
         end
     end
-    job_in.areas          = pipeline.resamp_aal.files_out;
-    job_in.mask           = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
-
-    [pipeline_rg] = niak_pipeline_region_growing(job_in,job_opt);
-    [pipeline] = psom_merge_pipeline(pipeline,pipeline_rg);
+    job_in.areas = pipeline.resample_aal.files_out;
+    job_in.mask  = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
+    if strcmp(opt.granularity,'subject')
+        [pipeline.region_growing,pipeline.clean_region_growing] = psom_pipeline2job(niak_pipeline_region_growing(job_in,job_opt),[opt.psom.path_logs 'region_growing']);
+    else
+        pipeline = psom_merge_pipeline(pipeline,niak_pipeline_region_growing(job_in,job_opt));
+    end
 
     if opt.flag_verbose        
         fprintf('%1.2f sec\n',etime(clock,t1));
@@ -839,6 +844,6 @@ if isfield(opt.tune,'subject')
         end
     end
 end
-opt_ind = rmfield(opt_ind,{'tune','flag_verbose','granularity'});    
+opt_ind = rmfield(opt_ind,{'tune','flag_verbose','granularity','flag_rand'});    
 opt_ind.subject = subject;    
 opt_ind.flag_test = true;

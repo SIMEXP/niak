@@ -8,80 +8,85 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 % INPUTS
 %
 % FILES_IN  
-%    (structure) with the following fields :
+%   (structure) with the following fields :
 %
-%    FMRI 
-%        (string) the original fMRI 3D+t data
+%   FMRI 
+%      (string) the original fMRI 3D+t data
 %
-%    COMPONENT 
-%        (string) a 2D text array with the temporal distribution of sICA.
+%   COMPONENT 
+%      (string) a 2D text array with the temporal distribution of sICA.
 %
-%    MASK 
-%        (string) a path to a binary mask (the spatial a priori).
+%   MASK 
+%      (string) a path to a binary mask (the spatial a priori).
 %
-%    TRANSFORMATION 
-%        (string, default 'gb_niak_omitted') a transformation file from 
-%        the functional space to the mask space. If it is omitted, the
-%        original mask will be used. If 'identity' is used, the mask
-%        will be resampled at the resolution of the functional space,
-%        but no actual transformation of the space will be applied.
+%   TRANSFORMATION 
+%      (string, default 'gb_niak_omitted') a transformation file from 
+%      the functional space to the mask space. If it is omitted, the
+%      original mask will be used. If 'identity' is used, the mask
+%      will be resampled at the resolution of the functional space,
+%      but no actual transformation of the space will be applied.
 %
-%    COMPONENT_TO_KEEP
-%        (string, default none) a text file, whose first line is a
-%        a set of string labels, and each column is otherwise a temporal
-%        component of interest. The ICA component with higher
-%        correlation with each signal of interest will be automatically
-%        attributed a selection score of 0.
+%   COMPONENT_TO_KEEP
+%      (string, default none) a text file, whose first line is a
+%      a set of string labels, and each column is otherwise a temporal
+%      component of interest. The ICA component with higher
+%      correlation with each signal of interest will be automatically
+%      attributed a selection score of 0.
 %
 % FILES_OUT 
-%    (string, default <base COMPONENT>_<base MASK>_compsel.mat) The name
-%    of a mat file with two variables SCORE and ORDER. SCORE(I) is the
-%    selection score of component ORDER(I). Components are ranked by 
-%    descending selection scores.
+%   (string, default <base COMPONENT>_<base MASK>_compsel.mat) The name
+%   of a mat file with two variables SCORE and ORDER. SCORE(I) is the
+%   selection score of component ORDER(I). Components are ranked by 
+%   descending selection scores.
 %
 % OPT   
-%    (structure) with the following fields :
+%   (structure) with the following fields :
 %
-%    NB_CLUSTER 
-%        (default 0). The number of spatial clusters used in stepwise 
-%        regression. If NB_CLUSTER == 0, the number of clusters is set 
-%        to (nb_vox/10), where nb_vox is the number of voxels in the 
-%        region.
+%   NB_CLUSTER 
+%      (default 0). The number of spatial clusters used in stepwise 
+%      regression. If NB_CLUSTER == 0, the number of clusters is set 
+%      to (nb_vox/10), where nb_vox is the number of voxels in the 
+%      region.
 %
-%    P 
-%        (real number, 0<P<1, default 0.0001) the p-value of the stepwise
-%        regression.
+%   P 
+%      (real number, 0<P<1, default 0.0001) the p-value of the stepwise
+%      regression.
 %
-%    NB_SAMPS 
-%        (default 50) the number of kmeans repetition.
+%   NB_SAMPS 
+%      (default 50) the number of kmeans repetition.
 %
-%    TYPE_SCORE 
-%        (string, default 'freq') Score function. 'freq' for the
-%        frequency of selection of the regressor and 'inertia' for the
-%        relative part of inertia explained by the clusters "selecting"
-%        the regressor.
+%   TYPE_SCORE 
+%      (string, default 'freq') Score function. 'freq' for the
+%      frequency of selection of the regressor and 'inertia' for the
+%      relative part of inertia explained by the clusters "selecting"
+%      the regressor.
 %
-%    FOLDER_OUT 
-%        (string, default: path of FILES_IN.SPACE) If present,
-%        all default outputs will be created in the folder FOLDER_OUT.
-%        The folder needs to be created beforehand.
+%   RAND_SEED
+%      (scalar, default []) The specified value is used to seed the random
+%      number generator with PSOM_SET_RAND_SEED for each job. If left empty,
+%      the generator is not initialized.
 %
-%    FLAG_VERBOSE 
-%        (boolean, default 1) gives progression infos
+%   FOLDER_OUT 
+%      (string, default: path of FILES_IN.SPACE) If present,
+%      all default outputs will be created in the folder FOLDER_OUT.
+%      The folder needs to be created beforehand.
 %
-%    FLAG_TEST 
-%        (boolean, default 0) if FLAG_TEST equals 1, the
-%        brick does not do anything but update the default
-%        values in FILES_IN, FILES_OUT and OPT.
+%   FLAG_VERBOSE 
+%      (boolean, default 1) gives progression infos
+%
+%   FLAG_TEST 
+%      (boolean, default 0) if FLAG_TEST equals 1, the
+%      brick does not do anything but update the default
+%      values in FILES_IN, FILES_OUT and OPT.
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % This brick is using multiple functions from the SICA toolbox, developped
 % by Vincent Perlbarg, LIF Inserm U678, Faculte de medecine
@@ -107,8 +112,11 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
-% Montreal Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Montreal Neurological Institute, McGill University, 2008-2010.
+% Research Centre of the Montreal Geriatric Institute
+% & Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2011-2012
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : NIAK, ICA, CORSICA
 
@@ -154,8 +162,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'ww','nb_cluster','p','nb_samps','type_score','flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {0,0,0.0001,50,'freq',1,0,''};
+gb_list_fields    = { 'rand_seed' , 'ww' , 'nb_cluster' , 'p'    , 'nb_samps' , 'type_score' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = { []          , 0    , 0            , 0.0001 , 50         , 'freq'       , 1              , 0           , ''           };
 niak_set_defaults
 
 %% Parsing the input names
@@ -205,6 +213,9 @@ if flag_verbose
     stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n\n',stars,msg,stars);
 end
+
+%% Seeding the random number generator
+psom_set_rand_seed(opt.rand_seed);
 
 %%%%%%%%%%%%%%%%%%%%
 %% Reading inputs %%

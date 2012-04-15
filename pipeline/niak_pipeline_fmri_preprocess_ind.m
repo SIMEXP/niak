@@ -57,6 +57,14 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       will be used to resample the fMRI datasets. By default it uses
 %       a 2 mm isotropic space with a field of view adjusted on the brain.
 %
+%   RAND_SEED
+%       (scalar, default []) The specified value is used to seed the random
+%       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
+%       the generator is not initialized by the bricks. As PSOM features an 
+%       initialization based on the clock, the results will be slightly 
+%       different due to random variations in bootstrap sampling if the 
+%       pipeline is executed twice.
+%
 %   FOLDER_OUT
 %       (string) where to write the default outputs.
 %
@@ -353,8 +361,8 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = {'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
-list_defaults  = {NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         };
+list_fields    = {'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' };
+list_defaults  = {[]          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -699,7 +707,8 @@ job_in.(subject).component_to_keep  = files_in.component_to_keep;
 job_in.(subject).mask_brain         = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.(subject).mask_selection{1}  = pipeline.(['mask_corsica_' subject]).files_out.mask_vent_ind;
 job_in.(subject).mask_selection{2}  = pipeline.(['mask_corsica_' subject]).files_out.mask_stem_ind;
-job_opt              = opt.corsica;
+job_opt = opt.corsica;
+job_opt.rand_seed = opt.rand_seed;
 if isfield(opt.corsica,'size_output')
   job_opt.size_output = opt.corsica.size_output;
 else
