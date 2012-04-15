@@ -453,7 +453,7 @@ for num_s = 1:length(list_subject)
         opt_ind.rand_seed = double(md5sum(subject,true));
         opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
     end
-    opt_ind.flag_verbose = true;
+    
     pipeline_ind = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
 
     %% aggregate jobs
