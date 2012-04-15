@@ -453,6 +453,7 @@ for num_s = 1:length(list_subject)
         opt_ind.rand_seed = double(md5sum(subject,true));
         opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
     end
+    opt_ind.flag_verbose = true;
     pipeline_ind = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
 
     %% aggregate jobs
@@ -482,8 +483,9 @@ job_in.vol  = cell([length(list_subject) 1]);
 job_in.mask = cell([length(list_subject) 1]);
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.anat_nuc_stereolin;
-        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.mask_stereolin;
+        ind_anat = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['t1_preprocess_' list_subject{num_s}]));
+        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind_anat}.files_out.anat_nuc_stereolin;
+        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind_anat}.files_out.mask_stereolin;
     else
         job_in.vol{num_s}  = pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.anat_nuc_stereolin;
         job_in.mask{num_s} = pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.mask_stereolin;
@@ -512,8 +514,9 @@ job_in.vol  = cell([length(list_subject) 1]);
 job_in.mask = cell([length(list_subject) 1]);
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.anat_nuc_stereonl;
-        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.mask_stereonl;
+        ind_anat = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['t1_preprocess_' list_subject{num_s}]));
+        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind_anat}.files_out.anat_nuc_stereonl;
+        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind_anat}.files_out.mask_stereonl;
     else
         job_in.vol{num_s}  = pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.anat_nuc_stereonl;
         job_in.mask{num_s} = pipeline.(['t1_preprocess_' list_subject{num_s}]).files_out.mask_stereonl;
@@ -542,8 +545,9 @@ job_in.vol  = cell([length(list_subject) 1]);
 job_in.mask = cell([length(list_subject) 1]);
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['mask_ind_stereolin_' list_subject{num_s}]).files_out{1};
-        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['mask_ind_stereolin_' list_subject{num_s}]).files_out{2};
+        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['mask_ind_stereolin_' list_subject{num_s}]));
+        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out{1};
+        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out{2};
     else
         job_in.vol{num_s}  = pipeline.(['mask_ind_stereolin_' list_subject{num_s}]).files_out{1};
         job_in.mask{num_s} = pipeline.(['mask_ind_stereolin_' list_subject{num_s}]).files_out{2};
@@ -573,8 +577,9 @@ job_in.vol  = cell([length(list_subject) 1]);
 job_in.mask = cell([length(list_subject) 1]);
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['mask_ind_stereonl_' list_subject{num_s}]).files_out{1};
-        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['mask_ind_stereonl_' list_subject{num_s}]).files_out{2};
+        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['mask_ind_stereonl_' list_subject{num_s}]));
+        job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out{1};
+        job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out{2};
     else
         job_in.vol{num_s}  = pipeline.(['mask_ind_stereonl_' list_subject{num_s}]).files_out{1};
         job_in.mask{num_s} = pipeline.(['mask_ind_stereonl_' list_subject{num_s}]).files_out{2};
@@ -601,8 +606,9 @@ end
 clear job_in job_out job_opt
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        job_in.(list_subject{num_s}).tab_coregister_ind    = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['qc_motion_' list_subject{num_s}]).files_out.tab_coregister;
-        job_in.(list_subject{num_s}).motion_parameters_ind = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['qc_motion_' list_subject{num_s}]).files_in.motion_parameters;
+        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['qc_motion_' list_subject{num_s}]));
+        job_in.(list_subject{num_s}).motion_parameters_ind = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_in.motion_parameters;
+        job_in.(list_subject{num_s}).tab_coregister_ind    = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out.tab_coregister;
     else
         job_in.(list_subject{num_s}).tab_coregister_ind    = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.tab_coregister;
         job_in.(list_subject{num_s}).motion_parameters_ind = pipeline.(['qc_motion_' list_subject{num_s}]).files_in.motion_parameters;
@@ -630,7 +636,8 @@ job_in.mask = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 num_e = 0;
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_qc_var_motion_' list_subject{num_s}]).files_out;
+        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['resample_qc_var_motion_' list_subject{num_s}]));
+        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out;
     else
         tmp  = pipeline.(['resample_qc_var_motion_' list_subject{num_s}]).files_out;
     end 
@@ -664,7 +671,8 @@ for num_m = 1:length(list_maps)
     end
     for num_s = 1:length(list_subject)
         if strcmp(opt.granularity,'subject')
-            tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_' list_maps{num_m} '_' list_subject{num_s}]).files_out;
+            ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['resample_' list_maps{num_m} '_' list_subject{num_s}]));
+            tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out;
         else
             tmp  = pipeline.(['resample_' list_maps{num_m} '_' list_subject{num_s}]).files_out;
         end 
@@ -694,7 +702,8 @@ job_in.mask = pipeline.qc_coregister_group_func_stereonl.files_out.mask_group;
 num_e = 0;
 for num_s = 1:length(list_subject)
     if strcmp(opt.granularity,'subject')
-        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline.(['resample_qc_corsica_var_' list_subject{num_s}]).files_out;
+        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['resample_qc_corsica_var_' list_subject{num_s}]));
+        tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out;
     else
         tmp  = pipeline.(['resample_qc_corsica_var_' list_subject{num_s}]).files_out;
     end 
@@ -724,7 +733,8 @@ if ~opt.region_growing.flag_skip
     job_opt.flag_test  = true;
     for num_e = 1:length(fmri_c)
         if strcmp(opt.granularity,'subject')
-            job_in.fmri.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline.(['smooth_' label(num_e).name]).files_out;
+            ind = find(ismember(pipeline.(['preproc_' label(num_e).subject]).opt.list_jobs,['smooth_' label(num_e).name]));
+            job_in.fmri.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline{ind}.files_out;
         else
             job_in.fmri.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = pipeline.(['smooth_' label(num_e).name]).files_out;
         end
