@@ -183,7 +183,7 @@ if fwhm>0
     vol = niak_smooth_vol(vol,opt_smooth);
 end
 
-if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')
+if strcmp(type_flip,'rot270')||strcmp(type_flip,'rot90')
     vol2 = zeros([ny*N nx*M]);
 else
     vol2 = zeros([nx*N ny*M]);    
@@ -193,7 +193,7 @@ end
 ind = find(ones([M*N]));
 
 for num_z = 1:nz
-    if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')
+    if strcmp(type_flip,'rot270')||strcmp(type_flip,'rot90')
         vol2(1+(indx(num_z)-1)*ny:indx(num_z)*ny,1+(indy(num_z)-1)*nx:indy(num_z)*nx) = niak_flip_vol(squeeze(vol(:,:,ind(num_z))),type_flip);
     else
         vol2(1+(indx(num_z)-1)*nx:indx(num_z)*nx,1+(indy(num_z)-1)*ny:indy(num_z)*ny) = niak_flip_vol(squeeze(vol(:,:,ind(num_z))),type_flip);
@@ -201,7 +201,7 @@ for num_z = 1:nz
 end
 
 imagesc(vol2,vol_limits);
-if strcmp(type_flip,'rot270')|strcmp(type_flip,'rot90')    
+if strcmp(type_flip,'rot270')||strcmp(type_flip,'rot90')    
     %axis([1 ny*N 1 nx*M]);
     siz_tot = [size(vol2).*voxel_size([2 1])];
     siz_tot = siz_tot/sum(siz_tot);    
