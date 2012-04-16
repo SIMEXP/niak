@@ -32,6 +32,10 @@ function cell_lines = niak_string2lines(vec_string)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+if isempty(vec_string)
+    cell_lines{1} = '';
+    return
+end
 if ~strcmp(vec_string(end),char(10));
     vec_string = [vec_string char(10)];
 end
