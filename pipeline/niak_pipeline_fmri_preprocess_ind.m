@@ -649,6 +649,7 @@ for num_e = 1:length(fmri)
     job_in.motion_param = pipeline.(['motion_parameters_' label(num_e).name]).files_out;
     job_in.custom_param = files_in.custom_confounds;
 
+    job_opt = opt.regress_confounds;
     job_opt.folder_out     = [opt.folder_intermediate 'regress_confounds' filesep];
     job_out.filtered_data  = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
     job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
