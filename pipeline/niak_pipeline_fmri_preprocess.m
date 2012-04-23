@@ -267,6 +267,34 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %          present in PARAM will override the fields of OPT of the subject
 %          or group of subjects that fit with LABEL.
 %
+%   REGRESS_CONFOUNDS
+%       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
+%       FOLDER_OUT
+%           (string, default folder of FMRI) the folder where the default outputs
+%           are generated.
+%
+%       FLAG_SLOW
+%           (boolean, default true) turn on/off the correction of slow time drifts
+%
+%       FLAG_GSC 
+%           (boolean, default true) turn on/off global signal correction
+%
+%       FLAG_MOTION_PARAMS 
+%           (boolean, default false) turn on/off the removal of the 6 motion 
+%           parameters + the square of 6 motion parameters.
+%
+%       FLAG_WM 
+%           (boolean, default true) turn on/off the removal of the average 
+%           white matter signal
+%
+%       PCT_VAR_EXPLAINED 
+%           (boolean, default 0.95) the % of variance explained by the selected 
+%           PCA components when reducing the dimensionality of motion parameters.
+%
+%       FLAG_PCA_MOTION 
+%           (boolean, default true) turn on/off the PCA reduction of motion 
+%           parameters.
+%
 % _________________________________________________________________________
 % OUTPUTS : 
 %

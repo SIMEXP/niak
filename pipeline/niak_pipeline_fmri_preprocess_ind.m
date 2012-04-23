@@ -250,6 +250,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
 %           anything, just copy the input on the output. 
 %
+%   REGRESS_CONFOUNDS
+%       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
+%
 % _________________________________________________________________________
 % OUTPUTS : 
 %
