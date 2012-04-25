@@ -587,8 +587,7 @@ for num_e = 1:length(fmri)
     job_in(num_e).transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
     job_in(num_e).target         = opt.template_fmri;
 end
-job_opt               = opt.resample_vol;
-job_opt.interpolation = 'tricubic';
+job_opt = opt.resample_vol;
 pipeline.(['resample_qc_var_motion_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
 pipeline.(['resample_qc_var_motion_' subject]).files_in   = job_in;
 pipeline.(['resample_qc_var_motion_' subject]).files_out  = job_out;
@@ -679,7 +678,6 @@ if opt.flag_verbose
 end
 list_maps = { 'qc_wm' , 'qc_slow_drift' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
 job_opt = opt.resample_vol;
-job_opt.interpolation = 'tricubic';
 for num_m = 1:length(list_maps)
     clear job_in job_out 
     if strcmp(list_maps{num_m},'qc_custom_param')&&strcmp(pipeline.(['confounds_' label(num_e).name]).files_out.qc_custom_param,'gb_niak_omitted')
@@ -762,7 +760,6 @@ for num_e = 1:length(fmri)
     job_in(num_e).target         = opt.template_fmri;
 end
 job_opt               = opt.resample_vol;
-job_opt.interpolation = 'tricubic';
 pipeline.(['resample_qc_corsica_var_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
 pipeline.(['resample_qc_corsica_var_' subject]).files_in   = job_in;
 pipeline.(['resample_qc_corsica_var_' subject]).files_out  = job_out;
