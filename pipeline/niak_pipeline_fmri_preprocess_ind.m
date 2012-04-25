@@ -793,7 +793,7 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%% spatial smoothing (stereotaxic space) 
+%% Spatial smoothing (stereotaxic space) 
 if opt.flag_verbose
     t1 = clock;
     fprintf('smoothing (');

@@ -161,8 +161,8 @@ niak_set_defaults
 
 % Setting up options
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_skip' , 'suppress_vol' ,'transf_name' ,'interpolation' ,'flag_tfm_space' ,'voxel_size' ,'folder_out' ,'flag_test' ,'flag_invert_transf' ,'flag_verbose' ,'flag_adjust_fov' ,'flag_keep_range'};
-gb_list_defaults  = {0           , 0              ,'transf'      ,'tricubic'      ,0                ,0            ,''           ,0           ,0                    ,1              ,0                 ,0};
+gb_list_fields    = { 'flag_skip' , 'suppress_vol' , 'transf_name' , 'interpolation' , 'flag_tfm_space' , 'voxel_size' , 'folder_out' , 'flag_test' , 'flag_invert_transf' , 'flag_verbose' , 'flag_adjust_fov' , 'flag_keep_range' };
+gb_list_defaults  = { 0           , 0              , 'transf'      , 'trilinear'     , 0                , 0            , ''           , 0           , 0                    , 1              , 0                 , 0                 };
 niak_set_defaults
 
 if (length(voxel_size)==1)&&(voxel_size~=0)&&(voxel_size~=1)
