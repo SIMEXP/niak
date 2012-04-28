@@ -730,7 +730,7 @@ for num_e = 1:length(fmri_c)
         ind = find(ismember(pipeline.(['preproc_' label(num_e).subject]).opt.list_jobs,['confounds_' label(num_e).name]));
         job_in.(label(num_e).name) = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline{ind}.files_out.scrubbing;
     else
-        tmp  = pipeline.(['confounds_' label(num_e).name]).files_out.scrubbing;
+        job_in.(label(num_e).name) = pipeline.(['confounds_' label(num_e).name]).files_out.scrubbing;
     end 
 end
 job_out = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'summary_scrubbing.mat'];
