@@ -86,7 +86,7 @@ end
 %% Build summary
 list_subject = fieldnames(files_in);
 opt_w.labels_x = list_subject;
-opt_w.labels_y = {'frames_scrubbed','frames_OK','FD','DVARS'};
+opt_w.labels_y = {'frames_scrubbed','frames_OK','FD','DVARS','FD_scrubbed','DVARS_scrubbed'};
 tab = zeros(length(list_subject),4);
 for num_s = 1:length(list_subject)
     subject = list_subject{num_s};
@@ -95,4 +95,9 @@ for num_s = 1:length(list_subject)
     tab(num_s,2) = sum(~data.mask_scrubbing);
     tab(num_s,3) = mean(data.fd);
     tab(num_s,4) = mean(data.dvars);
+    tab(num_s,5) = mean(data.fd(~data.mask_scrubbing));
+    tab(num_s,6) = mean(data.dvars(~data.mask_scrubbing));
 end
+
+%% Write results
+niak_write_csv(files_out,tab,opt_w);

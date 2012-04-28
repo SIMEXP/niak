@@ -255,7 +255,7 @@ end
 if opt.flag_verbose
     fprintf('Scrubbing frames exhibiting large motion ...\n')
 end
-dvars = sqrt(mean(((y(2:end,mask) - y(1:(end-1),mask))./repmat(mean(y(:,mask),1),[size(y,1) 1])).^2,1));
+dvars = 100*sqrt(mean(((y(2:end,mask) - y(1:(end-1),mask))./repmat(mean(y(:,mask),1),[size(y,1) 1])).^2,1));
 transf = load(files_in.motion_param);
 [rot,tsl] = niak_transf2param(transf.transf);
 rot_d = 50*(rot/360)*pi/2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
