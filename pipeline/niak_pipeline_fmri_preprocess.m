@@ -719,6 +719,27 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
+%% GROUP QC CONFOUNDS : scrubbing
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality control of scrubbing time frames with excessive motion ; ');
+end
+clear job_in job_out job_opt
+for num_e = 1:length(fmri_c)
+    if strcmp(opt.granularity,'subject')
+        ind = find(ismember(pipeline.(['preproc_' label(num_e).subject]).opt.list_jobs,['confounds_' label(num_e).name]));
+        job_in.(label(num_e).name) = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline{ind}.files_out.scrubbing;
+    else
+        tmp  = pipeline.(['confounds_' label(num_e).name]).files_out.scrubbing;
+    end 
+end
+job_out = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'summary_scrubbing.mat'];
+job_opt.flag_test = false;
+pipeline = psom_add_job(pipeline,'group_qc_scrubbing','niak_brick_qc_scrubbing',job_in,job_out,job_opt,false);
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
 %% GROUP QC CORSICA
 if opt.flag_verbose
     t1 = clock;

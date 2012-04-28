@@ -1,5 +1,6 @@
 function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_out,opt)
-% Regress slow time drifst, global signals, motion parameters, etc
+% Regress slow time drifst, global signals, motion parameters
+% "scrubbing" of time frames with excessive motion is also available.
 %
 % SYNTAX :
 % NIAK_BRICK_REGRESS_CONFOUNDS(FILES_IN,FILES_OUT,OPT)
@@ -51,6 +52,15 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      average, and X2, LABELS2 for stage 2, including custom covariates
 %      and global signal).
 %
+%   SCRUBBING
+%      (string, default FOLDER_OUT/<base FMRI>_scrub.mat) a .mat file with 
+%      the following variables:
+%          MASK_SCRUB (vector of boolean): if MASK_SCRUB(I) is true, the 
+%             volume #I is scrubbed.
+%          FD (vector) FD(I) is the framewise displacement at volume I.
+%          DVARS (vector) DVARS(I) is the mean squares variance
+%             of residuals.
+%
 %   QC_SLOW_DRIFT 
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_slow_drift.<ext FMRI>) 
 %      the name of a volume file with the f-test of the slow time drifts
@@ -94,6 +104,18 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %       (boolean, default true) turn on/off the removal of the average 
 %       white matter signal
 %
+%   FLAG_SCRUBBING
+%       (boolean, default true) turn on/off the "scrubbing" of volumes with 
+%       excessive motion.
+%
+%   THRE_FD
+%       (scalar, default 0.5) the maximal acceptable framewise displacement 
+%       after scrubbing.
+%
+%   THRE_DVARS
+%       (scalar, default default ) the maximal acceptable mean squares variance
+%       of residuals after scrubbing (expressed in % of baseline BOLD signal.
+%       
 %   PCT_VAR_EXPLAINED 
 %       (boolean, default 0.95) the % of variance explained by the selected 
 %       PCA components when reducing the dimensionality of motion parameters.
@@ -117,6 +139,14 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % F. Carbonell, P. Bellec, A. Shmuel. Validation of a superposition model 
 % of global and system-specific resting state activity reveals anti-correlated 
 % networks.  To appear in Brain Connectivity.
+%
+% For an overview of the regression steps as well as the "scrubbing" of 
+% volumes with excessive motion, see:
+%
+% J. D. Power, K. A. Barnes, Abraham Z. Snyder, B. L. Schlaggar, S. E. Petersen
+% Spurious but systematic correlations in functional connectivity MRI networks 
+% arise from subject motion
+% NeuroImage Volume 59, Issue 3, 1 February 2012, Pages 2142–2154
 %
 % Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
 % Research Centre of the Montreal Geriatric Institute
@@ -150,13 +180,13 @@ list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN 
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_wm'           , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
-list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+list_fields    = { 'scrubbing'       , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_wm'           , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { true        , ''           , true          , true                , true     , true      , true             , false      , 0.95               };
+list_fields    = { 'flag_scrubbing' , 'thre_fd' , 'thre_dvars' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { true             , 0.5       , 0.5          , true        , ''           , true          , true                , true     , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
@@ -221,6 +251,23 @@ if opt.flag_verbose
 end
 [hdr_mask,mask_wm] = niak_read_vol(files_in.mask_wm); % mask of the white matter
 
+%% Scrubbing
+if opt.flag_verbose
+    fprintf('Scrubbing frames exhibiting large motion ...\n')
+end
+dvars = sqrt(mean(((y(2:end,mask) - y(1:(end-1),mask))./repmat(mean(y(:,mask),1),[size(y,1) 1])).^2,1));
+transf = load(files_in.motion_param);
+[rot,tsl] = niak_transf2param(transf.transf);
+rot_d = 50*(rot/360)*pi/2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
+rot_d = rot_d(2:end) - rot_d(1:(end-1));
+tsl_d = tsl(2:end) - tsl(1:(end-1));
+fd = sum(abs(rot_d)+abs(tsl_d),1)';
+mask_scrubbing = false(size(y,1),1);
+if opt.flag_scrubbing
+    mask_scrubbing(2:end) = (fd>opt.thre_fd)&(dvars>opt.thre_dvars);
+    y = y(~mask_scrubbing,:);
+end
+
 %% Initialization 
 x = [];
 labels = {};
@@ -232,7 +279,7 @@ if opt.flag_verbose
     fprintf('Reading slow time drifts ...\n')
 end
 slow_drift = load(files_in.dc_low);
-slow_drift = slow_drift.tseries_dc_low;
+slow_drift = slow_drift.tseries_dc_low(~mask_scrubbing,:);
 mask_i = std(slow_drift,[],1)~=0;
 slow_drift = slow_drift(:,mask_i); % get rid of the intercept in the slow time drifts
 if opt.flag_slow
@@ -244,10 +291,10 @@ end
 if opt.flag_verbose
     fprintf('Reading (and reducing) the motion parameters ...\n')
 end
-transf = load(files_in.motion_param);
-[rot,tsl] = niak_transf2param(transf.transf);
 rot = niak_normalize_tseries(rot');
 tsl = niak_normalize_tseries(tsl');
+rot = rot(~mask_scrubbing,:);
+tsl = tsl(~mask_scrubbing,:);
 motion_param = [rot,tsl,rot.^2,tsl.^2];
 if opt.flag_pca_motion
     [eig_val,motion_param] = niak_pca(motion_param',opt.pct_var_explained);
@@ -261,7 +308,7 @@ end
 if opt.flag_verbose
     fprintf('White matter average ...\n')
 end
-wm_av = mean(y(:,mask_wm>0),2);
+wm_av = mean(y(~mask_scrubbing,mask_wm>0),2);
 if opt.flag_wm   
     x = [x,wm_av];
     labels = [labels {'wm_av'}];
@@ -344,7 +391,7 @@ if ~strcmp(files_in.custom_param,'gb_niak_omitted')
         fprintf('Regress custom parameters ...\n')
     end
     covar = load(files_in.custom_param);
-    covar = covar.covar;
+    covar = covar.covar(~mask_scrubbing,:);
     model_covar.y = covar;
     model_covar.x = x;
     res = niak_glm(model_covar,opt_glm);
@@ -419,6 +466,11 @@ end
 %% Save the confounds
 if ~strcmp(files_out.confounds,'gb_niak_omitted')
     save(files_out.confounds, 'x' , 'x2' , 'labels' , 'labels2');
+end
+
+%% Save the scrubbing parameters
+if ~strcmp(files_out.scrubbing,'gb_niak_omitted')
+    save(files_out.scrubbing,'mask_scrubbing','fd','dvars');
 end
 
 %%%%%%%%%%%%%%%%%%
