@@ -251,23 +251,6 @@ if opt.flag_verbose
 end
 [hdr_mask,mask_wm] = niak_read_vol(files_in.mask_wm); % mask of the white matter
 
-%% Scrubbing
-if opt.flag_verbose
-    fprintf('Scrubbing frames exhibiting large motion ...\n')
-end
-dvars = 100*sqrt(mean(((y(2:end,mask) - y(1:(end-1),mask))./repmat(mean(y(:,mask),1),[size(y,1) 1])).^2,1));
-transf = load(files_in.motion_param);
-[rot,tsl] = niak_transf2param(transf.transf);
-rot_d = 50*(rot/360)*pi/2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
-rot_d = rot_d(2:end) - rot_d(1:(end-1));
-tsl_d = tsl(2:end) - tsl(1:(end-1));
-fd = sum(abs(rot_d)+abs(tsl_d),1)';
-mask_scrubbing = false(size(y,1),1);
-if opt.flag_scrubbing
-    mask_scrubbing(2:end) = (fd>opt.thre_fd)&(dvars>opt.thre_dvars);
-    y = y(~mask_scrubbing,:);
-end
-
 %% Initialization 
 x = [];
 labels = {};
@@ -279,7 +262,7 @@ if opt.flag_verbose
     fprintf('Reading slow time drifts ...\n')
 end
 slow_drift = load(files_in.dc_low);
-slow_drift = slow_drift.tseries_dc_low(~mask_scrubbing,:);
+slow_drift = slow_drift.tseries_dc_low;
 mask_i = std(slow_drift,[],1)~=0;
 slow_drift = slow_drift(:,mask_i); % get rid of the intercept in the slow time drifts
 if opt.flag_slow
@@ -291,10 +274,10 @@ end
 if opt.flag_verbose
     fprintf('Reading (and reducing) the motion parameters ...\n')
 end
+transf = load(files_in.motion_param);
+[rot,tsl] = niak_transf2param(transf.transf);
 rot = niak_normalize_tseries(rot');
 tsl = niak_normalize_tseries(tsl');
-rot = rot(~mask_scrubbing,:);
-tsl = tsl(~mask_scrubbing,:);
 motion_param = [rot,tsl,rot.^2,tsl.^2];
 if opt.flag_pca_motion
     [eig_val,motion_param] = niak_pca(motion_param',opt.pct_var_explained);
@@ -308,7 +291,7 @@ end
 if opt.flag_verbose
     fprintf('White matter average ...\n')
 end
-wm_av = mean(y(~mask_scrubbing,mask_wm>0),2);
+wm_av = mean(y(:,mask_wm>0),2);
 if opt.flag_wm   
     x = [x,wm_av];
     labels = [labels {'wm_av'}];
@@ -391,7 +374,7 @@ if ~strcmp(files_in.custom_param,'gb_niak_omitted')
         fprintf('Regress custom parameters ...\n')
     end
     covar = load(files_in.custom_param);
-    covar = covar.covar(~mask_scrubbing,:);
+    covar = covar.covar;
     model_covar.y = covar;
     model_covar.x = x;
     res = niak_glm(model_covar,opt_glm);
@@ -452,6 +435,30 @@ if ~isempty(x2)
 else
     % there is nothing to regress we put the input in the output
     vol_denoised = vol;
+end
+
+%% Scrubbing
+if opt.flag_verbose
+    fprintf('Scrubbing frames exhibiting large motion ...\n')
+end
+mask_e = mask;
+mask_e(1,:,:) = false; % remove edge slices
+mask_e(end,:,:) = false;
+mask_e(:,1,:) = false;
+mask_e(:,end,:) = false;
+mask_e(:,:,1) = false;
+mask_e(:,:,end) = false;
+dvars = 100*sqrt(mean(((y(2:end,mask_e) - y(1:(end-1),mask_e))/median(median(y(:,mask_e)))).^2,2));
+transf = load(files_in.motion_param);
+[rot,tsl] = niak_transf2param(transf.transf);
+rot_d = 50*(rot/360)*pi*2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
+rot_d = rot_d(2:end) - rot_d(1:(end-1));
+tsl_d = tsl(2:end) - tsl(1:(end-1));
+fd = sum(abs(rot_d)+abs(tsl_d),1)';
+mask_scrubbing = false(size(y,1),1);
+if opt.flag_scrubbing
+    mask_scrubbing(2:end) = (fd>opt.thre_fd)&(dvars>opt.thre_dvars);
+    vol_denoised = vol_denoised(:,~mask_scrubbing);
 end
 
 %% Save the fMRI dataset after regressing out the confounds
