@@ -95,7 +95,7 @@ for num_s = 1:length(list_subject)
     tab(num_s,1) = sum(data.mask_scrubbing);
     tab(num_s,2) = sum(~data.mask_scrubbing);
     tab(num_s,3) = mean(data.fd);
-    tab(num_s,4) = mean(data.fd(~data.mask_scrubbing));
+    tab(num_s,4) = mean(data.fd(~data.mask_scrubbing(2:end)));
 end
 
 %% Write results
