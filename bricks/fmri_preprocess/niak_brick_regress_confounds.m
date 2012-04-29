@@ -234,6 +234,8 @@ if opt.flag_verbose
 end
 [hdr_vol,vol] = niak_read_vol(files_in.fmri); % fMRI dataset
 y = reshape(vol,[size(vol,1)*size(vol,2)*size(vol,3) size(vol,4)])'; % organize the fMRI dataset as a time x space array
+mean_y = mean(y,1);
+y = niak_normalize_tseries(y,'mean');
 
 if opt.flag_verbose
     fprintf('Reading the brain mask ventricle ...\n%s\n',files_in.mask_vent);
@@ -299,7 +301,7 @@ end
 
 %% Generate F-TEST maps for all components of the model for quality control purposes
 hdr_qc = hdr_mask;
-model.y = niak_normalize_tseries(y);
+model.y = y;
 model.x = niak_normalize_tseries([slow_drift motion_param wm_av]);
 labels_all = [repmat({'slow_drift'},[1 size(slow_drift,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av'}];
 opt_qc.test ='ftest';
@@ -431,9 +433,11 @@ if ~isempty(x2)
     model.x=x2;
     res = niak_glm(model,opt_glm);
     y = res.e;
+    y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
     vol_denoised = reshape(y',size(vol));
 else
     % there is nothing to regress we put the input in the output
+    y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
     vol_denoised = vol;
 end
 
@@ -452,8 +456,8 @@ dvars = 100*sqrt(mean(((y(2:end,mask_e) - y(1:(end-1),mask_e))/median(median(y(:
 transf = load(files_in.motion_param);
 [rot,tsl] = niak_transf2param(transf.transf);
 rot_d = 50*(rot/360)*pi*2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
-rot_d = rot_d(2:end) - rot_d(1:(end-1));
-tsl_d = tsl(2:end) - tsl(1:(end-1));
+rot_d = rot_d(:,2:end) - rot_d(:,1:(end-1));
+tsl_d = tsl(:,2:end) - tsl(:,1:(end-1));
 fd = sum(abs(rot_d)+abs(tsl_d),1)';
 mask_scrubbing = false(size(y,1),1);
 if opt.flag_scrubbing
