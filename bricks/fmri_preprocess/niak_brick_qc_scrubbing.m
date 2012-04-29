@@ -14,7 +14,7 @@ function [files_in,files_out,opt]=niak_brick_qc_scrubbing(files_in,files_out,opt
 % FILES_OUT 
 %   (string) the name of a csv file with three metrics for each subject:
 %   number of scrubbed time frames, number of remaining time frames, average FD 
-%   and average DVARS.
+%   before and after scrubbing.
 %
 % OPT
 %   (structure, optional) with the following fields:
@@ -25,7 +25,8 @@ function [files_in,files_out,opt]=niak_brick_qc_scrubbing(files_in,files_out,opt
 %
 %   FLAG_TEST
 %      (boolean, default false) if FLAG_TEST is true, the brick does not do 
-%      anything except update default values and perform sanity checks.    
+%      anything except update default values and perform sanity checks.  
+%  
 % _________________________________________________________________________
 % OUTPUTS
 %
@@ -86,7 +87,7 @@ end
 %% Build summary
 list_subject = fieldnames(files_in);
 opt_w.labels_x = list_subject;
-opt_w.labels_y = {'frames_scrubbed','frames_OK','FD','DVARS','FD_scrubbed','DVARS_scrubbed'};
+opt_w.labels_y = {'frames_scrubbed','frames_OK','FD','FD_scrubbed'};
 tab = zeros(length(list_subject),4);
 for num_s = 1:length(list_subject)
     subject = list_subject{num_s};
@@ -94,9 +95,7 @@ for num_s = 1:length(list_subject)
     tab(num_s,1) = sum(data.mask_scrubbing);
     tab(num_s,2) = sum(~data.mask_scrubbing);
     tab(num_s,3) = mean(data.fd);
-    tab(num_s,4) = mean(data.dvars);
-    tab(num_s,5) = mean(data.fd(~data.mask_scrubbing));
-    tab(num_s,6) = mean(data.dvars(~data.mask_scrubbing));
+    tab(num_s,4) = mean(data.fd(~data.mask_scrubbing));
 end
 
 %% Write results

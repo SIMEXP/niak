@@ -112,10 +112,6 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %       (scalar, default 0.5) the maximal acceptable framewise displacement 
 %       after scrubbing.
 %
-%   THRE_DVARS
-%       (scalar, default default ) the maximal acceptable mean squares variance
-%       of residuals after scrubbing (expressed in % of baseline BOLD signal.
-%       
 %   PCT_VAR_EXPLAINED 
 %       (boolean, default 0.95) the % of variance explained by the selected 
 %       PCA components when reducing the dimensionality of motion parameters.
@@ -147,6 +143,9 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % Spurious but systematic correlations in functional connectivity MRI networks 
 % arise from subject motion
 % NeuroImage Volume 59, Issue 3, 1 February 2012, Pages 2142–2154
+%
+% Note that the scrubbing is based solely on the FD index, and that DVARS is not
+% derived.
 %
 % Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
 % Research Centre of the Montreal Geriatric Institute
@@ -185,8 +184,8 @@ list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , '
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_scrubbing' , 'thre_fd' , 'thre_dvars' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { true             , 0.5       , 0.5          , true        , ''           , true          , true                , true     , true      , true             , false      , 0.95               };
+list_fields    = { 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { true             , 0.5       , true        , ''           , true          , true                , true     , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
@@ -253,6 +252,23 @@ if opt.flag_verbose
 end
 [hdr_mask,mask_wm] = niak_read_vol(files_in.mask_wm); % mask of the white matter
 
+%% Scrubbing
+if opt.flag_verbose
+    fprintf('Scrubbing frames exhibiting large motion ...\n')
+end
+
+transf = load(files_in.motion_param);
+[rot,tsl] = niak_transf2param(transf.transf);
+rot_d = 50*(rot/360)*pi*2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
+rot_d = rot_d(:,2:end) - rot_d(:,1:(end-1));
+tsl_d = tsl(:,2:end) - tsl(:,1:(end-1));
+fd = sum(abs(rot_d)+abs(tsl_d),1)';
+mask_scrubbing = false(size(y,1),1);
+if opt.flag_scrubbing
+    mask_scrubbing(2:end) = (fd>opt.thre_fd);
+    y = y(~mask_scrubbing,:);
+end
+
 %% Initialization 
 x = [];
 labels = {};
@@ -264,7 +280,7 @@ if opt.flag_verbose
     fprintf('Reading slow time drifts ...\n')
 end
 slow_drift = load(files_in.dc_low);
-slow_drift = slow_drift.tseries_dc_low;
+slow_drift = slow_drift.tseries_dc_low(~mask_scrubbing,:);
 mask_i = std(slow_drift,[],1)~=0;
 slow_drift = slow_drift(:,mask_i); % get rid of the intercept in the slow time drifts
 if opt.flag_slow
@@ -278,6 +294,8 @@ if opt.flag_verbose
 end
 transf = load(files_in.motion_param);
 [rot,tsl] = niak_transf2param(transf.transf);
+rot = rot(:,~mask_scrubbing);
+tsl = tsl(:,~mask_scrubbing);
 rot = niak_normalize_tseries(rot');
 tsl = niak_normalize_tseries(tsl');
 motion_param = [rot,tsl,rot.^2,tsl.^2];
@@ -352,7 +370,7 @@ if ~isempty(x)
     model.x = niak_normalize_tseries(x);
     res = niak_glm(model,opt_glm);
     y   = res.e;
-    vol = reshape(y',size(vol));
+    vol = reshape(y',[size(vol,1) size(vol,2) size(vol,3) size(y,1)]);
 end
 
 %% Add Global signal
@@ -376,7 +394,7 @@ if ~strcmp(files_in.custom_param,'gb_niak_omitted')
         fprintf('Regress custom parameters ...\n')
     end
     covar = load(files_in.custom_param);
-    covar = covar.covar;
+    covar = covar.covar(~mask_scrubbing,:);
     model_covar.y = covar;
     model_covar.x = x;
     res = niak_glm(model_covar,opt_glm);
@@ -433,37 +451,9 @@ if ~isempty(x2)
     model.x=x2;
     res = niak_glm(model,opt_glm);
     y = res.e;
-    y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
-    vol_denoised = reshape(y',size(vol));
-else
-    % there is nothing to regress we put the input in the output
-    y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
-    vol_denoised = vol;
 end
-
-%% Scrubbing
-if opt.flag_verbose
-    fprintf('Scrubbing frames exhibiting large motion ...\n')
-end
-mask_e = mask;
-mask_e(1,:,:) = false; % remove edge slices
-mask_e(end,:,:) = false;
-mask_e(:,1,:) = false;
-mask_e(:,end,:) = false;
-mask_e(:,:,1) = false;
-mask_e(:,:,end) = false;
-dvars = 100*sqrt(mean(((y(2:end,mask_e) - y(1:(end-1),mask_e))/median(median(y(:,mask_e)))).^2,2));
-transf = load(files_in.motion_param);
-[rot,tsl] = niak_transf2param(transf.transf);
-rot_d = 50*(rot/360)*pi*2; % adjust rotation parameters to express them as a displacement for a typical distance from the center of 50 mm
-rot_d = rot_d(:,2:end) - rot_d(:,1:(end-1));
-tsl_d = tsl(:,2:end) - tsl(:,1:(end-1));
-fd = sum(abs(rot_d)+abs(tsl_d),1)';
-mask_scrubbing = false(size(y,1),1);
-if opt.flag_scrubbing
-    mask_scrubbing(2:end) = (fd>opt.thre_fd)&(dvars>opt.thre_dvars);
-    vol_denoised = vol_denoised(:,~mask_scrubbing);
-end
+y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
+vol_denoised = reshape(y',size(vol));
 
 %% Save the fMRI dataset after regressing out the confounds
 if ~strcmp(files_out.filtered_data,'gb_niak_omitted')
@@ -481,7 +471,7 @@ end
 
 %% Save the scrubbing parameters
 if ~strcmp(files_out.scrubbing,'gb_niak_omitted')
-    save(files_out.scrubbing,'mask_scrubbing','fd','dvars');
+    save(files_out.scrubbing,'mask_scrubbing','fd');
 end
 
 %%%%%%%%%%%%%%%%%%
