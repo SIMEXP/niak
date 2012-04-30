@@ -19,6 +19,10 @@ function [files_in,files_out,opt]=niak_brick_qc_scrubbing(files_in,files_out,opt
 % OPT
 %   (structure, optional) with the following fields:
 %
+%   THRE_FD
+%      (scalar, default []) the threshold on FD to define the scrubbing mask.
+%      If left empty, the mask from the results is used.
+%
 %   FLAG_VERBOSE
 %      (boolean, default true) if the flag is on, print some information
 %      about progress.
@@ -75,9 +79,9 @@ if ~ischar(files_out)
 end
 
 if nargin<3
-    opt = psom_struct_defaults(struct(),{'flag_verbose','flag_test'},{true,false});
+    opt = psom_struct_defaults(struct(),{'thre_fd','flag_verbose','flag_test'},{[],true,false});
 else
-    opt = psom_struct_defaults(opt,{'flag_verbose','flag_test'},{true,false});
+    opt = psom_struct_defaults(opt,{'thre_fd','flag_verbose','flag_test'},{[],true,false});
 end
 
 if opt.flag_test
@@ -91,11 +95,20 @@ opt_w.labels_y = {'frames_scrubbed','frames_OK','FD','FD_scrubbed'};
 tab = zeros(length(list_subject),4);
 for num_s = 1:length(list_subject)
     subject = list_subject{num_s};
+    if opt.flag_verbose
+        fprintf('    %s\n',subject);
+    end
     data = load(files_in.(subject));
-    tab(num_s,1) = sum(data.mask_scrubbing);
-    tab(num_s,2) = sum(~data.mask_scrubbing);
+    if isempty(opt.thre_fd)
+        mask_scrubbing = data.mask_scrubbing;
+    else
+        mask_scrubbing = false(size(data.mask_scrubbing));
+        mask_scrubbing(2:end) = data.fd>opt.thre_fd;
+    end
+    tab(num_s,1) = sum(mask_scrubbing);
+    tab(num_s,2) = sum(~mask_scrubbing);
     tab(num_s,3) = mean(data.fd);
-    tab(num_s,4) = mean(data.fd(~data.mask_scrubbing(2:end)));
+    tab(num_s,4) = mean(data.fd(~mask_scrubbing(2:end)));
 end
 
 %% Write results

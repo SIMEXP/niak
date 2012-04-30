@@ -733,9 +733,9 @@ for num_e = 1:length(fmri_c)
         job_in.(label(num_e).name) = pipeline.(['confounds_' label(num_e).name]).files_out.scrubbing;
     end 
 end
-job_out = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'summary_scrubbing.mat'];
+job_out = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_scrubbing_group.csv'];
 job_opt.flag_test = false;
-pipeline = psom_add_job(pipeline,'group_qc_scrubbing','niak_brick_qc_scrubbing',job_in,job_out,job_opt,false);
+pipeline = psom_add_job(pipeline,'qc_scrubbing_group','niak_brick_qc_scrubbing',job_in,job_out,job_opt,false);
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
