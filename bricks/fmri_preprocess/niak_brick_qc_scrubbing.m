@@ -104,6 +104,11 @@ for num_s = 1:length(list_subject)
     else
         mask_scrubbing = false(size(data.mask_scrubbing));
         mask_scrubbing(2:end) = data.fd>opt.thre_fd;
+        mask_scrubbing2 = mask_scrubbing;
+        mask_scrubbing2(1:(end-1)) = mask_scrubbing2(1:(end-1))|mask_scrubbing(2:end);
+        mask_scrubbing2(2:end) = mask_scrubbing2(2:end)|mask_scrubbing(1:(end-1));
+        mask_scrubbing2(3:end) = mask_scrubbing2(3:end)|mask_scrubbing(1:(end-2));
+        mask_scrubbing = mask_scrubbing2;
     end
     tab(num_s,1) = sum(mask_scrubbing);
     tab(num_s,2) = sum(~mask_scrubbing);

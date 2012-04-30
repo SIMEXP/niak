@@ -266,6 +266,11 @@ fd = sum(abs(rot_d)+abs(tsl_d),1)';
 mask_scrubbing = false(size(y,1),1);
 if opt.flag_scrubbing
     mask_scrubbing(2:end) = (fd>opt.thre_fd);
+    mask_scrubbing2 = mask_scrubbing;
+    mask_scrubbing2(1:(end-1)) = mask_scrubbing2(1:(end-1))|mask_scrubbing(2:end);
+    mask_scrubbing2(2:end) = mask_scrubbing2(2:end)|mask_scrubbing(1:(end-1));
+    mask_scrubbing2(3:end) = mask_scrubbing2(3:end)|mask_scrubbing(1:(end-2));
+    mask_scrubbing = mask_scrubbing2;
     y = y(~mask_scrubbing,:);
 end
 
