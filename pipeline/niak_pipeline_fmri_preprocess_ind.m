@@ -57,6 +57,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       will be used to resample the fMRI datasets. By default it uses
 %       a 2 mm isotropic space with a field of view adjusted on the brain.
 %
+%   FLAG_KEEP_MOTION
+%       (boolean, default false) if FLAG_KEEP_MOTION is true, the 
+%       motion-corrected data is kept, whatever OPT.SIZE_OUTPUT is. 
+%
 %   RAND_SEED
 %       (scalar, default []) The specified value is used to seed the random
 %       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
@@ -364,8 +368,8 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = {'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = {[]          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = {'flag_keep_motion' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = {false              , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -444,7 +448,7 @@ job_opt.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
 job_opt.folder_qc   = [opt.folder_qc 'motion_correction' filesep];
 [pipeline_mc,job_opt,files_motion] = niak_pipeline_motion_correction(job_in,job_opt);
 pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
-if strcmp(opt.size_output,'quality_control')
+if strcmp(opt.size_output,'quality_control')&&~opt.flag_keep_motion
     pipeline = psom_add_clean(pipeline,['clean_motion_correction_' subject],files_motion.motion_corrected);
 end
 
