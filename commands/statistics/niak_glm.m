@@ -157,6 +157,7 @@ if isfield(opt,'test')
             results.ttest = ttest;
             results.pce = pce;
             results.eff = eff;
+            results.std_eff = std_eff;
 
         case 'ftest'
 
