@@ -87,7 +87,7 @@ function vol_s = niak_smooth_vol(vol,opt)
 % Setting up default
 gb_name_structure = 'opt';
 gb_list_fields    = {'mask' , 'flag_edge' , 'flag_verbose' , 'voxel_size' ,'fwhm'   };
-gb_list_defaults  = {[]     , true        , true           , [1 1 1]'     ,[2 2 2]' };
+gb_list_defaults  = {[]     , true        , true           , [1 1 1]'     ,[2 ; 2 ; 2]' };
 niak_set_defaults
 
 if length(voxel_size)>3
