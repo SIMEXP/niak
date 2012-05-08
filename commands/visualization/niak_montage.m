@@ -200,7 +200,7 @@ for num_z = 1:nz
     end
 end
 
-imagesc(vol2,vol_limits);
+imagesc(vol2,double(vol_limits));
 if strcmp(type_flip,'rot270')||strcmp(type_flip,'rot90')    
     %axis([1 ny*N 1 nx*M]);
     siz_tot = [size(vol2).*voxel_size([2 1])];
