@@ -1,9 +1,7 @@
-function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt)
-% Within-subject motion correction of fMRI data.
-% Correction is implemented via estimation of a rigid-body transform and 
-% spatial resampling.
+function [pipeline,opt,files_out] = niak_pipeline_motion(files_in,opt)
+% Estimation of within-subject motion in fMRI data.
 %
-% [PIPELINE,OPT,FILES_OUT] = NIAK_PIPELINE_MOTION_CORRECTION(FILES_IN,OPT)
+% [PIPELINE,OPT,FILES_OUT] = NIAK_PIPELINE_MOTION(FILES_IN,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -26,9 +24,6 @@ function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt
 %
 %   FOLDER_OUT 
 %       (string) The name of the folder to save all the outputs.
-%
-%   FOLDER_QC
-%       (string, default FOLDER_OUT) the name of a the folder to save the QC.
 %
 %   VOL_REF 
 %       (vector, default 'median') VOL_REF is the number of the volume that 
@@ -66,25 +61,6 @@ function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt
 %       in MINCTRACC in between-run motion correction (either intra- or 
 %       inter-session).
 %
-%   SUPPRESS_VOL 
-%       (integer, default 0) the number of volumes that are suppressed at 
-%       the begining of the time series. This is a good stage to get rid of 
-%       "dummy scans" necessary to reach signal stabilization (that takes 
-%       about 10 seconds, usually 3 to 5 volumes depending on the TR). Note 
-%       that most brain imaging centers now automatically discard dummy 
-%       scans.
-%
-%   INTERPOLATION 
-%       (string, default 'tricubic') the spatial interpolation method used 
-%       for resampling. Available options : 
-%       'trilinear', 'tricubic', 'nearest_neighbour', 'sinc'.
-%
-%   FLAG_SKIP
-%       (boolean, default 0) if FLAG_SKIP == 1, the brick does not do 
-%       anything, just copying the inputs to the outputs (note that it is 
-%       still possible to suppress volumes). The motion parameters are 
-%       still estimated and the quality control is still performed.
-%
 %   FLAG_TEST 
 %       (boolean, default: 0) if FLAG_TEST equals 1, the brick does not do 
 %       anything but update the default values in FILES_IN, FILES_OUT and 
@@ -106,11 +82,11 @@ function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt
 %   FILES_OUT
 %       (structure) with the following fields :
 %
-%       MOTION_CORRECTED
-%           (structure) a list of the final (motion corrected) output 
-%           files organized as FILES_IN.
+%       FINAL
+%           (structure) a list of the final motion parameters (the target is 
+%           the run of reference in the session of reference).
 %
-%       MOTION_PARAMETERS
+%       WITHIN_RUN
 %           (structure) a list of the within-run motion parameters
 %           organized as FILES_IN.
 %
@@ -135,10 +111,7 @@ function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt
 % NOTE 2: if FLAG_SESSION == 1, the within-run transformations are not 
 % applied. 
 %
-% NOTE 3: if FLAG_SKIP==1, the motion parameters are still estimated yet
-% no correction is applied to the fMRI datasets.
-%
-% NOTE 4: A session corresponds to a single scanning session with one
+% NOTE 3: A session corresponds to a single scanning session with one
 % participant (typically 1 hour) while a run is a single set of brain
 % volumes (typically around 5 minutes). The real distinction between
 % sessions and runs should be based upon size of displacements rather than
@@ -146,7 +119,7 @@ function [pipeline,opt,files_out] = niak_pipeline_motion_correction(files_in,opt
 % runs before and after repositioning should be regarded as being collected
 % on different sessions.
 %
-% NOTE 5: The TRANSF variables are standard 4*4 matrix array representation 
+% NOTE 4: The TRANSF variables are standard 4*4 matrix array representation 
 % of an affine transformation [M T ; 0 0 0 1] for (y=M*x+T) 
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
@@ -182,7 +155,7 @@ niak_gb_vars
 
 %% SYNTAX
 if ~exist('files_in','var')
-    error('SYNTAX: [PIPELINE,OPT] = NIAK_PIPELINE_MOTION_CORRECTION(FILES_IN,OPT).\n Type ''help niak_pipeline_motion_correction'' for more info.')
+    error('SYNTAX: [PIPELINE,OPT] = NIAK_PIPELINE_MOTION(FILES_IN,OPT).\n Type ''help niak_pipeline_motion'' for more info.')
 end
 
 %% FILES_IN
@@ -195,15 +168,12 @@ list_session = fieldnames(files_in);
 job_opt.flag_test = true;
 opt_psom.path_logs = '';
 gb_name_structure = 'opt';
-gb_list_fields   = {'folder_qc' , 'ignore_slice' ,'fwhm' ,'step' ,'tol_within_run' ,'tol_between_run' ,'psom'   , 'subject' , 'vol_ref', 'run_ref', 'session_ref'   , 'parameters', 'suppress_vol', 'interpolation', 'flag_skip', 'folder_out', 'flag_test', 'flag_verbose'};
-gb_list_defaults = {''          , 1              ,5      ,10     ,0.0005           ,0.00001           ,opt_psom , 'subject' , 'median' , 1        , list_session{1} , job_opt     , 0             , 'tricubic'     , false      , NaN         , false      , true          };
+gb_list_fields   = {'ignore_slice' ,'fwhm' ,'step' ,'tol_within_run' ,'tol_between_run' , 'psom'   , 'subject' , 'vol_ref', 'run_ref', 'session_ref'   , 'parameters', 'folder_out', 'flag_test', 'flag_verbose'};
+gb_list_defaults = {1              ,5      ,10     ,0.0005           ,0.00001           , opt_psom , 'subject' , 'median' , 1        , list_session{1} , job_opt     , NaN         , false      , true          };
 psom_set_defaults
 
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [folder_out,'logs',filesep];
-if isempty(opt.folder_qc)
-    opt.folder_qc = opt.folder_out;
-end
 opt.parameters.ignore_slice = opt.ignore_slice;
 opt.parameters.fwhm         = opt.fwhm;
 opt.parameters.step         = opt.step;
@@ -234,7 +204,7 @@ for num_e = 1:length(fmri)
     job_in.fmri     = fmri{num_e};
     job_in.target   = pipeline.(['motion_target_' label(num_e).name]).files_out;
     job_out         = [opt.folder_out 'motion_Wrun_' label(num_e).name '.mat'];
-    files_out.motion_parameters.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = job_out;
+    files_out.within_run.(label(num_e).subject).(label(num_e).session).(label(num_e).run) = job_out;
     job_opt         = opt.parameters;
     job_opt.tol     = opt.tol_within_run;        
     pipeline = psom_add_job(pipeline,['motion_Wrun_' label(num_e).name],'niak_brick_motion_parameters',job_in,job_out,job_opt);
@@ -292,51 +262,11 @@ for num_s = 1:length(list_session)
         if ~strcmp(session,session_ref)            
             job_in{end+1} = pipeline.(['motion_Bsession_' subject '_' session]).files_out;
         end                
-        job_out          = [opt.folder_out name_job '.mat'];        
+        job_out          = [opt.folder_out name_job '.mat'];  
+        files_out.final.(subject).(session).(list_run{num_r}) = job_out;
         job_opt.var_name = 'transf';
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_combine_transf',job_in,job_out,job_opt);
     end
-end
-
-%% Resample fMRI datasets
-for num_s = 1:length(list_session)
-    session = list_session{num_s};
-    list_run = fieldnames(fmri_s.(subject).(session));
-    for num_r = 1:length(list_run)      
-        clear job_in job_out job_opt
-        [path_f,name_f,ext_f] = niak_fileparts(fmri_s.(subject).(session).(list_run{num_r}));
-        job_out = [opt.folder_out name_f '_mc' ext_f];
-        files_out.motion_corrected.(subject).(session).(list_run{num_r}) = job_out;
-        name_job = ['motion_resample_' subject '_' session '_' list_run{num_r}]; 
-        if flag_skip
-            job_in{1} = fmri_s.(subject).(session).(list_run{num_r});                        
-            job_opt.operation = sprintf('vol = vol_in{1}(:,:,:,%i:end);',1+suppress_vol);
-            pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
-        else
-            job_in.transformation = pipeline.(['motion_parameters_' subject '_' session '_' list_run{num_r}]).files_out;
-            job_in.source         = fmri_s.(subject).(session).(list_run{num_r});
-            job_in.target         = pipeline.(['motion_target_' subject '_' session_ref '_' list_run_ref{run_ref}]).files_out;            
-            job_opt.interpolation = opt.interpolation;
-            job_opt.suppress_vol  = opt.suppress_vol;
-            pipeline = psom_add_job(pipeline,name_job,'niak_brick_resample_vol',job_in,job_out,job_opt);
-        end
-    end
-end
-
-%% QC variance explained 
-for num_e = 1:length(fmri)
-    clear job_in job_out job_opt
-    name_job        = ['qc_motion_var_' label(num_e).name];
-    job_in{1} = pipeline.(['motion_resample_' label(num_e).name]).files_out;
-    job_in{2} = fmri{num_e};
-    [path_f,name_f,ext_f] = niak_fileparts(job_in{1});
-    job_out = [opt.folder_qc 'fmri_' label(num_e).subject '_' label(num_e).session '_' label(num_e).run '_ratio_var_mc' ext_f];
-    job_opt.operation = [ 'var1 = std(vol_in{1},[],4).^2; ' ...
-                          'var2 = std(vol_in{2},[],4).^2; ' ...
-                          'mask = (var1>0) & (var2>0); ' ...
-                          'vol = ones(size(var1)); '    ...
-                          'vol(mask)=var1(mask)./var2(mask);' ]; 
-    pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%

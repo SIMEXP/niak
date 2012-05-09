@@ -57,10 +57,6 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       will be used to resample the fMRI datasets. By default it uses
 %       a 2 mm isotropic space with a field of view adjusted on the brain.
 %
-%   FLAG_KEEP_MOTION
-%       (boolean, default false) if FLAG_KEEP_MOTION is true, the 
-%       motion-corrected data is kept, whatever OPT.SIZE_OUTPUT is. 
-%
 %   RAND_SEED
 %       (scalar, default []) The specified value is used to seed the random
 %       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
@@ -100,67 +96,13 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       data.
 %
 %   FLAG_VERBOSE
-%           (boolean, default 0) if the flag is 1, then the function
-%           prints some infos during the processing.
+%       (boolean, default 0) if the flag is 1, then the function
+%       prints some infos during the processing.
 %
 %   PSOM
 %       (structure) the options of the pipeline manager. See the OPT 
 %       argument of PSOM_RUN_PIPELINE. Default values can be used here.
 %       Note that the field PSOM.PATH_LOGS will be set up by the pipeline.
-%    
-%   SLICE_TIMING 
-%       (structure) options of NIAK_BRICK_SLICE_TIMING (correction of slice 
-%       timing effects). Note that there are more flexible ways to specify 
-%       the slice timing but the following should work for most users, see 
-%       the help for details:
-%
-%       TYPE_ACQUISITION
-%           (string, default 'manual') the type of acquisition used by the 
-%           scanner. Possible choices are 'manual', 'sequential ascending',
-%           'sequential descending', 'interleaved ascending',
-%           'interleaved descending'. 
-%       
-%       TYPE_SCANNER
-%           (string, default '') the type of MR scanner. The only value
-%           that will change something to the processing here is 'Siemens', 
-%           which has different conventions for interleaved acquisitions.
-%
-%       DELAY_IN_TR
-%           (integer, default 0) the delay between the last slice of the 
-%           first volume and the first slice of the following volume.
-%
-%       FLAG_SKIP
-%           (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing 
-%           anything, just copying the input to the output. Some 
-%           simplifications will still be made in the header, see the
-%           FLAG_REGULAR and FLAG_HISTORY flags.
-%
-%   MOTION_CORRECTION 
-%       (structure) options of NIAK_PIPELINE_MOTION_CORRECTION. 
-%
-%       SESSION_REF
-%           (string, default first session) name of the session of reference. 
-%           By default, it is the first field found in FILES_IN. Use the
-%           session corresponding to the acqusition of the T1 scan.
-%
-%       SUPPRESS_VOL 
-%           (integer, default 0) the number of volumes that are suppressed 
-%           at the begining of the time series. This is a good stage to get 
-%           rid of "dummy scans" necessary to reach signal stabilization 
-%           (that takes about 10 seconds, usually 3 to 5 volumes depending 
-%           on the TR). Note that most brain imaging centers now 
-%           automatically discard dummy scans.²
-%
-%       FLAG_SKIP
-%           (boolean, default 0) if FLAG_SKIP == 1, the flag does not do 
-%           anything, just copying the inputs to the outputs (note that it 
-%           is still possible to suppress volumes). The motion parameters 
-%           are still estimated and the quality control is still performed.
-%  
-%   QC_MOTION_CORRECTION_IND
-%       (structure) options of NIAK_BRICK_QC_MOTION_CORRECTION_IND 
-%       (Individual brain mask in fMRI data, measures of quality for 
-%       motion correction).
 %
 %   T1_PREPROCESS
 %       (structure) Options of NIAK_BRICK_T1_PREPROCESS, the brick of 
@@ -191,6 +133,67 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       if you have very big misrealignement between the two images 
 %       (say, > 2 cm).
 %
+%   SLICE_TIMING 
+%       (structure) options of NIAK_BRICK_SLICE_TIMING (correction of slice 
+%       timing effects). Note that there are more flexible ways to specify 
+%       the slice timing but the following should work for most users, see 
+%       the help for details:
+%
+%       TYPE_ACQUISITION
+%           (string, default 'manual') the type of acquisition used by the 
+%           scanner. Possible choices are 'manual', 'sequential ascending',
+%           'sequential descending', 'interleaved ascending',
+%           'interleaved descending'. 
+%       
+%       TYPE_SCANNER
+%           (string, default '') the type of MR scanner. The only value
+%           that will change something to the processing here is 'Siemens', 
+%           which has different conventions for interleaved acquisitions.
+%
+%       DELAY_IN_TR
+%           (integer, default 0) the delay between the last slice of the 
+%           first volume and the first slice of the following volume.
+%
+%       SUPPRESS_VOL 
+%           (integer, default 0) the number of volumes that are suppressed 
+%           at the begining of the time series. This is a good stage to get 
+%           rid of "dummy scans" necessary to reach signal stabilization 
+%           (that takes about 10 seconds, usually 3 to 5 volumes depending 
+%           on the TR). Note that most brain imaging centers now 
+%           automatically discard dummy scans.²
+%
+%       FLAG_SKIP
+%           (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing 
+%           anything, just copying the input to the output. Some 
+%           simplifications will still be made in the header, see the
+%           FLAG_REGULAR and FLAG_HISTORY flags.
+%
+%   MOTION 
+%       (structure) options of NIAK_PIPELINE_MOTION 
+%
+%       SESSION_REF
+%           (string, default first session) name of the session of reference. 
+%           By default, it is the first field found in FILES_IN. Use the
+%           session corresponding to the acqusition of the T1 scan.
+%
+%   QC_MOTION_CORRECTION_IND
+%       (structure) options of NIAK_BRICK_QC_MOTION_CORRECTION_IND 
+%       (Individual brain mask in fMRI data, measures of quality for 
+%       motion correction).
+%
+%   RESAMPLE_VOL 
+%       (structure) options of NIAK_BRICK_RESAMPLE_VOL (spatial resampling 
+%       in the stereotaxic space).
+%
+%       INTERPOLATION 
+%           (string, default 'tricubic') the spatial interpolation method. 
+%           Available options : 'trilinear', 'tricubic', 
+%           'nearest_neighbour','sinc'.
+%
+%       FLAG_SKIP
+%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
+%           anything, just copy the input on the output. 
+%
 %   QC_COREGISTER
 %       (structure) options of NIAK_BRICK_QC_COREGISTER (measures of 
 %       registration of the T1 volume in stereotaxic space as well as the 
@@ -206,6 +209,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       LP 
 %           (real, default: Inf) the cut-off frequency for low pass 
 %           filtering. opt.lp = Inf means no low-pass filtering.
+%
+%   REGRESS_CONFOUNDS
+%       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
 %
 %   CORSICA
 %       (structure) options of NIAK_PIPELINE_CORSICA (correction of the
@@ -228,20 +234,6 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           ICA decomposition will still be generated and the component 
 %           selection will still be generated for quality control purposes)
 %
-%
-%   RESAMPLE_VOL 
-%       (structure) options of NIAK_BRICK_RESAMPLE_VOL (spatial resampling 
-%       in the stereotaxic space).
-%
-%       INTERPOLATION 
-%           (string, default 'tricubic') the spatial interpolation method. 
-%           Available options : 'trilinear', 'tricubic', 
-%           'nearest_neighbour','sinc'.
-%
-%       FLAG_SKIP
-%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
-%           anything, just copy the input on the output. 
-%
 %   SMOOTH_VOL 
 %       (structure) options of NIAK_BRICK_SMOOTH_VOL (spatial smoothing).
 %
@@ -253,9 +245,6 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       FLAG_SKIP
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
 %           anything, just copy the input on the output. 
-%
-%   REGRESS_CONFOUNDS
-%       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
 %
 % _________________________________________________________________________
 % OUTPUTS : 
@@ -271,8 +260,8 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % The steps of the pipeline are the following :
 %       1.  Slice timing correction
 %           See NIAK_BRICK_SLICE_TIMING and OPT.SLICE_TIMING
-%       2.  Motion correction (within- and between-run for each label).
-%           See NIAK_PIPELINE_MOTION_CORRECTION and OPT.MOTION_CORRECTION
+%       2.  Motion estimation (within- and between-run for each label).
+%           See NIAK_PIPELINE_MOTION and OPT.MOTION
 %       3.  Quality control for motion correction.
 %           See NIAK_BRICK_QC_MOTION_CORRECTION and
 %           OPT.QC_MOTION_CORRECTION
@@ -281,25 +270,26 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           CSF/GM/WM classification)
 %           See NIAK_BRICK_T1_PREPROCESS and OPT.T1_PREPROCESS
 %           See NIAK_BRICK_PVE and OPT.PVE
-%       5.  Coregistration of the anatomical volume with the mean 
-%           functional volume.
+%       5.  Coregistration of the anatomical volume with the target volume of 
+%           the motion estimation
 %           See NIAK_BRICK_ANAT2FUNC and OPT.ANAT2FUNC
 %       6.  Concatenation of the T2-to-T1 and T1-to-stereotaxic-nl
 %           transformations.
 %           See NIAK_BRICK_CONCAT_TRANSF, no option there.
-%       7.  Extraction of mean/std/mask for functional images, in various
-%           spaces (Linear and non-linear stereotaxic spaces).
-%           Uses the outputs of step 3, and NIAK_BRICK_RESAMPLE_VOL. 
-%           Options can be accessed through OPT.RESAMPLE_VOL
-%       8.  Quality control for 4 and 5.
+%       7.  Resampling of the functional data in the stereotaxic space.
+%           See NIAK_BRICK_RESAMPLE_VOL and OPT.RESAMPLE_VOL
+%       8.  Quality control for 7 (includes generation of average image and mask,
+%           as well as metrics of coregistration between runs for motion).
 %           See NIAK_BRICK_QC_COREGISTER
-%       9.  Correction of slow time drifts.
+%       9.  Estimation of a temporal model of slow time drifts.
 %           See NIAK_BRICK_TIME_FILTER
-%      10.  Correction of physiological noise.
+%      10.  Regression of confounds (slow time drifts, motion parameters, 
+%           WM average, global signal) and scrubbing of time frames with 
+%           an excessive motion.
+%           See NIAK_BRICK_REGRESS_CONFOUNDS and OPT.REGRESS_CONFOUNDS
+%      11.  Correction of physiological noise.
 %           See NIAK_PIPELINE_CORSICA and OPT.CORSICA
 %           Also, see NIAK_BRICK_MASK_CORSICA (no option there)
-%      11.  Resampling of the functional data in the stereotaxic space.
-%           See NIAK_BRICK_RESAMPLE_VOL and OPT.RESAMPLE_VOL
 %      12.  Spatial smoothing.
 %           See NIAK_BRICK_SMOOTH_VOL and OPT.SMOOTH_VOL
 %
@@ -307,8 +297,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %   The physiological & motion noise correction CORSICA is changing the
 %   degrees of freedom of the data. It is usullay negligible for 
 %   intra-label analysis, and will have no impact on the between-label 
-%   variance estimate (except those should be less noisy). However, the 
-%   purist may consider to take that into account in the linear model 
+%   variance estimate (except those should be less noisy). The slice timing 
+%   and scrubbing of time series also changes the sampling grid in time. 
+%   These effects have to be taken into account in the linear model 
 %   analysis. This will be taken care of in the (yet to come) 
 %   NIAK_PIPELINE_FMRISTAT
 %
@@ -328,7 +319,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
-% operationnelle, Universite de Montreal, 2010.
+% operationnelle, Universite de Montreal, 2010-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
@@ -368,8 +359,8 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = {'flag_keep_motion' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = {false              , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -408,67 +399,6 @@ pipeline = struct([]);
 tmp.(subject) = files_in.fmri;
 [fmri,label] = niak_fmri2cell(tmp);
 [path_f,name_f,ext_f] = niak_fileparts(fmri{1});
-
-%% slice-timing correction
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('slice timing (');
-end
-for num_e = 1:length(fmri)
-    clear job_in job_out job_opt
-    job_in             = fmri{num_e};        
-    job_opt            = opt.slice_timing;
-    job_opt.folder_out = [opt.folder_intermediate 'slice_timing' filesep];
-    job_out            = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_a' ext_f];        
-    pipeline = psom_add_job(pipeline,['slice_timing_' label(num_e).name],'niak_brick_slice_timing',job_in,job_out,job_opt);    
-    if strcmp(opt.size_output,'quality_control') % Clean-up
-        pipeline = psom_add_clean(pipeline,['clean_slice_timing_' label(num_e).name],job_out);        
-    end
-end 
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
-%% Motion correction
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('motion correction (');
-end
-clear job_opt job_in job_out
-job_in = cell(length(fmri),1);
-for num_e = 1:length(fmri)
-    job_in{num_e} = pipeline.(['slice_timing_' label(num_e).name]).files_out;
-end
-job_in = niak_fmri2struct(job_in,label);
-job_in = job_in.(subject);
-job_opt             = opt.motion_correction;
-job_opt.subject     = subject;
-job_opt.flag_test   = true;
-job_opt.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
-job_opt.folder_qc   = [opt.folder_qc 'motion_correction' filesep];
-[pipeline_mc,job_opt,files_motion] = niak_pipeline_motion_correction(job_in,job_opt);
-pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
-if strcmp(opt.size_output,'quality_control')&&~opt.flag_keep_motion
-    pipeline = psom_add_clean(pipeline,['clean_motion_correction_' subject],files_motion.motion_corrected);
-end
-
-%% QC motion correction 
-clear job_in job_out job_opt
-job_in.vol                     = psom_files2cell(files_motion.motion_corrected);
-job_in.motion_parameters       = psom_files2cell(files_motion.motion_parameters);
-job_out.fig_motion_parameters  = [opt.folder_qc 'motion_correction' filesep 'fig_motion_within_run.pdf'];
-job_out.mask_average           = [opt.folder_qc 'motion_correction' filesep 'func_' subject '_mask_average_nativefunc' ext_f];
-job_out.mask_group             = [opt.folder_anat 'func_' subject '_mask_nativefunc' ext_f];
-job_out.mean_vol               = [opt.folder_anat 'func_' subject '_mean_nativefunc' ext_f];
-job_out.std_vol                = [opt.folder_anat 'func_' subject '_std_nativefunc' ext_f];
-job_out.fig_coregister         = [opt.folder_qc 'motion_correction' filesep 'fig_coregister_motion.pdf'];
-job_out.tab_coregister         = [opt.folder_qc 'motion_correction' filesep 'tab_coregister_motion.csv'];
-job_opt                        = opt.qc_motion_correction_ind;
-[tmp1,job_opt.labels_vol]      = niak_fileparts(job_in.vol);
-pipeline = psom_add_job(pipeline,['qc_motion_' subject],'niak_brick_qc_motion_correction_ind',job_in,job_out,job_opt);  
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
 
 %% T1 preprocess
 if opt.flag_verbose
@@ -512,14 +442,68 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
+%% slice-timing correction
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('slice timing (');
+end
+for num_e = 1:length(fmri)
+    clear job_in job_out job_opt
+    job_in             = fmri{num_e};        
+    job_opt            = opt.slice_timing;
+    job_opt.folder_out = [opt.folder_intermediate 'slice_timing' filesep];
+    job_out            = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_a' ext_f];        
+    pipeline = psom_add_job(pipeline,['slice_timing_' label(num_e).name],'niak_brick_slice_timing',job_in,job_out,job_opt);    
+    if strcmp(opt.size_output,'quality_control') % Clean-up
+        pipeline = psom_add_clean(pipeline,['clean_slice_timing_' label(num_e).name],job_out);        
+    end
+end 
+if opt.flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
+%% Motion correction
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('motion correction (');
+end
+clear job_opt job_in job_out
+job_in = cell(length(fmri),1);
+for num_e = 1:length(fmri)
+    job_in{num_e} = pipeline.(['slice_timing_' label(num_e).name]).files_out;
+end
+job_in = niak_fmri2struct(job_in,label);
+job_in = job_in.(subject);
+job_opt             = opt.motion_correction;
+job_opt.subject     = subject;
+job_opt.flag_test   = true;
+job_opt.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
+[pipeline_mc,job_opt] = niak_pipeline_motion(job_in,job_opt);
+session_ref = job_opt.session_ref;
+run_ref = job_opt.run_ref;
+pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
+if strcmp(opt.size_output,'quality_control')&&~opt.flag_keep_motion
+    pipeline = psom_add_clean(pipeline,['clean_motion_correction_' subject],files_motion.motion_corrected);
+end
+
+%% QC motion parameters
+clear job_in job_out job_opt
+job_in  = psom_files2cell(files_motion.within_run);
+job_out = [opt.folder_qc 'motion_correction' filesep 'fig_motion_within_run.pdf'];
+job_opt = opt.qc_motion_correction_ind;
+job_opt.labels_vol = {label.name};
+pipeline = psom_add_job(pipeline,['qc_motion_params_' subject],'niak_brick_qc_motion_correction_ind',job_in,job_out,job_opt);  
+if opt.flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
 %% T1-T2 coregistration
 if opt.flag_verbose
     t1 = clock;
     fprintf('T1-T2 coregistration (');
 end
 clear job_in job_out job_opt
-job_in.func                   = pipeline.(['qc_motion_' subject]).files_out.mean_vol;
-job_in.mask_func              = pipeline.(['qc_motion_' subject]).files_out.mask_group;
+job_in.func                   = pipeline.(['motion_target_' subject '_' session_ref '_' run_ref]).files_out.mean_vol;
 job_in.anat                   = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
 job_in.mask_anat              = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
 job_in.transformation_init    = pipeline.(['t1_preprocess_' subject]).files_out.transformation_lin;
@@ -542,61 +526,47 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%% Generate functional brain masks/mean/std volumes in the stereotaxic (non-linear) space 
+%% Spatial resampling of functional datasets in stereotaxic space
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Brain masks & average (');
+    fprintf('resampling (');
 end
-clear job_in job_out job_opt
-job_in(1).transformation    = pipeline.(['concat_transf_nl_' subject]).files_out;
-job_in(1).source            = pipeline.(['qc_motion_' subject]).files_out.mean_vol;
-job_in(1).target            = opt.template_fmri;
-job_in(2).transformation    = pipeline.(['concat_transf_nl_' subject]).files_out;
-job_in(2).source            = pipeline.(['qc_motion_' subject]).files_out.mask_group;
-job_in(2).target            = opt.template_fmri;
-job_out{1}                  = [opt.folder_anat 'func_' subject '_mean_stereonl' ext_f];
-job_out{2}                  = [opt.folder_anat 'func_' subject '_mask_stereonl' ext_f];
-job_opt(1)                  = opt.resample_vol;
-job_opt(2)                  = opt.resample_vol;
-job_opt(1).interpolation    = 'tricubic';
-job_opt(2).interpolation    = 'nearest_neighbour';
-pipeline.(['mask_ind_stereonl_' subject]).command    = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
-pipeline.(['mask_ind_stereonl_' subject]).files_in   = job_in;
-pipeline.(['mask_ind_stereonl_' subject]).files_out  = job_out;
-pipeline.(['mask_ind_stereonl_' subject]).opt        = job_opt;
-
-%% Generate functional brain masks/mean/std volumes in the stereotaxic linear space
-job_in(1).transformation    = pipeline.(['anat2func_' subject]).files_out.transformation;
-job_in(2).transformation    = pipeline.(['anat2func_' subject]).files_out.transformation;
-job_out{1}                  = [opt.folder_anat 'func_' subject '_mean_stereolin' ext_f];
-job_out{2}                  = [opt.folder_anat 'func_' subject '_mask_stereolin' ext_f];
-pipeline.(['mask_ind_stereolin_' subject]).command    = 'niak_brick_resample_vol(files_in(1),files_out{1},opt(1)),niak_brick_resample_vol(files_in(2),files_out{2},opt(2))';
-pipeline.(['mask_ind_stereolin_' subject]).files_in   = job_in;
-pipeline.(['mask_ind_stereolin_' subject]).files_out  = job_out;
-pipeline.(['mask_ind_stereolin_' subject]).opt        = job_opt;
+for num_e = 1:length(fmri);
+    clear job_in job_out job_opt     
+    job_in.source = pipeline.(['slice_timing_' label(num_e).name]).files_out;
+    job_in.target = opt.template_fmri;
+    job_in.transformation = files_motion.final.(label(num_e).subject).(label(num_e).session).(label(num_e).run);
+    job_in.transformation_stereo = pipeline.(['concat_transf_nl_' subject]).files_out; 
+    job_out = '';            
+    job_opt = opt.resample_vol;
+    job_opt.folder_out = [opt.folder_intermediate 'resample' filesep];
+    pipeline = psom_add_job(pipeline,['resample_' label(num_e).name],'niak_brick_resample_vol',job_in,job_out,job_opt);
+    if strcmp(opt.size_output,'quality_control')
+        pipeline = psom_add_clean(pipeline,['clean_resample_' label(num_e).name],pipeline.(['resample_' label(num_e).name]).files_out);
+    end
+end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%% Resample the map of ratio of variance after/before motion correction in the stereotaxic (non-linear) space 
+%% QC resampling
 if opt.flag_verbose
     t1 = clock;
-    fprintf('Resample var map of motion correction (');
+    fprintf('QC resampling (');
 end
-clear job_in job_out job_opt
-for num_e = 1:length(fmri)
-    job_in(num_e).source         = pipeline.(['qc_motion_var_' label(num_e).name]).files_out;
-    [path_t,name_t,ext_t] = niak_fileparts(job_in(num_e).source);
-    job_out{num_e}        = [path_t filesep name_t '_stereonl' ext_t];
-    job_in(num_e).transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
-    job_in(num_e).target         = opt.template_fmri;
+for num_e = 1:length(fmri);
+    clear job_in job_out job_opt     
+    job_in.vol{num_e} = pipeline.(['resample_' label(num_e).name]).files_out;
 end
-job_opt = opt.resample_vol;
-pipeline.(['resample_qc_var_motion_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
-pipeline.(['resample_qc_var_motion_' subject]).files_in   = job_in;
-pipeline.(['resample_qc_var_motion_' subject]).files_out  = job_out;
-pipeline.(['resample_qc_var_motion_' subject]).opt        = job_opt;
-
+job_out.mask_average           = [opt.folder_qc 'motion_correction' filesep 'func_' subject '_mask_average_nativefunc' ext_f];
+job_out.mask_group             = [opt.folder_anat 'func_' subject '_mask_nativefunc' ext_f];
+job_out.mean_vol               = [opt.folder_anat 'func_' subject '_mean_nativefunc' ext_f];
+job_out.std_vol                = [opt.folder_anat 'func_' subject '_std_nativefunc' ext_f];
+job_out.fig_coregister         = [opt.folder_qc 'motion_correction' filesep 'fig_coregister_motion.pdf'];
+job_out.tab_coregister         = [opt.folder_qc 'motion_correction' filesep 'tab_coregister_motion.csv'];
+job_opt = opt.qc_coregister;
+job_opt.labels_subject = label;
+pipeline = psom_add_job(pipeline,['qc_resample_' subject],'niak_brick_qc_coregister',job_in,job_out,job_opt);
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
@@ -609,12 +579,12 @@ end
 clear job_in job_out job_opt 
 job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
 job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
-job_in.functional_space   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
+job_in.functional_space   = pipeline.(['qc_resample_' subject]).files_out.mask_group;
 job_in.transformation_lin = pipeline.(['anat2func_' subject]).files_out.transformation;
 job_in.transformation_nl  = pipeline.(['concat_transf_nl_' subject]).files_out;
 job_in.segmentation       = pipeline.(['t1_preprocess_' subject]).files_out.classify;
-job_out.mask_vent_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_vent_nativefunc' ext_f];
-job_out.mask_stem_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_stem_nativefunc' ext_f];
+job_out.mask_vent_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_vent' ext_f];
+job_out.mask_stem_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_stem' ext_f];
 job_out.white_matter_ind  = [opt.folder_qc 'corsica' filesep subject '_mask_wm_nativefunc' ext_f];
 job_opt.flag_test = false;
 pipeline = psom_add_job(pipeline,['mask_corsica_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
@@ -626,7 +596,7 @@ if opt.flag_verbose
 end
 for num_e = 1:length(fmri)
     clear job_opt job_in job_out
-    job_in = pipeline.(['motion_resample_' label(num_e).name]).files_out;
+    job_in = pipeline.(['resample_' label(num_e).name]).files_out;
     job_out.dc_high  = '';
     job_out.dc_low   = '';                                    
     job_opt            = opt.time_filter;
@@ -671,34 +641,6 @@ for num_e = 1:length(fmri)
     if strcmp(opt.size_output,'quality_control')
         pipeline = psom_add_clean(pipeline,['clean_confounds_' label(num_e).name],pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data);
     end    
-end
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
-%% Resample the maps of F-tests for the confound in the stereotaxic (non-linear) space 
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('Resample var map of motion correction (');
-end
-list_maps = { 'qc_wm' , 'qc_slow_drift' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
-job_opt = opt.resample_vol;
-for num_m = 1:length(list_maps)
-    clear job_in job_out 
-    if strcmp(list_maps{num_m},'qc_custom_param')&&strcmp(pipeline.(['confounds_' label(num_e).name]).files_out.qc_custom_param,'gb_niak_omitted')
-        continue
-    end
-    for num_e = 1:length(fmri)
-        job_in(num_e).source  = pipeline.(['confounds_' label(num_e).name]).files_out.(list_maps{num_m});
-        [path_t,name_t,ext_t] = niak_fileparts(job_in(num_e).source);
-        job_out{num_e}        = [path_t filesep name_t '_stereonl' ext_t];
-        job_in(num_e).transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
-        job_in(num_e).target         = opt.template_fmri;
-    end
-    pipeline.(['resample_' list_maps{num_m} '_' subject]).command   = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
-    pipeline.(['resample_' list_maps{num_m} '_' subject]).files_in  = job_in;
-    pipeline.(['resample_' list_maps{num_m} '_' subject]).files_out = job_out;
-    pipeline.(['resample_' list_maps{num_m} '_' subject]).opt       = job_opt;
 end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
@@ -751,50 +693,6 @@ for num_e = 1:size(files_co,1)
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 
-%% Resample the map of ratio of variance after/before motion correction in the stereotaxic (non-linear) space 
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('Resample var map of CORSICA (');
-end
-clear job_in job_out job_opt
-for num_e = 1:length(fmri)
-    job_in(num_e).source  = pipeline.(['qc_corsica_var_' label(num_e).name]).files_out;
-    [path_t,name_t,ext_t] = niak_fileparts(job_in(num_e).source);
-    job_out{num_e}        = [path_t filesep name_t '_stereonl' ext_t];
-    job_in(num_e).transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
-    job_in(num_e).target         = opt.template_fmri;
-end
-job_opt               = opt.resample_vol;
-pipeline.(['resample_qc_corsica_var_' subject]).command = 'for num_e = 1:length(files_in); niak_brick_resample_vol(files_in(num_e),files_out{num_e},opt); end';
-pipeline.(['resample_qc_corsica_var_' subject]).files_in   = job_in;
-pipeline.(['resample_qc_corsica_var_' subject]).files_out  = job_out;
-pipeline.(['resample_qc_corsica_var_' subject]).opt        = job_opt;
-
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-%% Spatial resampling in stereotaxic space
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('resampling (');
-end
-for num_e = 1:length(fmri);
-    clear job_in job_out job_opt     
-    job_in.source = files_co{num_e};
-    job_in.target = opt.template_fmri;
-    job_in.transformation = pipeline.(['concat_transf_nl_' subject]).files_out;
-    job_out = '';            
-    job_opt = opt.resample_vol;
-    job_opt.folder_out = [opt.folder_intermediate 'resample' filesep];
-    pipeline = psom_add_job(pipeline,['resample_' label(num_e).name],'niak_brick_resample_vol',job_in,job_out,job_opt);
-    if strcmp(opt.size_output,'quality_control')
-        pipeline = psom_add_clean(pipeline,['clean_resample_' label(num_e).name],pipeline.(['resample_' label(num_e).name]).files_out);
-    end
-end
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
 %% Spatial smoothing (stereotaxic space) 
 if opt.flag_verbose
     t1 = clock;
@@ -802,7 +700,7 @@ if opt.flag_verbose
 end
 for num_e = 1:length(fmri)
     clear job_in job_out job_opt     
-    job_in = pipeline.(['resample_' label(num_e).name]).files_out;
+    job_in = files_co{num_e};
     job_out = [opt.folder_fmri filesep 'fmri_' label(num_e).name ext_f];            
     job_opt = opt.smooth_vol;    
     pipeline = psom_add_job(pipeline,['smooth_' label(num_e).name],'niak_brick_smooth_vol',job_in,job_out,job_opt);

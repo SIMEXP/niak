@@ -96,6 +96,11 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       inverted, i.e. the transformation goes from functional to 
 %       anatomical space.
 %
+%   FWHM_MASKING
+%       (real value, default 3) the FWHM of the blurring kernel used to 
+%       extract of mask of the brain in the functional volume, if the mask 
+%       was not specified/
+%       
 %   FOLDER_OUT
 %       (string, default: path of FILES_IN) If present, all default outputs 
 %       will be created in the folder FOLDER_OUT. The folder needs to be 
@@ -195,8 +200,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = {'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
-gb_list_defaults    = {false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
+gb_list_fields      = {'fwhm_masking' , 'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
+gb_list_defaults    = {3              , false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&&~strcmp(opt.init,'identity')
@@ -326,15 +331,6 @@ opt_res.interpolation = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 [hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);
 
-%% Copying the functional mask
-if flag_verbose
-    fprintf('Creating temporary copies of the functional mask ...\n');
-end
-[hdr_func,mask_func] = niak_read_vol(files_in.mask_func);
-mask_func = round(mask_func)>0;
-hdr_func.file_name = file_mask_func;
-niak_write_vol(hdr_func,mask_func);
-
 %% Copying the functional volume
 if flag_verbose
     fprintf('Copying the functional volume in the temporary folder ...\n');
@@ -342,6 +338,21 @@ end
 [hdr_func,vol_func] = niak_read_vol(files_in.func);
 hdr_func.file_name = file_func_init;
 niak_write_vol(hdr_func,vol_func);
+
+%% Copying the functional mask
+if flag_verbose
+    fprintf('Creating temporary copies of the functional mask ...\n');
+end
+if ~strcmp(files_in.mask_func,'gb_niak_omitted')
+    [hdr_func,mask_func] = niak_read_vol(files_in.mask_func);
+    mask_func = round(mask_func)>0;
+else
+    opt_mask_func.voxel_size = hdr_func.info.voxel_size;
+    opt_mask_func.fwhm = opt.fwhm_masking;
+    mask_func = niak_mask_brain(vol_func,opt_mask);
+end
+hdr_func.file_name = file_mask_func;
+niak_write_vol(hdr_func,mask_func);
 
 %% For large displacement, make a first guess of the transformation by
 %% matching the centers of mass

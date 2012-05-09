@@ -30,6 +30,11 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           volume will be resampled using TRANSF(:,:,I). The name of the 
 %           variable can be modified (see OPT.TRANSF_NAME below).
 %
+%       TRANSFORMATION_STEREO
+%           (string, default 'gb_niak_omitted'). This option is used only for
+%           4D dataset. For each volume, TRANSFORMATION_STEREO is applied after
+%           TRANSFORMATION.
+%
 %   FILES_OUT 
 %       (string,default <BASE_SOURCE>_res) the name of the output resampled 
 %       volume.
@@ -155,8 +160,8 @@ niak_gb_vars
 
 % Setting up inputs
 gb_name_structure = 'files_in';
-gb_list_fields    = {'source', 'target' , 'transformation' };
-gb_list_defaults  = {NaN     , NaN      , ''               };
+gb_list_fields    = {'source', 'target' , 'transformation' , 'transformation_stereo' };
+gb_list_defaults  = {NaN     , NaN      , ''               , 'gb_niak_omitted'       };
 niak_set_defaults
 
 % Setting up options
@@ -419,6 +424,7 @@ else
         
     file_func_tmp = [folder_tmp 'func.mnc']; % temporary file for input
     file_func_tmp2 = [folder_tmp 'func2.mnc']; % temporary file for output
+    file_transf_tmp = [folder_tmp 'transf.xfm']; % temporary file for transform
     [hdr_source,vol_source] = niak_read_vol(files_in.source); % read the source
     vol_resampled = zeros([nx2,ny2,nz2,nt1-suppress_vol]); % initialize a resampled space
     hdr_source.file_name = file_func_tmp;
@@ -434,11 +440,20 @@ else
         %% Resample
         instr_resample = ['mincresample ',instr_range,file_func_tmp,' ',file_func_tmp2];
         if ~isempty(files_in.transformation)
-            if ischar(files_in.transformation)
-                instr_resample = [instr_resample ' -transform ',files_in.transformation];
+            if ~strcmp(files_in.transformation_stereo,'gb_niak_omitted')
+                if ischar(files_in.transformation)
+                    instr_transf = ['xfm_concat -clobber ' files_in.transformation ' ' files_in.transformation_stereo ' ' file_transf_tmp];
+                else
+                    instr_transf = ['xfm_concat -clobber ' files_in.transformation{num_t} ' ' files_in.transformation_stereo ' ' file_transf_tmp];
+                end
             else
-                instr_resample = [instr_resample ' -transform ',files_in.transformation{num_t}];
+                if ischar(files_in.transformation)
+                    file_transf_tmp = files_in.transformation;
+                else
+                    file_transf_tmp = files_in.transformation{num_t};
+                end
             end
+            instr_resample = [instr_resample ' -transform ' file_transf_tmp];
         end
         if flag_invert_transf
             instr_resample = [instr_resample ' -invert_transformation'];
