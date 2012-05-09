@@ -1,6 +1,6 @@
 function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_out,opt)
-% Regress slow time drifst, global signals, motion parameters
-% "scrubbing" of time frames with excessive motion is also available.
+% Regress slow time drift, global signal, motion parameters
+% as well as "scrubbing" of time frames with excessive motion 
 %
 % SYNTAX :
 % NIAK_BRICK_REGRESS_CONFOUNDS(FILES_IN,FILES_OUT,OPT)
@@ -64,6 +64,11 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   QC_SLOW_DRIFT 
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_slow_drift.<ext FMRI>) 
 %      the name of a volume file with the f-test of the slow time drifts
+%
+%   QC_VENT
+%      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_vent.<ext FMRI>)  
+%      the name of a volume file with the f-test of the average ventricular
+%      signal
 %
 %   QC_WM 
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_wm.<ext FMRI>)  
@@ -145,7 +150,7 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % NeuroImage Volume 59, Issue 3, 1 February 2012, Pages 2142–2154
 %
 % Note that the scrubbing is based solely on the FD index, and that DVARS is not
-% derived.
+% derived. The paper of Power et al. included both indices.
 %
 % Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
 % Research Centre of the Montreal Geriatric Institute
@@ -179,8 +184,8 @@ list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN 
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'scrubbing'       , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_wm'           , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
-list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+list_fields    = { 'scrubbing'       , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
@@ -209,6 +214,10 @@ end
 
 if isempty(files_out.qc_wm)
     files_out.qc_wm = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_wm',ext_f);
+end
+
+if isempty(files_out.qc_vent)
+    files_out.qc_vent = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_vent',ext_f);
 end
 
 if isempty(files_out.qc_motion)
@@ -322,11 +331,21 @@ if opt.flag_wm
     labels = [labels {'wm_av'}];
 end
 
+%% Add ventricular average
+if opt.flag_verbose
+    fprintf('Ventricular average ...\n')
+end
+vent_av = mean(y(:,mask_vent>0),2);
+if opt.flag_wm   
+    x = [x,vent_av];
+    labels = [labels {'vent_av'}];
+end
+
 %% Generate F-TEST maps for all components of the model for quality control purposes
 hdr_qc = hdr_mask;
 model.y = y;
-model.x = niak_normalize_tseries([slow_drift motion_param wm_av]);
-labels_all = [repmat({'slow_drift'},[1 size(slow_drift,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av'}];
+model.x = niak_normalize_tseries([slow_drift motion_param wm_av vent_av]);
+labels_all = [repmat({'slow_drift'},[1 size(slow_drift,2)]) repmat({'motion'},[1 size(motion_param,2)]) {'wm_av','vent_av'}];
 opt_qc.test ='ftest';
 
 %% F-test slow drift
@@ -356,6 +375,17 @@ if ~strcmp(files_out.qc_wm,'gb_niak_omitted')
     niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
 end
 
+%% F-test ventricles
+if ~strcmp(files_out.qc_wm,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Generate a F-test map for the average signal in the ventricles ...\n')
+    end
+    model.c = ismember(labels_all,'vent_av');
+    res = niak_glm(model,opt_qc);
+    hdr_qc.file_name = files_out.qc_vent;
+    niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
+end
+
 %% F-test motion
 if ~strcmp(files_out.qc_motion,'gb_niak_omitted')
     if opt.flag_verbose
@@ -367,10 +397,10 @@ if ~strcmp(files_out.qc_motion,'gb_niak_omitted')
     niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
 end
 
-%% Regress confounds stage 1 (slow time drifts, average WM, motion parameters)  
+%% Regress confounds stage 1 (slow time drifts, average WM, vent, motion parameters)  
 if ~isempty(x)
     if opt.flag_verbose
-        fprintf('Regress the confounds stage 1 (slow time drifts, average WM, motion parameters) ...\n')
+        fprintf('Regress the confounds stage 1 (slow time drifts, average WM, vent, motion parameters) ...\n')
     end
     model.x = niak_normalize_tseries(x);
     res = niak_glm(model,opt_glm);
@@ -471,7 +501,7 @@ end
 
 %% Save the confounds
 if ~strcmp(files_out.confounds,'gb_niak_omitted')
-    save(files_out.confounds, 'x' , 'x2' , 'labels' , 'labels2');
+    save(files_out.confounds, 'x' , 'x2' , 'labels' , 'labels2' , 'slow_drift' , 'motion_param' , 'wm_av' , 'vent_av' , 'pc_spatial_av' , 'covar');
 end
 
 %% Save the scrubbing parameters

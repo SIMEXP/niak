@@ -54,8 +54,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       
 %   TEMPLATE_FMRI
 %       (string, default '<~niak>/template/roi_aal.mnc.gz') a volume that
-%       will be used to resample the fMRI datasets. By default it uses
-%       a 2 mm isotropic space with a field of view adjusted on the brain.
+%       will be used to resample the fMRI datasets. 
 %
 %   TARGET_SPACE
 %       (string, default 'stereonl') which space will be used to resample
@@ -166,7 +165,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           rid of "dummy scans" necessary to reach signal stabilization 
 %           (that takes about 10 seconds, usually 3 to 5 volumes depending 
 %           on the TR). Note that most brain imaging centers now 
-%           automatically discard dummy scans.²
+%           automatically discard dummy scans.
 %
 %       FLAG_SKIP
 %           (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing 
@@ -196,14 +195,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           Available options : 'trilinear', 'tricubic', 
 %           'nearest_neighbour','sinc'.
 %
-%       FLAG_SKIP
-%           (boolean, default false) if FLAG_SKIP==1, the brick does not do
-%           anything, just copy the input on the output. 
 %
 %   QC_COREGISTER
 %       (structure) options of NIAK_BRICK_QC_COREGISTER (measures of 
 %       registration of the T1 volume in stereotaxic space as well as the 
-%       coregistration between the anatomical and functional volumes.
+%       coregistration between the anatomical and functional volumes).
 %
 %   TIME_FILTER 
 %       (structure) options of NIAK_BRICK_TIME_FILTER (temporal filtering).
@@ -218,6 +214,31 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %
 %   REGRESS_CONFOUNDS
 %       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
+%       FOLDER_OUT
+%           (string, default folder of FMRI) the folder where the default outputs
+%           are generated.
+%
+%       FLAG_SLOW
+%           (boolean, default true) turn on/off the correction of slow time drifts
+%
+%       FLAG_GSC 
+%           (boolean, default true) turn on/off global signal correction
+%
+%       FLAG_MOTION_PARAMS 
+%           (boolean, default false) turn on/off the removal of the 6 motion 
+%           parameters + the square of 6 motion parameters.
+%
+%       FLAG_WM 
+%           (boolean, default true) turn on/off the removal of the average 
+%           white matter signal
+%
+%       PCT_VAR_EXPLAINED 
+%           (boolean, default 0.95) the % of variance explained by the selected 
+%           PCA components when reducing the dimensionality of motion parameters.
+%
+%       FLAG_PCA_MOTION 
+%           (boolean, default true) turn on/off the PCA reduction of motion 
+%           parameters.
 %
 %   CORSICA
 %       (structure) options of NIAK_PIPELINE_CORSICA (correction of the
@@ -632,6 +653,7 @@ for num_e = 1:length(fmri)
     job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
     job_out.scrubbing      = [job_opt.folder_out filesep 'scrubbing_' label(num_e).name '.mat']; 
     job_out.qc_wm          = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_wm_func' opt.target_space ext_f]; 
+    job_out.qc_vent        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_vent_func' opt.target_space ext_f]; 
     job_out.qc_slow_drift  = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_slow_drift_func' opt.target_space ext_f]; 
     job_out.qc_motion      = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_motion_func' opt.target_space ext_f]; 
     job_out.qc_gse         = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
