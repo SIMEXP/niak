@@ -114,7 +114,7 @@ function [results,opt] = niak_glm(model,opt)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-if isempty(opt)
+if (nargin<2)||(isempty(opt))
     opt = struct([]);
 end
 
@@ -181,6 +181,7 @@ if isfield(opt,'test')
         case 'none'
             
             % Do nothing
+            results = struct();
             
         otherwise,
             error('This test is not supported');
