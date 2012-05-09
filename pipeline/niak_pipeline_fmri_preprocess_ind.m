@@ -57,6 +57,12 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       will be used to resample the fMRI datasets. By default it uses
 %       a 2 mm isotropic space with a field of view adjusted on the brain.
 %
+%   TARGET_SPACE
+%       (string, default 'stereonl') which space will be used to resample
+%       the functional datasets. Available options:
+%          'stereolin' : stereotaxic space using a linear transformation. 
+%          'stereonl' : stereotaxic space using a non-linear transformation.
+%
 %   RAND_SEED
 %       (scalar, default []) The specified value is used to seed the random
 %       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
@@ -359,8 +365,8 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = { 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -486,17 +492,6 @@ if strcmp(opt.size_output,'quality_control')&&~opt.flag_keep_motion
     pipeline = psom_add_clean(pipeline,['clean_motion_correction_' subject],files_motion.motion_corrected);
 end
 
-%% QC motion parameters
-clear job_in job_out job_opt
-job_in  = psom_files2cell(files_motion.within_run);
-job_out = [opt.folder_qc 'motion_correction' filesep 'fig_motion_within_run.pdf'];
-job_opt = opt.qc_motion_correction_ind;
-job_opt.labels_vol = {label.name};
-pipeline = psom_add_job(pipeline,['qc_motion_params_' subject],'niak_brick_qc_motion_correction_ind',job_in,job_out,job_opt);  
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
 %% T1-T2 coregistration
 if opt.flag_verbose
     t1 = clock;
@@ -536,7 +531,14 @@ for num_e = 1:length(fmri);
     job_in.source = pipeline.(['slice_timing_' label(num_e).name]).files_out;
     job_in.target = opt.template_fmri;
     job_in.transformation = files_motion.final.(label(num_e).subject).(label(num_e).session).(label(num_e).run);
-    job_in.transformation_stereo = pipeline.(['concat_transf_nl_' subject]).files_out; 
+    switch opt.target_space
+        case 'stereolin'
+            job_in.transformation_stereo = pipeline.(['anat2func_' subject]).files_out.transformation; 
+        case 'stereonl'
+            job_in.transformation_stereo = pipeline.(['concat_transf_nl_' subject]).files_out; 
+        otherwise
+            error('%s is an unknown target space (see OPT.TARGET_SPACE)',opt.target_space)
+    end
     job_out = '';            
     job_opt = opt.resample_vol;
     job_opt.folder_out = [opt.folder_intermediate 'resample' filesep];
@@ -549,24 +551,23 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%% QC resampling
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('QC resampling (');
+%% QC motion correction 
+clear job_in job_out job_opt
+job_in.vol = cell(length(fmri),1);
+for num_e = 1:length(fmri)
+    job_in.vol{num_e} = pipeline.([opt.folder_intermediate 'resample' filesep]).files_out;
 end
-for num_e = 1:length(fmri);
-    clear job_in job_out job_opt     
-    job_in.vol{num_e} = pipeline.(['resample_' label(num_e).name]).files_out;
-end
-job_out.mask_average           = [opt.folder_qc 'motion_correction' filesep 'func_' subject '_mask_average_nativefunc' ext_f];
-job_out.mask_group             = [opt.folder_anat 'func_' subject '_mask_nativefunc' ext_f];
-job_out.mean_vol               = [opt.folder_anat 'func_' subject '_mean_nativefunc' ext_f];
-job_out.std_vol                = [opt.folder_anat 'func_' subject '_std_nativefunc' ext_f];
+job_in.motion_parameters       = psom_files2cell(files_motion.within_run);
+job_out.fig_motion_parameters  = [opt.folder_qc 'motion_correction' filesep 'fig_motion_within_run.pdf'];
+job_out.mask_average           = [opt.folder_qc 'motion_correction' filesep 'func_' subject '_mask_average_' opt.target_space ext_f];
+job_out.mask_group             = [opt.folder_anat 'func_' subject '_mask_' opt.target_space ext_f];
+job_out.mean_vol               = [opt.folder_anat 'func_' subject '_mean_' opt.target_space ext_f];
+job_out.std_vol                = [opt.folder_anat 'func_' subject '_std_' opt.target_space ext_f];
 job_out.fig_coregister         = [opt.folder_qc 'motion_correction' filesep 'fig_coregister_motion.pdf'];
 job_out.tab_coregister         = [opt.folder_qc 'motion_correction' filesep 'tab_coregister_motion.csv'];
-job_opt = opt.qc_coregister;
-job_opt.labels_subject = label;
-pipeline = psom_add_job(pipeline,['qc_resample_' subject],'niak_brick_qc_coregister',job_in,job_out,job_opt);
+job_opt                        = opt.qc_motion_correction_ind;
+[tmp1,job_opt.labels_vol]      = niak_fileparts(job_in.vol);
+pipeline = psom_add_job(pipeline,['qc_motion_' subject],'niak_brick_qc_motion_correction_ind',job_in,job_out,job_opt);  
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
@@ -580,12 +581,12 @@ clear job_in job_out job_opt
 job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
 job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
 job_in.functional_space   = pipeline.(['qc_resample_' subject]).files_out.mask_group;
-job_in.transformation_lin = pipeline.(['anat2func_' subject]).files_out.transformation;
-job_in.transformation_nl  = pipeline.(['concat_transf_nl_' subject]).files_out;
+job_in.transformation_nl  = pipeline.(['t1_preprocess_',subject]).files_out.transformation_nl;
 job_in.segmentation       = pipeline.(['t1_preprocess_' subject]).files_out.classify;
-job_out.mask_vent_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_vent' ext_f];
-job_out.mask_stem_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_stem' ext_f];
-job_out.white_matter_ind  = [opt.folder_qc 'corsica' filesep subject '_mask_wm_nativefunc' ext_f];
+job_out.mask_vent_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_vent_func' opt.target_space ext_f];
+job_out.mask_stem_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_stem_func' opt.target_space ext_f];
+job_out.white_matter_ind  = [opt.folder_qc 'corsica' filesep subject '_mask_wm_func' opt.target_space ext_f];
+job_opt.target_space = opt.target_space;
 job_opt.flag_test = false;
 pipeline = psom_add_job(pipeline,['mask_corsica_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
 
@@ -630,12 +631,12 @@ for num_e = 1:length(fmri)
     job_out.filtered_data  = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
     job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
     job_out.scrubbing      = [job_opt.folder_out filesep 'scrubbing_' label(num_e).name '.mat']; 
-    job_out.qc_wm          = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_wm' ext_f]; 
-    job_out.qc_slow_drift  = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_slow_drift' ext_f]; 
-    job_out.qc_motion      = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_motion' ext_f]; 
-    job_out.qc_gse         = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
+    job_out.qc_wm          = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_wm_func' opt.target_space ext_f]; 
+    job_out.qc_slow_drift  = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_slow_drift_func' opt.target_space ext_f]; 
+    job_out.qc_motion      = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_motion_func' opt.target_space ext_f]; 
+    job_out.qc_gse         = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
     if ~strcmp(job_in.custom_param,'gb_niak_omitted')
-        job_out.qc_custom_param = [opt.folder_qc filesep 'confounds' filesep label(num_e).name '_qc_gse' ext_f]; 
+        job_out.qc_custom_param = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
     end
     pipeline = psom_add_job(pipeline,['confounds_' label(num_e).name],'niak_brick_regress_confounds',job_in,job_out,job_opt);    
     if strcmp(opt.size_output,'quality_control')
@@ -684,7 +685,7 @@ for num_e = 1:size(files_co,1)
     name_job = ['qc_corsica_var_' label(num_e).name];
     job_in{1} = files_co{num_e};
     job_in{2} = pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data;
-    job_out     = [opt.folder_qc 'corsica' filesep name_job ext_f];
+    job_out     = [opt.folder_qc 'corsica' filesep name_job '_func' opt.target_space ext_f];
     job_opt.operation = [ 'var1 = std(vol_in{1},[],4).^2; ' ...
                           'var2 = std(vol_in{2},[],4).^2; ' ...
                           'mask = (var1>0) & (var2>0); ' ...

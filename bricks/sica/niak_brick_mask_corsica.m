@@ -22,13 +22,9 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 %       (string) the file name of a 3D volume which defines the native
 %       functional space coordinates, resolution & bounding box.
 %
-%   TRANSFORMATION_LIN
-%       (string) the file name of a linear xfm transformation file from
-%       the individual functional space to the stereotaxic space.
-%
 %   TRANSFORMATION_NL
 %       (string) the file name of a non-linear xfm transformation file from
-%       the individual functional space to the stereotaxic space.
+%       the linear stereotaxic space to the non-linear stereotaxic space.
 %
 %   SEGMENTATION
 %       (string) the file name of a segmentation into three tissu types
@@ -51,7 +47,13 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 %       functional space.
 %       
 % OPT           
-% 	(structure) with the following fields.  
+%   (structure) with the following fields.  
+%
+%   TARGET_SPACE
+%       (string, default 'stereonl') which space will be used to resample
+%       the masks. Available options:
+%          'stereolin' : stereotaxic space using a linear transformation. 
+%          'stereonl' : stereotaxic space using a non-linear transformation.
 %
 %   FOLDER_OUT 
 %       (string, default: path of FILES_IN.MASK_SEGMENTATION) 
@@ -127,8 +129,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_verbose' , 'flag_test' , 'folder_out' };
-gb_list_defaults  = {true           , false       , ''           };
+gb_list_fields    = { 'target_space' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = { 'stereonl'     , true           , false       , ''           };
 niak_set_defaults
 
 if flag_test == 1
@@ -141,34 +143,43 @@ end
 folder_tmp = niak_path_tmp('_mask_corsica');
 [path_f,name_f,ext_f] = niak_fileparts(files_in.mask_vent_stereo);
 
-%% Resampling the segmentation into individual functional space.
+%% Resampling the segmentation in target space.
 if flag_verbose
     tic;
-    fprintf('Resampling the segmentation of brain tissues in individual functional space - ')
+    fprintf('Resampling the segmentation of brain tissues in %s functional space - ',opt.target_space)
 end
 clear files_in_res files_out_res opt_res
 files_in_res.source         = files_in.segmentation;
 files_in_res.target         = files_in.functional_space;
-files_in_res.transformation = files_in.transformation_lin;
+switch opt.target_space
+    case 'stereolin'
+    case 'stereonl'
+        files_in_res.transformation = files_in.transformation_nl;
+        opt_res.flag_invert_transf  = false;
+    otherwise
+        error('%s is an unknown target space (see OPT.TARGET_SPACE)',opt.target_space)
+end
 files_out_res               = [folder_tmp 'brain_segmentation_ind.mnc'];
-opt_res.flag_invert_transf  = true;
+
 opt_res.interpolation       = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
 end
 
-%% Resampling the mask of the ventricle in native space
+%% Resampling the mask of the ventricle in target space
 if flag_verbose
     tic;
-    fprintf('Resampling the mask of the ventricle in native space - ')
+    fprintf('Resampling the mask of the ventricle in %s functional space - ',opt.target_space)
 end
 clear files_in_res files_out_res opt_res
 files_in_res.source         = files_in.mask_vent_stereo;
 files_in_res.target         = files_in.functional_space;
-files_in_res.transformation = files_in.transformation_nl;
+if strcmp(opt.target_space,'stereolin')
+    files_in_res.transformation = files_in.transformation_nl;
+    opt_res.flag_invert_transf  = true;
+end
 files_out_res               = [folder_tmp 'mask_vent_ind.mnc'];
-opt_res.flag_invert_transf  = true;
 opt_res.interpolation       = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 if flag_verbose    
@@ -183,9 +194,11 @@ end
 clear files_in_res files_out_res opt_res
 files_in_res.source         = files_in.mask_stem_stereo;
 files_in_res.target         = files_in.functional_space;
-files_in_res.transformation = files_in.transformation_nl;
+if strcmp(opt.target_space,'stereolin')
+    files_in_res.transformation = files_in.transformation_nl;
+    opt_res.flag_invert_transf  = true;
+end
 files_out_res               = [folder_tmp 'mask_stem_ind.mnc'];
-opt_res.flag_invert_transf  = true;
 opt_res.interpolation       = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 if flag_verbose    
