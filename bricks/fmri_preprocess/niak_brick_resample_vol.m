@@ -442,9 +442,13 @@ else
         if ~isempty(files_in.transformation)
             if ~strcmp(files_in.transformation_stereo,'gb_niak_omitted')
                 if ischar(files_in.transformation)
-                    instr_transf = ['xfm_concat -clobber ' files_in.transformation ' ' files_in.transformation_stereo ' ' file_transf_tmp];
+                    instr_transf = ['xfmconcat -clobber ' files_in.transformation ' ' files_in.transformation_stereo ' ' file_transf_tmp];
                 else
-                    instr_transf = ['xfm_concat -clobber ' files_in.transformation{num_t} ' ' files_in.transformation_stereo ' ' file_transf_tmp];
+                    instr_transf = ['xfmconcat -clobber ' files_in.transformation{num_t} ' ' files_in.transformation_stereo ' ' file_transf_tmp];
+                end
+                [flag_fail,msg] = system(instr_transf);
+                if flag_fail
+                    error('There was a problem with the concatenation of transformation. The command was %s. The error message was %s',instr_transf,msg)
                 end
             else
                 if ischar(files_in.transformation)

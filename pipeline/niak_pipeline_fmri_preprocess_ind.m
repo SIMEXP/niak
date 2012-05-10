@@ -505,13 +505,11 @@ job_opt             = opt.motion_correction;
 job_opt.subject     = subject;
 job_opt.flag_test   = true;
 job_opt.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
-[pipeline_mc,job_opt] = niak_pipeline_motion(job_in,job_opt);
+[pipeline_mc,job_opt,files_motion] = niak_pipeline_motion(job_in,job_opt);
 session_ref = job_opt.session_ref;
-run_ref = job_opt.run_ref;
+list_run_tmp = fieldnames(files_in.fmri.(session_ref));
+run_ref = list_run_tmp{job_opt.run_ref};
 pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
-if strcmp(opt.size_output,'quality_control')&&~opt.flag_keep_motion
-    pipeline = psom_add_clean(pipeline,['clean_motion_correction_' subject],files_motion.motion_corrected);
-end
 
 %% T1-T2 coregistration
 if opt.flag_verbose
@@ -519,7 +517,7 @@ if opt.flag_verbose
     fprintf('T1-T2 coregistration (');
 end
 clear job_in job_out job_opt
-job_in.func                   = pipeline.(['motion_target_' subject '_' session_ref '_' run_ref]).files_out.mean_vol;
+job_in.func                   = pipeline.(['motion_target_' subject '_' session_ref '_' run_ref]).files_out;
 job_in.anat                   = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
 job_in.mask_anat              = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
 job_in.transformation_init    = pipeline.(['t1_preprocess_' subject]).files_out.transformation_lin;
@@ -576,7 +574,7 @@ end
 clear job_in job_out job_opt
 job_in.vol = cell(length(fmri),1);
 for num_e = 1:length(fmri)
-    job_in.vol{num_e} = pipeline.([opt.folder_intermediate 'resample' filesep]).files_out;
+    job_in.vol{num_e} = pipeline.(['resample_' label(num_e).name]).files_out;
 end
 job_in.motion_parameters       = psom_files2cell(files_motion.within_run);
 job_out.fig_motion_parameters  = [opt.folder_qc 'motion_correction' filesep 'fig_motion_within_run.pdf'];
@@ -601,7 +599,7 @@ end
 clear job_in job_out job_opt 
 job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
 job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
-job_in.functional_space   = pipeline.(['qc_resample_' subject]).files_out.mask_group;
+job_in.functional_space   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.transformation_nl  = pipeline.(['t1_preprocess_',subject]).files_out.transformation_nl;
 job_in.segmentation       = pipeline.(['t1_preprocess_' subject]).files_out.classify;
 job_out.mask_vent_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_vent_func' opt.target_space ext_f];
@@ -639,7 +637,7 @@ if opt.flag_verbose
 end
 for num_e = 1:length(fmri)
     clear job_opt job_in job_out
-    job_in.fmri         = pipeline.(['motion_resample_' label(num_e).name]).files_out;
+    job_in.fmri         = pipeline.(['resample_' label(num_e).name]).files_out;
     job_in.dc_low       = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_low;
     job_in.mask_vent    = pipeline.(['mask_corsica_' subject]).files_out.mask_vent_ind;
     job_in.mask_wm      = pipeline.(['mask_corsica_' subject]).files_out.white_matter_ind;

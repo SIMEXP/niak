@@ -349,7 +349,7 @@ if ~strcmp(files_in.mask_func,'gb_niak_omitted')
 else
     opt_mask_func.voxel_size = hdr_func.info.voxel_size;
     opt_mask_func.fwhm = opt.fwhm_masking;
-    mask_func = niak_mask_brain(vol_func,opt_mask);
+    mask_func = niak_mask_brain(vol_func,opt_mask_func);
 end
 hdr_func.file_name = file_mask_func;
 niak_write_vol(hdr_func,mask_func);

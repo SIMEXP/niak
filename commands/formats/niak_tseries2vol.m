@@ -52,7 +52,7 @@ function vol = niak_tseries2vol(tseries,mask)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if ~exist('tseries','var')|~exist('mask','var')
+if ~exist('tseries','var')||~exist('mask','var')
     error('Syntax : VOL = NIAK_TSERIES2VOL(TSERIES,MASK) . Type ''help niak_tseries2vol'' for more info');
 end
 

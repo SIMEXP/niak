@@ -117,21 +117,21 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields    = {'mask_vent_stereo' , 'mask_stem_stereo' , 'functional_space' , 'transformation_lin' , 'transformation_nl' , 'segmentation' };
-gb_list_defaults  = {NaN                , NaN                , NaN                , NaN                  , NaN                 , NaN            };
-niak_set_defaults
+gb_list_fields    = {'mask_vent_stereo' , 'mask_stem_stereo' , 'functional_space' , 'transformation_nl' , 'segmentation' };
+gb_list_defaults  = {NaN                , NaN                , NaN                , NaN                 , NaN            };
+psom_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
 gb_list_fields    = {'white_matter_ind' , 'mask_vent_ind' , 'mask_stem_ind' };
 gb_list_defaults  = {NaN                , NaN             , NaN             };
-niak_set_defaults
+psom_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields    = { 'target_space' , 'flag_verbose' , 'flag_test' , 'folder_out' };
 gb_list_defaults  = { 'stereonl'     , true           , false       , ''           };
-niak_set_defaults
+psom_set_defaults
 
 if flag_test == 1
     return

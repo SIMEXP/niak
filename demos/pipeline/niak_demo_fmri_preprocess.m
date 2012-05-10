@@ -160,11 +160,10 @@ opt.slice_timing.type_acquisition = 'interleaved ascending'; % Interleaved ascen
 opt.slice_timing.type_scanner     = 'Bruker';                % Only the value 'Siemens' will actually have an impact
 opt.slice_timing.delay_in_tr      = 0;                       % The delay in TR ("blank" time between two volumes)
 opt.slice_timing.flag_skip        = 0;                       % Turn on/off the slice timing (here it is on)
+opt.slice_timing.suppress_vol     = 0;
 
 % Motion correction (niak_brick_motion_correction)
-opt.motion_correction.suppress_vol = 0;          % There is no dummy scan to supress.
 opt.motion_correction.session_ref  = 'session1'; % The session that is used as a reference. Use the session corresponding to the acqusition of the T1 scan.
-opt.motion_correction.flag_skip    = 0;          % Turn on/off the motion correction
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
 % space (niak_brick_t1_preprocess)
@@ -185,7 +184,6 @@ opt.corsica.threshold                = 0.15;  % This threshold has been calibrat
 opt.corsica.flag_skip                = 0;     % Turn on/off the motion correction
 
 % resampling in stereotaxic space
-opt.resample_vol.interpolation       = 'tricubic'; % The resampling scheme. The most accurate is 'sinc' but it is awfully slow
 opt.resample_vol.voxel_size          = [3 3 3];    % The voxel size to use in the stereotaxic space
 opt.resample_vol.flag_skip           = 0;          % Turn on/off the resampling in stereotaxic space
 

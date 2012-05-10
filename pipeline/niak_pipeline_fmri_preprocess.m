@@ -434,8 +434,8 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 template_fmri = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = { 'target_space' , 'flag_keep_motion' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
-list_defaults  = { 'stereonl'     , false              , false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
+list_fields    = { 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
+list_defaults  = { 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
@@ -576,8 +576,8 @@ for num_s = 1:length(list_subject)
         job_in.vol{num_s}  = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out.mean_vol;
         job_in.mask{num_s} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out.mask_group;
     else
-        job_in.vol{num_s}  = pipeline.(['qc_motion_' list_subject{num_s}]).mean_vol;
-        job_in.mask{num_s} = pipeline.(['qc_motion_' list_subject{num_s}]).mask_group;
+        job_in.vol{num_s}  = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.mean_vol;
+        job_in.mask{num_s} = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.mask_group;
     end 
 end
 
@@ -655,7 +655,7 @@ for num_m = 1:length(list_maps)
     job_out.tab_coregister  = [opt.folder_out filesep 'quality_control' filesep 'group_confounds' filesep 'func_' list_maps{num_m} '_' opt.target_space '_fit.csv'];
     job_opt                 = opt.qc_coregister;
     job_opt.labels_subject  = {label.name};
-    pipeline = psom_add_job(pipeline,['qc_group_' list_maps{num_m}],'niak_brick_qc_coregister',job_in,job_out,job_opt);
+    pipeline = psom_add_job(pipeline,['qc_group_' list_maps{num_m}(4:end)],'niak_brick_qc_coregister',job_in,job_out,job_opt);
 end
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
@@ -677,7 +677,7 @@ for num_e = 1:length(fmri_c)
 end
 job_out = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_scrubbing_group.csv'];
 job_opt.flag_test = false;
-pipeline = psom_add_job(pipeline,'qc_scrubbing_group','niak_brick_qc_scrubbing',job_in,job_out,job_opt,false);
+pipeline = psom_add_job(pipeline,'qc_group_scrubbing','niak_brick_qc_scrubbing',job_in,job_out,job_opt,false);
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
