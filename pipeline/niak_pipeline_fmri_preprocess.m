@@ -616,7 +616,7 @@ job_out.tab_coregister_group  = [opt.folder_out filesep 'quality_control' filese
 job_out.fig_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.pdf'];
 job_out.tab_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.csv'];
 job_opt.flag_test                   = true;
-pipeline = psom_add_job(pipeline,'qc_group_motion','niak_brick_qc_motion_correction_group',job_in,job_out,job_opt);
+pipeline = psom_add_job(pipeline,'qc_group_motion_estimation','niak_brick_qc_motion_correction_group',job_in,job_out,job_opt);
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
