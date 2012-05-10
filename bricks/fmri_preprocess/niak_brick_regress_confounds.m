@@ -189,8 +189,8 @@ list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , '
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { true             , 0.5       , true        , ''           , true          , true                , true     , true      , true             , false      , 0.95               };
+list_fields    = { 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { true             , 0.5       , true        , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
@@ -336,7 +336,7 @@ if opt.flag_verbose
     fprintf('Ventricular average ...\n')
 end
 vent_av = mean(y(:,mask_vent>0),2);
-if opt.flag_wm   
+if opt.flag_vent   
     x = [x,vent_av];
     labels = [labels {'vent_av'}];
 end
@@ -376,7 +376,7 @@ if ~strcmp(files_out.qc_wm,'gb_niak_omitted')
 end
 
 %% F-test ventricles
-if ~strcmp(files_out.qc_wm,'gb_niak_omitted')
+if ~strcmp(files_out.qc_vent,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Generate a F-test map for the average signal in the ventricles ...\n')
     end
@@ -499,9 +499,18 @@ if ~strcmp(files_out.filtered_data,'gb_niak_omitted')
     niak_write_vol(hdr_vol,vol_denoised);
 end
 
+%% Merge all the flags into one structure
+flags.gsc           = opt.flag_gsc;
+flags.motion_params = opt.flag_motion_params;
+flags.pca_motion    = opt.flag_pca_motion;
+flags.scrubbing     = opt.flag_scrubbing;
+flags.slow          = opt.flag_slow;
+flags.vent          = opt.flag_vent;
+flags.wm            = opt.flag_wm;
+
 %% Save the confounds
 if ~strcmp(files_out.confounds,'gb_niak_omitted')
-    save(files_out.confounds, 'x' , 'x2' , 'labels' , 'labels2' , 'slow_drift' , 'motion_param' , 'wm_av' , 'vent_av' , 'pc_spatial_av' , 'covar');
+    save(files_out.confounds, 'x' , 'x2' , 'labels' , 'labels2' , 'slow_drift' , 'motion_param' , 'wm_av' , 'vent_av' , 'pc_spatial_av' , 'covar','flags');
 end
 
 %% Save the scrubbing parameters
