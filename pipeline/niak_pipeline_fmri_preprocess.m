@@ -776,7 +776,7 @@ else
         for num_c = 1:length(list_session)
             session = list_session{num_c};
             if ~iscellstr(files_in.(subject).fmri.(session))&&~isstruct(files_in.(subject).fmri.(session))
-                error('FILES_IN.%s.fmri.%s should be a struture or a cell of strings!',upper(subject),upper(session));
+                error('FILES_IN.%s.fmri.%s should be a structure or a cell of strings!',upper(subject),upper(session));
             end
         end
                    

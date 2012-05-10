@@ -425,6 +425,7 @@ opt.psom.path_logs = opt.folder_logs;
 pipeline = struct([]);
 tmp.(subject) = files_in.fmri;
 [fmri,label] = niak_fmri2cell(tmp);
+fmri_s = niak_fmri2struct(fmri,label);
 [path_f,name_f,ext_f] = niak_fileparts(fmri{1});
 
 %% T1 preprocess
@@ -507,7 +508,7 @@ job_opt.flag_test   = true;
 job_opt.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
 [pipeline_mc,job_opt,files_motion] = niak_pipeline_motion(job_in,job_opt);
 session_ref = job_opt.session_ref;
-list_run_tmp = fieldnames(fmri.(session_ref));
+list_run_tmp = fieldnames(fmri_s.(subject).(session_ref));
 run_ref = list_run_tmp{job_opt.run_ref};
 pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
 

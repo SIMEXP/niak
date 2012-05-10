@@ -124,9 +124,9 @@ switch format_demo
     
     case 'minc1' % If data are in minc1 format
                 
-        files_in.subject1.anat                = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');        
-        files_in.subject1.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
-        files_in.subject1.fmri.session2.rest  = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz');     
+        files_in.subject1.anat                = cat(2,path_demo,filesep,'anat_subject1.mnc.gz');
+        files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_in.subject1.fmri.session1{2}.rest  = cat(2,path_demo,filesep,'func_rest_subject1.mnc.gz');     
         
         files_in.subject2.anat                = cat(2,path_demo,filesep,'anat_subject2.mnc.gz');        
         files_in.subject2.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject2.mnc.gz');
@@ -134,9 +134,9 @@ switch format_demo
         
     case 'minc2' % If data are in minc2 format
         
-        files_in.subject1.anat                = cat(2,path_demo,filesep,'anat_subject1.mnc');        
-        files_in.subject1.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
-        files_in.subject1.fmri.session2.rest  = cat(2,path_demo,filesep,'func_rest_subject1.mnc');          
+        files_in.subject1.anat                = cat(2,path_demo,filesep,'anat_subject1.mnc');
+        files_in.subject1.fmri.session1{1} = cat(2,path_demo,filesep,'func_motor_subject1.mnc');
+        files_in.subject1.fmri.session1{2} = cat(2,path_demo,filesep,'func_rest_subject1.mnc');          
         
         files_in.subject2.anat                = cat(2,path_demo,filesep,'anat_subject2.mnc');        
         files_in.subject2.fmri.session1.motor = cat(2,path_demo,filesep,'func_motor_subject2.mnc');
