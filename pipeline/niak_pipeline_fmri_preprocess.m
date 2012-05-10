@@ -638,8 +638,8 @@ for num_m = 1:length(list_maps)
         else
             tmp  = pipeline.(['confounds_' label(num_e).name]).files_out;
         end 
-        if isfield(tmp,list_maps{num_e})
-            job_in.vol{num_e} = tmp.(list_maps{num_e});
+        if isfield(tmp,list_maps{num_m})&&~strcmp(tmp.(list_maps{num_m}),'gb_niak_omitted')
+            job_in.vol{num_e} = tmp.(list_maps{num_m});
             flag_ok = true;
         else
             flag_ok = false;
