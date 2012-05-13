@@ -117,6 +117,11 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %       (scalar, default 0.5) the maximal acceptable framewise displacement 
 %       after scrubbing.
 %
+%   NB_VOL_MIN
+%       (integer, default 40) the minimal number of volumes remaining after 
+%       scrubbing (unless the data themselves are shorter). If there are not enough
+%       time frames after scrubbing, the time frames with lowest FD are selected.
+%
 %   PCT_VAR_EXPLAINED 
 %       (boolean, default 0.95) the % of variance explained by the selected 
 %       PCA components when reducing the dimensionality of motion parameters.
@@ -189,8 +194,8 @@ list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , '
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { true             , 0.5       , true        , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
+list_fields    = { 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { 40           , true             , 0.5       , true        , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
@@ -280,7 +285,13 @@ if opt.flag_scrubbing
     mask_scrubbing2(2:end) = mask_scrubbing2(2:end)|mask_scrubbing(1:(end-1));
     mask_scrubbing2(3:end) = mask_scrubbing2(3:end)|mask_scrubbing(1:(end-2));
     mask_scrubbing = mask_scrubbing2;
-    y = y(~mask_scrubbing,:);
+    if sum(~mask_scrubbing) < opt.nb_vol_min
+        mask_scrubbing = true(size(mask_scrubbing));
+        [val_scr,order_scr] = sort(fd,'ascend');
+        mask_scrubbing(order_scr(1:min(length(mask_scrubbing),opt.nb_vol_min))) = false;
+        warning('There was not enough time frames left after scrubbing, kept the %i time frames with smallest frame displacement. See OPT.NB_VOL_MIN.',opt.nb_vol_min)
+     end
+     y = y(~mask_scrubbing,:);
 end
 
 %% Initialization 
