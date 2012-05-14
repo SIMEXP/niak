@@ -287,7 +287,7 @@ if opt.flag_scrubbing
     mask_scrubbing = mask_scrubbing2;
     if sum(~mask_scrubbing) < opt.nb_vol_min
         mask_scrubbing = true(size(mask_scrubbing));
-        [val_scr,order_scr] = sort(max([0 ; fd(:)],[fd(:) 0]),'ascend');
+        [val_scr,order_scr] = sort(max([0 ; fd(:)],[fd(:) ; 0]),'ascend');
         mask_scrubbing(order_scr(1:min(length(mask_scrubbing),opt.nb_vol_min))) = false;
         warning('There was not enough time frames left after scrubbing, kept the %i time frames with smallest frame displacement. See OPT.NB_VOL_MIN.',opt.nb_vol_min)
      end
