@@ -31,6 +31,13 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 %       (cerebrospinal fluid / gray matter / white matter, in this order)
 %       of the anatomical volume in linear stereotaxic space.
 %
+%   AAL
+%       (string) the file name of the AAL template (resampled in the same
+%       space as the functional data). This template will be used to exclude 
+%       voxels from the white matter segmentation. This is necessary in particular
+%       to exclude the basal ganglia and thalami which sometimes end up being included
+%       in the segmentation of the white matter.
+%
 % FILES_OUT   
 %   (structure) with the following fields : 
 %   
@@ -79,7 +86,18 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 % NIAK_BRICK_T1_PREPROCESS, NIAK_PIPELINE_CORSICA
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
+% 
+% The mask of the stem is derived from the non-linear transformation, and 
+% grey matter voxels are excluded.
+%
+% The ventricle mask is derived from the non-linear transformation, and 
+% is intersected with CSF voxels.
+%
+% The white matter mask is derived from the non-linear transformation, and voxels 
+% falling in the AAL template are excluded (the AAL template providing a loose 
+% segmentation of the grey matter, more robust than automated segmentations for 
+% the basal ganglia & thalami.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
@@ -117,8 +135,8 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields    = {'mask_vent_stereo' , 'mask_stem_stereo' , 'functional_space' , 'transformation_nl' , 'segmentation' };
-gb_list_defaults  = {NaN                , NaN                , NaN                , NaN                 , NaN            };
+gb_list_fields    = {'mask_vent_stereo' , 'mask_stem_stereo' , 'functional_space' , 'transformation_nl' , 'segmentation' , 'aal' };
+gb_list_defaults  = {NaN                , NaN                , NaN                , NaN                 , NaN            , NaN   };
 psom_set_defaults
 
 %% FILES_OUT
@@ -186,6 +204,25 @@ if flag_verbose
     fprintf('%1.2f sec.\n',toc)
 end
 
+%% Resampling the AAL template in target space
+if flag_verbose
+    tic;
+    fprintf('Resampling the AAL template in %s functional space - ',opt.target_space)
+end
+clear files_in_res files_out_res opt_res
+files_in_res.source         = files_in.aal;
+files_in_res.target         = files_in.functional_space;
+if strcmp(opt.target_space,'stereolin')
+    files_in_res.transformation = files_in.transformation_nl;
+    opt_res.flag_invert_transf  = true;
+end
+files_out_res               = [folder_tmp 'mask_aal.mnc'];
+opt_res.interpolation       = 'nearest_neighbour';
+niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
+if flag_verbose    
+    fprintf('%1.2f sec.\n',toc)
+end
+
 %% Resampling the mask of the brain stem in native space
 if flag_verbose
     tic;
@@ -242,8 +279,9 @@ if flag_verbose
 end
 clear files_in_math files_out_math opt_math
 files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
+files_in_math{2}    = [folder_tmp 'mask_aal.mnc'];
 files_out_math      = files_out.white_matter_ind;
-opt_math.operation  = 'vol = (round(vol_in{1}) == 3);';
+opt_math.operation  = 'vol = (round(vol_in{1}) == 3); vol(round(vol_in{2})>0) = 0;';
 niak_brick_math_vol(files_in_math,files_out_math,opt_math);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
