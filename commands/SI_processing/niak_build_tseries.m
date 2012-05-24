@@ -1,51 +1,58 @@
-function [tseries,std_tseries] = niak_build_tseries(vol,mask,opt)
+function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 % Extract the mean and std of time series of in multiple ROI 
 % from a 3D+t dataset.
 %
-% TSERIES = NIAK_BUILD_TSERIES(VOL,MASK,OPT)
+% [TSERIES,STD_TSERIES,LABELS_ROI] = NIAK_BUILD_TSERIES(VOL,MASK,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
 % VOL       
-%       (3D+t array) the fMRI data. 
+%   (3D+t array) the fMRI data. 
 %
 % MASK      
-%       (3D volume) binary mask. The second dimension of TSERIES
-%       corresponds to the voxel in FIND(MASK(:))
+%   (3D volume) mask or ROI coded with integers. ROI #I is defined by 
+%   MASK==I
 %
 % OPT       
-%       (structure, optional) each field of OPT is used to specify an 
-%       option. If a field was not specified, then the default value is
-%       assumed.
+%   (structure, optional) each field of OPT is used to specify an 
+%   option. If a field was not specified, then the default value is
+%   assumed.
 %
-%       CORRECTION
-%           (structure, default CORRECTION.TYPE = 'none') the temporal 
-%           normalization to apply on the individual time series before 
-%           averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
+%   CORRECTION
+%      (structure, default CORRECTION.TYPE = 'none') the temporal 
+%      normalization to apply on the individual time series before 
+%      averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
 %
-%       FLAG_ALL
-%           (boolean, default false) if FLAG_ALL is true, the time series
-%           of all voxels found in MASK>0 will be sent in TSERIES, rather
-%           than the mean time series.
+%   FLAG_ALL
+%     (boolean, default false) if FLAG_ALL is true, the time series
+%     of all voxels found in MASK>0 will be sent in TSERIES, rather
+%     than the mean time series.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % TSERIES   
-%       (array) TSERIES(:,I) is the mean time series in the ROI MASK==I.
-%       In this case, STD_TSERIES is a sparse matrix full of zeros.
+%   (array) TSERIES(:,I) is the mean time series in the ROI MASK==I.
+%   In this case, STD_TSERIES is a sparse matrix full of zeros.
 %
 % STD_TSERIES   
-%       (arrays) STD_TSERIES(:,I) is the standard deviation of the time 
-%       series in the ROI MASK==I.
+%   (arrays) STD_TSERIES(:,I) is the standard deviation of the time 
+%   series in the ROI MASK==I.
+%
+% LABELS_ROI
+%   (vector) LABELS_ROI is the labels of the Ith ROI.
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,Montreal
-%               Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+%   McConnell Brain Imaging Center,Montreal
+%   Neurological Institute, McGill University, 2008-2010.
+%   Research Centre of the Montreal Geriatric Institute
+%   & Department of Computer Science and Operations Research
+%   University of Montreal, Québec, Canada, 2010-2012.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : ROI, time series, fMRI
 
