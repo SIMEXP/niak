@@ -600,6 +600,7 @@ end
 clear job_in job_out job_opt 
 job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
 job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
+job_in.mask_brain         = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.aal                = [gb_niak_path_niak 'template' filesep 'roi_aal.mnc.gz'];
 job_in.functional_space   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.transformation_nl  = pipeline.(['t1_preprocess_',subject]).files_out.transformation_nl;

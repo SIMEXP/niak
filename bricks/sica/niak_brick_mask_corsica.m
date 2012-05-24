@@ -12,11 +12,16 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 %
 %   MASK_VENT_STEREO
 %       (string) the file 
-%       name of a binary mask of ventricles in stereotaxic space.
+%       name of a binary mask of ventricles in stereotaxic non-linear space.
 %
 %   MASK_STEM_STEREO
 %       (string) the file 
-%       name of a binary mask of brain stem in stereotaxic space.
+%       name of a binary mask of brain stem in stereotaxic non-linear space.
+%
+%   MASK_BRAIN
+%       (string) the file name of a binary mask of the brain in the same space
+%       as the functional (either linear or non-linear stereotaxic, 
+%       see OPT.TARGET_SPACE below.
 %
 %   FUNCTIONAL_SPACE
 %       (string) the file name of a 3D volume which defines the native
@@ -97,7 +102,9 @@ function [files_in,files_out,opt] = niak_brick_mask_corsica(files_in,files_out,o
 % The white matter mask is derived from the non-linear transformation, and voxels 
 % falling in the AAL template are excluded (the AAL template providing a loose 
 % segmentation of the grey matter, more robust than automated segmentations for 
-% the basal ganglia & thalami.
+% the basal ganglia & thalami) as well as voxels that do not fall in the mask
+% of the brain. The largest connex component is finally identified with 
+% NIAK_FIND_CONNEX_ROI and serves as the final white matter mask.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
@@ -135,8 +142,8 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields    = {'mask_vent_stereo' , 'mask_stem_stereo' , 'functional_space' , 'transformation_nl' , 'segmentation' , 'aal' };
-gb_list_defaults  = {NaN                , NaN                , NaN                , NaN                 , NaN            , NaN   };
+gb_list_fields    = {'mask_brain' , 'mask_vent_stereo' , 'mask_stem_stereo' , 'functional_space' , 'transformation_nl' , 'segmentation' , 'aal' };
+gb_list_defaults  = {NaN          , NaN                , NaN                , NaN                , NaN                 , NaN            , NaN   };
 psom_set_defaults
 
 %% FILES_OUT
@@ -280,8 +287,14 @@ end
 clear files_in_math files_out_math opt_math
 files_in_math{1}    = [folder_tmp 'brain_segmentation_ind.mnc'];
 files_in_math{2}    = [folder_tmp 'mask_aal.mnc'];
+files_in_math{3}    = files_in.mask_brain;
 files_out_math      = files_out.white_matter_ind;
-opt_math.operation  = 'vol = (round(vol_in{1}) == 3); vol(round(vol_in{2})>0) = 0;';
+opt_math.operation  = ['vol = (round(vol_in{1}) == 3); ' ...
+                       'vol(round(vol_in{2})>0) = 0; '   ...
+                       'vol(round(vol_in{3})==0) = 0; '  ...
+                       '[vol,list_size] = niak_find_connex_roi(vol); ' ...
+                       '[val,order] = sort(list_size,''descend''); ' ...
+                       'vol = vol==order(1);'];
 niak_brick_math_vol(files_in_math,files_out_math,opt_math);
 if flag_verbose    
     fprintf('%1.2f sec.\n',toc)
