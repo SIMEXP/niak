@@ -386,7 +386,7 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = { 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion_correction' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_fields    = { 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
 list_defaults  = { 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
@@ -502,7 +502,7 @@ for num_e = 1:length(fmri)
 end
 job_in = niak_fmri2struct(job_in,label);
 job_in = job_in.(subject);
-job_opt             = opt.motion_correction;
+job_opt             = opt.motion;
 job_opt.subject     = subject;
 job_opt.flag_test   = true;
 job_opt.folder_out  = [opt.folder_intermediate 'motion_correction',filesep];
