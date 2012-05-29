@@ -96,6 +96,11 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %        latter stage of the analysis (MINCRESAMPLE cannot handle files with 
 %        irregular spacing.
 %
+%    FLAG_EVEN_ODD
+%        (boolean, default 0) if the flag is on, the mean of odd and even slices
+%        will be set to a common values (the grand mean) for each volume. This is 
+%        applied within a brain mask.
+%
 %    FLAG_HISTORY
 %        (boolean, default 0) if FLAG_HISTORY == 1, the brick will preserve 
 %        the history of MINC files. It is often a good idea to get rid of it, 
@@ -226,8 +231,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = {'type_scanner','flag_history','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
-gb_list_defaults    = {''            ,0             ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
+gb_list_fields      = {'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
+gb_list_defaults    = {''            ,0             ,0              ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
@@ -464,6 +469,27 @@ opt_a.interpolation = opt.interpolation;
 
 if suppress_vol > 0;
     vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
+end
+
+if flag_even_odd
+    if flag_verbose
+        msg = sprintf('Correcting the mean of odd and even slices to a common value ...');
+        fprintf('\n%s\n',msg);
+    end
+    mask_brain = niak_mask_brain(vol_a);
+    for num_t = 1:size(vol_a,4);
+        v_o = vol_a(:,:,1:2:end,num_t);
+        m_o = mean(v_o(mask_brain(:,:,1:2:end)));
+        v_e = vol_a(:,:,2:2:end,num_t);
+        m_e = mean(v_e(mask_brain(:,:,2:2:end)));
+        v_g = vol_a(:,:,:,num_t);
+        m_g = mean(v_g(mask_brain));
+        v_o(mask_brain(:,:,1:2:end)) = v_o(mask_brain(:,:,1:2:end)) * (m_g/m_o);
+        v_e(mask_brain(:,:,2:2:end)) = v_e(mask_brain(:,:,2:2:end)) * (m_g/m_e);
+        v_g(:,:,1:2:end) = v_g ;
+        v_g(:,:,2:2:end) = v_e;
+        vol_a(:,:,:,num_t) = v_g;        
+    end
 end
 
 if flag_variance
