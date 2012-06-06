@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MASK_BRAIN_T1
-%
 % Derive a brain mask from one T1 volume
 %
 % SYNTAX:
@@ -11,73 +7,73 @@ function [files_in,files_out,opt] = niak_brick_mask_brain_t1(files_in,files_out,
 % _________________________________________________________________________
 % INPUTS:
 %
-%  * FILES_IN        
-%       (string) the name of a file with a t1 volume.
+% FILES_IN        
+%   (string) the name of a file with a t1 volume.
 %
-%  * FILES_OUT   
-%       (string, default <BASE FILES_IN>_mask.<EXT FILES_IN>) 
-%       the name of a file with a binary mask of the brain.
+% FILES_OUT   
+%   (string, default <BASE FILES_IN>_mask.<EXT FILES_IN>) 
+%   the name of a file with a binary mask of the brain.
 %   
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+%   (structure) with the following fields.  
 %
-%       PERC_CONF
-%           (scalar, default 0.5) the portion of brain tissue that is
-%           excluded when defining core dense regions (the darkest voxels
-%           are excluded first).
+%   PERC_CONF
+%      (scalar, default 0.5) the portion of brain tissue that is
+%      excluded when defining core dense regions (the darkest voxels
+%      are excluded first).
 %
-%       REGION_GROWING
-%           (structure) with the following fields :
+%   REGION_GROWING
+%      (structure) with the following fields :
 %
-%           NB_EROSIONS
-%               (integer, default 0) number of erosions to apply on the mask
-%               before defining the spatial density.
+%      NB_EROSIONS
+%         (integer, default 0) number of erosions to apply on the mask
+%         before defining the spatial density.
 %
-%           THRE_DENSITY
-%               (scalar, default 0.9) the spatial density threshold to define
-%               the core clusters.
+%      THRE_DENSITY
+%         (scalar, default 0.9) the spatial density threshold to define
+%         the core clusters.
 %
-%           TYPE_NEIG_GROW
-%               (integer, default 6) defines the spatial neighbourhood in the
-%               region growing.
-%               Available options 4 (2D), 6 (3D), 8 (2D) and 26 (3D).
+%      TYPE_NEIG_GROW
+%         (integer, default 6) defines the spatial neighbourhood in the
+%         region growing.
+%         Available options 4 (2D), 6 (3D), 8 (2D) and 26 (3D).
 %
-%           NB_ITER_MAX
-%               (integer, default Inf) the maximal number of iteration in the
-%               region growing to propagate cluster labels
+%      NB_ITER_MAX
+%         (integer, default Inf) the maximal number of iteration in the
+%         region growing to propagate cluster labels
 %
-%           MIN_SIZE_CORES
-%               (scalar, default 30) the minimum size of dense cores for
-%               region growing. This is expressed in volume with a unit
-%               consistent with OPT.VOXEL_SIZE.
+%      MIN_SIZE_CORES
+%         (scalar, default 30) the minimum size of dense cores for
+%         region growing. This is expressed in volume with a unit
+%         consistent with OPT.VOXEL_SIZE.
 %
-%       FILL_HOLES
-%           (structure) with the following fields :
+%   FILL_HOLES
+%      (structure) with the following fields :
 %
-%           THRESH_DIST
-%               (scalar, default 10) the distance for expansion/shrinking
-%               of the brain, expressed in the same units as VOXEL_SIZE.
+%      THRESH_DIST
+%         (scalar, default 10) the distance for expansion/shrinking
+%         of the brain, expressed in the same units as VOXEL_SIZE.
 %
-%       DIST_BRAIN
-%           (scalar, default 130) voxels that are further away than
-%           DIST_BRAIN from the center of mass of the brain are excluded of
-%           the mask. That can be used to get rid of the spinal cord.
-%           Setting up DIST_BRAIN to Inf will result in keeping the whole
-%           mask.
+%   DIST_BRAIN
+%      (scalar, default 130) voxels that are further away than
+%      DIST_BRAIN from the center of mass of the brain are excluded of
+%      the mask. That can be used to get rid of the spinal cord.
+%      Setting up DIST_BRAIN to Inf will result in keeping the whole
+%      mask.
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
+%   FOLDER_OUT 
+%      (string, default: path of FILES_IN) If present, all default 
+%      outputs will be created in the folder FOLDER_OUT. The folder 
+%      needs to be created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%   FLAG_VERBOSE 
+%      (boolean, default 1) if the flag is 1, then the function 
+%      prints some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%      (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%      do anything but update the default values in FILES_IN, 
+%      FILES_OUT and OPT.
 %           
 % _________________________________________________________________________
 % OUTPUTS:

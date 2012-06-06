@@ -25,6 +25,7 @@ function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
 %        (string) An operation that will be submitted to EVAL in order
 %        to generate the resulting volume. Note that the data in
 %        FILES_IN{I} is accessible in a variable VOL_IN{I}. 
+%        The header of FILES_IN{1} is called HDR_FUNC.
 %        The final result should be stored in a variable called VOL. 
 %        The variable OPT_OPERATION is also available in memory.
 %
