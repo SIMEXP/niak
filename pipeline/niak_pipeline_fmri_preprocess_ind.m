@@ -599,6 +599,7 @@ if opt.flag_verbose
 end
 clear job_in job_out job_opt 
 job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
+job_in.mask_wm_stereo     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_3mm.mnc.gz'];
 job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
 job_in.mask_brain         = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.aal                = [gb_niak_path_niak 'template' filesep 'roi_aal.mnc.gz'];
