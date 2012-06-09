@@ -470,7 +470,7 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%% slice-timing correction
+%% Slice-timing correction
 if opt.flag_verbose
     t1 = clock;
     fprintf('slice timing (');
