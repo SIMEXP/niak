@@ -20,8 +20,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %
 %    SUPPRESS_VOL 
 %        (integer, default 0) the number of volumes that are suppressed 
-%        at the begining and the end of the time series. This can be 
-%        usefull to limit the edges effects in the sinc interpolation.
+%        at the begining of the time series. 
 %
 %    INTERPOLATION
 %        (string, default 'spline') the method for temporal interpolation,
@@ -110,10 +109,10 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %        does not matter to preserve it as it is not accurate. 
 %
 %    FLAG_SKIP
-%        (boolean,  default 0) If FLAG_SKIP == 1, the brick is not doing
-%        anything, just copying the input to the output. This flag is
-%        useful if you want to get rid of the slice timing correction in
-%        the pipeline. 
+%        (boolean,  default 0) If FLAG_SKIP == 1, the brick is not performing the 
+%        slice timing correction. All other steps (FLAG_HISTORY, SUPPRESS_VOL, etc)
+%        are applied anyway if enabled. This flag is useful if you want to get rid 
+%        of the slice timing correction in the pipeline. 
 %
 %    FOLDER_OUT 
 %        (string, default: path of FILES_IN) If present, all default 
@@ -154,7 +153,12 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % linear model. The influence may be negligible for some design, e.g. long 
 % blocks, and more important for other ones, e.g. event-related. Packages 
 % like fMRIstat include the slice timing in the model, so slice timing 
-% correction may not be necessary in the preprocessing.
+% correction may not be necessary in the preprocessing. The time of frames
+% is stored in a vector time frames, which is saved in a file
+% <BASE FILES_OUT>_extra.mat. If some volumes are suppressed there will
+% also be a variable MASK_SUPPRESS. This is a binary mask with as many entries
+% as the original time series, with a 1 if the frame has been suppressed
+% (scrubbed).
 %
 % NOTE 2:
 % The linear/cubic/spline interpolations were coded by P Bellec, MNI 2008.
@@ -281,35 +285,9 @@ if flag_test == 1
     return
 end
 
-%% Check if the user specified to skip this step
-if flag_skip
-    if flag_verbose
-        msg = sprintf('FLAG_SKIP is on, the brick will just copy the input on the output (yet it may simplify the header for MINC files, see OPT.FLAG_HISTORY and OPT.FLAG_REGULAR). NO SLICE TIMING CORRECTION WAS APPLIED !');
-        fprintf('\n%s\n',msg);
-    end
-    
-    [hdr,vol] = niak_read_vol(files_in);
-    hdr.file_name = files_out;
-    if ~flag_history
-        hdr.info.history = 'niak_slice_timing';
-    end
-    if flag_regular
-        if ismember(hdr.type,{'minc1','minc2'})
-            list_axis = {'xspace','yspace','zspace'};
-            for num_a = 1:3
-                ind = find(ismember(hdr.details.(list_axis{num_a}).varatts,'spacing'));
-                if ~isempty(ind)
-                    hdr.details.(list_axis{num_a}).attvalue{ind} = 'regular__';
-                end
-            end
-        end
-    end
-    niak_write_vol(hdr,vol);
-    return
-end
-
 %% Set up the defaults that necessitate to read the file
 [hdr,vol] = niak_read_vol(files_in);
+hdr = hdr(1);
 [mat,step,start] = niak_hdr_mat2minc(hdr.info.mat);
 
 % Z step
@@ -424,6 +402,7 @@ if isempty(ref_slice)
     ref_slice = opt.slice_order(ceil(opt.nb_slices/2));
     opt.ref_slice = ref_slice;
 end
+time_ref = (opt.ref_slice-1) * opt.timing(1); % the time associated with the slice of reference in the first volume
 
 %% Reading data
 if flag_verbose
@@ -443,7 +422,7 @@ if flag_variance
 end
 
 %% Performing slice timing correction
-if flag_verbose
+if flag_verbose&&~flag_skip
     msg = sprintf('Applying slice timing correction...');
     fprintf('\n%s\n',msg);
     fprintf('Volume : %s\n',files_in);
@@ -458,6 +437,9 @@ if flag_verbose
     opt.slice_order
     fprintf('The TR is : %1.2f\n',opt.tr);
     fprintf('The delay in TR is : %1.2f\n',opt.delay_in_tr);
+elseif flag_verbose
+    msg = sprintf('FLAG_SKIP is on, the brick will just copy the input on the output (yet it may simplify the header for MINC files, see OPT.FLAG_HISTORY and OPT.FLAG_REGULAR). NO SLICE TIMING CORRECTION WAS APPLIED !');
+    fprintf('\n%s\n',msg);
 end
 
 opt_a.slice_order = opt.slice_order;
@@ -465,10 +447,19 @@ opt_a.timing = opt.timing;
 opt_a.ref_slice = opt.ref_slice;
 opt_a.interpolation = opt.interpolation;
 
-[vol_a,opt_a] = niak_slice_timing(vol,opt_a);
+if flag_skip
+    vol_a = vol;
+    hdr.extra.time_frames = opt.tr * 0:(size(vol_a,4)-1);
+else
+    [vol_a,opt_a] = niak_slice_timing(vol,opt_a);
+    hdr.extra.time_frames = (opt.tr * 0:(size(vol_a,4)-1)) + time_ref;
+end
 
+hdr.extra.mask_suppressed = false(size(vol_a,4),1);
 if suppress_vol > 0;
-    vol_a = vol_a(:,:,:,1+suppress_vol:end-suppress_vol);
+    hdr.extra.mask_suppressed(1:suppress_vol) = true;
+    hdr.extra.time_frames = hdr.extra.time_frames(~hdr.extra.mask_suppressed);
+    vol_a = vol_a(:,:,:,~hdr.extra.mask_suppressed);
 end
 
 if flag_even_odd
@@ -515,7 +506,6 @@ if flag_verbose
     msg = sprintf('Writting results...');
     fprintf('\n%s\n',msg);
 end
-hdr = hdr(1);
 hdr.file_name = files_out;
 if flag_history
     opt_hist.command = 'niak_slice_timing';

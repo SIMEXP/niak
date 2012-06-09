@@ -50,7 +50,9 @@ function [files_in,files_out,opt] = niak_demo_slice_timing(path_demo)
 % THE SOFTWARE.
 
 if nargin>=1
-    gb_niak_path_demo = path_demo;
+    path_demo = niak_full_path(path_demo);
+else
+    path_demo = gb_niak_path_demo;
 end
 
 niak_gb_vars
@@ -72,12 +74,12 @@ switch format_demo
     
      case 'minc1' % If data are in minc1 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_in = cat(2,path_demo,filesep,'func_motor_subject1.mnc.gz'); 
         files_out = ''; % The default output name will be used
     
     case 'minc2' % If data are in minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
+        files_in = cat(2,path_demo,filesep,'func_motor_subject1.mnc'); 
         files_out = ''; % The default output name will be used
     
     otherwise 
@@ -87,6 +89,7 @@ switch format_demo
 end
 
 %% Options
+opt.suppress_vol = 3; % Suppress the three first volumes
 opt.type_acquisition = 'interleaved ascending'; % Interleaved ascending (odd first by default)
 opt.flag_test = 0; % This is not a test, the slice timing is actually performed
 
