@@ -57,6 +57,12 @@ function [] = niak_write_vol(hdr,vol)
 %            't' is time. Example : 'xzyt' means that dimension 1 of
 %            VOL is 'x', dimension 2 is 'z', etc.
 %
+%        EXTRA
+%            (structure) whatever field that is found here is saved 
+%            as a variable in a file <BASE FILE_NAME>_extra.mat 
+%            This feature is only supported when a single file is 
+%            created.
+%
 %        HISTORY 
 %            (string, default '') history of the operations applied to
 %            the data.
@@ -227,13 +233,19 @@ elseif ischar(file_name)
             path_f = '.';
         end
         
+        if isfield(hdr,'extra')
+            extra = hdr.extra;
+            hdr = rmfield(hdr,'extra');
+        else
+            extra = struct();
+        end
+        
         %% check if the path exist
         if ~exist(path_f,'dir')
             error(sprintf('Could not write %s, the folder %s does not exist !',hdr.file_name,path_f));
         end
-        
+        file_name = hdr.file_name;
         if strcmp(ext_f,gb_niak_zip_ext)
-            file_name = hdr.file_name;
             hdr.file_name = niak_file_tmp(['_' name_f]);
         end
         switch type_f
@@ -257,7 +269,12 @@ elseif ischar(file_name)
                 error(cat(2,'niak:write: ',msg,'. There was a problem moving the compressed file from the temporary folder to its final destination'));
             end
         end
-
+        
+        if (length(fieldnames(extra))>1)
+            [path_extra,name_extra] = niak_fileparts(file_name);
+            file_extra = [path_extra filesep name_extra '_extra.mat'];
+            save(file_extra,'-struct','extra')
+        end
     end
 else
     error('niak:write: hdr.filename has to be a string or a char array')
