@@ -73,6 +73,10 @@ function [hdr,vol] = niak_read_vol(file_name)
 %        HISTORY 
 %            (string) the history of the file.
 %
+%    EXTRA
+%        (structure) whatever variable that is found in a file 
+%        <BASE FILE_NAME>_extra.mat. See note 5 below.
+%
 %    DETAILS 
 %        (structure) Additional information, specific to the format 
 %        of the data. See NIAK_READ_HDR_MINC or NIAK_READ_HDR_NIFTI 
@@ -109,6 +113,13 @@ function [hdr,vol] = niak_read_vol(file_name)
 % behaviour, that indexes array starting from 1. To convert coordinates
 % from (matlab) voxel system to world system see NIAK_COORD_WORLD2VOX and
 % NIAK_COORD_VOX2WORLD.
+%
+% NOTE 5:
+% If the name of the file is of the form toto.ext, the reader will look for 
+% a file toto_extra.mat. If such a file exist, it is assumed to contain matlab
+% variables and is loaded in HDR.EXTRA. This generic mechanism makes it easy to 
+% attach custom information to a file which may not be easy to achieve in a 
+% consistent way for all data formats. 
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Centre de recherche de l'institut de Gériatrie de Montréal,
@@ -202,15 +213,15 @@ else
 
         %% The file exists
         [path_f,name_f,type] = fileparts(file_name);
-
+        
         switch type
 
             case gb_niak_zip_ext
 
                 %% The file is zipped... Unzip it first and restart reading              
 
-                [path_f,name_f,type] = fileparts(name_f);
-                
+                [path_f_tmp,name_f,type] = fileparts(name_f);
+                file_extra = [path_f filesep name_f '_extra.mat'];
                 file_tmp_gz = niak_file_tmp([name_f type gb_niak_zip_ext]);
                 
                 [succ,msg] = system(cat(2,'cp ',file_name,' ',file_tmp_gz));
@@ -233,7 +244,10 @@ else
 
                 delete(file_tmp_gz(1:end-length(gb_niak_zip_ext)));               
                 hdr.info.file_parent = file_name;
-
+                if psom_exist(file_extra)
+                    hdr.extra = load(file_extra);
+                end
+                
             case {'.mnc'}
                 
                 %% This is either a minc1 or minc2 file
@@ -242,7 +256,11 @@ else
                 else
                     hdr = niak_read_minc(file_name);
                 end
-
+                file_extra = [path_f filesep name_f '_extra.mat'];
+                if psom_exist(file_extra)
+                    hdr.extra = load(file_extra);
+                end
+                
             case {'.nii','.img'}
                 
                 %% This is a nifti file (either one file .nii, or two files
@@ -252,7 +270,11 @@ else
                 else
                     hdr = niak_read_nifti(file_name);
                 end
-
+                file_extra = [path_f filesep name_f '_extra.mat'];
+                if strcmp(type,'.nii')&&psom_exist(file_extra)
+                    hdr.extra = load(file_extra);
+                end
+                
             otherwise
 
                 %% Unsupported extension
