@@ -270,7 +270,7 @@ elseif ischar(file_name)
             end
         end
         
-        if (length(fieldnames(extra))>1)
+        if (length(fieldnames(extra))>1)&&(length(extra.time_frames)==size(vol,4))
             [path_extra,name_extra] = niak_fileparts(file_name);
             file_extra = [path_extra filesep name_extra '_extra.mat'];
             save(file_extra,'-struct','extra')
