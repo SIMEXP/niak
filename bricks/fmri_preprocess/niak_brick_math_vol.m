@@ -29,6 +29,10 @@ function [files_in,files_out,opt] = niak_brick_math_vol(files_in,files_out,opt)
 %        The final result should be stored in a variable called VOL. 
 %        The variable OPT_OPERATION is also available in memory.
 %
+%    FLAG_EXTRA
+%        (boolean, default 1) keep the extra information in the 
+%        header. 
+%
 %    FLAG_VERBOSE 
 %        (boolean, default 1) if the flag is 1, then the function 
 %        prints some infos during the processing.
@@ -86,8 +90,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'opt_operation','operation','flag_verbose','flag_test'};
-gb_list_defaults = {[],NaN,true,false};
+gb_list_fields    = {'opt_operation' , 'operation' , 'flag_extra' , 'flag_verbose' , 'flag_test' };
+gb_list_defaults  = {[]              , NaN         , true         , true           , false       };
 niak_set_defaults
 
 if flag_test
@@ -112,6 +116,9 @@ for num_f = 1:nb_files
 
     if num_f == 1
         hdr_func = hdr;
+        if ~flag_extra&&isfield(hdr_func,'extra')
+            hdr_func = rmfield(hdr_func,'extra');
+        end
     end   
 
 end

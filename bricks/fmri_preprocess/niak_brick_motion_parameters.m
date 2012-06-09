@@ -213,7 +213,9 @@ end
 
 %% read volumes
 [hdr,data] = niak_read_vol(files_in.fmri);
-
+if isfield(hdr,'extra')
+    hdr = rmfield(hdr,'extra');
+end
 if length(hdr.info.dimensions)==4
     nb_vol = hdr.info.dimensions(4);
 else

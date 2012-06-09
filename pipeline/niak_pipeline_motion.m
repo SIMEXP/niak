@@ -195,6 +195,7 @@ for num_e = 1:length(fmri)
     else
         job_opt.operation = sprintf('vol = vol_in{1}(:,:,:,%i);',vol_ref);
     end   
+    job_opt.flag_extra = false;
     pipeline = psom_add_job(pipeline,['motion_target_' label(num_e).name],'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 
