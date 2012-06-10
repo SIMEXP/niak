@@ -186,12 +186,5 @@ if (min(opt.fwhm) ~=0) && (flag_skip~=1)
     niak_write_vol(hdr,vol_s);
 
 else
-
-    instr_copy = cat(2,'cp ',files_in,' ',files_out);
-    
-    [status,msg] = system(instr_copy);
-    if status~=0
-        error(msg)
-    end
-
+    niak_cp_fmri(files_in,files_out);
 end
