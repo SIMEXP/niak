@@ -212,8 +212,8 @@ else
     else
 
         %% The file exists
+        file_name = niak_full_file(file_name);
         [path_f,name_f,type] = fileparts(file_name);
-        
         switch type
 
             case gb_niak_zip_ext

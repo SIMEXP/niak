@@ -1,21 +1,20 @@
-function path_name_f = niak_full_path(path_name)
-% convert a path name (either relative or absolute) into a full path name
+function file_name_f = niak_full_file(file_name)
+% convert a file name (either relative or absolute) into a full file name
 %
 % SYNTAX:
-% PATH_NAME_F = NIAK_FULL_PATH(PATH_NAME)
+% PATH_NAME_F = NIAK_FULL_FILE(PATH_NAME)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_NAME
-%    (string) a relative or absolute path name.
+% FILE_NAME
+%   (string) a file name with a relative or absolute path name.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% PATH_NAME_F 
-%       (string) same as PATH_NAME, but in a absolute form and with a
-%       filesep appended at the end.
+% FILE_NAME_F 
+%   (string) same as FILE_NAME, but in a absolute path.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -46,25 +45,7 @@ function path_name_f = niak_full_path(path_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-%% convert relative into full path
-path_name = strrep(path_name,[filesep filesep],filesep);
-if isempty(strfind(path_name,[':' filesep]))&&~strcmp(path_name(1),filesep)&&~strcmp(path_name(1:min(2,length(path_name))),['.' filesep])&&~strcmp(path_name(1:min(3,length(path_name))),['..' filesep])
-    path_name_f = [ pwd filesep path_name ] ;
-elseif strcmp(path_name(1:min(2,length(path_name))),['.' filesep])
-    path_name_f = [pwd filesep path_name(3:end)];
-elseif strcmp(path_name(1:min(3,length(path_name))),['..' filesep])
-    path_name_f = pwd;
-    ind = strfind(path_name_f,filesep);
-    if ~isempty(ind)&&(ind(end)>1)
-        path_name_f = path_name_f(1:(ind(end)-1));
-    end
-    path_name_f = [path_name_f filesep path_name(4:end)];
-else
-    path_name_f = path_name;
-end
-
-%% Append filesep at the end
-if ~strcmp(path_name_f(end),filesep)
-    path_name_f = [path_name_f filesep];
-end
+[path_f,name_f,ext_f] = niak_fileparts(file_name);
+path_f = niak_full_path(path_f);
+file_name_f = [path_f name_f ext_f];
 
