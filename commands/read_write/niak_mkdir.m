@@ -1,8 +1,4 @@
 function [success,message,messageid] = niak_mkdir(path_name)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_MKDIR
-%
 % Create a new directory. The difference between the regular matlab MKDIR
 % command and NIAK_MKDIR is that NIAK_MKDIR will create all folders and
 % subfolders, while MKDIR will only let you create a subdirectory in an
@@ -15,30 +11,29 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % INPUTS:
 %
 % PATH_NAME      
-%       (string) the name of the path to create
+%   (string) the name of the path to create
 %       
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % SUCCESS     
-%       (boolean) define the outcome of NIAK_MKDIR. 
-%           1 : NIAK_MKDIR executed successfully.
-%           0 : an error occurred.
+%   (boolean) define the outcome of NIAK_MKDIR. 
+%      1 : NIAK_MKDIR executed successfully.
+%      0 : an error occurred.
 %
 % MESSAGE     
-%       (string)  define the error or warning message. 
-%           empty string : MKDIR executed successfully.
-%           message : an error or warning message, as applicable.
+%   (string)  define the error or warning message. 
+%      empty string : MKDIR executed successfully.
+%      message : an error or warning message, as applicable.
 %
 % MESSAGEID   
-%       (string) defining the error or warning identifier.
-%           empty string : MKDIR executed successfully.
-%           message id: the MATLAB error or warning message
-%           identifier
+%   (string) defining the error or warning identifier.
+%      empty string : MKDIR executed successfully.
+%      message id: the MATLAB error or warning message
+%      identifier
 %           
 % _________________________________________________________________________
 % SEE ALSO:
-%
 % ERROR, LASTERR, WARNING, LASTWARN
 %
 % _________________________________________________________________________
@@ -52,7 +47,7 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % Contrary to the regular MKDIR command, SUCCESS = 1 if the directory
 % already exists.
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2012.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, pipeline, fMRI, PMP
