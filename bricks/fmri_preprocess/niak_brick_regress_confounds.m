@@ -339,7 +339,11 @@ if opt.flag_verbose
     fprintf('Reading high frequencies ...\n')
 end
 high_freq = load(files_in.dc_high);
-high_freq = high_freq.tseries_dc_high(~mask_scrubbing,:);
+if ~isempty(high_freq.tseries_dc_high)
+    high_freq = high_freq.tseries_dc_high(~mask_scrubbing,:);
+else
+    high_freq = zeros([sum(~mask_scrubbing) 0]);
+end
 if opt.flag_high
     x = [x high_freq];
     labels = [labels repmat({'high'},[1 size(high_freq,2)])];
