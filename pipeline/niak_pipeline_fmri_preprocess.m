@@ -626,7 +626,7 @@ if opt.flag_verbose
     t1 = clock;
     fprintf('Adding group-level quality control of confound regression (slow time drifts, motion parameters, etc; F-test) ; ');
 end
-list_maps = { 'qc_wm' , 'qc_vent' , 'qc_slow_drift' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
+list_maps = { 'qc_wm' , 'qc_vent' , 'qc_slow_drift' , 'qc_high' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
 for num_m = 1:length(list_maps)
     clear job_in job_out job_opt
     job_in.vol  = cell([length(fmri_c) 1]);

@@ -17,6 +17,9 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   DC_LOW 
 %      (string) cosine basis of slow time drifts to be removed
 %
+%   DC_HIGH
+%      (string) cosine basis of high frequencies to be removed
+%
 %   CUSTOM_PARAM
 %      (string, optional) a .mat file with one variable 'covar'(TxK)
 %
@@ -65,6 +68,11 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_slow_drift.<ext FMRI>) 
 %      the name of a volume file with the f-test of the slow time drifts
 %
+%   QC_HIGH
+%      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_high.<ext FMRI>) 
+%      the name of a volume file with the f-test of the removal of high frequencies
+%      (low-pass filter).
+%
 %   QC_VENT
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_vent.<ext FMRI>)  
 %      the name of a volume file with the f-test of the average ventricular
@@ -97,6 +105,9 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %
 %   FLAG_SLOW
 %       (boolean, default true) turn on/off the correction of slow time drifts
+%
+%   FLAG_HIGH
+%       (boolean, default false) turn on/off the correction of high frequencies
 %
 %   FLAG_GSC 
 %       (boolean, default true) turn on/off global signal correction
@@ -184,18 +195,18 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % THE SOFTWARE.
 
 %% FILES_IN
-list_fields    = { 'fmri' , 'dc_low' , 'custom_param'    , 'motion_param' , 'mask_brain' , 'mask_vent' , 'mask_wm' };
-list_defaults  = { NaN    , NaN      , 'gb_niak_omitted' , NaN            , NaN          , NaN         , NaN       };
+list_fields    = { 'fmri' , 'dc_low' , 'dc_high' , 'custom_param'    , 'motion_param' , 'mask_brain' , 'mask_vent' , 'mask_wm' };
+list_defaults  = { NaN    , NaN      , NaN       , 'gb_niak_omitted' , NaN            , NaN          , NaN         , NaN       };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'scrubbing'       , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
-list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
+list_fields    = { 'scrubbing'       , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_high'         , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { 40           , true             , 0.5       , true        , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
+list_fields    = { 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { 40           , true             , 0.5       , true        , false       , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
@@ -215,6 +226,10 @@ end
 
 if isempty(files_out.qc_slow_drift)
     files_out.qc_slow_drift = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_slow_drift',ext_f);
+end
+
+if isempty(files_out.qc_high)
+    files_out.qc_high = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_high',ext_f);
 end
 
 if isempty(files_out.qc_wm)
@@ -294,13 +309,19 @@ if opt.flag_scrubbing
      y = y(~mask_scrubbing,:);
 end
 
+if isfield(hdr_vol,'extra')
+    %% Add the scrubbing information in the 'extra' .mat companion that comes with the 3D+t dataset
+    hdr_vol.extra.mask_suppressed(~hdr_vol.extra.mask_suppressed) = mask_scrubbing;
+    hdr_vol.extra.time_frames = hdr_vol.extra.time_frames(~mask_scrubbing);
+end
+
 %% Initialization 
 x = [];
 labels = {};
 opt_glm.flag_residuals = true;
 opt_glm.test = 'none';
 
-%% Add Time filter dc high and low
+%% Add Time filter dc low
 if opt.flag_verbose
     fprintf('Reading slow time drifts ...\n')
 end
@@ -311,6 +332,17 @@ slow_drift = slow_drift(:,mask_i); % get rid of the intercept in the slow time d
 if opt.flag_slow
     x = [x slow_drift];
     labels = [labels repmat({'slow_drift'},[1 size(slow_drift,2)])];
+end
+
+%% Add Time filter dc high
+if opt.flag_verbose
+    fprintf('Reading high frequencies ...\n')
+end
+high_freq = load(files_in.dc_high);
+high_freq = high_freq.tseries_dc_high(~mask_scrubbing,:);
+if opt.flag_high
+    x = [x high_freq];
+    labels = [labels repmat({'high'},[1 size(high_freq,2)])];
 end
 
 %% Motion parameters
@@ -372,6 +404,22 @@ if ~strcmp(files_out.qc_slow_drift,'gb_niak_omitted')
         qc = zeros(size(mask_brain));
     end
     hdr_qc.file_name = files_out.qc_slow_drift;
+    niak_write_vol(hdr_qc,qc);
+end
+
+%% F-test high frequencies
+if ~strcmp(files_out.qc_high,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Generate a F-test map for the high frequencies ...\n')
+    end
+    model.c = ismember(labels_all,'high');
+    if any(model.c)
+        res = niak_glm(model,opt_qc);
+        qc = reshape(res.ftest,size(mask_brain));
+    else
+        qc = zeros(size(mask_brain));
+    end
+    hdr_qc.file_name = files_out.qc_high;
     niak_write_vol(hdr_qc,qc);
 end
 
@@ -507,6 +555,11 @@ if ~strcmp(files_out.filtered_data,'gb_niak_omitted')
         fprintf('Saving results in %s ...\n',files_out.filtered_data);
     end  
     hdr_vol.file_name = files_out.filtered_data;
+    if isfield(hdr_vol,'extra')
+        % Store the regression covariates in the extra .mat companion that comes with the 3D+t dataset
+        hdr_vol.extra.confounds = [x x2];
+        hdr_vol.extra.labels_confounds = [labels(:) ; labels2(:)];
+    end
     niak_write_vol(hdr_vol,vol_denoised);
 end
 

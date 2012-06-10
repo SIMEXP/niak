@@ -123,7 +123,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %   PVE
 %       (structure) option for the estimation of partial volume effects of 
 %       tissue types (grey matter, white matter, cerbrospinal fluid) on the 
-%       anatomical scan.
+%       anatomical scan. Additional option:
+%
+%       FLAG_SKIP
+%           (boolean, default false) if the flag is true, do not extract 
+%           PVE maps.
 %
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
@@ -465,7 +469,12 @@ job_out.pve_gm      = [opt.folder_anat 'anat_' subject '_pve_gm_stereolin'   ext
 job_out.pve_csf     = [opt.folder_anat 'anat_' subject '_pve_csf_stereolin'  ext_f];
 job_out.pve_disc    = [opt.folder_anat 'anat_' subject '_pve_disc_stereolin' ext_f];
 job_opt             = opt.pve;
-pipeline = psom_add_job(pipeline,['pve_',subject],'niak_brick_pve',job_in,job_out,job_opt);
+if isfield(job_opt,'flag_skip')
+    job_opt = rmfield(job_opt,'flag_skip');
+end
+if ~isfield(opt.pve,'flag_skip')||~opt.pve.flag_skip
+    pipeline = psom_add_job(pipeline,['pve_',subject],'niak_brick_pve',job_in,job_out,job_opt);
+end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
@@ -643,6 +652,7 @@ for num_e = 1:length(fmri)
     clear job_opt job_in job_out
     job_in.fmri         = pipeline.(['resample_' label(num_e).name]).files_out;
     job_in.dc_low       = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_low;
+    job_in.dc_high      = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_high;
     job_in.mask_vent    = pipeline.(['mask_corsica_' subject]).files_out.mask_vent_ind;
     job_in.mask_wm      = pipeline.(['mask_corsica_' subject]).files_out.white_matter_ind;
     job_in.mask_brain   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
@@ -657,6 +667,7 @@ for num_e = 1:length(fmri)
     job_out.qc_wm          = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_wm_func' opt.target_space ext_f]; 
     job_out.qc_vent        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_vent_func' opt.target_space ext_f]; 
     job_out.qc_slow_drift  = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_slow_drift_func' opt.target_space ext_f]; 
+    job_out.qc_high        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_high_func' opt.target_space ext_f];  
     job_out.qc_motion      = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_motion_func' opt.target_space ext_f]; 
     job_out.qc_gse         = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
     if ~strcmp(job_in.custom_param,'gb_niak_omitted')
