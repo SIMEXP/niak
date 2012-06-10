@@ -18,6 +18,11 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 % OPT           
 %   (structure) with the following fields.  
 %
+%   FLAG_FMRI
+%       (boolean, default false) if the flag is true, then NIAK_CP_FMRI is 
+%       used instead of a system call to cp. This command copies "_extra.mat" files
+%       along with fMRI datasets.
+%
 %   FOLDER_OUT 
 %       (string, default: same as FILES_IN{1}) If present, all default 
 %       outputs will be created in the folder FOLDER_OUT. The folder 
@@ -77,8 +82,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_verbose','flag_test','folder_out'};
-gb_list_defaults = {1,0,''};
+gb_list_fields    = {'flag_fmri' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = {false       , 1              , 0           , ''           };
 niak_set_defaults
 
 %% Output files
@@ -124,10 +129,13 @@ for num_f = 1:nb_files
         msg = sprintf('Copying file %s to %s',files_in{num_f},files_out{num_f});
         fprintf('%s\n',msg);
     end
-
-    instr_copy = ['cp -f ',files_in{num_f},' ',files_out{num_f}];
-    [succ,msg] = system(instr_copy);
-    if succ~=0
-        error(sprintf('error copying the file : %s',msg));
+    if opt.flag_fmri
+        niak_cp_fmri(files_in{num_f},files_out{num_f});
+    else
+        instr_copy = ['cp -f ',files_in{num_f},' ',files_out{num_f}];
+        [succ,msg] = system(instr_copy);
+        if succ~=0
+            error(sprintf('error copying the file : %s',msg));
+        end
     end
 end

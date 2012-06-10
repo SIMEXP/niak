@@ -369,7 +369,8 @@ for num_s = 1:nb_subject
             name_job_supp              = ['component_supp_',subject,'_',run];
             files_in_tmp{1}            = files_in.(subject).fmri{num_r};
             files_out_tmp{1}           = [opt.folder_out name_f '_p' ext_f];
-            opt_tmp.flag_verbose       = true;            
+            opt_tmp.flag_verbose       = true;   
+            opt_tmp.flag_fmri          = true;
             pipeline = psom_add_job(pipeline,name_job_supp,'niak_brick_copy',files_in_tmp,files_out_tmp,opt_tmp);
             files_out.suppress_vol.(subject){num_r} = pipeline.(name_job_supp).files_out{1};            
         end
