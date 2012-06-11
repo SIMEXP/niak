@@ -477,7 +477,7 @@ if flag_even_odd
         m_g = mean(v_g(mask_brain));
         v_o(mask_brain(:,:,1:2:end)) = v_o(mask_brain(:,:,1:2:end)) * (m_g/m_o);
         v_e(mask_brain(:,:,2:2:end)) = v_e(mask_brain(:,:,2:2:end)) * (m_g/m_e);
-        v_g(:,:,1:2:end) = v_g ;
+        v_g(:,:,1:2:end) = v_o ;
         v_g(:,:,2:2:end) = v_e;
         vol_a(:,:,:,num_t) = v_g;        
     end
