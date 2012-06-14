@@ -7,112 +7,112 @@ function [files_in,files_out,opt] = niak_brick_tseries(files_in,files_out,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-%  FILES_IN
-%       (structure) with the following fields :
+% FILES_IN
+%   (structure) with the following fields :
 %
-%       FMRI
-%           (string or cell of string) A collection of fMRI datasets. They 
-%           need to be all in the same world and voxel space. A .mat file 
-%           can also be used instead with a variable TSERIES (the name can 
-%           actually be changed, see OPT.NAME_TSERIES) associated with a 
-%           set of ROIS, see FILES_IN.ATOMS below.
+%   FMRI
+%      (string or cell of string) A collection of fMRI datasets. They 
+%      need to be all in the same world and voxel space. A .mat file 
+%      can also be used instead with a variable TSERIES (the name can 
+%      actually be changed, see OPT.NAME_TSERIES) associated with a 
+%      set of ROIS, see FILES_IN.ATOMS below.
 %
-%       MASK
-%           (string or cell of strings) A mask of regions of interest
-%           (region I is defined by MASK==I).
+%   MASK
+%      (string or cell of strings) A mask of regions of interest
+%      (region I is defined by MASK==I).
 %
-%       ATOMS
-%           (string, default 'gb_niak_omitted') can be used if FILES_IN.FMRI
-%           is already represented through region time series averaged on
-%           ATOMS, i.e. a 3D volume of ROIs.
+%   ATOMS
+%      (string, default 'gb_niak_omitted') can be used if FILES_IN.FMRI
+%      is already represented through region time series averaged on
+%      ATOMS, i.e. a 3D volume of ROIs.
 %
-%  FILES_OUT
+% FILES_OUT
 %
-%       TSERIES
-%           (cell of string, default {<BASE_FMRI>_<BASE_MASK>.mat})
-%           FILES_OUT.TSERIES{K,L} is derived using FILES_IN.FMRI{K} and
-%           FILES_IN.MASK{L}. Each entry is a MAT file with the following
-%           variables :
+%   TSERIES
+%      (cell of string, default {<BASE_FMRI>_<BASE_MASK>.mat})
+%      FILES_OUT.TSERIES{K,L} is derived using FILES_IN.FMRI{K} and
+%      FILES_IN.MASK{L}. Each entry is a MAT file with the following
+%      variables :
 %
-%               TSERIES_MEAN
-%                   (2D array) the time series of the ROIs for each fMRI
-%                   dataset. TSERIES_MEAN(:,I) is the time series of region I.
+%      TSERIES_MEAN
+%         (2D array) the time series of the ROIs for each fMRI
+%         dataset. TSERIES_MEAN(:,I) is the time series of region I.
 %
-%               TSERIES_STD
-%                   (2D array) TSERIES_STD(:,I) is the standard deviation
-%                   of the time series  in region I in FILES_IN.MASK{L}
+%      TSERIES_STD
+%         (2D array) TSERIES_STD(:,I) is the standard deviation
+%         of the time series  in region I in FILES_IN.MASK{L}
 %
-%               TIMING
-%                   (vector) TIMING(T) is the time associated with
-%                   TSERIES_MEAN(T,:). The first volume is assumed to
-%                   correspond to time 0.
+%      TIME_FRAMES
+%         (vector) TIME_FRAMES(T) is the time associated with
+%         TSERIES_MEAN(T,:). The first volume is assumed to
+%         correspond to time 0.
 %
-%       TSERIES_AVG
-%           (cell of string, default {tseries_avg_<BASE_MASK>.mat})
-%           FILES_OUT.TSERIES_MEAN{L} is derived using all entries of 
-%           FILES_IN.FMRI and FILES_IN.MASK{L}. Each entry is a MAT file 
-%           with the following variables :
+%   TSERIES_AVG
+%      (cell of string, default {tseries_avg_<BASE_MASK>.mat})
+%      FILES_OUT.TSERIES_MEAN{L} is derived using all entries of 
+%      FILES_IN.FMRI and FILES_IN.MASK{L}. Each entry is a MAT file 
+%      with the following variables :
 %
-%               TSERIES_MEAN
-%                   (2D array) the mean time series of the ROIs averaged
-%                   over all fMRI datasets. TSERIES_MEAN(:,I) is the time
-%                   series of region I in FILES_IN.MASK{L}
+%      TSERIES_MEAN
+%         (2D array) the mean time series of the ROIs averaged
+%         over all fMRI datasets. TSERIES_MEAN(:,I) is the time
+%         series of region I in FILES_IN.MASK{L}
 %
-%               TSERIES_STD
-%                   (2D array) the standard deviation of the mean regional
-%                   time series over all fMRI datasets. TSERIES_STD(:,I) is
-%                   standard deviation of the time series in region I in
-%                   FILES_IN.MASK{L}
+%      TSERIES_STD
+%         (2D array) the standard deviation of the mean regional
+%         time series over all fMRI datasets. TSERIES_STD(:,I) is
+%         standard deviation of the time series in region I in
+%         FILES_IN.MASK{L}
 %
-%               TIMING
-%                   (vector) TIMING(T) is the time associated with
-%                   TSERIES_MEAN(T,:). The first volume is assumed to
-%                   correspond to time 0.
+%      TIME_FRAMES
+%         (vector) TIME_FRAMES(T) is the time associated with
+%         TSERIES_MEAN(T,:). The first volume is assumed to
+%         correspond to time 0.
 %
 %
-%  OPT
-%       (structure) with the following fields.
+% OPT
+%   (structure) with the following fields.
 %
-%       IND_ROIS
-%           (vector, default []) if not empty, the analysis is restricted
-%           to the rois whose numbers are included in IND_ROIS.
+%   IND_ROIS
+%      (vector, default []) if not empty, the analysis is restricted
+%      to the rois whose numbers are included in IND_ROIS.
 %
-%       FLAG_ALL
-%           (boolean, default false) if FLAG_ALL is true, the time series
-%           of all the voxels of each roi are saved. Instead of having one
-%           variable TSERIES in FILES_OUT.TSERIES, there are multiple
-%           variables TSERIES_<NUM_R> where NUM_R is the number of a roi.
-%           Note that in this case STD_TSERIES and TIMING are not saved.
-%           This option is supported only if FILES_IN.ATOMS is not used.
+%   FLAG_ALL
+%      (boolean, default false) if FLAG_ALL is true, the time series
+%      of all the voxels of each roi are saved. Instead of having one
+%      variable TSERIES in FILES_OUT.TSERIES, there are multiple
+%      variables TSERIES_<NUM_R> where NUM_R is the number of a roi.
+%      Note that in this case STD_TSERIES and TIMING are not saved.
+%      This option is supported only if FILES_IN.ATOMS is not used.
 %
-%       FLAG_STD
-%           (boolean, default true) save the standard deviation of the time
-%           series, as well as the timing information. Otherwise, only the
-%           mean time series are saved.
+%   FLAG_STD
+%      (boolean, default true) save the standard deviation of the time
+%      series, as well as the timing information. Otherwise, only the
+%      mean time series are saved.
 %
-%       CORRECTION
-%           (structure, default CORRECTION.TYPE = 'mean_var') the temporal
-%           normalization to apply on the individual time series before
-%           averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
+%   CORRECTION
+%      (structure, default CORRECTION.TYPE = 'mean_var') the temporal
+%      normalization to apply on the individual time series before
+%      averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
 %
-%       NAME_TSERIES
-%           (string, default 'tseries') If FILES_IN.FMRI is a mat file,
-%           NAME_TSERIES is the name of the variable with the array of
-%           time series associated with the atoms.
+%   NAME_TSERIES
+%      (string, default 'tseries') If FILES_IN.FMRI is a mat file,
+%      NAME_TSERIES is the name of the variable with the array of
+%      time series associated with the atoms.
 %
-%       FOLDER_OUT
-%           (string, default: path of FILES_IN.MASK) If present, all default
-%           outputs will be created in the folder FOLDER_OUT. The folder
-%           needs to be created beforehand.
+%   FOLDER_OUT
+%      (string, default: path of FILES_IN.MASK) If present, all default
+%      outputs will be created in the folder FOLDER_OUT. The folder
+%      needs to be created beforehand.
 %
-%       FLAG_VERBOSE
-%           (boolean, default 1) if the flag is 1, then the function
-%           prints some infos during the processing.
+%   FLAG_VERBOSE
+%      (boolean, default 1) if the flag is 1, then the function
+%      prints some infos during the processing.
 %
-%       FLAG_TEST
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not
-%           do anything but update the default values in FILES_IN,
-%           FILES_OUT and OPT.
+%   FLAG_TEST
+%      (boolean, default 0) if FLAG_TEST equals 1, the brick does not
+%      do anything but update the default values in FILES_IN,
+%      FILES_OUT and OPT.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -134,6 +134,10 @@ function [files_in,files_out,opt] = niak_brick_tseries(files_in,files_out,opt)
 %
 % When a string is specified in FILES_IN.FMRI or FILES_IN.MASK, the
 % argument is treated as a cell of string with one entry.
+%
+% If extra variables TIME_FRAMES, MASK_SUPPRESSED, CONFOUNDS or LABELS_CONFOUNDS
+% are found either in a .mat file or the hdr.extra part of the header of a 3D+t
+% dataset, those are saved in the output. 
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
 %       Centre de recherche de l'institut de Gériatrie de Montréal
@@ -260,25 +264,42 @@ for num_f = 1:length(files_in.fmri)
     
     if flag_verbose
         fprintf('Dataset %s...\n',files_in.fmri{num_f});
-    end
-    clear tseries timing
+    end    
+    results = struct();
     
     if ~strcmp(files_in.atoms,'gb_niak_omitted')
         data = load(files_in.fmri{num_f});
         atoms_tseries = niak_normalize_tseries(data.(opt.name_tseries),opt.correction);
-        if isfield(data,'timing')
-            timing = data.timing;
+        if isfield(data,'time_frames')
+            results.time_frames = data.time_frames;
         else
-            timing = 1:size(atoms_tseries,1);
+            results.time_frames = 1:size(atoms_tseries,1);
+        end
+        if isfield(data,'mask_suppressed')
+            results.mask_suppressed = data.mask_suppressed;
+        end
+        if isfield(data,'confounds')
+            results.confounds = data.confounds;
+            results.labels_confounds = data.labels_confounds;
         end
     else
         [hdr,vol] = niak_read_vol(files_in.fmri{num_f}); % read fMRI data
-        timing = (0:(size(vol,4)-1))*hdr.info.tr;
-        timing = timing(1:size(vol,4)); % An apparently useless line to get rid of a really weird bug in Octave
+        if isfield(hdr,'extra')&&isfield(hdr.extra,'time_frames')
+            results.time_frames = hdr.extra.time_frames;
+        else
+            results.time_frames = (0:(size(vol,4)-1))*hdr.info.tr;
+            results.time_frames = time_frames(1:size(vol,4)); % An apparently useless line to get rid of a really weird bug in Octave
+        end
+        if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_suppressed')
+            results.mask_suppressed = hdr.extra.mask_suppressed;
+        end
+        if isfield(hdr,'extra')&&isfield(hdr.extra,'confounds')
+            results.confounds = hdr.extra.confounds;
+            results.labels_confounds = hdr.extra.labels_confounds;
+        end
     end
     
     for num_m = 1:length(files_in.mask)
-        clear tseries_*
         
         %% Read the mask
         [hdr_mask,mask] = niak_read_vol(files_in.mask{num_m});
@@ -290,8 +311,7 @@ for num_f = 1:length(files_in.fmri)
         
         if flag_all
             for num_r = list_num_roi
-                instr_tseries = sprintf('tseries_%i = niak_build_tseries(vol,mask==%i,opt_tseries);',num_r,num_r);
-                eval(instr_tseries);
+                results.(sprintf('tseries_%i',num_r)) = niak_build_tseries(vol,mask==num_r,opt_tseries);                
             end
         else
             if ~strcmp(files_in.atoms,'gb_niak_omitted')
@@ -317,10 +337,13 @@ for num_f = 1:length(files_in.fmri)
         
         if ~ischar(files_out.tseries)
             if flag_all
-                save(files_out.tseries{num_f,num_m},'tseries*'); % Save outputs
+                save(files_out.tseries{num_f,num_m},'-struct','results'); % Save outputs
             else
                 if flag_std
-                    save(files_out.tseries{num_f,num_m},'tseries','tseries_std','timing'); % Save outputs
+                    results.tseries = tseries;
+                    results.tseries_std = tseries_std;
+                    results.time_frames = time_frames;
+                    save(files_out.tseries{num_f,num_m},'-struct','results'); % Save outputs
                     if ~ischar(files_out.tseries_avg)
                         if num_f == 1
                             avg_tseries{num_m} = tseries;
@@ -331,7 +354,9 @@ for num_f = 1:length(files_in.fmri)
                         end
                     end
                 else
-                    save(files_out.tseries{num_f,num_m},'tseries'); % Save outputs
+                    results.tseries = tseries;                    
+                    results.time_frames = time_frames;
+                    save(files_out.tseries{num_f,num_m},'-struct','results'); % Save outputs
                     if ~ischar(files_out.tseries_avg)
                         if num_m == 1
                             avg_tseries{num_m} = tseries;
@@ -352,9 +377,14 @@ if ~ischar(files_out.tseries_avg)
         tseries = avg_tseries{num_m}/N;
         if flag_std
             tseries_std = sqrt(std_tseries{num_m}/N - tseries.^2);
-            save(files_out.tseries_avg{num_m},'tseries','tseries_std','timing');
+            results.tseries = tseries;
+            results.tseries_std = tseries_std;
+            results.time_frames = time_frames;
+            save(files_out.tseries_avg{num_m},'-struct','results');
         else
-            save(files_out.tseries_avg{num_m},'tseries');
+            results.tseries = tseries;            
+            results.time_frames = time_frames;
+            save(files_out.tseries_avg{num_m},'-struct','results');
         end
     end
 end
