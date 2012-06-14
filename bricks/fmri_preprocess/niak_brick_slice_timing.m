@@ -333,7 +333,7 @@ if isempty(opt.slice_order)
     switch opt.type_acquisition
         
         case 'manual'
-            if ~exist(opt.slice_order,'var')
+            if ~exist(opt.slice_order,'var') && ~opt.flag_skip
                 error('niak:brick', 'opt: slice_order must be specified when using type_acquisition manual.\n Type ''help niak_brick_slice_timing'' for more info.');
             end
 
@@ -398,9 +398,14 @@ if isempty(opt.slice_order)
 end
 
 % Reference slice
-if isempty(ref_slice)        
+if isempty(ref_slice)&&~opt.flag_skip 
     ref_slice = opt.slice_order(ceil(opt.nb_slices/2));
     opt.ref_slice = ref_slice;
+elseif opt.flag_skip
+    opt.ref_slice = 1;
+    ref_slice = 1;
+    opt.slice_order = 1:opt.nb_slices;
+    slice_order = opt.slice_order;
 end
 time_ref = (opt.ref_slice-1) * opt.timing(1); % the time associated with the slice of reference in the first volume
 
