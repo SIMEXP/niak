@@ -449,10 +449,10 @@ opt_a.interpolation = opt.interpolation;
 
 if flag_skip
     vol_a = vol;
-    hdr.extra.time_frames = opt.tr * 0:(size(vol_a,4)-1);
+    hdr.extra.time_frames = opt.tr * (0:(size(vol_a,4)-1));
 else
     [vol_a,opt_a] = niak_slice_timing(vol,opt_a);
-    hdr.extra.time_frames = (opt.tr * 0:(size(vol_a,4)-1)) + time_ref;
+    hdr.extra.time_frames = opt.tr * (0:(size(vol_a,4)-1)) + time_ref;
 end
 
 hdr.extra.mask_suppressed = false(size(vol_a,4),1);
