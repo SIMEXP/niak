@@ -72,7 +72,7 @@ end
 file_extra_s = [path_s filesep name_s '_extra.mat'];
 file_extra_t = [path_t filesep name_t '_extra.mat'];
 if psom_exist(file_extra_s)
-    instr_copy = cat(2,'cp -f ',files_extra_s,' ',files_extra_t);
+    instr_copy = cat(2,'cp -f ',file_extra_s,' ',file_extra_t);
     [status,msg] = system(instr_copy);
     if status~=0
         error(msg)
