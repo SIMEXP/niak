@@ -342,7 +342,6 @@ for num_f = 1:length(files_in.fmri)
                 if flag_std
                     results.tseries = tseries;
                     results.tseries_std = tseries_std;
-                    results.time_frames = time_frames;
                     save(files_out.tseries{num_f,num_m},'-struct','results'); % Save outputs
                     if ~ischar(files_out.tseries_avg)
                         if num_f == 1
@@ -355,7 +354,6 @@ for num_f = 1:length(files_in.fmri)
                     end
                 else
                     results.tseries = tseries;                    
-                    results.time_frames = time_frames;
                     save(files_out.tseries{num_f,num_m},'-struct','results'); % Save outputs
                     if ~ischar(files_out.tseries_avg)
                         if num_m == 1
@@ -379,11 +377,9 @@ if ~ischar(files_out.tseries_avg)
             tseries_std = sqrt(std_tseries{num_m}/N - tseries.^2);
             results.tseries = tseries;
             results.tseries_std = tseries_std;
-            results.time_frames = time_frames;
             save(files_out.tseries_avg{num_m},'-struct','results');
         else
             results.tseries = tseries;            
-            results.time_frames = time_frames;
             save(files_out.tseries_avg{num_m},'-struct','results');
         end
     end
