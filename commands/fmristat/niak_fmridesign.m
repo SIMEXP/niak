@@ -246,7 +246,7 @@ for k=1:numresponses
       d_hrf=-gradient(hrf,dt);
    else
       tinv=(time>0)./(time+(time<=0));
-      if peak1>0 & fwhm1>0
+      if peak1>0 && fwhm1>0
          alpha1=peak1^2/fwhm1^2*8*log(2);
          beta1=fwhm1^2/peak1/8/log(2);
          gamma1=(time/peak1).^alpha1.*exp(-(time-peak1)./beta1);
@@ -255,7 +255,7 @@ for k=1:numresponses
          gamma1=min(abs(time-peak1))==abs(time-peak1);
          d_gamma1=zeros(numlags,1);
       end
-      if peak2>0 & fwhm2>0
+      if peak2>0 && fwhm2>0
          alpha2=peak2^2/fwhm2^2*8*log(2);
          beta2=fwhm2^2/peak2/8/log(2);
          gamma2=(time/peak2).^alpha2.*exp(-(time-peak2)./beta2);
@@ -280,12 +280,12 @@ for k=1:numresponses
          hrf=interp1(hrf_parameters.T(k,:),hrf_parameters.H(k,:),t,'spline',0);
       else
          t=(time+Delta1-delta(id)).*((time+Delta1)>delta(id));
-         if peak1>0 & fwhm1>0
+         if peak1>0 && fwhm1>0
             gamma1=(t/peak1).^alpha1.*exp(-(t-peak1)./beta1);
          else 
             gamma1=min(abs(t-peak1))==abs(t-peak1);
          end
-         if peak2>0 & fwhm2>0
+         if peak2>0 && fwhm2>0
             gamma2=(t/peak2).^alpha2.*exp(-(t-peak2)./beta2);
          else 
             gamma2=min(abs(t-peak2))==abs(t-peak2);
