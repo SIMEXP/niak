@@ -31,6 +31,10 @@ function [results,opt] = niak_glm(model,opt)
 %      (boolean, default false) if the flag is true, the residuals E of the 
 %      regression are added to RESULTS (see below).
 %
+%   FLAG_EFF
+%      (boolean, default false) if the flag is true, the estimated effects are 
+%      added to RESULTS (i.e. the regression coefficients times the contrast).
+%
 %   FLAG_BETA 
 %      (boolean, default false) if the flag is true, the regression coefficients
 %      BETA are added to RESULTS (see below).
@@ -119,8 +123,8 @@ if (nargin<2)||(isempty(opt))
 end
 
 %% Default options
-list_fields    = { 'flag_residuals' , 'flag_beta', 'test' };
-list_defaults  = {  false           , false      , 'none' };
+list_fields    = { 'flag_eff' , 'flag_residuals' , 'flag_beta', 'test' };
+list_defaults  = {  false     , false           , false      , 'none' };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 y = model.y;
@@ -198,3 +202,10 @@ if opt.flag_beta
     results.beta = beta; % Beta
 end
 
+if opt.flag_eff
+    if ~isfield(model,'c')
+        error('Please specify MODEL.C to estimate the effects')
+    end        
+    eff = (model.c)'*beta;                          % The effect matrix
+    results.eff = eff; % Beta
+end
