@@ -36,7 +36,8 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %      (structure, optional) with multiple entries and the following fields :
 %          
 %      LABEL
-%         (string) a label for the interaction covariate.
+%         (string) a label for the interaction covariate. There should be only one 
+%         covariate associated with this label.
 %
 %      FACTOR
 %         (cell of string) covariates that are being multiplied together to build the
@@ -95,12 +96,11 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %   LABELS_X
 %      (cell of strings, default {}) The list of entries (rows) used 
 %      to build the model (the order will be used as well). If left empty, 
-%      all entries are used.
-%
-%   LABELS_Y
-%      (cell of strings, default {}) a list of the covariates (columns)
-%      involved in the model (the order will be used as well). If left empty, 
-%      all covariates are used.
+%      all entries are used (but they are re-ordered based on alphabetical order). 
+%      Contrary to MODEL.LABELS_X, the labels listed in OPT.LABELS_X need to be unique. 
+%      For example, OPT.LABELS_X = { 'motion' , 'confounds' }; will first put all the 
+%      covariates labeled 'motion' in the model and then all the covariates labeled 
+%      'confounds', regardless of their numbers.
 %
 %_________________________________________________________________________________________
 % OUTPUTS:
@@ -120,6 +120,10 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 % _________________________________________________________________________________________
 % COMMENTS:
 %
+% In the selection process, if more than covariate are associated with OPT.SELECT.LABEL, 
+% the final selection will be the intersection of all selections performed with individual
+% covariates associated with the label.
+%
 % Copyright (c) Pierre Bellec, Jalloul Bouchkara
 %               Centre de recherche de l'institut de Gériatrie de Montréal
 %               Département d'informatique et de recherche opérationnelle
@@ -134,41 +138,44 @@ list_defaults = { NaN , []  , NaN        , NaN        };
 model = psom_struct_defaults(model,list_fields,list_defaults);
 
 %% Check the options
-list_fields   = { 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' , 'labels_y' };
-list_defaults = { struct   , struct()   , struct       , true             , {}            , true          , false         , {}         , {}         };
+list_fields   = { 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' };
+list_defaults = { struct   , struct()   , struct       , true             , {}            , true          , false         , {}         };
 if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
    opt = psom_struct_defaults(struct,list_fields,list_defaults);
 end
 if isempty(opt.labels_x)
-    opt.labels_x = model.labels_x;
-end
-if isempty(opt.labels_y)
-    opt.labels_y = model.labels_y;
+    opt.labels_x = unique(model.labels_x);
 end
 
-%% Reorder (and reduce) the model using opt.labels_x and opt.labels_y
+%% Reorder (and reduce) the model using opt.labels_x 
+if length(unique(opt.labels_x))~=length(opt.labels_x)
+    error('The labels provided in OPT.LABELS_X should be unique')
+end
 [mask_x,ind_m] = ismember(opt.labels_x,model.labels_x) ; 
-[mask_y,ind_n] = ismember(opt.labels_y,model.labels_y) ;
 ind_err_x = find(mask_x == 0);
 for num_ex = 1:length(ind_err_x)
     warning('The following specified observation was not found in the model : %s',labels_x{ind_err_x(num_ex)});
 end
-ind_err_y = find(mask_y == 0) ;
-for num_ey = 1:length(ind_err_y)
-    warning('The following specified covariate was not found in the model : %s',labels_y{ind_err_y(num_ey)});
-end
 ind_m = ind_m(ind_m~=0);
-ind_n = ind_n(ind_n~=0);
-model.labels_y = opt.labels_y(mask_y~=0);
-model.labels_x = opt.labels_x(mask_x~=0) ;
-if ~isempty (model.x);
-    model.x = model.x(ind_m,ind_n);
+
+labx_tmp = {};
+x_tmp = [];
+y_tmp = [];
+model.labels_x = model.labels_x(:);
+model.labels_y = model.labels_y(:);
+
+for num_m = 1:length(ind_m)
+    mask_tmp = ismember(model.labels_x,model.labels_x{ind_m(num_m)});
+    labx_tmp = [ labx_tmp ; model.labels_x(mask_tmp)];
+    x_tmp = [x_tmp ; model.x(mask_tmp,:)];
+    y_tmp = [y_tmp ; model.y(mask_tmp,:)];
 end
-if ~isempty (model.y);
-    model.y = model.y(ind_m,:);
-end
+
+model.x = x_tmp;
+model.y = y_tmp;
+model.labels_x = labx_tmp;
 
 % Optional : select a subset of entries
 if ~isempty(opt.select)
@@ -180,13 +187,13 @@ if ~isempty(opt.select)
         mask = true([size(model.x,1) 1]);
         ind = find(ismember(model.labels_y,opt_s.label));
         if ~isempty(opt_s.values)
-           mask = ismember(model.x(:,ind),opt_s.values);
+           mask = min(ismember(model.x(:,ind),opt_s.values),[],2);
         end
         if ~isempty(opt_s.min)
-           mask = mask&(model.x(:,ind)>opt_s.min);
+           mask = mask&min(model.x(:,ind)>opt_s.min,[],2);
         end
         if ~isempty(opt_s.max)
-           mask = mask&(model.x(:,ind)<opt_s.max);
+           mask = mask&min((model.x(:,ind)<opt_s.max),[],2);
         end
         model.x = model.x(mask,:);
         if ~isempty(model.y)
@@ -204,11 +211,20 @@ if ~isempty(opt.interaction)
           for num_u = 1:size((opt.interaction(num_i).factor),2)
               factor = opt.interaction(num_i).factor{num_u};
               mask   = strcmpi(factor, model.labels_y) ;
-              ind    = find(mask == 1);        
+              ind    = find(mask == 1);
+              if length(ind)>1
+                  error('Attempt to define an interaction term using the label %s, which is associated with more than one covariate',factor)
+              end
+              if ~isfield(opt.interaction(num_j),'flag_normalize_inter')||opt.interaction(num_j).flag_normalize_inter
+                  opt_m.type = 'mean_var';
+                  fac_ind = niak_normalize_tseries(model.x(:,ind));
+              else
+                  fac_ind = model.x(:,ind);
+              end
               if num_u == 1 
-                  col_inter = model.x(:,ind);
+                  col_inter = fac_ind;
               else              
-                  col_inter = model.x(:,ind).*col_inter ;
+                  col_inter = fac_ind.*col_inter ;
               end 
           end
           % Optional: normalization of interaction covariates   
@@ -217,13 +233,8 @@ if ~isempty(opt.interaction)
              col_inter = niak_normalize_tseries(col_inter,opt_m);
           end
           % Check if the column exist before adding a new column 
-          mask = strcmpi(opt.interaction(num_i).label,model.labels_y);
-          if ~any(mask)
-             model.labels_y{end+1} = opt.interaction(num_i).label;
-             x_inter = [x_inter col_inter];
-          else 
-             x_inter(:,mask==1) = col_inter;
-          end    
+          model.labels_y{end+1} = opt.interaction(num_i).label;
+          x_inter = [x_inter col_inter];
       else 
           error('factor should be a cell of string and choose more than 1 factor ');
       end
