@@ -36,12 +36,12 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %      (structure, optional) with multiple entries and the following fields :
 %          
 %      LABEL
-%         (string) a label for the interaction covariate. There should be only one 
-%         covariate associated with this label.
+%         (string) a label for the interaction covariate.
 %
 %      FACTOR
 %         (cell of string) covariates that are being multiplied together to build the
-%         interaction covariate. 
+%         interaction covariate.  There should be only one covariate associated with 
+%         each label.
 %
 %      FLAG_NORMALIZE_INTER
 %         (boolean,default true) if FLAG_NORMALIZE_INTER is true, the factor of interaction 
@@ -215,7 +215,7 @@ if ~isempty(opt.interaction)
               if length(ind)>1
                   error('Attempt to define an interaction term using the label %s, which is associated with more than one covariate',factor)
               end
-              if ~isfield(opt.interaction(num_j),'flag_normalize_inter')||opt.interaction(num_j).flag_normalize_inter
+              if ~isfield(opt.interaction(num_i),'flag_normalize_inter')||opt.interaction(num_i).flag_normalize_inter
                   opt_m.type = 'mean_var';
                   fac_ind = niak_normalize_tseries(model.x(:,ind));
               else
@@ -228,7 +228,7 @@ if ~isempty(opt.interaction)
               end 
           end
           % Optional: normalization of interaction covariates   
-          if ~isfield(opt.interaction(num_j),'flag_normalize_inter')||opt.interaction(num_j).flag_normalize_inter
+          if ~isfield(opt.interaction(num_i),'flag_normalize_inter')||opt.interaction(num_i).flag_normalize_inter
              opt_m.type = 'mean_var';
              col_inter = niak_normalize_tseries(col_inter,opt_m);
           end

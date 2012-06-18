@@ -44,7 +44,6 @@ model_n.single_sex = niak_normalize_model(model_raw,test.single_sex);
 
 %% test of sex effect, playing with the order of subjects/covariates
 test.single_sex_sel.labels_x = {'sub6','sub2','sub1','sub4'};
-test.single_sex_sel.labels_y = {'sex','age'};
 test.single_sex_sel.contrast.sex = 1;
 test.single_sex_sel.contrast.age = 0;
 model_n.single_sex_sel = niak_normalize_model(model_raw,test.single_sex_sel);
@@ -54,6 +53,7 @@ test.single_sex_20.contrast.sex = 1;
 test.single_sex_20.contrast.age = 0;
 test.single_sex_20.select.label = 'age';
 test.single_sex_20.select.min = 20;
+test.single_sex_20.normalize_x.sex = 1;
 model_n.single_sex_20 = niak_normalize_model(model_raw,test.single_sex_20);
 
 %% test of sex effect after regressing out age
@@ -62,3 +62,12 @@ test.single_sex_reg.contrast.age = 0;
 test.single_sex_reg.projection.space = {'age'};
 test.single_sex_reg.projection.ortho = {'sex'};
 model_n.single_sex_reg = niak_normalize_model(model_raw,test.single_sex_reg);
+
+%% test of the interaction between age and sex 
+test.single_sex_int.contrast.sex = 0;
+test.single_sex_int.contrast.age = 0;
+test.single_sex_int.contrast.sex_x_age = 1;
+test.single_sex_int.interaction.label = 'sex_x_age';
+test.single_sex_int.interaction.factor{1} = 'sex';
+test.single_sex_int.interaction.factor{2} = 'age';
+model_n.single_sex_int = niak_normalize_model(model_raw,test.single_sex_int);
