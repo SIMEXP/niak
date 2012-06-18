@@ -169,8 +169,12 @@ model.labels_y = model.labels_y(:);
 for num_m = 1:length(ind_m)
     mask_tmp = ismember(model.labels_x,model.labels_x{ind_m(num_m)});
     labx_tmp = [ labx_tmp ; model.labels_x(mask_tmp)];
-    x_tmp = [x_tmp ; model.x(mask_tmp,:)];
-    y_tmp = [y_tmp ; model.y(mask_tmp,:)];
+    if ~isempty(model.x)
+        x_tmp = [x_tmp ; model.x(mask_tmp,:)];
+    end
+    if ~isempty(model.y)
+        y_tmp = [y_tmp ; model.y(mask_tmp,:)];
+    end
 end
 
 model.x = x_tmp;
