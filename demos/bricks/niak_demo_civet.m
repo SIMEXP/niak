@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_demo_civet(path_demo)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_DEMO_CIVET
-%
 % This script is to demonstrate the usage of NIAK_BRICK_CIVET.
 %
 % SYNTAX:

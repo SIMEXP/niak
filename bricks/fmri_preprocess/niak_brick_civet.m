@@ -15,43 +15,43 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CIVET(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
-% INPUTS
+% INPUTS:
 %
-%  * FILES_IN 
-%       (structure) with the following fields :
+% FILES_IN 
+%   (structure) with the following fields :
 %
-%       ANAT 
-%           (string) a file with an individual T1 anatomical volume. If 
-%           previous results of civet are used (see below), this should be 
-%           an empty string.
+%   ANAT 
+%      (string) a file with an individual T1 anatomical volume. If 
+%      previous results of civet are used (see below), this should be 
+%      an empty string.
 %
-%       CIVET 
-%           (structure) If OPT.CIVET is specified to import results of a 
-%           previously generated results using CIVET, this field will be 
-%           updated to indicate all files of the original results that have 
-%           been copied and renamed. This is usefull in pipeline mode for 
-%           proper handling of inputs/outputs dependencies.
+%   CIVET 
+%      (structure) If OPT.CIVET is specified to import results of a 
+%      previously generated results using CIVET, this field will be 
+%      updated to indicate all files of the original results that have 
+%      been copied and renamed. This is usefull in pipeline mode for 
+%      proper handling of inputs/outputs dependencies.
 %
-%  * FILES_OUT  
-%       (structure) with the following fields. Note that if a field is an 
-%       empty string, a default value will be used to name the outputs. If 
-%       a field is ommited, the output won't be saved at all (this is 
-%       equivalent to setting up the output file names to 
-%       'gb_niak_omitted').
+% FILES_OUT  
+%   (structure) with the following fields. Note that if a field is an 
+%   empty string, a default value will be used to name the outputs. If 
+%   a field is ommited, the output won't be saved at all (this is 
+%   equivalent to setting up the output file names to 
+%   'gb_niak_omitted').
 %
 %
-%       TRANSFORMATION_LIN 
-%           (string, default transf_<BASE_ANAT>_native_to_stereolin.xfm)
-%           Linear transformation from native to stereotaxic space (lsq9).
+%   TRANSFORMATION_LIN 
+%      (string, default transf_<BASE_ANAT>_native_to_stereolin.xfm)
+%      Linear transformation from native to stereotaxic space (lsq9).
 %
-%       TRANSFORMATION_NL 
-%           (string, default transf_<BASE_ANAT>_stereolin_to_stereonl.xfm)
-%           Non-linear transformation from linear stereotaxic space to
-%           stereotaxic space.
+%   TRANSFORMATION_NL 
+%      (string, default transf_<BASE_ANAT>_stereolin_to_stereonl.xfm)
+%      Non-linear transformation from linear stereotaxic space to
+%      stereotaxic space.
 %
-%       TRANSFORMATION_NL_GRID 
-%           (string, default transf_<BASE_ANAT>_stereolin_to_stereonl_grid.mnc)
-%           Deformation field for non-linear transformation.
+%   TRANSFORMATION_NL_GRID 
+%      (string, default transf_<BASE_ANAT>_stereolin_to_stereonl_grid.mnc)
+%      Deformation field for non-linear transformation.
 %
 %       ANAT_NUC 
 %           (string, default <BASE_ANAT>_nuc_native.<EXT>)
@@ -154,25 +154,26 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %                   used, a prefix has to be specified for the database.
 %
 % _________________________________________________________________________
-% OUTPUTS
+% OUTPUTS:
 %
-%   The structures FILES_IN, FILES_OUT and OPT are updated with default
-%   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
+% The structures FILES_IN, FILES_OUT and OPT are updated with default
+% values. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
 % _________________________________________________________________________
-% SEE ALSO
-% 
+% SEE ALSO:
 % NIAK_DEMO_CIVET, NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % _________________________________________________________________________
-% COMMENTS
+% COMMENTS:
 %
 % The outputs of the CIVET pipeline will never be zipped, even if the
 % inputs were zipped. That's a bit tough, but zipping the minc outputs is 
 % simply too much work. 
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Francois Chouinard-Decorte
+%   Montreal Neurological Institute, 2008-2010.
+%   Centre de recherche de l'institut de gériatrie de Montréal, 2011-2012.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, filtering, fMRI
 
@@ -201,7 +202,7 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CIVET(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_civet'' for more info.')
 end
 
@@ -222,21 +223,23 @@ gb_name_structure = 'opt';
 gb_list_fields   = {'flag_keep_tmp' , 'civet_command' , 'flag_test' ,'folder_out' , 'flag_verbose' , 'n3_distance' , 'civet'           };
 gb_list_defaults = {0               , ''              , 0           , ''          , 1              , 200           , 'gb_niak_omitted' };
 niak_set_defaults
-        
+  
 if isempty(civet_command)
     civet_command = cat(2,gb_niak_path_civet,filesep,'CIVET_Processing_Pipeline');
 end
 
 if isstruct(opt.civet)
-    if ~isfield(opt.civet,'folder')|~isfield(opt.civet,'id')|~isfield(opt.civet,'prefix')
+    if ~isfield(opt.civet,'folder')||~isfield(opt.civet,'id')||~isfield(opt.civet,'prefix')
         error('Please specify fields FOLDER, ID and PREFIX in OPT.CIVET');
     end
+    opt.civet.folder = niak_full_path(opt.civet.folder);
     flag_civet = 1;
 else
     flag_civet = 0;
 end
 
 %% Building default output names
+opt.folder_out = niak_full_path(opt.folder_out);
 
 if ~flag_civet
     
@@ -294,7 +297,6 @@ else
 end
        
 %% Generating the default outputs of the NIAK brick and civet
-
 if strcmp(files_out.transformation_lin,'')    
     files_out.transformation_lin = cat(2,folder_anat,'transf_',name_anat,'_native_to_stereolin.xfm');        
 end
