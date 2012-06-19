@@ -46,7 +46,7 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %      FLAG_NORMALIZE_INTER
 %         (boolean,default true) if FLAG_NORMALIZE_INTER is true, the factor of interaction 
 %         will be normalized to a zero mean and unit variance before the interaction is 
-%         derived (independently of OPT.<LABEL>.GROUP.NORMALIZE below.
+%         derived (independently of OPT.<LABEL>.GROUP.NORMALIZE below).
 %
 %   PROJECTION
 %      (structure, optional) with multiple entries and the following fields :
