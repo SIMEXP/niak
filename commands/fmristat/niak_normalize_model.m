@@ -307,7 +307,7 @@ if isbool(opt.normalize_x)&&opt.normalize_x
     if size(model.x,1) ~= 1  
         model.x = niak_normalize_tseries(model.x,opt_n);
     end
-else
+elseif ~isbool(opt.normalize_x)
     mask = ismember(model.labels_y,fieldnames(opt.normalize_x));
     model.x(:,mask) = niak_normalize_tseries(model.x(:,mask));
 end
