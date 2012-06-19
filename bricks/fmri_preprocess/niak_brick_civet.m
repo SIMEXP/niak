@@ -340,7 +340,7 @@ files_civet.mask_stereo = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civ
 if strcmp(files_out.classify,'')    
     files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
 end
-files_civet.classify = cat(2,civet_folder,civet_id,filesep,'classify',filesep,civet_prefix,'_',civet_id,'_classify.mnc');
+files_civet.classify = cat(2,civet_folder,civet_id,filesep,'classify',filesep,civet_prefix,'_',civet_id,'_pve_classify.mnc');
 
 if strcmp(files_out.pve_wm,'')    
     files_out.pve_wm = cat(2,folder_anat,name_anat,'_wm_stereolin',ext_anat);
