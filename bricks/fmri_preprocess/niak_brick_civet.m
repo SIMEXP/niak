@@ -207,20 +207,20 @@ end
 
 %% FILES_IN
 gb_name_structure = 'files_in';
-gb_list_fields = {'anat','civet'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields   = {'anat'            , 'civet'};
+gb_list_defaults = {'gb_niak_omitted' , 'gb_niak_omitted'};
 niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask','mask_stereo','classify','pve_wm','pve_gm','pve_csf','verify'};
-gb_list_defaults = {'gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted','gb_niak_omitted'};
+gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereo_lin' , 'anat_nuc_stereo_nl' , 'mask'            , 'mask_stereo'     , 'classify'        , 'pve_wm'          , 'pve_gm'          , 'pve_csf'         , 'verify'          };
+gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'     , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_keep_tmp','civet_command','flag_test','folder_out','flag_verbose','n3_distance','civet'};
-gb_list_defaults = {0,'',0,'',1,200,'gb_niak_omitted'};
+gb_list_fields   = {'flag_keep_tmp' , 'civet_command' , 'flag_test' ,'folder_out' , 'flag_verbose' , 'n3_distance' , 'civet'           };
+gb_list_defaults = {0               , ''              , 0           , ''          , 1              , 200           , 'gb_niak_omitted' };
 niak_set_defaults
         
 if isempty(civet_command)
