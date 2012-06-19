@@ -61,7 +61,7 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         to SPACE (see above).
 %
 %   NORMALIZE_X
-%      (structure or boolean, default true) If a boolean and true, all covariates of the 
+%      (structure or boolean, default false) If a boolean and true, all covariates of the 
 %      model are normalized to a zero mean and unit variance. If a structure, the 
 %      fields <NAME> need to correspond to the label of a column in the 
 %      file FILES_IN.MODEL.GROUP):
@@ -139,7 +139,7 @@ model = psom_struct_defaults(model,list_fields,list_defaults);
 
 %% Check the options
 list_fields   = { 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' };
-list_defaults = { struct   , struct()   , struct       , true             , {}            , true          , false         , {}         };
+list_defaults = { struct   , struct()   , struct       , true             , {}            , false         , false         , {}         };
 if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
