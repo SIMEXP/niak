@@ -219,11 +219,12 @@ if ~isempty(opt.interaction)
               if length(ind)>1
                   error('Attempt to define an interaction term using the label %s, which is associated with more than one covariate',factor)
               end
-              if ~isfield(opt.interaction(num_i),'flag_normalize_inter')||opt.interaction(num_i).flag_normalize_inter
-                  opt_m.type = 'mean_var';
-                  fac_ind = niak_normalize_tseries(model.x(:,ind));
+              % Optional : normalisation of the covariate, which is involved in this interaction, BEFORE building the crossproduct 
+              if isfield(opt.interaction(num_i),'flag_normalize_inter') && opt.interaction(num_i).flag_normalize_inter
+                 opt_m.type = 'mean_var';
+                 fac_ind = niak_normalize_tseries(model.x(:,ind));
               else
-                  fac_ind = model.x(:,ind);
+                fac_ind = model.x(:,ind);
               end
               if num_u == 1 
                   col_inter = fac_ind;
@@ -231,14 +232,14 @@ if ~isempty(opt.interaction)
                   col_inter = fac_ind.*col_inter ;
               end 
           end
-          % Optional: normalization of interaction covariates   
-          if ~isfield(opt.interaction(num_i),'flag_normalize_inter')||opt.interaction(num_i).flag_normalize_inter
-             opt_m.type = 'mean_var';
-             col_inter = niak_normalize_tseries(col_inter,opt_m);
-          end
           % Check if the column exist before adding a new column 
-          model.labels_y{end+1} = opt.interaction(num_i).label;
-          x_inter = [x_inter col_inter];
+          mask = strcmpi(opt.interaction(num_i).label,model.labels_y);
+          if mask == 0
+              model.labels_y{end+1} = opt.interaction(num_i).label;
+             x_inter = [x_inter col_inter];
+          else 
+             x_inter = [x_inter col_inter];
+          end
       else 
           error('factor should be a cell of string and choose more than 1 factor ');
       end
@@ -261,7 +262,7 @@ end
 
 %% Build the contrast vector and extract the associated covariates
 list_cont = fieldnames(opt.contrast);
-if opt.flag_intercept&&~isfield(opt.contrast,'intercept')
+if opt.flag_intercept && ~isfield(opt.contrast,'intercept')
     list_cont = [{'intercept'} ; list_cont(:)];
     opt.contrast.intercept = 0;
 end
