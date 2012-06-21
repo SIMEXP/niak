@@ -457,8 +457,8 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
 if ~ischar(opt.civet)
-    list_fields   = { 'folder' , 'id'                 , 'prefix' };
-    list_defaults = { NaN      , fieldnames(files_in) , NaN      }; 
+    list_fields   = { 'folder' , 'id'   , 'prefix' };
+    list_defaults = { NaN      , struct , NaN      }; 
     opt.civet = psom_struct_defaults(opt.civet,list_fields,list_defaults);
 end
 
@@ -504,8 +504,10 @@ for num_s = 1:length(list_subject)
         opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
     end
     
-    if ~ischar(civet)
-        opt.civet.id = opt.civet.id.(subject);
+    if ~ischar(opt.civet)&&~isfield(opt.civet.id,subject)
+        opt_ind.civet.id = opt.civet.id.(subject);
+    elseif ~ischar(opt.civet)
+        opt_ind.civet.id = opt.civet.id.(subject);
     end
     pipeline_ind = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
 

@@ -58,12 +58,12 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %      t1 image partially corrected for non-uniformities (without
 %      mask), in native space.
 %       
-%   ANAT_NUC_STEREO_LIN 
+%   ANAT_NUC_STEREOLIN 
 %      (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
 %      original t1 image transformed in stereotaxic space using the 
 %      lsq9 transformation, fully corrected for non-uniformities (with mask)
 %
-%   ANAT_NUC_STEREO_NL 
+%   ANAT_NUC_STEREONL 
 %      (string, default <BASE_ANAT>_nuc_stereonl.<EXT>)
 %      original t1 image transformed in stereotaxic space using the 
 %      non-linear transformation, fully corrected for non-uniformities (with
@@ -73,7 +73,7 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %      (string, default <BASE_ANAT>_mask_native.<EXT>)
 %      brain mask in native space.
 %
-%   MASK_STEREO 
+%   MASK_STEREOLIN
 %      (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
 %      brain mask in stereotaxic (linear) space.
 %
@@ -214,7 +214,7 @@ niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereo_lin' , 'anat_nuc_stereo_nl' , 'mask'            , 'mask_stereo'     , 'classify'        , 'pve_wm'          , 'pve_gm'          , 'pve_csf'         , 'verify'          };
+gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask'            , 'mask_stereolin'     , 'classify'        , 'pve_wm'          , 'pve_gm'          , 'pve_csf'         , 'verify'          };
 gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'     , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
@@ -317,25 +317,25 @@ if strcmp(files_out.anat_nuc,'')
 end
 files_civet.anat_nuc = cat(2,civet_folder,civet_id,filesep,'native',filesep,civet_prefix,'_',civet_id,'_t1_nuc.mnc');
 
-if strcmp(files_out.anat_nuc_stereo_lin,'')    
-    files_out.anat_nuc_stereo_lin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);    
+if strcmp(files_out.anat_nuc_stereolin,'')    
+    files_out.anat_nuc_stereolin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);    
 end
-files_civet.anat_nuc_stereo_lin = cat(2,civet_folder,civet_id,filesep,'final',filesep,civet_prefix,'_',civet_id,'_t1_final.mnc');
+files_civet.anat_nuc_stereolin = cat(2,civet_folder,civet_id,filesep,'final',filesep,civet_prefix,'_',civet_id,'_t1_final.mnc');
 
-if strcmp(files_out.anat_nuc_stereo_nl,'')    
-    files_out.anat_nuc_stereo_nl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);        
+if strcmp(files_out.anat_nuc_stereonl,'')    
+    files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);        
 end
-files_civet.anat_nuc_stereo_nl = cat(2,civet_folder,civet_id,filesep,'final',filesep,civet_prefix,'_',civet_id,'_t1_nl.mnc');
+files_civet.anat_nuc_stereonl = cat(2,civet_folder,civet_id,filesep,'final',filesep,civet_prefix,'_',civet_id,'_t1_nl.mnc');
 
 if strcmp(files_out.mask,'')    
     files_out.mask = cat(2,folder_anat,name_anat,'_mask_native',ext_anat);
 end
 files_civet.mask = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask_native.mnc');
 
-if strcmp(files_out.mask_stereo,'')    
-    files_out.mask_stereo = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
+if strcmp(files_out.mask_stereolin,'')    
+    files_out.mask_stereolin = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
 end
-files_civet.mask_stereo = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask.mnc');
+files_civet.mask_stereolin = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask.mnc');
 
 if strcmp(files_out.classify,'')    
     files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
@@ -387,7 +387,7 @@ if ~flag_civet
     %% civet-compliant name.
     flag = niak_mkdir(civet_folder);
     if flag_zip
-        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext))
+        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext));
         if succ~=0
             error(msg);
         end
@@ -413,7 +413,7 @@ end
 %% Copying and renaming the results of CIVET %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereo_lin','anat_nuc_stereo_nl','mask','mask_stereo','classify','pve_wm','pve_gm','pve_csf','verify'};
+list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask','mask_stereolin','classify','pve_wm','pve_gm','pve_csf','verify'};
 
 for num_r = 1:length(list_results)
 
