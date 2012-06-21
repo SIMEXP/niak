@@ -272,6 +272,23 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (boolean, default true) if FLAG_SKIP==1, the brick does not do
 %           anything. 
 %
+%       CIVET (structure)
+%           If this field is present, NIAK will not process the T1 image, but
+%           will rather grab the (previously generated) results of the CIVET 
+%           pipeline, i.e. copy/rename them. The following fields need
+%           to be specified :
+%               
+%           FOLDER 
+%              (string) The path of a folder with CIVET results. The field 
+%              ANAT will be ignored in this case.
+%
+%           ID 
+%              (structure, optional) ID.<SUBJECT> is the ID associated with 
+%              SUBJECT in the CIVET results. By default SUBJECT is used.
+%
+%           PREFIX 
+%              (string) The prefix used for the database.
+%
 %   TUNE
 %       (structure) can be used to set different parameters for one or 
 %       multiple subjects. OPT.TUNE can have multiple entries with the following 
@@ -434,10 +451,16 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 template_fmri = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = { 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
-list_defaults  = { 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
+list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
+
+if ~ischar(opt.civet)
+    list_fields   = { 'folder' , 'id'                 , 'prefix' };
+    list_defaults = { NaN      , fieldnames(files_in) , NaN      }; 
+    opt.civet = psom_struct_defaults(opt.civet,list_fields,list_defaults);
+end
 
 if ~isfield(opt.region_growing,'flag_skip') % By default, skip the region growing
     opt.region_growing.flag_skip = true;
@@ -481,6 +504,9 @@ for num_s = 1:length(list_subject)
         opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
     end
     
+    if ~ischar(civet)
+        opt.civet.id = opt.civet.id.(subject);
+    end
     pipeline_ind = niak_pipeline_fmri_preprocess_ind(files_in.(subject),opt_ind);
 
     %% aggregate jobs

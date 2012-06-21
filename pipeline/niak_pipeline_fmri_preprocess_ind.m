@@ -277,6 +277,22 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           (boolean, default false) if FLAG_SKIP==1, the brick does not do
 %           anything, just copy the input on the output. 
 %
+%   CIVET (structure)
+%       If this field is present, NIAK will not process the T1 image, but
+%       will rather grab the (previously generated) results of the CIVET 
+%       pipeline, i.e. copy/rename them. The following fields need
+%       to be specified :
+%               
+%       FOLDER 
+%          (string) The path of a folder with CIVET results. The field 
+%          ANAT will be ignored in this case.
+%
+%       ID 
+%          (string) the ID associated with SUBJECT in the CIVET results. 
+%
+%       PREFIX 
+%          (string) The prefix used for the database.
+%
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -390,10 +406,16 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
-list_fields    = { 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
+
+if ~ischar(opt.civet)
+    list_fields   = { 'folder' , 'id' , 'prefix' };
+    list_defaults = { NaN      , NaN  , NaN      }; 
+    opt.civet = psom_struct_defaults(opt.civet,list_fields,list_defaults);
+end
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
@@ -433,50 +455,79 @@ fmri_s = niak_fmri2struct(fmri,label);
 [path_f,name_f,ext_f] = niak_fileparts(fmri{1});
 
 %% T1 preprocess
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('T1 preprocess (');
-end
-clear job_in job_out job_opt
-job_in                          = files_in.anat;
-job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
-job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
-job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
-job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
-job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
-job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f];
-job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
-job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
-job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
-job_opt                         = opt.t1_preprocess;
-job_opt.folder_out              = opt.folder_anat;
-pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess',job_in,job_out,job_opt);
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
-%% PVE
-if opt.flag_verbose
-    t1 = clock;
-    fprintf('PVE (');
-end
-clear job_in job_out job_opt
-job_in.vol          = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
-job_in.mask         = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
-job_in.segmentation = pipeline.(['t1_preprocess_' subject]).files_out.classify;
-job_out.pve_wm      = [opt.folder_anat 'anat_' subject '_pve_wm_stereolin'   ext_f];
-job_out.pve_gm      = [opt.folder_anat 'anat_' subject '_pve_gm_stereolin'   ext_f];
-job_out.pve_csf     = [opt.folder_anat 'anat_' subject '_pve_csf_stereolin'  ext_f];
-job_out.pve_disc    = [opt.folder_anat 'anat_' subject '_pve_disc_stereolin' ext_f];
-job_opt             = opt.pve;
-if isfield(job_opt,'flag_skip')
-    job_opt = rmfield(job_opt,'flag_skip');
-end
-if ~isfield(opt.pve,'flag_skip')||~opt.pve.flag_skip
-    pipeline = psom_add_job(pipeline,['pve_',subject],'niak_brick_pve',job_in,job_out,job_opt);
-end
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
+if ischar(opt.civet)
+    if opt.flag_verbose
+        t1 = clock;
+        fprintf('T1 preprocess (');
+    end
+    clear job_in job_out job_opt
+    job_in                          = files_in.anat;
+    job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
+    job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
+    job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
+    job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
+    job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
+    job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f];
+    job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
+    job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
+    job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
+    job_opt                         = opt.t1_preprocess;
+    job_opt.folder_out              = opt.folder_anat;
+    pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess',job_in,job_out,job_opt);
+    if opt.flag_verbose        
+        fprintf('%1.2f sec) - ',etime(clock,t1));
+    end
+    
+    %% PVE
+    if opt.flag_verbose
+        t1 = clock;
+        fprintf('PVE (');
+    end
+    clear job_in job_out job_opt
+    job_in.vol          = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
+    job_in.mask         = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
+    job_in.segmentation = pipeline.(['t1_preprocess_' subject]).files_out.classify;
+    job_out.pve_wm      = [opt.folder_anat 'anat_' subject '_pve_wm_stereolin'   ext_f];
+    job_out.pve_gm      = [opt.folder_anat 'anat_' subject '_pve_gm_stereolin'   ext_f];
+    job_out.pve_csf     = [opt.folder_anat 'anat_' subject '_pve_csf_stereolin'  ext_f];
+    job_out.pve_disc    = [opt.folder_anat 'anat_' subject '_pve_disc_stereolin' ext_f];
+    job_opt             = opt.pve;
+    if isfield(job_opt,'flag_skip')
+        job_opt = rmfield(job_opt,'flag_skip');
+    end
+    if ~isfield(opt.pve,'flag_skip')||~opt.pve.flag_skip
+        pipeline = psom_add_job(pipeline,['pve_',subject],'niak_brick_pve',job_in,job_out,job_opt);
+    end
+    if opt.flag_verbose        
+        fprintf('%1.2f sec) - ',etime(clock,t1));
+    end
+else
+    % CIVET results have been specified. Copy and rename them
+    if opt.flag_verbose
+        t1 = clock;
+        fprintf('CIVET (');
+    end
+    clear job_in job_out job_opt
+    job_in.civet                    = struct;
+    job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
+    job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
+    job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
+    job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
+    job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
+    job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f]; 
+    job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
+    %job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f]; % Not generated by the pipeline. Will need to generate it as part of the brick. TO DO
+    job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
+    job_out.pve_wm                  = [opt.folder_anat 'anat_' subject '_pve_wm_stereolin'   ext_f];
+    job_out.pve_gm                  = [opt.folder_anat 'anat_' subject '_pve_gm_stereolin'   ext_f];
+    job_out.pve_csf                 = [opt.folder_anat 'anat_' subject '_pve_csf_stereolin'  ext_f];
+    job_out.pve_csf                 = [opt.folder_anat 'anat_' subject '_verify.png'];
+    job_opt.civet                   = opt.civet;    
+    job_opt.folder_out              = opt.folder_anat;
+    pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess',job_in,job_out,job_opt);
+    if opt.flag_verbose        
+        fprintf('%1.2f sec) - ',etime(clock,t1));
+    end
 end
 
 %% Slice-timing correction
