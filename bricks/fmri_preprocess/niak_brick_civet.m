@@ -53,105 +53,105 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %      (string, default transf_<BASE_ANAT>_stereolin_to_stereonl_grid.mnc)
 %      Deformation field for non-linear transformation.
 %
-%       ANAT_NUC 
-%           (string, default <BASE_ANAT>_nuc_native.<EXT>)
-%           t1 image partially corrected for non-uniformities (without
-%           mask), in native space.
+%   ANAT_NUC 
+%      (string, default <BASE_ANAT>_nuc_native.<EXT>)
+%      t1 image partially corrected for non-uniformities (without
+%      mask), in native space.
 %       
-%       ANAT_NUC_STEREO_LIN 
-%           (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
-%           original t1 image transformed in stereotaxic space using the 
-%           lsq9 transformation, fully corrected for non-uniformities (with mask)
+%   ANAT_NUC_STEREO_LIN 
+%      (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
+%      original t1 image transformed in stereotaxic space using the 
+%      lsq9 transformation, fully corrected for non-uniformities (with mask)
 %
-%       ANAT_NUC_STEREO_NL 
-%           (string, default <BASE_ANAT>_nuc_stereonl.<EXT>)
-%           original t1 image transformed in stereotaxic space using the 
-%           non-linear transformation, fully corrected for non-uniformities (with
-%           mask)
+%   ANAT_NUC_STEREO_NL 
+%      (string, default <BASE_ANAT>_nuc_stereonl.<EXT>)
+%      original t1 image transformed in stereotaxic space using the 
+%      non-linear transformation, fully corrected for non-uniformities (with
+%      mask)
 %       
-%       MASK 
-%           (string, default <BASE_ANAT>_mask_native.<EXT>)
-%           brain mask in native space.
+%   MASK 
+%      (string, default <BASE_ANAT>_mask_native.<EXT>)
+%      brain mask in native space.
 %
-%       MASK_STEREO 
-%           (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
-%           brain mask in stereotaxic (linear) space.
+%   MASK_STEREO 
+%      (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
+%      brain mask in stereotaxic (linear) space.
 %
-%       CLASSIFY 
-%           (string, default <BASE_ANAT>_classify_stereolin.<EXT>)
-%           final masked discrete tissue classification in stereotaxic
-%           (linear) space after correction for partial volumes.
+%   CLASSIFY 
+%      (string, default <BASE_ANAT>_classify_stereolin.<EXT>)
+%      final masked discrete tissue classification in stereotaxic
+%      (linear) space after correction for partial volumes.
 %
-%       PVE_WM 
-%           (string, default <BASE_ANAT>_wm_stereolin.<EXT>)
-%           partial volume estimates for white matter in stereotaxic space.
+%   PVE_WM 
+%      (string, default <BASE_ANAT>_wm_stereolin.<EXT>)
+%      partial volume estimates for white matter in stereotaxic space.
 %
-%       PVE_GM 
-%           (string, default <BASE_ANAT>_gm_stereolin.<EXT>)
-%           partial volume estimates for grey matter in stereotaxic (linear)
-%           space.
+%   PVE_GM 
+%      (string, default <BASE_ANAT>_gm_stereolin.<EXT>)
+%      partial volume estimates for grey matter in stereotaxic (linear)
+%      space.
 %
-%       PVE_CSF 
-%           (string, default <BASE_ANAT>_csf_stereolin.<EXT>)
-%           partial volume estimates for cerebro-spinal fluids in 
-%           stereotaxic (linear) space.
+%   PVE_CSF 
+%      (string, default <BASE_ANAT>_csf_stereolin.<EXT>)
+%      partial volume estimates for cerebro-spinal fluids in 
+%      stereotaxic (linear) space.
 %
-%       VERIFY 
-%           (string, default <BASE_ANAT>_verify.png)
-%           quality control image for registration and classification
+%   VERIFY 
+%      (string, default <BASE_ANAT>_verify.png)
+%      quality control image for registration and classification
 %
 %   
-%  * OPT   
-%       (structure) with the following fields:
+% OPT   
+%   (structure) with the following fields:
 %
-%       N3_DISTANCE 
-%           (real number, default 200 mm)  N3 spline distance in mm 
-%           (suggested values: 200 for 1.5T scan; 25 for 3T scan). 
+%   N3_DISTANCE 
+%      (real number, default 200 mm)  N3 spline distance in mm 
+%      (suggested values: 200 for 1.5T scan; 25 for 3T scan). 
 %
-%       CIVET_COMMAND
-%           (string, default
-%           GB_NIAK_PATH_CIVET/CIVET_Processing_Pipeline)
-%           The command used to invoke CIVET.
+%   CIVET_COMMAND
+%      (string, default
+%      GB_NIAK_PATH_CIVET/CIVET_Processing_Pipeline)
+%      The command used to invoke CIVET.
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present,
-%           all default outputs will be created in the folder FOLDER_OUT.
-%           The folder needs to be created beforehand.
+%   FOLDER_OUT 
+%      (string, default: path of FILES_IN) If present,
+%      all default outputs will be created in the folder FOLDER_OUT.
+%      The folder needs to be created beforehand.
 %
-%       FLAG_KEEP_TMP
-%           (boolean, default 0) if FLAG_KEEP_TMP is true, the temporary
-%           folder will not be removed after completion of the job. This
-%           might be useful to get access to the logs of CIVET.
+%   FLAG_KEEP_TMP
+%      (boolean, default 0) if FLAG_KEEP_TMP is true, the temporary
+%      folder will not be removed after completion of the job. This
+%      might be useful to get access to the logs of CIVET.
 %
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%      (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%      do anything but update the default values in FILES_IN, 
+%      FILES_OUT and OPT.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
-%           messages indicating progress.
+%   FLAG_VERBOSE 
+%      (boolean, default: 1) If FLAG_VERBOSE == 1, write
+%      messages indicating progress.
 %
-%       CIVET (structure)
-%           If this field is present, the CIVET pipeline WILL NOT be used
-%           to process the data. Instead, a copy/renaming of previously
-%           generated results will be used. All of the following fields need
-%           to be specified :
+%   CIVET (structure)
+%      If this field is present, the CIVET pipeline WILL NOT be used
+%      to process the data. Instead, a copy/renaming of previously
+%      generated results will be used. All of the following fields need
+%      to be specified :
 %               
-%               FOLDER 
-%                   (string) The path of a folder with CIVET results. If 
-%                   this field is specified, the brick is not going to run 
-%                   CIVET but will rather copy and rename files from the 
-%                   previously processed CIVET results.
-%                   The field ANAT will be ignored in this case.
+%      FOLDER 
+%         (string) The path of a folder with CIVET results. If 
+%         this field is specified, the brick is not going to run 
+%         CIVET but will rather copy and rename files from the 
+%         previously processed CIVET results.
+%         The field ANAT will be ignored in this case.
 %
-%               ID 
-%                   (string) If results of a previous CIVET processing are 
-%                   used, an ID has to be specified for the subject.
+%      ID 
+%         (string) If results of a previous CIVET processing are 
+%         used, an ID has to be specified for the subject.
 %
-%               PREFIX 
-%                   (string) If results of a previous CIVET processing are 
-%                   used, a prefix has to be specified for the database.
+%      PREFIX 
+%         (string) If results of a previous CIVET processing are 
+%         used, a prefix has to be specified for the database.
 %
 % _________________________________________________________________________
 % OUTPUTS:
