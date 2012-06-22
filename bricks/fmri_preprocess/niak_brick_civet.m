@@ -77,6 +77,10 @@ function [files_in,files_out,opt] = niak_brick_civet(files_in,files_out,opt)
 %      (string, default <BASE_ANAT>_mask_stereolin.<EXT>)
 %      brain mask in stereotaxic (linear) space.
 %
+%   MASK_STEREONL
+%      (string, default <BASE_ANAT>_mask_stereonl.<EXT>)
+%      brain mask in stereotaxic (non-linear) space.
+%
 %   CLASSIFY 
 %      (string, default <BASE_ANAT>_classify_stereolin.<EXT>)
 %      final masked discrete tissue classification in stereotaxic
@@ -214,8 +218,8 @@ niak_set_defaults
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask'            , 'mask_stereolin'     , 'classify'        , 'pve_wm'          , 'pve_gm'          , 'pve_csf'         , 'verify'          };
-gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'     , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+gb_list_fields    = {'mask_stereonl'   , 'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask'            , 'mask_stereolin'     , 'classify'        , 'pve_wm'          , 'pve_gm'          , 'pve_csf'         , 'verify'          };
+gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'     , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% OPTIONS
@@ -337,6 +341,10 @@ if strcmp(files_out.mask_stereolin,'')
 end
 files_civet.mask_stereolin = cat(2,civet_folder,civet_id,filesep,'mask',filesep,civet_prefix,'_',civet_id,'_skull_mask.mnc');
 
+if strcmp(files_out.mask_stereonl,'')
+    files_out.mask_stereonl = cat(2,folder_anat,name_anat,'_mask_stereonl',ext_anat);
+end
+
 if strcmp(files_out.classify,'')    
     files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
 end
@@ -413,7 +421,7 @@ end
 %% Copying and renaming the results of CIVET %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask','mask_stereolin','classify','pve_wm','pve_gm','pve_csf','verify'};
+list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask','mask_stereolin','classify','pve_wm','pve_gm','pve_csf','verify','mask_stereonl'};
 
 for num_r = 1:length(list_results)
 
@@ -426,33 +434,44 @@ for num_r = 1:length(list_results)
             fprintf('Copying %s to %s\n',name_civet,name_res);
         end
         
-        if ~strcmp(list_results{num_r},'transformation_nl')
+        switch list_results{num_r}
 
-            %% Just copy and rename the stuff
-            [flag,str] = system(cat(2,'cp ',name_civet,' ',name_res));
-            if flag~=0
-                warning(str)
-            end
-        else
+            case 'mask_stereonl'
 
-            %% For the non-linear transform, it is necessary to rename the
-            %% grid file inside the xfm file.
-            hf = fopen(name_civet,'r');
-            hf2 = fopen(name_res,'w');
-            xfm_info = fread(hf,Inf,'uint8=>char')';
-            cell_info = niak_string2lines(xfm_info);
+                job_in.source = files_out.mask_stereolin;
+                job_in.target = files_out.mask_stereolin;
+                job_in.transformation = files_out.transformation_nl;
+                job_out = files_out.mask_stereonl;
+                job_opt.interpolation = 'nearest_neighbour';
+                niak_brick_resample_vol(job_in,job_out,job_opt);
+
+            case 'transformation_nl'
+
+                %% For the non-linear transform, it is necessary to rename the
+                %% grid file inside the xfm file.
+                hf = fopen(name_civet,'r');
+                hf2 = fopen(name_res,'w');
+                xfm_info = fread(hf,Inf,'uint8=>char')';
+                cell_info = niak_string2lines(xfm_info);
             
-            for num_l = 1:length(cell_info)
-                if num_l~=length(cell_info)
-                    fprintf(hf2,'%s\n',cell_info{num_l});
-                else
-                    [tmp,tmp2,tmp3] = fileparts(files_out.transformation_nl_grid);
-                    fprintf(hf2,'Displacement_Volume = %s;',cat(2,tmp2,tmp3));
+                for num_l = 1:length(cell_info)
+                    if num_l~=length(cell_info)
+                        fprintf(hf2,'%s\n',cell_info{num_l});
+                    else
+                        [tmp,tmp2,tmp3] = fileparts(files_out.transformation_nl_grid);
+                        fprintf(hf2,'Displacement_Volume = %s;',cat(2,tmp2,tmp3));
+                    end
                 end
-            end
-            fclose(hf);
-            fclose(hf2);
-            
+                fclose(hf);
+                fclose(hf2);
+
+            otherwise
+
+                %% Just copy and rename the stuff
+                [flag,str] = system(cat(2,'cp ',name_civet,' ',name_res));
+                if flag~=0
+                    warning(str)
+                end
         end
                                
     end              
