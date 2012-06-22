@@ -661,8 +661,8 @@ for num_m = 1:length(list_maps)
     job_in.mask = pipeline.qc_group_coregister_func.files_out.mask_group;
     for num_e = 1:length(fmri_c)
         if strcmp(opt.granularity,'subject')
-            ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['confounds_' label(num_e).name]));
-            tmp = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out;
+            ind = find(ismember(pipeline.(['preproc_' label(num_e).subject]).opt.list_jobs,['confounds_' label(num_e).name]));
+            tmp = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline{ind}.files_out;
         else
             tmp  = pipeline.(['confounds_' label(num_e).name]).files_out;
         end 
@@ -720,8 +720,8 @@ job_in.vol  = cell([length(fmri_c) 1]);
 job_in.mask = pipeline.qc_group_coregister_func.files_out.mask_group;
 for num_e = 1:length(fmri_c)
     if strcmp(opt.granularity,'subject')
-        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['qc_corsica_var_' label(num_e).name]));
-        job_in.vol{num_e} = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out;
+        ind = find(ismember(pipeline.(['preproc_' label(num_e).subject]).opt.list_jobs,['qc_corsica_var_' label(num_e).name]));
+        job_in.vol{num_e} = pipeline.(['preproc_' label(num_e).subject]).opt.pipeline{ind}.files_out;
     else
         job_in.vol{num_e} = pipeline.(['qc_corsica_var_' label(num_e).name]).files_out;
     end
