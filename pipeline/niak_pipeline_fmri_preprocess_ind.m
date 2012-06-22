@@ -521,7 +521,7 @@ else
     job_out.pve_wm                  = [opt.folder_anat 'anat_' subject '_pve_wm_stereolin'   ext_f];
     job_out.pve_gm                  = [opt.folder_anat 'anat_' subject '_pve_gm_stereolin'   ext_f];
     job_out.pve_csf                 = [opt.folder_anat 'anat_' subject '_pve_csf_stereolin'  ext_f];
-    job_out.pve_csf                 = [opt.folder_anat 'anat_' subject '_verify.png'];
+    job_out.veriy                   = [opt.folder_anat 'anat_' subject '_verify.png'];
     job_opt.civet                   = opt.civet;    
     job_opt.folder_out              = opt.folder_anat;
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_civet',job_in,job_out,job_opt);
