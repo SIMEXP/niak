@@ -344,6 +344,7 @@ files_civet.mask_stereolin = cat(2,civet_folder,civet_id,filesep,'mask',filesep,
 if strcmp(files_out.mask_stereonl,'')
     files_out.mask_stereonl = cat(2,folder_anat,name_anat,'_mask_stereonl',ext_anat);
 end
+files_civet.mask_stereonl = ''; 
 
 if strcmp(files_out.classify,'')    
     files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
