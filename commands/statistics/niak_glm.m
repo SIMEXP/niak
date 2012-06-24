@@ -27,6 +27,10 @@ function [results,opt] = niak_glm(model,opt)
 %      (string, default 'none') the type of test to be applied.
 %      Available options: 'ttest' , 'ftest', 'none'
 %
+%   FLAG_RSQUARED
+%      (boolean, default false) if the flaf is true, the R2 statistics of the
+%      regression is added to RESULTS (see below).
+%
 %   FLAG_RESIDUALS 
 %      (boolean, default false) if the flag is true, the residuals E of the 
 %      regression are added to RESULTS (see below).
@@ -81,7 +85,11 @@ function [results,opt] = niak_glm(model,opt)
 %   STD_EFF
 %      (vector, size [1 N]) STD_EFF(n) is the standard deviation of the effect
 %      EFF(n).
-% 
+%
+%   RSQUARE
+%      (vector, size 1*N) The R2 statistics of the model (percentage of sum-of-squares
+%      explained by the model).
+%
 % _________________________________________________________________________
 % REFERENCES:
 %
@@ -123,8 +131,8 @@ if (nargin<2)||(isempty(opt))
 end
 
 %% Default options
-list_fields    = { 'flag_eff' , 'flag_residuals' , 'flag_beta', 'test' };
-list_defaults  = {  false     , false           , false      , 'none' };
+list_fields    = { 'flag_rsquare' , 'flag_eff' , 'flag_residuals' , 'flag_beta', 'test' };
+list_defaults  = {  false         , false     , false           , false      , 'none' };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 y = model.y;
@@ -194,6 +202,9 @@ end
 
 
 %% flags
+if opt.flag_rsquare
+    results.rsquare = 1 - (sum(e.^2,1)./sum((y-repmat(mean(y,1),[size(y,1) 1])).^2,1));
+end
 if opt.flag_residuals
     results.e = e;       % Residuals
 end
