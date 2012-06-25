@@ -17,6 +17,14 @@ function [p,model_w] = niak_white_test_hetero(model,opt)
 %      (2D array size T*K) each column of X is a explaining factor with the 
 %      same number of rows as Y.
 %
+%   LABELS_X
+%      (cell of strings, optional) LABELS_X{T} is the label of observation T, 
+%      associated with X(T,:) and Y(T,:). By default the label is 'sampT'
+%
+%   LABELS_Y
+%      (cell of strings, optional) LABELS_Y{K} is the label of covariate K,
+%      associated with X(:,K). By default the label is 'covK'.
+%
 %   MASK_TEST
 %      (vector, boolean, size K*1, default true) a binary mask of the covariates 
 %      that are suspected to cause heteroskedasticity. By default the whole model X
@@ -38,6 +46,15 @@ function [p,model_w] = niak_white_test_hetero(model,opt)
 %
 %   Y
 %      (2D array size T*N) the square of the residuals of the ols regression with MODEL.
+%
+%   LABELS_X
+%      (cell of strings, optional) Identical to MODEL.LABELS_X.
+%
+%   LABELS_Y
+%      (cell of strings, optional) LABELS_Y{K} is the label of covariate K,
+%      associated with MODEL_W.X(:,K). Labels are derived from MODEL.LABELS_X.
+%      Interaction terms are noted LABEL1_x_LABEL2 and squared terms are 
+%      labeled LABEL.^2. The intercept is labeled 'intercept'.
 %
 % _________________________________________________________________________
 % REFERENCE:
@@ -100,12 +117,26 @@ function [p,model_w] = niak_white_test_hetero(model,opt)
 % THE SOFTWARE.
 
 %% Default model
-list_fields    = { 'x' , 'y' , 'mask_test' };
-list_defaults  = { NaN , NaN , []          };
+list_fields    = { 'x' , 'y' , 'mask_test' , 'labels_x' , 'labels_y' };
+list_defaults  = { NaN , NaN , []          , {}         , {}         };
 model = psom_struct_defaults(model,list_fields,list_defaults);
 
 if isempty(model.mask_test)
     model.mask_test = true(size(model.x,2),1);
+end
+
+if isempty(model.labels_x)
+    model.labels_x = cell(size(model.x,1),1);
+    for num_t = 1:size(model.x,1)
+        model.labels_x{num_t} = sprintf('samp%i',num_t);
+    end
+end
+
+if isempty(model.labels_y)
+    model.labels_y = cell(size(model.x,2),1);
+    for num_k = 1:size(model.x,2)
+        model.labels_y{num_k} = sprintf('cov%i',num_k);
+    end
 end
 
 %% Run an ordinary least-squares estimation of the residuals of the model
@@ -116,6 +147,8 @@ res_glm = niak_glm(glm,opt_glm);
 %% The white model_w
 model_w.y = (res_glm.e).^2;
 model_w.x = model.x(:,model.mask_test);
+model_w.labels_x = model.labels_x;
+model_w.labels_y = model.labels_y(model.mask_test);
 model_w = sub_square_model(model_w);
 
 %% Run an ordinary least-squares for the regression of the square model on the squares of the residuals
@@ -139,25 +172,31 @@ mask_intercept = min(model.x == repmat(model.x(1,:),[size(model.x,1) 1]),[],1);
 model_s = model;
 if any(mask_intercept)
     model.x = model.x(:,~mask_intercept);
+    model.labels_y = model.labels_y(~mask_intercept);
 end
    
 k = size(model.x,2);
 num_c = 1;
 model_inter = zeros(size(model.x,1),k*(k-1)/2);
+labels_inter = cell(k*(k-1)/2,1);
 for num_k = 1:k
     for num_l = num_k+1:k
         model_inter(:,num_c) = model.x(:,num_k).*model.x(:,num_l);
+        labels_inter{num_c} = [model.labels_y{num_k} '_x_' model.labels_y{num_l}];
         num_c = num_c+1;
     end
 end
 
 model_square = (model.x).^2;
+labels_square = cell(k,1);
 mask_dummy = false(size(model_square,2),1);
 for num_c = 1:size(model_square,2)
     mask_dummy(num_c) = length(unique(model_square(:,num_c)))<3;
+    labels_square{num_c} = [model.labels_y{num_c} '.^2'];
 end
 model_square = model_square(:,~mask_dummy);
-model_s.x = [model.x model_inter model_square];
-model_s.x = [ones(size(model_s.x,1),1) model_s.x];
+labels_square = labels_square(~mask_dummy);
+model_s.x = [ones(size(model.x,1),1) model.x model_inter model_square];
+model_s.labels_y = [{'intercept'} ; model.labels_y(:) ; labels_inter ; labels_square];
 
 end
