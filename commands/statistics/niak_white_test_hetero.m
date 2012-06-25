@@ -50,7 +50,7 @@ function [p,model_w] = niak_white_test_hetero(model,opt)
 %
 % _________________________________________________________________________
 % DEMO:
-% 
+%  
 % Generate samples with a gross heteroscedasticity:
 %
 % model.x = [ones(100,1) [zeros(50,1) ; ones(50,1)] randn([100 1])];
@@ -71,6 +71,9 @@ function [p,model_w] = niak_white_test_hetero(model,opt)
 % with a model, and then try to regress the same model (or a subset of variables
 % that can cause heteroskedasticity) on the squares of the residuals. The overall
 % significance of this second regression is tested with a R square.
+%
+% Note that the no squared term is added for dummy variables (or the intercept...)
+% because this results in a degenerate model.
 %
 % Copyright (c) Pierre Bellec, 
 % Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
@@ -149,8 +152,11 @@ for num_k = 1:k
 end
 
 model_square = (model.x).^2;
-mask_eq = min(model_square==model.x,[],1);
-model_square = model_square(:,~mask_eq);
+mask_dummy = false(size(model_square,2),1);
+for num_c = 1:size(model_square,2)
+    mask_dummy(num_c) = length(unique(model_square(:,num_c)))<3;
+end
+model_square = model_square(:,~mask_dummy);
 model_s.x = [model.x model_inter model_square];
 model_s.x = [ones(size(model_s.x,1),1) model_s.x];
 
