@@ -93,6 +93,12 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %      MAX
 %         (scalar, default []) only values lower (or equal) than MAX are retained. 
 %
+%      OPERATION
+%         (string, default 'or') the operation that is applied to select the frames.
+%         Available options:
+%         'or' : merge the current selection SELECT(E) with the result of the previous one.
+%         'and' : intersect the current selection SELECT(E) with the result of the previous one.
+%
 %   LABELS_X
 %      (cell of strings, default {}) The list of entries (rows) used 
 %      to build the model (the order will be used as well). If left empty, 
@@ -183,28 +189,43 @@ model.labels_x = labx_tmp;
 
 % Optional : select a subset of entries
 if ~isempty(opt.select)
+    mask = true([size(model.x,1) 1]);
     for num_s = 1:length(opt.select)
         if ~isfield(opt.select(num_s),'label')
            continue
         end
-        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max'},{NaN,[],[],[]});
-        mask = true([size(model.x,1) 1]);
+        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max','operation'},{NaN,[],[],[],'or'});        
         ind = find(ismember(model.labels_y,opt_s.label));
-        if ~isempty(opt_s.values)
-           mask = min(ismember(model.x(:,ind),opt_s.values),[],2);
+        switch opt_s.operation
+            case 'or'
+                if ~isempty(opt_s.values)           
+                    mask = mask|min(ismember(model.x(:,ind),opt_s.values),[],2);
+                end
+                if ~isempty(opt_s.min)
+                   mask = mask|min(model.x(:,ind)>opt_s.min,[],2);
+                end
+                if ~isempty(opt_s.max)
+                   mask = mask|min((model.x(:,ind)<opt_s.max),[],2);
+                end
+            case 'and'
+                if ~isempty(opt_s.values)           
+                    mask = mask&min(ismember(model.x(:,ind),opt_s.values),[],2);
+                end
+                if ~isempty(opt_s.min)
+                   mask = mask&min(model.x(:,ind)>opt_s.min,[],2);
+                end
+                if ~isempty(opt_s.max)
+                   mask = mask&min((model.x(:,ind)<opt_s.max),[],2);
+                end
+            otherwise
+                error('%s is an unkown operation in SELECT',opt_s.operation)
         end
-        if ~isempty(opt_s.min)
-           mask = mask&min(model.x(:,ind)>opt_s.min,[],2);
-        end
-        if ~isempty(opt_s.max)
-           mask = mask&min((model.x(:,ind)<opt_s.max),[],2);
-        end
-        model.x = model.x(mask,:);
-        if ~isempty(model.y)
-           model.y = model.y(mask,:);
-        end
-        model.labels_x = model.labels_x(mask);
-     end
+    end
+    model.x = model.x(mask,:);
+    if ~isempty(model.y)
+        model.y = model.y(mask,:);
+    end
+    model.labels_x = model.labels_x(mask);    
 end
 
 % Optional: Compute the interaction
