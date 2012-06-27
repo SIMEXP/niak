@@ -182,14 +182,13 @@ for num_m = 1:length(ind_m)
         y_tmp = [y_tmp ; model.y(mask_tmp,:)];
     end
 end
-
 model.x = x_tmp;
 model.y = y_tmp;
 model.labels_x = labx_tmp;
 
 % Optional : select a subset of entries
-if ~isempty(opt.select)
-    mask = true([size(model.x,1) 1]);
+if isfield(opt.select(1),'label')
+    mask = true([size(model.labels_x,1) 1]);
     for num_s = 1:length(opt.select)
         if ~isfield(opt.select(num_s),'label')
            continue
@@ -221,7 +220,9 @@ if ~isempty(opt.select)
                 error('%s is an unkown operation in SELECT',opt_s.operation)
         end
     end
-    model.x = model.x(mask,:);
+    if ~isempty(model.x)
+        model.x = model.x(mask,:);
+    end
     if ~isempty(model.y)
         model.y = model.y(mask,:);
     end
