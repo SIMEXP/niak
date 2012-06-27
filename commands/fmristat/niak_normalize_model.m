@@ -57,8 +57,12 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         in the space orthogonal to SPACE).
 %
 %      ORTHO
-%         (cell of strings) a list of the covariates to project in the space orthogonal
-%         to SPACE (see above).
+%         (cell of strings, default all the covariates except those in space) a list of 
+%         the covariates to project in the space orthogonal to SPACE (see above).
+%
+%      FLAG_INTERCEPT
+%         (boolean, default true) if the flag is true, add an intercept in SPACE (even 
+%         when the model does not have an intercept).
 %
 %   NORMALIZE_X
 %      (structure or boolean, default false) If a boolean and true, all covariates of the 
@@ -130,6 +134,12 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 % the final selection will be the intersection of all selections performed with individual
 % covariates associated with the label.
 %
+% The operations are applied in the following order:
+%   1. Select a subset of entries
+%   2. Orthogonalization of covariates
+%   3. Add interaction terms
+%   4. Normalization (standardization) of the covariates. 
+%
 % Copyright (c) Pierre Bellec, Jalloul Bouchkara
 %               Centre de recherche de l'institut de Gériatrie de Montréal
 %               Département d'informatique et de recherche opérationnelle
@@ -186,9 +196,13 @@ model.x = x_tmp;
 model.y = y_tmp;
 model.labels_x = labx_tmp;
 
-% Optional : select a subset of entries
+%% Select a subset of entries
 if isfield(opt.select(1),'label')
-    mask = true([size(model.labels_x,1) 1]);
+    if isfield(opt.select(1),'operation')&&strcmp(opt.select(1).operation,'and')
+        mask = true([size(model.labels_x,1) 1]);
+    else
+        mask = false([size(model.labels_x,1) 1]);
+    end
     for num_s = 1:length(opt.select)
         if ~isfield(opt.select(num_s),'label')
            continue
@@ -229,12 +243,42 @@ if isfield(opt.select(1),'label')
     model.labels_x = model.labels_x(mask);    
 end
 
-% Optional: Compute the interaction
-if ~isempty(opt.interaction)   
-    x_inter = model.x;
+%% Orthogonalization of covariates
+if ~isempty(opt.projection)&&isfield(opt.projection(1),'space')
+   for num_e = 1:length(opt.projection)  
+       if ~ismember('intercept',opt.projection(num_e).space)&&(~isfield(opt.projection(num_e),'flag_intercept')||opt.projection(num_e).flag_intercept)
+           if ismember('intercept',model.labels_y)
+               opt.projection(num_e).space = [opt.projection(num_e).space(:) ; {'intercept'}];
+               mask_space = ismember(model.labels_y,opt.projection(num_e).space);
+               x_space = x(:,mask_space);
+           else
+               mask_space = ismember(model.labels_y,opt.projection(num_e).space);
+               x_space = [ones(size(model.x,1),1) model.x(:,mask_space)];
+           end
+       end
+       if any(~ismember(opt.projection(num_e).space,model.labels_y))
+           error('Could not find the covariates %s to perform a regression',opt.projection(num_e).space{1})
+       end
+       
+       if ~isfield(opt.projection(num_e),'ortho')||isempty(opt.projection(num_e).ortho)
+           opt.projection(num_e).ortho = setdiff(model.labels_y,opt.projection(num_e).space);
+       end
+       mask_ortho = ismember(model.labels_y,opt.projection(num_e).ortho);
+       if any(~ismember(opt.projection(num_e).ortho,model.labels_y))
+           error('Could not find the covariates %s to perform a regression',opt.projection(num_e).ortho{1})
+       end       
+       [B,E] = niak_lse(model.x(:,mask_ortho),x_space);
+       model.x(:,mask_ortho) = E ;
+       % normalization of covariates (again)
+       model = sub_normalize(model,opt);
+    end
+end
+
+%% Compute the interaction(s)
+if ~isempty(opt.interaction)       
     for num_i = 1:length(opt.interaction)
-       if iscellstr(opt.interaction(num_i).factor) && (size((opt.interaction(num_i).factor),2) > 1)      
-          for num_u = 1:size((opt.interaction(num_i).factor),2)
+       if iscellstr(opt.interaction(num_i).factor) && (length(opt.interaction(num_i).factor) > 1)      
+          for num_u = 1:length(opt.interaction(num_i).factor)
               factor = opt.interaction(num_i).factor{num_u};
               mask   = strcmpi(factor, model.labels_y) ;
               ind    = find(mask == 1);
@@ -242,11 +286,11 @@ if ~isempty(opt.interaction)
                   error('Attempt to define an interaction term using the label %s, which is associated with more than one covariate',factor)
               end
               % Optional : normalisation of the covariate, which is involved in this interaction, BEFORE building the crossproduct 
-              if isfield(opt.interaction(num_i),'flag_normalize_inter') && opt.interaction(num_i).flag_normalize_inter
-                 opt_m.type = 'mean_var';
-                 fac_ind = niak_normalize_tseries(model.x(:,ind));
+              if isfield(opt.interaction(num_i),'flag_normalize_inter') && ~opt.interaction(num_i).flag_normalize_inter
+                  fac_ind = model.x(:,ind);   
               else
-                fac_ind = model.x(:,ind);
+                  opt_m.type = 'mean_var';
+                  fac_ind = niak_normalize_tseries(model.x(:,ind));                
               end
               if num_u == 1 
                   col_inter = fac_ind;
@@ -256,20 +300,22 @@ if ~isempty(opt.interaction)
           end
           % Check if the column exist before adding a new column 
           mask = strcmpi(opt.interaction(num_i).label,model.labels_y);
-          if mask == 0
+          if ~any(mask) 
               model.labels_y{end+1} = opt.interaction(num_i).label;
-             x_inter = [x_inter col_inter];
+             model.x = [model.x col_inter];
           else 
-             x_inter = [x_inter col_inter];
+             error('Attempt to define a new interaction term %s which was already found in the model',opt.interaction(num_i).label)
           end
       else 
           error('factor should be a cell of string and choose more than 1 factor ');
-      end
-      model.x=x_inter ;
+      end      
    end
 end 
 
-% Optional: additional intercept covariate
+%% Standardization of the model
+model = sub_normalize(model,opt);
+
+%% Additional intercept covariate
 if opt.flag_intercept
     mask = strcmpi('intercept',model.labels_y);
     if ~any(mask) ||  isempty(mask) % mask =0 or when the model.labels_y= {} !
@@ -301,19 +347,6 @@ end
 model.x = x_cont;
 model.labels_y = list_cont;
 
-% orthogonalization of covariates
-model = sub_normalize(model,opt);
-if ~isempty(opt.projection)&&isfield(opt.projection(1),'space')
-   for num_e = 1:length(opt.projection)  
-       mask_space = ismember(model.labels_y,opt.projection(num_e).space);
-       mask_ortho = ismember(model.labels_y,opt.projection(num_e).ortho);
-       [B,E] = niak_lse(model.x(:,mask_ortho),model.x(:,mask_space));
-       model.x(:,mask_ortho) = E ;
-       % normalization of covariates (again)
-       model = sub_normalize(model,opt);
-    end
-end
-
 % Return
 model_n = model;
 
@@ -337,6 +370,7 @@ end
 mask = ismember(model.labels_y,'intercept');
 model.x(:,mask) = 1;
 
-if opt.normalize_y && isfield ( model, 'y' ) &&  size(model.y,1) > 2   
+if opt.normalize_y && isfield ( model, 'y' ) &&  size(model.y,1) > 2 
+    opt_n.type = 'mean_var';  
     model.y = niak_normalize_tseries(model.y,opt_n);
 end
