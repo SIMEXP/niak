@@ -360,7 +360,7 @@ function model = sub_normalize(model,opt)
 if isbool(opt.normalize_x)&&opt.normalize_x
     opt_n.type = 'mean_var';  
     % because the normalization will give 0 il the nbr of rows = 1
-    if size(model.x,1) ~= 1  
+    if (size(model.x,1) ~= 1)&&~isempty(model.x)
         model.x = niak_normalize_tseries(model.x,opt_n);
     end
 elseif ~isbool(opt.normalize_x)
@@ -370,7 +370,7 @@ end
 mask = ismember(model.labels_y,'intercept');
 model.x(:,mask) = 1;
 
-if opt.normalize_y && isfield ( model, 'y' ) &&  size(model.y,1) > 2 
+if opt.normalize_y && isfield ( model, 'y' ) &&  (size(model.y,1) > 2) && ~isempty(model.x)
     opt_n.type = 'mean_var';  
     model.y = niak_normalize_tseries(model.y,opt_n);
 end
