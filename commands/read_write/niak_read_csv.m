@@ -102,7 +102,7 @@ for num_x = 2:length(cell_tab)
         cell_tab{num_x} = regexprep(cell_tab{num_x},'[''"]','');
     end
     
-    line_tmp = sub_csv(cell_tab{num_x},separator);  
+    line_tmp = sub_csv(cell_tab{num_x},separator); 
     if num_x == 2
         lines = cell([length(cell_tab)-1 length(line_tmp)]);
         lines(1,:) = line_tmp;
@@ -116,9 +116,9 @@ end
 
 if isempty(labels_y{1})
     labels_x = lines(:,1);
-    tab = str2double(lines(:,2:end));
+    tab = str2double(strtrim(lines(:,2:end)));
 else
-    tab = str2double(lines);
+    tab = str2double(strtrim(lines));
 end
 
 if flag_trim
