@@ -209,6 +209,9 @@ if isfield(opt.select(1),'label')
         end
         opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max','operation'},{NaN,[],[],[],'or'});        
         ind = find(ismember(model.labels_y,opt_s.label));
+        if isempty(ind)
+            error('I could not find the "%s" covariate in the model to select a subset of observations',opt_s.label)
+        end
         switch opt_s.operation
             case 'or'
                 if ~isempty(opt_s.values)           
