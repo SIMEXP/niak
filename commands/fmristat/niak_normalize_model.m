@@ -334,18 +334,22 @@ if opt.flag_intercept && ~isfield(opt.contrast,'intercept')
     list_cont = [{'intercept'} ; list_cont(:)];
     opt.contrast.intercept = 0;
 end
-x_cont = zeros(size(model.x,1),length(list_cont));
-model.c = zeros(length(list_cont),1);
+x_cont = zeros(size(model.x,1),sum(ismember(model.labels_y,list_cont)));
+model.c = zeros(size(x_cont,2),1);
+labels_cont = cell(size(x_cont,2),1);
+num_cov = 0;
 for num_c = 1:length(list_cont)
     mask = strcmpi(list_cont{num_c},model.labels_y);
     if ~any(mask)
         error('Could not find the covariate %s listed in the contrast',list_cont{num_c});
     end
-    x_cont(:,num_c) = model.x(:,mask);
-    model.c(num_c) = opt.contrast.(list_cont{num_c});
+    x_cont(:,(num_cov+1):(num_cov+sum(mask))) = model.x(:,mask);
+    model.c((num_cov+1):(num_cov+sum(mask))) = opt.contrast.(list_cont{num_c});
+    labels_cont((num_cov+1):(num_cov+sum(mask))) = list_cont(num_c);
+    num_cov = num_cov+sum(mask);
 end
 model.x = x_cont;
-model.labels_y = list_cont;
+model.labels_y = labels_cont;
 
 % Return
 model_n = model;
