@@ -358,7 +358,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %      13.  Region growing.
 %           See NIAK_PIPELINE_REGION_GROWING and OPT.REGION_GROWING
 %
-% In addition job the following jobs are performed at the group level:
+% In addition the following jobs are performed at the group level:
 %       1.  Group quality control for motion correction.
 %           See NIAK_BRICK_QC_MOTION_CORRECTION_GROUP and 
 %           OPT.QC_MOTION_CORRECTION_GROUP
