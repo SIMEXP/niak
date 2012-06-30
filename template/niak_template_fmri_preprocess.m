@@ -1,11 +1,14 @@
-% This script demonstrates how to write a script to run an fMRI
-% preprocessing pipeline in NIAK.
+% Template to write a script for the NIAK fMRI preprocessing pipeline
 %
-% To actually run a demo of the preprocessing data, please see
+% To run a demo of the preprocessing, please see
 % NIAK_DEMO_FMRI_PREPROCESS.
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+%   Montreal Neurological Institute, McGill University, 2008-2010.
+%   Research Centre of the Montreal Geriatric Institute
+%   & Department of Computer Science and Operations Research
+%   University of Montreal, Québec, Canada, 2010-2012
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI, preprocessing, pipeline
 
