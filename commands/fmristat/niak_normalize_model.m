@@ -66,8 +66,9 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %
 %   NORMALIZE_X
 %      (structure or boolean, default false) If a boolean and true, all covariates of the 
-%      model are normalized to a zero mean and unit variance. If a structure, the 
-%      fields <NAME> need to correspond to the label of a column in the 
+%      model are normalized to a zero mean and unit variance EXCEPT the interaction terms 
+%      (if there are) because they are already standardized by default, see FLAG_NORMALIZE_INTER. 
+%      If a structure, the fields <NAME> need to correspond to the label of a column in the 
 %      file FILES_IN.MODEL.GROUP):
 %
 %      <NAME>
@@ -75,7 +76,7 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         to a zero mean and a unit variance. 
 %
 %   NORMALIZE_Y
-%      (boolean, default false) If true, the data is corrected to a zero mean and unit variance,
+%      (boolean, default true) If true, the data is corrected to a zero mean and unit variance,
 %      in this case across subjects.
 %
 %   FLAG_INTERCEPT
@@ -155,7 +156,7 @@ model = psom_struct_defaults(model,list_fields,list_defaults);
 
 %% Check the options
 list_fields   = { 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' };
-list_defaults = { struct   , struct()   , struct       , true             , {}            , false         , false         , {}         };
+list_defaults = { struct   , struct()   , struct       , true               , {}                 , false             , true                , {}         };
 if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -279,7 +280,7 @@ end
 
 %% Compute the interaction(s)
 if ~isempty(opt.interaction)       
-    for num_i = 1:length(opt.interaction)
+   for num_i = 1:length(opt.interaction)
        if iscellstr(opt.interaction(num_i).factor) && (length(opt.interaction(num_i).factor) > 1)      
           for num_u = 1:length(opt.interaction(num_i).factor)
               factor = opt.interaction(num_i).factor{num_u};
@@ -288,7 +289,7 @@ if ~isempty(opt.interaction)
               if length(ind)>1
                   error('Attempt to define an interaction term using the label %s, which is associated with more than one covariate',factor)
               end
-              % Optional : normalisation of the covariate, which is involved in this interaction, BEFORE building the crossproduct 
+              % Optional : normalisation of the covariate, which is involved in this interaction, BEFORE building the crossproduct
               if isfield(opt.interaction(num_i),'flag_normalize_inter') && ~opt.interaction(num_i).flag_normalize_inter
                   fac_ind = model.x(:,ind);   
               else
@@ -305,13 +306,13 @@ if ~isempty(opt.interaction)
           mask = strcmpi(opt.interaction(num_i).label,model.labels_y);
           if ~any(mask) 
               model.labels_y{end+1} = opt.interaction(num_i).label;
-             model.x = [model.x col_inter];
+              model.x = [model.x col_inter];      
           else 
              error('Attempt to define a new interaction term %s which was already found in the model',opt.interaction(num_i).label)
           end
       else 
           error('factor should be a cell of string and choose more than 1 factor ');
-      end      
+      end
    end
 end 
 
@@ -365,11 +366,19 @@ function model = sub_normalize(model,opt)
 %% Optional: normalization of covariates
 
 if isbool(opt.normalize_x)&&opt.normalize_x
-    opt_n.type = 'mean_var';  
-    % because the normalization will give 0 il the nbr of rows = 1
-    if (size(model.x,1) ~= 1)&&~isempty(model.x)
-        model.x = niak_normalize_tseries(model.x,opt_n);
-    end
+  % we must not repeat the standardization of the covariates of interactions. I save the columns
+  % of model.x corresponds to the interaction in model_r and re injected them after normalization of all the model.x 
+   ind_inter_l = length(model.labels_y);
+   for num_i = 1:length(opt.interaction)-1
+        all_ind_inter = [ind_inter_l ind_inter_l-1];
+   end
+   model_r  = model.x(:,all_ind_inter );
+   opt_n.type = 'mean_var';  
+   % because the normalization will give 0 il the nbr of rows = 1
+   if (size(model.x,1) ~= 1)&&~isempty(model.x)
+       model.x = niak_normalize_tseries(model.x,opt_n);
+   end
+   model.x(:,all_ind_inter) = model_r ;
 elseif ~isbool(opt.normalize_x)
     mask = ismember(model.labels_y,fieldnames(opt.normalize_x));
     model.x(:,mask) = niak_normalize_tseries(model.x(:,mask));
