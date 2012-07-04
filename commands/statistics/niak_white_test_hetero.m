@@ -89,8 +89,9 @@ function [p,model_w] = niak_white_test_hetero(model,opt)
 % that can cause heteroskedasticity) on the squares of the residuals. The overall
 % significance of this second regression is tested with a R square.
 %
-% Note that the no squared term is added for dummy variables (or the intercept...)
-% because this results in a degenerate model.
+% The interaction terms are added one by one to the model, followed by the squared
+% model. At every attempt to add a covariate, the function checks that the resulting
+% model is not degenerate using RCOND on the cross-product matrix.
 %
 % Copyright (c) Pierre Bellec, 
 % Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
@@ -174,29 +175,30 @@ if any(mask_intercept)
     model.x = model.x(:,~mask_intercept);
     model.labels_y = model.labels_y(~mask_intercept);
 end
-   
+
+%% Initialize the model
+model_s.x = [ones(size(model.x,1),1) model.x];
+model_s.labels_y = [{'intercept'} ; model.labels_y(:)];
+
+%% Add interaction terms
 k = size(model.x,2);
-num_c = 1;
-model_inter = zeros(size(model.x,1),k*(k-1)/2);
-labels_inter = cell(k*(k-1)/2,1);
+num_c = 0;
 for num_k = 1:k
     for num_l = num_k+1:k
-        model_inter(:,num_c) = model.x(:,num_k).*model.x(:,num_l);
-        labels_inter{num_c} = [model.labels_y{num_k} '_x_' model.labels_y{num_l}];
-        num_c = num_c+1;
+        model_tmp = [model_s.x model.x(:,num_k).*model.x(:,num_l)];
+        if rcond(model_tmp'*model_tmp)>eps
+            model_s.x = model_tmp;
+            model_s.labels_y{end+1} = [model.labels_y{num_k} '_x_' model.labels_y{num_l}];
+        end
     end
 end
 
-model_square = (model.x).^2;
-labels_square = cell(k,1);
-mask_dummy = false(size(model_square,2),1);
-for num_c = 1:size(model_square,2)
-    mask_dummy(num_c) = length(unique(model_square(:,num_c)))<3;
-    labels_square{num_c} = [model.labels_y{num_c} '.^2'];
+%% Add squared terms
+for num_e = 1:size(model.x,2)
+    model_tmp = [model_s.x model.x(:,num_e).^2];
+    if rcond(model_tmp'*model_tmp)>eps
+        model_s.x = model_tmp;
+        model_s.labels_y{end+1} = [model.labels_y{num_e} '.^2'];
+    end
 end
-model_square = model_square(:,~mask_dummy);
-labels_square = labels_square(~mask_dummy);
-model_s.x = [ones(size(model.x,1),1) model.x model_inter model_square];
-model_s.labels_y = [{'intercept'} ; model.labels_y(:) ; labels_inter ; labels_square];
-
 end
