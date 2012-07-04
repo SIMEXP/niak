@@ -186,7 +186,7 @@ num_c = 0;
 for num_k = 1:k
     for num_l = num_k+1:k
         model_tmp = [model_s.x model.x(:,num_k).*model.x(:,num_l)];
-        if rcond(model_tmp'*model_tmp)>eps
+        if rcond(model_tmp'*model_tmp)>0.01
             model_s.x = model_tmp;
             model_s.labels_y{end+1} = [model.labels_y{num_k} '_x_' model.labels_y{num_l}];
         end
@@ -196,7 +196,7 @@ end
 %% Add squared terms
 for num_e = 1:size(model.x,2)
     model_tmp = [model_s.x model.x(:,num_e).^2];
-    if rcond(model_tmp'*model_tmp)>eps
+    if (rcond(model_tmp'*model_tmp)>0.01)&&(length(unique(model.x(:,num_e)))>2)
         model_s.x = model_tmp;
         model_s.labels_y{end+1} = [model.labels_y{num_e} '.^2'];
     end
