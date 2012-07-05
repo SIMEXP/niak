@@ -1,8 +1,8 @@
-function pipeline = niak_pipeline_region_growing(files_in,opt)
+function [pipeline,opt] = niak_pipeline_region_growing(files_in,opt)
 % Pipeline to perform a fixed-effect region growing on multiple datasets.
 %
 % SYNTAX:
-% PIPELINE = NIAK_PIPELINE_REGION_GROWING(FILES_IN,OPT)
+% [PIPELINE,OPT] = NIAK_PIPELINE_REGION_GROWING(FILES_IN,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -101,6 +101,9 @@ function pipeline = niak_pipeline_region_growing(files_in,opt)
 %   (structure) describe all jobs that need to be performed in the 
 %   pipeline. This structure is meant to be used with the pipeline manage 
 %   PSOM_RUN_PIPELINE.
+%
+% OPT
+%   (structure) updated version of OPT.
 %
 % _________________________________________________________________________
 % SEE ALSO:
