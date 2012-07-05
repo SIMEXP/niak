@@ -215,6 +215,8 @@ gb_list_fields    = { 'flag_tseries' , 'labels' , 'ind_rois' , 'thre_size' , 'th
 gb_list_defaults  = { true           , {}       , []         , 1000        , []         , 0              , 'afc'         , opt_norm_ind     , opt_norm_group     , opt_norm_average     , true        , NaN          , default_psom , false      };
 niak_set_defaults
 
+opt.folder_out = niak_full_path(opt.folder_out);
+
 if isempty(opt.thre_sim)
     opt.thre_sim = NaN;
     thre_sim = NaN;
