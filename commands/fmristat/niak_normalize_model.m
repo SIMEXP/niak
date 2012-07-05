@@ -274,7 +274,7 @@ if ~isempty(opt.projection)&&isfield(opt.projection(1),'space')
        [B,E] = niak_lse(model.x(:,mask_ortho),x_space);
        model.x(:,mask_ortho) = E ;
        % normalization of covariates (again)
-       model = sub_normalize(model,opt);
+       model = sub_normalize1(model,opt);
     end
 end
 
@@ -317,7 +317,7 @@ if ~isempty(opt.interaction)
 end 
 
 %% Standardization of the model
-model = sub_normalize(model,opt);
+model = sub_normalize2(model,opt);
 
 %% Additional intercept covariate
 if opt.flag_intercept
@@ -362,23 +362,59 @@ model_n = model;
 %% SUBFUNCTIONS %%
 %%%%%%%%%%%%%%%%%%
 
-function model = sub_normalize(model,opt)
+function model = sub_normalize1(model,opt)
+%% Optional: normalization of covariates
+
+if isbool(opt.normalize_x)&&opt.normalize_x
+   opt_n.type = 'mean_var';  
+
+   % because the normalization will give 0 il the nbr of rows = 1
+   if (size(model.x,1) ~= 1)&&~isempty(model.x)
+       model.x = niak_normalize_tseries(model.x,opt_n);
+   end
+  
+  elseif ~isbool(opt.normalize_x)
+    mask = ismember(model.labels_y,fieldnames(opt.normalize_x));
+    model.x(:,mask) = niak_normalize_tseries(model.x(:,mask));
+end
+mask = ismember(model.labels_y,'intercept');
+model.x(:,mask) = 1;
+
+if opt.normalize_y && isfield ( model, 'y' ) &&  (size(model.y,1) > 2) && ~isempty(model.x)
+    opt_n.type = 'mean_var';  
+    model.y = niak_normalize_tseries(model.y,opt_n);
+end
+
+function model = sub_normalize2(model,opt)
 %% Optional: normalization of covariates
 
 if isbool(opt.normalize_x)&&opt.normalize_x
   % we must not repeat the standardization of the covariates of interactions. I save the columns
   % of model.x corresponds to the interaction in model_r and re injected them after normalization of all the model.x 
-   ind_inter_l = length(model.labels_y);
-   for num_i = 1:length(opt.interaction)-1
-        all_ind_inter = [ind_inter_l ind_inter_l-1];
-   end
-   model_r  = model.x(:,all_ind_inter );
+  ind_inter_l = length(model.labels_y);
+  leng_inter = length(opt.interaction) ;
+  flag_model_r =0 ;
+
+  if leng_inter == 1
+      all_ind_inter = ind_inter_l ;
+      model_r  = model.x(:,all_ind_inter );
+      flag_model_r = 1 ;
+  elseif leng_inter >1
+           for num_i = 1:length(opt.interaction)-1
+                all_ind_inter = [ind_inter_l ind_inter_l-1];
+           end 
+           model_r  = model.x(:,all_ind_inter );
+           flag_model_r = 1 ;
+  end 
+
    opt_n.type = 'mean_var';  
    % because the normalization will give 0 il the nbr of rows = 1
    if (size(model.x,1) ~= 1)&&~isempty(model.x)
        model.x = niak_normalize_tseries(model.x,opt_n);
    end
-   model.x(:,all_ind_inter) = model_r ;
+   if flag_model_r
+       model.x(:,all_ind_inter) = model_r ;
+   end
 elseif ~isbool(opt.normalize_x)
     mask = ismember(model.labels_y,fieldnames(opt.normalize_x));
     model.x(:,mask) = niak_normalize_tseries(model.x(:,mask));
