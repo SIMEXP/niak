@@ -541,6 +541,9 @@ for num_e = 1:length(fmri)
     job_opt            = opt.slice_timing;
     job_opt.folder_out = [opt.folder_intermediate 'slice_timing' filesep];
     job_out            = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_a' ext_f];        
+    if any(strfind(label(num_e).run,'_'))
+        error('The labels of runs should not contain any underscore. I cannot process the run "%s"',label(num_e).run)
+    end
     pipeline = psom_add_job(pipeline,['slice_timing_' label(num_e).name],'niak_brick_slice_timing',job_in,job_out,job_opt);    
     if strcmp(opt.size_output,'quality_control') % Clean-up
         pipeline = psom_add_clean(pipeline,['clean_slice_timing_' label(num_e).name],job_out);        
