@@ -46,7 +46,7 @@ function [] = niak_montage(vol,opt)
 %				'jet_rev' a revert jet color map (red for low values, 
 %					blue for high values). Good for representing 
 %					distances.
-%				'hotcold' designed for maps with both positive & 
+%				'hot_cold' designed for maps with both positive & 
 %					negative matrices.					
 %
 %       FWHM 
