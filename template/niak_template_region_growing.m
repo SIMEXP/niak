@@ -33,7 +33,9 @@
 
 clear 
 
+%%%%%%%%%%%%
 %% Grabbing the results from the NIAK fMRI preprocessing pipeline
+%%%%%%%%%%%%
 opt_g.min_nb_vol = 100;     % The minimum number of volumes for an fMRI dataset to be included. This option is useful when scrubbing is used, and the resulting time series may be too short.
 opt_g.min_xcorr_func = 0.5; % The minimum xcorr score for an fMRI dataset to be included. This metric is a tool for quality control which assess the quality of non-linear coregistration of functional images in stereotaxic space. Manual inspection of the values during QC is necessary to properly set this threshold.
 opt_g.min_xcorr_anat = 0.5; % The minimum xcorr score for an fMRI dataset to be included. This metric is a tool for quality control which assess the quality of non-linear coregistration of the anatomical image in stereotaxic space. Manual inspection of the values during QC is necessary to properly set this threshold.
@@ -41,10 +43,15 @@ opt_g.exclude_subject = {'subject1','subject2'}; % If for whatever reason some s
 opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
 files_in = niak_grab_fmri_preprocess('/home/toto/database/fmri_preprocess',opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 
+%%%%%%%%%%%%
 %% Options 
+%%%%%%%%%%%%
 opt.folder_out = ['/home/toto/database/region_growing']; % Where to store the results
 opt.thre_size = 1000; % The critical size for regions, in mm3. A threshold of 1000 mm3 will give about 1000 regions on the grey matter
 
+%%%%%%%%%%%%
 %% Run the pipeline
-opt.flag_test = false;
+%%%%%%%%%%%%
+opt.flag_test = false; % Put this flag to true to just generate the pipeline without running it. Otherwise the region growing will start. 
+%opt.psom.max_queued = 10; % Uncomment and change this parameter to set the number of parallel threads used to run the pipeline
 [pipeline,opt] = niak_pipeline_region_growing(files_in,opt); 
