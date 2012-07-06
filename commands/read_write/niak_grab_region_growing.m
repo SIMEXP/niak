@@ -30,7 +30,7 @@ function files = niak_grab_region_growing(path_data,filter)
 %
 % FILES
 %   (structure) with the following fields, ready to feed into 
-%   NIAK_PIPELINE_STABILITY_{REST,FIR,GLM} :
+%   NIAK_PIPELINE_STABILITY_{REST,FIR} :
 %
 %   DATA
 %       (structure) with the following fields :
@@ -99,10 +99,6 @@ if (length(path_data)<5)||~strcmp(path_data((end-4):end),['rois' filesep])
     path_data = [path_data 'rois' filesep]; % For backwards compatibility, it is possible to specify the root of the results, or directly the 'rois' subfolder
 end
 
-if ~strcmp(path_data(end),filesep);
-    path_data = [path_data filesep];
-end
-
 list_files = dir([path_data]);
 files.data = struct();
 for num_f = 1:length(list_files)
@@ -111,15 +107,16 @@ for num_f = 1:length(list_files)
         if regexp(name_f,'^brain_rois','once');
             files.atoms = [path_data,name_f,ext_f];
         else
-            flag_ok = ~isempty(regexp(name_f,'^tseries_rois_','once'))&&~isempty(regexp(name_f,'_run\d','once'));
+            flag_ok = ~isempty(regexp(name_f,'^tseries_rois_','once'));
             if ~flag_ok
                 if ~regexp(name_f,'^template_aal_','once')
-                    error('The following file is not consistent with the expected file structure: %s',list_files(num_f).name);
+                    warning('Warning: the following file is not consistent with the expected file structure: %s',list_files(num_f).name);
                 end
                 continue
             end
             if ~isempty(regexp([name_f ext_f],filter))
-                ind_run = regexp(name_f,'_run\d');
+                ind_run = regexp(name_f,'_');
+                ind_run = ind_run(end-1);
                 subject = name_f((length('tseries_rois_')+1):(ind_run(end)-1));
                 if ~isfield(files.data,subject)
                     files.data.(subject){1} = [path_data name_f ext_f];
