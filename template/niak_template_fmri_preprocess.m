@@ -34,6 +34,8 @@
 %% Setting input/output files %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% WARNING: Do not use underscores '_' in the IDs of subject, sessions or runs. This may cause bugs in subsequent pipelines.
+
 %% Subject 1
 files_in.subject1.anat                = '/home/pbellec/demo_niak/anat_subject1.mnc.gz';       % Structural scan
 files_in.subject1.fmri.session1.motor = '/home/pbellec/demo_niak/func_motor_subject1.mnc.gz'; % fMRI run 1
