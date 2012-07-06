@@ -1,7 +1,9 @@
-% Template to write a script for the NIAK region growing pipeline
+% Template for the NIAK region growing pipeline
 %
 % To run this pipeline, the fMRI datasets first need to be preprocessed 
 % using the NIAK fMRI preprocessing pipeline.
+%
+% WARNING: This script will clear the workspace
 %
 % Copyright (c) Pierre Bellec, 
 %   Research Centre of the Montreal Geriatric Institute
@@ -28,6 +30,8 @@
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+clear 
 
 %% Grabbing the results from the NIAK fMRI preprocessing pipeline
 opt_g.min_nb_vol = 100;     % The minimum number of volumes for an fMRI dataset to be included. This option is useful when scrubbing is used, and the resulting time series may be too short.

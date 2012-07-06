@@ -8,7 +8,7 @@ function path_name_f = niak_full_path(path_name)
 % INPUTS:
 %
 % PATH_NAME
-%    (string) a relative or absolute path name.
+%    (string, default pwd) a relative or absolute path name.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -45,6 +45,10 @@ function path_name_f = niak_full_path(path_name)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
+if nargin == 0
+    path_name = pwd;
+end
 
 %% convert relative into full path
 path_name = strrep(path_name,[filesep filesep],filesep);
