@@ -288,7 +288,7 @@ for num_f = 1:length(files_in.fmri)
             results.time_frames = hdr.extra.time_frames;
         else
             results.time_frames = (0:(size(vol,4)-1))*hdr.info.tr;
-            results.time_frames = time_frames(1:size(vol,4)); % An apparently useless line to get rid of a really weird bug in Octave
+            results.time_frames = results.time_frames(1:size(vol,4)); % An apparently useless line to get rid of a really weird bug in Octave
         end
         if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_suppressed')
             results.mask_suppressed = hdr.extra.mask_suppressed;
