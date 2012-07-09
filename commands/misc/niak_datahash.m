@@ -5,7 +5,10 @@ function Hash = niak_datahash(Data, Opt)
 % UINT16(0) have different hash values. Nested STRUCTs and CELLs are parsed
 % recursively.
 %
-% Hash = datahash(Data, Opt)
+% SYNTAX:
+% PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT)
+% HASH = NIAK_DATAHASH(DATA, OPT)
+% _________________________________________________________________________
 % INPUT:
 %   Data: Array of these built-in types:
 %           (U)INT8/16/32/64, SINGLE, DOUBLE, (real or complex)
@@ -36,10 +39,12 @@ function Hash = niak_datahash(Data, Opt)
 %                      e.g. empty arrays of different type reply the same hash.
 %             Default: 'array'.
 %
+% _________________________________________________________________________
 % OUTPUT:
 %   Hash: String, DOUBLE or UINT8 vector. The length depends on the hashing
 %         method.
 %
+% _________________________________________________________________________
 % EXAMPLES:
 % % Default: MD5, hex:
 %   DataHash([])                % 7de5637fd217d0e44e0082f4d79b3e73
@@ -93,6 +98,15 @@ function Hash = niak_datahash(Data, Opt)
 % 001: 01-May-2011 21:52, First version.
 % 007: 10-Jun-2011 10:38, [Opt.Input], binary data, complex values considered.
 % 011: 26-May-2012 15:57, Fails for binary input and empty data.
+
+
+niak_gb_vars
+
+%% OCTAVE FIX
+if ~isequal(gb_niak_language,'matlab')
+    Hash = md5sum(Data,true);
+    return
+end
 
 % Main function: ===============================================================
 % Java is needed:
