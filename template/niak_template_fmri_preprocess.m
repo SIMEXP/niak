@@ -67,8 +67,8 @@ opt.slice_timing.suppress_vol     = 0;                       % Number of dummy s
 opt.slice_timing.flag_skip        = 0;                       % Skip the slice timing (0: don't skip, 1 : skip)
 
 % Motion estimation (niak_pipeline_motion)
-opt.motion_correction.session_ref  = 'session1'; % The session that is used as a reference. In general, use the session including the acqusition of the T1 scan.
-opt.motion_correction.flag_skip    = 0;          % Skip the motion correction (0: don't skip, 1 : skip)
+opt.motion.session_ref  = 'session1'; % The session that is used as a reference. In general, use the session including the acqusition of the T1 scan.
+opt.motion.flag_skip    = 0;          % Skip the motion correction (0: don't skip, 1 : skip)
 
 % resampling in stereotaxic space
 opt.resample_vol.interpolation = 'trilinear'; % The resampling scheme. The most accurate is 'sinc' but it is awfully slow
