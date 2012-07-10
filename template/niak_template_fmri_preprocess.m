@@ -42,9 +42,9 @@ files_in.subject1.fmri.session1.motor = '/home/pbellec/demo_niak/func_motor_subj
 files_in.subject1.fmri.session1.rest  = '/home/pbellec/demo_niak/func_rest_subject1.mnc.gz';  % fMRI run 2
 
 %% Subject 2
-files_in.subject1.anat                = '/home/pbellec/demo_niak/anat_subject2.mnc.gz';       % Structural scan
-files_in.subject1.fmri.session1.motor = '/home/pbellec/demo_niak/func_motor_subject2.mnc.gz'; % fMRI run 1
-files_in.subject1.fmri.session1.rest  = '/home/pbellec/demo_niak/func_rest_subject2.mnc.gz';  % fMRI run 2
+files_in.subject2.anat                = '/home/pbellec/demo_niak/anat_subject2.mnc.gz';       % Structural scan
+files_in.subject2.fmri.session1.motor = '/home/pbellec/demo_niak/func_motor_subject2.mnc.gz'; % fMRI run 1
+files_in.subject2.fmri.session1.rest  = '/home/pbellec/demo_niak/func_rest_subject2.mnc.gz';  % fMRI run 2
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Pipeline options  %%
