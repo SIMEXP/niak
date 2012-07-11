@@ -64,10 +64,13 @@
 %       purpose of subsequent analysis. Available options :
 %
 %           'rest' : FILES is ready to feed into
-%               NIAK_PIPELINE_STABILITY_REST.
+%              NIAK_PIPELINE_STABILITY_REST.
 %      
 %           'roi' : FILES is ready to feed into 
-%               NIAK_PIPELINE_REGION_GROWING.
+%              NIAK_PIPELINE_REGION_GROWING.
+%
+%           'glm_connectome' : FILES is ready to feed into 
+%              NIAK_PIPELINE_GLM_CONNECTOME.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -264,7 +267,7 @@ for num_s = 1:nb_subject
     for num_f = 1:length(list_files_s)
         mask_s = ~cellfun('isempty',regexp(files_fmri,['^fmri_' list_files_s{num_f} '.']));    
         if any(mask_s)
-            if strcmp(opt.type_files,'roi')
+            if strcmp(opt.type_files,'roi')||strcmp(opt.type_files,'glm_connectome')
                 files_tmp = files_fmri(mask_s);
                 [path_f,name_f,ext_f] = niak_fileparts(files_tmp{1});
                 name_f = name_f((7+length(list_subject{num_s})):end);
@@ -277,7 +280,7 @@ for num_s = 1:nb_subject
                 if ~exist('ext_f','var')
                     [path_f,name_f,ext_f] = niak_fileparts(files_tmp{1});
                 end
-                files.data.(list_subject{num_s}){num_f} = [path_fmri files_tmp{1}];
+                files.data.(list_subject{num_s}){num_f} = [path_fmri files_tmp{1}];            
             else
                 error('%s is an unsupported type of output format for the files structure')            
             end
