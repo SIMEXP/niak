@@ -41,6 +41,8 @@ opt_g.min_xcorr_func = 0.5; % The minimum xcorr score for an fMRI dataset to be 
 opt_g.min_xcorr_anat = 0.5; % The minimum xcorr score for an fMRI dataset to be included. This metric is a tool for quality control which assess the quality of non-linear coregistration of the anatomical image in stereotaxic space. Manual inspection of the values during QC is necessary to properly set this threshold.
 opt_g.exclude_subject = {'subject1','subject2'}; % If for whatever reason some subjects have to be excluded that were not caught by the quality control metrics, it is possible to manually specify their IDs here.
 opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
+opt_g.filter.session = {'session1'}; % Just grab session 1
+opt_g.filter.run = {'rest'}; % Just grab the "rest" run
 files_in = niak_grab_fmri_preprocess('/home/toto/database/fmri_preprocess',opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 
 %%%%%%%%%%%%

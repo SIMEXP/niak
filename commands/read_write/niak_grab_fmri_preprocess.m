@@ -59,6 +59,16 @@
 %       (cell of string, default {}) if non-empty, a list of the labels of
 %       subjects that will be included in the analysis. Ignored if empty.
 %
+%   FILTER
+%       (structure) with the following fields:
+%
+%       SESSION
+%           (cell of strings) a list of session IDs. Only those sessions will
+%           be grabbed.
+%
+%       RUN
+%           (cell of strings) a list of RUN IDs. Only those runs will be grabbed.
+%
 %   TYPE_FILES
 %       (string, default 'rest') how to format FILES. This depends of the
 %       purpose of subsequent analysis. Available options :
@@ -90,10 +100,26 @@
 %               subfolder of PATH_DATA.
 %
 %       MASK
-%           (string, default AREAS>0) a file name of a binary mask common 
+%           (string) a file name of a binary mask common 
 %           to all subjects and runs. The mask is the file located in 
 %           quality_control/group_coregistration/anat_mask_group_stereonl.<
 %           ext>
+%
+%       AREAS
+%           (string) a file name of an AAL parcelation into anatomical regions
+%           resampled at the same resolution as the fMRI datasets. 
+%
+%   case 'roi': 
+%
+%       FMRI.(SUBJECT).(SESSION).(RUN)
+%           (string) the preprocessed fMRI dataset for subject SUBJECT, session SESSION
+%           and run RUN
+%
+%       MASK, AREAS: same as for 'rest'
+%
+%   case 'glm_connectome'
+%   
+%       same as for 'roi', but without MASK and AREAS
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -142,13 +168,18 @@ if ~strcmp(path_data(end),filesep)
 end
 
 %% Default options
-list_fields   = { 'flag_areas' , 'min_nb_vol' , 'max_translation' , 'max_rotation' , 'min_xcorr_func' , 'min_xcorr_anat' , 'exclude_subject' , 'include_subject' , 'type_files' };
-list_defaults = { true         , 100          , Inf               , Inf            , 0.5              , 0.5              , {}                , {}                , 'rest'       };
+list_fields   = { 'filter' , 'flag_areas' , 'min_nb_vol' , 'max_translation' , 'max_rotation' , 'min_xcorr_func' , 'min_xcorr_anat' , 'exclude_subject' , 'include_subject' , 'type_files' };
+list_defaults = { struct   , true         , 100          , Inf               , Inf            , 0.5              , 0.5              , {}                , {}                , 'rest'       };
 if nargin > 1
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 end
+
+%% Default filters
+list_fields   = { 'session' , 'run' };
+list_defaults = { {}        , {}    };
+opt.filter = psom_struct_defaults(opt.filter,list_fields,list_defaults);
 
 %% Grab the list of subjects
 path_qc = [path_data 'quality_control' filesep];
@@ -261,26 +292,31 @@ for num_s = 1:nb_subject
     if isempty(list_files_s)
         continue
     end
-    if strcmp(opt.type_files,'rest')
-        files.data.(list_subject{num_s}) = cell([length(list_files_s) 1]);
-    end
+    nb_f = 0;
     for num_f = 1:length(list_files_s)
         mask_s = ~cellfun('isempty',regexp(files_fmri,['^fmri_' list_files_s{num_f} '.']));    
         if any(mask_s)
-            if strcmp(opt.type_files,'roi')||strcmp(opt.type_files,'glm_connectome')
-                files_tmp = files_fmri(mask_s);
-                [path_f,name_f,ext_f] = niak_fileparts(files_tmp{1});
-                name_f = name_f((7+length(list_subject{num_s})):end);
-                pos_sep = strfind(name_f,'_');
-                run = name_f((pos_sep(end)+1):end);
-                session = name_f(1:(pos_sep(end)-1));
+            files_tmp = files_fmri(mask_s);
+            [path_f,name_f,ext_f] = niak_fileparts(files_tmp{1});
+            name_f = name_f((7+length(list_subject{num_s})):end);
+            pos_sep = strfind(name_f,'_');
+            run = name_f((pos_sep(end)+1):end);
+            session = name_f(1:(pos_sep(end)-1));
+            if ~isempty(opt.filter.session) && ~ismember(session,opt.filter.session)
+                continue
+            end
+            if ~isempty(opt.filter.run) && ~ismember(run,opt.filter.run)
+                continue
+            end
+            nb_f = nb_f+1;
+            if strcmp(opt.type_files,'roi')||strcmp(opt.type_files,'glm_connectome')                
                 files.fmri.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];
             elseif strcmp(opt.type_files,'rest')
                 files_tmp = files_fmri(mask_s);
                 if ~exist('ext_f','var')
                     [path_f,name_f,ext_f] = niak_fileparts(files_tmp{1});
                 end
-                files.data.(list_subject{num_s}){num_f} = [path_fmri files_tmp{1}];            
+                files.data.(list_subject{num_s}){nb_f} = [path_fmri files_tmp{1}];            
             else
                 error('%s is an unsupported type of output format for the files structure')            
             end
@@ -289,15 +325,17 @@ for num_s = 1:nb_subject
         end
     end
 end
-files.mask = dir([path_qc 'group_coregistration' filesep 'func_mask_group_stereonl.*']);
-if isempty(files.mask)
-    error('Could not find the group-level mask for functional data')
-end
-files.mask = [path_qc 'group_coregistration' filesep files.mask(1).name];
-if opt.flag_areas
-    files.areas = dir([path_data 'anat' filesep 'template_aal.*']);
+if ~strcmp(opt.type_files,'glm_connectome')
+    files.mask = dir([path_qc 'group_coregistration' filesep 'func_mask_group_stereonl.*']);
     if isempty(files.mask)
-        error('Could not find the AAL parcelation for functional data')
+        error('Could not find the group-level mask for functional data')
     end
-    files.areas = [path_data 'anat' filesep files.areas(1).name];
+    files.mask = [path_qc 'group_coregistration' filesep files.mask(1).name];
+    if opt.flag_areas
+        files.areas = dir([path_data 'anat' filesep 'template_aal.*']);
+        if isempty(files.mask)
+            error('Could not find the AAL parcelation for functional data')
+        end
+        files.areas = [path_data 'anat' filesep files.areas(1).name];
+    end
 end
