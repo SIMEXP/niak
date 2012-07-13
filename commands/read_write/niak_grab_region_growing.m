@@ -115,8 +115,7 @@ for num_f = 1:length(list_files)
                 continue
             end
             if ~isempty(regexp([name_f ext_f],filter))
-                ind_run = regexp(name_f,'_');
-                ind_run = ind_run(end-1);
+                ind_run = find(name_f=='_');
                 subject = name_f((length('tseries_rois_')+1):(ind_run(end)-1));
                 if ~isfield(files.data,subject)
                     files.data.(subject){1} = [path_data name_f ext_f];
