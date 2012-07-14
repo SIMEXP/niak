@@ -103,6 +103,10 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         'or' : merge the current selection SELECT(E) with the result of the previous one.
 %         'and' : intersect the current selection SELECT(E) with the result of the previous one.
 %
+%   FLAG_FILTER_NAN
+%      (boolean, default true) if the flag is true, any observation associated with a NaN in 
+%      MODEL.X is removed from the model. 
+%
 %   LABELS_X
 %      (cell of strings, default {}) The list of entries (rows) used 
 %      to build the model (the order will be used as well). If left empty, 
@@ -154,13 +158,22 @@ list_defaults = { NaN , []  , NaN        , NaN        };
 model = psom_struct_defaults(model,list_fields,list_defaults);
 
 %% Check the options
-list_fields   = { 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' };
-list_defaults = { struct   , struct()   , struct       , true               , {}                 , false             , true                , {}         };
+list_fields   = { 'flag_filter_nan' , 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' };
+list_defaults = { true              , struct   , struct()   , struct       , true               , {}                 , false             , true                , {}         };
 if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
    opt = psom_struct_defaults(struct,list_fields,list_defaults);
 end
+
+%% Filter out the NaN entries
+if opt.flag_filter_nan
+    mask_nan = max(isnan(model.x),[],2);
+    model.x = model.x(~mask_nan,:);
+    model.labels_x = model.labels_x(~mask_nan,:);
+end
+
+%% Default OPT.LABELS_X
 if isempty(opt.labels_x)
     opt.labels_x = unique(model.labels_x);
 end
@@ -198,16 +211,19 @@ model.labels_x = labx_tmp;
 
 %% Select a subset of entries
 if isfield(opt.select(1),'label')
-    if isfield(opt.select(1),'operation')&&strcmp(opt.select(1).operation,'and')
-        mask = true([size(model.labels_x,1) 1]);
-    else
+    if isfield(opt.select(1),'operation')&&(isempty(opt.select(1).operation)||strcmp(opt.select(1).operation,'or'))
         mask = false([size(model.labels_x,1) 1]);
+    else
+        mask = true([size(model.labels_x,1) 1]);
     end
     for num_s = 1:length(opt.select)
         if ~isfield(opt.select(num_s),'label')
            continue
         end
-        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max','operation'},{NaN,[],[],[],'or'});        
+        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max','operation'},{NaN,[],[],[],'or'}); 
+        if isempty(opt_s.operation)
+            opt_s.operation = 'or';
+        end
         ind = find(ismember(model.labels_y,opt_s.label));
         if isempty(ind)
             error('I could not find the "%s" covariate in the model to select a subset of observations',opt_s.label)
