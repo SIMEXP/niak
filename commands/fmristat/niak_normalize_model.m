@@ -183,9 +183,12 @@ if length(unique(opt.labels_x))~=length(opt.labels_x)
     error('The labels provided in OPT.LABELS_X should be unique')
 end
 [mask_x,ind_m] = ismember(opt.labels_x,model.labels_x) ; 
-ind_err_x = find(mask_x == 0);
-for num_ex = 1:length(ind_err_x)
-    warning('The following specified observation was not found in the model : %s',labels_x{ind_err_x(num_ex)});
+if any(ind_m==0)
+    ind_0 = find(ind_m == 0);
+    fprintf('Warning: the following entries that were specified in the CSV were not associated with any data and will be omitted:\n')
+    for num_m = 1:length(ind_0)
+        fprintf('    %s\n',opt.labels_x{ind_0(num_m)});
+    end
 end
 ind_m = ind_m(ind_m~=0);
 
