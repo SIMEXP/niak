@@ -167,7 +167,7 @@ else
 end
 
 %% Filter out the NaN entries
-if opt.flag_filter_nan
+if (opt.flag_filter_nan)&&~isempty(model.x)
     mask_nan = max(isnan(model.x),[],2);
     model.x = model.x(~mask_nan,:);
     model.labels_x = model.labels_x(~mask_nan,:);
