@@ -79,6 +79,9 @@
 %           'roi' : FILES is ready to feed into 
 %              NIAK_PIPELINE_REGION_GROWING.
 %
+%           'fir' : FILES is ready to feed into 
+%              NIAK_PIPELINE_STABILITY_FIR
+%
 %           'glm_connectome' : FILES is ready to feed into 
 %              NIAK_PIPELINE_GLM_CONNECTOME.
 %
@@ -109,7 +112,7 @@
 %           (string) a file name of an AAL parcelation into anatomical regions
 %           resampled at the same resolution as the fMRI datasets. 
 %
-%   case 'roi': 
+%   case {'roi','fir'}: 
 %
 %       FMRI.(SUBJECT).(SESSION).(RUN)
 %           (string) the preprocessed fMRI dataset for subject SUBJECT, session SESSION
@@ -123,7 +126,8 @@
 %
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_PIPELINE_STABILITY_REST
+% NIAK_PIPELINE_STABILITY_REST, NIAK_PIPELINE_REGION_GROWING
+% NIAK_PIPELINE_STABILITY_FIR, NIAK_PIPELINE_GLM_CONNECTOME
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -135,8 +139,8 @@
 % Copyright (c) Pierre Bellec
 %               Centre de recherche de l'institut de Gériatrie de Montréal,
 %               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2011.
-% Maintainer : pbellec@criugm.qc.ca
+%               Université de Montréal, 2011-2012.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, stability, bootstrap, time series
 
@@ -309,7 +313,7 @@ for num_s = 1:nb_subject
                 continue
             end
             nb_f = nb_f+1;
-            if strcmp(opt.type_files,'roi')||strcmp(opt.type_files,'glm_connectome')                
+            if ismember(opt.type_files,{'roi','glm_connectome','fir'})
                 files.fmri.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];
             elseif strcmp(opt.type_files,'rest')
                 files_tmp = files_fmri(mask_s);
