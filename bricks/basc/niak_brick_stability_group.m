@@ -244,7 +244,7 @@ end
 clear data
 
 %% Filter out empty stability matrices, to offer support for missing data evaluated during pipeline execution
-nr = size(niak_vec2mat(mat_stab(:,1),1);
+nr = size(niak_vec2mat(mat_stab(:,1),1));
 if opt.nb_classes_ind < nr
     mask = max(mat_stab,[],1)>0;
     mat_stab = mat_stab(:,mask);
