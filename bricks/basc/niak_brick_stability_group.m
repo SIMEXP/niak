@@ -80,6 +80,11 @@ function [files_in,files_out,opt] = niak_brick_stability_group(files_in,files_ou
 % OPT           
 %   (structure) with the following fields.  
 %
+%   MIN_SUBJECT
+%       (integer, default 3) the minimal number of subjects to start the group-level
+%       stability analysis. An error message will be issued if this number is 
+%       not reached. 
+%
 %   NB_CLASSES
 %       (vector of integer) the number of clusters (or classes) that will
 %       be investigated. This parameter will overide the parameters
@@ -148,6 +153,12 @@ function [files_in,files_out,opt] = niak_brick_stability_group(files_in,files_ou
 % _________________________________________________________________________
 % COMMENTS:
 %
+% Unless there are more clusters than atoms (trivial case), subjects with 
+% a zero stability matrix are ignored. This feature makes it possible to 
+% dynamically filter out subjects based on certain desirable features of the
+% individual datasets during pipeline execution (if the subject is not usable, 
+% just generate a zero stability matrix). 
+%
 % For more details, see the description of the stability analysis on a
 % group clustering in the following reference :
 %
@@ -199,8 +210,8 @@ files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 opt_clustering.type   = 'hierarchical';
 opt_clustering.opt    = struct();
 opt_consensus.clustering.type    = 'hierarchical';
-list_fields    = {'rand_seed' , 'nb_samps' , 'nb_classes' , 'nb_classes_ind' , 'clustering'   , 'consensus'   , 'flag_verbose' , 'flag_test' };
-list_defaults  = {[]          , 100        , NaN          , NaN              , opt_clustering , opt_consensus , true           , false       };
+list_fields    = {'min_subject' , 'rand_seed' , 'nb_samps' , 'nb_classes' , 'nb_classes_ind' , 'clustering'   , 'consensus'   , 'flag_verbose' , 'flag_test' };
+list_defaults  = {3             , []          , 100        , NaN          , NaN              , opt_clustering , opt_consensus , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -231,6 +242,20 @@ for num_e = 1:N
     mat_stab(:,num_e) = data.stab(:,data.nb_classes==opt.nb_classes_ind);
 end
 clear data
+
+%% Filter out empty stability matrices, to offer support for missing data evaluated during pipeline execution
+nr = size(niak_vec2mat(mat_stab(:,1),1);
+if opt.nb_classes_ind < nr
+    mask = max(mat_stab,[],1)>0;
+    mat_stab = mat_stab(:,mask);
+    list_subject = list_subject(mask);
+    files_in = files_in(mask);
+    N = length(files_in);
+end
+
+if N < opt.min_subject
+    error('There was not enough usable subjects (%i) for the group-level analysis (either there is not enough subjects in the first place, or the individual datasets were somehow incomplete',opt.min_subject)
+end
 
 %% Build strata
 if strcmp(infos,'gb_niak_omitted');
