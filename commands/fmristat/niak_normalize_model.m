@@ -383,7 +383,7 @@ model_n = model;
 function model = sub_normalize(model,opt)
 %% Optional: normalization of covariates
 
-if isbool(opt.normalize_x)&&opt.normalize_x
+if islogical(opt.normalize_x)&&opt.normalize_x
    opt_n.type = 'mean_var';  
 
    % because the normalization will give 0 il the nbr of rows = 1
@@ -391,7 +391,7 @@ if isbool(opt.normalize_x)&&opt.normalize_x
        model.x = niak_normalize_tseries(model.x,opt_n);
    end
   
-  elseif ~isbool(opt.normalize_x)
+  elseif ~islogical(opt.normalize_x)
     mask = ismember(model.labels_y,fieldnames(opt.normalize_x));
     model.x(:,mask) = niak_normalize_tseries(model.x(:,mask));
 end
