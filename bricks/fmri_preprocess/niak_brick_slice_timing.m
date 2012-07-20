@@ -314,6 +314,8 @@ end
 % TR
 if isempty(opt.tr)
     opt.tr = hdr.info.tr;
+else 
+    hdr.info.tr = opt.tr;
 end
 
 % Number of slices
