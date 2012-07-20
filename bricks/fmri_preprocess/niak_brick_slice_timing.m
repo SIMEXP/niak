@@ -407,7 +407,7 @@ elseif opt.flag_skip
     opt.slice_order = 1:opt.nb_slices;
     slice_order = opt.slice_order;
 end
-time_ref = (opt.ref_slice-1) * opt.timing(1); % the time associated with the slice of reference in the first volume
+time_ref = (find(opt.ref_slice == opt.slice_order)-1) * opt.timing(1); % the time associated with the slice of reference in the first volume
 
 %% Reading data
 if flag_verbose
