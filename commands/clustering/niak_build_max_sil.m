@@ -147,7 +147,7 @@ switch method
             [valS,numS] = max(valK);
             indS = find(maskS);
             indK = find(maskK);
-            if ~isempty(numS)&~isempty(numK)
+            if ~isempty(numS)&&~isempty(numK)
                 sil_max(num_m) = valS;
                 scales_max(num_m,:) = [scales(indK(numK(numS)),:) indS(numS)];
             else
