@@ -166,23 +166,32 @@ end
 nb_classes = opt.nb_classes;
 K = length(nb_classes);
 N = length(files_in);
+mask_ok = true(N,1);
 for num_n = 1:N
     if opt.flag_verbose
         fprintf('    %s\n',files_in{num_n});
     end
     data = load(files_in{num_n},'sil');
     sil = data.sil;
-    if (num_n==1)
+    if ~any(abs(data.sil))
+       warning('All silhouette values are equal to zero. I am going to assume that the dataset of this subject was not usable.');
+       mask_ok(num_n) = false;
+       continue
+    end
+    if ~exist('sil_all','var')
         [S,K] = size(sil);
         sil_all = zeros([S,K,N]);
-    else
-        if max(size(sil)~=[S,K])
-            error('All SIL arrays should have the same length')
-        end
+    end
+    if max(size(sil)~=[S,K])
+        error('All SIL arrays should have the same length')
     end
     sil_all(:,:,num_n) = sil;
 end
 
+%% Filter out subjects with unusable silhouette values
+files_in = files_in(mask_ok);
+N = length(files_in);
+sil_all = sil_all(:,:,mask_ok);
         
 %% Extract maximal measures over clustering parameters for each individual
 scales = nb_classes;
