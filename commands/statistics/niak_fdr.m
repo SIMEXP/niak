@@ -122,7 +122,9 @@ if strcmp(method,'GBH')||strcmp(method,'LSL')
 
             % The least-slope method
             [val,order] = sort(pce,1,'ascend');            
-            l = repmat((n+1-(1:n)'),[1 n])./(1-val);
+            l = repmat((n+1-(1:n)'),[1 n]);
+            l(val~=1) = l(val~=1)./(1-val(val~=1));
+            l(val==1) = Inf;          
             dl = l(2:end,:) - l(1:(end-1),:);
             pi_g_0 = zeros(n,1);
             for num_c = 1:n
