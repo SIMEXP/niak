@@ -148,11 +148,16 @@ if ischar(files_in)
         fprintf('Reading the stability measure...\n');
     end
     data = load(files_in);
-    [sil_max,scales_max] = niak_build_max_sil(data.sil,data.nb_classes(:),opt.neigh,2);
-    opt_msteps.weights = sil_max;
-    opt_msteps.param = opt.param;
-    opt_msteps.scales_max = scales_max;
-    [scales,score,scales_final] = niak_msteps(data.stab,data.nb_classes(:),opt_msteps);
+    if any(abs(data.sil))
+        [sil_max,scales_max] = niak_build_max_sil(data.sil,data.nb_classes(:),opt.neigh,2);
+        opt_msteps.weights = sil_max;
+        opt_msteps.param = opt.param;
+        opt_msteps.scales_max = scales_max;
+        [scales,score,scales_final] = niak_msteps(data.stab,data.nb_classes(:),opt_msteps);
+    else
+        scales_final = [NaN NaN];
+        warning('All silhouette measures are equal to zero. I am assuming that the data for this subject was not usable')
+    end
 
 else
 
