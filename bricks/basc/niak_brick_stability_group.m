@@ -239,7 +239,13 @@ for num_e = 1:N
         S = size(data.stab,1);
         mat_stab = zeros([S N]);
     end
-    mat_stab(:,num_e) = data.stab(:,data.nb_classes==opt.nb_classes_ind);
+    if size(data.stab,2)~=length(data.nb_classes)
+        if ~max(data.stab)==0
+            error('%s : the dimensions of STAB are not compatible with NB_CLASSES',files_in{num_e})
+        end
+    else   
+        mat_stab(:,num_e) = data.stab(:,data.nb_classes==opt.nb_classes_ind);
+    end
 end
 clear data
 
@@ -274,7 +280,7 @@ else
 end
 
 %% Estimation of the stability
-opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_classes_ind'});
+opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_classes_ind','min_subject'});
 stab = niak_stability_group(mat_stab,mask,opt_s);
 
 %% Consensus clustering
