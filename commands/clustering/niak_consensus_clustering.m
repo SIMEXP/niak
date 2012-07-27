@@ -1,8 +1,8 @@
-function [part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt);
+function [part,order,sil,intra,inter,hier,nb_classes] = niak_consensus_clustering(stab,opt);
 % Consensus clustering based on one or multiple stability matrices
 %
 % SYNTAX :
-% [PART,ORDER,SIL,INTRA,INTER,HIER] = NIAK_CONSENSUS_CLUSTERING(STAB,OPT);
+% [PART,ORDER,SIL,INTRA,INTER,HIER,NB_CLASSES] = NIAK_CONSENSUS_CLUSTERING(STAB,OPT);
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -68,6 +68,9 @@ function [part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt)
 % HIER
 %   (cell of array) HIER{S} is the hierarchy associated with STAB(:,s)
 %
+% NB_CLASSES
+%   (vector) same as OPT.NB_CLASSES (updated if it was left empty). 
+%
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_BUILD_SILHOUETTE, NIAK_BUILD_AVG_SILHOUETTE,
@@ -80,6 +83,9 @@ function [part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt)
 % silhouette criterion, as well as the inter-cluster average stability and
 % the maximal between cluster average stability (noted a and b in the
 % documentation, respectively). 
+%
+% If OPT.NB_CLASSES is specified, HIER, INTRA and INTER are not derived 
+% (they are left filled with zeros).
 %
 % See the following publication regarding consensus clustering on stability
 % matrices and the use of stability contrast to select the number of
@@ -145,6 +151,7 @@ sil = zeros([N nb_s]);
 intra = zeros([N nb_s]);
 inter = zeros([N nb_s]);
 opt.clustering.opt.flag_verbose = false;
+nb_classes = zeros([nb_s 1]);
 for num_s = 1:nb_s
     if opt.flag_verbose
         if floor(perc_verb^(-1)*(num_s-1)/(nb_s-1))>floor(perc_verb^(-1)*(num_s-2)/(nb_s-1))
@@ -163,13 +170,14 @@ for num_s = 1:nb_s
             error('%s is an unkown type of consensus clustering',opt.clustering.type)
 
     end    
-    if (nargout > 2)||isempty(opt.nb_classes)     
+    if isempty(opt.nb_classes)     
         [sil(:,num_s),intra(:,num_s),inter(:,num_s)] = niak_build_avg_silhouette(mat,hier{num_s},false);
         [sil_max,ind_max] = max(sil(:,num_s));
         opt_t.thresh = ind_max;
-    end
-    if ~isempty(opt.nb_classes)
+        nb_classes(num_s) = ind_max;
+    else
         opt_t.thresh = opt.nb_classes(num_s);
+        nb_classes(num_s) = opt.nb_classes(num_s);
     end
     part(:,num_s) = niak_threshold_hierarchy(hier{num_s},opt_t);
     if nargout > 1

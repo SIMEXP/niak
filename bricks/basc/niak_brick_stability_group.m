@@ -46,6 +46,9 @@ function [files_in,files_out,opt] = niak_brick_stability_group(files_in,files_ou
 %   NB_CLASSES
 %       (vector) Identical to OPT.NB_CLASSES (see below).
 %
+%   NB_CLASSES_FINAL
+%       (vector) Identical to OPT.NB_CLASSES_FINAL (see below).
+%
 %   NB_CLASSES_IND
 %       (integer) The number of classes used to derive the individual
 %       stability matrices (see OPT.NB_CLASSES_IND below).
@@ -89,6 +92,11 @@ function [files_in,files_out,opt] = niak_brick_stability_group(files_in,files_ou
 %       (vector of integer) the number of clusters (or classes) that will
 %       be investigated. This parameter will overide the parameters
 %       specified in CLUSTERING.OPT_CLUST
+%
+%   NB_CLASSES_FINAL
+%       (vector of integer, default []) the number of final (consensus) clusters. 
+%       By default (empty), the number is selected to optimize the stability contrast 
+%       in a neighbourhood of OPT.NB_CLASSES. 
 %
 %   NB_CLASSES_IND
 %       (integer) The number of classes used to derive the individual
@@ -210,8 +218,8 @@ files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 opt_clustering.type   = 'hierarchical';
 opt_clustering.opt    = struct();
 opt_consensus.clustering.type    = 'hierarchical';
-list_fields    = {'min_subject' , 'rand_seed' , 'nb_samps' , 'nb_classes' , 'nb_classes_ind' , 'clustering'   , 'consensus'   , 'flag_verbose' , 'flag_test' };
-list_defaults  = {3             , []          , 100        , NaN          , NaN              , opt_clustering , opt_consensus , true           , false       };
+list_fields    = {'min_subject' , 'rand_seed' , 'nb_samps' , 'nb_classes' , 'nb_classes_final' , 'nb_classes_ind' , 'clustering'   , 'consensus'   , 'flag_verbose' , 'flag_test' };
+list_defaults  = {3             , []          , 100        , NaN          , []                 , NaN              , opt_clustering , opt_consensus , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -286,7 +294,8 @@ stab = niak_stability_group(mat_stab,mask,opt_s);
 %% Consensus clustering
 opt_c = opt.consensus;
 opt_c.flag_verbose = opt.flag_verbose;
-[part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt_c);
+opt_c.nb_classes = opt.nb_classes_final;
+[part,order,sil,intra,inter,hier,nb_classes_final] = niak_consensus_clustering(stab,opt_c);
 
 %% Save outputs
 if opt.flag_verbose
@@ -294,4 +303,4 @@ if opt.flag_verbose
 end
 nb_classes = opt.nb_classes;
 nb_classes_ind = opt.nb_classes_ind;
-save(files_out,'stab','nb_classes','nb_classes_ind','part','hier','order','sil','intra','inter')
+save(files_out,'stab','nb_classes','nb_classes_ind','nb_classes_final','part','hier','order','sil','intra','inter')
