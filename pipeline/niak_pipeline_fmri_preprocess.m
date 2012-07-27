@@ -500,7 +500,7 @@ for num_s = 1:length(list_subject)
     end
     opt_ind = sub_tune(opt,subject); % Tune the pipeline parameters for this subject    
     if ~opt.flag_rand
-        opt_ind.rand_seed = double(md5sum(subject,true));
+        opt_ind.rand_seed = double(niak_datahash(subject));
         opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
     end
     
