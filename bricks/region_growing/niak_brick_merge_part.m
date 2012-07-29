@@ -1,6 +1,6 @@
 function  [files_in,files_out,opt] = niak_brick_merge_part(files_in,files_out,opt)
 % Merge multiple partitions into one. This brick is used by
-% NIAK_PIPELINE_REGION_GROWING, and is not that usefull by itself.
+% NIAK_PIPELINE_REGION_GROWING, and is not useful by itself.
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MERGE_PART(FILES_IN,FILES_OUT,OPT)
