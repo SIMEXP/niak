@@ -178,7 +178,7 @@ else
     %% Single file (either 3D or 3D+t)
     file_name = deblank(file_name);
     
-    if ~exist(file_name)
+    if ~exist(file_name,'file')
 
         %% The file does not exist ... check for wild cards !
         cell_name = dir(file_name);
@@ -224,12 +224,12 @@ else
                 file_extra = [path_f filesep name_f '_extra.mat'];
                 file_tmp_gz = niak_file_tmp([name_f type gb_niak_zip_ext]);
                 
-                [succ,msg] = system(cat(2,'cp ',file_name,' ',file_tmp_gz));
+                [succ,msg] = system(cat(2,'cp "',file_name,'" ',file_tmp_gz));
                 if succ~=0
                     error(msg)
                 end
                 
-                instr_unzip = cat(2,gb_niak_unzip,' ',file_tmp_gz);
+                instr_unzip = cat(2,gb_niak_unzip,' "',file_tmp_gz,'"');
 
                 [succ,msg] = system(instr_unzip);
                 if succ ~= 0
