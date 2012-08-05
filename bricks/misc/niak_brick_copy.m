@@ -110,6 +110,7 @@ if isempty(files_out)
     files_out = cell([nb_files 1]);
 
     for num_f = 1:nb_files
+        [path_f,name_f,ext_f] = niak_fileparts(files_in{num_f});
         files_out{num_f} = cat(2,opt.folder_out,filesep,name_f,'_copy',ext_f);
     end
 
