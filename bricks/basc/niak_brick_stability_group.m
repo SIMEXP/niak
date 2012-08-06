@@ -288,7 +288,7 @@ else
 end
 
 %% Estimation of the stability
-opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_classes_ind','min_subject'});
+opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_classes_ind','min_subject','nb_classes_final'});
 stab = niak_stability_group(mat_stab,mask,opt_s);
 
 %% Consensus clustering
