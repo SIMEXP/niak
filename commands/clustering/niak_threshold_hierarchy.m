@@ -96,9 +96,7 @@ taille = ones(size(part));
 niveau = zeros(size(part));
 thresh = sort(thresh);
 flag_m = length(thresh)>1;
-if flag_m
-    part_final = zeros([N length(thresh)]);
-end
+part_final = zeros([N length(thresh)]);
 
 %% Thresholding the partition
 switch opt.type
@@ -182,4 +180,5 @@ if flag_m
     end
 else
     [tmp1,tmp2,part] = unique(part);
+    part = part(:);
 end
