@@ -214,11 +214,6 @@ model.labels_x = labx_tmp;
 
 %% Select a subset of entries
 if isfield(opt.select(1),'label')
-    if isfield(opt.select(1),'operation')&&(isempty(opt.select(1).operation)||strcmp(opt.select(1).operation,'or'))
-        mask = false([size(model.labels_x,1) 1]);
-    else
-        mask = true([size(model.labels_x,1) 1]);
-    end
     for num_s = 1:length(opt.select)
         if ~isfield(opt.select(num_s),'label')
            continue
@@ -226,6 +221,11 @@ if isfield(opt.select(1),'label')
         opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max','operation'},{NaN,[],[],[],'or'}); 
         if isempty(opt_s.operation)
             opt_s.operation = 'or';
+        end
+        if strcmp(opt_s.operation,'or')
+            mask = false([size(model.labels_x,1) 1]);
+        else
+            mask = true([size(model.labels_x,1) 1]);
         end
         ind = find(ismember(model.labels_y,opt_s.label));
         if isempty(ind)
