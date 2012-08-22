@@ -111,12 +111,27 @@ gb_list_defaults  = {'axial'      ,[min(vol(:)) max(vol(:))],'jet',0,'rot90',1,0
 niak_set_defaults
 
 switch type_color
-	case 'hot_cold'
-		c1 = hot(128);
-		c1 = c1(1:100,:);
-		c2 = c1(:,[3 2 1]);
-		c= [c2(size(c2,1):-1:1,:) ; c1];
-		colormap(c)   
+	case 'hot_cold'   
+    if (opt.vol_limits(2)>0) && (opt.vol_limits(1)<0)
+        per_hot = opt.vol_limits(2)/(opt.vol_limits(2)-opt.vol_limits(1));
+    elseif opt.vol_limits(2)<=0
+        per_hot = 0;
+    else 
+        per_hot = 1;
+    end
+    c1 = hot(ceil(128*per_hot));
+    if ~isempty(c1)
+        c1 = c1(1:ceil(per_hot*100),:);
+    end
+    c2 = hot(ceil(128*(1-per_hot)));
+    if ~isempty(c2)
+        c2 = c2(1:ceil((1-per_hot)*100),:);
+        c2 = c2(:,[3 2 1]);
+        c2(size(c2,1):-1:1,:);
+    end
+    c= [c2(size(c2,1):-1:1,:) ; c1];
+    colormap(c)   
+    
 	case 'jet_rev'
 		c = jet(256);
 		c = c(end:-1:1,:);
