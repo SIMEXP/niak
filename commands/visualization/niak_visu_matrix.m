@@ -188,12 +188,23 @@ imagesc(matx,opt.limits);
 axis([0.5 nx+0.5 0.5 ny+0.5]);
 
 if strcmp(opt.color_map,'hot_cold')
-    per_hot = max(matx(:))/(max(matx(:))-min(matx(:)));
-    c1 = hot(128);
-    c1 = c1(1:100,:);
-    c2 = c1(:,[3 2 1]);
-    c2(size(c2,1):-1:1,:);
-    
+    if (opt.limits(2)>0) && (opt.limits(1)<0)
+        per_hot = opt.limits(2)/(opt.limits(2)-opt.limits(1));
+    elseif opt.limits(2)<=0
+        per_hot = 0;
+    else 
+        per_hot = 1;
+    end
+    c1 = hot(ceil(128*per_hot));
+    if ~isempty(c1)
+        c1 = c1(1:ceil(per_hot*100),:);
+    end
+    c2 = hot(ceil(128*(1-per_hot)));
+    if ~isempty(c2)
+        c2 = c2(1:ceil((1-per_hot)*100),:);
+        c2 = c2(:,[3 2 1]);
+        c2(size(c2,1):-1:1,:);
+    end
     c= [c2(size(c2,1):-1:1,:) ; c1];
     colormap(c)   
 elseif strcmp(opt.color_map,'jet_rev')
