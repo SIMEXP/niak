@@ -173,7 +173,7 @@ for num_c = 1:size(pce,2)
            fdr_c = ind.*val(:,num_c);
            fdr(order(:,num_c),num_c) = fdr_c;
         otherwise
-            error('%s is an unkown procedure for FDR estimation')
+            error('%s is an unknown procedure for FDR estimation',method)
     end
     if nargout>1
         ind_c = find(fdr_c>q,1);
