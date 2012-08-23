@@ -108,6 +108,7 @@ end
 if strcmp(method,'GBH')||strcmp(method,'LSL')
 
     n = size(pce,1);
+    m = size(pce,2);
     % estimate the number of discoveries
 
     switch method
@@ -122,24 +123,24 @@ if strcmp(method,'GBH')||strcmp(method,'LSL')
 
             % The least-slope method
             [val,order] = sort(pce,1,'ascend');            
-            l = repmat((n+1-(1:n)'),[1 n]);
+            l = repmat((n+1-(1:n)'),[1 m]);
             l(val~=1) = l(val~=1)./(1-val(val~=1));
             l(val==1) = Inf;          
-            dl = l(2:end,:) - l(1:(end-1),:);
-            pi_g_0 = zeros(n,1);
-            for num_c = 1:n
+            dl = l(2:end,:) - l(1:(end-1),:);            
+            pi_g_0 = zeros(m,1);
+            for num_c = 1:m               
                 ind_c = find(dl(:,num_c)>0,1);
                 if isempty(ind_c)
-                    ind_c = n;
+                    ind_c = n-1;
                 end
-                pi_g_0(num_c) = min((floor(l(ind_c))+1)/n,1);
-            end
+                pi_g_0(num_c) = min((floor(l(ind_c+1,num_c))+1)/n,1);
+            end            
     end
     pi_g_1 = 1-pi_g_0;
     pi_0 = mean(pi_g_0);
 
     % weight the p-values based on the estimated number of discoveries
-    w = zeros(1,n);
+    w = zeros(1,m);
     w(pi_g_0~=1) = pi_g_0(pi_g_0~=1)./pi_g_1(pi_g_0~=1);
     w(pi_g_0==1) = Inf;
     pce = pce.*repmat(w,[n 1]);
