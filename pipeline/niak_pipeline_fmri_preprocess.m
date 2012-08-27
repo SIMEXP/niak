@@ -269,25 +269,25 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           all the ROIs found in FILES_IN.MASK
 %
 %       FLAG_SKIP
-%           (boolean, default true) if FLAG_SKIP==1, the brick does not do
-%           anything. 
+%          (boolean, default true) if FLAG_SKIP==1, the brick does not do
+%          anything. 
 %
-%       CIVET (structure)
-%           If this field is present, NIAK will not process the T1 image, but
-%           will rather grab the (previously generated) results of the CIVET 
-%           pipeline, i.e. copy/rename them. The following fields need
-%           to be specified :
+%   CIVET 
+%       (structure)If this field is present, NIAK will not process the T1 image, 
+%       but will rather grab the (previously generated) results of the CIVET 
+%       pipeline, i.e. copy/rename them. The following fields need
+%       to be specified :
 %               
-%           FOLDER 
-%              (string) The path of a folder with CIVET results. The field 
-%              ANAT will be ignored in this case.
+%       FOLDER 
+%           (string) The path of a folder with CIVET results. The field 
+%           ANAT will be ignored in this case.
 %
-%           ID 
-%              (structure, optional) ID.<SUBJECT> is the ID associated with 
-%              SUBJECT in the CIVET results. By default SUBJECT is used.
+%       ID 
+%           (structure, optional) ID.<SUBJECT> is the ID associated with 
+%           SUBJECT in the CIVET results. By default SUBJECT is used.
 %
-%           PREFIX 
-%              (string) The prefix used for the database.
+%       PREFIX 
+%           (string) The prefix used for the database.
 %
 %   TUNE
 %       (structure) can be used to set different parameters for one or 
