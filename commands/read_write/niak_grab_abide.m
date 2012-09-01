@@ -1,4 +1,4 @@
-function files = niak_grab_adhd200(path_data)
+function files = niak_grab_abide(path_data)
 % Grab the T1+fMRI datasets of the ABIDE database to process with the 
 % NIAK fMRI preprocessing.
 %
