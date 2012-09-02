@@ -460,7 +460,7 @@ prior_flag = 0;
 %%%%%%%%%% Collect keywords and values from argument list %%%%%%%%%%%%%%%
 %
 
-if (nargin> 1 & rem(nargin,2) == 0)
+if (nargin> 1 && rem(nargin,2) == 0)
     fprintf('runica(): Even number of input arguments???')
     return
 end
@@ -473,7 +473,7 @@ for i = 3:2:nargin % for each Keyword
     end
     Keyword = lower(Keyword); % convert upper or mixed case to lower
 
-    if strcmp(Keyword,'weights') | strcmp(Keyword,'weight')
+    if strcmp(Keyword,'weights') || strcmp(Keyword,'weight')
         if ischar(Value)
             fprintf(...
                 'runica(): weights value must be a weight matrix or sphere')
@@ -487,7 +487,7 @@ for i = 3:2:nargin % for each Keyword
             fprintf('runica(): ncomps value must be an integer')
             return
         end
-        if ncomps < urchans & ncomps ~= Value
+        if (ncomps < urchans) && (ncomps ~= Value)
             fprintf('runica(): Use either PCA or ICA dimension reduction');
             return
         end
@@ -496,7 +496,7 @@ for i = 3:2:nargin % for each Keyword
             ncomps = chans;
         end
     elseif strcmp(Keyword,'pca')
-        if ncomps < urchans & ncomps ~= Value
+        if (ncomps < urchans) && (ncomps ~= Value)
             fprintf('runica(): Use either PCA or ICA dimension reduction');
             return
         end
@@ -507,7 +507,7 @@ for i = 3:2:nargin % for each Keyword
         end
         pcaflag = 'on';
         ncomps = Value;
-        if ncomps >= chans | ncomps < 1,
+        if (ncomps >= chans) || (ncomps < 1),
             fprintf('runica(): pca value must be in range [1,%d]\n',chans-1)
             return
         end
@@ -518,7 +518,7 @@ for i = 3:2:nargin % for each Keyword
             return
         else
             Value = lower(Value);
-            if ~strcmp(Value,'on') & ~strcmp(Value,'off'),
+            if ~strcmp(Value,'on') && ~strcmp(Value,'off'),
                 fprintf('runica(): posact value must be on or off')
                 return
             end
@@ -530,14 +530,14 @@ for i = 3:2:nargin % for each Keyword
             return
         end
         lrate = Value;
-        if lrate>MAX_LRATE | lrate <0,
+        if (lrate>MAX_LRATE) || (lrate <0),
             fprintf('runica(): lrate value is out of bounds');
             return
         end
         if ~lrate,
             lrate = DEFAULT_LRATE;
         end
-    elseif strcmp(Keyword,'block') | strcmp(Keyword,'blocksize')
+    elseif strcmp(Keyword,'block') || strcmp(Keyword,'blocksize')
         if ischar(Value)
             fprintf('runica(): block size value must be a number')
             return
@@ -546,14 +546,14 @@ for i = 3:2:nargin % for each Keyword
         if ~block,
             block = DEFAULT_BLOCK;
         end
-    elseif strcmp(Keyword,'stop') | strcmp(Keyword,'nochange') ...
-            | strcmp(Keyword,'stopping')
+    elseif strcmp(Keyword,'stop') || strcmp(Keyword,'nochange') ...
+            || strcmp(Keyword,'stopping')
         if ischar(Value)
             fprintf('runica(): stop wchange value must be a number')
             return
         end
         nochange = Value;
-    elseif strcmp(Keyword,'maxsteps') | strcmp(Keyword,'steps')
+    elseif strcmp(Keyword,'maxsteps') || strcmp(Keyword,'steps')
         if ischar(Value)
             fprintf('runica(): maxsteps value must be an integer')
             return
@@ -566,17 +566,17 @@ for i = 3:2:nargin % for each Keyword
             fprintf('runica(): maxsteps value (%d) must be a positive integer',maxsteps)
             return
         end
-    elseif strcmp(Keyword,'anneal') | strcmp(Keyword,'annealstep')
+    elseif strcmp(Keyword,'anneal') || strcmp(Keyword,'annealstep')
         if ischar(Value)
             fprintf('runica(): anneal step value (%2.4f) must be a number (0,1)',Value)
             return
         end
         annealstep = Value;
-        if annealstep <=0 | annealstep > 1,
+        if annealstep <=0 || annealstep > 1,
             fprintf('runica(): anneal step value (%2.4f) must be (0,1]',annealstep)
             return
         end
-    elseif strcmp(Keyword,'annealdeg') | strcmp(Keyword,'degrees')
+    elseif strcmp(Keyword,'annealdeg') || strcmp(Keyword,'degrees')
         if ischar(Value)
             fprintf('runica(): annealdeg value must be a number')
             return
@@ -584,7 +584,7 @@ for i = 3:2:nargin % for each Keyword
         annealdeg = Value;
         if ~annealdeg,
             annealdeg = DEFAULT_ANNEALDEG;
-        elseif annealdeg > 180 | annealdeg < 0
+        elseif (annealdeg > 180) || (annealdeg < 0)
             fprintf('runica(): annealdeg (%3.1f) is out of bounds [0,180]',...
                 annealdeg);
             return
@@ -596,18 +596,18 @@ for i = 3:2:nargin % for each Keyword
             return
         end
         momentum = Value;
-        if momentum > 1.0 | momentum < 0
+        if (momentum > 1.0) || (momentum < 0)
             fprintf('runica(): momentum value is out of bounds [0,1]')
             return
         end
-    elseif strcmp(Keyword,'sphering') | strcmp(Keyword,'sphereing') ...
-            | strcmp(Keyword,'sphere')
+    elseif strcmp(Keyword,'sphering') || strcmp(Keyword,'sphereing') ...
+            || strcmp(Keyword,'sphere')
         if ~ischar(Value)
             fprintf('runica(): sphering value must be on, off, or none')
             return
         else
             Value = lower(Value);
-            if ~strcmp(Value,'on') & ~strcmp(Value,'off') & ~strcmp(Value,'none'),
+            if ~strcmp(Value,'on') && ~strcmp(Value,'off') && ~strcmp(Value,'none'),
                 fprintf('runica(): sphering value must be on or off')
                 return
             end
@@ -628,7 +628,7 @@ for i = 3:2:nargin % for each Keyword
                 return
             end
         end
-    elseif strcmp(Keyword,'specgram') | strcmp(Keyword,'spec')
+    elseif strcmp(Keyword,'specgram') || strcmp(Keyword,'spec')
 
         if ~exist('specgram') < 2 % if ~exist or defined workspace variable
             fprintf(...
@@ -646,7 +646,7 @@ for i = 3:2:nargin % for each Keyword
         end
         if length(Value)>1
             loHz = Value(2);
-            if (loHz < 0 | loHz > srate/2)
+            if (loHz < 0) || (loHz > srate/2)
                 fprintf('runica(): specgram loHz must be >=0 and <= srate/2 (%4.1f)',srate/2)
                 return
             end
@@ -655,7 +655,7 @@ for i = 3:2:nargin % for each Keyword
         end
         if length(Value)>2
             hiHz = Value(3);
-            if (hiHz < loHz | hiHz > srate/2)
+            if (hiHz < loHz) || (hiHz > srate/2)
                 fprintf('runica(): specgram hiHz must be >=loHz (%4.1f) and <= srate/2 (%4.1f)',loHz,srate/2)
                 return
             end
@@ -664,7 +664,7 @@ for i = 3:2:nargin % for each Keyword
         end
         if length(Value)>3
             Hzframes = Value(5);
-            if (Hzframes<0 | Hzframes > size(data,2))
+            if (Hzframes<0) || (Hzframes > size(data,2))
                 fprintf('runica(): specgram frames must be >=0 and <= data length (%d)',size(data,2))
                 return
             end
@@ -682,7 +682,7 @@ for i = 3:2:nargin % for each Keyword
         end
         Specgramflag = 1; % set flag to perform specgram()
 
-    elseif strcmp(Keyword,'extended') | strcmp(Keyword,'extend')
+    elseif strcmp(Keyword,'extended') || strcmp(Keyword,'extend')
         if ischar(Value)
             fprintf('runica(): extended value must be an integer (+/-)')
             return
@@ -736,7 +736,7 @@ if ~annealdeg,
         annealdeg = 0;
     end
 end
-if ncomps >  chans | ncomps < 1
+if (ncomps >  chans) || (ncomps < 1)
     fprintf('runica(): number of components must be 1 to %d.\n',chans);
     return
 end
@@ -746,9 +746,9 @@ if weights ~= 0,                    % initialize weights
     if verbose,
         fprintf('Using starting weight matrix named in argument list ...\n')
     end
-    if  chans>ncomps & weights ~=0,
+    if  (chans>ncomps) && (weights ~=0),
         [r,c]=size(weights);
-        if r~=ncomps | c~=chans,
+        if (r~=ncomps) || (c~=chans),
             fprintf(...
                 'runica(): weight matrix must have %d rows, %d columns.\n', ...
                 chans,ncomps);
