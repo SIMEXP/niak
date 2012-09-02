@@ -89,6 +89,10 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %        (boolean, default 1) if FLAG_VARIANCE == 1, the mean and 
 %        variance of the time series at each voxel is preserved.
 %
+%    FLAG_CENTER
+%        (boolean, default false) if the flag is true, the origin of space is 
+%        placed in the center of the field of view.
+%
 %    FLAG_REGULAR
 %        (boolean, default 1) if FLAG_REGULAR == 1, the spacing of all axis 
 %        will be set to regular in MINC files. This is done to avoid bugs in 
@@ -235,8 +239,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = {'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
-gb_list_defaults    = {''            ,0             ,0              ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
+gb_list_fields      = {'flag_center' , 'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
+gb_list_defaults    = {false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
@@ -532,5 +536,12 @@ if flag_regular
             end
         end
     end
+end
+if flag_center
+    mask = niak_mask_brain(vol_a);
+    ind = find(mask);
+    [cx,cy,cz] = ind2sub (size(mask),ind);
+    avg = mean([cx cy cz],1);
+    hdr.info.mat(1:3,4) = -hdr.info.mat(1:3,1:3)*avg(:);
 end
 niak_write_vol(hdr,vol_a);
