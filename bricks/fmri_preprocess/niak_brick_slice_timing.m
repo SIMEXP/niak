@@ -537,7 +537,7 @@ if flag_regular
         end
     end
 end
-if flag_center
+if opt.flag_center
     mask = niak_mask_brain(vol_a);
     ind = find(mask);
     [cx,cy,cz] = ind2sub (size(mask),ind);
