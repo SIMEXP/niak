@@ -175,7 +175,12 @@ if flag_keep_range
 else
     instr_range = '-nokeep_real_range ';
 end
-    
+
+%% Check that the resampling scheme is acceptable
+if ~ismember(opt.interpolation,{'trilinear','tricubic','sinc','nearest_neighbour'})
+    error('%s is an unsupported resampling scheme',opt.interpolation)
+end
+
 %% Generating default ouputs
 [path_f,name_f,ext_f] = niak_fileparts(files_in.source);
 
@@ -401,7 +406,7 @@ if nt1 == 1
     if flag_invert_transf
         instr_resample = [instr_resample ' -invert_transformation'];
     end
-    instr_resample = [instr_resample ' -',interpolation,' -like ',file_target_tmp,' -clobber'];        
+    instr_resample = [instr_resample ' -',interpolation,' -like ',file_target_tmp,' -clobber'];            
     [status,msg] = system(instr_resample);    
     if status~=0
         error(msg);
