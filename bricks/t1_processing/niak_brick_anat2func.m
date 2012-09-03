@@ -417,7 +417,7 @@ for num_i = 1:length(list_fwhm)
       
     %% Crop anatomical mask
     if flag_verbose
-        fprintf('Resampling the anatomical brain mask in funcitonal space... \n');
+        fprintf('Resampling the anatomical brain mask in functional space... \n');
     end
    
     % resample anatomical mask in functional space keeping FOV
