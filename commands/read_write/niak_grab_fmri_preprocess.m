@@ -222,7 +222,7 @@ end
 file_scrub = [path_qc 'group_motion' filesep 'qc_scrubbing_group.csv'];
 [tab_scrub,labx_scrub,laby_scrub] = niak_read_csv(file_scrub);
 for num_s = 1:nb_subject
-    ind_r = regexp(labx_scrub,['^' list_subject{num_s}]);
+    ind_r = regexp(labx_scrub,['^' list_subject{num_s} '_']);
     ind_r = find(cellfun(@length,ind_r,'UniformOutput',true)>0);
     mask_scrub.(list_subject{num_s}) = struct();
     if ~isempty(ind_r)

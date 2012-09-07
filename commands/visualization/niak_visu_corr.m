@@ -41,7 +41,7 @@ function [results]=niak_visu_corr(file_in,folder_out,db_name)
 system(['mkdir ' folder_out filesep 'png' filesep ]);
 opt_mat.limits = [-1,1];
 
-% Print the correlation matrices
+% Print the correlation matrices for video
  for n_s = 1:size(data.labels_subject,1)
    R_ind = niak_vec2mat(data.y(n_s,:));
    f_handle=figure;
