@@ -1,8 +1,4 @@
 function vol_s = niak_smooth_vol(vol,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_SMOOTH_VOL
-%
 % Spatial smoothing of 3D+t data with a Gaussian kernel
 %
 % SYNTAX:
@@ -12,44 +8,44 @@ function vol_s = niak_smooth_vol(vol,opt)
 % INPUTS:
 %
 % VOL         
-%       (4D array) a 3D+t dataset
+%   (4D array) a 3D+t dataset
 %
 % OPT         
-%       (structure, optional) with the following fields :
+%   (structure, optional) with the following fields :
 %
-%       MASK
-%           (binary volume, default true(size(VOL))) this volume should 
-%           have the same size as VOL and will be used to correct for 
-%           edges effects in the smoothing, assuming zero values outside 
-%           the mask if OPT.FLAG_EDGE is true (see below).
+%   MASK
+%      (binary volume, default true(size(VOL))) this volume should 
+%      have the same size as VOL and will be used to correct for 
+%      edges effects in the smoothing, assuming zero values outside 
+%      the mask if OPT.FLAG_EDGE is true (see below).
 %
-%       VOXEL_SIZE  
-%           (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
-%           in the respective dimensions, i.e. the space in mmm between 
-%           two voxels in x, y, and z (yet the unit is irrelevant and just 
-%           needs to be consistent with the filter width (fwhm)). The 
-%           fourth element is ignored.
+%   VOXEL_SIZE  
+%      (vector of size [3 1] or [4 1], default [1 1 1]) the resolution
+%      in the respective dimensions, i.e. the space in mmm between 
+%      two voxels in x, y, and z (yet the unit is irrelevant and just 
+%      needs to be consistent with the filter width (fwhm)). The 
+%      fourth element is ignored.
 %
-%       FWHM  
-%           (vector of size [3 1], default [2 2 2]) the full width at half 
-%           maximum of the Gaussian kernel, in each dimension. If fwhm has 
-%           length 1, an isotropic kernel is implemented.
+%   FWHM  
+%      (vector of size [3 1], default [2 2 2]) the full width at half 
+%      maximum of the Gaussian kernel, in each dimension. If fwhm has 
+%      length 1, an isotropic kernel is implemented.
 %
-%       FLAG_EDGE
-%           (boolean, default 1) if the flag is 1, then a correction is
-%           applied for edges effects in the smoothing (such that a volume
-%           full of ones is left untouched by the smoothing).
+%   FLAG_EDGE
+%      (boolean, default 1) if the flag is 1, then a correction is
+%      applied for edges effects in the smoothing (such that a volume
+%      full of ones is left untouched by the smoothing).
 %
-%       FLAG_VERBOSE
-%           (boolean, default true) if the flag is 1, then the function prints 
-%           some infos during the processing.
+%   FLAG_VERBOSE
+%      (boolean, default true) if the flag is 1, then the function prints 
+%      some infos during the processing.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % VOL_S       
-%       (4D array) same as VOL after each volume has been spatially
-%       convolved with a 3D separable Gaussian kernel.
+%   (4D array) same as VOL after each volume has been spatially
+%   convolved with a 3D separable Gaussian kernel.
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -61,7 +57,7 @@ function vol_s = niak_smooth_vol(vol,opt)
 %
 % This command is using temporary files on the disk to run MINCBLUR.
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, smoothing, fMRI
