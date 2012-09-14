@@ -85,11 +85,11 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %			clusters is back to the one specified.
 %
 %       CONVERGENCE_RATE
-%           (scalar, 0) the rate of changes in the adjacency matrix
-%           representation of the clustering to decide on convergence of
-%           the algorithm. The rate of change is defined as the proportion of
-%           regions whose associated cluster changed between two
-%           iterations.
+%           (scalar, 0.01) 1-the minimal dice coefficient between two clusters at two 
+%           distinct iterations (clusters with zero overlap are excluded). Up to 
+%           OPT.NB_TESTS_CYCLE are tested. A value of 0.01 means that if 99% of clusters 
+%           are identical between two steps of the algorithm (in the sense of DICE), then 
+%           the algorithm stops.
 %
 %       NB_ITER_MAX
 %           (integer, default 50) Maximal number of iterations of the
@@ -289,13 +289,21 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     end
     
     %% Check for cycles and list the clusters that have changed    
-    mat_curr = niak_part2mat(part(:,part_curr),true);
-    mat_old = niak_part2mat(part(:,part_old),true);
-    diff = any(mat_curr~=mat_old);
-    deplacements = sum(diff)/length(diff);
-    changement = deplacements>0.01;        
+    list_test = 1:size(part,2);
+    list_test = list_test(list_test~=part_curr);
+    mdice_all = 0;
+    for num_t = 1:length(list_test)
+        if any(part(:,list_test(num_t)))
+            mdice = sub_dice(part(:,part_curr),part(:,list_test(num_t)));
+            mdice_all = max(mdice_all,min(mdice(mdice~=0)));
+            if num_t == part_old
+                ind_change = find(max(mdice,[],2)~=1);
+            end
+        end
+    end
+    deplacements = (1-mdice_all);
+    changement = deplacements>opt.convergence_rate;        
     N_iter = N_iter + 1;
-    ind_change = unique(part(diff>0,part_curr));
     if opt.flag_verbose
         fprintf(' %1.2f -',deplacements);        
     end
@@ -338,6 +346,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                    SUBFUNCTIONS                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Compute the DICE between every pair of clusters
+function mdice = sub_dice(part1,part2)
+
+k1 = max(part1);
+k2 = max(part2);
+mdice = zeros(k1,k2);
+for nk1 = 1:k1
+    for nk2 = 1:k2
+        mdice(nk1,nk2) = 2*sum((part1==nk1)&(part2==nk2))/(sum(part1==nk1)+sum(part2==nk2));
+    end
+end
+return
 
 %% Attraction of each object to the centers
 function A = attraction(data,gi,p,ind_change,A);
