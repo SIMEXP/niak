@@ -67,13 +67,8 @@ function [files_in,files_out,opt] = niak_brick_qc_motion_correction_ind(files_in
 %       (string, default name of FILES_IN{1}, without path or extension) 
 %       used in the default names.
 %
-%   FWHM 
-%       (real value, default 3) the FWHM of the blurring kernel used to 
-%       extract of mask of the brain.
-%       
-%   FLAG_REMOVE_EYES 
-%       (boolean, default 0) if FLAG_REMOVE_EYES == 1, an attempt is done 
-%        to remove the eyes from the mask.
+%   MASK
+%       (structure) the options of NIAK_BRICK_MASK_BRAIN. 
 %
 %   THRESH
 %       (real number, default 0.95) the threshold used to define a group 
@@ -172,8 +167,8 @@ niak_set_defaults
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_remove_eyes' , 'fwhm' , 'label' , 'labels_vol' , 'thresh' , 'flag_verbose' , 'flag_test' , 'folder_out' };
-gb_list_defaults  = {false              , 3      , ''      , files_in.vol , 0.95     , true           , false       , ''           };
+gb_list_fields    = { 'mask'   , 'label' , 'labels_vol' , 'thresh' , 'flag_verbose' , 'flag_test' , 'folder_out' };
+gb_list_defaults  = { struct() , ''      , files_in.vol , 0.95     , true           , false       , ''           };
 niak_set_defaults
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.vol{1});
@@ -242,8 +237,7 @@ for num_f = 1:nb_file
     file_mask{num_f}         = [folder_tmp 'mask_vol' num2str(num_f) '.mnc'];
     files_in_tmp             = files_in.vol{num_f};
     files_out_tmp            = file_mask{num_f};
-    opt_tmp.fwhm             = opt.fwhm;
-    opt_tmp.flag_remove_eyes = opt.flag_remove_eyes;
+    opt_tmp                  = opt.mask;
     opt_tmp.flag_verbose     = false;
     niak_brick_mask_brain(files_in_tmp,files_out_tmp,opt_tmp);
 end
