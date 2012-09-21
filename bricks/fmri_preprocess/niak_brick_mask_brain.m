@@ -23,9 +23,17 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %       smoothing step.
 %       
 %   FLAG_REMOVE_EYES 
-%       (boolean, default 0) if FLAG_REMOVE_EYES == 1, an attempt is made 
+%       (boolean, default 1) if FLAG_REMOVE_EYES == 1, an attempt is made 
 %       to remove the eyes from the mask.
 %           
+%   FLAG_NU_CORRECT
+%       (boolean, default true) if FLAG_NU_CORRECT == 1, the NU_CORRECT
+%       method is used to correct for non-uniformity of the B0 field.
+%
+%   ARG_NU_CORRECT
+%       (string, default '-distance 200') the argument passed to NU_CORRECT.
+%       See "nu_correct -help" in a terminal for more infos.
+%
 %   FOLDER_OUT 
 %       (string, default: path of FILES_IN) If present, the output will be 
 %       created in the folder FOLDER_OUT. 
@@ -108,8 +116,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields   = {'fwhm' , 'flag_remove_eyes' , 'flag_verbose' ,'flag_test' ,'folder_out' };
-gb_list_defaults = {8      , 0                  , true           ,false       ,''           };
+gb_list_fields   = { 'arg_nu_correct' , 'flag_nu_correct' , 'fwhm' , 'flag_remove_eyes' , 'flag_verbose' ,'flag_test' ,'folder_out' };
+gb_list_defaults = { '-distance 200'  , true              , 8      , 1                  , true           ,false       ,''           };
 niak_set_defaults
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in);
@@ -137,7 +145,18 @@ if flag_verbose
     fprintf('Masking brain in file %s ...\n',files_in);
 end
 
-[hdr,vol] = niak_read_vol(files_in);
+if opt.flag_nu_correct
+    % Optional: run a non-uniformity correction on the input volume
+    [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(files_in);    
+    out_nu.vol_nu = psom_file_tmp(['_mask_brain' ext_short]);
+    in_nu.vol = files_in;
+    opt_nu.arg = opt.arg_nu_correct;
+    opt_nu.flag_verbose = opt.flag_verbose;
+    niak_brick_nu_correct(in_nu,out_nu,opt_nu);
+    [hdr,vol] = niak_read_vol(out_nu.vol_nu);
+else
+    [hdr,vol] = niak_read_vol(files_in);
+end
 opt_mask.voxel_size = hdr.info.voxel_size;
 mask = niak_mask_brain(vol,opt_mask);
 
@@ -147,3 +166,8 @@ if flag_verbose
 end
 hdr.file_name = files_out;
 niak_write_vol(hdr,mask);
+
+%% Cleaning up intermediate files
+if opt.flag_nu_correct
+    psom_clean(out_nu.vol_nu);
+end
