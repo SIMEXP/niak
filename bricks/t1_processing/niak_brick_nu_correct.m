@@ -187,9 +187,9 @@ file_tmp_nu = [path_tmp 'vol_nu.mnc'];
 file_tmp_imp = [path_tmp 'vol_nu.imp'];
 
 if strcmp(files_in.mask,'gb_niak_omitted')
-    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' ' files_in.vol ' ' file_tmp_nu];
+    instr = ['nu_correct -clobber -tmpdir ' path_tmp ' ' arg ' ' files_in.vol ' ' file_tmp_nu];
 else
-    instr = ['nu_correct -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.vol ' ' file_tmp_nu];
+    instr = ['nu_correct -clobber -tmpdir ' path_tmp ' ' arg ' -mask ' files_in.mask ' ' files_in.vol ' ' file_tmp_nu];
 end
 
 %% Running NU_CORRECT
