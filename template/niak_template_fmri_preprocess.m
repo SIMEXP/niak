@@ -65,7 +65,9 @@ opt.slice_timing.type_scanner     = 'Bruker';                % Scanner manufactu
 opt.slice_timing.delay_in_tr      = 0;                       % The delay in TR ("blank" time between two volumes)
 opt.slice_timing.suppress_vol     = 0;                       % Number of dummy scans to suppress.
 opt.slice_timing.flag_skip        = 0;                       % Skip the slice timing (0: don't skip, 1 : skip)
-
+opt.slice_timing.flag_nu_correct  = true;                    % Correct non-uniformities on the functional volumes using the N3 method. This is particularly important for 32-channels coils.
+opt.slice_timing.arg_nu_correct   = '-distance 200';         % The argument sent to nu_correct. A correction with a 200 distance results in a very mild, slow varying correction, which seems to be sufficient in practice but has not yet been thoroughly tested 
+ 
 % Motion estimation (niak_pipeline_motion)
 opt.motion.session_ref  = 'session1'; % The session that is used as a reference. In general, use the session including the acqusition of the T1 scan.
 
