@@ -27,7 +27,7 @@ function [files_in,files_out,opt] = niak_brick_mask_brain(files_in,files_out,opt
 %       to remove the eyes from the mask.
 %           
 %   FLAG_NU_CORRECT
-%       (boolean, default true) if FLAG_NU_CORRECT == 1, the NU_CORRECT
+%       (boolean, default false) if FLAG_NU_CORRECT == 1, the NU_CORRECT
 %       method is used to correct for non-uniformity of the B0 field.
 %
 %   ARG_NU_CORRECT
@@ -117,7 +117,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields   = { 'arg_nu_correct' , 'flag_nu_correct' , 'fwhm' , 'flag_remove_eyes' , 'flag_verbose' ,'flag_test' ,'folder_out' };
-gb_list_defaults = { '-distance 200'  , true              , 8      , 1                  , true           ,false       ,''           };
+gb_list_defaults = { '-distance 200'  , false             , 8      , 1                  , true           ,false       ,''           };
 niak_set_defaults
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in);

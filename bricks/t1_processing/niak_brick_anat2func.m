@@ -97,7 +97,7 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       anatomical space.
 %
 %   FLAG_NU_CORRECT
-%       (boolean, default true) if FLAG_NU_CORRECT == 1, the NU_CORRECT
+%       (boolean, default false) if FLAG_NU_CORRECT == 1, the NU_CORRECT
 %       method is used to correct for non-uniformity of the B0 field on 
 %       the functional volume.
 %
@@ -210,7 +210,7 @@ niak_set_defaults
 %% OPTIONS
 gb_name_structure   = 'opt';
 gb_list_fields      = { 'arg_nu_correct' , 'flag_nu_correct' , 'fwhm_masking' , 'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
-gb_list_defaults    = { '-distance 200'  , true              , 8              , false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
+gb_list_defaults    = { '-distance 200'  , false             , 8              , false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&&~strcmp(opt.init,'identity')
