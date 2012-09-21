@@ -96,10 +96,19 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %       inverted, i.e. the transformation goes from functional to 
 %       anatomical space.
 %
+%   FLAG_NU_CORRECT
+%       (boolean, default true) if FLAG_NU_CORRECT == 1, the NU_CORRECT
+%       method is used to correct for non-uniformity of the B0 field on 
+%       the functional volume.
+%
+%   ARG_NU_CORRECT
+%       (string, default '-distance 200') the argument passed to NU_CORRECT.
+%       See "nu_correct -help" in a terminal for more infos.
+%
 %   FWHM_MASKING
-%       (real value, default 3) the FWHM of the blurring kernel used to 
-%       extract of mask of the brain in the functional volume, if the mask 
-%       was not specified/
+%       (real value, default 8) the FWHM of the blurring kernel used to 
+%       extract the mask of the brain in the functional volume, if the mask 
+%       was not specified.
 %       
 %   FOLDER_OUT
 %       (string, default: path of FILES_IN) If present, all default outputs 
@@ -200,8 +209,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = {'fwhm_masking' , 'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
-gb_list_defaults    = {3              , false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
+gb_list_fields      = { 'arg_nu_correct' , 'flag_nu_correct' , 'fwhm_masking' , 'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
+gb_list_defaults    = { '-distance 200'  , true              , 8              , false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&&~strcmp(opt.init,'identity')
@@ -331,13 +340,23 @@ opt_res.interpolation = 'nearest_neighbour';
 niak_brick_resample_vol(files_in_res,files_out_res,opt_res);
 [hdr_anat,mask_anat] = niak_read_vol(file_mask_anat);
 
-%% Copying the functional volume
-if flag_verbose
-    fprintf('Copying the functional volume in the temporary folder ...\n');
+
+if opt.flag_nu_correct
+    %% Non-uniformity correction on the functional volume
+    in_nu.vol = files_in.func;
+    out_nu.vol_nu = file_func_init;
+    opt_nu.arg = opt.arg_nu_correct;
+    niak_brick_nu_correct(in_nu,out_nu,opt_nu);
+    [hdr_func,vol_func] = niak_read_vol(out_nu.vol_nu);
+else
+    %% Skip non-uniformity correction, just copy the volume over
+    if flag_verbose
+        fprintf('Copying the functional volume in the temporary folder ...\n');
+    end
+    [hdr_func,vol_func] = niak_read_vol(files_in.func);
+    hdr_func.file_name = file_func_init;
+    niak_write_vol(hdr_func,vol_func);
 end
-[hdr_func,vol_func] = niak_read_vol(files_in.func);
-hdr_func.file_name = file_func_init;
-niak_write_vol(hdr_func,vol_func);
 
 %% Copying the functional mask
 if flag_verbose
