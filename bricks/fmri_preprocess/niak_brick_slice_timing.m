@@ -571,13 +571,17 @@ if opt.flag_nu_correct
        fprintf('\nCorrecting for non-uniformities ...\n    Iteration ')
     end
     
-    vol_med = median(vol_a,4);
+    vol_med = median(vol_a,4);    
     [path_f,name_f,ext_f,flag_z,ext_s] = niak_fileparts(files_out);
     nu.in.mask = psom_file_tmp(['_mask' ext_s]);
     nu.in.vol = psom_file_tmp(['_vol' ext_s]);
     nu.out.vol_nu = psom_file_tmp(['_vol_nu' ext_s]);
     nu.out.vol_imp = psom_file_tmp(['_vol.imp']);
-        
+    hdr_nu = hdr;
+    hdr_nu.file_name = nu.in.vol;
+    niak_write_vol(hdr_nu,vol_med);
+    hdr_nu.file_name = nu.in.mask;
+    
     for num_i = 1:opt.iter_nu_correct
         if opt.flag_verbose
             fprintf('%i - ',num_i)
@@ -587,12 +591,8 @@ if opt.flag_nu_correct
         opt_m.fwhm = 2;
         mask = niak_mask_brain(vol_med,opt_m);
     
-        % Run nu_correct on the median volume
-        hdr_nu = hdr;
-        hdr_nu.file_name = nu.in.mask;
+        % Run nu_correct on the median volume                
         niak_write_vol(hdr_nu,mask);
-        hdr_nu.file_name = nu.in.vol;
-        niak_write_vol(hdr_nu,vol_med);
         opt_nu.arg = opt.arg_nu_correct;
         opt_nu.flag_verbose = false;
         niak_brick_nu_correct(nu.in,nu.out,opt_nu);
