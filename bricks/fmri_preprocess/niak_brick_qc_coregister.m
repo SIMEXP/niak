@@ -59,7 +59,7 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 %        each volume in the tables.
 %
 %    THRESH
-%        (real number, default 0.9) the threshold used to define a group
+%        (real number, default 0.5) the threshold used to define a group
 %        mask based on the average of all individual masks.
 %
 %    FOLDER_OUT
