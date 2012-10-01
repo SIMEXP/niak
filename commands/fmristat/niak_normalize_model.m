@@ -173,44 +173,41 @@ if (opt.flag_filter_nan)&&~isempty(model.x)
     model.labels_x = model.labels_x(~mask_nan,:);
 end
 
-%% Default OPT.LABELS_X
-if isempty(opt.labels_x)
-    opt.labels_x = unique(model.labels_x);
-end
-
 %% Reorder (and reduce) the model using opt.labels_x 
-if length(unique(opt.labels_x))~=length(opt.labels_x)
-    error('The labels provided in OPT.LABELS_X should be unique')
-end
-[mask_x,ind_m] = ismember(opt.labels_x,model.labels_x) ; 
-if any(ind_m==0)
-    ind_0 = find(ind_m == 0);
-    fprintf('Warning: the following entries that were specified in the CSV were not associated with any data and will be omitted:\n')
-    for num_m = 1:length(ind_0)
-        fprintf('    %s\n',opt.labels_x{ind_0(num_m)});
+if ~isempty(opt.labels_x)
+    if length(unique(opt.labels_x))~=length(opt.labels_x)
+        error('The labels provided in OPT.LABELS_X should be unique')
     end
-end
-ind_m = ind_m(ind_m~=0);
+    [mask_x,ind_m] = ismember(opt.labels_x,model.labels_x) ; 
+    if any(ind_m==0)
+        ind_0 = find(ind_m == 0);
+        fprintf('Warning: the following entries that were specified in the CSV were not associated with any data and will be omitted:\n')
+        for num_m = 1:length(ind_0)
+            fprintf('    %s\n',opt.labels_x{ind_0(num_m)});
+        end
+    end
+    ind_m = ind_m(ind_m~=0);
 
-labx_tmp = {};
-x_tmp = [];
-y_tmp = [];
-model.labels_x = model.labels_x(:);
-model.labels_y = model.labels_y(:);
+    labx_tmp = {};
+    x_tmp = [];
+    y_tmp = [];
+    model.labels_x = model.labels_x(:);
+    model.labels_y = model.labels_y(:);
 
-for num_m = 1:length(ind_m)
-    mask_tmp = ismember(model.labels_x,model.labels_x{ind_m(num_m)});
-    labx_tmp = [ labx_tmp ; model.labels_x(mask_tmp)];
-    if ~isempty(model.x)
-        x_tmp = [x_tmp ; model.x(mask_tmp,:)];
+    for num_m = 1:length(ind_m)
+        mask_tmp = ismember(model.labels_x,model.labels_x{ind_m(num_m)});
+        labx_tmp = [ labx_tmp ; model.labels_x(mask_tmp)];
+        if ~isempty(model.x)
+            x_tmp = [x_tmp ; model.x(mask_tmp,:)];
+        end
+        if ~isempty(model.y)
+            y_tmp = [y_tmp ; model.y(mask_tmp,:)];
+        end
     end
-    if ~isempty(model.y)
-        y_tmp = [y_tmp ; model.y(mask_tmp,:)];
-    end
+    model.x = x_tmp;
+    model.y = y_tmp;
+    model.labels_x = labx_tmp;
 end
-model.x = x_tmp;
-model.y = y_tmp;
-model.labels_x = labx_tmp;
 
 %% Select a subset of entries
 if isfield(opt.select(1),'label')
