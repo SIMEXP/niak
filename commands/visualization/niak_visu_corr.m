@@ -1,5 +1,10 @@
 function [results]=niak_visu_corr(file_in,folder_out,db_name)
-
+% gen a video of all the correlation matrix
+% In
+%   FILES_IN
+%   FOLDER_OUT
+%   DB_NAME
+%
 % Out
 % 	RESULTS
 %		R_MEAN Average correlation matrix
