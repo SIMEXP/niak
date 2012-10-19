@@ -120,15 +120,19 @@ flag_play = 0;
 
 if ndims(vol)~=2
     opt = rmfield(opt,'order');
+else
+    opt_tmp.limits = opt.vol_limits;
+    opt_tmp.color_map = opt.type_color;
+    opt = opt_tmp;
 end
 
 while ~flag_exit
     if ndims(vol)==2
         if ~isempty(order)
             mat = niak_vec2mat(vol(:,num_t));
-            niak_visu_matrix(mat(order,order));
+            niak_visu_matrix(mat(order,order),opt);
         else
-            niak_visu_matrix(vol(:,num_t));
+            niak_visu_matrix(vol(:,num_t),opt);
         end
     else        
         niak_montage(vol(:,:,:,num_t),opt);
