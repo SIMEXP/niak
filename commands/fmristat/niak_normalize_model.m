@@ -65,7 +65,7 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         when the model does not have an intercept).
 %
 %   NORMALIZE_X
-%      (structure or boolean, default false) If a boolean and true, all covariates of the 
+%      (structure or boolean, default true) If a boolean and true, all covariates of the 
 %      model are normalized to a zero mean and unit variance.  
 %      If a structure, the fields <NAME> need to correspond to the label of a column in the 
 %      file FILES_IN.MODEL.GROUP):
@@ -75,8 +75,11 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         to a zero mean and a unit variance. 
 %
 %   NORMALIZE_Y
-%      (boolean, default true) If true, the data is corrected to a zero mean and unit variance,
-%      in this case across subjects.
+%      (boolean, default true) If true, the data is corrected to a zero mean and unit variance.
+%
+%   NORMALIZE_TYPE
+%      (string, default 'mean_var') By default, the data is corrected to a zero mean and unit variance.
+%      Use 'mean' for zero mean correction only.
 %
 %   FLAG_INTERCEPT
 %      (boolean, default true) if FLAG_INTERCEPT is true, a constant covariate will be
@@ -158,8 +161,8 @@ list_defaults = { NaN , []  , NaN        , NaN        };
 model = psom_struct_defaults(model,list_fields,list_defaults);
 
 %% Check the options
-list_fields   = { 'flag_filter_nan' , 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'labels_x' };
-list_defaults = { true              , struct   , struct()   , struct       , true               , {}                 , false             , true                , {}         };
+list_fields   = { 'flag_filter_nan' , 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'labels_x' };
+list_defaults = { true              , struct   , struct()   , struct       , true             , {}            , true          , true          , 'mean_var'       ,{}         };
 if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -381,7 +384,7 @@ function model = sub_normalize(model,opt)
 %% Optional: normalization of covariates
 
 if islogical(opt.normalize_x)&&opt.normalize_x
-   opt_n.type = 'mean_var';  
+   opt_n.type = opt.normalize_type;  
 
    % because the normalization will give 0 il the nbr of rows = 1
    if (size(model.x,1) ~= 1)&&~isempty(model.x)
@@ -396,6 +399,6 @@ mask = ismember(model.labels_y,'intercept');
 model.x(:,mask) = 1;
 
 if opt.normalize_y && isfield ( model, 'y' ) &&  (size(model.y,1) > 2) && ~isempty(model.x)
-    opt_n.type = 'mean_var';  
+    opt_n.type = opt.normalize_type;  
     model.y = niak_normalize_tseries(model.y,opt_n);
 end
