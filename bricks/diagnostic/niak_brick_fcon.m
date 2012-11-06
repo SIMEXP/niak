@@ -1,38 +1,52 @@
 function [files_in,files_out,opt] = niak_brick_fcon(files_in,files_out,opt)
-% Generate the outcome mesures based on the connectome at the defined scale
+% Generate the outcome mesures based on the functional connectome at the defined scale
 %
-% [R_IND] = NIAK_BRICK_OUTCOME(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_FCON(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% FILES_IN       
-%   (3D+t array) the fMRI data. 
+% FILES_IN
 %
-% FILES_OUT      
-%   (3D volume) mask or ROI coded with integers. ROI #I is defined by 
-%   MASK==I
+%   REF_PARAM      
+%       (string) .mat file of the reference population. The file contain
+%       the following fields: p2p (point to proint correlations),
+%       brain_partition (3D volume partition), R_ind (3D volume with all
+%       the individual correlation matrices), R_mean (avg of the individual
+%       correlation matrix), R_std (std of the individual correlation
+%       matrices), order (order based on the R_mean), connections
+%       (structure with field 'seed' the number in the partition of the
+%       first seed and 'name' for that seed).
+%
+%   SUBJ_FMRI      
+%       (string) a 4D dataset. fMRI preprocessed run to generate the
+%       outcome mesures.
+%
+% FILES_OUT
 %
 %   P2P      
-%       (3D volume) mask or ROI coded with integers. ROI #I is defined by 
+%       (string) mask or ROI coded with integers. ROI #I is defined by 
 %       MASK==I
 %
 %   SEEDCON      
-%       (3D volume) mask or ROI coded with integers. ROI #I is defined by 
-%       MASK==I
+%       (string, PDF file) path for the boxplot of the SEED data.
+%
+%   SEEDCONP2P      
+%       (string, PDF file) path for the boxplot of the P2P data.
 %
 %   CONNECTOME      
-%       (3D volume) mask or ROI coded with integers. ROI #I is defined by 
-%       MASK==I
+%       (string, PDF file) path for the boxplot of the connectome data.
 %
-% FILES_OUT       
-%   (optional) the order of eahc index of the connectome index
+%   CSV      
+%       (string, CSV file) path of the csv outcome report for the individual data
+%       specified in FILES_IN.SUBJ_FMRI
+%
+%   DM_MAP      
+%       (string, MNC file) path of the default mode map for the individual data
+%       specified in FILES_IN.SUBJ_FMRI
 %
 % _________________________________________________________________________
 % OUTPUTS:
-%
-% R_IND   
-%   (array) The connectome of the 3D+t dataset
 %
 % _________________________________________________________________________
 % COMMENTS:
