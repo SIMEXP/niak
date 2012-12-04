@@ -1,8 +1,8 @@
-function ssurf = niak_read_surf(file_name)
+function ssurf = niak_read_surf(file_name,flag_neigh)
 % Read a surface in the MNI .obj or Freesurfer format
 %
 % SYNTAX:
-% SSURF = NIAK_READ_SURF_OBJ(FILE_NAME)
+% SSURF = NIAK_READ_SURF_OBJ(FILE_NAME,FLAG_NEIGH)
 %
 % _________________________________________________________________________
 % INPUTS :
@@ -11,6 +11,10 @@ function ssurf = niak_read_surf(file_name)
 %    (string or cell of strings, default mid surface in MNI 2009 space) 
 %    string: a single surface file. cell of strings : all the surfaces are 
 %    concatenated.
+%
+% FLAG_NEIGH
+%    (boolean, default false) if FLAG_NEIGH is true, a neighborhood array 
+%    is derived.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -27,6 +31,9 @@ function ssurf = niak_read_surf(file_name)
 %    TRI
 %        (vector, t x 3) list of triangle elements. t=#triangles.
 %
+%    NEIGH
+%        (array) list of neighbour nodes. Only present if FLAG_NEIGH is true.
+%
 %    COLR
 %        (vector or matrix) 4 x 1 vector of colours for the whole surface,
 %        or 4 x v matrix of colours for each vertex, either uint8 in [0 255], 
@@ -40,10 +47,10 @@ function ssurf = niak_read_surf(file_name)
 % different data input coding is used.
 %
 % (C) Keith Worsley, McGill University, 2008
-% Slightly modified by Pierre Bellec, 
-% Centre de recherche de l'institut de Gériatrie de Montréal,
-% Département d'informatique et de recherche opérationnelle,
-% Université de Montréal, 2012.
+%     Moo K. Chung, 2004-2007, http://www.stat.wisc.edu/softwares/hk/hk.html
+%     Pierre Bellec, Centre de recherche de l'institut de Gériatrie de Montréal,
+%        Département d'informatique et de recherche opérationnelle,
+%        Université de Montréal, 2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : surface, reader
@@ -72,6 +79,10 @@ if (nargin<1)||isempty(file_name)
     file_name = {[path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_mid_left.obj'],[path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_mid_right.obj']};
 end
 
+if nargin < 2
+    flag_neigh = false;
+end
+
 %% Multiple surfaces
 if iscellstr(file_name)
     k = length(file_name);
@@ -79,10 +90,14 @@ if iscellstr(file_name)
     ssurf.coord = [];
     ssurf.colr = [];
     ssurf.normal = [];
+    ssurf.neigh = [];
     for j=1:k
-        s = niak_read_surf(file_name{j});
+        s = niak_read_surf(file_name{j},flag_neigh);
         ssurf.tri=[ssurf.tri; int32(s.tri)+size(ssurf.coord,2)];
         ssurf.coord = [ssurf.coord s.coord];
+        if isfield(s,'neigh')
+            ssurf.neigh = [ssurf.neigh ; s.neigh+size(ssurf.neigh,1)];
+        end
         if isfield(s,'colr') 
             if size(s.colr,2)==1
                 ssurf.colr = s.colr;
@@ -96,6 +111,9 @@ if iscellstr(file_name)
     end
     if isempty(ssurf.colr)
         ssurf = rmfield(ssurf,'colr');
+    end
+    if isempty(ssurf.neigh)
+        ssurf = rmfield(ssurf,'neigh');
     end
     if isempty(ssurf.normal)
         ssurf = rmfield(ssurf,'normal');
@@ -239,6 +257,33 @@ else
         fprintf(1,'%s\n',['Unable to read ' file_name ', magic = ' num2str(magic)]);
     end
     ab='b';
+end
+
+% If requested, find out the neighboring nodes
+if flag_neigh
+    % compute the maximum degree of node
+    degree = niak_build_size_roi(ssurf.tri(:));
+    max_degree = max(degree);
+    n_points = size(ssurf.coord,2);
+    n_tri = size(ssurf.tri,1);
+    nbr = zeros(n_points,max_degree);
+    pos = ones(n_points,1);
+    for i_tri=1:n_tri
+        niak_progress(i_tri,n_tri);
+        for j=1:3
+            cur_point = ssurf.tri(i_tri,j);
+            for k=1:3
+                if (j ~= k)
+                    nbr_point = ssurf.tri(i_tri,k);
+                    if ~any(nbr(cur_point,:)==nbr_point)
+                        nbr(cur_point,pos(cur_point)) = nbr_point;
+                        pos(cur_point) = pos(cur_point)+1;
+                    end;
+                end;
+            end;
+        end;
+    end;
+    ssurf.neigh = nbr;
 end
 
 return
