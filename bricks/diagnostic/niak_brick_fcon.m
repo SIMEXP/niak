@@ -102,8 +102,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = { 'arg_nu_correct' , 'flag_invert_transf_init' , 'flag_test'    , 'folder_out'   , 'flag_verbose' };
-gb_list_defaults    = { '-distance 200'  , false                     , false          , ''             , true           };
+gb_list_fields      = { 'arg_nu_correct' , 'flag_invert_transf_init' , 'flag_test'    , 'folder_out'   , 'flag_verbose', 'scale' };
+gb_list_defaults    = { '-distance 200'  , false                     , false          , ''             , true          , NaN     };
 niak_set_defaults
 
 %% Building default output names
@@ -113,6 +113,8 @@ niak_set_defaults
 if flag_test == true
     return
 end
+
+system(['mkdir ' opt.folder_out]);
 
 %%%%%%%%%%%%%%%
 %% Read data %%
@@ -126,10 +128,12 @@ glob_param = load(files_in.ref_param);
 R_ind = niak_gen_connectome(vol_sub,glob_param.brain_partition);
 
 tab_csv = zeros(size(glob_param.p2p.seed,2),4);
+
 %%%%%%%%%%%%%%%%%%%%%
 %% p2p connections %%
 %%%%%%%%%%%%%%%%%%%%%
 for i=1:size(glob_param.p2p.seed,2)
+    
     [score_ref(i,:),score_ind(i)] = niak_diff_connections(glob_param, R_ind, glob_param.p2p.seed{i}, opt);
 
 end
@@ -138,12 +142,16 @@ opt_csv.labels_x = glob_param.p2p.name;
 % boxplot 
 f_handle = figure;
 boxplot([score_ref]','labels',glob_param.p2p.name)
-title(cat(2,'Similarity index'))
-ylabel('R_r_e_f-R_i_n_d')
+title(cat(2,'Similarity index'));
+ylabel('R_r_e_f-R_i_n_d');
 hold on
 plot(score_ind,'r*')
 hold off
-print(f_handle,files_out.p2p,'-dpdf');
+[pathstr,name,ext,versn] = fileparts(files_out.p2p);
+tmp_path = pwd;
+cd(pathstr)
+print(f_handle,[name ext],'-dpdf');
+cd(tmp_path)
 %close(f_handle);
 
 tab_csv(:,1) = score_ind;
@@ -161,8 +169,12 @@ ylabel('R_r_e_f-R_i_n_d')
 hold on
 plot(score_ind,'r*')
 hold off
-print(f_handle,files_out.seedcon,'-dpdf');
+[pathstr,name,ext,versn] = fileparts(files_out.seedcon);
+tmp_path = pwd;
+cd(pathstr)
+print(f_handle,[name ext],'-dpdf');
 %close(f_handle);
+cd(tmp_path)
 
 %% save the volume of the seed map
 values_corr = R_ind(:,glob_param.connections.seed{1});
@@ -175,29 +187,6 @@ end
 h.file_name = files_out.dm_map;
 niak_write_vol(h,connect_map);
 tab_csv(1,2) = score_ind;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Seed connections for all P2P %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-param = [];
-for i=1:size(glob_param.p2p.seed,2)
-    param = [param ; glob_param.p2p.seed{i}];
-end
-
-[score_ref,score_ind] = niak_diff_connections(glob_param, R_ind, unique(param(:)), opt);
-
-% boxplot 
-f_handle = figure;
-boxplot([score_ref]','labels','Seed all P2P')
-title(cat(2,'Similarity index'))
-ylabel('R_r_e_f-R_i_n_d')
-hold on
-plot(score_ind,'r*')
-hold off
-print(f_handle,files_out.seedconp2p,'-dpdf');
-%close(f_handle);
-
-tab_csv(1,3) = score_ind;
 
 %%%%%%%%%%%%%%%%%
 %% Connectomes %%
@@ -212,15 +201,46 @@ ylabel('R_r_e_f-R_i_n_d')
 hold on
 plot(score_ind,'r*')
 hold off
-print(f_handle,files_out.connectome,'-dpdf');
+[pathstr,name,ext,versn] = fileparts(files_out.connectome);
+tmp_path = pwd;
+cd(pathstr)
+print(f_handle,[name ext],'-dpdf');
 %close(f_handle);
+cd(tmp_path)
 
-tab_csv(1,4) = score_ind;
+tab_csv(1,3) = score_ind;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Seed connections for all P2P %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% param = [];
+% for i=1:size(glob_param.p2p.seed,2)
+%     param = [param ; glob_param.p2p.seed{i}];
+% end
+% 
+% [score_ref,score_ind] = niak_diff_connections(glob_param, R_ind, unique(param(:)), opt);
+% 
+% % boxplot 
+% f_handle = figure;
+% boxplot([score_ref]','labels','Seed all P2P')
+% title(cat(2,'Similarity index'))
+% ylabel('R_r_e_f-R_i_n_d')
+% hold on
+% plot(score_ind,'r*')
+% hold off
+% [pathstr,name,ext,versn] = fileparts(files_out.seedconp2p);
+% tmp_path = pwd;
+% cd(pathstr)
+% print(f_handle,[name ext],'-dpdf');
+% %close(f_handle);
+% cd(tmp_path)
+% 
+% tab_csv(1,4) = score_ind;
 
 %%%%%%%%%%%%%%%
 %% Write CSV %%
 %%%%%%%%%%%%%%%
-opt_csv.labels_y = {'P2P','DM','Seed all P2P','Connectome'}
+opt_csv.labels_y = {'P2P','DM','Connectome','Seed all P2P'}
 niak_write_csv(files_out.csv,tab_csv,opt_csv)
 
 
