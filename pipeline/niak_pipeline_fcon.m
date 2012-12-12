@@ -14,7 +14,7 @@ function [pipeline,opt] = niak_pipeline_fcon(files_in,opt)
 %       (structure) 
 %
 %       FMRI 
-%           (structure) all the functional runs to be analysed
+%           (structure) the functional runs to be analysed
 %
 %       REF_PARAM 
 %           (string) path for the .mat file containing the reference data
