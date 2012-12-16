@@ -219,7 +219,7 @@ while (nb_rois>thre_nb_rois)&&(nb_mnn>0)
         fprintf(' %i',nb_mnn);
     end
     
-    if (nb_rois>=thre_nb_rois)&(nb_mnn>0)
+    if (nb_rois>=thre_nb_rois)&&(nb_mnn>0)
         
         %% Update tseries
         tseries = sub_update_tseries(tseries,list_size,ind_mnn1,ind_mnn2,size_chunks);        
@@ -288,7 +288,7 @@ end
 if flag_size
     nb_iter_max = 100;
     ind_merge = find(list_size<=thre_size);
-    while (~isempty(ind_merge))&(nb_iter_max>0)
+    while (~isempty(ind_merge))&&(nb_iter_max>0)
         ind_merge_with = zeros(size(ind_merge));
         num_e = 1;
         for num_r = ind_merge(:)'
