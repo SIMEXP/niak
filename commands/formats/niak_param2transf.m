@@ -1,8 +1,4 @@
 function transf = niak_param2transf(rot,tsl)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_PARAM2TRANSF
-%
 % Convert rotation and translation parameters to a standard
 % 4*4 matrix array (y=M*x+T).
 %
