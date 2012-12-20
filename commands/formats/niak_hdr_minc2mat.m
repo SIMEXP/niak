@@ -1,33 +1,26 @@
 function [mat] = niak_hdr_minc2mat(direction_cosine,step,start)
-
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_HDR_MINC2MAT
-%
-% Convert a "voxel-to-world" coordinates affine transformation from the 
-% cosines/start/step representation used in minc headers to the standard
-% 4*4 matrix array (y=M*x+T).
+% Convert MINC cosines/start/step into an affine transformation.
 %
 % SYNTAX:
-% [MAT] = NIAK_HDR_MINC2MAT(DIRECTION_COSINE,STEP,START)
+% MAT = NIAK_HDR_MINC2MAT(DIRECTION_COSINE,STEP,START)
 % 
 % _________________________________________________________________________
 % INPUTS:
 %
 % DIRECTION_COSINES (array 3*3) gives you the direction assigned to the
-%           respective dimensions of the voxel array.
+%   respective dimensions of the voxel array.
 %
 % START (vector 3*1) the starting value of each voxel dimension along the
-%       DIRECTION_COSINES vector.
+%   DIRECTION_COSINES vector.
 %
 % STEP  (vector 3*1) the step made at each voxel dimension along the
-%       DIRECTION_COSINES vector.
+%   DIRECTION_COSINES vector.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% MAT   (4*4 array) An affine transformation, usually seen as a
-%           "voxel-to-world" space transform.
+% MAT (4*4 array) An affine transformation, usually seen as a
+%   "voxel-to-world" space transform.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -38,12 +31,11 @@ function [mat] = niak_hdr_minc2mat(direction_cosine,step,start)
 %
 % _________________________________________________________________________
 % SEE ALSO:
-%
 % NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_HDR_MAT2MINC
 %
 % Copyright (c) Pierre Bellec, McConnel Brain Imaging Center, Montreal 
-% Neurological Institute, McGill University, Montreal, Canada, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Neurological Institute, McGill University, Montreal, Canada.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, I/O, affine transformation, minc
 
