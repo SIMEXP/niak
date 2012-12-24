@@ -19,9 +19,9 @@ function [pipeline,opt] = niak_pipeline_region_growing(files_in,opt)
 %       which case the label OPT.LABELS{I} will be used for FMRI{I}
 %
 %   AREAS
-%       (string, default AAL template from NIAK) the name of the brain 
-%       parcelation template that will be used to constrain the region 
-%       growing.
+%       (string, default AAL template from NIAK at 3mm isotropic) the name 
+%       of the brain parcelation template that will be used to constrain the 
+%       region growing.
 %
 %   MASK
 %       (string, default FILES_IN.AREAS) a file name of a binary mask 
@@ -80,9 +80,11 @@ function [pipeline,opt] = niak_pipeline_region_growing(files_in,opt)
 %       averaging in each ROI. See OPT in NIAK_NORMALIZE_TSERIES.
 %
 %   IND_ROIS
-%       (vector of integer, default all) list of ROIs index that will 
+%       (vector of integer, default all) list of ROIs labels that will 
 %       be included in the analysis. By default, the brick is processing 
-%       all the ROIs found in FILES_IN.MASK
+%       all the ROIs found in FILES_IN.MASK. Note that if the default 
+%       is used for FILE_IN.AREAS or if the file name in FILES_IN.AREAS
+%       is 'template_aal', the AAL labels are used without reading the file.
 %
 %   FLAG_SIZE 
 %       (boolean, default 1) if FLAG_SIZE == 1, all regions that
@@ -172,7 +174,6 @@ if ~exist('files_in','var')||~exist('opt','var')
 end
 
 %% Checking that FILES_IN is in the correct format
-flag_areas = false;
 if ~isstruct(files_in)
     error('FILES_IN should be a struture!')
 else
@@ -190,8 +191,17 @@ else
         end
     end
 
-    if isfield(files_in,'areas_in')&&~isempty(files_in.areas_in)
-        flag_areas = true;
+    if isfield(files_in,'areas')&&~isempty(files_in.areas)&&~strcmp(files_in,'gb_niak_omitted')
+        [path_a,name_a,ext_a] = niak_fileparts(files_in.areas);
+        if strcmp(name_a,'template_aal')
+            flag_aal = true;
+        else
+            flag_aal = false;    
+        end
+    else
+        flag_aal = true;
+        niak_gb_vars;
+        files_in.areas = [gb_niak_path_template 'roi_aal_3mm.mnc.gz'];
     end
     
     if ~isfield(files_in,'mask')||isempty(files_in.mask)||strcmp(files_in.mask,'gb_niak_omitted')
@@ -273,12 +283,9 @@ pipeline = psom_add_job(pipeline,'neighbourhood_areas','niak_brick_neighbour',fi
 %%%%%%%%%%%%%%%%%%%%%
 %% Region growing  %%
 %%%%%%%%%%%%%%%%%%%%%
-if flag_areas || ~isempty(opt.ind_rois)
-    [hdr,mask] = niak_read_vol(files_in.areas_in); 
+if ~flag_aal
+    [hdr,mask] = niak_read_vol(files_in.areas); 
     mask = round(mask);
-    if ~isempty(opt.ind_rois)
-        mask = mask(ismember(mask,opt.ind_rois));
-    end
     list_roi = unique(mask(:))';
     list_roi = list_roi(list_roi~=0);
 else
