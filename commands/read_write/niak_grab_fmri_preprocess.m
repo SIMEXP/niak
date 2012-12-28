@@ -9,11 +9,7 @@
 %
 % PATH_DATA
 %   (string, default [pwd filesep], aka './') full path to the outputs of 
-%   NIAK_PIPELINE_REGION_GROWING. There should be a file "brain_rois.EXT" 
-%   where EXT can be .mnc or .nii possibly compressed (see GB_NIAK_ZIP_EXT 
-%   in NIAK_GB_VARS.M for the extension, usually it is .gz). There should 
-%   also be a collection of files named with the following pattern : 
-%   tseries_rois_<SUBJECT>_run<I>.mat
+%   NIAK_PIPELINE_FMRI_PREPROCESS. 
 %
 % OPT
 %   (structure, optional) with the following fields :
