@@ -1,61 +1,58 @@
-function [files_in,files_out,opt] = niak_template_brick(files_in,files_out,opt)
+function [in,out,opt] = niak_template_brick(in,out,opt)
 % This is a template file for "brick" functions in NIAK.
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_TEMPLATE_BRICK(FILES_IN,FILES_OUT,OPT)
+% [IN,OUT,OPT] = NIAK_TEMPLATE_BRICK(IN,OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% FILES_IN        
+% IN        
 %   (string) a file name of a 3D+t fMRI dataset .
 %
-%
-% FILES_OUT
+% OUT
 %   (structure) with the following fields:
 %       
 %   CORRECTED_DATA
 %       (string, default <BASE NAME FMRI>_c.<EXT>) File name for processed 
 %       data.
-%       If FILES_OUT is an empty string, the name of the outputs will be 
+%       If OUT is an empty string, the name of the outputs will be 
 %       the same as the inputs, with a '_c' suffix added at the end.
 %
 %   MASK
 %       (string, default <BASE NAME FMRI>_mask.<EXT>) File name for a mask 
-%       of the data. If FILES_OUT is an empty string, the name of the 
+%       of the data. If OUT is an empty string, the name of the 
 %       outputs will be the same as the inputs, with a '_mask' suffix added 
 %       at the end.
 %
 % OPT           
-% 	(structure) with the following fields.  
+%   (structure) with the following fields.  
 %
 %   TYPE_CORRECTION       
-%   	(string, default 'mean_var') possible values :
-%       'none' : no correction at all                       
-%       'mean' : correction to zero mean.
-%       'mean_var' : correction to zero mean and unit variance
-%       'mean_var2' : same as 'mean_var' but slower, yet does not use as 
-%       much memory).
+%      (string, default 'mean_var') possible values :
+%      'none' : no correction at all                       
+%      'mean' : correction to zero mean.
+%      'mean_var' : correction to zero mean and unit variance
+%      'mean_var2' : same as 'mean_var' but slower, yet does not use as 
+%      much memory).
 %
-%	FOLDER_OUT 
-%   	(string, default: path of FILES_IN) If present, all default outputs 
-%       will be created in the folder FOLDER_OUT. The folder needs to be 
-%       created beforehand.
+%   FOLDER_OUT 
+%      (string, default: path of IN) If present, all default outputs 
+%      will be created in the folder FOLDER_OUT. The folder needs to be 
+%      created beforehand.
 %
 %   FLAG_VERBOSE 
-%   	(boolean, default 1) if the flag is 1, then the function prints 
-%       some infos during the processing.
+%      (boolean, default 1) if the flag is 1, then the function prints 
+%      some infos during the processing.
 %
 %   FLAG_TEST 
-%       (boolean, default 0) if FLAG_TEST equals 1, the brick does not do 
-%       anything but update the default values in FILES_IN, FILES_OUT and 
-%       OPT.
+%      (boolean, default 0) if FLAG_TEST equals 1, the brick does not do 
+%      anything but update the default values in IN, OUT and OPT.
 %           
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% The structures FILES_IN, FILES_OUT and OPT are updated with default
-% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
+% IN, OUT, OPT: same as inputs but updated with default values.
 %              
 % _________________________________________________________________________
 % SEE ALSO:
@@ -108,13 +105,13 @@ flag_gb_niak_fast_gb = true; % Only load the most important global variables for
 niak_gb_vars 
 
 %% Syntax
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_TEMPLATE_BRICK(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_template_brick'' for more info.')
+if ~exist('in','var')||~exist('out','var')||~exist('opt','var')
+    error('niak:brick','Bad syntax, type ''help %s'' for more info.',mfilename)
 end
 
 %% Inputs
-if ~ischar(files_in)
-    error('FILES_IN should be a string');
+if ~ischar(in)
+    error('IN should be a string');
 end
     
 %% Options
@@ -125,31 +122,31 @@ niak_set_defaults
 
 
 %% Check the output files structure
-gb_name_structure = 'files_out';
+gb_name_structure = 'out';
 gb_list_fields    = {'corrected_data'  , 'mask'            };
 gb_list_defaults  = {'gb_niak_omitted' , 'gb_niak_omitted' };
 niak_set_defaults
 
 %% Building default output names
-[path_f,name_f,ext_f] = niak_fileparts(files_in(1,:)); % parse the folder, file name and extension of the input
+[path_f,name_f,ext_f] = niak_fileparts(in(1,:)); % parse the folder, file name and extension of the input
 
 if strcmp(opt.folder_out,'') % if the output folder is left empty, use the same folder as the input
     opt.folder_out = path_f;
     folder_out = path_f;
 end
 
-if isempty(files_out.corrected_data)
+if isempty(out.corrected_data)
 
-    if size(files_in,1) == 1 % There is only one input volume
+    if size(in,1) == 1 % There is only one input volume
 
-        files_out.corrected_data = cat(2,opt.folder_out,filesep,name_f,'_c',ext_f);
+        out.corrected_data = cat(2,opt.folder_out,filesep,name_f,'_c',ext_f);
 
     else % Multiple volumes have been specified, must be an old analyze format
 
-        name_files = cell([size(files_in,1) 1]);
+        name_files = cell([size(in,1) 1]);
 
-        for num_f = 1:size(files_in,1)
-            [path_f,name_f,ext_f] = fileparts(deblank(files_in(num_f,:)));
+        for num_f = 1:size(in,1)
+            [path_f,name_f,ext_f] = fileparts(deblank(in(num_f,:)));
 
             if strcmp(ext_f,'.gz')
                 [tmp,name_f,ext_f] = fileparts(name_f);
@@ -157,13 +154,13 @@ if isempty(files_out.corrected_data)
             
             name_files{num_f} = cat(2,opt.folder_out,filesep,name_f,'_c',ext_f);
         end
-        files_out = char(name_filtered_data);
+        out = char(name_filtered_data);
     end
 end
 
-if isempty(files_out.mask)
+if isempty(out.mask)
 
-    files_out.mask = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
+    out.mask = cat(2,opt.folder_out,filesep,name_f,'_mask',ext_f);
 
 end
 
@@ -177,7 +174,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if flag_verbose
-    msg = sprintf('Performing temporal correction of %s on the fMRI time series in file %s',type_correction,files_in);
+    msg = sprintf('Performing temporal correction of %s on the fMRI time series in file %s',type_correction,in);
     stars = repmat('*',[length(msg) 1]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);
 end
@@ -186,7 +183,7 @@ end
 if flag_verbose
     fprintf('Correct the time series ...\n');
 end
-[hdr,vol] = niak_read_vol(files_in); % read fMRI data
+[hdr,vol] = niak_read_vol(in); % read fMRI data
 mask = niak_mask_brain(mean(abs(vol),4)); % extract a brain mask
 tseries = niak_vol2tseries(vol,mask); % extract the time series in the mask
 tseries = niak_correct_mean_var(tseries,type_correction); % Correct the time series
@@ -197,12 +194,12 @@ if flag_verbose
     fprintf('Save outputs ...\n');
 end
 
-if ~strcmp(files_out.corrected_data,'gb_niak_omitted');
-    hdr.file_name = files_out.corrected_data;
+if ~strcmp(out.corrected_data,'gb_niak_omitted');
+    hdr.file_name = out.corrected_data;
     niak_write_vol(hdr,vol);
 end
 
-if ~strcmp(files_out.mask,'gb_niak_omitted');
-    hdr.file_name = files_out.mask;
+if ~strcmp(out.mask,'gb_niak_omitted');
+    hdr.file_name = out.mask;
     niak_write_vol(hdr,mask);
 end
