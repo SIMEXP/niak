@@ -1,8 +1,8 @@
-function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
+function [pipeline,opt_pipe,files_in] = niak_demo_fmri_preprocess(path_demo,opt)
 % This function demonstrates how to use NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % SYNTAX:
-% [PIPELINE,OPT] = NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO,OPT)
+% [PIPELINE,OPT_PIPE,FILES_IN] = NIAK_DEMO_FMRI_PREPROCESS(PATH_DEMO,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -46,8 +46,12 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 %   (structure) a formal description of the pipeline. See
 %   PSOM_RUN_PIPELINE.
 %
-% OPT
+% OPT_PIPE
 %   (structure) the option to call NIAK_PIPELINE_FMRI_PREPROCESS
+%
+% FILES_IN
+%   (structure) the description of input files used to call 
+%   NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -201,3 +205,4 @@ opt = rmfield(opt,'flag_region_growing');
 %% Run the fmri_preprocess pipeline  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt);
+opt_pipe = opt;
