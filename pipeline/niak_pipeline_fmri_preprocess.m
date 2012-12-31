@@ -454,6 +454,7 @@ template_fmri = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
 list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
+opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
 if ~ischar(opt.civet)
