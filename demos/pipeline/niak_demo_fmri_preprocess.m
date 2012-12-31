@@ -8,42 +8,46 @@ function [pipeline,opt] = niak_demo_fmri_preprocess(path_demo,opt)
 % INPUTS:
 %
 % PATH_DEMO
-%       (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
-%       the full path to the NIAK demo dataset. The dataset can be found in 
-%       multiple file formats at the following address : 
-%       http://www.bic.mni.mcgill.ca/users/pbellec/demo_niak/
+%   (string, default GB_NIAK_PATH_DEMO in the file NIAK_GB_VARS) 
+%   the full path to the NIAK demo dataset. The dataset can be found in 
+%   multiple file formats at the following address : 
+%   http://www.nitrc.org/frs/?group_id=411
 %
 % OPT
-%       (structure, optional) with the following fields : 
+%   (structure, optional) with the following fields : 
 %
-%       FLAG_TEST
-%           (boolean, default false) if FLAG_TEST == true, the demo will 
-%           just generate the PIPELINE and OPT structure, otherwise it will 
-%           process the pipeline.
+%   FOLDER_OUT
+%      (string, default PATH_DEMO/fmri_preprocess) where to store the 
+%      results of the pipeline.
 %
-%       FLAG_REGION_GROWING
-%           (boolean, default false) if this flag is true, the region growing
-%           step of the pipeline will be performed.
+%   FLAG_TEST
+%      (boolean, default false) if FLAG_TEST == true, the demo will 
+%      just generate the PIPELINE and OPT structure, otherwise it will 
+%      process the pipeline.
 %
-%       SIZE_OUTPUT 
-%           (string, default 'quality_control') possible values : 
-%           'quality_control’, ‘all’.
+%   FLAG_REGION_GROWING
+%      (boolean, default false) if this flag is true, the region growing
+%      step of the pipeline will be performed.
 %
-%       PSOM
-%           (structure) the options of the pipeline manager. See the OPT
-%           argument of PSOM_RUN_PIPELINE. Default values can be used here.
-%           Note that the field PSOM.PATH_LOGS will be set up by the
-%           pipeline.
+%   SIZE_OUTPUT 
+%      (string, default 'quality_control') possible values : 
+%      'quality_control’, ‘all’.
+%
+%   PSOM
+%      (structure) the options of the pipeline manager. See the OPT
+%      argument of PSOM_RUN_PIPELINE. Default values can be used here.
+%      Note that the field PSOM.PATH_LOGS will be set up by the
+%      pipeline.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % PIPELINE
-%       (structure) a formal description of the pipeline. See
-%       PSOM_RUN_PIPELINE.
+%   (structure) a formal description of the pipeline. See
+%   PSOM_RUN_PIPELINE.
 %
 % OPT
-%       (structure) the option to call NIAK_PIPELINE_FMRI_PREPROCESS
+%   (structure) the option to call NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -98,10 +102,11 @@ if ~strcmp(path_demo(end),filesep)
 end
 
 %% Set up defaults
+folder_out = [niak_full_path(path_demo) 'fmri_preprocess' filesep];
 default_psom.path_logs = '';
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_region_growing' , 'size_output'     , 'flag_test' , 'psom'       };
-gb_list_defaults  = {false                 , 'quality_control' , false       , default_psom };
+gb_list_fields    = { 'folder_out' , 'flag_region_growing' , 'size_output'     , 'flag_test' , 'psom'       };
+gb_list_defaults  = { folder_out   , false                 , 'quality_control' , false       , default_psom };
 niak_set_defaults
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,9 +156,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
-
-% General
-opt.folder_out          = cat(2,path_demo,filesep,'fmri_preprocess',filesep);            % Where to store the results
 
 % Slice timing correction (niak_brick_slice_timing)
 opt.slice_timing.type_acquisition = 'interleaved ascending'; % Interleaved ascending (odd first by default)
