@@ -149,20 +149,15 @@ end
 [fmri_c,lc] = niak_fmri2cell(files.fmri.vol);
 list_ext = { '.nii' , '.nii.gz' , '.mnc' , '.mnc.gz' };
 for num_f = 1:length(lc)
-    base_fmri = [path_fmri 'fmri_' lc(num_f).name];
-    flag_exist = false;
+    base_fmri = [path_fmri 'fmri_' lc(num_f).name];    
     for num_e = 1:length(list_ext)    
         file_fmri = [base_fmri list_ext{num_e}];
-        if psom_exist(file_fmri)
-            flag_exist = true;
+        if psom_exist(file_fmri)||(num_e == length(list_ext))            
             ext = list_ext{num_e};
             files.fmri.vol.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = file_fmri;
             files.fmri.extra.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = [base_fmri '_extra.mat'];
         end
-     end
-     if ~flag_exist
-         error('I could not find any fmri dataset for %s, %s, %s',lc(num_f).subject,lc(num_f).session,lc(num_f).run);
-     end
+     end     
 end
 
 %% Grab the preprocessed anat datasets
@@ -175,12 +170,13 @@ for num_s = 1:length(list_subject)
                   'nativefunc_lowres'  , ...
                   'nativefunc_hires'   , ...
                   'classify_stereolin' , ...
+                  'mask_stereolin'     , ...
+                  'mask_stereonl'};
 %                  'pve_csf_stereolin'  , ... % Commented out because it is an optional output
 %                  'pve_wm_stereolin'   , ... % Commented out because it is an optional output
 %                  'pve_gm_stereolin'   , ... % Commented out because it is an optional output
 %                  'pve_disc_stereolin' , ... % Commented out because it is an optional output
-                  'mask_stereolin'     , ...
-                  'mask_stereonl'};
+
                    
     list_func = { 'mask_stereonl'  , ...
                   'mean_stereonl'  , ...
