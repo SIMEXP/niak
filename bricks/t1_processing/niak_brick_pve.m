@@ -27,24 +27,29 @@ function [files_in,files_out,opt] = niak_brick_pve(files_in,files_out,opt)
 %   (structure) with the following fields. 
 %                       
 %   PVE_WM
-%       (string, default <FILES_IN.VOL>_PVE_WM.<EXT>) tissue fraction 
-%       estimate for white matter.
+%      (string, default <FILES_IN.VOL>_PVE_WM.<EXT>) tissue fraction 
+%      estimate for white matter.
 %
 %   PVE_GM
-%       (string, default <FILES_IN.VOL>_PVE_GM.<EXT>) tissue fraction 
-%       estimate for grey matter.
+%      (string, default <FILES_IN.VOL>_PVE_GM.<EXT>) tissue fraction 
+%      estimate for grey matter.
 %
 %   PVE_CSF
-%       (string, default <FILES_IN.VOL>_PVE_CSF.<EXT>) tissue fraction 
-%       estimate for cerebro-spinal fluid
+%      (string, default <FILES_IN.VOL>_PVE_CSF.<EXT>) tissue fraction 
+%      estimate for cerebro-spinal fluid
 %
 %   PVE_DISC
-%       (string, default <FILES_IN.VOL>_PVE_DISC.<EXT>) crisp segmentation
-%       with PVE labels.
+%      (string, default <FILES_IN.VOL>_PVE_DISC.<EXT>) crisp segmentation
+%      with PVE labels.
 %
 % OPT           
 %   (structure) with the following fields:
 %   
+%   RAND_SEED
+%      (scalar, default []) The specified value is used to seed the random
+%      number generator with PSOM_SET_RAND_SEED. If left empty, no action
+%      is taken.
+%
 %   BETA
 %      (scalar, default 0.1) the regularization parameter.
 %
@@ -108,7 +113,7 @@ function [files_in,files_out,opt] = niak_brick_pve(files_in,files_out,opt)
 % (C) 2010 Jussi Tohka 
 % Department of Signal Processing,
 % Tampere University of Technology, Finland
-% Maintainer: jussi.tohka at tut.fi
+% Maintainer: jussi.tohka at tut.fi , pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, T1, partial volume effect
 
@@ -150,8 +155,8 @@ list_defaults = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'g
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
-list_fields   = { 'beta' , 'class_params' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 0.1    , []             , true           , false       };
+list_fields   = { 'rand_seed' , 'beta' , 'class_params' , 'flag_verbose' , 'flag_test' };
+list_defaults = { []          , 0.1    , []             , true           , false       };
 if nargin < 3
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 else
@@ -185,12 +190,19 @@ end
 %% The brick starts here %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Seed the random generator
+if ~isempty(opt.rand_seed)
+    psom_set_rand_seed(opt.rand_seed);
+end
+
+%% Verbose
 if opt.flag_verbose
     msg = 'Estimation of partial volume effects';
     stars = repmat('*',[1 length(msg)]);
     fprintf('\n%s\n%s\n%s\n',stars,msg,stars);    
 end
 
+%% Read the T1 volume and the brain mask
 [hdr,img] = niak_read_vol(files_in.vol);
 [hdr,brain_mask] = niak_read_vol(files_in.mask);
 brain_mask = brain_mask>0;
@@ -200,6 +212,7 @@ else
     tissue_class = [];
 end
 
+%% Run the PVE estimation
 [tfe,pve_disc] = sub_pvemri(img,brain_mask,tissue_class,opt.class_params,hdr.info.voxel_size,opt.beta,opt.flag_verbose);
 
 %% Write results
