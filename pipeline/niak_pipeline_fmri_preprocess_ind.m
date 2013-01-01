@@ -407,7 +407,7 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
 list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct()            , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -486,12 +486,13 @@ if ischar(opt.civet)
     clear job_in job_out job_opt
     job_in.vol          = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
     job_in.mask         = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
-    job_in.segmentation = pipeline.(['t1_preprocess_' subject]).files_out.classify;
+    job_in.segmentation = pipeline.(['t1_preprocess_' subject]).files_out.classify;    
     job_out.pve_wm      = [opt.folder_anat 'anat_' subject '_pve_wm_stereolin'   ext_f];
     job_out.pve_gm      = [opt.folder_anat 'anat_' subject '_pve_gm_stereolin'   ext_f];
     job_out.pve_csf     = [opt.folder_anat 'anat_' subject '_pve_csf_stereolin'  ext_f];
     job_out.pve_disc    = [opt.folder_anat 'anat_' subject '_pve_disc_stereolin' ext_f];
     job_opt             = opt.pve;
+    job_opt.rand_seed   = opt.rand_seed;
     if isfield(job_opt,'flag_skip')
         job_opt = rmfield(job_opt,'flag_skip');
     end
