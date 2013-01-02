@@ -163,13 +163,16 @@ end
 
 % Slice timing correction (niak_brick_slice_timing)
 opt.slice_timing.type_acquisition = 'interleaved ascending'; % Interleaved ascending (odd first by default)
-opt.slice_timing.type_scanner     = 'Bruker';                % Only the value 'Siemens' will actually have an impact
+opt.slice_timing.type_scanner     = 'Bruker';                % Scanner manufacturer. Only the value 'Siemens' will actually have an impact
 opt.slice_timing.delay_in_tr      = 0;                       % The delay in TR ("blank" time between two volumes)
-opt.slice_timing.flag_skip        = 0;                       % Turn on/off the slice timing (here it is on)
-opt.slice_timing.suppress_vol     = 0;
+opt.slice_timing.suppress_vol     = 0;                       % Number of dummy scans to suppress.
+opt.slice_timing.flag_nu_correct  = 1;                       % Apply a correction for non-uniformities on the EPI volumes (1: on, 0: of). This is particularly important for 32-channels coil.
+opt.slice_timing.arg_nu_correct   = '-distance 200';         % The distance between control points for non-uniformity correction (in mm, lower values can capture faster varying slow spatial drifts).
+opt.slice_timing.flag_center      = 0;                       % Set the origin of the volume at the center of mass of a brain mask. This is useful only if the voxel-to-world transformation from the DICOM header has somehow been damaged. This needs to be assessed on the raw images.
+opt.slice_timing.flag_skip        = 0;                       % Skip the slice timing (0: don't skip, 1 : skip). Note that only the slice timing corretion portion is skipped, not all other effects such as FLAG_CENTER or FLAG_NU_CORRECT
 
 % Motion correction (niak_brick_motion_correction)
-opt.motion_correction.session_ref  = 'session1'; % The session that is used as a reference. Use the session corresponding to the acqusition of the T1 scan.
+opt.motion.session_ref  = 'session1'; % The session that is used as a reference. Use the session corresponding to the acqusition of the T1 scan.
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
 % space (niak_brick_t1_preprocess)
