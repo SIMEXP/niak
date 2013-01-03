@@ -155,7 +155,7 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %
 % F. Carbonell, P. Bellec, A. Shmuel. Validation of a superposition model 
 % of global and system-specific resting state activity reveals anti-correlated 
-% networks.  To appear in Brain Connectivity.
+% networks. Brain Connectivity 2011 1(6): 496-510. doi:10.1089/brain.2011.0065
 %
 % For an overview of the regression steps as well as the "scrubbing" of 
 % volumes with excessive motion, see:
