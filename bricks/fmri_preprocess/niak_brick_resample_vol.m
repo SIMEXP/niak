@@ -43,7 +43,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %       (structure, optional) has the following fields:
 %
 %       INTERPOLATION 
-%          (string, default 'tricubic') the spatial interpolation method. 
+%          (string, default 'trilinear') the spatial interpolation method. 
 %          Available options : 'trilinear', 'tricubic', 'nearest_neighbour'
 %          ,'sinc'.
 %

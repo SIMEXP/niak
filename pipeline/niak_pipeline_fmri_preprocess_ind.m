@@ -53,7 +53,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %             kept
 %       
 %   TEMPLATE_FMRI
-%       (string, default '<~niak>/template/roi_aal.mnc.gz') a volume that
+%       (string, default '<~niak>/template/roi_aal_3mm.mnc.gz') a volume that
 %       will be used to resample the fMRI datasets. 
 %
 %   TARGET_SPACE
@@ -195,7 +195,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       in the stereotaxic space).
 %
 %       INTERPOLATION 
-%           (string, default 'tricubic') the spatial interpolation method. 
+%           (string, default 'trilinear') the spatial interpolation method. 
 %           Available options : 'trilinear', 'tricubic', 
 %           'nearest_neighbour','sinc'.
 %
@@ -405,7 +405,7 @@ end
 files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correct format
 
 %% OPT
-file_template = [gb_niak_path_template filesep 'roi_aal.mnc.gz'];
+file_template = [gb_niak_path_template filesep 'roi_aal_3mm.mnc.gz'];
 list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
 list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
