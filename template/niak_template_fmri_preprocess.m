@@ -77,16 +77,13 @@ opt.slice_timing.flag_skip        = 0;                       % Skip the slice ti
 opt.motion.session_ref  = 'session1'; % The session that is used as a reference. In general, use the session including the acqusition of the T1 scan.
 
 % resampling in stereotaxic space
-opt.resample_vol.interpolation = 'trilinear'; % The resampling scheme. The most accurate is 'sinc' but it is awfully slow
+opt.resample_vol.interpolation = 'trilinear'; % The resampling scheme. The fastest and most robust method is trilinear. 
 opt.resample_vol.voxel_size    = [3 3 3];     % The voxel size to use in the stereotaxic space
 opt.resample_vol.flag_skip     = 0;           % Skip resampling (data will stay in native functional space after slice timing/motion correction) (0: don't skip, 1 : skip)
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
 % space (niak_brick_t1_preprocess)
-opt.t1_preprocess.nu_correct.arg = '-distance 50'; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 50 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
-
-% T1-T2 coregistration (niak_brick_anat2func)
-opt.anat2func.init = 'identity'; % An initial guess of the transform. Possible values 'identity', 'center'. 'identity' is self-explanatory. The 'center' option usually does more harm than good. Use it only if you have very big misrealignement between the two images (say, 2 cm).
+opt.t1_preprocess.nu_correct.arg = '-distance 75'; % Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 75 for 3T images. If you find that this stage did not work well, this parameter is usually critical to improve the results.
 
 % Temporal filtering (niak_brick_time_filter)
 opt.time_filter.hp = 0.01; % Cut-off frequency for high-pass filtering, or removal of low frequencies (in Hz). A cut-off of -Inf will result in no high-pass filtering.
@@ -108,6 +105,10 @@ opt.corsica.flag_skip                = 1;     % Skip CORSICA (0: don't skip, 1 :
 % Spatial smoothing (niak_brick_smooth_vol)
 opt.smooth_vol.fwhm      = 6;  % Full-width at maximum (FWHM) of the Gaussian blurring kernel, in mm.
 opt.smooth_vol.flag_skip = 0;  % Skip spatial smoothing (0: don't skip, 1 : skip)
+
+% Just to show case how to specify a different parameter for one subject (here subject1)
+opt.tune.subject = 'subject1';
+opt.tune.param.slice_timing.flag_center = true; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
