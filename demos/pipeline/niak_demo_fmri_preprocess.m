@@ -55,7 +55,7 @@ function [pipeline,opt_pipe,files_in] = niak_demo_fmri_preprocess(path_demo,opt)
 % The following parameters are hard-coded and cannot be modified:
 %   opt.slice_timing.type_acquisition = 'interleaved ascending'; 
 %   opt.slice_timing.type_scanner     = 'Bruker';                
-%   opt.t1_preprocess.nu_correct.arg = '-distance 75';
+%   opt.t1_preprocess.nu_correct.arg = '-distance 50';
 %   
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -104,7 +104,7 @@ end
 % Hard-coded processing parameters
 opt.slice_timing.type_acquisition = 'interleaved ascending'; 
 opt.slice_timing.type_scanner     = 'Bruker';                
-opt.t1_preprocess.nu_correct.arg = '-distance 75'; 
+opt.t1_preprocess.nu_correct.arg = '-distance 50'; 
 
 %% In which format is the niak demo ?
 if psom_exist(cat(2,path_demo,'anat_subject1.img'))
