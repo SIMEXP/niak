@@ -75,11 +75,12 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         to a zero mean and a unit variance. 
 %
 %   NORMALIZE_Y
-%      (boolean, default true) If true, the data is corrected to a zero mean and unit variance.
+%      (boolean, default false) If true, the data is corrected to a zero mean and unit variance.
 %
 %   NORMALIZE_TYPE
-%      (string, default 'mean_var') By default, the data is corrected to a zero mean and unit variance.
-%      Use 'mean' for zero mean correction only.
+%      (string, default 'mean') Available options:
+%         'mean': correction to a zero mean (for each column)
+%         'mean_var': correction to a zero mean and unit variance (for each column)
 %
 %   FLAG_INTERCEPT
 %      (boolean, default true) if FLAG_INTERCEPT is true, a constant covariate will be
@@ -162,7 +163,7 @@ model = psom_struct_defaults(model,list_fields,list_defaults);
 
 %% Check the options
 list_fields   = { 'flag_filter_nan' , 'select' , 'contrast' , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'labels_x' };
-list_defaults = { true              , struct   , struct()   , struct       , true             , {}            , true          , true          , 'mean_var'       ,{}         };
+list_defaults = { true              , struct   , struct()   , struct       , true             , {}            , true          , false         , 'mean'           ,{}         };
 if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -384,16 +385,16 @@ function model = sub_normalize(model,opt)
 %% Optional: normalization of covariates
 
 if islogical(opt.normalize_x)&&opt.normalize_x
-   opt_n.type = opt.normalize_type;  
+    opt_n.type = opt.normalize_type;  
 
-   % because the normalization will give 0 il the nbr of rows = 1
-   if (size(model.x,1) ~= 1)&&~isempty(model.x)
-       model.x = niak_normalize_tseries(model.x,opt_n);
-   end
-  
-  elseif ~islogical(opt.normalize_x)
+    % because the normalization will give 0 il the nbr of rows = 1
+    if (size(model.x,1) ~= 1)&&~isempty(model.x)
+        model.x = niak_normalize_tseries(model.x,opt_n);
+    end
+elseif ~islogical(opt.normalize_x)
+    opt_n.type = opt.normalize_type;  
     mask = ismember(model.labels_y,fieldnames(opt.normalize_x));
-    model.x(:,mask) = niak_normalize_tseries(model.x(:,mask));
+    model.x(:,mask) = niak_normalize_tseries(model.x(:,mask),opt_n);
 end
 mask = ismember(model.labels_y,'intercept');
 model.x(:,mask) = 1;
