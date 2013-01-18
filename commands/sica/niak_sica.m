@@ -2,7 +2,7 @@ function [res_ica]=niak_sica(data,opt)
 % ICA processing of 2D dataset
 %
 % SYNTAX:
-% RES_ICA = NIAK_DO_SICA(DATA,OPT)
+% RES_ICA = NIAK_SICA(DATA,OPT)
 % 
 % _________________________________________________________________________
 % INPUTS:
@@ -917,7 +917,8 @@ if strcmp(sphering,'on'), %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if verbose,
         fprintf('Computing the sphering matrix...\n');
     end
-    sphere = 2.0*inv(sqrtm(cov(data'))); % find the "sphering" matrix = spher()
+    [sphere,rcond_data] = inv(sqrtm(cov(data'))); % find the "sphering" matrix = spher()
+    sphere = 2.0*sphere;
     if ~weights,
         if verbose,
             fprintf('Starting weights are the identity matrix ...\n');
@@ -939,7 +940,8 @@ elseif strcmp(sphering,'off') %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             fprintf('Using the sphering matrix as the starting weight matrix ...\n');
             fprintf('Returning the identity matrix in variable "sphere" ...\n');
         end
-        sphere = 2.0*inv(sqrtm(cov(data'))); % find the "sphering" matrix = spher()
+        [sphere,rcond_data] = inv(sqrtm(cov(data'))); % find the "sphering" matrix = spher()
+        sphere = 2.0*sphere;        
         weights = eye(ncomps,chans)*sphere; % begin with the identity matrix
         sphere = eye(chans);                 % return the identity matrix
     else % weights ~= 0
@@ -988,7 +990,7 @@ signs = ones(1,ncomps);    % initialize signs to nsub -1, rest +1
 for k=1:nsub
     signs(k) = -1;
 end
-if extended & extblocks < 0 & verbose,
+if extended & (extblocks < 0) && verbose,
     fprintf('Fixed extended-ICA sign assignments:  ');
     for k=1:ncomps
         fprintf('%d ',signs(k));
@@ -1020,7 +1022,7 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     for t=1:block:lastt, %%%%%%%%% ICA Training Block %%%%%%%%%%%%%%%%%%%
         pause(0);
-        if ~isempty(get(0, 'currentfigure')) & strcmp(get(gcf, 'tag'), 'stop')
+        if ~isempty(get(0, 'currentfigure')) && strcmp(get(gcf, 'tag'), 'stop')
             close; error('USER ABORT');
         end;
         if biasflag
@@ -1061,11 +1063,11 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             wts_blowup = 1;
             change = nochange;
         end
-        if extended & ~wts_blowup
+        if extended && ~wts_blowup
             %
             %%%%%%%%%%% Extended-ICA kurtosis estimation %%%%%%%%%%%%%%%%%%%%%
             %
-            if extblocks > 0 & rem(blockno,extblocks) == 0,
+            if (extblocks > 0) && (rem(blockno,extblocks) == 0),
                 % recompute signs vector using kurtosis
                 if kurtsize < frames % 12-22-99 rand() size suggestion by M. Spratling
                     rp = fix(rand(1,kurtsize)*datalength);  % pick random subset
@@ -1120,7 +1122,7 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %
     %%%%%%%%%%%%%%%%%%%%%% Restart if weights blow up %%%%%%%%%%%%%%%%%%%%
     %
-    if wts_blowup | isnan(change)|isinf(change),  % if weights blow up,
+    if wts_blowup || isnan(change) || isinf(change),  % if weights blow up,
         if verbose
             fprintf('');
         end
@@ -1210,7 +1212,7 @@ while step < maxsteps, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %
         %%%%%%%%%%%%%%%%%%%% Apply stopping rule %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %
-        if step >2 & change < nochange,      % apply stopping rule
+        if (step > 2) && (change < nochange),      % apply stopping rule
             laststep=step;
             step=maxsteps;                  % stop when weights stabilize
         elseif change > DEFAULT_BLOWUP,      % if weights blow up,

@@ -44,9 +44,9 @@ function [files_in,files_out,opt] = niak_brick_sica(files_in,files_out,opt)
 %      Possible values : 'Infomax', 'Fastica-Def' or 'Fastica-Sym'.
 %
 %   NB_COMP
-%      (integer, default min(60,foor(0.95*T)))
+%      (integer, default min(60,floor(0.95*T)))
 %      number of components to compute (for default : T is the number
-%      of time samples.
+%      of time samples).
 %
 %   RAND_SEED
 %      (scalar, default []) The specified value is used to seed the random
