@@ -8,7 +8,7 @@ function [eig_val,eig_vec,weights] = niak_pca(data,nb_comp)
 % INPUTS
 %
 % DATA
-%   (2D array, size N*T) samples*variables data array. If data is a time 
+%   (2D array, size N*T) variables x samples data array. If data is a time 
 %   series array, the time would be the second dimension for a spatial PCA 
 %   (the variables here are the volumes), which corresponds to TSERIES' for 
 %   the usual NIAK conventions for array of time series.
