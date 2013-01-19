@@ -64,6 +64,11 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %          DVARS (vector) DVARS(I) is the mean squares variance
 %             of residuals.
 %
+%   COMPCOR_MASK
+%      (string, default FOLDER_OUT/<base FMRI>_mask_compcor.<ext FMRI>) the 
+%      name of a 3D file, with a binary volume of the voxels used for compcor
+%      regression. 
+%
 %   QC_SLOW_DRIFT 
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_slow_drift.<ext FMRI>) 
 %      the name of a volume file with the f-test of the slow time drifts
@@ -82,6 +87,10 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_wm.<ext FMRI>)  
 %      the name of a volume file with the f-test of the average white matter 
 %      signal
+%
+%   QC_COMPCOR
+%      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_compcor.<ext FMRI>)  
+%      the name of a volume file with the f-test of compcor
 %
 %   QC_MOTION 
 %      (string, default FOLDER_OUT/qc_<base FMRI>_ftest_motion.<ext FMRI>)  
@@ -104,42 +113,58 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      are generated.
 %
 %   FLAG_SLOW
-%       (boolean, default true) turn on/off the correction of slow time drifts
+%      (boolean, default true) turn on/off the correction of slow time drifts
 %
 %   FLAG_HIGH
-%       (boolean, default false) turn on/off the correction of high frequencies
+%      (boolean, default false) turn on/off the correction of high frequencies
 %
 %   FLAG_GSC 
-%       (boolean, default true) turn on/off global signal correction
+%      (boolean, default true) turn on/off global signal correction
 %
 %   FLAG_MOTION_PARAMS 
-%       (boolean, default false) turn on/off the removal of the 6 motion 
-%       parameters + the square of 6 motion parameters.
+%      (boolean, default false) turn on/off the removal of the 6 motion 
+%      parameters + the square of 6 motion parameters.
 %
 %   FLAG_WM 
-%       (boolean, default true) turn on/off the removal of the average 
-%       white matter signal
+%      (boolean, default true) turn on/off the removal of the average 
+%      white matter signal
+%
+%   FLAG_COMPCOR
+%      (boolean, default false) turn on/off COMPCOR 
 %
 %   FLAG_SCRUBBING
-%       (boolean, default true) turn on/off the "scrubbing" of volumes with 
-%       excessive motion.
+%      (boolean, default true) turn on/off the "scrubbing" of volumes with 
+%      excessive motion.
 %
 %   THRE_FD
-%       (scalar, default 0.5) the maximal acceptable framewise displacement 
-%       after scrubbing.
+%      (scalar, default 0.5) the maximal acceptable framewise displacement 
+%      after scrubbing.
 %
 %   NB_VOL_MIN
-%       (integer, default 40) the minimal number of volumes remaining after 
-%       scrubbing (unless the data themselves are shorter). If there are not enough
-%       time frames after scrubbing, the time frames with lowest FD are selected.
+%      (integer, default 40) the minimal number of volumes remaining after 
+%      scrubbing (unless the data themselves are shorter). If there are not enough
+%      time frames after scrubbing, the time frames with lowest FD are selected.
 %
 %   PCT_VAR_EXPLAINED 
-%       (boolean, default 0.95) the % of variance explained by the selected 
-%       PCA components when reducing the dimensionality of motion parameters.
+%      (boolean, default 0.95) the % of variance explained by the selected 
+%      PCA components when reducing the dimensionality of motion parameters.
 %
 %   FLAG_PCA_MOTION 
-%       (boolean, default true) turn on/off the PCA reduction of motion 
-%       parameters.
+%      (boolean, default true) turn on/off the PCA reduction of motion 
+%      parameters.
+%
+%   COMPCOR_PERC
+%      (scalar, default 0.02) the percentage of voxels used to define 
+%      "high" standard deviation. See NIAK_COMPCOR_MASK
+%
+%   COMPCOR_TYPE
+%      (string, default 'at') the type of mask used for compcor:
+%         'a' : anatomical mask of white matter + ventricles
+%         't' : mask of voxels with high standard deviation 
+%         'at' : merging of the 'a' and 't' masks
+%
+%   COMPCOR_NB
+%      (integer, default 10) the number of principal components removed in COMPCOR
 %
 % _________________________________________________________________________
 % OUTPUTS
@@ -153,21 +178,27 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % The estimator of the global average using PCA is described in the 
 % following publication:
 %
-% F. Carbonell, P. Bellec, A. Shmuel. Validation of a superposition model 
-% of global and system-specific resting state activity reveals anti-correlated 
-% networks. Brain Connectivity 2011 1(6): 496-510. doi:10.1089/brain.2011.0065
+%   F. Carbonell, P. Bellec, A. Shmuel. Validation of a superposition model 
+%   of global and system-specific resting state activity reveals anti-correlated 
+%   networks. Brain Connectivity 2011 1(6): 496-510. doi:10.1089/brain.2011.0065
 %
 % For an overview of the regression steps as well as the "scrubbing" of 
 % volumes with excessive motion, see:
 %
-% J. D. Power, K. A. Barnes, Abraham Z. Snyder, B. L. Schlaggar, S. E. Petersen
-% Spurious but systematic correlations in functional connectivity MRI networks 
-% arise from subject motion
-% NeuroImage Volume 59, Issue 3, 1 February 2012, Pages 2142–2154
+%   J. D. Power, K. A. Barnes, Abraham Z. Snyder, B. L. Schlaggar, S. E. Petersen
+%   Spurious but systematic correlations in functional connectivity MRI networks 
+%   arise from subject motion
+%   NeuroImage Volume 59, Issue 3, 1 February 2012, Pages 2142–2154
 %
-% Note that the scrubbing is based solely on the FD index, and that DVARS is not
-% derived. The paper of Power et al. included both indices.
+%   Note that the scrubbing is based solely on the FD index, and that DVARS is not
+%   derived. The paper of Power et al. included both indices.
 %
+% For a description of the COMPCOR method:
+%
+%   Behzadi, Y., Restom, K., Liau, J., Liu, T. T., Aug. 2007. A component based 
+%   noise correction method (CompCor) for BOLD and perfusion based fMRI. 
+%   NeuroImage 37 (1), 90-101. http://dx.doi.org/10.1016/j.neuroimage.2007.04.042
+% 
 % Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
 % Research Centre of the Montreal Geriatric Institute
 % & Department of Computer Science and Operations Research
@@ -200,13 +231,13 @@ list_defaults  = { NaN    , NaN      , NaN       , 'gb_niak_omitted' , NaN      
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'scrubbing'       , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_high'         , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
-list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
+list_fields    = { 'scrubbing'       , 'compcor_mask'    , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_high'         , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { 40           , true             , 0.5       , true        , false       , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
+list_fields    = { 'flag_compcor' , 'compcor_perc' , 'compcor_nb' , 'compcor_type' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { false          , 0.02           , 10           , 'at'           , 40           , true             , 0.5       , true        , false       , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
