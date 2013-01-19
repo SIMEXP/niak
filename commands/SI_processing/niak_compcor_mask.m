@@ -1,17 +1,19 @@
-function mask = niak_compcor_mask(vol,perc);
+function mask = niak_compcor_mask(vol,perc,method);
 % Compute the 't' mask of the compcor method (based on temporal standard deviation)
 %
 % SYNTAX:
-% MASK = NIAK_COMPCOR_MASK(VOL,PERC)
+% MASK = NIAK_COMPCOR_MASK( VOL , [PERC] , [METHOD] )
 %
 % INPUTS:
 %   VOL (3D+t array) an fMRI dataset
 %   PERC (scalar, default 0.02) the proportion of voxels considered to have a 
 %      "high" standard deviation (in time).
+%   METHOD (string, default 'slice') how to define "high" standard deviation. 
+%      'slice': top PERC of voxels per slice
+%      'global': top PERC of voxels globally
 %
 % OUTPUTS
-%   MASK (3D array) a binary mask of high standard deviation voxels (defined
-%      per slice)
+%   MASK (3D array) a binary mask of high standard deviation voxels 
 %
 % REFERENCE
 %   Behzadi, Y., Restom, K., Liau, J., Liu, T. T., Aug. 2007. A component based 
@@ -46,11 +48,22 @@ function mask = niak_compcor_mask(vol,perc);
 if nargin < 2
     perc = 0.02;
 end
+if nargin < 3
+    method = 'slice';
+end
 std_vol = std(vol,[],4);
 [nx,ny,nz,nt] = size(vol);
-mask = false([nx ny nz]);
-for iz = 1:nz % loop over slices
-    slice = std_vol(:,:,iz);
-    val = sort(slice(:),'descend');
-    mask(:,:,iz) = std_vol(:,:,iz)>= val(floor(perc*length(val)));
+switch method
+    case 'slice'
+        mask = false([nx ny nz]);
+        for iz = 1:nz % loop over slices
+            slice = std_vol(:,:,iz);
+            val = sort(slice(:),'descend');
+            mask(:,:,iz) = std_vol(:,:,iz)>= val(floor(perc*length(val)));
+        end
+    case 'global'
+        val = sort(std_vol(:),'descend');
+        mask = std_vol >= val(floor(perc*length(val)));
+    otherwise
+        error('%s is an unknown method',method)
 end
