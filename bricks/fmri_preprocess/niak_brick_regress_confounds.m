@@ -602,7 +602,8 @@ if ~isempty(x2)
     if opt.flag_verbose
         fprintf('Regress the confounds stage 2 (global signal + custom covariates)...\n')
     end
-    model.x=x2;
+    [tmp,reg] = niak_lse(x2,x);    
+    model.x=reg;
     res = niak_glm(model,opt_glm);
     y = res.e;
 end
