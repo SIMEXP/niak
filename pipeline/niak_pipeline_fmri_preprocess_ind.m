@@ -228,6 +228,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       FLAG_GSC 
 %           (boolean, default true) turn on/off global signal correction
 %
+%       FLAG_COMPCOR
+%           (boolean, default false) turn on/off COMPCOR 
+%
 %       FLAG_MOTION_PARAMS 
 %           (boolean, default false) turn on/off the removal of the 6 motion 
 %           parameters + the square of 6 motion parameters.
@@ -240,6 +243,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           (boolean, default 0.95) the % of variance explained by the selected 
 %           PCA components when reducing the dimensionality of motion parameters.
 %
+%       COMPCOR
+%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
+% 
 %       FLAG_PCA_MOTION 
 %           (boolean, default true) turn on/off the PCA reduction of motion 
 %           parameters.
@@ -331,8 +337,8 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       9.  Estimation of a temporal model of slow time drifts.
 %           See NIAK_BRICK_TIME_FILTER
 %      10.  Regression of confounds (slow time drifts, motion parameters, 
-%           WM average, global signal) and scrubbing of time frames with 
-%           an excessive motion.
+%           WM average, COMPCOR, global signal) preceeded by scrubbing of time frames 
+%           with an excessive motion.
 %           See NIAK_BRICK_REGRESS_CONFOUNDS and OPT.REGRESS_CONFOUNDS
 %      11.  Correction of physiological noise.
 %           See NIAK_PIPELINE_CORSICA and OPT.CORSICA
@@ -718,12 +724,14 @@ for num_e = 1:length(fmri)
     job_opt.folder_out     = [opt.folder_intermediate 'regress_confounds' filesep];
     job_out.filtered_data  = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
     job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
-    job_out.scrubbing      = [job_opt.folder_out filesep 'scrubbing_' label(num_e).name '.mat']; 
+    job_out.scrubbing      = [job_opt.folder_out filesep 'scrubbing_' label(num_e).name '.mat'];
+    job_out.compcor_mask   = [job_opt.folder_out filesep 'compcor_mask_' label(num_e).name ext_f]; 
     job_out.qc_wm          = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_wm_func' opt.target_space ext_f]; 
     job_out.qc_vent        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_vent_func' opt.target_space ext_f]; 
     job_out.qc_slow_drift  = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_slow_drift_func' opt.target_space ext_f]; 
     job_out.qc_high        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_high_func' opt.target_space ext_f];  
     job_out.qc_motion      = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_motion_func' opt.target_space ext_f]; 
+    job_out.qc_compcor     = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_compcor_func' opt.target_space ext_f]; 
     job_out.qc_gse         = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
     if ~strcmp(job_in.custom_param,'gb_niak_omitted')
         job_out.qc_custom_param = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 

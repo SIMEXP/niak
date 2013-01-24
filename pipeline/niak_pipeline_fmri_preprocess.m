@@ -195,6 +195,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       FLAG_SLOW
 %           (boolean, default true) turn on/off the correction of slow time drifts
 %
+%       FLAG_COMPCOR
+%           (boolean, default false) turn on/off COMPCOR 
+%
 %       FLAG_GSC 
 %           (boolean, default true) turn on/off global signal correction
 %
@@ -210,6 +213,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (boolean, default 0.95) the % of variance explained by the selected 
 %           PCA components when reducing the dimensionality of motion parameters.
 %
+%       COMPCOR
+%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
+% 
 %       FLAG_PCA_MOTION 
 %           (boolean, default true) turn on/off the PCA reduction of motion 
 %           parameters.
@@ -655,7 +661,7 @@ if opt.flag_verbose
     t1 = clock;
     fprintf('Adding group-level quality control of confound regression (slow time drifts, motion parameters, etc; F-test) ; ');
 end
-list_maps = { 'qc_wm' , 'qc_vent' , 'qc_slow_drift' , 'qc_high' , 'qc_motion' , 'qc_gse' , 'qc_custom_param' };
+list_maps = { 'qc_wm' , 'qc_vent' , 'qc_slow_drift' , 'qc_high' , 'qc_motion' , 'qc_compcor' , 'qc_gse' , 'qc_custom_param' };
 for num_m = 1:length(list_maps)
     clear job_in job_out job_opt
     job_in.vol  = cell([length(fmri_c) 1]);
