@@ -153,18 +153,9 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      (boolean, default true) turn on/off the PCA reduction of motion 
 %      parameters.
 %
-%   COMPCOR_PERC
-%      (scalar, default 0.02) the percentage of voxels used to define 
-%      "high" standard deviation. See NIAK_COMPCOR_MASK
-%
-%   COMPCOR_TYPE
-%      (string, default 'at') the type of mask used for compcor:
-%         'a' : anatomical mask of white matter + ventricles
-%         't' : mask of voxels with high standard deviation 
-%         'at' : merging of the 'a' and 't' masks
-%
-%   COMPCOR_NB
-%      (integer, default 10) the number of principal components removed in COMPCOR
+%   COMPCOR
+%      (structure) the options of the COMPCOR method. See the OPT argument
+%      of NIAK_COMPCOR.
 %
 % _________________________________________________________________________
 % OUTPUTS
@@ -199,6 +190,8 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   noise correction method (CompCor) for BOLD and perfusion based fMRI. 
 %   NeuroImage 37 (1), 90-101. http://dx.doi.org/10.1016/j.neuroimage.2007.04.042
 % 
+% Note that a maximum number of (# degrees of freedom)/2 are removed through compcor.
+%
 % Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
 % Research Centre of the Montreal Geriatric Institute
 % & Department of Computer Science and Operations Research
@@ -231,13 +224,13 @@ list_defaults  = { NaN    , NaN      , NaN       , 'gb_niak_omitted' , NaN      
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-list_fields    = { 'scrubbing'       , 'compcor_mask'    , 'confounds'       , 'filtered_data'   , 'qc_slow_drift'   , 'qc_high'         , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
-list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
+list_fields    = { 'scrubbing'       , 'compcor_mask'    , 'confounds'       , 'filtered_data'   , 'qc_compcor'      , 'qc_slow_drift'   , 'qc_high'         , 'qc_wm'           , 'qc_vent'         , 'qc_motion'       , 'qc_custom_param'  , 'qc_gse'          };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_compcor' , 'compcor_perc' , 'compcor_nb' , 'compcor_type' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { false          , 0.02           , 10           , 'at'           , 40           , true             , 0.5       , true        , false       , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
+list_fields    = { 'flag_compcor' , 'compcor' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { false          , struct()  , 40           , true             , 0.5       , true        , false       , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
@@ -249,6 +242,10 @@ end
 
 if isempty(files_out.confounds)
     files_out.confounds = cat(2,opt.folder_out,filesep,name_f,'_cor.mat');
+end
+
+if isempty(files_out.compcor_mask)
+    files_out.compcor_mask = cat(2,opt.folder_out,filesep,name_f,'_compcor_mask',ext_f);
 end
 
 if isempty(files_out.filtered_data)
@@ -277,6 +274,10 @@ end
 
 if isempty(files_out.qc_custom_param)
     files_out.qc_custom_param = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_customparam',ext_f);
+end
+
+if isempty(files_out.qc_compcor)
+    files_out.qc_compcor = cat(2,opt.folder_out,filesep,'qc_',name_f,'_ftest_compcor',ext_f);
 end
 
 if isempty(files_out.qc_gse)
@@ -516,6 +517,19 @@ else
     labels2 = {};
 end
 
+%% Add Compcor
+if opt.flag_verbose
+    fprintf('Generate a PCA-based estimation of components to regress in the WM/Vent/high std ...\n')
+end
+[x_comp,mask_comp] = niak_compcor(vol,opt.compcor,mask_wm|mask_vent);
+nb_comp_max = floor((size(y,1)-size(x,1))/2);
+x_comp = x_comp(:,1:min(size(x_comp,2),nb_comp_max));
+
+if opt.flag_compcor
+    x2 = [x2 x_comp];
+    labels2 = [ labels2 repmat({'compcor'},[1 size(x_comp,2)]) ];
+end
+
 %% Custom parameters to be regressed
 covar=[];
 if ~strcmp(files_in.custom_param,'gb_niak_omitted')
@@ -540,10 +554,32 @@ else
     covar = [];
 end
 
-%% F-TEST stage 2 (global signal + custom covariates)
+%% F-TEST stage 2 (global signal + compcor + custom covariates)
 model.y = y;
-model.x = [pc_spatial_av covar];
-labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'custom'},[1 size(covar,2)]) ];
+model.x = [pc_spatial_av x_comp covar];
+labels_all2 = [ repmat({'pc_spatial_av'},[1 size(pc_spatial_av,2)]) repmat({'compcor'},[1 size(x_comp,2)]) repmat({'custom'},[1 size(covar,2)]) ];
+
+%% The global signal
+if ~strcmp(files_out.qc_gse,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Generate a F-test map for the global signal estimate ...\n')
+    end
+    model.c = ismember(labels_all2,'pc_spatial_av');
+    res = niak_glm(model,opt_qc);
+    hdr_qc.file_name = files_out.qc_gse;
+    niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
+end
+
+%% The COMPCOR
+if ~strcmp(files_out.qc_compcor,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Generate a F-test map for the COMPCOR estimate ...\n')
+    end
+    model.c = ismember(labels_all2,'compcor');
+    res = niak_glm(model,opt_qc);
+    hdr_qc.file_name = files_out.qc_compcor;
+    niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
+end
 
 %% The custom covariates
 if ~strcmp(files_out.qc_custom_param,'gb_niak_omitted')
@@ -559,17 +595,6 @@ if ~strcmp(files_out.qc_custom_param,'gb_niak_omitted')
     end
     hdr_qc.file_name = files_out.qc_custom_param;
     niak_write_vol(hdr_qc,qc);
-end
-
-%% The global signal
-if ~strcmp(files_out.qc_gse,'gb_niak_omitted')
-    if opt.flag_verbose
-        fprintf('Generate a F-test map for the global signal estimate ...\n')
-    end
-    model.c = ismember(labels_all2,'pc_spatial_av');
-    res = niak_glm(model,opt_qc);
-    hdr_qc.file_name = files_out.qc_gse;
-    niak_write_vol(hdr_qc,reshape(res.ftest,size(mask_brain)));
 end
 
 %% Regress confounds stage 2 
@@ -598,7 +623,17 @@ if ~strcmp(files_out.filtered_data,'gb_niak_omitted')
     niak_write_vol(hdr_vol,vol_denoised);
 end
 
+%% Save the COMPCOR mask
+if ~strcmp(files_out.compcor_mask,'gb_niak_omitted')
+    hdr_vol.file_name = files_out.compcor_mask;
+    if isfield(hdr_vol,'extra')
+        hdr_vol = rmfield(hdr_vol,'extra');
+    end
+    niak_write_vol(hdr_vol,mask_comp);
+end
+
 %% Merge all the flags into one structure
+flags.compcor       = opt.flag_compcor;
 flags.gsc           = opt.flag_gsc;
 flags.motion_params = opt.flag_motion_params;
 flags.pca_motion    = opt.flag_pca_motion;

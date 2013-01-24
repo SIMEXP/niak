@@ -1,8 +1,8 @@
-function x = niak_compcor(vol,opt);
-% Compute components in the COMPCOR method 
+function [x,mask] = niak_compcor(vol,opt,mask_a);
+% Compute components with the COMPCOR method 
 %
 % SYNTAX:
-% X = NIAK_COMPCOR( VOL , [OPT] )
+% [X,MASK] = NIAK_COMPCOR( VOL , [OPT] , [MASK_A])
 %
 % INPUTS:
 %   VOL (3D+t array) an fMRI dataset
@@ -12,13 +12,14 @@ function x = niak_compcor(vol,opt);
 %         'a' : anatomical mask of white matter + ventricles
 %         't' : mask of voxels with high standard deviation 
 %         'at' : merging of the 'a' and 't' masks
-%   OPT.MASK (3D array) if OPT.TYPE is 'a' or 'at', mask of white matter+ventricles
 %   OPT.NB_SAMPS (integer, default 1000) the number of samples for the MC simulation
 %   OPT.P (scalar, default 0.05) the significance level to accept a principal component
 %   OPT.FLAG_VERBOSE (boolean, default 1) print progress
+%   MASK_A (3D array) if OPT.TYPE is 'a' or 'at', mask of white matter+ventricles (necessary)
 %
 % OUTPUTS
 %   X (2D array T x NB_COMP) each column is one (temporal) component
+%   MASK (3D array) the binary mask used to run COMPCOR
 %
 % REFERENCE
 %   Behzadi, Y., Restom, K., Liau, J., Liu, T. T., Aug. 2007. A component based 
@@ -56,14 +57,14 @@ if nargin < 2
     opt = struct();
 end
 
-lfields = { 'flag_verbose' , 'perc' , 'type' , 'mask' , 'nb_samps' , 'p'  };
-ldefs   = { true           , 0.02   , 'at'   , []     , 1000       , 0.05 };
+lfields = { 'flag_verbose' , 'perc' , 'type' , 'nb_samps' , 'p'  };
+ldefs   = { true           , 0.02   , 'at'   , 1000       , 0.05 };
 opt = psom_struct_defaults(opt,lfields,ldefs);
 
 %% Check the presence of OPT.MASK if needed
 if ismember(opt.type,{'a','at'})
-    if isempty(opt.mask)
-        error('Please specify OPT.MASK to use an anatomical mask')
+    if nargin < 3
+        error('Please specify MASK_A to use an anatomical mask')
     end
 end
 
@@ -75,7 +76,7 @@ end
 %% Generate the analysis mask
 switch opt.type
     case 'a'
-        mask = opt.mask;
+        mask = mask_a;
     case 'at'
         mask = mask | mask_t;
     case 't'
