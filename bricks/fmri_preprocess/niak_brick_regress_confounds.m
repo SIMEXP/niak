@@ -522,7 +522,7 @@ if opt.flag_verbose
     fprintf('Generate a PCA-based estimation of components to regress in the WM/Vent/high std ...\n')
 end
 [x_comp,mask_comp] = niak_compcor(vol,opt.compcor,mask_wm|mask_vent);
-nb_comp_max = floor((size(y,1)-size(x,1))/2);
+nb_comp_max = floor((size(y,1)-size(x,2))/2);
 x_comp = x_comp(:,1:min(size(x_comp,2),nb_comp_max));
 
 if opt.flag_compcor
