@@ -12,7 +12,7 @@ function [x,mask] = niak_compcor(vol,opt,mask_a);
 %         'a' : anatomical mask of white matter + ventricles
 %         't' : mask of voxels with high standard deviation 
 %         'at' : merging of the 'a' and 't' masks
-%   OPT.NB_SAMPS (integer, default 1000) the number of samples for the MC simulation
+%   OPT.NB_SAMPS (integer, default 100) the number of samples for the MC simulation
 %   OPT.P (scalar, default 0.05) the significance level to accept a principal component
 %   OPT.FLAG_VERBOSE (boolean, default 1) print progress
 %   MASK_A (3D array) if OPT.TYPE is 'a' or 'at', mask of white matter+ventricles (necessary)
@@ -58,7 +58,7 @@ if nargin < 2
 end
 
 lfields = { 'flag_verbose' , 'perc' , 'type' , 'nb_samps' , 'p'  };
-ldefs   = { true           , 0.02   , 'at'   , 1000       , 0.05 };
+ldefs   = { true           , 0.02   , 'at'   , 100        , 0.05 };
 opt = psom_struct_defaults(opt,lfields,ldefs);
 
 %% Check the presence of OPT.MASK if needed
