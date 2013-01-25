@@ -78,7 +78,7 @@ switch opt.type
     case 'a'
         mask = mask_a;
     case 'at'
-        mask = mask | mask_t;
+        mask = mask_a | mask_t;
     case 't'
         mask = mask_t;
     otherwise
