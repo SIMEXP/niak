@@ -190,6 +190,11 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   noise correction method (CompCor) for BOLD and perfusion based fMRI. 
 %   NeuroImage 37 (1), 90-101. http://dx.doi.org/10.1016/j.neuroimage.2007.04.042
 % 
+%   This other paper describes more accurately the COMPCOR implemented in NIAK:
+%   Chai, X. J., Castañón, A. N. N., Ongür, D., Whitfield-Gabrieli, S., Jan. 2012. 
+%   Anticorrelations in resting state networks without global signal regression. 
+%   NeuroImage 59 (2), 1420-1428. http://dx.doi.org/10.1016/j.neuroimage.2011.08.048
+
 % Note that a maximum number of (# degrees of freedom)/2 are removed through compcor.
 %
 % Copyright (c) Christian L. Dansereau, Felix Carbonell, Pierre Bellec 
