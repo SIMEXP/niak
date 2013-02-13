@@ -27,8 +27,8 @@ function [results,opt] = niak_glm(model,opt)
 %      (string, default 'none') the type of test to be applied.
 %      Available options: 'ttest' , 'ftest', 'none'
 %
-%   FLAG_RSQUARED
-%      (boolean, default false) if the flaf is true, the R2 statistics of the
+%   FLAG_RSQUARE
+%      (boolean, default false) if the flag is true, the R2 statistics of the
 %      regression is added to RESULTS (see below).
 %
 %   FLAG_RESIDUALS 
