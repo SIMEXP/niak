@@ -92,7 +92,7 @@ path_fmri  = [path_data 'fmri' filesep];
 path_inter = [path_data 'intermediate' filesep];
 
 if ~exist(path_anat,'dir')||~exist(path_qc,'dir')||~exist(path_fmri,'dir')||~exist(path_inter,'dir')
-    error('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control ; fmri ; intermediate)')
+    warning('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control ; fmri ; intermediate)')
 end
 
 %% Grab the list of subjects
@@ -130,7 +130,7 @@ else
         subject = list_subject{num_s};
         ind_r = regexp(labx_scrub,['^' subject '_']);
         ind_r = find(cellfun(@length,ind_r,'UniformOutput',true)>0);
-        files.fmri.(subject) = struct();
+        files.fmri.vol.(subject) = struct();
         if ~isempty(ind_r)
             for num_r = 1:length(ind_r)
                 ind_e = regexp(labx_scrub{ind_r(num_r)},'_');
