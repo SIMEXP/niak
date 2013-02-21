@@ -1,4 +1,4 @@
-﻿= Neuroimaging Analysis Kit (NIAK) v0.6.4.3 =
+ = Neuroimaging Analysis Kit (NIAK) v0.6.4.3 =
 
 NIAK is a library of modules and pipelines for fMRI processing with Octave or Matlab(r) that can run in parallel either locally or in a supercomputing environment. Linux OS and MINC file format are supported. Developers interested in using NIAK as a development library or to contribute to the project can consult the [http://code.google.com/p/niak/ NIAK google code] webpage. The wiki http://www.nitrc.org/plugins/mwiki/index.php/niak:MainPage is a detailed user guide with the following resources : 
 
@@ -42,7 +42,7 @@ Many of the functions of the kit are based on software developed over the years 
 *The NIFTI reader/writer is adapted from a [http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8797&objectType=file code] by [http://www.rotman-baycrest.on.ca/~jimmy/ Jimmy Shen] (BSD license). 
 *The [http://www.mathworks.com/matlabcentral/fileexchange/956 conversion] between rotation/translation and matrix representations of rigid-body motion by Giampiero Campa (BSD license). 
 *The 'sinc' scheme for slice timing correction is a port from [http://www.fil.ion.ucl.ac.uk/spm/ SPM] (GPL license). 
-*The NIAK logo was adapted from an original work by the artist [http://mattahan.deviantart.com/ Mattahan] (creative commons license). 
+*The NIAK logo was adapted from an original work by the artist [mattahan.deviantart.com/ Mattahan] (creative commons license). 
 *The spatial independent component analysis was extracted from [http://sccn.ucsd.edu/fmrlab/ fMRlab] (GPL license). 
 *The windowed Fourier transfrom is from the [http://www-stat.stanford.edu/~wavelab/ WaveLab] toolbox (license&nbsp;: non-standard). 
 *The mutli-dimensional scaling algorithm and implementation was generously contributed by [http://pgrc-16.ipk-gatersleben.de/~stricker/ Marc Strickert] as part of the NIAK project (MIT license).
