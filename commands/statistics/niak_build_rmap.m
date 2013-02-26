@@ -1,12 +1,13 @@
-function rmap = niak_build_rmap(vol,seed);
+function rmap = niak_build_rmap(vol,seed,mask);
 % Compute a functional connectivity map from a seed
 %
 % SYNTAX:
-% R = NIAK_BUILD_RMAP(VOL,SEED)
+% R = NIAK_BUILD_RMAP(VOL,SEED,MASK)
 %
 % INPUTS:
 %   VOL (3D+t array) an fMRI dataset
 %   SEED (3D array, same size as VOL(:,:,:,1) ) a binary mask of the seed
+%   MASK (3D array, default every voxels) a binary mask where computation is restricted
 %
 % OUTPUTS
 %   RMAP (3D array) the functional connectivity map, starting from the seed
@@ -38,8 +39,10 @@ function rmap = niak_build_rmap(vol,seed);
 % THE SOFTWARE.
 
 [nx,ny,nz,nt] = size(vol);
-fov = true(nx,ny,nz);
-y = niak_normalize_tseries(niak_vol2tseries(vol,fov));
+if nargin < 3
+    mask = true(nx,ny,nz);
+end
+y = niak_normalize_tseries(niak_vol2tseries(vol,mask));
 x = niak_normalize_tseries(mean(y(:,seed(:)),2));
-rmap = sum(y.*x,1)/(nt-1);
-rmap = niak_tseries2vol	(rmap,fov);
+rmap = sum(y.*repmat(x,[1 size(y,2)]),1)/(nt-1);
+rmap = niak_tseries2vol	(rmap,mask);
