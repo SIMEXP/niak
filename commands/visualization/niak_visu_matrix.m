@@ -185,7 +185,7 @@ end
 imagesc(matx,opt.limits);
 
 [nx,ny] = size(matx);
-axis([0.5 nx+0.5 0.5 ny+0.5]);
+axis([0.5 ny+0.5 0.5 nx+0.5]);
 
 if strcmp(opt.color_map,'hot_cold')
     if (opt.limits(2)>0) && (opt.limits(1)<0)
