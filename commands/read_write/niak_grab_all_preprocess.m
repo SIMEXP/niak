@@ -150,9 +150,10 @@ end
 list_ext = { '.nii' , '.nii.gz' , '.mnc' , '.mnc.gz' };
 for num_f = 1:length(lc)
     base_fmri = [path_fmri 'fmri_' lc(num_f).name];    
+    ext = list_ext{end};
     for num_e = 1:length(list_ext)    
-        file_fmri = [base_fmri list_ext{num_e}];
-        if psom_exist(file_fmri)||(num_e == length(list_ext))            
+        file_fmri = [base_fmri list_ext{num_e}];        
+        if psom_exist(file_fmri)
             ext = list_ext{num_e};
             files.fmri.vol.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = file_fmri;
             files.fmri.extra.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = [base_fmri '_extra.mat'];
