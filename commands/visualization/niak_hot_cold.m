@@ -42,13 +42,13 @@ if nargin < 2
     per = 0.5;
 end
 
-c1 = hot(ceil(128*per));
+c1 = hot(ceil(1.28*n*per));
 if ~isempty(c1)
-    c1 = c1(1:ceil(per*100),:);
+    c1 = c1(1:ceil(n*per),:);
 end
-c2 = hot(ceil(128*(1-per)));
+c2 = hot(ceil(1.28*n*(1-per)));
 if ~isempty(c2)
-    c2 = c2(1:ceil((1-per)*100),:);
+    c2 = c2(1:(n-length(c1)),:);
     c2 = c2(:,[3 2 1]);
     c2(size(c2,1):-1:1,:);
 end
