@@ -8,36 +8,26 @@ function tseries_n = niak_normalize_tseries(tseries,opt)
 % INPUTS:
 %
 % TSERIES_N             
-%       (2D array) each column of TSERIES is a time series.
+%   (2D array) each column of TSERIES is a time series.
 %
 % OPT
-%       (structure or string) If string, see TYPE below. If structure, 
-%       the following fields are supported :
+%   (structure or string) If string, see TYPE below. If structure, 
+%   the following fields are supported :
 %
-%       TYPE
-%           (string, default 'mean_var') 
-%           the type of temporal normalization. Available options:
-%
-%               'none'
-%                   Don't do anything
-%
-%               'mean'
-%                   Translate the time series to a zero temporal mean.
-%
-%               'mean_var'          
-%                   Correct the time series to zero mean and unit variance.
-%
-%              'mean_var2' : same as 'mean_var' but slower, yet does not 
-%                   use as much memory.
-%
-%               'median_mad'
-%                   Correct the time series to zero median and a
-%                   median-absolute-deviation (MAD) corresponding to a
-%                   standard-deviation of 1 for a Gaussian process (MAD = 0.6764).
-%
-%               'grand_mean'
-%                   Express the time series as a percentage of the grand
-%                   mean of all time series.
+%   TYPE
+%      (string, default 'mean_var') 
+%      the type of temporal normalization. Available options:
+%         'none'       : Don't do anything
+%         'mean'       : Translate the time series to a zero temporal mean.
+%         'mean_var'   : Correct the time series to zero mean and unit variance.
+%         'mean_var2'  : same as 'mean_var' but slower, yet does not use as much memory.
+%         'median_mad' : Correct the time series to zero median and a
+%                        median-absolute-deviation (MAD) corresponding to a
+%                        standard-deviation of 1 for a Gaussian process (MAD = 0.6764).
+%         'grand_mean' : Express the time series as a percentage of the grand
+%                        mean of all time series.
+%         'perc'       : Express the time series as a percentage deviation from the baseline
+%                        on a voxel-by-voxel basis
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -137,7 +127,12 @@ switch opt.type
     case 'grand_mean'
         
         grand_mean = mean(tseries(:));
-        tseries_n = tseries/grand_mean;
+        tseries_n = 100*tseries/grand_mean;
+        
+    case 'perc'
+        
+        mean_ts = mean(tseries,1);
+        tseries_n = 100*tseries./repmat(mean_ts,[nt 1]) - 100;
                 
     otherwise
 
