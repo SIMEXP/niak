@@ -195,17 +195,7 @@ if strcmp(opt.color_map,'hot_cold')
     else 
         per_hot = 1;
     end
-    c1 = hot(ceil(128*per_hot));
-    if ~isempty(c1)
-        c1 = c1(1:ceil(per_hot*100),:);
-    end
-    c2 = hot(ceil(128*(1-per_hot)));
-    if ~isempty(c2)
-        c2 = c2(1:ceil((1-per_hot)*100),:);
-        c2 = c2(:,[3 2 1]);
-        c2(size(c2,1):-1:1,:);
-    end
-    c= [c2(size(c2,1):-1:1,:) ; c1];
+    c = niak_hot_cold(256,per_hot);    
     colormap(c)   
 elseif strcmp(opt.color_map,'jet_rev')
     c = jet(256);

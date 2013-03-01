@@ -106,8 +106,8 @@ function [] = niak_montage(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields    = {'type_slice' ,'vol_limits','type_color','fwhm','type_flip','flag_colorbar','nb_rows','nb_columns','voxel_size','comment'};
-gb_list_defaults  = {'axial'      ,[min(vol(:)) max(vol(:))],'jet',0,'rot90',1,0,0,[1 1 1],''};
+gb_list_fields    = {'type_slice' , 'vol_limits'              , 'type_color' , 'fwhm' , 'type_flip' , 'flag_colorbar' , 'nb_rows' , 'nb_columns' , 'voxel_size' , 'comment' };
+gb_list_defaults  = {'axial'      , [min(vol(:)) max(vol(:))] , 'jet'        , 0      , 'rot90'     , 1               , 0         , 0            , [1 1 1]      , ''        };
 niak_set_defaults
 
 switch type_color
@@ -119,17 +119,7 @@ switch type_color
     else 
         per_hot = 1;
     end
-    c1 = hot(ceil(128*per_hot));
-    if ~isempty(c1)
-        c1 = c1(1:ceil(per_hot*100),:);
-    end
-    c2 = hot(ceil(128*(1-per_hot)));
-    if ~isempty(c2)
-        c2 = c2(1:ceil((1-per_hot)*100),:);
-        c2 = c2(:,[3 2 1]);
-        c2(size(c2,1):-1:1,:);
-    end
-    c= [c2(size(c2,1):-1:1,:) ; c1];
+    c = niak_hot_cold(256,per_hot);    
     colormap(c)   
     
 	case 'jet_rev'
