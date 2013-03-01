@@ -97,7 +97,11 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %   PVE
 %       (structure) option for the estimation of partial volume effects of 
 %       tissue types (grey matter, white matter, cerbrospinal fluid) on the 
-%       anatomical scan.
+%       anatomical scan. Additional option:
+%
+%       FLAG_SKIP
+%           (boolean, default false) if the flag is true, do not extract 
+%           PVE maps.
 %
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
