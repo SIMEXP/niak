@@ -174,6 +174,10 @@ end
 if (opt.flag_filter_nan)&&~isempty(model.x)
     mask_nan = max(isnan(model.x),[],2);
     model.x = model.x(~mask_nan,:);
+    if any(mask_nan)
+        warning('The following entries were suppressed because they were associated to NaNs')
+        char(model.labels_x{mask_nan})
+    end
     model.labels_x = model.labels_x(~mask_nan,:);
 end
 
