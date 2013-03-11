@@ -3,7 +3,7 @@ function coord_v = niak_coord_world2vox(coord_w,mat,opt);
 % space. 
 %
 % SYNTAX:
-% COORD_V = NIAK_COORD_WORLD2VOXEL(COORD_W,MAT,OPT)
+% COORD_V = NIAK_COORD_WORLD2VOX(COORD_W,MAT,OPT)
 %
 % _________________________________________________________________________
 %
