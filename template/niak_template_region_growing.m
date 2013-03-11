@@ -8,7 +8,7 @@
 % Copyright (c) Pierre Bellec, 
 %   Research Centre of the Montreal Geriatric Institute
 %   & Department of Computer Science and Operations Research
-%   University of Montreal, Québec, Canada, 2010-2012
+%   University of Montreal, Québec, Canada, 2010-2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI, preprocessing, pipeline
