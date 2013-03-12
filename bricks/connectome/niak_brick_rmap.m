@@ -152,10 +152,10 @@ all_seed = false([dim_vol(:)' length(list_seed)]);
 
 for num_s = 1:length(list_seed)
     seed = list_seed{num_s};
-    [path_f,name_f,ext_f] = niak_full_path_full(files_in.seeds.(seed));
+    [path_f,name_f,ext_full,flag_zip,ext_f] = niak_fileparts(files_in.seeds.(seed));
     if opt.flag_verbose
         fprintf('Generating seed %s from file %s ...\n',seed,files_in.seeds.(seed));
-    end
+    end       
     switch ext_f
         case '.csv'
             [coord,lseeds,laxis] = niak_read_csv(files_in.seeds.(seed));
@@ -185,13 +185,15 @@ for num_s = 1:length(list_seed)
                 tmp(coord_v(1),coord_v(2),coord_v(3)) = true;
                 all_seed(:,:,:,num_s) = tmp;
             end
-        case any(niak_find_cell_str({'.mnc','.nii'},{ext_f}));
+        case {'.mnc','.nii'}
             [hdr_s,vol_seed] = niak_read_vol(files_in.seeds.(seed));
             if isfield(opt.ind_seeds,seed)
-                all_seed(:,:,:,num_s) = vol_seed == opt.ind_seeds.seed;
+                all_seed(:,:,:,num_s) = vol_seed == opt.ind_seeds.(seed);
             else
                 all_seed(:,:,:,num_s) = vol_seed>0;
             end
+        otherwise
+            error('The file associated with the seed is neither a .csv or a .mnc(.gz)/.nii(.gz) file')
     end
 end
 
@@ -205,29 +207,42 @@ for num_f = 1:length(files_in.fmri)
     for num_s = 1:length(list_seed)
          seed = list_seed{num_s};
          if opt.flag_verbose
-             fprintf('%s ,',seed)
+             fprintf('%s , ',seed)
          end
-         map(:,:,:,num_s) = map(:,:,:,num_s) + niak_build_rmap(vol,seed(:,:,:,num_s));  
+         maps(:,:,:,num_s) = maps(:,:,:,num_s) + niak_build_rmap(vol,all_seed(:,:,:,num_s));  
     end
     if opt.flag_verbose
         fprintf('\n')    
     end
 end
-map = map / length(list_seed);
+maps = maps / length(list_seed);
 
-%% Write the results
+%% Write the results: seeds
 for num_s = 1:length(list_seed)
     seed = list_seed{num_s};
     
     %% The seeds
     if opt.flag_verbose
-        fprintf('Saving seed %s ...\n')
+        fprintf('Saving seeds %s ...\n')
     end
     if opt.flag_verbose
-        fprintf('    %s\n    %s\n',files_out.seeds.(seed),files_out.maps.(seed))
+        fprintf('    %s\n',files_out.seeds.(seed))
     end
     hdr.file_name = files_out.seeds.(seed);
-    niak_write_vol(hdr,seeds(:,:,:,num_s));
+    niak_write_vol(hdr,all_seed(:,:,:,num_s));    
+end
+
+%% Write the results: maps
+for num_s = 1:length(list_seed)
+    seed = list_seed{num_s};
+    
+    %% The seeds
+    if opt.flag_verbose
+        fprintf('Saving maps %s ...\n')
+    end
+    if opt.flag_verbose
+        fprintf('    %s\n',files_out.maps.(seed))
+    end
     hdr.file_name = files_out.maps.(seed);
     niak_write_vol(hdr,maps(:,:,:,num_s));    
 end
