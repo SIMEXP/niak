@@ -23,6 +23,14 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 %   CONN 
 %      (vector) a vectorized version of the connectome
 %
+%   G
+%      (vector) a binarized version of the connectome (see OPT.THRESH below for 
+%      options of binarization)
+%
+%   THRESH
+%      (structure) the parameters of binarization of the connectome. See OPT.THRESH
+%      below.
+%
 %   TYPE
 %      (string) the type of connectome (see OPT.TYPE below)
 %
@@ -41,14 +49,29 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 %         'U' : concentration
 %         'P' : partial correlation
 %
+%   THRESH
+%      (structure, optional) with the following fields:
+%      THRESH.TYPE (string, default 'sparsity_pos') type of binarization applied to the 
+%         connectome to generate an undirected graph. Available options:
+%         'sparsity' keep a proportion of the largest connection (in absolute value)
+%         'sparsity_pos' keep a proportion of the largest connection (positive only)
+%         'cut_off' a cut-off on connectivity (in absolute value)
+%         'cut_off_pos' a cut-off on connectivity (only positive) 
+%      THRESH.PARAM (depends on OPT.THRESH.TYPE) the parameter of the 
+%         thresholding. The actual definition depends of THRESH.TYPE:
+%         'sparsity' (scalar, default 0.2) percentage of connections
+%         'sparsity_pos' (scalar, default 0.2) percentage of connections
+%         'cut_off' (scalar, default 0.25) the cut-off
+%         'cut_off_pos' (scalar, default 0.25) the cut-off       
+%       
 %   FLAG_TEST
-%       (boolean, default: 0) if FLAG_TEST equals 1, the brick does not do 
-%       anything but update the default values in FILES_IN, FILES_OUT and 
-%       OPT.
+%      (boolean, default: 0) if FLAG_TEST equals 1, the brick does not do 
+%      anything but update the default values in FILES_IN, FILES_OUT and 
+%      OPT.
 %
 %   FLAG_VERBOSE
-%       (boolean, default: 1) If FLAG_VERBOSE == 1, write messages 
-%       indicating progress.
+%      (boolean, default: 1) If FLAG_VERBOSE == 1, write messages 
+%      indicating progress.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -127,13 +150,30 @@ if ~iscellstr(files_out)
 end
 
 % OPTIONS
-list_fields      = { 'type' , 'flag_test'    , 'flag_verbose' };
-list_defaults    = { 'Z'    , false          , true           };
+list_fields      = { 'thresh' , 'type' , 'flag_test'    , 'flag_verbose' };
+list_defaults    = { struct() , 'Z'    , false          , true           };
 if nargin<3
     opt = struct();
 end
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 type = opt.type;
+
+% Binarization
+opt.thresh = psom_struct_defaults(opt.thresh,{'type','param'},{'sparsity_pos',[]});
+thresh = opt.tresh;
+
+switch opt.thresh.type
+    case {'sparsity','sparsity_pos'}
+        if isempty(opt.thresh.param)
+            opt.thresh.param = 0.2;
+        end
+    case {'cut_off','cut_off_pos'}
+        if isempty(opt.thresh.param)
+            opt.thresh.param = 0.25;
+        end
+    otherwise
+        error('%s is not supported in OPT.THRESH.TYPE',opt.thresh.type)
+end
 
 % Check input/output match
 if length(files_in.mask) ~= length(files_out)
@@ -213,6 +253,7 @@ for num_o = 1:length(files_out)
         fprintf('   %s\n',files_out{num_o})
     end
     conn = mean(all_conn{num_o},2);
+    G = niak_build_graph(conn,thresh);    
     ind_roi = all_ind_roi{num_o};
-    save(files_out{num_o},'conn','ind_roi','type');
+    save(files_out{num_o},'conn','G','ind_roi','type','thresh');
 end

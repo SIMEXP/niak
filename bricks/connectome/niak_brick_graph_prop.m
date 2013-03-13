@@ -13,8 +13,15 @@ function [files_in,files_out,opt] = niak_brick_graph_prop(files_in,files_out,opt
 %   CONN 
 %      (vector) a vectorized version of the connectome
 %
+%   G
+%      (vector) a binarized version of the connectome
+%
 %   TYPE
 %      (string) the type of connectome (see OPT.TYPE in NIAK_BRICK_CONNECTOME)
+%
+%   THRESH
+%      (structure) parameters of the binarization of the connectome. See the OPT 
+%      argument of NIAK_BUILD_GRAPH
 %
 %   IND_ROI
 %      (vector) the Nth row/column of CONN corresponds to the region IND_ROI(n) 
@@ -25,7 +32,7 @@ function [files_in,files_out,opt] = niak_brick_graph_prop(files_in,files_out,opt
 %    variables called (MEASURE) (with MEASURE being the name of the measure):
 %
 %    (MEASURE).TYPE (string) the type of measure
-%    (MEASURE).PARAM (structure) the options of the measure
+%    (MEASURE).PARAM (type may vary) the parameters of the measure
 %    (MEASURE).VAL (type may vary) the measure
 %
 % OPT
@@ -34,41 +41,30 @@ function [files_in,files_out,opt] = niak_brick_graph_prop(files_in,files_out,opt
 %   (MEASURE).TYPE 
 %      (string) the type of measure. Available options:
 %
-%      'degree_centrality': as defined in Buckner et al. 2009
-%      'pairwise': simply extract the connectivity measure between a pair of regions
-%      'clustering': the local clustering coefficient. See CLUSTERING_COEF_BU
-%      'avg_clustering': the average clustering coefficient. See CLUSTERING_COEF_BU
-%      'global_efficiency': the average of the inverse of shortest path length. See EFFICIENCY_BIN
-%      'local_efficiency': same as 'global_efficiency' but restricted to the neighbourhood of each node. See EFFICIENCY_BIN
+%      'Dcentrality': as defined in Buckner et al. 2009
+%      'p2p': simply extract the "point-to-point" connectivity measure between a pair of regions.
+%      'clustering': the local clustering coefficient. See CLUSTERING_COEF_BU.
+%      'avg_clustering': the average clustering coefficient. See CLUSTERING_COEF_BU.
+%      'global_eff': the global efficiency, i.e. the average of the inverse of shortest path length. See EFFICIENCY_BIN.
+%      'local_eff': the local efficiency, i.e. the inverse of shortest path length in the neighbourhood of each node. See EFFICIENCY_BIN.
+%      'modularity': the network modularity. See MODULARITY_UND.
 %
-%   (MEASURE).PARAM (structure) the options of the measure. 
+%   (MEASURE).PARAM
+%      Options of the measure. Types/values depend on the measure:
+%      'Dcentrality': (scalar) the index of the ROI that is used to measure the degree centrality.
+%      'p2p' (vector) the indices of the first and second ROI that define the connection.
+%      'clustering' (scalar) the index of the ROI that is used to measure the local clustering.
+%      'avg_clustering' None.
+%      'global_eff' None.
+%      'local_eff'(scalar) the index of the ROI that is used to measure the local clustering.
+%      'modularity' None.
 %
-%      case 'degree_centrality':
-%         THRESH (scalar, default 0.25) the threshold on connections
-%         IND_ROI (scalar) the index of the ROI that is used to measure the degree centrality
-%         FLAG_MEAN (boolean, default true) correct the mean of all connections to 0.
-%
-%      case 'pairwise'
-%         IND_ROI1 (scalar) the index of the first ROI that defines the connection
-%         IND_ROI2 (scalar) the index of second ROI that defines the connection
-%
-%      case 'clustering' 
-%         SPARSITY (scalar, default 0.3) the proportion of connectivity to retain in 
-%            each connectome.
-%         IND_ROI (scalar) the index of the ROI that is used to measure the local clustering
-%
-%      case 'avg_clustering' 
-%         SPARSITY (scalar, default 0.3) the proportion of connectivity to retain in 
-%            each connectome.
-%
-%      case 'global_efficiency'
-%         SPARSITY (scalar, default 0.3) the proportion of connectivity to retain in 
-%            each connectome.
-%
-%      case 'local_efficiency'
-%         SPARSITY (scalar, default 0.3) the proportion of connectivity to retain in 
-%            each connectome.
-%         IND_ROI (scalar) the index of the ROI that is used to measure the local clustering
+%   RAND_SEED
+%       (scalar, default 0) The specified value is used to seed the random
+%       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
+%       the generator is initialized based on the clock (the results will be
+%       slightly different due to random variations in bootstrap sampling if
+%       the pipeline is executed twice).
 %
 %   FLAG_TEST
 %       (boolean, default: 0) if FLAG_TEST equals 1, the brick does not do 
@@ -87,25 +83,25 @@ function [files_in,files_out,opt] = niak_brick_graph_prop(files_in,files_out,opt
 %
 % _________________________________________________________________________
 % SEE ALSO:
-% NIAK_BRICK_CONNECTOME, NIAK_PIPELINE_CONNECTOME, CLUSTERING_COEF_BU
+% NIAK_BRICK_CONNECTOME, NIAK_PIPELINE_CONNECTOME, NIAK_BUILD_GRAPH
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% The measure 'degree_centrality' is described in the following paper:
+% The measure 'Dcentrality' is described in the following paper:
 %   Buckner et al. Cortical Hubs Revealed by Intrinsic Functional Connectivity:
 %   Mapping, Assessment of Stability, and Relation to
 %   Alzheimer’s Disease. The Journal of Neuroscience, February 11, 2009.
 %
-% The functional connectivity is thresholded at 0.25 in that work, but the 
-% preprocessing used in this work included the regression of the global 
-% signal. For this reason, the function by default correct the average of all connections 
-% to zero. If the global average was actually regressed out, this flag can be turned off.
-%
 % Some of the measures employed here depend on function from the "brain connectivity toolbox"
-%  https://sites.google.com/site/bctnet/Home/functions
-% This software has to be installed to generate the networks properties. 
-% _________________________________________________________________________
+%   https://sites.google.com/site/bctnet/Home/functions
+% This software has to be installed to generate the networks properties, and is described 
+% in the following paper:
+%   Rubinov, M., Sporns, O., Sep. 2010. 
+%   Complex network measures of brain connectivity: Uses and interpretations. 
+%   NeuroImage 52 (3), 1059-1069.
+%   URL http://dx.doi.org/10.1016/j.neuroimage.2009.10.003
+%
 % Copyright (c) Pierre Bellec, Christian L. Dansereau, 
 % Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
@@ -143,8 +139,8 @@ if ~ischar(files_out)
 end
 
 % OPTIONS
-list_fields      = { 'flag_test'    , 'flag_verbose' };
-list_defaults    = { false          , true           };
+list_fields      = { 'rand_seed' , 'flag_test'    , 'flag_verbose' };
+list_defaults    = { 0           , false          , true           };
 if nargin<3
     opt = struct();
 end
@@ -155,25 +151,33 @@ list_mes = fieldnames(opt);
 list_mes = list_mes(~ismember(list_mes,{'flag_test','flag_verbose'}));
 for num_m = 1:length(list_mes)
     name = list_mes{num_m};
-    opt.(name) = psom_struct_defaults(opt.(name),{'type','param'},{NaN,NaN});
+    opt.(name) = psom_struct_defaults(opt.(name),{'type','param'},{NaN,[]});
     switch opt.(name).type
-        case 'degree_centrality'
-            opt.(name).param = psom_struct_defaults(opt.(name).param,{'thresh','ind_roi','flag_mean'},{0.25,NaN,true});
-        case 'pairwise'
-            opt.(name).param = psom_struct_defaults(opt.(name).param,{'ind_roi1','ind_roi2'},{NaN,NaN});
+        case 'Dcentrality'
+            
+        case 'p2p'
+            if length(opt.(name).param)~=2
+                error('Please provide two indices to generate point-2-point connectivity in measure %s',mes)
+            end
         case 'clustering'
-            opt.(name).param = psom_struct_defaults(opt.(name).param,{'sparsity','ind_roi'},{0.3,NaN});
+            if length(opt.(name).param)~=1
+                error('Please provide an index to generate local clustering in measure %s',mes)
+            end
         case 'avg_clustering'
-            opt.(name).param = psom_struct_defaults(opt.(name).param,{'sparsity'},{0.3});
+            
         case 'global_efficiency'
-            opt.(name).param = psom_struct_defaults(opt.(name).param,{'sparsity'},{0.3});            
+            
         case 'local_efficiency'
-            opt.(name).param = psom_struct_defaults(opt.(name).param,{'sparsity','ind_roi'},{0.3,NaN});
+            if length(opt.(name).param)~=1
+                error('Please provide an index to generate local clustering in measure %s',mes)
+            end
+        case 'modularity'
+        
         otherwise
             error('%s is an unknown measure',opt.(name).type)
     end
 end
-mes = rmfield(opt,{'flag_test','flag_verbose'});
+mes = rmfield(opt,{'rand_seed','flag_test','flag_verbose'});
 
 if opt.flag_test == 1
     return
@@ -181,11 +185,17 @@ end
 
 %% Thre brick starts here
 
+%% Set the random number generator if necessary
+if ~isempty(opt.rand_seed)
+    psom_set_rand_seed(opt.rand_seed);
+end
+
 %% Read the connectome
 if opt.flag_verbose
     fprintf('Reading connectome in file %s ...\n',files_in);
 end
-conn = load(files_in);
+conn = load(files_in,'conn','G','ind_roi');
+G = niak_vec2mat(G,false);
 
 for num_m = 1:length(list_mes)
     name = list_mes{num_m};
@@ -195,61 +205,38 @@ for num_m = 1:length(list_mes)
     
     switch mes.(name).type
     
-        case 'degree_centrality'
+        case 'Dcentrality'
         
-            if opt.(name).param.flag_mean
-                conn.conn = conn.conn - mean(conn.conn);
-            end
-            G = niak_vec2mat(conn.conn>=mes.(name).param.thresh);
             dG = sum(G,1)/size(G,1);
-            dG = (dG - mean(dG))/std(dG);
+            dG = (dG - mean(dG))/std(dG); % the degree centrality is simply the degree, corrected to have a zero mean, unit variance distribution across the brain
             mes.(name).val = dG(conn.ind_roi == mes.(name).param.ind_roi);
             
-        case 'pairwise'
+        case 'p2p'
         
-            G = niak_vec2mat(conn.conn);
-            mes.(name).val = G(conn.ind_roi == mes.(name).param.ind_roi1,conn.ind_roi == mes.(name).param.ind_roi2);
+            G = niak_vec2mat(conn); % For point-to-point, the graph is the weighted connectome
+            mes.(name).val = G(ind_roi == mes.(name).param(1),ind_roi == mes.(name).param(2));
             
         case 'clustering'
-            
-            [G,order] = sort(conn.conn,'descend');
-            G(min(ceil(mes.(name).param.sparsity * length(G)),length(G))+1:end) = 0;            
-            G = G>0;
-            G = niak_vec2mat(G(order),0);
-            neigh = G(conn.ind_roi == mes.(name).param.ind_roi,:)>0;
-            k = sum(neigh);
-            if k<2
-                 mes.(name).val = 0;
-            else 
-                 V = G(neigh,neigh);                 
-                 mes.(name).val = sum(V(:))/(k^2-k);
-            end
-            
-        case 'avg_clustering'
-        
-            [G,order] = sort(conn.conn,'descend');
-            G(min(ceil(mes.(name).param.sparsity * length(G)),length(G))+1:end) = 0;
-            G = G>0;
-            G = niak_vec2mat(G(order),0);
+                        
             C = clustering_coef_bu(G);
-            mes.(name).val = mean(C);
+            mes.(name).val = C(ind_roi == mes.(name).param);            
             
-        case 'global_efficiency'
+        case 'avg_clustering'        
             
-            [G,order] = sort(conn.conn,'descend');
-            G(min(ceil(mes.(name).param.sparsity * length(G)),length(G))+1:end) = 0;
-            G = G>0;
-            G = niak_vec2mat(G(order),0);
+            mes.(name).val = mean(clustering_coef_bu(G));
+            
+        case 'global_efficiency'            
+            
             mes.(name).val = efficiency_bin(G);
             
         case 'local_efficiency'
-        
-            [G,order] = sort(conn.conn,'descend');
-            G(min(ceil(mes.(name).param.sparsity * length(G)),length(G))+1:end) = 0;
-            G = G>0;
-            G = niak_vec2mat(G(order),0);
+                    
             e = efficiency_bin(G,1);
-            mes.(name).val = e(conn.ind_roi == mes.(name).param.ind_roi);
+            mes.(name).val = e(ind_roi == mes.(name).param);
+            
+        case 'modularity'
+           
+            [Ci,mes.(name).val] = modularity_und(G);            
             
     end
     
