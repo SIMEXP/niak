@@ -23,6 +23,11 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %         string. Note that time series can be specified directly as variables in a .mat file. The file 
 %         FILES_IN.ATOMS needs to be specified in that instance. The <SESSION> level can be skipped.
 % 
+%   SEEDS
+%      (string, default 'gb_niak_omitted') the name of a .csv file with a list of seeds. This input is 
+%      necessary to generate any local graph property, point-to-point correlation as well as 
+%      seed-based functional connectivity maps. 
+%      
 % OPT
 %   (structure) with the following fields : 
 %
@@ -45,6 +50,16 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %      (structure, optional) the options of the pipeline manager. See the
 %      OPT argument of PSOM_RUN_PIPELINE. Default values can be used here.
 %      Note that the field PSOM.PATH_LOGS will be set up by the pipeline.
+%
+%   FLAG_RAND
+%      (boolean, default false) some of the graph measures (such as the 
+%      modularity) have some random components, which means that slight 
+%      variations of the measure will be observed if the measure is repeated
+%      multiple times. By default, NIAK will control the seeds of the random
+%      number generator to guarantee that the measures are identical if the 
+%      analysis were replicated. If FLAG_RAND is set to true, then the clock
+%      is used to set the random number generator, and two runs of the pipeline
+%      can generate different results. 
 %
 %   FLAG_TEST
 %      (boolean, default false) If FLAG_TEST is true, the pipeline will
@@ -112,8 +127,8 @@ list_defaults = { NaN       , NaN    };
 files_in      = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Options
-list_fields   = { 'label_network' , 'rmap'   , 'graph_prop' , 'connectome' , 'psom'   , 'folder_out' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 'rois'          , struct() , struct()     , struct()     , struct() , NaN          , true           , false       };
+list_fields   = { 'flag_rand' , 'label_network' , 'rmap'   , 'graph_prop' , 'connectome' , 'psom'   , 'folder_out' , 'flag_verbose' , 'flag_test' };
+list_defaults = { false       , 'rois'          , struct() , struct()     , struct()     , struct() , NaN          , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [folder_out 'logs' filesep];
@@ -162,6 +177,12 @@ if ~isempty(list_mes)
         in = pipeline.(name_job_in).files_out{1};
         out = [folder_out 'graph_prop' filesep name_job '.mat'];
         jopt = opt.graph_prop;
+        if opt.flag_rand
+            jopt.rand_seed = [];
+        else
+            jopt.rand_seed = double(niak_datahash(subject));
+            jopt.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
+        end
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_graph_prop',in,out,jopt);        
     end
     
