@@ -178,6 +178,7 @@ end
 
 %% Generate functional connectivity maps
 if ~isempty(list_seed)
+    list_maps = cell(length(list_subject),length(list_seed));
     for num_s = 1:length(list_subject) 
         subject = list_subject{num_s};        
         clear in out jopt
@@ -190,10 +191,21 @@ if ~isempty(list_seed)
             in.seeds.(seed) = pipeline.(['mask_' network]).files_out;
             out.seeds.(seed) = [folder_out 'rmap_seeds' filesep 'mask_' subject '_' seed ext_f];
             out.maps.(seed)  = [folder_out 'rmap_seeds' filesep 'rmap_' subject '_' seed ext_f];
+            list_maps(num_s,num_seed) = out.maps.(seed);
         end        
         name_job = ['rmap_seeds_' subject];
         jopt = opt.rmap;
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_rmap',in,out,jopt);
+    end
+    
+    %% Compute the average map for each seed
+    for num_seed = 1:length(list_seed)
+        seed = list_seed{num_seed};
+        clear in out jopt
+        in = list_maps(:,num_seed);
+        out = [folder_out 'rmap_seeds' filesep 'average_rmap_' seed ext_f];
+        jopt.operation = 'vol = zeros(size(vol_in{1})); for num_m = 1:length(vol_in), vol = vol + vol_in{num_m}; end, vol = vol / length(vol_in);';
+        pipeline = psom_add_job(pipeline,['average_rmap_' seed],'niak_brick_math_vol',in,out,jopt);
     end
 end
    
