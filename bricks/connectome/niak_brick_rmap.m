@@ -215,7 +215,7 @@ for num_f = 1:length(files_in.fmri)
         fprintf('\n')    
     end
 end
-maps = maps / length(list_seed);
+maps = maps / length(files_in.fmri);
 
 %% Write the results: seeds
 for num_s = 1:length(list_seed)
