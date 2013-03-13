@@ -25,13 +25,13 @@ function [files_in,files_out,opt] = niak_brick_rmap(files_in,files_out,opt)
 %    (structure) with two fields
 %
 %    MAPS
-%       (structure) FILES_OUT.MAPS.(SEED) is the functional connectivity map associated 
-%       with FILES_IN.SEEDS.(SEED). Note that the connectivity maps are averaged across all
-%       fMRI datasets. 
+%       (structure, default 'gb_niak_omitted') FILES_OUT.MAPS.(SEED) is the functional 
+%       connectivity map associated with FILES_IN.SEEDS.(SEED). Note that the connectivity 
+%       maps are averaged across all fMRI datasets. 
 %
 %    SEEDS
-%       (structure) FILES_OUT.SEEDS.(SEED) is the seed associated with FILES_IN.SEEDS.(SEED). 
-%       This is particularly useful when using .csv description of the seeds.
+%       (structure, default 'gb_niak_omitted') FILES_OUT.SEEDS.(SEED) is the seed associated 
+%       with FILES_IN.SEEDS.(SEED). This is particularly useful when using .csv description of the seeds.
 %
 % OPT
 %   (structure, optional) with the following fields:
@@ -127,9 +127,13 @@ if ischar(files_in.fmri)
 end
 
 % FILES_OUT
-files_out = psom_struct_defaults(files_out,{'maps','seeds'},{NaN,NaN});
-files_out.maps = psom_struct_defaults(files_out.maps,list_seed,repmat({NaN},[1 length(list_seed)]));
-files_out.seeds = psom_struct_defaults(files_out.seeds,list_seed,repmat({NaN},[1 length(list_seed)]));
+files_out = psom_struct_defaults(files_out,{'maps','seeds'},{'gb_niak_omitted','gb_niak_omitted'});
+if ~ischar(files_out.maps)&&strcmp(files_out.maps,'gb_niak_omitted')
+    files_out.maps = psom_struct_defaults(files_out.maps,list_seed,repmat({NaN},[1 length(list_seed)]));
+end
+if ~ischar(files_out.seeds)&&strcmp(files_out.seeds,'gb_niak_omitted')
+    files_out.seeds = psom_struct_defaults(files_out.seeds,list_seed,repmat({NaN},[1 length(list_seed)]));
+end
 
 % OPTIONS
 list_fields      = { 'flag_fisher' , 'radius_seed' , 'ind_seeds' , 'flag_test'    , 'flag_verbose' };
@@ -198,51 +202,57 @@ for num_s = 1:length(list_seed)
 end
 
 %% Generate the functional connectivity maps 
-maps = zeros(size(all_seed));
-for num_f = 1:length(files_in.fmri)
-    if opt.flag_verbose
-        fprintf('Generating connectivity map from fMRI dataset %s, processing seeds:\n    ',files_in.fmri{num_f});
+if ~ischar(files_out.maps)
+    maps = zeros(size(all_seed));
+    for num_f = 1:length(files_in.fmri)
+        if opt.flag_verbose
+            fprintf('Generating connectivity map from fMRI dataset %s, processing seeds:\n    ',files_in.fmri{num_f});
+        end
+        [hdr,vol] = niak_read_vol(files_in.fmri{num_f});
+        for num_s = 1:length(list_seed)
+            seed = list_seed{num_s};
+            if opt.flag_verbose
+                fprintf('%s , ',seed)
+            end
+            maps(:,:,:,num_s) = maps(:,:,:,num_s) + niak_build_rmap(vol,all_seed(:,:,:,num_s));  
+        end
+        if opt.flag_verbose
+            fprintf('\n')    
+        end
     end
-    [hdr,vol] = niak_read_vol(files_in.fmri{num_f});
-    for num_s = 1:length(list_seed)
-         seed = list_seed{num_s};
-         if opt.flag_verbose
-             fprintf('%s , ',seed)
-         end
-         maps(:,:,:,num_s) = maps(:,:,:,num_s) + niak_build_rmap(vol,all_seed(:,:,:,num_s));  
-    end
-    if opt.flag_verbose
-        fprintf('\n')    
-    end
+    maps = maps / length(files_in.fmri);
 end
-maps = maps / length(files_in.fmri);
 
 %% Write the results: seeds
-for num_s = 1:length(list_seed)
-    seed = list_seed{num_s};
+if ~ischar(files_out.seeds)
+    for num_s = 1:length(list_seed)
+        seed = list_seed{num_s};
     
-    %% The seeds
-    if opt.flag_verbose
-        fprintf('Saving seeds %s ...\n')
+        %% The seeds
+        if opt.flag_verbose
+            fprintf('Saving seeds %s ...\n')
+        end
+        if opt.flag_verbose
+            fprintf('    %s\n',files_out.seeds.(seed))
+        end
+        hdr.file_name = files_out.seeds.(seed);
+        niak_write_vol(hdr,all_seed(:,:,:,num_s));    
     end
-    if opt.flag_verbose
-        fprintf('    %s\n',files_out.seeds.(seed))
-    end
-    hdr.file_name = files_out.seeds.(seed);
-    niak_write_vol(hdr,all_seed(:,:,:,num_s));    
 end
 
 %% Write the results: maps
-for num_s = 1:length(list_seed)
-    seed = list_seed{num_s};
+if ~ischar(files_out.maps)
+    for num_s = 1:length(list_seed)
+        seed = list_seed{num_s};
     
-    %% The seeds
-    if opt.flag_verbose
-        fprintf('Saving maps %s ...\n')
+        %% The seeds
+        if opt.flag_verbose
+            fprintf('Saving maps %s ...\n')
+        end
+        if opt.flag_verbose
+            fprintf('    %s\n',files_out.maps.(seed))
+        end
+        hdr.file_name = files_out.maps.(seed);
+        niak_write_vol(hdr,maps(:,:,:,num_s));    
     end
-    if opt.flag_verbose
-        fprintf('    %s\n',files_out.maps.(seed))
-    end
-    hdr.file_name = files_out.maps.(seed);
-    niak_write_vol(hdr,maps(:,:,:,num_s));    
 end

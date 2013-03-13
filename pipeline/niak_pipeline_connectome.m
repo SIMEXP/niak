@@ -178,6 +178,7 @@ end
 
 %% Generate functional connectivity maps
 if ~isempty(list_seed)
+
     list_maps = cell(length(list_subject),length(list_seed));
     for num_s = 1:length(list_subject) 
         subject = list_subject{num_s};        
@@ -189,7 +190,11 @@ if ~isempty(list_seed)
         for num_seed = 1:length(list_seed)
             seed = list_seed{num_seed};
             in.seeds.(seed) = pipeline.(['mask_' network]).files_out;
-            out.seeds.(seed) = [folder_out 'rmap_seeds' filesep 'mask_' subject '_' seed ext_f];
+            if num_s == 1
+                out.seeds.(seed) = [folder_out 'rmap_seeds' filesep 'mask_' seed ext_f];
+            else
+                out.seeds = 'gb_niak_omitted';
+            end
             out.maps.(seed)  = [folder_out 'rmap_seeds' filesep 'rmap_' subject '_' seed ext_f];
             list_maps(num_s,num_seed) = out.maps.(seed);
         end        
