@@ -202,9 +202,9 @@ end
 
 %% Add global network properties, if required
 if opt.flag_global_prop
-    opt_prop.global_efficiency.type  = 'global_efficiency';
-    opt_prop.average_clustering.type = 'average_clustering';
-    opt_prop.modularity.type = 'modularity';
+    opt.graph_prop.global_efficiency.type  = 'global_efficiency';
+    opt.graph_prop.average_clustering.type = 'average_clustering';
+    opt.graph_prop.modularity.type = 'modularity';
 end
 
 %% Add local network properties, if required
