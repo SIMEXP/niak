@@ -148,9 +148,9 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults,false);
 
 % Measures
 list_mes = fieldnames(opt);
-list_mes = list_mes(~ismember(list_mes,{'flag_test','flag_verbose'}));
+list_mes = list_mes(~ismember(list_mes,{'rand_seed','flag_test','flag_verbose'}));
 for num_m = 1:length(list_mes)
-    name = list_mes{num_m};
+    name = list_mes{num_m};    
     opt.(name) = psom_struct_defaults(opt.(name),{'type','param'},{NaN,[]});
     switch opt.(name).type
         case 'Dcentrality'
@@ -195,7 +195,9 @@ if opt.flag_verbose
     fprintf('Reading connectome in file %s ...\n',files_in);
 end
 conn = load(files_in,'conn','G','ind_roi');
-G = niak_vec2mat(G,false);
+G = niak_vec2mat(conn.G,false);
+ind_roi = conn.ind_roi;
+conn = conn.conn;
 
 for num_m = 1:length(list_mes)
     name = list_mes{num_m};
@@ -209,7 +211,7 @@ for num_m = 1:length(list_mes)
         
             dG = sum(G,1)/size(G,1);
             dG = (dG - mean(dG))/std(dG); % the degree centrality is simply the degree, corrected to have a zero mean, unit variance distribution across the brain
-            mes.(name).val = dG(conn.ind_roi == mes.(name).param.ind_roi);
+            mes.(name).val = dG(ind_roi == mes.(name).param);
             
         case 'p2p'
         

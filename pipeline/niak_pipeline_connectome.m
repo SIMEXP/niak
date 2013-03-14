@@ -26,7 +26,8 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %   SEEDS
 %      (string, default 'gb_niak_omitted') the name of a .csv file with a list of seeds. This input is 
 %      necessary to generate any local graph property, point-to-point correlation as well as 
-%      seed-based functional connectivity maps. 
+%      seed-based functional connectivity maps. See the comments section below for some example of the 
+%      format.
 %      
 % OPT
 %   (structure) with the following fields : 
@@ -37,15 +38,25 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %   CONNECTOME
 %      (structure) see the OPT argument of NIAK_BRICK_CONNECTOME. 
 %
-%   GRAPH_PROP
-%      (structure) see the OPT argument of NIAK_BRICK_GRAPH_PROP.
-%
-%   RMAP
-%      (structure) see the OPT argument of NIAK_BRICK_RMAP
-%
 %   FOLDER_OUT 
 %      (string) where to write the results of the pipeline. 
 % 
+%   FLAG_P2P
+%      (boolean, default true) turn on/off the generation of point-to-point 
+%      connectivity estimates (a .csv FILES_IN.SEEDS file must be provided)
+%
+%   FLAG_GLOBAL_PROP
+%      (boolean, default true) turn on/off the generation of global network
+%      properties.
+%
+%   FLAG_LOCAL_PROP
+%      (boolean, default true) turn on/off the generation of local network
+%      properties.
+%
+%   FLAG_RMAP
+%      (boolean, default true) turn on/off the generation of correlation 
+%      maps. 
+%
 %   PSOM
 %      (structure, optional) the options of the pipeline manager. See the
 %      OPT argument of PSOM_RUN_PIPELINE. Default values can be used here.
@@ -88,8 +99,31 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% The parcellation into network will be automatically fed to 
-% NIAK_BRICK_RMAP. The options OPT.RMAP should refer to this parcellation.
+% The .csv FILES_IN.SEEDS can take two forms.
+% Example 1, (world) coordinates in stereotaxic space:
+%
+%         ,   x ,  y ,  z
+% ROI1    ,  12 ,  7 , 33
+% ROI2    ,  45 , -3 , 27
+%
+% With that method, the region will load the parcellation, extract the number 
+% of the parcels corresponding to the coordinates, and associate them to labels
+% ROI1 and ROI2. WARNING: the labels for the ROI must be acceptable as field names 
+% for matlab, i.e. no special characters (+ - / * space) and relatively short.
+%
+% Example 2, string and numeric labels:
+%
+%        , index
+% ROI1   , 3010
+% ROI2   , 3020
+%
+% In this case, the index refers to the number associated with one parcel. The labels will be attached. 
+% 
+% With both methods, the first row does not really matter. It is still important that the row is present,
+% and that the intersection of first column and first row is left empty.
+%
+% If two rows are associated with the same parcel, the pipeline will throw an error. This can
+% occur in particular with method 1. 
 %
 % Copyright (c) Pierre Bellec
 %               Centre de recherche de l'institut de Gériatrie de Montréal
@@ -122,20 +156,96 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Checking that FILES_IN is in the correct format
-list_fields   = { 'network' , 'fmri' };
-list_defaults = { NaN       , NaN    };
+list_fields   = { 'network' , 'fmri' , 'seeds'           };
+list_defaults = { NaN       , NaN    , 'gb_niak_omitted' };
 files_in      = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Options
-list_fields   = { 'flag_rand' , 'label_network' , 'rmap'   , 'graph_prop' , 'connectome' , 'psom'   , 'folder_out' , 'flag_verbose' , 'flag_test' };
-list_defaults = { false       , 'rois'          , struct() , struct()     , struct()     , struct() , NaN          , true           , false       };
+list_fields   = { 'flag_rand' , 'label_network' , 'flag_p2p' , 'flag_rmap'   , 'flag_global_prop' , 'flag_local_prop' , 'connectome' , 'psom'   , 'folder_out' , 'flag_verbose' , 'flag_test' };
+list_defaults = { false       , 'rois'          , true       , true          , true               , true              , struct()     , struct() , NaN          , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [folder_out 'logs' filesep];
 
-%% Get the list of seeds
-opt.rmap = psom_struct_defaults(opt.rmap,{'ind_seeds'},{struct()},false);
-list_seed = fieldnames(opt.rmap.ind_seeds);
+%% Get the list of seeds and associated labels
+if ~strcmp(files_in.seeds,'gb_niak_omitted')
+    [seeds,labels_seed,ly] = niak_read_csv(files_in.seeds);
+    [hdr,mask] = niak_read_vol(files_in.network);
+    if size(seeds,2) == 1
+        % Method 1: the user specified the indices of the parcels
+        list_seed = seeds;
+        mask_ok = ismember(list_seed,unique(mask));
+        if any(~mask_ok)
+            error('The following seeds are listed in the .csv FILES_IN.SEEDS but do not correspond to any parcels',char(labels_seed(~mask_ok)))
+        end
+    elseif size(seeds,2) == 3
+        % Method 2: world coordinates
+        list_seed = zeros(size(seeds,1),1);
+        coord_v = niak_coord_world2vox(seeds,hdr.info.mat);
+        for num_s = 1:length(list_seed)
+            list_seed(num_s) = mask(coord_v(num_s,1),coord_v(num_s,2),coord_v(num_s,3));            
+        end
+    end
+    %% Sanity check on the seeds
+    for num_s = 1:length(list_seed)
+        if opt.flag_verbose
+            fprintf('Adding seed %s (parcel number %i)\n',labels_seed{num_s},list_seed(num_s));
+        end
+    end
+    if length(unique(list_seed))~=length(list_seed)
+        error('The same parcel was associated with multiple rows in the seeds .csv file')
+    end
+    if length(unique(labels_seed))~=length(labels_seed)
+        error('The same label was associated with multiple rows in the seeds .csv file')
+    end
+end
+
+%% Add global network properties, if required
+if opt.flag_global_prop
+    opt_prop.global_efficiency.type  = 'global_efficiency';
+    opt_prop.average_clustering.type = 'average_clustering';
+    opt_prop.modularity.type = 'modularity';
+end
+
+%% Add local network properties, if required
+if opt.flag_local_prop && ~strcmp(files_in.seeds,'gb_niak_omitted')
+
+    %% Add measures of degree centrality
+    for x = 1:length(list_seed) 
+        opt.graph_prop.(['Dcentrality_' labels_seed{x}]).param = list_seed(x);
+        opt.graph_prop.(['Dcentrality_' labels_seed{x}]).type = 'Dcentrality'; 
+    end
+   
+    %% Add measures of local clustering
+    for x = 1:length(list_seed) 
+        opt.graph_prop.(['clustering_' labels_seed{x}]).param = list_seed(x);
+        opt.graph_prop.(['clustering_' labels_seed{x}]).type = 'clustering'; 
+    end
+
+    %% Add measures of local efficiency
+    for x = 1:length(list_seed) 
+        opt.graph_prop.(['local_eff_' labels_seed{x}]).param = list_seed(x);
+        opt.graph_prop.(['local_eff_' labels_seed{x}]).type = 'local_efficiency'; 
+    end
+end
+
+%% Add point-to-point connectivity, if required
+if opt.flag_p2p && ~strcmp(files_in.seeds,'gb_niak_omitted')    
+    for x = 1:length(list_seed) 
+        for y = x+1:length(list_seed)
+            opt.graph_prop.(['p2p_' labels_seed{x} '_X_' labels_seed{y}]).param(1) = list_seed(x);
+            opt.graph_prop.(['p2p_' labels_seed{x} '_X_' labels_seed{y}]).param(2) = list_seed(y);
+            opt.graph_prop.(['p2p_' labels_seed{x} '_X_' labels_seed{y}]).type = 'p2p';
+        end
+    end
+end
+
+%% Add correlation maps, if required
+if opt.flag_rmap && ~strcmp(files_in.seeds,'gb_niak_omitted')
+    for x = 1:length(list_seed)
+        opt.rmap.ind_seeds.(labels_seed{x}) = list_seed(x);
+    end
+end
 
 %% Loop over networks
 pipeline = struct();
@@ -181,7 +291,7 @@ if ~isempty(list_mes)
             jopt.rand_seed = [];
         else
             jopt.rand_seed = double(niak_datahash(subject));
-            jopt.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
+            jopt.rand_seed = jopt.rand_seed(1:min(length(jopt.rand_seed),625));
         end
         pipeline = psom_add_job(pipeline,name_job,'niak_brick_graph_prop',in,out,jopt);        
     end
@@ -198,9 +308,9 @@ if ~isempty(list_mes)
 end
 
 %% Generate functional connectivity maps
-if ~isempty(list_seed)
+if ~isempty(labels_seed)&&opt.flag_rmap
 
-    list_maps = cell(length(list_subject),length(list_seed));
+    list_maps = cell(length(list_subject),length(labels_seed));
     for num_s = 1:length(list_subject) 
         subject = list_subject{num_s};        
         clear in out jopt
@@ -208,8 +318,8 @@ if ~isempty(list_seed)
         if num_s == 1
             [path_f,name_f,ext_f] = niak_fileparts(in.fmri{1});
         end
-        for num_seed = 1:length(list_seed)
-            seed = list_seed{num_seed};
+        for num_seed = 1:length(labels_seed)
+            seed = labels_seed{num_seed};
             in.seeds.(seed) = pipeline.(['mask_' network]).files_out;
             if num_s == 1
                 out.seeds.(seed) = [folder_out 'rmap_seeds' filesep 'mask_' seed ext_f];
@@ -225,8 +335,8 @@ if ~isempty(list_seed)
     end
     
     %% Compute the average map for each seed
-    for num_seed = 1:length(list_seed)
-        seed = list_seed{num_seed};
+    for num_seed = 1:length(labels_seed)
+        seed = labels_seed{num_seed};
         clear in out jopt
         in = list_maps(:,num_seed);
         out = [folder_out 'rmap_seeds' filesep 'average_rmap_' seed ext_f];

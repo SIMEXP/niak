@@ -158,10 +158,8 @@ end
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 type = opt.type;
 
-% Binarization
+% Options for binarization
 opt.thresh = psom_struct_defaults(opt.thresh,{'type','param'},{'sparsity_pos',[]});
-thresh = opt.tresh;
-
 switch opt.thresh.type
     case {'sparsity','sparsity_pos'}
         if isempty(opt.thresh.param)
@@ -174,6 +172,7 @@ switch opt.thresh.type
     otherwise
         error('%s is not supported in OPT.THRESH.TYPE',opt.thresh.type)
 end
+thresh = opt.thresh;
 
 % Check input/output match
 if length(files_in.mask) ~= length(files_out)
