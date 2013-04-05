@@ -142,7 +142,7 @@ end
 
 %% write results
 if opt.flag_verbose
-    fprintf('\nWrite edges of the partition in %s ...\n',files_out);
+    fprintf('Write edges of the partition in %s ...\n',files_out);
 end
 hdr.file_name = files_out;
 niak_write_vol(hdr,vol_e);
