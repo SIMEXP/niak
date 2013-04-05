@@ -50,6 +50,15 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       (string, default '<~niak>/template/roi_aal_3mm.mnc.gz') a volume that
 %       will be used to resample the fMRI datasets. 
 %
+%   TEMPLATE_T1
+%       (string, default 'ICBM_152_nlin_sym_2009') the template that 
+%       will be used as a target for the coregistration of the T1 image. 
+%       Available choices (see also the "NOTE 5" in the COMMENTS section below) : 
+%
+%         'mni_icbm152_nlin_sym_09a' : an adult symmetric template 
+%             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
+%
+%
 %   GRANULARITY
 %       (string, default 'cleanup') the level of granularity of the pipeline.
 %       Available options:
