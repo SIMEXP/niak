@@ -51,13 +51,13 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       will be used to resample the fMRI datasets. 
 %
 %   TEMPLATE_T1
-%       (string, default 'ICBM_152_nlin_sym_2009') the template that 
+%       (string, default 'mni_icbm152_nlin_sym_09a') the template that 
 %       will be used as a target for the coregistration of the T1 image. 
-%       Available choices (see also the "NOTE 5" in the COMMENTS section below) : 
-%
-%         'mni_icbm152_nlin_sym_09a' : an adult symmetric template 
+%       Available choices: 
+%         'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
 %             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
-%
+%         'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
+%             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
 %
 %   GRANULARITY
 %       (string, default 'cleanup') the level of granularity of the pipeline.
@@ -470,8 +470,8 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 template_fmri = [gb_niak_path_template filesep 'roi_aal_3mm.mnc.gz'];
-list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
+list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'template_t1'              , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct()            , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
@@ -487,7 +487,11 @@ if ~isfield(opt.region_growing,'flag_skip') % By default, skip the region growin
 end
 
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
-    error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''quality_control'', ''all''',opt.size_output))
+    error('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''quality_control'', ''all''',opt.size_output)
+end
+
+if ~ismember(opt.template_t1,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
+    error('%s is an unkown T1 template space',opt.template_t1)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

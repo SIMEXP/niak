@@ -56,6 +56,15 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       (string, default '<~niak>/template/roi_aal_3mm.mnc.gz') a volume that
 %       will be used to resample the fMRI datasets. 
 %
+%   TEMPLATE_T1
+%       (string, default 'mni_icbm152_nlin_sym_09a') the template that 
+%       will be used as a target for the coregistration of the T1 image. 
+%       Available choices: 
+%         'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
+%             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
+%         'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
+%             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
+%
 %   TARGET_SPACE
 %       (string, default 'stereonl') which space will be used to resample
 %       the functional datasets. Available options:
@@ -412,8 +421,8 @@ files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correc
 
 %% OPT
 file_template = [gb_niak_path_template filesep 'roi_aal_3mm.mnc.gz'];
-list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' ,  'template_t1'              , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   ,  'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -447,6 +456,10 @@ if isempty(opt.folder_intermediate)
     opt.folder_intermediate = [opt.folder_out 'intermediate' filesep subject filesep];
 end
 
+if ~ismember(opt.template_t1,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
+    error('%s is an unkown T1 template space',opt.template_t1)
+end
+
 opt.psom.path_logs = opt.folder_logs;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -478,6 +491,7 @@ if ischar(opt.civet)
     job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
     job_opt                         = opt.t1_preprocess;
+    job_opt.template_t1             = opt.template_t1;
     job_opt.folder_out              = opt.folder_anat;
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess',job_in,job_out,job_opt);
     if opt.flag_verbose        
@@ -669,7 +683,12 @@ if opt.flag_verbose
 end
 clear job_in job_out job_opt 
 job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
-job_in.mask_wm_stereo     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_3mm.mnc.gz'];
+switch opt.template_t1
+    case 'mni_icbm152_nlin_sym_09a'
+        job_in.mask_wm_stereo     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_2mm.mnc.gz'];
+    case 'mni_icbm152_nlin_asym_09a'
+        job_in.mask_wm_stereo     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_2mm.mnc.gz'];
+end
 job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
 job_in.mask_brain         = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.aal                = [gb_niak_path_niak 'template' filesep 'roi_aal.mnc.gz'];

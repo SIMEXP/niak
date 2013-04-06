@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_ANAT2STEREOLIN
-%
 % Linear coregistration of a T1 anatomical scan in native space to the MNI
 % stereotaxic space.
 %
@@ -11,6 +7,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 %
 % _________________________________________________________________________
 % INPUTS:
+%
 %   FILES_IN        
 %       (structure) with the following fields :
 %
@@ -107,14 +104,10 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 %   by Louis Collins, Vladimir Fonov and Andrew Janke. 
 %   A small subset of this package is bundled in the NIAK archive releases
 %   and can be found in :
-%   <root niak>/extensions/mni-models_icbm152-nl-2009-1.0
+%   <root niak>/template/mni-models_icbm152-nl-2009-1.0
 %   See the AUTHORS, COPYING and README files in this folder for details
 %   about authorship and license information (it is a BSD-like license
-%   similar to what is used in most minc tools). Note that the templates
-%   are simply included in NIAK archive releases, but are not part of the
-%   subversion repository hosted by google code. As a consequence, a simple
-%   download of the latest NIAK code repository will not be enough to get
-%   this brick to work.
+%   similar to what is used in most minc tools). 
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008.
@@ -172,22 +165,12 @@ niak_set_defaults
 
 %% Building default input names for template
 if isempty(files_in.template)
-    flag_gb_niak_fast_gb = false;
-    niak_gb_vars; % load important NIAK variables
     files_in.template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
     files_in.template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
 end
 
 %% Building default output names
-[path_f,name_f,ext_f] = fileparts(files_in.t1);
-if isempty(path_f)
-    path_f = '.';
-end
-
-if strcmp(ext_f,gb_niak_zip_ext)    
-    [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
-end
+[path_f,name_f,ext_f] = niak_fileparts(files_in.t1);
 
 if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
