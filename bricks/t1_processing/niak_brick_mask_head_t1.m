@@ -1,8 +1,4 @@
 function [files_in,files_out,opt] = niak_brick_mask_head_t1(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_MASK_HEAD_T1
-%
 % Derive a head mask from one T1 volume
 %
 % SYNTAX:
@@ -11,37 +7,37 @@ function [files_in,files_out,opt] = niak_brick_mask_head_t1(files_in,files_out,o
 % _________________________________________________________________________
 % INPUTS:
 %
-%  * FILES_IN        
-%       (string) the name of a file with a t1 volume.
+% FILES_IN        
+%   (string) the name of a file with a t1 volume.
 %
-%  * FILES_OUT   
-%       (string, default <BASE FILES_IN>_mask.<EXT FILES_IN>) 
-%       the name of a file with a binary mask of the brain.
+% FILES_OUT   
+%   (string, default <BASE FILES_IN>_mask.<EXT FILES_IN>) 
+%   the name of a file with a binary mask of the brain.
 %   
-%  * OPT           
-%       (structure) with the following fields.  
+% OPT           
+%   (structure) with the following fields.  
 %
-%       NB_CLUSTERS_MAX
-%           (integer, default 10) the number of largest connected
-%           components in the mask.
+%   NB_CLUSTERS_MAX
+%      (integer, default 10) the number of largest connected
+%      components in the mask.
 %
-%       THRESH_DIST
-%           (real value, default 15) the distance applied to expand /
-%           shrink the head mask.
+%   THRESH_DIST
+%      (real value, default 15) the distance applied to expand /
+%      shrink the head mask.
 %
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
+%   FOLDER_OUT 
+%      (string, default: path of FILES_IN) If present, all default 
+%      outputs will be created in the folder FOLDER_OUT. The folder 
+%      needs to be created beforehand.
 %
-%       FLAG_VERBOSE 
-%           (boolean, default 1) if the flag is 1, then the function 
-%           prints some infos during the processing.
+%   FLAG_VERBOSE 
+%      (boolean, default 1) if the flag is 1, then the function 
+%      prints some infos during the processing.
 %
-%       FLAG_TEST 
-%           (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
+%   FLAG_TEST 
+%      (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%      do anything but update the default values in FILES_IN, 
+%      FILES_OUT and OPT.
 %           
 % _________________________________________________________________________
 % OUTPUTS:
@@ -72,8 +68,11 @@ function [files_in,files_out,opt] = niak_brick_mask_head_t1(files_in,files_out,o
 %   ~mask is THRESH_DIST).
 %
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2010.
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2013
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, t1, mask, segmentation
 
