@@ -263,7 +263,7 @@ elseif ischar(file_name)
             if status~=0
                 error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
             end
-            instr_mv = ['mv ' hdr.file_name gb_niak_zip_ext ' ' file_name];
+            instr_mv = ['mv "' hdr.file_name gb_niak_zip_ext '" "' file_name '"'];
             [status,msg] = system(instr_mv);
             if status~=0
                 error(cat(2,'niak:write: ',msg,'. There was a problem moving the compressed file from the temporary folder to its final destination'));
