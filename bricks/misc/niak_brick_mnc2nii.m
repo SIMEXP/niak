@@ -132,7 +132,7 @@ for num_f = 1:length(list_files)
         if flag_err
             error(err_msg)
         end
-        if strcmp(ext,'.mnc')&flag_zip
+        if strcmp(ext,'.mnc')&&flag_zip
             instr_zip = [gb_niak_zip ' ' target_file];
             [flag_err,err_msg] = system(instr_zip);
             if flag_err
