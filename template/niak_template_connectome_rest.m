@@ -47,6 +47,9 @@ opt_g.filter.session = {'session1'}; % Just grab session 1
 opt_g.filter.run = {'rest'}; % Just grab the "rest" run
 files_in.fmri = niak_grab_fmri_preprocess('/home/toto/database/fmri_preprocess',opt_g).fmri; % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 
+%% Set the seeds
+files_in.seeds = '/home/toto/database/list_seeds.csv';
+
 %% Options 
 opt.folder_out = ['/home/toto/database/glm_connectome']; % Where to store the results
 opt.connectome.type = 'Z'; % The type of connectome. See "help niak_brick_connectome".

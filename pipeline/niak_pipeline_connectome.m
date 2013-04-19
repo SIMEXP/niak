@@ -99,6 +99,20 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
+%  The measure 'Dcentrality' is described in the following paper:
+%   Buckner et al. Cortical Hubs Revealed by Intrinsic Functional Connectivity:
+%   Mapping, Assessment of Stability, and Relation to
+%   Alzheimer’s Disease. The Journal of Neuroscience, February 11, 2009.
+%
+% Some of the measures employed here depend on function from the "brain connectivity toolbox"
+%   https://sites.google.com/site/bctnet/Home/functions
+% This software has to be installed to generate the networks properties, and is described 
+% in the following paper:
+%   Rubinov, M., Sporns, O., Sep. 2010. 
+%   Complex network measures of brain connectivity: Uses and interpretations. 
+%   NeuroImage 52 (3), 1059-1069.
+%   URL http://dx.doi.org/10.1016/j.neuroimage.2009.10.003
+%
 % The .csv FILES_IN.SEEDS can take two forms.
 % Example 1, (world) coordinates in stereotaxic space:
 %
