@@ -52,7 +52,22 @@ files_in.seeds = '/home/toto/database/list_seeds.csv';
 
 %% Options 
 opt.folder_out = ['/home/toto/database/glm_connectome']; % Where to store the results
-opt.connectome.type = 'Z'; % The type of connectome. See "help niak_brick_connectome".
+opt.connectome.type = 'Z'; % The type of connectome. See "help niak_brick_connectome" for more info. 
+% 'S': covariance; 
+%'R': correlation; 
+%'Z': Fisher transform of the correlation; 
+%'U': concentration; 
+%'P': partial correlation.
+opt.connectome.thresh.type = 'sparsity_pos'; % The type of treshold used to binarize the connectome. See "help niak_brick_connectome" for more info. 
+% 'sparsity': keep a proportion of the largest connection (in absolute value); 
+% 'sparsity_pos' keep a proportion of the largest connection (positive only)
+% 'cut_off' a cut-off on connectivity (in absolute value)
+% 'cut_off_pos' a cut-off on connectivity (only positive) 
+opt.connectome.thresh.param = 0.2; % the parameter of the thresholding. The actual definition depends of THRESH.TYPE:
+% 'sparsity' (scalar, default 0.2) percentage of connections
+% 'sparsity_pos' (scalar, default 0.2) percentage of connections
+% 'cut_off' (scalar, default 0.25) the cut-off
+% 'cut_off_pos' (scalar, default 0.25) the cut-off       
 
 %%%%%%%%%%%%
 %% Run the pipeline
