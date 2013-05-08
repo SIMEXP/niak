@@ -35,7 +35,7 @@
 clear 
 
 %% Set the template
-files_in.networks.aal = '/home/pbellec/svn/niak/template/roi_aal_3mm.mnc.gz';
+files_in.networks = '/home/pbellec/svn/niak/template/roi_aal_3mm.mnc.gz';
 
 %% Grabbing the results from the NIAK fMRI preprocessing pipeline
 opt_g.min_nb_vol = 100;     % The minimum number of volumes for an fMRI dataset to be included. This option is useful when scrubbing is used, and the resulting time series may be too short.
