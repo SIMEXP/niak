@@ -89,14 +89,8 @@
 %
 %   case 'rest' :
 %
-%       DATA
-%           (structure) with the following fields :
-%
-%           <SUBJECT>
-%               (cell of strings) a list of fMRI datasets, acquired for the 
-%               same subject. The field names <SUBJECT> can be any arbitrary 
-%               strings. The fMRI datasets are found in the 'fmri'
-%               subfolder of PATH_DATA.
+%       DATA.(SUBJECT).(SESSION).(RUN)
+%           (string) preprocessed fMRI datasets. 
 %
 %       MASK
 %           (string) a file name of a binary mask common 
@@ -312,11 +306,7 @@ for num_s = 1:nb_subject
             if ismember(opt.type_files,{'roi','glm_connectome','fir'})
                 files.fmri.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];
             elseif strcmp(opt.type_files,'rest')
-                files_tmp = files_fmri(mask_s);
-                if ~exist('ext_f','var')
-                    [path_f,name_f,ext_f] = niak_fileparts(files_tmp{1});
-                end
-                files.data.(list_subject{num_s}){nb_f} = [path_fmri files_tmp{1}];            
+                files.data.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];            
             else
                 error('%s is an unsupported type of output format for the files structure')            
             end
