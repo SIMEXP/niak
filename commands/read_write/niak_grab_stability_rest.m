@@ -129,7 +129,7 @@ case 'mixed'
     end
     files_subject = dir(path_data);
     for num_sub = 1:length(files_subject)
-        subject = files_subject(num_sub).name
+        subject = files_subject(num_sub).name;
         flag_subj = files_subject(num_sub).isdir&~strcmp(subject,'.')&~strcmp(subject,'..');
         if flag_subj
             path_subject = [path_data subject filesep];
@@ -155,15 +155,14 @@ case 'mixed'
                     files_tseries = dir([path_scale '*' opt.type '*']);
                     nb_tseries = 1;
                     for num_t = 1:length(files_tseries)
-                        if (~files_tseries(num_t).isdir)&&regexp(files_tseries(num_t).name,['^tseries_'])&&regexp(files_tseries(num_t).name,['*' opt.type '*'])
+                        if (~files_tseries(num_t).isdir)&&regexp(files_tseries(num_t).name,['^tseries_'])&&regexp(files_tseries(num_t).name,[opt.type])
                             file_read = files_tseries(num_t).name;
                             [path_f,name_f,ext_f] = niak_fileparts(file_read);
-                            name_f = name_f((26+length(list_subject{num_s})+length(scale)):end);
+                            name_f = name_f((27+length(subject)+length(scale)):end);
                             pos_sep = strfind(name_f,'_');
                             run = name_f((pos_sep(end)+1):end);
                             session = name_f(1:(pos_sep(end)-1));
-                            files.networks.(scale).tseries.(subject).(session).(run) = [path_subject file_read];
-                            files.networks.(scale).tseries.(subject){nb_tseries} = [path_scale files_tseries(num_t).name];
+                            files.networks.(scale).tseries.(subject).(session).(run) = [path_subject file_read];                            
                             nb_tseries = nb_tseries+1;
                         end
                     end
@@ -209,7 +208,7 @@ case 'group'
                     if ~files_tseries(num_t).isdir
                         file_read = files_tseries(num_t).name;
                         [path_f,name_f,ext_f] = niak_fileparts(file_read);
-                        name_f = name_f((26+length(list_subject{num_s})+length(scale)):end);
+                        name_f = name_f((27+length(subject)+length(scale)):end);
                         pos_sep = strfind(name_f,'_');
                         run = name_f((pos_sep(end)+1):end);
                         session = name_f(1:(pos_sep(end)-1));
