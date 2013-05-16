@@ -106,9 +106,12 @@ opt.corsica.flag_skip                = 1;     % Skip CORSICA (0: don't skip, 1 :
 opt.smooth_vol.fwhm      = 6;  % Full-width at maximum (FWHM) of the Gaussian blurring kernel, in mm.
 opt.smooth_vol.flag_skip = 0;  % Skip spatial smoothing (0: don't skip, 1 : skip)
 
-% Just to show case how to specify a different parameter for one subject (here subject1)
-opt.tune.subject = 'subject1';
-opt.tune.param.slice_timing.flag_center = true; 
+% how to specify a different parameter for two subjects (here subject1 and subject2)
+opt.tune(1).subject = 'subject1';
+opt.tune(1).param.slice_timing.flag_center = true; % Anything that usually goes in opt can go in param. What's specified in opt applies by default, but is overridden by tune.param
+
+opt.tune(2).subject = 'subject2';
+opt.tune(2).param.slice_timing.flag_center = false; % Anything that usually goes in opt can go in param. What's specified in opt applies by default, but is overridden by tune.param
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
