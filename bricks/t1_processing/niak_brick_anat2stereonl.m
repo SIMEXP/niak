@@ -272,10 +272,10 @@ if flag_zip
 end
 
 %% Renaming the output grid file
-[path_t,name_t,ext_t] = fileparts(files_out.transformation);
+[path_t,name_t,ext_t] = niak_fileparts(files_out.transformation);
 file_grid = [path_t,filesep,name_t,'_grid_0.mnc'];
-[path_g,name_g,ext_g] = fileparts(files_out.transformation_grid);
-if strcmp(ext_g,gb_niak_zip_ext)    
+[path_g,name_g,ext_g,flag_zip] = niak_fileparts(files_out.transformation_grid);
+if flag_zip    
     instr_zip = [gb_niak_zip ' ' file_grid];
     [status,msg] = system(instr_zip);
     if status ~= 0
