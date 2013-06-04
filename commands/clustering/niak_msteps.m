@@ -155,13 +155,15 @@ function ss = sub_residuals(scales_test,list_scales,M,weights,N)
 [tmp,ind_test] = ismember(scales_test,list_scales);
 ss = zeros([length(list_scales) 1]);
 for num_sc = 1:length(list_scales)
-    sci = list_scales(num_sc);
-    if sci<=scales_test(1)
+    sci = list_scales(num_sc);    
+    if ismember(sci,scales_test)
+        ss(num_sc) = 0;
+    elseif sci<scales_test(1)
         ss(num_sc) = M(num_sc,num_sc) + M(ind_test(1),ind_test(1)) - 2*M(num_sc,ind_test(1));        
-    elseif sci>=scales_test(end)
-        sc = scales_test(end);
+    elseif sci>scales_test(end)
+        sc = scales_test(end);        
         alpha = (1-(sc^(1/4))/(N^(1/4)))^(-1)*((sc.^(1/4))/((sci)^(1/4))-((sc)^(1/4))/((N)^(1/4)));
-        ss(num_sc) = M(num_sc,num_sc) + alpha^2*M(ind_test(end),ind_test(end)) - 2*alpha*M(num_sc,ind_test(end));
+        ss(num_sc) = M(num_sc,num_sc) + alpha^2*M(ind_test(end),ind_test(end)) - 2*alpha*M(num_sc,ind_test(end));        
     else
         ind1 = find(scales_test<=sci);
         ind2 = find(scales_test>sci);
@@ -208,9 +210,9 @@ while var_res>perc_var
     for num_s2 = 1:length(ind_scales)
         ind = ind_scales(num_s2);
         scales(num_s) = list_scales(ind);
-        score_tmp(num_s2) = sum(sub_residuals(scales(1:num_s),list_scales,M,weights,N)); 
+        score_tmp(num_s2) = sum(sub_residuals(scales(1:num_s),list_scales,M,weights,N));         
     end
-    score_min = min(score_tmp);
+    score_min = min(score_tmp);    
     ind_min = find(score_tmp==score_min);
     ind_min = ind_min(end);
     scales(num_s) = list_scales(ind_scales(ind_min));
