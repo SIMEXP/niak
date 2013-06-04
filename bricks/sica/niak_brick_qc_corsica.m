@@ -199,11 +199,7 @@ if flag_verbose
     fprintf('Generating a pdf summary of the ICA ...\n');
 end
 
-%% Options & temporary folders
-folder_tmp = niak_path_tmp('_qc_corsica');
-file_space = cell([size(tseries,2) 1]);
-file_time  = cell([size(tseries,2) 1]);
-
+%% Options 
 opt_visu.voxel_size = hdr.info.voxel_size;
 opt_visu.fwhm       = opt.fwhm;
 opt_visu.vol_limits = [0 3];
@@ -213,10 +209,7 @@ opt_visu.type_color = 'jet';
 [tmp,order] = sort(score_max,'descend');
 order = order(:)';
 
-for num_c = order
-    
-    file_space{num_c} = sprintf('%sfig_corsica_space_%i.eps',folder_tmp,num_c);
-    file_time{num_c}  = sprintf('%sfig_corsica_time_%i.eps',folder_tmp,num_c);
+for num_c = order        
     
     %% Score title
     if ~ischar(files_in.score)
@@ -245,7 +238,7 @@ for num_c = order
     vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
     niak_montage(abs(vol_c),opt_visu);    
     title(sprintf('Component %i %s',num_c,title_score));        
-    print(file_space{num_c},'-dpsc2');    
+    print(files_out,'-dpdf','-append');    
     close(hf)
     
     %% temporal distribution
@@ -290,34 +283,8 @@ for num_c = order
     else
         niak_visu_wft(tseries(:,num_c),1);
     end    
-    print(file_time{num_c},'-dpsc2');    
+    print(files_out,'-dpdf','-append');
     close(hf)    
-end
-
-%% Merge all eps figures into a single file
-file_eps_final = [folder_tmp 'fig_corsica.eps'];
-instr_concat = ['gs  -q -dNOPAUSE -dBATCH -sOutputFile=' file_eps_final '  -sDEVICE=pswrite ' ];
-for num_c = order
-    instr_concat = [instr_concat file_space{num_c} ' ' file_time{num_c} ' '];
-end
-instr_concat = [instr_concat 'quit.ps'];
-[status,msg] = system(instr_concat);
-if status~=0
-    error(['There was a problem concatenating the EPS figures with ghostscript (gs): ',msg]);
-end
-
-%% In octave, use ps2pdf to convert the result into PDF format
-instr_ps2pdf = cat(2,'ps2pdf -dEPSCrop ',file_eps_final,' ',files_out);
-[succ,msg] = system(instr_ps2pdf);
-if succ~=0
-    warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf with ps2pdf: ',msg));
-end
-
-%% Clean up
-instr_clean = ['rm -rf ' folder_tmp];
-[status,msg] = system(instr_clean);
-if status~=0
-    error(['There was a problem cleaning-up the temporary folder : ' msg]);
 end
 
 if flag_verbose
