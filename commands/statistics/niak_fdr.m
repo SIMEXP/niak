@@ -17,7 +17,7 @@ function [fdr,test] = niak_fdr(pce,method,q)
 %       'BY' : The Benjamini-Yekutieli procedure, appropriate for dependent tests
 %       'BH' : The Benjamini-Hochberg procedure, appropriate for independent tests 
 %              (or positively correlated tests).
-%       'GBH' : The two-stage adaptative group BH procedure, with the two stage 
+%       'TST' : The two-stage adaptative group BH procedure, with the two stage 
 %               (TST) estimator of the number of discoveries.
 %       'LSL' : The two-stage adaptative group BH procedure, with the least-slope
 %               (LSL) estimator of the number of discoveries.
@@ -99,6 +99,10 @@ function [fdr,test] = niak_fdr(pce,method,q)
 % THE SOFTWARE.
 if nargin < 2
     method = 'BY';
+end
+
+if strcmp(method,'TST')
+    method = 'GBH';
 end
 
 if nargin < 3
