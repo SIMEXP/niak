@@ -140,13 +140,13 @@ if strcmp(method,'GBH')||strcmp(method,'LSL')
                 pi_g_0(num_c) = min((floor(l(ind_c+1,num_c))+1)/n,1);
             end            
     end
+    
+    % weight the p-values based on the estimated number of discoveries
     pi_g_1 = 1-pi_g_0;
     pi_0 = mean(pi_g_0);
-
-    % weight the p-values based on the estimated number of discoveries
     w = zeros(1,m);
-    w(pi_g_0~=1) = pi_g_0(pi_g_0~=1)./pi_g_1(pi_g_0~=1);
-    w(pi_g_0==1) = Inf;
+    w(pi_g_0~=1) = (1-pi_0) * pi_g_0(pi_g_0~=1)./pi_g_1(pi_g_0~=1);   
+    w(pi_g_0==1) = Inf;    
     pce = pce.*repmat(w,[n 1]);
     
     % run a standard (global) BH procedure, with weighted p-values and modified FDR threshold
@@ -154,7 +154,7 @@ if strcmp(method,'GBH')||strcmp(method,'LSL')
        fdr = ones(size(pce));
        test = zeros(size(pce));
     else
-       [fdr,test] = niak_fdr(pce(:),'BH',q/(1-pi_0));
+       [fdr,test] = niak_fdr(pce(:),'BH',q);
        fdr = reshape(fdr,size(pce));
        test = reshape(test,size(pce));
     end
