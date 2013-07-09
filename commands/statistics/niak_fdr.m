@@ -122,7 +122,7 @@ if strcmp(method,'GBH')||strcmp(method,'LSL')
             q = q/(1+q);
             [fdr_bh,test_bh] = niak_fdr(pce,'BH',q); 
             pi_g_0 = (n-sum(test_bh,1))/n;        
-
+  
         case 'LSL'
 
             % The least-slope method
@@ -184,6 +184,8 @@ for num_c = 1:size(pce,2)
         ind_c = find(fdr_c>q,1);
         if ind_c>1
             test(order(1:(ind_c-1),num_c),num_c) = 1;
+        elseif isempty(ind_c)
+            test(:,num_c) = 1;
         end
     end
 end
