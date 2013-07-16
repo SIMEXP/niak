@@ -222,6 +222,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           (boolean, default true) turn on/off the removal of the average 
 %           white matter signal
 %
+%       FLAG_VENT
+%          (boolean, default true) turn on/off the removal of the average 
+%          signal in the lateral ventricles.
+%
 %       PCT_VAR_EXPLAINED 
 %           (boolean, default 0.95) the % of variance explained by the selected 
 %           PCA components when reducing the dimensionality of motion parameters.

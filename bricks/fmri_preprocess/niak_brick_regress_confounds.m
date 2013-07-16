@@ -127,7 +127,11 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %
 %   FLAG_WM 
 %      (boolean, default true) turn on/off the removal of the average 
-%      white matter signal
+%      white matter signal.
+%
+%   FLAG_VENT
+%      (boolean, default true) turn on/off the removal of the average 
+%      signal in the lateral ventricles.
 %
 %   FLAG_COMPCOR
 %      (boolean, default false) turn on/off COMPCOR 
@@ -235,7 +239,7 @@ files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
 list_fields    = { 'flag_compcor' , 'compcor' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { false          , struct()  , 40           , true             , 0.5       , true        , false       , ''           , true          , true                , true     , true        , true      , true             , false      , 0.95               };
+list_defaults  = { false          , struct()  , 40           , true             , 0.5       , true        , false       , ''            , true          , true                , true     , true        , true      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
