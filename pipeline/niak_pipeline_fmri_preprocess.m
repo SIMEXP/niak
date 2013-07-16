@@ -214,6 +214,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       FLAG_GSC 
 %           (boolean, default true) turn on/off global signal correction
 %
+%       FLAG_SCRUBBING
+%           (boolean, default true) turn on/off the "scrubbing" of volumes with 
+%           excessive motion.
+%
 %       FLAG_MOTION_PARAMS 
 %           (boolean, default false) turn on/off the removal of the 6 motion 
 %           parameters + the square of 6 motion parameters.
