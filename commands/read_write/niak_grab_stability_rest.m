@@ -19,7 +19,7 @@
 %   LEVEL
 %      (string, default 'group') the level of networks. Available options;
 %      'group' : group-level (atlas) networks
-%      'mixed' : group-level networks wraped on individual stability matrices.
+%      'mixed' : group-level networks wrapped on individual stability matrices.
 %       
 %   TYPE
 %      (string, default 'consensus') the type of network clusters. Available options:
