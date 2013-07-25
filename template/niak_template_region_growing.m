@@ -34,7 +34,7 @@
 clear 
 
 %%%%%%%%%%%%
-%% Grabbing the results from the NIAK fMRI preprocessing pipeline
+%% Grab the results from the NIAK fMRI preprocessing pipeline
 %%%%%%%%%%%%
 opt_g.min_nb_vol = 100;     % The minimum number of volumes for an fMRI dataset to be included. This option is useful when scrubbing is used, and the resulting time series may be too short.
 opt_g.min_xcorr_func = 0.5; % The minimum xcorr score for an fMRI dataset to be included. This metric is a tool for quality control which assess the quality of non-linear coregistration of functional images in stereotaxic space. Manual inspection of the values during QC is necessary to properly set this threshold.

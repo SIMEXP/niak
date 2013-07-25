@@ -49,7 +49,7 @@ function [pipeline,opt_pipe,files_in] = niak_demo_fmri_preprocess(path_demo,opt)
 % NOTE 2:
 % The demo database exists in multiple file formats. NIAK looks into the demo 
 % path and is supposed to figure out which format you are intending to use 
-% by himself. 
+% by itself. 
 %
 % NOTE 3:
 % The following parameters are hard-coded and cannot be modified:
