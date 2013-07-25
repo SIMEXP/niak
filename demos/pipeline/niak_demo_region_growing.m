@@ -38,10 +38,9 @@ function [pipeline,opt_pipe,files_in] = niak_demo_region_growing(path_demo,opt)
 % COMMENTS
 %
 % Note 1:
-% The demo will apply the region growign pipeline on the 
-% functional data of subject 1 (rest and motor conditions). It is possible to 
-% configure the pipeline manager to use parallel computing using OPT.PSOM, 
-% see : 
+% The demo will apply the region growing pipeline on preprocessed version of 
+% the DEMONIAK dataset. It is possible to configure the pipeline manager to 
+% use parallel computing using OPT.PSOM, see : 
 % http://code.google.com/p/psom/wiki/PsomConfiguration
 %
 % NOTE 2:
