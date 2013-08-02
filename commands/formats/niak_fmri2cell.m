@@ -1,8 +1,8 @@
-function [fmri_c,label] = niak_fmri2cell(fmri);
+function [fmri_c,label] = niak_fmri2cell(fmri,flag_subject);
 % Convert a set of fMRI files into a cell of string
 %
 % SYNTAX:
-% [FMRI_C,LABEL] = NIAK_FMRI2CELL(FMRI)
+% [FMRI_C,LABEL] = NIAK_FMRI2CELL(FMRI , FLAG_SUBJECT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -11,6 +11,11 @@ function [fmri_c,label] = niak_fmri2cell(fmri);
 %   The canonical form of FMRI is a structure with the following fields : 
 %   <SUBJECT>.<SESSION>.<RUN> or <SUBJECT>.fmri.<SESSION>.<RUN>
 %      (string) the file name of an fMRI dataset.
+%
+% FLAG_SUBJECT
+%   (boolean, default true) if the flag is false, the function ignores the 
+%   <SUBJECT> IDs. 
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -72,6 +77,16 @@ function [fmri_c,label] = niak_fmri2cell(fmri);
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if nargin < 2
+    flag_subject = true;
+end
+
+if ~flag_subject    
+    fmri2.subject = fmri;
+    [fmri_c,label] = niak_fmri2cell(fmri2);
+    label = rmfield(label,'subject');
+    return
+end
 fmri = niak_fmri2struct(fmri);
 
 list_subject = fieldnames(fmri);
