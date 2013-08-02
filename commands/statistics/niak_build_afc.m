@@ -1,8 +1,4 @@
 function afc = niak_build_afc(tseries,part,flag_vec)
-%
-% _________________________________________________________________________
-% SUMMARY OF NIAK_BUILD_AFC
-%
 % Compute the average functional connectivity (AFC) within and between 
 % networks given a set of regional time series and a partition of regions 
 % into networks. Functional connectivity simply refers to the linear
