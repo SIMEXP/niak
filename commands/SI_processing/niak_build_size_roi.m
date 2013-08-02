@@ -8,17 +8,22 @@ function [size_roi,labels_roi] = niak_build_size_roi(mask,flag_iterative)
 % INPUTS:
 %
 % MASK      
-%       (array) voxels belonging to no region are coded with 0, those 
-%       belonging to region I are coded with I (I being a positive integer).
+%   (array) voxels belonging to no region are coded with 0, those 
+%   belonging to region I are coded with I (I being a positive integer).
+%
+% FLAG_ITERATIVE
+%   (boolean, default false) if the flag is true, the size of regions
+%   is generated with a for loop, rather than the vectorized code 
+%   used by default.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % SIZE_ROI  
-%       (vector) SIZE_ROI(I) is the number of voxels in region number I.
+%   (vector) SIZE_ROI(I) is the number of voxels in region number I.
 %
 % LABELS_ROI 
-%       (vector) LABELS_ROI(I) is the label of region I.
+%   (vector) LABELS_ROI(I) is the label of region I.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -83,7 +88,7 @@ if ~flag_iterative
     end
     
 else
-    
+
     %% Implementation based on a loop
     labels_roi = unique(mask(:));
     labels_roi = labels_roi(labels_roi~=0);
