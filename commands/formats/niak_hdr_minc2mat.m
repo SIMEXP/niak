@@ -10,10 +10,10 @@ function [mat] = niak_hdr_minc2mat(direction_cosine,step,start)
 % DIRECTION_COSINES (array 3*3) gives you the direction assigned to the
 %   respective dimensions of the voxel array.
 %
-% START (vector 3*1) the starting value of each voxel dimension along the
+% STEP  (vector 3*1) the step made at each voxel dimension along the
 %   DIRECTION_COSINES vector.
 %
-% STEP  (vector 3*1) the step made at each voxel dimension along the
+% START (vector 3*1) the starting value of each voxel dimension along the
 %   DIRECTION_COSINES vector.
 %
 % _________________________________________________________________________
