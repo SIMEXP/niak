@@ -85,6 +85,9 @@ if ~flag_subject
     fmri2.subject = fmri;
     [fmri_c,label] = niak_fmri2cell(fmri2);
     label = rmfield(label,'subject');
+    for ee = 1:length(label)
+        label(ee).name = label(ee).name(9:end);
+    end
     return
 end
 fmri = niak_fmri2struct(fmri);
