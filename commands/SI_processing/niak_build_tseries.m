@@ -8,11 +8,11 @@ function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 % INPUTS:
 %
 % VOL       
-%   (3D+t array) the fMRI data. 
+%   (3D+t array or space x time array) the fMRI data. 
 %
 % MASK      
-%   (3D volume) mask or ROI coded with integers. ROI #I is defined by 
-%   MASK==I
+%   (3D volume or vector) mask or ROI coded with integers. 
+%   ROI #I is defined by MASK==I
 %
 % OPT       
 %   (structure, optional) each field of OPT is used to specify an 
@@ -51,7 +51,7 @@ function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 %   Neurological Institute, McGill University, 2008-2010.
 %   Research Centre of the Montreal Geriatric Institute
 %   & Department of Computer Science and Operations Research
-%   University of Montreal, Québec, Canada, 2010-2012.
+%   University of Montreal, Québec, Canada, 2010-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : ROI, time series, fMRI
@@ -82,11 +82,18 @@ gb_list_defaults = {false,opt_norm};
 niak_set_defaults
 
 %% Extracting the labels of regions and reorganizing the data 
-[nx,ny,nz,nt] = size(vol);
+if ndims(vol)>2
+    tseries_mask = niak_vol2tseries(vol,mask>0);
+    mask_v = mask(mask>0);
+else
+    tseries_mask = vol(:,mask>0);
+    mask_v = mask(mask>0);
+end
+
 labels_roi = unique(mask(:));
 labels_roi = labels_roi(labels_roi~=0);
 nb_rois = length(labels_roi);
-tseries_mask = niak_vol2tseries(vol,mask>0);
+
 tseries_mask = niak_normalize_tseries(tseries_mask,opt.correction);
 
 if flag_all
@@ -94,8 +101,7 @@ if flag_all
     std_tseries = sparse(size(tseries));
 else
     tseries = zeros([size(tseries_mask,1) nb_rois]);
-    std_tseries = zeros([size(tseries_mask,1) nb_rois]);
-    mask_v = mask(mask>0);
+    std_tseries = zeros([size(tseries_mask,1) nb_rois]);    
 
     for num_r = 1:nb_rois
         tseries(:,num_r) = mean(tseries_mask(:,mask_v == labels_roi(num_r)),2);
