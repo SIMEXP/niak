@@ -35,10 +35,9 @@ function files = niak_grab_region_growing(path_data,filter)
 %   DATA
 %       (structure) with the following fields :
 %
-%       <SUBJECT>
+%       <SUBJECT>.<SESSION>.<RUN>
 %           (cell of strings) a list of .mat files, corresponding to the 
-%           same subject. The field names <SUBJECT> can be any arbitrary 
-%           strings. Each .mat file contains one variable TSERIES, where
+%           same subject. Each .mat file contains one variable TSERIES, where
 %           TSERIES(:,I) is the time course of region I as defined by
 %           FILES.ATOMS (see below).
 %
@@ -116,7 +115,9 @@ for num_f = 1:length(list_files)
             end
             if ~isempty(regexp([name_f ext_f],filter))
                 ind_run = find(name_f=='_');
-                subject = name_f((length('tseries_rois_')+1):(ind_run(end)-1));
+                run = name_f(ind_run(end)+1:end);
+                session = name_f(ind_run(end-1)+1:ind_run(end)-1);
+                subject = name_f((length('tseries_rois_')+1):(ind_run(end-1)-1));
                 if ~isfield(files.data,subject)
                     files.data.(subject){1} = [path_data name_f ext_f];
                 else
