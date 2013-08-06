@@ -118,11 +118,7 @@ for num_f = 1:length(list_files)
                 run = name_f(ind_run(end)+1:end);
                 session = name_f(ind_run(end-1)+1:ind_run(end)-1);
                 subject = name_f((length('tseries_rois_')+1):(ind_run(end-1)-1));
-                if ~isfield(files.data,subject)
-                    files.data.(subject){1} = [path_data name_f ext_f];
-                else
-                    files.data.(subject){end+1} = [path_data name_f ext_f];
-                end
+                files.data.(subject).(session).(run) = [path_data name_f ext_f];                
             end
         end
     end
