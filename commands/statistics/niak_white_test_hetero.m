@@ -158,7 +158,7 @@ opt_glm.flag_rsquare = true;
 res_w = niak_glm(model_w,opt_glm);
 
 %% Test the rsquare
-chi2_w = size(model.x,1)*res_w.rsquare;
+chi2_w = size(model.x,1)*res_w.rsquare
 p = 1-chi2cdf(chi2_w,size(model_w.x,2)-1);
 
 end
@@ -172,13 +172,14 @@ function model_s = sub_square_model(model)
 mask_intercept = min(model.x == repmat(model.x(1,:),[size(model.x,1) 1]),[],1);
 model_s = model;
 if any(mask_intercept)
-    model.x = model.x(:,~mask_intercept);
-    model.labels_y = model.labels_y(~mask_intercept);
+    model_s.x = model.x;
+    model_s.labels_y = model.labels_y;
+else
+    model_s.x = [ones(size(model.x,1),1) model.x];
+    model_s.labels_y = [{'intercept'} ; model.labels_y(:)];
 end
 
 %% Initialize the model
-model_s.x = [ones(size(model.x,1),1) model.x];
-model_s.labels_y = [{'intercept'} ; model.labels_y(:)];
 
 %% Add interaction terms
 k = size(model.x,2);
