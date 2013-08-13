@@ -119,10 +119,10 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %      (boolean, default false) turn on/off the correction of high frequencies
 %
 %   FLAG_GSC 
-%      (boolean, default true) turn on/off global signal correction
+%      (boolean, default false) turn on/off global signal correction
 %
 %   FLAG_MOTION_PARAMS 
-%      (boolean, default false) turn on/off the removal of the 6 motion 
+%      (boolean, default true) turn on/off the removal of the 6 motion 
 %      parameters + the square of 6 motion parameters.
 %
 %   FLAG_WM 
@@ -238,8 +238,8 @@ list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , '
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_compcor' , 'compcor' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc', 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { false          , struct()  , 40           , true             , 0.5       , true        , false       , ''            , true          , true                , true     , true        , true      , true             , false      , 0.95               };
+list_fields    = { 'flag_compcor' , 'compcor' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc' , 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { false          , struct()  , 40           , true             , 0.5       , true        , false       , ''            , true          , true                , true     , true        , false      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 
