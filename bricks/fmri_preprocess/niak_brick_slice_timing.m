@@ -605,7 +605,9 @@ if opt.flag_nu_correct
     end
     
     % Apply the imp file on every volume
-    instr_ev = ['nu_evaluate -clobber ' nu.in.vol ' ' nu.out.vol_nu ' -mapping ' nu.out.vol_imp];   
+    mask = niak_mask_brain(vol_med,opt_m);
+    niak_write_vol(hdr_nu,mask);
+    instr_ev = ['nu_evaluate -clobber ' nu.in.vol ' ' nu.out.vol_nu ' -mapping ' nu.out.vol_imp ' -mask ' nu.in.mask];
     hdr_nu.file_name = nu.in.vol;
     for num_v = 1:size(vol_a,4);   
         niak_progress(num_v,size(vol_a,4),5);
