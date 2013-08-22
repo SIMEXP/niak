@@ -114,7 +114,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %        does not matter to preserve it as it is not accurate. 
 %
 %    FLAG_NU_CORRECT
-%        (boolean, default true) if FLAG_NU_CORRECT == 1, the NU_CORRECT
+%        (boolean, default false) if FLAG_NU_CORRECT == 1, the NU_CORRECT
 %        method is used to correct for non-uniformity of the B0 field.
 %
 %    ARG_NU_CORRECT
@@ -255,7 +255,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields      = { 'iter_nu_correct' , 'arg_nu_correct' , 'flag_nu_correct' , 'flag_center' , 'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
-gb_list_defaults    = { 3                 , '-distance 200'  , true             , false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
+gb_list_defaults    = { 3                 , '-distance 200'  , false             , false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
@@ -605,9 +605,7 @@ if opt.flag_nu_correct
     end
     
     % Apply the imp file on every volume
-    mask = niak_mask_brain(vol_med,opt_m);
-    niak_write_vol(hdr_nu,mask);
-    instr_ev = ['nu_evaluate -clobber ' nu.in.vol ' ' nu.out.vol_nu ' -mapping ' nu.out.vol_imp ' -mask ' nu.in.mask];
+    instr_ev = ['nu_evaluate -clobber ' nu.in.vol ' ' nu.out.vol_nu ' -mapping ' nu.out.vol_imp ];
     hdr_nu.file_name = nu.in.vol;
     for num_v = 1:size(vol_a,4);   
         niak_progress(num_v,size(vol_a,4),5);
