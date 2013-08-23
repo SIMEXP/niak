@@ -8,7 +8,7 @@ function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 % INPUTS:
 %
 % VOL       
-%   (3D+t array or space x time array) the fMRI data. 
+%   (3D+t array or timeXspace array) the fMRI data. 
 %
 % MASK      
 %   (3D volume or vector) mask or ROI coded with integers. 
