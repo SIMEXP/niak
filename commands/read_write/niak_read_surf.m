@@ -2,7 +2,7 @@ function ssurf = niak_read_surf(file_name,flag_neigh)
 % Read a surface in the MNI .obj or Freesurfer format
 %
 % SYNTAX:
-% SSURF = NIAK_READ_SURF_OBJ(FILE_NAME,FLAG_NEIGH)
+% SSURF = NIAK_READ_SURF_OBJ(FILE_NAME,FLAG_NEIGH,FLAG_VERBOSE)
 %
 % _________________________________________________________________________
 % INPUTS :
@@ -15,6 +15,10 @@ function ssurf = niak_read_surf(file_name,flag_neigh)
 % FLAG_NEIGH
 %    (boolean, default false) if FLAG_NEIGH is true, a neighborhood array 
 %    is derived.
+%
+% FLAG_VERBOSE
+%    (boolean, default true) if FLAG_VERBOSE is true, progress is indicated
+%    when deriving the neighborhood structure.
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -81,6 +85,10 @@ end
 
 if nargin < 2
     flag_neigh = false;
+end
+
+if nargin < 3
+    flag_verbose = true;
 end
 
 %% Multiple surfaces
@@ -271,7 +279,9 @@ if flag_neigh
     nbr = zeros(n_points,max_degree);
     pos = ones(n_points,1);
     for i_tri=1:n_tri
-        niak_progress(i_tri,n_tri);
+        if flag_verbose
+            niak_progress(i_tri,n_tri);
+        end
         for j=1:3
             cur_point = ssurf.tri(i_tri,j);
             for k=1:3
