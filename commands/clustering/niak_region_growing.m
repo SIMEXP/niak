@@ -339,17 +339,12 @@ if flag_sieve
     part(ismember(part,list_ind_roi(list_size<thre_size))) = 0;
 end
 
-%% Re-label the homogeneous roi
-if flag_verbose
-    fprintf('\nRandomizing ROIs order ...\n')        
-end
+%% Re-order the partition to achieve continuous partition indices
 flag_0 = any(part==0);
 [list_labels,I,part] = unique(part);
 if flag_0
     part = part-1;
 end
-labels_rand = randperm(max(part));
-part(part~=0) = labels_rand(part(part~=0));
 
 %%%%%%%%%%%%%%%%%
 %% SUBFUNCTION %%
