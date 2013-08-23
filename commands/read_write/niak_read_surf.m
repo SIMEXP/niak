@@ -96,7 +96,9 @@ if iscellstr(file_name)
         ssurf.tri=[ssurf.tri; int32(s.tri)+size(ssurf.coord,2)];
         ssurf.coord = [ssurf.coord s.coord];
         if isfield(s,'neigh')
-            ssurf.neigh = [ssurf.neigh ; s.neigh+size(ssurf.neigh,1)];
+            mask = s.neigh ~= 0;
+            s.neigh(mask) = s.neigh(mask) + size(ssurf.neigh,1);
+            ssurf.neigh = [ssurf.neigh ; s.neigh];
         end
         if isfield(s,'colr') 
             if size(s.colr,2)==1
