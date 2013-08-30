@@ -214,6 +214,8 @@ if ~strcmp(files_in.seeds,'gb_niak_omitted')
     end
 end
 
+opt.graph_prop = struct;
+
 %% Add global network properties, if required
 if opt.flag_global_prop
     opt.graph_prop.global_efficiency.type  = 'global_efficiency';
