@@ -376,7 +376,6 @@ for num_s = 1:length(list_subject)
     subject  = list_subject{num_s};
     files_subject = files_tseries.(subject);
     list_session = fieldnames(files_subject);       
-    files_tmp = cell();
     nb_data = 1;
     for num_sess = 1:length(list_session)
         list_run = fieldnames(files_subject.(list_session{num_sess}));
