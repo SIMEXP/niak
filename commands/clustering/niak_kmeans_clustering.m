@@ -190,7 +190,7 @@ if opt.nb_iter > 1
     for num_i = 1:opt.nb_iter
 
         [part_tmp,gi_tmp,i_intra_tmp,i_inter_tmp] = niak_kmeans_clustering(data,opt_kmeans,false);
-        if (i_inter_tmp > i_inter)|~exist('part','var')
+        if (i_inter_tmp > i_inter)||~exist('part','var')
             part = part_tmp;
             i_inter = i_inter_tmp;
             gi = gi_tmp;

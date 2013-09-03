@@ -151,7 +151,7 @@ function [part,gi,i_intra,i_inter] = niak_kmeans_mat(data,opt,flag_opt);
 %% Options
 if (nargin < 3)||(flag_opt)
     list_fields    = {'hierarchical' , 'type_similarity' , 'convergence_rate' , 'init' , 'type_init'        , 'type_death' , 'nb_classes' , 'p' , 'flag_verbose' , 'nb_iter_max' , 'nb_tests_cycle' };
-    list_defaults  = {struct()       , 'product'         , 0                  , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
+    list_defaults  = {struct()       , 'product'         , 0.01               , []     , 'random_partition' , 'none'       , NaN          , []  , 0              , 50            , 5                };
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 end
 K = opt.nb_classes;
@@ -252,7 +252,7 @@ end
 %% The big loop %%
 %%%%%%%%%%%%%%%%%%
 if opt.flag_verbose
-    fprintf('Relative change (perc) : ');
+    fprintf('Average DICE with previous iterations: ');
 end
 
 while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )    
@@ -295,7 +295,7 @@ while ( changement == 1 ) && ( N_iter < opt.nb_iter_max )
     for num_t = 1:length(list_test)
         if any(part(:,list_test(num_t)))
             mdice = sub_dice(part(:,part_curr),part(:,list_test(num_t)));
-            mdice_all = max(mdice_all,min(mdice(mdice~=0)));
+            mdice_all = max(mdice_all,mean(max(mdice,[],2)));
             if num_t == part_old
                 ind_change = find(max(mdice,[],2)~=1);
             end
