@@ -124,6 +124,13 @@ if isempty(fir)
     return
 end
 
+if isempty(baseline)
+    if strcmp(opt.type,'perc')
+        error('Please specify BASELINE to run a ''perc'' normalization')
+    end
+    baseline = zeros(1,size(fir,2));
+end
+
 if strcmp(opt.type,'none')
     fir_c = fir;
     return
