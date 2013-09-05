@@ -343,7 +343,7 @@ if ~isempty(labels_seed)&&opt.flag_rmap
                 out.seeds = 'gb_niak_omitted';
             end
             out.maps.(seed)  = [folder_out 'rmap_seeds' filesep 'rmap_' subject '_' seed ext_f];
-            list_maps(num_s,num_seed) = out.maps.(seed);
+            list_maps{num_s,num_seed} = out.maps.(seed);
         end        
         name_job = ['rmap_seeds_' subject];
         jopt = opt.rmap;
@@ -354,7 +354,7 @@ if ~isempty(labels_seed)&&opt.flag_rmap
     for num_seed = 1:length(labels_seed)
         seed = labels_seed{num_seed};
         clear in out jopt
-        in = list_maps(:,num_seed);
+        in = list_maps{:,num_seed};
         out = [folder_out 'rmap_seeds' filesep 'average_rmap_' seed ext_f];
         jopt.operation = 'vol = zeros(size(vol_in{1})); for num_m = 1:length(vol_in), vol = vol + vol_in{num_m}; end, vol = vol / length(vol_in);';
         pipeline = psom_add_job(pipeline,['average_rmap_' seed],'niak_brick_math_vol',in,out,jopt);

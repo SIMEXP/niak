@@ -80,11 +80,9 @@ for i=1:size(target,1)
         % p2p analysis
         for j=1:size(ref_data.R_ind,3)
             % reference
-            %score_ref(i,j) = sqrt(sum((mean(ref_data.R_ind(target(i,1),target(i,2),:),3) - ref_data.R_ind(target(i,1),target(i,2),j)).^2));
             score_ref(i,j) = ref_data.R_ind(target(i,1),target(i,2),j);
         end
         % individual
-        %score_ind(i) = sqrt(sum((mean(ref_data.R_ind(target(i,1),target(i,2),:),3) - ind_data(target(i,1),target(i,2))).^2));
         score_ind(i) = ind_data(target(i,1),target(i,2));
 
     end
