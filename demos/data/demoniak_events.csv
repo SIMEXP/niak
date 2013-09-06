@@ -1,0 +1,6 @@
+      , onset , duration
+motor , 0     , 30
+rest  , 35    , 10
+motor , 45    , 30
+rest  , 80    , 10
+motor , 90    , 30
