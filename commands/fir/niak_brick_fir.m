@@ -209,7 +209,7 @@ for num_r = 1:length(files_in.fmri)
     else
         mask_cond = ismember(labels_conditions,opt.name_condition);
     end
-    timing.time_events = sort(time_events(mask_cond,:));
+    timing.time_events = sort(time_events(mask_cond,1));
     
     % Extract baseline time frames
     if isempty(opt.name_baseline)
@@ -217,7 +217,11 @@ for num_r = 1:length(files_in.fmri)
     else
         mask_base = ismember(labels_conditions,opt.name_baseline);
     end
-    baseline = tseries((opt_fir.time_frames>=time_events(mask_base,1))&(opt_fir.time_frames<=(time_events(mask_base,1)+time_events(mask_base,2))),:);
+    baseline = [];
+    ind_b = find(mask_base);
+    for ii = ind_b(:)'
+        baseline = [baseline ; tseries((opt_fir.time_frames>=time_events(ii,1))&(opt_fir.time_frames<=(time_events(ii,1)+time_events(ii,2))),:)];
+    end
     
     % Run the FIR estimation
     if isempty(opt.max_interpolation)
