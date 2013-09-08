@@ -284,13 +284,10 @@ for num_r = 1:length(files_in.fmri)
         
         %% Normalization
         opt_norm.time_sampling = opt.time_sampling;
-        if ~strcmp(opt.type_norm,'fir_shape')
-            opt_norm.type          = opt.type_norm;
-        else
-            opt_norm.type = 'fir';
-        end
+        opt_norm.type = 'fir';
         fir_mean = niak_normalize_fir(fir_mean,baseline,opt_norm);    
-    
+        fir_all  = niak_normalize_fir(fir_all,baseline,opt_norm);    
+        
         % Average the FIR estimation across runs
         nb_events(num_r,num_m) = nb_fir;
         nb_fir_tot(num_m) = nb_events(num_r,num_m) + nb_fir_tot(num_m);    
@@ -310,8 +307,7 @@ for num_m = 1:length(files_in.mask)
         fir_mean{num_m} = fir_mean_tot{num_m}/nb_fir_tot(num_m);
         if strcmp(opt.type_norm,'fir_shape')
             %% Normalization
-            opt_norm.time_sampling = opt.time_sampling;
-            opt_norm.type          = opt.type_norm;    
+            opt_norm.type = 'fir_shape';    
             fir_mean{num_m} = niak_normalize_fir(fir_mean{num_m},[],opt_norm);    
         end        
     end

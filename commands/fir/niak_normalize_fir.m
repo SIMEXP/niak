@@ -22,16 +22,12 @@ function fir_c = niak_normalize_fir(fir,baseline,opt)
 %        (string) the type of applied normalization of the response. 
 %        Available options:
 %
-%        'fir' : correction to a zero mean at baseline.
-%
-%        'perc : (1) Correction to a zero mean at baseline; 
+%        'fir' : (1) Correction to a zero mean at baseline; 
 %                (2) Express changes as a percentage of the baseline.
 %            
 %        'fir_shape' : correction to a zero mean at baseline and a unit 
 %           energy of the response.  
 %
-%        'none' : no correction at all
-%    
 %    TIME_SAMPLING
 %        (scalar) the time between two samples of the response.
 %    
@@ -71,13 +67,6 @@ function fir_c = niak_normalize_fir(fir,baseline,opt)
 % plot(fir_c)
 % title('''fir\_shape'' normalization')
 %
-% % 'perc' normalization
-% opt.type = 'perc';
-% fir_c = niak_normalize_fir (fir,baseline,opt);
-% figure
-% plot(fir_c)
-% title('''perc'' normalization')
-%
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_STABILITY_FIR, NIAK_STABILITY_FIR, NIAK_BRICK_FIR, 
@@ -116,7 +105,7 @@ list_fields   = { 'type' , 'time_sampling' };
 list_defaults = { NaN    , NaN             };
 opt = psom_struct_defaults ( opt , list_fields, list_defaults );
 
-if ~ismember(opt.type,{'fir','fir_shape','perc','none'});
+if ~ismember(opt.type,{'fir','fir_shape'});
     error('%s is an unknown type of normalization',opt.type);
 end
 
@@ -125,8 +114,8 @@ if isempty(fir)
 end
 
 if isempty(baseline)
-    if strcmp(opt.type,'perc')
-        error('Please specify BASELINE to run a ''perc'' normalization')
+    if strcmp(opt.type,'fir')
+        error('Please specify BASELINE to run a ''fir'' normalization')
     end
     baseline = zeros(1,size(fir,2));
 end
@@ -136,11 +125,20 @@ if strcmp(opt.type,'none')
     return
 end
 fir_m = mean(baseline,1);
-fir_c = fir - repmat(fir_m , [size(fir,1) 1]);
-if strcmp(opt.type,'fir_shape')        
-    weights = repmat(sqrt(sum(fir_c.^2,1)*opt.time_sampling),[size(fir_c,1) 1]);
-    fir_c = fir_c./weights;
-elseif strcmp(opt.type,'fir')
-elseif strcmp(opt.type,'perc')
-    fir_c = fir_c./repmat(fir_m, [size(fir,1) 1]);
+if ndims(fir) == 2
+    fir_c = fir - repmat(fir_m , [size(fir,1) 1]);
+    if strcmp(opt.type,'fir_shape')        
+        weights = repmat(sqrt(sum(fir_c.^2,1)*opt.time_sampling),[size(fir_c,1) 1]);
+        fir_c = fir_c./weights;
+    elseif strcmp(opt.type,'fir')
+        fir_c = fir_c./repmat(fir_m, [size(fir,1) 1]);
+    end
+else 
+    fir_c = fir - repmat(fir_m , [size(fir,1) 1 size(fir,3)]);
+    if strcmp(opt.type,'fir_shape')        
+        weights = repmat(sqrt(sum(fir_c.^2,1)*opt.time_sampling),[size(fir_c,1) 1 1]);
+        fir_c = fir_c./weights;
+    elseif strcmp(opt.type,'fir')    
+        fir_c = fir_c./repmat(fir_m, [size(fir,1) 1 size(fir,3)]);
+    end
 end
