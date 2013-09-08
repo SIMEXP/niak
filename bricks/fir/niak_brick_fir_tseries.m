@@ -19,21 +19,17 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %       0 is the code for background and is ignored.
 %
 %   TIMING
-%       (cell of strings) a list of .mat files coding for the time of 
-%       events. Each file can be either in '.mat' or '.csv' format. 
-%           
-%       case '.mat': TIMING{I} contains one variable TIME_EVENTS
-%           (vector) a list of event time that will be used to derive 
-%           the FIR estimation for fMRI{I}.
-%
-%       case '.csv': a csv file where the first column code for the 
-%           timing of event. Other columns are ignored. There can 
-%           also be a first column with (string) condition labels and
-%           a first line with column labels. The latter is ignored, 
-%           and the former is used to code multiple conditions in 
-%           one CSV file. In this case, OPT.NAME_CONDITION can be used
-%           to specify the name of the condition of interest (by default 
-%           the first one is used). 
+%       (cell of strings) a list of .csv files coding for the time of events. 
+%       Note that OPT.NAME_CONDITION can be used to specify the name of the 
+%       condition of interest (by default the first one is used). It is also 
+%       possible to use OPT.NAME_BASELINE to specify which condition 
+%       will be used as baseline (by default the first one is used).
+%       Example :
+%                    , TIMES , DURATION 
+%         'motor'    , 4     , 8        
+%         'baseline' , 12    , 5        
+%         'motor'    , 17    , 8        
+%         'baseline' , 25    , 5        
 %
 % FILES_OUT
 %   (string or cell of strings) The name of a .mat file with the following 
@@ -86,15 +82,13 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %       applied on each response sample. Available option 'fir' or
 %       'fir_shape'. See NIAK_BUILD_FIR for details.
 %
-%   TIME_NORM
-%       (scalar, default 1) the number of seconds of signal at the
-%       begining of each response which are used to set the baseline to 
-%       zero.
-%
 %   NAME_CONDITION
-%       (string, default '') in case the timing of events is coded with a csv file
-%       including multiple conditions, NAME_CONDITION is the name of the condition 
-%       to use. By default (empty string), the first condition is used. 
+%       (string, default '') NAME_CONDITION is the name of the condition of 
+%       interest. By default (empty string), the first condition is used. 
+%
+%   NAME_BASELINE
+%       (string, default '') NAME_BASELINE is the name of the condition 
+%       to use as baseline. By default (empty string), the first condition is used. 
 %
 %   FLAG_VERBOSE
 %       (boolean, default 1) if FLAG_VERBOSE == 1, print some information 
@@ -161,8 +155,8 @@ niak_set_defaults
 
 %% Default options
 gb_name_structure = 'opt';
-gb_list_fields    = {'name_condition' , 'max_interpolation' , 'type_norm' , 'time_norm' , 'time_window' , 'time_sampling' , 'interpolation' , 'flag_verbose' , 'flag_test' };
-gb_list_defaults  = {''               , []                  , 'fir_shape' , 1           , 10            , 0.5             , 'linear'        , true           , false       };
+gb_list_fields    = {'name_baseline' , 'name_condition' , 'max_interpolation' , 'type_norm' , 'time_window' , 'time_sampling' , 'interpolation' , 'flag_verbose' , 'flag_test' };
+gb_list_defaults  = {''              , ''               , []                  , 'fir_shape' , 10            , 0.5             , 'linear'        , true           , false       };
 niak_set_defaults
 
 %% If the test flag is true, stop here !
@@ -198,15 +192,19 @@ end
 
 %% Read the mask
 if flag_verbose
-    fprintf('Read the brain mask in file %s \n',files_in.mask);
+    fprintf('Read the brain mask(s) ...\n');
 end
 
 for num_m = 1:length(files_in.mask)
+    if flag_verbose
+        fprintf('    %s\n',files_in.mask{num_m});
+    end
+
     if num_m == 1
         hdr = niak_read_vol(files_in.mask{1});
         mask = zeros([hdr.info.dimensions(:)' length(files_in.mask)]);
     end
-    [hdr,mask(:,:,:,num_m)] = niak_read_vol(files_in.mask);
+    [hdr,mask(:,:,:,num_m)] = niak_read_vol(files_in.mask{num_m});
 end
 mask = round(mask);
 
@@ -216,7 +214,6 @@ opt_fir.flag_verbose      = false;
 opt_fir.time_sampling     = opt.time_sampling;
 opt_fir.interpolation     = opt.interpolation;
 opt_norm.type          = type_norm;
-opt_norm.time_norm     = time_norm;
 opt_norm.time_sampling = opt.time_sampling;
 
 opt_tseries.correction.type = 'none';
@@ -229,41 +226,72 @@ for num_r = 1:length(files_in.fmri)
     if flag_verbose
         fprintf('Estimation for fMRI dataset %s ...\n',files_in.fmri{num_r});
     end
+    
+    % Read the 3D+t dataset
     [hdr,vol] = niak_read_vol(files_in.fmri{num_r});
-    if isempty(opt.max_interpolation)
-        opt_fir.max_interpolation = hdr.info.tr;
-    else
-        opt_fir.max_interpolation = opt.max_interpolation;
-    end
-    [path_time,name_time,ext_time] = niak_fileparts(files_in.timing{num_r});
-    switch ext_time
-        case '.mat'
-            timing = load(files_in.timing{num_r});
-            time_events = timing.time_events;
-        case '.csv'
-            [time_events,labels_conditions] = niak_read_csv(files_in.timing{num_r});
-            if isempty(opt.name_condition)
-                mask_cond = ismember(labels_conditions,labels_conditions{1});
-            else
-                mask_cond = ismember(labels_conditions,opt.name_condition);
-            end
-            time_events = sort(time_events(mask_cond,:));
-        otherwise
-            error('%s is not supported (available extensions .mat or .csv',files_in.timing{num_r})
-    end
-    opt_fir.time_events = time_events;
+    
+    % Read the time frames 
     if isfield(hdr,'extra')
         opt_fir.time_frames = hdr.extra.time_frames;
     else
         opt_fir.time_frames = (0:(size(vol,4)-1))*hdr.info.tr;
     end
+    
+    % Read the event times
+    [time_events,labels_conditions] = niak_read_csv(files_in.timing{num_r});
+    
+    % Build the timing for the condition of interest
+    if isempty(opt.name_condition)
+        mask_cond = ismember(labels_conditions,labels_conditions{1});
+    else
+        mask_cond = ismember(labels_conditions,opt.name_condition);
+    end
+    opt_fir.time_events = sort(time_events(mask_cond,1));
+    
+    %% Parameters for interpolation
+    if isempty(opt.max_interpolation)
+        opt_fir.max_interpolation = hdr.info.tr;
+    else
+        opt_fir.max_interpolation = opt.max_interpolation;
+    end
+    
+    % Extract baseline time frames
+    if isempty(opt.name_baseline)
+        mask_base = ismember(labels_conditions,labels_conditions{1});
+    else
+        mask_base = ismember(labels_conditions,opt.name_baseline);
+    end    
+    ind_b = find(mask_base);    
+    
+    %% Loop over the collection of masks
     for num_m = 1:length(files_in.mask)
+    
+        %% Build time series
         tseries = niak_build_tseries(vol,mask(:,:,:,num_m),opt_tseries);
+        
+        %% Build baseline
+        baseline = [];
+        for ii = ind_b(:)'
+            baseline = [baseline ; tseries((opt_fir.time_frames>=time_events(ii,1))&(opt_fir.time_frames<=(time_events(ii,1)+time_events(ii,2))),:)];
+        end
+        
+        %% Run the FIR estimation
         if num_r == 1
             [fir_mean,nb_fir,fir_all,time_samples] = niak_build_fir(tseries,opt_fir);
         else
             [fir_mean,nb_fir,fir_all] = niak_build_fir(tseries,opt_fir);
         end
+        
+        %% Normalization
+        opt_norm.time_sampling = opt.time_sampling;
+        if ~strcmp(opt.type_norm,'fir_shape')
+            opt_norm.type          = opt.type_norm;
+        else
+            opt_norm.type = 'fir';
+        end
+        fir_mean = niak_normalize_fir(fir_mean,baseline,opt_norm);    
+    
+        % Average the FIR estimation across runs
         nb_events(num_r,num_m) = nb_fir;
         nb_fir_tot(num_m) = nb_events(num_r,num_m) + nb_fir_tot(num_m);    
         if (num_r == 1)
@@ -280,7 +308,12 @@ fir_mean = cell([length(files_in.mask) 1]);
 for num_m = 1:length(files_in.mask)
     if nb_fir_tot>0
         fir_mean{num_m} = fir_mean_tot{num_m}/nb_fir_tot(num_m);
-        fir_mean{num_m} = niak_normalize_fir(fir_mean{num_m},opt_norm);    
+        if strcmp(opt.type_norm,'fir_shape')
+            %% Normalization
+            opt_norm.time_sampling = opt.time_sampling;
+            opt_norm.type          = opt.type_norm;    
+            fir_mean{num_m} = niak_normalize_fir(fir_mean{num_m},[],opt_norm);    
+        end        
     end
 end
 
@@ -300,9 +333,12 @@ end
 
 %% write the results
 if flag_verbose
-    fprintf('Writting the FIR estimates %s ...\n',files_out);
+    fprintf('Writting the FIR estimates ...\n');
 end
 
 for num_m = 1:length(files_in.mask)
+    if flag_verbose
+        fprintf('    %s\n',files_out{num_m});
+    end
     save(files_out{num_m},'fir_mean','fir_all','nb_fir_tot','time_samples');
 end

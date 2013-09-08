@@ -68,9 +68,8 @@ function [files_in,files_out,opt] = niak_brick_fir(files_in,files_out,opt);
 %       interpolation between points that are too far apart will be excluded.
 % 
 %   NAME_CONDITION
-%       (string, default '') in case the timing of events is coded with a csv file
-%       including multiple conditions, NAME_CONDITION is the name of the condition 
-%       to use. By default (empty string), the first condition is used. 
+%       (string, default '') NAME_CONDITION is the name of the condition of 
+%       interest. By default (empty string), the first condition is used. 
 %
 %   NAME_BASELINE
 %       (string, default '') NAME_BASELINE is the name of the condition 
