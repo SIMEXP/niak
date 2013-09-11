@@ -34,12 +34,6 @@
 clear all
 
 %%%%%%%%%%%%
-%% Add libs
-%%%%%%%%%%%%
-%addpath(genpath('/data/cisl/cdansereau/psom-conf'))
-addpath(genpath('/home/cdansereau/svn/niak'));
-
-%%%%%%%%%%%%
 %% Input / Output folders 
 %%%%%%%%%%%%
 path_preproc     = '/home/toto/database/fmri_preprocess/'; % the output folder of NIAK fMRI preprocessing pipeline
