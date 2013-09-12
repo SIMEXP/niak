@@ -81,6 +81,12 @@ end
 
 if nargin<2
     files_in = struct();
+    flag_in = false;
+    ext_f = '';
+else 
+    flag_in = true;
+    [files_c,label] = niak_fmri2cell(files_in);
+    [path_tmp,name_tmp,ext] = niak_fileparts(files_c{1});
 end
 
 path_data = niak_full_path(path_data);
@@ -91,7 +97,7 @@ path_qc    = [path_data 'quality_control' filesep];
 path_fmri  = [path_data 'fmri' filesep];
 path_inter = [path_data 'intermediate' filesep];
 
-if ~exist(path_anat,'dir')||~exist(path_qc,'dir')||~exist(path_fmri,'dir')||~exist(path_inter,'dir')
+if ~flag_in&&(~exist(path_anat,'dir')||~exist(path_qc,'dir')||~exist(path_fmri,'dir')||~exist(path_inter,'dir'))
     warning('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control ; fmri ; intermediate)')
 end
 
@@ -149,11 +155,15 @@ end
 [fmri_c,lc] = niak_fmri2cell(files.fmri.vol);
 list_ext = { '.nii' , '.nii.gz' , '.mnc' , '.mnc.gz' };
 for num_f = 1:length(lc)
-    base_fmri = [path_fmri 'fmri_' lc(num_f).name];    
-    ext = list_ext{end};
+    base_fmri = [path_fmri 'fmri_' lc(num_f).name];
+    if ~flag_in
+        ext = list_ext{end};
+    else
+        list_ext = {ext};
+    end
     for num_e = 1:length(list_ext)    
-        file_fmri = [base_fmri list_ext{num_e}];        
-        if psom_exist(file_fmri)
+        file_fmri = [base_fmri list_ext{num_e}];
+        if flag_in||psom_exist(file_fmri)
             ext = list_ext{num_e};
             files.fmri.vol.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = file_fmri;
             files.fmri.extra.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = [base_fmri '_extra.mat'];

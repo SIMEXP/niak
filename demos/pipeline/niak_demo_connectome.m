@@ -16,6 +16,10 @@ function [pipeline,opt_pipe,files_in] = niak_demo_connectome(path_demo,opt)
 %   will do here. The demo only changes one default and enforces a few 
 %   parameters (see COMMENTS below):
 %
+%   FILES_IN.FMRI
+%      (structure, default grab the preprocessed demoniak) the input files 
+%      from the preprocessing to be fed in the connectome dataset.
+%
 %   FOLDER_OUT
 %      (string, default PATH_DEMO/connectome) where to store the 
 %      results of the pipeline.
@@ -84,15 +88,19 @@ if nargin < 2
 end
 
 path_demo = niak_full_path(path_demo);
-opt = psom_struct_defaults(opt,{'folder_out'},{[path_demo,filesep,'connectome',filesep]},false);
+opt = psom_struct_defaults(opt,{'files_in','folder_out','flag_test'},{'',[path_demo,filesep,'region_growing',filesep],false});
 
 %% Set the template
 files_in.network = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
 
-%% Grab the results from the NIAK fMRI preprocessing pipeline
-opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
-files_in.fmri = niak_grab_fmri_preprocess(path_demo,opt_g).fmri; % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+if ~isempty(opt.files_in)
+    files_in.fmri = opt.files_in.fmri;
+else
+    %% Grab the results from the NIAK fMRI preprocessing pipeline
+    opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
+    opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
+    files_in.fmri = niak_grab_fmri_preprocess(path_demo,opt_g).fmri; % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+end
 
 %% Set the seeds
 files_in.seeds = [gb_niak_path_niak 'template' filesep 'list_seeds_cambridge_100.csv'];

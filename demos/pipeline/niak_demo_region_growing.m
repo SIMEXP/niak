@@ -16,6 +16,10 @@ function [pipeline,opt_pipe,files_in] = niak_demo_region_growing(path_demo,opt)
 %   will do here. The demo only changes one default and enforces a few 
 %   parameters (see COMMENTS below):
 %
+%   FILES_IN 
+%      (structure, default grab the preprocessed demoniak) the input files 
+%      for the region growing.
+
 %   FOLDER_OUT
 %      (string, default PATH_DEMO/region_growing) where to store the 
 %      results of the pipeline.
@@ -83,11 +87,14 @@ if nargin < 2
 end
 
 path_demo = niak_full_path(path_demo);
-opt = psom_struct_defaults(opt,{'folder_out'},{[path_demo,filesep,'region_growing',filesep]},false);
+opt = psom_struct_defaults(opt,{'files_in','folder_out','flag_test'},{'',[path_demo,filesep,'region_growing',filesep],false});
 
-%% Grab the results from the NIAK fMRI preprocessing pipeline
-opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
-files_in = niak_grab_fmri_preprocess(path_demo,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
-
-[pipeline,opt_pipe] = niak_pipeline_region_growing(files_in,opt);
+if isempty(opt.files_in)
+    %% Grab the results from the NIAK fMRI preprocessing pipeline
+    opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
+    opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
+    files_in = niak_grab_fmri_preprocess(path_demo,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
+else
+    files_in = opt.files_in;
+end
+[pipeline,opt_pipe] = niak_pipeline_region_growing(files_in,rmfield(opt,'files_in'));
