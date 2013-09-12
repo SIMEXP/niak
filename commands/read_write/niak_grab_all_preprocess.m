@@ -202,7 +202,7 @@ for num_s = 1:length(list_subject)
 end
 
 %% Grab the AAL template 
-files.template_aal = [path_anat 'template_aal' ext];
+files.template_aal = [path_anat 'template_aal.mnc.gz'];
 
 %% Grab the results of quality control -- Group confounds
 list_conf = { 'gse' , 'high' , 'motion' , 'slow_drift' , 'vent' , 'wm' };
