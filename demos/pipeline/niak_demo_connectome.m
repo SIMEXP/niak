@@ -106,4 +106,4 @@ end
 files_in.seeds = [gb_niak_path_niak 'template' filesep 'list_seeds_cambridge_100.csv'];
 
 %% Generate the pipeline
-[pipeline,opt_pipe] = niak_pipeline_connectome(files_in,opt);
+[pipeline,opt_pipe] = niak_pipeline_connectome(files_in,rmfield(opt,'files_in'));
