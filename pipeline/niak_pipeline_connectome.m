@@ -15,13 +15,9 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %      with Is, 0 is for the background). The analysis will be done at the level 
 %      of these networks.
 %
-%   FMRI
-%      (structure) with the following fields :      
-%
-%      <SUBJECT>.<SESSION>.<RUN>
-%         (string) a 3D+t fMRI dataset. The fields <SUBJECT>, <SESSION> and <RUN> can be any arbitrary 
-%         string. Note that time series can be specified directly as variables in a .mat file. The file 
-%         FILES_IN.ATOMS needs to be specified in that instance. The <SESSION> level can be skipped.
+%   FMRI.(SUBJECT).(SESSION).(RUN)
+%      (string) a 3D+t fMRI dataset. The fields <SUBJECT>, <SESSION> and <RUN> can be 
+%      any arbitrary string. 
 % 
 %   SEEDS
 %      (string, default 'gb_niak_omitted') the name of a .csv file with a list of seeds. This input is 
@@ -117,21 +113,22 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 % Example 1, (world) coordinates in stereotaxic space:
 %
 %         ,   x ,  y ,  z
-% ROI1    ,  12 ,  7 , 33
-% ROI2    ,  45 , -3 , 27
+% NET1    ,  12 ,  7 , 33
+% NET2    ,  45 , -3 , 27
 %
-% With that method, the region will load the parcellation, extract the number 
-% of the parcels corresponding to the coordinates, and associate them to labels
-% ROI1 and ROI2. WARNING: the labels for the ROI must be acceptable as field names 
+% With that method, the pipeline will load FILES_IN.NETWORK, extract the number 
+% of the networks corresponding to the coordinates, and associate them to labels
+% NET1 and NET2. WARNING: the labels for the ROI must be acceptable as field names 
 % for matlab, i.e. no special characters (+ - / * space) and relatively short.
 %
 % Example 2, string and numeric labels:
 %
 %        , index
-% ROI1   , 3010
-% ROI2   , 3020
+% NET1   , 3010
+% NET2   , 3020
 %
-% In this case, the index refers to the number associated with one parcel. The labels will be attached. 
+% In this case, the index refers to the number associated with one network. 
+% The labels will be attached. 
 % 
 % With both methods, the first row does not really matter. It is still important that the row is present,
 % and that the intersection of first column and first row is left empty.
