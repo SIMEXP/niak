@@ -60,33 +60,19 @@ end
 
 path_data = niak_full_path(path_data);
 
-%% List of parcellations
-dir_parc = dir(path_data);
-list_parc = {dir_parc.name};
-mask_parc = true(length(dir_parc),1);
-for num_e = 1:length(dir_parc)
-    mask_parc(num_e) = dir_parc(num_e).isdir && ~ismember(list_parc{num_e},{'.','..'});
-end
-list_parc = list_parc(mask_parc);
+%% Initialize the files
+files = struct;
 
-if isempty(list_parc)
-    error('I could not find any subfolder in %s',path_data);
-end
-
-%% Loop of parcellations
-for num_p = 1:length(list_parc)
-    parc = list_parc{num_p};
-    path_parc = [path_data parc filesep];
-    list_conn = dir([path_parc 'connectome_' parc '_*.mat']);
+%% Grab connectomes
+path_conn = [path_data 'connectomes' filesep];
+if psom_exist(path_conn)
+    list_conn = dir([path_conn 'connectome_rois_*.mat']);
     list_conn = {list_conn.name};
-    if isempty(list_conn)
-        warning('I could not find any connectome_%s_*.mat files in %s',parc,parc)
-    end
-    ind_start = length(['connectome_' parc '_'])+1;
+    ind_start = length('connectome_rois_')+1;
     for num_c = 1:length(list_conn)
         conn = list_conn{num_c};
         ind_end = regexp(conn,'.mat$')-1;
         subject = conn(ind_start:ind_end);
-        files.(parc).(subject) = [path_parc conn];
+        files.connectome.(subject) = [path_conn conn];
     end
 end
