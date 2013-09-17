@@ -158,7 +158,7 @@ opt_glm.flag_rsquare = true;
 res_w = niak_glm(model_w,opt_glm);
 
 %% Test the rsquare
-chi2_w = size(model.x,1)*res_w.rsquare
+chi2_w = size(model.x,1)*res_w.rsquare;
 p = 1-chi2cdf(chi2_w,size(model_w.x,2)-1);
 
 end
