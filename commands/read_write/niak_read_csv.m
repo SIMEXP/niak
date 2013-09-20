@@ -1,10 +1,10 @@
-function [tab,labels_x,labels_y] = niak_read_csv(file_name,opt)
+function [tab,labels_x,labels_y,labels_id] = niak_read_csv(file_name,opt)
 % Read a table from a text file with comma-separated values (csv). 
 % The first line and first columns are assumed to be string labels, while
 % the rest of the table is assumed to be a numerical array. 
 %
 % SYNTAX:
-% [TAB,LABELS_X,LABELS_Y] = NIAK_READ_CSV(FILE_NAME,OPT)
+% [TAB,LABELS_X,LABELS_Y,LABELS_ID] = NIAK_READ_CSV(FILE_NAME,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -34,7 +34,10 @@ function [tab,labels_x,labels_y] = niak_read_csv(file_name,opt)
 %   (cell of strings 1*M) LABELS_X{X} is the label of line X in TAB.
 %
 % LABELS_Y
-%	(cell of strings 1*N) LABELS_Y{Y} is the label of column Y in TAB.
+%   (cell of strings 1*N) LABELS_Y{Y} is the label of column Y in TAB.
+%
+% LABELS_ID
+%   (string) the labels of the first column (associated with LABELS_X).
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -43,8 +46,18 @@ function [tab,labels_x,labels_y] = niak_read_csv(file_name,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% NOTE 1: The labels of rows can be omitted. 
+% NOTE 2: If the first cell is not empty, the function checks for the presence
+%   of " in the following rows to detect if these are the labels of rows, 
+%   or if these labels have been ommitted. 
+% NOTE 3: To have a proper behaviour without tweaking the OPT, the csv should
+%   be using "," as a separator, and all strings shoul be between ".
+%
+% Copyright (c) Pierre Bellec
+%               Centre de recherche de l'institut de 
+%               Gériatrie de Montréal, Département d'informatique et de recherche 
+%               opérationnelle, Université de Montréal, 2008-2013.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : table, CSV
 
@@ -96,7 +109,7 @@ end
 %% Extracting the numerical data
 nb_col = length(labels_y);
 labels_x = cell([length(cell_tab)-1 1]);
-
+flag_id = ismember(cell_tab{2}(1),{'''','"'});
 for num_x = 2:length(cell_tab)
     if flag_string
         cell_tab{num_x} = regexprep(cell_tab{num_x},'[''"]','');
@@ -114,7 +127,7 @@ for num_x = 2:length(cell_tab)
     end
 end
 
-if isempty(labels_y{1})
+if isempty(labels_y{1})||flag_id
     labels_x = lines(:,1);
     tab = str2double(strtrim(lines(:,2:end)));
 else
@@ -129,8 +142,11 @@ if flag_trim
     end
 end
 
-if isempty(labels_y{1})
+if isempty(labels_y{1})||flag_id
+    labels_id = labels_y{1};
     labels_y = labels_y(2:end);
+else 
+    labels_id = '';
 end
 
 function cell_values = sub_csv(str_values,separator)
