@@ -10,19 +10,22 @@ function [tab,labels_x,labels_y,labels_id] = niak_read_csv(file_name,opt)
 % INPUTS:
 %
 % FILE_NAME     
-%	(string) the name of the csv file (usually ends in .csv)
+%   (string) the name of the csv file (usually ends in .csv)
 % 
 % OPT
 %   (structure, optional) with the following fields:
 %
 %   SEPARATOR
-%       (string, default ',') The character used to separate values. 
+%      (string or cell of strings, default {',',';',horizontal tabulation}) 
+%      The character used to separate values. If a cell of strings, the 
+%      separators are tested one after the other, until a separator is 
+%      detected.
 %
 %   FLAG_STRING
-%       (boolean, default true) remove the ' and " characters in strings.
+%      (boolean, default true) remove the ' and " characters in strings.
 %
 %   FLAG_TRIM
-%       (boolean, default true) trim leading and trailing spaces in labels.
+%      (boolean, default true) trim leading and trailing spaces in labels.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -51,7 +54,8 @@ function [tab,labels_x,labels_y,labels_id] = niak_read_csv(file_name,opt)
 %   of " in the following rows to detect if these are the labels of rows, 
 %   or if these labels have been ommitted. 
 % NOTE 3: To have a proper behaviour without tweaking the OPT, the csv should
-%   be using "," as a separator, and all strings shoul be between ".
+%   be using "," or a ";" or an horizontal tabulation as a separator, and all 
+%   strings should be between ".
 %
 % Copyright (c) Pierre Bellec
 %               Centre de recherche de l'institut de 
@@ -84,10 +88,12 @@ if ~exist(file_name,'file')
 end
 
 %% Options
-gb_name_structure = 'opt';
-gb_list_fields   = {'separator' , 'flag_trim' , 'flag_string' };
-gb_list_defaults = {','         , true        , true          };
-niak_set_defaults
+list_fields   = {'separator'             , 'flag_trim' , 'flag_string' };
+list_defaults = {{',',';',sprintf('\t')} , true        , true          };
+if nargin < 2
+    opt = struct;
+end
+opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% Reading the table
 hf = fopen(file_name);
@@ -95,14 +101,25 @@ str_tab = fread(hf,Inf,'uint8=>char')';
 cell_tab = niak_string2lines(str_tab);
 fclose(hf);
 
+%% Detect the separator
+if iscellstr(opt.separator)
+    list_separator = opt.separator;
+    opt.separator = list_separator{1};
+    ss = 1;
+    while isempty(strfind(cell_tab{1},opt.separator))&&(ss<length(list_separator))
+        ss = ss+1;
+        opt.separator = list_separator{ss};
+    end 
+end     
+    
 %% Extracting the labels
-labels_y = sub_csv(cell_tab{1},separator);
-if flag_string    
+labels_y = sub_csv(cell_tab{1},opt.separator);
+if opt.flag_string    
     for num_e = 1:length(labels_y)
         labels_y{num_e} = regexprep(labels_y{num_e},'[''"]','');
     end
 end
-if flag_trim
+if opt.flag_trim
     labels_y = strtrim(labels_y);
 end
 
@@ -111,11 +128,11 @@ nb_col = length(labels_y);
 labels_x = cell([length(cell_tab)-1 1]);
 flag_id = ismember(cell_tab{2}(1),{'''','"'});
 for num_x = 2:length(cell_tab)
-    if flag_string
+    if opt.flag_string
         cell_tab{num_x} = regexprep(cell_tab{num_x},'[''"]','');
     end
     
-    line_tmp = sub_csv(cell_tab{num_x},separator); 
+    line_tmp = sub_csv(cell_tab{num_x},opt.separator); 
     if num_x == 2
         lines = cell([length(cell_tab)-1 length(line_tmp)]);
         lines(1,:) = line_tmp;
@@ -134,7 +151,7 @@ else
     tab = str2double(strtrim(lines));
 end
 
-if flag_trim
+if opt.flag_trim
     for num_e = 1:length(labels_x)
         if ~isempty(labels_x{num_e})
             labels_x{num_e} = strtrim(labels_x{num_e});
