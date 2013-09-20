@@ -20,19 +20,26 @@ function  [err,msg] = niak_write_csv(file_name,tab,opt)
 %   (structure) with the following fields.  
 %
 %   LABELS_X
-%   	(cell of strings 1*M, default {}) LABELS_X{NUM_R} is the label 
-%       of row NUM_R in TAB.
+%      (cell of strings 1*M, default {}) LABELS_X{NUM_R} is the label 
+%      of row NUM_R in TAB.
 %
 %   LABELS_Y
-%   	(cell of strings 1*N, default {}) LABELS_X{NUM_C} is the label 
-%       of column NUM_C in TAB.
+%      (cell of strings 1*N, default {}) LABELS_X{NUM_C} is the label 
+%      of column NUM_C in TAB.
+%
+%   LABELS_ID
+%      (string) the first cell of the tab. 
+%
+%   FLAG_QUOTES
+%      (boolean, default true) if the flag is true, the string labels are 
+%      written between ". 
 %
 %   SEPARATOR
-%   	(string, default ',') The character used to separate values. 
+%      (string, default ',') The character used to separate values. 
 %
 %   PRECISION
-%   	(integer, default 15) The number of decimals used to write the
-%       table.
+%      (integer, default 15) The number of decimals used to write the
+%      table.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -49,8 +56,11 @@ function  [err,msg] = niak_write_csv(file_name,tab,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec
+%               Centre de recherche de l'institut de 
+%               Gériatrie de Montréal, Département d'informatique et de recherche 
+%               opérationnelle, Université de Montréal, 2008-2013.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : table, CSV
 
@@ -78,15 +88,17 @@ if ~exist('tab','var')||~exist('file_name','var')
 end
 
 %% Options
-gb_name_structure = 'opt';
-gb_list_fields   = {'labels_x' , 'labels_y' , 'separator' ,'precision' };
-gb_list_defaults = {{}         , {}         , ','         ,15          };
-niak_set_defaults
+if nargin < 3
+    opt = struct;
+end
+list_fields   = {'flag_quotes' , 'labels_id' , 'labels_x' , 'labels_y' , 'separator' ,'precision' };
+list_defaults = {true          , ''          , {}         , {}         , ','         ,15          };
+opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 [nx,ny] = size(tab);
 
-if isempty(labels_x)
-    labels_x = repmat({''},[nx 1]);
+if isempty(opt.labels_x)
+    opt.labels_x = repmat({''},[nx 1]);
 end
 
 %% Writting the table
@@ -101,24 +113,36 @@ end
 
 %% Convert the table into string
 tab_str = cell([nx+1 ny+1]);
-str_num = ['%1.' num2str(precision) 'f'];
+str_num = ['%1.' num2str(opt.precision) 'f'];
 
 for numx = 1:(nx+1)
     for numy = 1:(ny+1)
         if numy == 1
             if numx == 1
-                tab_str{numx,numy} = '';
+                if opt.flag_quotes
+                    tab_str{numx,numy} = ['"' opt.labels_id '"'];
+                else
+                    tab_str{numx,numy} = opt.labels_id;
+                end
             else
-                if ~isempty(labels_x{numx-1})
-                    tab_str{numx,numy} = ['"' labels_x{numx-1} '"'];
+                if ~isempty(opt.labels_x{numx-1})
+                    if opt.flag_quotes
+                        tab_str{numx,numy} = ['"' opt.labels_x{numx-1} '"'];
+                    else 
+                        tab_str{numx,numy} = opt.labels_x{numx-1};
+                    end
                 else
                     tab_str{numx,numy} = '';
                 end
             end
         else
             if numx == 1
-                if ~isempty(labels_y)&&~isempty(labels_y{numy-1})                
-                    tab_str{numx,numy} = ['"' labels_y{numy-1} '"'];
+                if ~isempty(opt.labels_y)&&~isempty(opt.labels_y{numy-1})                
+                    if opt.flag_quotes
+                        tab_str{numx,numy} = ['"' opt.labels_y{numy-1} '"'];
+                    else
+                        tab_str{numx,numy} = opt.labels_y{numy-1};
+                    end
                 else
                     tab_str{numx,numy} = '';
                 end
@@ -131,7 +155,7 @@ for numx = 1:(nx+1)
 end
 
 %% Write the table
-if isempty(labels_y)
+if isempty(opt.labels_y)
     startx = 2;
 else
     startx = 1;
@@ -140,7 +164,7 @@ for numx = startx:size(tab_str,1)
     for numy = 1:size(tab_str,2)        
         
         if ~(numy == ny+1)
-            fprintf(hf,'%s ,',tab_str{numx,numy});
+            fprintf(hf,'%s %s',tab_str{numx,numy},opt.separator);
         else
             fprintf(hf,'%s\n',tab_str{numx,numy});
         end     
