@@ -60,17 +60,26 @@ end
 if nargin == 1
     t1 = size(X,1);
     ttest_local = (mean(X,1))./(std(X,[],1)./sqrt(t1));
+    nans = isnan(ttest_local);
+    ttest_local(nans)=0;
+    
     if flag_two_sided
         pvalues = 2*(1-niak_cdf_t(abs(ttest_local),t1-1)); % two-tailed p-value          
     else
         pvalues = niak_cdf_t(ttest_local,t1-1); % one-tailed p-value  
     end
+    
+    ttest_local(nans) = NaN;
+    pvalues(nans) = NaN;
 else
     t1 = size(X,1);
     t2 = size(Y,1);
     s1 = std(X,[],1); % unbiased variance estimatorof X
     s2 = std(Y,[],1); % unbiased variance estimatorof Y
     ttest_local = (mean(Y,1)-mean(X,1))./sqrt( (s1.^2)./t1 + (s2.^2)./t2 );
+    nans = isnan(ttest_local);
+    ttest_local(nans)=0;
+    
     if nargout == 2
         df = ( ((s1.^2)./t1 + (s2.^2)./t2).^(2) ) ./ ( ((s1.^2)./t1 ).^(2) ./ (t1-1) + ((s2.^2)./t2 ).^(2) ./ (t2-1));
         if flag_two_sided
@@ -79,8 +88,9 @@ else
             pvalues = niak_cdf_t(ttest_local,df); % one-tailed p-value  
         end
     end
-    
+    ttest_local(nans) = NaN;
+    pvalues(nans) = NaN;
 end
 
-ttest_local(isnan(ttest_local)) = 0;
+%ttest_local(isnan(ttest_local)) = 0;
     
