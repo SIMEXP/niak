@@ -89,6 +89,7 @@ K = size(x,2);
 if (nargin < 3) || isempty(c)
     c = ones([K 1]);
 end
+c = c(:);
 
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
