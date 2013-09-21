@@ -11,10 +11,10 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 %   (structure) with the following fields :
 %
 %   FMRI
-%       (string or cell of strings) one or multiple fMRI datasets. 
+%      (string or cell of strings) one or multiple fMRI datasets. 
 %
 %   MASK
-%       (string or cell of strings) one or multiple brain parcellations.
+%      (string or cell of strings) one or multiple brain parcellations.
 %
 % FILES_OUT
 %   (string or cell of strings) one entry per mask. Each entry is a .mat file 
