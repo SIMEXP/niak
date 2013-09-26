@@ -145,13 +145,14 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 % The operations are applied in the following order:
 %   1. Select a subset of entries
 %   2. Orthogonalization of covariates
-%   3. Add interaction terms
-%   4. Normalization (standardization) of the covariates. 
+%   3. Get rid of entries with NaN
+%   4. Add interaction terms
+%   5. Normalization (standardization) of the covariates. 
 %
 % Copyright (c) Pierre Bellec, Jalloul Bouchkara
 %               Centre de recherche de l'institut de Gériatrie de Montréal
 %               Département d'informatique et de recherche opérationnelle
-%               Université de Montréal, 2012
+%               Université de Montréal, 2012-2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : general linear model
@@ -168,17 +169,6 @@ if nargin > 1
    opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
    opt = psom_struct_defaults(struct,list_fields,list_defaults);
-end
-
-%% Filter out the NaN entries
-if (opt.flag_filter_nan)&&~isempty(model.x)
-    mask_nan = max(isnan(model.x),[],2);
-    model.x = model.x(~mask_nan,:);
-    if any(mask_nan)
-        warning('The following entries were suppressed because they were associated to NaNs')
-        char(model.labels_x{mask_nan})
-    end
-    model.labels_x = model.labels_x(~mask_nan,:);
 end
 
 %% Reorder (and reduce) the model using opt.labels_x 
@@ -268,6 +258,17 @@ if isfield(opt.select(1),'label')
         model.y = model.y(mask,:);
     end
     model.labels_x = model.labels_x(mask);    
+end
+
+%% Filter out the NaN entries
+if (opt.flag_filter_nan)&&~isempty(model.x)
+    mask_nan = max(isnan(model.x),[],2);
+    model.x = model.x(~mask_nan,:);
+    if any(mask_nan)
+        warning('The following entries were suppressed because they were associated to NaNs')
+        char(model.labels_x{mask_nan})
+    end
+    model.labels_x = model.labels_x(~mask_nan,:);
 end
 
 %% Orthogonalization of covariates
