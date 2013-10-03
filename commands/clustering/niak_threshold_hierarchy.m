@@ -14,23 +14,23 @@ function part = niak_threshold_hierarchy(hier,opt)
 %   (structure) with the following fields - absent fields will be assigned 
 %   a default value if possible.
 %
-%	TYPE
-%       (string, default 'nb_classes') the method to threshold the 
-%       hierarchy. Possible values : 'dist', 'nb_classes', 'size'. 
-%       See OPT.THRESH below.
+%   TYPE
+%      (string, default 'nb_classes') the method to threshold the 
+%      hierarchy. Possible values : 'dist', 'nb_classes', 'size'. 
+%      See OPT.THRESH below.
 %
 %   THRESH
-%       (scalar) threshold for converting the hierarchy into a partition. 
-%       The exact meaning of THRESH depends on the method selected to 
-%       "cut the tree" :
-%           if OPT.TYPE = 'dist', it is a threshold on the maximal
-%               distance between two clusters.
-%           if OPT.TYPE = 'nb_classes', it is the number of classes
-%           if OPT.TYPE = 'size', it is the maximal size of a class
+%      (scalar) threshold for converting the hierarchy into a partition. 
+%      The exact meaning of THRESH depends on the method selected to 
+%      "cut the tree" :
+%         if OPT.TYPE = 'dist', it is a threshold on the maximal
+%            distance between two clusters.
+%         if OPT.TYPE = 'nb_classes', it is the number of classes
+%         if OPT.TYPE = 'size', it is the maximal size of a class
 %
 %   FLAG_OTHER
-%       (boolean, default false) if FLAG_OTHER is true, the distance in
-%       HIER(:,5) is used instead of HIER(:,1) to threshold the hierarchy.
+%      (boolean, default false) if FLAG_OTHER is true, the distance in
+%      HIER(:,5) is used instead of HIER(:,1) to threshold the hierarchy.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -50,7 +50,7 @@ function part = niak_threshold_hierarchy(hier,opt)
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
 % Centre de recherche de l'institut de Gériatrie de Montréal
 % Département d'informatique et de recherche opérationnelle
-% Université de Montréal, 2010-2011
+% Université de Montréal, 2010-2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : hierarchical clustering
