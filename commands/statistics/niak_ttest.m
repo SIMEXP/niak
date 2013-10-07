@@ -85,7 +85,7 @@ else
     nans = isnan(ttest_local);
     ttest_local(nans)=0;
     
-    if nargout == 2
+    if nargout >= 2
         df = ( ((s1.^2)./t1 + (s2.^2)./t2).^(2) ) ./ ( ((s1.^2)./t1 ).^(2) ./ (t1-1) + ((s2.^2)./t2 ).^(2) ./ (t2-1));
         if flag_two_tailed
             pvalues = 2*(1-niak_cdf_t(abs(ttest_local),df)); % two-tailed p-value 
