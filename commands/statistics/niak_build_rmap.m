@@ -43,6 +43,7 @@ if nargin < 3
     mask = true(nx,ny,nz);
 end
 y = niak_normalize_tseries(niak_vol2tseries(vol,mask));
-x = niak_normalize_tseries(mean(y(:,seed(:)),2));
+seed_tseries = niak_vol2tseries(seed,mask);
+x = niak_normalize_tseries(mean(y(:,seed_tseries(:)),2));
 rmap = sum(y.*repmat(x,[1 size(y,2)]),1)/(nt-1);
 rmap = niak_tseries2vol	(rmap,mask);
