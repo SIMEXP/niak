@@ -1,4 +1,4 @@
-function iir = niak_build_intra_inter_r(tseries,part,flag_vec)
+function iir = niak_build_intra_inter_r(tseries,part,flag_vec,flag_fisher)
 % Compute the average correlation intra / inter clusters
 %
 % SYNTAX:
@@ -19,6 +19,10 @@ function iir = niak_build_intra_inter_r(tseries,part,flag_vec)
 %   "vectorized" using NIAK_MAT2LVEC and the redundant elements are 
 %   suppressed. Use NIAK_LVEC2MAT to unvectorize it.
 %       
+% FLAG_FISHER
+%   (boolean, default true) if FLAG_FISHER is true, a Fisher transform is 
+%   applied on the measure. See NIAK_FISHER.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -61,6 +65,10 @@ if nargin < 3
     flag_vec = false;
 end
 
+if nargin < 4
+    flag_fisher = true;
+end
+
 nb_netwk = max(part);
 iir = zeros([nb_netwk nb_netwk]);
 
@@ -79,4 +87,7 @@ ir(mask_0) = 0;
 iir(eye(size(iir))>0) = ir; % A tricky formula to add the average correlation within each network, at the voxel level, on the diagonal
 if flag_vec
     iir = niak_mat2lvec(iir);
+end
+if flag_fisher
+    iir = niak_fisher(iir);
 end
