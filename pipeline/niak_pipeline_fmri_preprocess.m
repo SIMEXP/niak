@@ -339,9 +339,12 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % _________________________________________________________________________
 % OUTPUTS : 
 %
-%	PIPELINE 
+%   PIPELINE 
 %       (structure) describe all jobs that need to be performed in the
 %       pipeline.
+%      
+%   OPT
+%       (structure) same as the input, but updated.
 %
 % _________________________________________________________________________
 % COMMENTS:
