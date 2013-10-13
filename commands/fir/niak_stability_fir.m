@@ -1,4 +1,4 @@
-function [stab,bias_mean,bias_std,plugin] = niak_stability_fir(fir_all,time_samples,opt)
+function [stab,plugin] = niak_stability_fir(fir_all,time_samples,opt)
 % Estimate the stability of a stochastic clustering on FIR estimates.
 % FIR estimates are a collection of recorded temporal responses to a given
 % stimulus that have been resampled on a common temporal grid. The average
@@ -6,7 +6,7 @@ function [stab,bias_mean,bias_std,plugin] = niak_stability_fir(fir_all,time_samp
 % stimulus.
 %
 % SYNTAX:
-% [STAB,BIAS_MEAN,BIAS_STD] = NIAK_STABILITY_FIR(FIR_ALL,TIME_SAMPLES,OPT)
+% [STAB,PLUGIN] = NIAK_STABILITY_FIR(FIR_ALL,TIME_SAMPLES,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -84,16 +84,6 @@ function [stab,bias_mean,bias_std,plugin] = niak_stability_fir(fir_all,time_samp
 %    (array) STAB(:,s) is the vectorized version of the stability matrix
 %    associated with OPT.NB_CLASSES(s) clusters.
 %
-% BIAS_MEAN
-%    (vector) a vectorized version of the bias on the distance between 
-%    the average response under the null hypothesis of no significant 
-%    average response.
-%
-% BIAS_STD
-%    (vector) a vectorized version of the standard deviation on the 
-%    distance between the average response under the null hypothesis 
-%    of no significant average response.
-%
 % PLUGIN
 %    (vector) a vectorized version of the "plug-in" estimate of the 
 %    distance between normalized FIR.
@@ -149,23 +139,15 @@ list_fields   = {'std_noise' , 'nb_samps_bias' , 'normalize'   , 'nb_samps' , 'n
 list_defaults = {4           , 100             , opt_normalize , 100        , NaN          , opt_clustering , opt_sampling , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
-%%%%%%%%%%%%%%%%%%%%%%
-%% Bias estimation  %%
-%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plug-in estimate of the distance matrix %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if opt.flag_verbose
-    fprintf('Estimation of the bias on the distance matrix ...\n')
+    fprintf('Plug-in estimate of the distance matrix ...\n')
 end
-time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular)
-bootstrap.name_boot = 'niak_stability_fir_null';
-measure.name_mes = 'niak_stability_fir_distance';
-measure.opt_mes.time_sampling = time_sampling;
-measure.opt_mes.type = opt.normalize.type;
-cdf.nb_samps = opt.nb_samps_bias;
-cdf.flag_mean_std = true;
-[tmp1,tmp2,bias_mean,bias_std] = niak_build_cdf(fir_all,bootstrap,measure,cdf);
-
-%% Plug-in estimate
-plugin = niak_stability_fir_distance(fir_all,measure.opt_mes);
+opt_mes.time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular)
+opt_mes.type = opt.normalize.type;
+plugin = niak_stability_fir_distance(fir_all,opt_mes);
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Stability matrix %%
@@ -220,9 +202,9 @@ for num_s = 1:opt.nb_samps
         perm_null = randperm(N);
         weights = repmat(std_null./std_null(perm_null),[T 1 ne]);
         fir_all_null = fir_all_null(:,perm_null,:).*weights;
-        D = niak_stability_fir_distance(fir_all_boot+opt.std_noise*fir_all_null,measure.opt_mes);
+        D = niak_stability_fir_distance(fir_all_boot+opt.std_noise*fir_all_null,opt_mes);
     else
-        D = niak_stability_fir_distance(fir_all_boot,measure.opt_mes);
+        D = niak_stability_fir_distance(fir_all_boot,opt_mes);
     end
     switch opt.clustering.type
         case 'hierarchical'

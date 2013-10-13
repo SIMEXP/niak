@@ -227,14 +227,12 @@ opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_min_fir'});
 if nb_fir_tot < opt.nb_min_fir
     nr = size(fir_all,2);
     stab = niak_mat2vec(zeros(nr,nr));
-    bias_mean = stab;
-    bias_std = stab;
     plugin = stab;
 else
     mask_zeros = reshape(fir_all,[size(fir_all,1)*size(fir_all,2),size(fir_all,3)]);
     mask_zeros = max(abs(mask_zeros),[],1)==0;
     fir_all = fir_all(:,:,~mask_zeros);    
-    [stab,bias_mean,bias_std,plugin] = niak_stability_fir(fir_all,time_samples,opt_s);
+    [stab,plugin] = niak_stability_fir(fir_all,time_samples,opt_s);
 end
 
 %% Consensus clustering
@@ -247,4 +245,4 @@ if opt.flag_verbose
     fprintf('Save outputs ...\n');
 end
 nb_classes = opt.nb_classes;
-save(files_out,'stab','nb_classes','part','hier','order','sil','intra','inter','bias_mean','bias_std','plugin')
+save(files_out,'stab','nb_classes','part','hier','order','sil','intra','inter','plugin')
