@@ -229,6 +229,7 @@ if nb_fir_tot < opt.nb_min_fir
     stab = niak_mat2vec(zeros(nr,nr));
     plugin = stab;
 else
+    fir_all = fir_all{1};
     mask_zeros = reshape(fir_all,[size(fir_all,1)*size(fir_all,2),size(fir_all,3)]);
     mask_zeros = max(abs(mask_zeros),[],1)==0;
     fir_all = fir_all(:,:,~mask_zeros);    
