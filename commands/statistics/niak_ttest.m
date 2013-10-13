@@ -1,5 +1,4 @@
 function [ttest_local,pvalues] = niak_ttest(X,Y,flag_two_tailed)
-
 % Massively univariate t-tests.
 %
 % SYNTAX :
@@ -11,11 +10,16 @@ function [ttest_local,pvalues] = niak_ttest(X,Y,flag_two_tailed)
 % X, Y
 %   (data array, size T*N) Each column is a series of independent 
 %   observations of a variable.
-%   if only X is provided calculation are a One-sample t-test, if X and Y
-%   are provided it's a two sample t-test with none equal variance and size. 
+%   if only X is provided (or Y is empty) the function implements a one-sample t-test,
+%   against a zero mean. 
+%   if X and Y are provided the function implements a two sample t-test with 
+%   unequal variance and size. 
 %
 % FLAG_TWO_TAILED
-%   
+%   (boolean, default true) if the flag is true, implements a two-tailed test. 
+%   Otherwise it is one tailed, mean(X) > 0 for one-sample or
+%   (mean(Y)>mean(X)) for two-sample.
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -32,7 +36,7 @@ function [ttest_local,pvalues] = niak_ttest(X,Y,flag_two_tailed)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% A positive t-test is for mean of Y greater than mean of X.
+% For A positive t-test is for mean of Y greater than mean of X.
 %
 % Copyright (c) Christian L. Dansereau, Pierre Bellec
 % Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
@@ -62,7 +66,7 @@ if nargin<3
     flag_two_tailed = true;
 end
 
-if nargin == 1
+if (nargin == 1)||isempty(Y)
     t1 = size(X,1);
     ttest_local = (mean(X,1))./(std(X,[],1)./sqrt(t1));
     nans = isnan(ttest_local);
@@ -71,7 +75,7 @@ if nargin == 1
     if flag_two_tailed
         pvalues = 2*(1-niak_cdf_t(abs(ttest_local),t1-1)); % two-tailed p-value          
     else
-        pvalues = niak_cdf_t(ttest_local,t1-1); % one-tailed p-value  
+        pvalues = 1-niak_cdf_t(ttest_local,t1-1); % one-tailed p-value  
     end
     
     ttest_local(nans) = NaN;
@@ -79,8 +83,8 @@ if nargin == 1
 else
     t1 = size(X,1);
     t2 = size(Y,1);
-    s1 = std(X,[],1); % unbiased variance estimatorof X
-    s2 = std(Y,[],1); % unbiased variance estimatorof Y
+    s1 = std(X,[],1); % unbiased estimator of the variance of X
+    s2 = std(Y,[],1); % unbiased estimator of the variance of Y
     ttest_local = (mean(X,1)-mean(Y,1))./sqrt( (s1.^2)./t1 + (s2.^2)./t2 );
     nans = isnan(ttest_local);
     ttest_local(nans)=0;
@@ -90,11 +94,9 @@ else
         if flag_two_tailed
             pvalues = 2*(1-niak_cdf_t(abs(ttest_local),df)); % two-tailed p-value 
         else
-            pvalues = niak_cdf_t(ttest_local,df); % one-tailed p-value  
+            pvalues = 1-niak_cdf_t(ttest_local,df); % one-tailed p-value  
         end
     end
     ttest_local(nans) = NaN;
     pvalues(nans) = NaN;
 end
-
-    
