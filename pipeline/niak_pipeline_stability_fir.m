@@ -336,6 +336,7 @@ if ~opt.flag_fir
         job_out        = [opt.folder_out 'rois' filesep 'fir_tseries_' subject '_roi.mat'];
         job_opt        = opt.fir;
         job_opt.name_condition = opt.name_condition;
+        job_opt.name_baseline  = opt.name_baseline;
         files_tseries{num_s}  = job_out;
         pipeline = psom_add_job(pipeline,['roi_tseries_subject_' subject],'niak_brick_fir_tseries',job_in,job_out,job_opt);
     end    
