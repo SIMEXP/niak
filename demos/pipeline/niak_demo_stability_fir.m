@@ -102,6 +102,7 @@ opt.scales_maps = [  5  5  5  ; ...   % The scales that will be used to generate
 opt.stability_fir.nb_samps = 20;     % Number of bootstrap samples at the individual level. 100: the CI on indidividual stability is +/-0.1
 opt.stability_fir.std_noise = 0;     % The standard deviation of the judo noise. The value 0 will not use judo noise. 
 opt.stability_group.nb_samps = 20;   % Number of bootstrap samples at the group level. 500: the CI on group stability is +/-0.05
+opt.stability_group.min_subject = 2; % Lower the min number of subject ... there are only two subjects in the demo_niak. 
 
 %% FIR estimation 
 opt.fir.type_norm     = 'fir_shape'; % The type of normalization of the FIR. Only "fir_shape" is available (starts at zero, unit sum-of-squares)
