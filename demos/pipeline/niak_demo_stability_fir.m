@@ -105,7 +105,7 @@ opt.stability_group.nb_samps = 20;   % Number of bootstrap samples at the group 
 
 %% FIR estimation 
 opt.fir.type_norm     = 'fir_shape'; % The type of normalization of the FIR. Only "fir_shape" is available (starts at zero, unit sum-of-squares)
-opt.fir.time_window   = 30;          % The size (in sec) of the time window to evaluate the response
+opt.fir.time_window   = 20;          % The size (in sec) of the time window to evaluate the response
 opt.fir.time_sampling = 1;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
 opt.fir.max_interpolation = 15;      % Allow interpolations of up to 15 seconds to cover for scrubbing. That's because the small demo dataset has hardly any usable time window ...
 
