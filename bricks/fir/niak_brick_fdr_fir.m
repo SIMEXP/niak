@@ -147,6 +147,7 @@ if opt.flag_verbose
 end
 if ischar(files_in.fir_all)
     load(files_in.fir_all)
+    fir_all = fir_all{1};
     if ~any(abs(fir_all(:)))
         warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
         test_fir = struct([]);
@@ -163,6 +164,7 @@ else
             fprintf('    %s\n',files_in.fir_all{num_e})
         end
         data = load(files_in.fir_all{num_e});
+        data.fir_all = data.fir_all{1};
         if num_e == 1
             [nt,nr,ne] = size(data.fir_all);
             fir_all = zeros([nt,nr,length(files_in.fir_all)]);
@@ -227,9 +229,11 @@ end
 df = size(fir_net,3);
 test_fir.mean  = mean(fir_net,3);                           % mean
 test_fir.std   = std(fir_net,[],3);                         % std
-test_fir.ttest = sqrt(df)*(test_fir.mean)./(test_fir.std);  % t-test
-test_fir.df    = df;                                        % degrees of freedom
-test_fir.pce   = 2*(1-niak_cdf_t(abs(test_fir.ttest),n-1)); % two-tailed p-value
+[test_fir.ttest,test_fir.pce,test_fir.mean,test_fir.std,test_fir.df] = niak_ttest(reshape(fir_net,[nt*nn ne])');  % one-sample t-test
+test_fir.ttest = reshape(test_fir.ttest,[nt nn]);
+test_fir.mean  = reshape(test_fir.mean,[nt nn]);
+test_fir.std   = reshape(test_fir.std,[nt nn]);
+test_fir.pce   = reshape(test_fir.pce,[nt nn]);
 switch opt.type_fdr
     case {'LSL','TST'}
         [test_fir.fdr,test_fir.test] = niak_fdr(test_fir.pce,opt.type_fdr,opt.fdr);
@@ -248,17 +252,18 @@ if opt.flag_verbose
     fprintf('Testing the significance of differences in FIR responses ...\n')
 end
 
-diff_mean  = zeros(nt,nn,nn); 
-diff_std   = zeros(nt,nn,nn); 
-diff_ttest = zeros(nt,nn,nn);
-diff_df    = zeros(nt,nn,nn); % degrees of freedom
-diff_pce   = zeros(nt,nn,nn); % two-tailed p-values
+dmean  = zeros(nt,nn,nn); 
+dstd   = zeros(nt,nn,nn); 
+dttest = zeros(nt,nn,nn);
+ddf    = zeros(nt,nn,nn); % degrees of freedom
+dpce   = zeros(nt,nn,nn); % two-tailed p-values
 for num_n = 1:nn
-    diff_mean(:,:,num_n)  = test_fir.mean - repmat(test_fir.mean(:,num_n),[1 nn]);
-    diff_std(:,:,num_n)   = sqrt((test_fir.std).^2  + repmat((test_fir.std(:,num_n)).^2,[1 nn]));
-    diff_ttest(:,:,num_n) = sqrt(df)*(diff_mean)./(diff_std);
-    diff_df(:,:,num_n)    = (df-1) * (diff_ttest(:,:,num_n).^4) ./ ((test_fir.std).^4  + repmat((test_fir.std(:,num_n)).^4,[1 nn])); % Welch-Satterwaite approximation for degrees of freedom
-    diff_pce(:,:,num_n)   = 2*(1-niak_cdf_t(abs(diff_ttest),diff_df)); % two-tailed p-value
+    [tttest,tpce,tmean,tstd,tdf] = niak_ttest(reshape(fir_net,[nt*nn,ne])',repmat(squeeze(fir_net(:,num_n,:))',[1 nn]));
+    dttest(:,:,num_n) = reshape(tttest,[nt,nn]);
+    dpce(:,:,num_n)   = reshape(tpce,[nt,nn]);
+    dmean(:,:,num_n)  = reshape(tmean,[nt,nn]);
+    dstd(:,:,num_n)   = reshape(tstd,[nt,nn]);
+    ddf(:,:,num_n)    = reshape(tdf,[nt,nn]);
 end
 
 % Re-organize the results of the test
@@ -269,11 +274,11 @@ test_diff.ttest = zeros(nt,nn2);
 test_diff.df    = zeros(nt,nn2); % degrees of freedom
 test_diff.pce   = zeros(nt,nn2); % two-tailed p-values
 for num_t = 1:nt
-    test_diff.mean(num_t,:)  = niak_mat2vec(squeeze(diff_mean(num_t,:,:)));
-    test_diff.std(num_t,:)   = niak_mat2vec(squeeze(diff_std(num_t,:,:)));
-    test_diff.ttest(num_t,:) = niak_mat2vec(squeeze(diff_ttest(num_t,:,:)));
-    test_diff.df(num_t,:)    = niak_mat2vec(squeeze(diff_df(num_t,:,:)));
-    test_diff.pce(num_t,:)   = niak_mat2vec(squeeze(diff_pce(num_t,:,:)));
+    test_diff.mean(num_t,:)  = niak_mat2vec(squeeze(dmean(num_t,:,:)));
+    test_diff.std(num_t,:)   = niak_mat2vec(squeeze(dstd(num_t,:,:)));
+    test_diff.ttest(num_t,:) = niak_mat2vec(squeeze(dttest(num_t,:,:)));
+    test_diff.df(num_t,:)    = niak_mat2vec(squeeze(ddf(num_t,:,:)));
+    test_diff.pce(num_t,:)   = niak_mat2vec(squeeze(dpce(num_t,:,:)));
 end
 
 % The FDR test 
