@@ -1,8 +1,8 @@
-function [ttest_local,pvalues] = niak_ttest(X,Y,flag_two_tailed)
+function [ttest_local,pvalues,mean_eff,std_eff,df] = niak_ttest(X,Y,flag_two_tailed)
 % Massively univariate t-tests.
 %
 % SYNTAX :
-% [TTEST_LOCAL,PVALUES] = NIAK_TTEST(X,Y,FLAG_TWO_TAILED)
+% [TTEST,PVALUES,MEAN_EFF,STD_EFF,DF] = NIAK_TTEST(X,Y,FLAG_TWO_TAILED)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -23,15 +23,28 @@ function [ttest_local,pvalues] = niak_ttest(X,Y,flag_two_tailed)
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% TTEST_LOCAL
-%   (data array, size T*N) a one sample t-test of significance of the mean 
+% TTEST
+%   (vector, size 1*N) a one sample t-test of significance of the mean 
 %   of the columns of X against 0 (case where Y was not specified) OR a two
 %   sample t-test on the difference of the mean of X and Y.
+%   TTEST is MEAN_EFF./STD_EFF, see below.
 %
 % PVALUES
-%   (data array, size T*N) the probability of obtaining a test statistic at 
+%   (vector, size 1*N) the probability of obtaining a test statistic at 
 %   least as extreme as the one that was actually observed, assuming that 
 %   the null hypothesis is true.
+%
+% MEAN_EFF
+%   (vector, size 1*N) the estimate of the mean (for one sample t-test) or 
+%   the differences between the mean of Y minus the mean of X (for two-
+%   sample t-tests). 
+%
+% STD_EFF
+%   (vector, size 1*N) the standard deviation of MEAN_EFF.
+%
+% DF
+%   (scaler for one-sample t-test, vector 1*N for two-sample t-test)
+%   The degrees of freedom associated with each test.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -68,29 +81,32 @@ end
 
 if (nargin == 1)||isempty(Y)
     t1 = size(X,1);
-    ttest_local = (mean(X,1))./(std(X,[],1)./sqrt(t1));
+    mean_eff = mean(X,1);
+    std_eff  = std(X,[],1)./sqrt(t1);
+    ttest_local = mean_eff./std_eff;
     nans = isnan(ttest_local);
     ttest_local(nans)=0;
-    
+    df = t1-1; 
     if flag_two_tailed
-        pvalues = 2*(1-niak_cdf_t(abs(ttest_local),t1-1)); % two-tailed p-value          
+        pvalues = 2*(1-niak_cdf_t(abs(ttest_local),df)); % two-tailed p-value          
     else
-        pvalues = 1-niak_cdf_t(ttest_local,t1-1); % one-tailed p-value  
-    end
-    
+        pvalues = 1-niak_cdf_t(ttest_local,df); % one-tailed p-value  
+    end    
     ttest_local(nans) = NaN;
     pvalues(nans) = NaN;
 else
     t1 = size(X,1);
     t2 = size(Y,1);
+    mean_eff = mean(X,1)-mean(Y,1);
     s1 = std(X,[],1); % unbiased estimator of the variance of X
     s2 = std(Y,[],1); % unbiased estimator of the variance of Y
-    ttest_local = (mean(X,1)-mean(Y,1))./sqrt( (s1.^2)./t1 + (s2.^2)./t2 );
+    std_eff  = sqrt( (s1.^2)./t1 + (s2.^2)./t2 );
+    ttest_local = mean_eff./std_eff;
     nans = isnan(ttest_local);
     ttest_local(nans)=0;
     
     if nargout >= 2
-        df = ( ((s1.^2)./t1 + (s2.^2)./t2).^(2) ) ./ ( ((s1.^2)./t1 ).^(2) ./ (t1-1) + ((s2.^2)./t2 ).^(2) ./ (t2-1));
+        df = ( ((s1.^2)./t1 + (s2.^2)./t2).^(2) ) ./ ( ((s1.^2)./t1 ).^(2) ./ (t1-1) + ((s2.^2)./t2 ).^(2) ./ (t2-1)); % Welch-Satterwaite approximation for degrees of freedom
         if flag_two_tailed
             pvalues = 2*(1-niak_cdf_t(abs(ttest_local),df)); % two-tailed p-value 
         else
