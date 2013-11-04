@@ -1,4 +1,4 @@
-function ssurf = niak_read_surf(file_name,flag_neigh)
+function ssurf = niak_read_surf(file_name,flag_neigh,flag_verbose)
 % Read a surface in the MNI .obj or Freesurfer format
 %
 % SYNTAX:
