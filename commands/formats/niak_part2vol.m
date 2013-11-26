@@ -8,16 +8,21 @@ function vol = niak_part2vol(part,mask);
 % INPUTS:
 %
 % PART
-%   (vector) PART(I) is the number of the cluster of region I.
+%   (array T x V) PART(t,I) is the number associated with region I for 
+%   volume #i
 %
 % MASK
-%   (3D volume) MASK==I is a binary mask of region I.
+%   (array with arbitrary number of dimensions, coding for "space", with a 
+%   total of V elements) 
+%   MASK==I is a binary mask of region I.
 %
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % VOL
-%   (3D volume) VOL==K is a binary mask of the Kth cluster.
+%   (size of MASK x T) the VOL(:,...,:,t) corresponds to the volues of PART(t,:),
+%   organized like MASK. In other words, the "t"th volume, the "i"th region of 
+%   mask is "painted" with the value PART(t,i).
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -35,7 +40,7 @@ function vol = niak_part2vol(part,mask);
 %   Neurological Institute, McGill University, 2007-2011.
 %   Centre de recherche de l'institut de Gériatrie de Montréal, 
 %   Département d'informatique et de recherche opérationnelle, 
-%   Université de Montréal, 2011-2012.
+%   Université de Montréal, 2011-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : partition, roi
@@ -57,13 +62,12 @@ function vol = niak_part2vol(part,mask);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
+
 if size(part,1)>1 && size(part,2)>1
-    vol = zeros([size(mask) size(part,1)]);
-    for num_v = 1:size(part,1)
-        vol_tmp = zeros(size(mask));
-        vol_tmp(mask>0) = part(num_v,mask(mask>0));
-        vol(:,:,:,num_v) = vol_tmp;
-    end
+    vol = zeros(size(part,1),length(mask(:)));
+    vol(:,mask>0) = part(:,mask(mask>0));
+    vol = vol';
+    vol = reshape(vol,[size(mask) size(part,1)]);    
 else
     vol = zeros(size(mask));
     vol(mask>0) = part(mask(mask>0));
