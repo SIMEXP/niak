@@ -243,19 +243,23 @@ files_in = struct2cell(files_in.stability);
 N = length(files_in);
 for num_e = 1:N
     data = load(files_in{num_e});
-    if num_e == 1
+    if ~exist('S','var')&&~isempty(data.stab)
         S = size(data.stab,1);
         mat_stab = zeros([S N]);
     end
-    if size(data.stab,2)~=length(data.nb_classes)
+    if ~isempty(data.stab)&&(size(data.stab,2)~=length(data.nb_classes))
         if ~max(data.stab)==0
             error('%s : the dimensions of STAB are not compatible with NB_CLASSES',files_in{num_e})
         end
-    else   
+    elseif ~isempty(data.stab)
         mat_stab(:,num_e) = data.stab(:,data.nb_classes==opt.nb_classes_ind);
     end
 end
 clear data
+
+if ~exist('mat_stab','var')
+    error('No subject was found with usable FIR data')
+end
 
 %% Filter out empty stability matrices, to offer support for missing data evaluated during pipeline execution
 nr = size(niak_vec2mat(mat_stab(:,1),1));
