@@ -68,6 +68,10 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %       See the METHOD argument of the matlab function INTERP1 for
 %       possible options.
 %
+%   NB_MIN_BASELINE
+%       (integer, default 10) the minimum number of time points used to 
+%       estimate the baseline.
+%
 %   MAX_INTERPOLATION
 %       (scalar, default one TR) the maximal time interval where temporal 
 %       interpolations can be performed. Usually interpolations are done
@@ -155,8 +159,8 @@ niak_set_defaults
 
 %% Default options
 gb_name_structure = 'opt';
-gb_list_fields    = {'name_baseline' , 'name_condition' , 'max_interpolation' , 'type_norm' , 'time_window' , 'time_sampling' , 'interpolation' , 'flag_verbose' , 'flag_test' };
-gb_list_defaults  = {''              , ''               , []                  , 'fir_shape' , 10            , 0.5             , 'linear'        , true           , false       };
+gb_list_fields    = {'name_baseline' , 'name_condition' , 'max_interpolation' , 'type_norm' , 'time_window' , 'time_sampling' , 'nb_min_baseline' , 'interpolation' , 'flag_verbose' , 'flag_test' };
+gb_list_defaults  = {''              , ''               , []                  , 'fir_shape' , 10            , 0.5             , 10                , 'linear'        , true           , false       };
 niak_set_defaults
 
 %% If the test flag is true, stop here !
@@ -227,7 +231,7 @@ for num_r = 1:length(files_in.fmri)
         fprintf('Estimation for fMRI dataset %s ...\n',files_in.fmri{num_r});
     end
     
-    % Read the 3D+t dataset
+    % Read the 3D+t 
     [hdr,vol] = niak_read_vol(files_in.fmri{num_r});
     
     % Read the time frames 
@@ -275,6 +279,13 @@ for num_r = 1:length(files_in.fmri)
             baseline = [baseline ; tseries((opt_fir.time_frames>=time_events(ii,1))&(opt_fir.time_frames<=(time_events(ii,1)+time_events(ii,2))),:)];
         end
         
+        if size(baseline,1) < opt.nb_min_baseline
+            warning('There were not enough points to estimate the baseline (%i points available, %i needed, see OPT.NB_MIN_BASELINE)',size(baseline,1),opt.nb_min_baseline);
+            flag_baseline = false;
+        else
+            flag_baseline = true;
+        end
+     
         %% Run the FIR estimation
         if num_r == 1
             [fir_mean,nb_fir,fir_all,time_samples] = niak_build_fir(tseries,opt_fir);
@@ -283,11 +294,17 @@ for num_r = 1:length(files_in.fmri)
         end
         
         %% Normalization
-        opt_norm.time_sampling = opt.time_sampling;
-        opt_norm.type = 'fir';
-        fir_mean = niak_normalize_fir(fir_mean,baseline,opt_norm);    
-        fir_all  = niak_normalize_fir(fir_all,baseline,opt_norm);    
-        
+        if flag_baseline
+            opt_norm.time_sampling = opt.time_sampling;
+            opt_norm.type = 'fir';
+            fir_mean = niak_normalize_fir(fir_mean,baseline,opt_norm);    
+            fir_all  = niak_normalize_fir(fir_all,baseline,opt_norm);    
+        else
+            fir_mean = zeros(size(fir_mean));
+            fir_all  = zeros(size(fir_all));
+            nb_fir   = 0;
+        end
+
         % Average the FIR estimation across runs
         nb_events(num_r,num_m) = nb_fir;
         nb_fir_tot(num_m) = nb_events(num_r,num_m) + nb_fir_tot(num_m);    
@@ -318,9 +335,9 @@ fir_all = cell([length(files_in.mask) 1]);
 
 for num_m = 1:length(files_in.mask)
     if max(nb_fir_tot(num_m)) > 0
-    pos = 1;
-    fir_all{num_m} = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
-    for num_r = 1:length(files_in.fmri)
+        pos = 1;
+        fir_all{num_m} = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
+        for num_r = 1:length(files_in.fmri)
             fir_all{num_m}(:,:,pos:(pos+nb_events(num_r,num_m)-1),:) = fir_all_tot{num_r,num_m};
             pos = pos + nb_events(num_r,num_m);
         end
