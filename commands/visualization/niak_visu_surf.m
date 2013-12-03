@@ -232,10 +232,13 @@ for num_v = 1:length(list_view)
     trisurf(surf.tri(list_tri{num_v},:)-double(w)*cuv,surf.coord(1,list_ver{num_v}),surf.coord(2,list_ver{num_v}),surf.coord(3,list_ver{num_v}),...
         double(data(list_ver{num_v})),'EdgeColor','none');
     view(list_view{num_v}(1),list_view{num_v}(2));
-    daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-    lighting(opt.lighting)
-    material(opt.material)       
-    shading(opt.shading)
+     daspect([1 1 1]); 
+     axis tight; 
+     camlight; 
+     axis vis3d off;
+     lighting(opt.lighting)
+     material(opt.material)       
+    %shading(opt.shading)
 end
  
 id0=[0 0 cuv 0 0 cuv 0 0];
