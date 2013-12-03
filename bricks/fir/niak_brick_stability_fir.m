@@ -203,7 +203,7 @@ opt_sampling.type   = 'bootstrap';
 opt_sampling.opt    = [];
 opt_consensus.type   = 'hierarchical';
 list_fields   = { 'nb_min_fir' , 'std_noise' , 'nb_samps_bias' , 'rand_seed' , 'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'sampling'   , 'consensus'   , 'flag_verbose' , 'flag_test'  };
-list_defaults = { 3            , 0           , 100             , []          , opt_normalize , 100        , NaN          , opt_clustering , opt_sampling , opt_consensus , true           , false        };
+list_defaults = { 1            , 0           , 100             , []          , opt_normalize , 100        , NaN          , opt_clustering , opt_sampling , opt_consensus , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
