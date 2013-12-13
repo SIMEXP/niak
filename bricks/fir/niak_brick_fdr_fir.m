@@ -59,11 +59,6 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 %       the FDR analysis. If this number is not met, TEST_FIR and TEST_DIFF
 %       are both set to empty structures.
 %
-%   RAND_SEED
-%       (scalar, default []) The specified value is used to seed the random
-%       number generator with PSOM_SET_RAND_SEED. If left empty, no action
-%       is taken.
-%
 %   FLAG_TEST
 %       (boolean, default 0) if the flag is 1, then the function does not
 %       do anything but update the defaults of FILES_IN, FILES_OUT and OPT.
@@ -127,18 +122,13 @@ files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
 opt_normalize.type = 'fir_shape';
-list_fields   = {'fdr' , 'type_fdr' , 'nb_min_fir' , 'rand_seed' , 'normalize'   , 'nb_samps' , 'flag_verbose' , 'flag_test'  };
-list_defaults = {0.05  , 'LSL'      , 3            , []          , opt_normalize , 100        , true           , false        };
+list_fields   = {'fdr' , 'type_fdr' , 'nb_min_fir' , 'normalize'   , 'nb_samps' , 'flag_verbose' , 'flag_test'  };
+list_defaults = {0.05  , 'LSL'      , 3            , opt_normalize , 100        , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
     return
-end
-
-%% Seed the random generator
-if ~isempty(opt.rand_seed)
-    psom_set_rand_seed(opt.rand_seed);
 end
 
 %% Read the FIR estimates
@@ -165,14 +155,14 @@ else
         end
         data = load(files_in.fir_all{num_e});
         data.fir_all = data.fir_all{1};
-        if num_e == 1
+        mask_ok(num_e) = any(abs(data.fir_all(:)));
+        if ~exist('fir_all','var')&&mask_ok(num_e)
             [nt,nr,ne] = size(data.fir_all);
             fir_all = zeros([nt,nr,length(files_in.fir_all)]);
             time_samples = data.time_samples;
             time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular) 
             opt.normalize.time_sampling = time_sampling;
         end
-        mask_ok(num_e) = any(abs(data.fir_all(:)));
         if ~mask_ok(num_e)
             warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
             continue
@@ -187,7 +177,11 @@ else
         end
     end
     clear data
-    fir_all = fir_all(:,:,mask_ok);
+    if any(mask_ok)
+        fir_all = fir_all(:,:,mask_ok);
+    else
+        fir_all = zeros(0,0,0);
+    end
 end
 [nt,nr,ne] = size(fir_all);
 if ne < opt.nb_min_fir
