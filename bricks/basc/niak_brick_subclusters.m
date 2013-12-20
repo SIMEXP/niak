@@ -158,7 +158,7 @@ function [files_in,files_out,opt] = niak_brick_subclusters(files_in,files_out,op
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('files_in','var')|~exist('files_out','var')|~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SUBCLUSTERS(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_subclusters'' for more info.')
 end
 
