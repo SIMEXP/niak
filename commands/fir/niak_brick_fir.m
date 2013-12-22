@@ -138,8 +138,8 @@ list_defaults  = {NaN    , []     , NaN      };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Default options
-list_fields    = { 'name_baseline' , 'name_condition' , 'type_norm' , 'time_window' , 'time_sampling' , 'interpolation' , 'max_interpolation' , 'flag_verbose' , 'flag_test' };
-list_defaults  = { ''              , ''               , 'fir_shape' , 10            , 0.5             , 'linear'        , []                  , true           , false       };
+list_fields    = { 'name_baseline' , 'nb_min_baseline' , 'name_condition' , 'type_norm' , 'time_window' , 'time_sampling' , 'interpolation' , 'max_interpolation' , 'flag_verbose' , 'flag_test' };
+list_defaults  = { ''              , []                , ''               , 'fir_shape' , 10            , 0.5             , 'linear'        , []                  , true           , false       };
 if nargin < 3
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 else
@@ -230,7 +230,7 @@ for num_r = 1:length(files_in.fmri)
     end
     opt_fir.time_events = timing.time_events;            
     [fir_mean,nb_fir] = niak_build_fir(tseries,opt_fir);       
-    
+        
     %% Normalization
     opt_norm.time_sampling = opt.time_sampling;
     opt_norm.type = 'fir';    
