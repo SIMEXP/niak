@@ -131,7 +131,7 @@ if ndims(fir) == 2
         weights = repmat(sqrt(sum(fir_c.^2,1)*opt.time_sampling),[size(fir_c,1) 1]);
         fir_c = fir_c./weights;
     elseif strcmp(opt.type,'fir')
-        fir_c = fir_c./repmat(fir_m, [size(fir,1) 1]);
+        fir_c = 100*fir_c./repmat(fir_m, [size(fir,1) 1]);
     end
 else 
     fir_c = fir - repmat(fir_m , [size(fir,1) 1 size(fir,3)]);
@@ -139,6 +139,6 @@ else
         weights = repmat(sqrt(sum(fir_c.^2,1)*opt.time_sampling),[size(fir_c,1) 1 1]);
         fir_c = fir_c./weights;
     elseif strcmp(opt.type,'fir')    
-        fir_c = fir_c./repmat(fir_m, [size(fir,1) 1 size(fir,3)]);
+        fir_c = 100*fir_c./repmat(fir_m, [size(fir,1) 1 size(fir,3)]);
     end
 end
