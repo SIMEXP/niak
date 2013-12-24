@@ -32,8 +32,7 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %         'baseline' , 25    , 5        
 %
 % FILES_OUT
-%   (string or cell of strings) The name of a .mat file with the following 
-%   variables (the nth entry FILES_OUT{n} is generated based on FILES_IN.MASK{n}:
+%   (string) The name of a .mat file with the following variables:
 %           
 %   FIR_MEAN
 %       (cell of 2D array, or 2D array) FIR_MEAN{n}(:,I) is the mean FIR response 
@@ -174,14 +173,6 @@ if ischar(files_in.mask)
     flag_string = true;
 else
     flag_string = false;
-end
-
-if ischar(files_out)
-    files_out = {files_out};
-end
-
-if length(files_in.mask) ~= length(files_out)
-    error('FILES_IN.MASK and FILES_OUT should have the same number of entries')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -349,9 +340,7 @@ if flag_verbose
     fprintf('Writting the FIR estimates ...\n');
 end
 
-for num_m = 1:length(files_in.mask)
-    if flag_verbose
-        fprintf('    %s\n',files_out{num_m});
-    end
-    save(files_out{num_m},'fir_mean','fir_all','nb_fir_tot','time_samples');
+if flag_verbose
+    fprintf('    %s\n',files_out);
 end
+save(files_out,'fir_mean','fir_all','nb_fir_tot','time_samples');
