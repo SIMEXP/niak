@@ -330,11 +330,11 @@ if ~opt.flag_fir
     for num_s = 1:nb_subject
         subject = list_subject{num_s};
         clear job_in job_out job_opt
-        job_in.fmri    = cell_fmri(ismember({labels_file(:).subject},subject));
-        job_in.mask    = file_atoms;
-        job_in.timing  = cell_timing(ismember({labels_file(:).subject},subject));
-        job_out        = [opt.folder_out 'rois' filesep 'fir_tseries_' subject '_roi.mat'];
-        job_opt        = opt.fir;
+        job_in.fmri       = cell_fmri(ismember({labels_file(:).subject},subject));
+        job_in.mask.atoms = file_atoms;
+        job_in.timing     = cell_timing(ismember({labels_file(:).subject},subject));
+        job_out           = [opt.folder_out 'rois' filesep 'fir_tseries_' subject '_roi.mat'];
+        job_opt           = opt.fir;
         job_opt.name_condition = opt.name_condition;
         job_opt.name_baseline  = opt.name_baseline;
         files_tseries{num_s}  = job_out;

@@ -8,8 +8,8 @@ function [files_in,files_out,opt] = niak_brick_stability_fir(files_in,files_out,
 % INPUTS:
 %
 % FILES_IN 
-%   (string) The name of a .mat file, which contains one variable FIR_ALL. 
-%   FIR_ALL(:,I,J) is the time series of region I at trial J. 
+%   (string) The name of a .mat file, which contains one variable ATOMS.FIR_ALL. 
+%   ATOMS.FIR_ALL(:,I,J) is the time series of region I at trial J. 
 %
 % FILES_OUT
 %   (string) A .mat file which contains the following variables :
@@ -221,6 +221,9 @@ if opt.flag_verbose
     fprintf('Read the FIR estimates ...\n');
 end
 load(files_in)
+nb_fir_tot = atoms.nb_fir_tot;
+time_samples = atoms.time_samples;
+fir_all = atoms.fir_all;
 
 %% Stability analysis
 opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_min_fir'});
@@ -229,7 +232,6 @@ if nb_fir_tot < opt.nb_min_fir
     stab = niak_mat2vec(zeros(nr,nr));
     plugin = stab;
 else
-    fir_all = fir_all{1};
     mask_zeros = reshape(fir_all,[size(fir_all,1)*size(fir_all,2),size(fir_all,3)]);
     mask_zeros = max(abs(mask_zeros),[],1)==0;
     fir_all = fir_all(:,:,~mask_zeros);    

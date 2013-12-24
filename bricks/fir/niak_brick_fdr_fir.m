@@ -123,7 +123,7 @@ files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 %% Options
 opt_normalize.type = 'fir_shape';
 list_fields   = {'fdr' , 'type_fdr' , 'nb_min_fir' , 'normalize'   , 'nb_samps' , 'flag_verbose' , 'flag_test'  };
-list_defaults = {0.05  , 'LSL'      , 3            , opt_normalize , 100        , true           , false        };
+list_defaults = {0.05  , 'LSL'      , 1            , opt_normalize , 100        , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -137,7 +137,8 @@ if opt.flag_verbose
 end
 if ischar(files_in.fir_all)
     load(files_in.fir_all)
-    fir_all = fir_all{1};
+    fir_all = atoms.fir_all;
+    time_samples = atoms.time_samples;
     if ~any(abs(fir_all(:)))
         warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
         test_fir = struct([]);
@@ -154,12 +155,12 @@ else
             fprintf('    %s\n',files_in.fir_all{num_e})
         end
         data = load(files_in.fir_all{num_e});
-        data.fir_all = data.fir_all{1};
-        mask_ok(num_e) = any(abs(data.fir_all(:)));
+        data.atoms.fir_all = data.atoms.fir_all;
+        mask_ok(num_e) = any(abs(data.atoms.fir_all(:)));
         if ~exist('fir_all','var')&&mask_ok(num_e)
-            [nt,nr,ne] = size(data.fir_all);
+            [nt,nr,ne] = size(data.atoms.fir_all);
             fir_all = zeros([nt,nr,length(files_in.fir_all)]);
-            time_samples = data.time_samples;
+            time_samples = data.atoms.time_samples;
             time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular) 
             opt.normalize.time_sampling = time_sampling;
         end
@@ -167,10 +168,10 @@ else
             warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
             continue
         end        
-        if (ndims(data.fir_all)==3)
-            fir_all(:,:,num_e) = mean(data.fir_all,3);
+        if (ndims(data.atoms.fir_all)==3)
+            fir_all(:,:,num_e) = mean(data.atoms.fir_all,3);
         else 
-            fir_all(:,:,num_e) = data.fir_all;
+            fir_all(:,:,num_e) = data.atoms.fir_all;
         end
         if strcmp(opt.normalize.type,'fir_shape')
             fir_all(:,:,num_e) = niak_normalize_fir(fir_all(:,:,num_e),[],opt.normalize);

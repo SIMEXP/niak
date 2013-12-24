@@ -13,7 +13,7 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %   FMRI
 %       (cell of strings) a list of fMRI datasets, all in the same space.
 %
-%   MASK
+%   MASK or MASK.(NETWORK)
 %       (string or cell of strings) The name of a 3D volume containing ROIs 
 %       defined through integer labels, i.e. ROI number I is filled with Is. 
 %       0 is the code for background and is ignored.
@@ -168,11 +168,8 @@ if flag_test
 end
 
 %% Adjust inputs to cell of strings if necessary
-if ischar(files_in.mask)
-    files_in.mask = {files_in.mask};
-    flag_string = true;
-else
-    flag_string = false;
+if ~isstruct(files_in.mask)
+    error('FILES_IN.MASK should be a structure')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,17 +186,18 @@ end
 if flag_verbose
     fprintf('Read the brain mask(s) ...\n');
 end
+list_mask = fieldnames(files_in.mask);
 
-for num_m = 1:length(files_in.mask)
+for num_m = 1:length(list_mask)
     if flag_verbose
-        fprintf('    %s\n',files_in.mask{num_m});
+        fprintf('    %s\n',files_in.mask.(list_mask{num_m}));
     end
 
     if num_m == 1
-        hdr = niak_read_vol(files_in.mask{1});
-        mask = zeros([hdr.info.dimensions(:)' length(files_in.mask)]);
+        hdr = niak_read_vol(files_in.mask.(list_mask{1}));
+        mask = zeros([hdr.info.dimensions(:)' length(list_mask)]);
     end
-    [hdr,mask(:,:,:,num_m)] = niak_read_vol(files_in.mask{num_m});
+    [hdr,mask(:,:,:,num_m)] = niak_read_vol(files_in.mask.(list_mask{num_m}));
 end
 mask = round(mask);
 
@@ -212,10 +210,10 @@ opt_norm.type          = type_norm;
 opt_norm.time_sampling = opt.time_sampling;
 
 opt_tseries.correction.type = 'none';
-fir_all_tot = cell([length(files_in.fmri) length(files_in.mask)]);
-fir_mean_tot = cell([length(files_in.mask) 1]);
-nb_events = zeros([length(files_in.fmri) length(files_in.mask)]);
-nb_fir_tot = zeros([length(files_in.mask) 1]);
+fir_all_tot = cell([length(files_in.fmri) length(list_mask)]);
+fir_mean_tot = cell([length(list_mask) 1]);
+nb_events = zeros([length(files_in.fmri) length(list_mask)]);
+nb_fir_tot = zeros([length(list_mask) 1]);
 
 for num_r = 1:length(files_in.fmri)
     if flag_verbose
@@ -259,7 +257,7 @@ for num_r = 1:length(files_in.fmri)
     ind_b = find(mask_base);    
     
     %% Loop over the collection of masks
-    for num_m = 1:length(files_in.mask)
+    for num_m = 1:length(list_mask)
     
         %% Build time series
         tseries = niak_build_tseries(vol,mask(:,:,:,num_m),opt_tseries);
@@ -308,39 +306,32 @@ for num_r = 1:length(files_in.fmri)
     end
 end
 
-%% Normalize FIR_MEAN
-fir_mean = cell([length(files_in.mask) 1]);
-for num_m = 1:length(files_in.mask)
-    if nb_fir_tot>0
-        fir_mean{num_m} = fir_mean_tot{num_m}/nb_fir_tot(num_m);
-        if strcmp(opt.type_norm,'fir_shape')
-            %% Normalization
-            opt_norm.type = 'fir_shape';    
-            fir_mean{num_m} = niak_normalize_fir(fir_mean{num_m},[],opt_norm);    
-        end        
-    end
-end
-
-%% Reshape the FIR_ALL array    
-fir_all = cell([length(files_in.mask) 1]);
-
-for num_m = 1:length(files_in.mask)
-    if max(nb_fir_tot(num_m)) > 0
-        pos = 1;
-        fir_all{num_m} = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
-        for num_r = 1:length(files_in.fmri)
-            fir_all{num_m}(:,:,pos:(pos+nb_events(num_r,num_m)-1),:) = fir_all_tot{num_r,num_m};
-            pos = pos + nb_events(num_r,num_m);
-        end
-    end
-end
-
 %% write the results
 if flag_verbose
     fprintf('Writting the FIR estimates ...\n');
 end
-
-if flag_verbose
-    fprintf('    %s\n',files_out);
+for num_m = 1:length(list_mask)
+    %% Normalize FIR_MEAN
+    res = struct();
+    res.(list_mask{num_m}).nb_fir_tot = nb_fir_tot(num_m);
+    res.(list_mask{num_m}).time_samples = time_samples;
+    if nb_fir_tot>0
+        res.(list_mask{num_m}).fir_mean = fir_mean_tot{num_m}/nb_fir_tot(num_m);
+        if strcmp(opt.type_norm,'fir_shape')
+            %% Normalization
+            opt_norm.type = 'fir_shape';    
+            res.(list_mask{num_m}).fir_mean = niak_normalize_fir(res.(list_mask{num_m}).fir_mean,[],opt_norm);    
+        end           
+   end
+   %% Reshape the FIR_ALL array   
+   if max(nb_fir_tot(num_m)) > 0
+        pos = 1;
+        res.(list_mask{num_m}).fir_all = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
+        for num_r = 1:length(files_in.fmri)
+            res.(list_mask{num_m}).fir_all(:,:,pos:(pos+nb_events(num_r,num_m)-1),:) = fir_all_tot{num_r,num_m};
+            pos = pos + nb_events(num_r,num_m);
+        end
+    end   
+    %% append the results
+    save(files_out,'-struct','-append','res');
 end
-save(files_out,'fir_mean','fir_all','nb_fir_tot','time_samples');
