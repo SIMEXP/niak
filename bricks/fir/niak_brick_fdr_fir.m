@@ -136,9 +136,9 @@ if opt.flag_verbose
     fprintf('Read the FIR estimates ...\n');
 end
 if ischar(files_in.fir_all)
-    load(files_in.fir_all)
-    fir_all = atoms.fir_all;
-    time_samples = atoms.time_samples;
+    data = load(files_in.fir_all);
+    fir_all = data.(network).fir_all;
+    time_samples = data.(network).time_samples;
     if ~any(abs(fir_all(:)))
         warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
         test_fir = struct([]);
@@ -155,23 +155,23 @@ else
             fprintf('    %s\n',files_in.fir_all{num_e})
         end
         data = load(files_in.fir_all{num_e});
-        data.atoms.fir_all = data.atoms.fir_all;
-        mask_ok(num_e) = any(abs(data.atoms.fir_all(:)));
+        data.(network).fir_all = data.(network).fir_all;
+        mask_ok(num_e) = any(abs(data.(network).fir_all(:)));
         if ~exist('fir_all','var')&&mask_ok(num_e)
-            [nt,nr,ne] = size(data.atoms.fir_all);
+            [nt,nr,ne] = size(data.(network).fir_all);
             fir_all = zeros([nt,nr,length(files_in.fir_all)]);
-            time_samples = data.atoms.time_samples;
+            time_samples = data.(network).time_samples;
             time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular) 
-            opt.normalize.time_sampling = time_sampling;
+            opt.normalize = data.(network).normalize;
         end
-        if ~mask_ok(num_e)||(size(data.atoms.fir_all,3)<opt.nb_min_fir)
+        if ~mask_ok(num_e)||(size(data.(network).fir_all,3)<opt.nb_min_fir)
             warning('The FIR did not have the minimum number of trials required in OPT.NB_MIN_FIR. I am going to use the data from this subject.')
             continue
         end        
-        if (ndims(data.atoms.fir_all)==3)
-            fir_all(:,:,num_e) = mean(data.atoms.fir_all,3);
+        if (ndims(data.(network).fir_all)==3)
+            fir_all(:,:,num_e) = mean(data.(network).fir_all,3);
         else 
-            fir_all(:,:,num_e) = data.atoms.fir_all;
+            fir_all(:,:,num_e) = data.(network).fir_all;
         end
         if strcmp(opt.normalize.type,'fir_shape')
             fir_all(:,:,num_e) = niak_normalize_fir(fir_all(:,:,num_e),[],opt.normalize);
