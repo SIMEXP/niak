@@ -56,8 +56,8 @@ function [stab,plugin] = niak_stability_fir(fir_all,time_samples,opt)
 %                   trials that are used to produce a sample of average
 %                   response (default 0.5).
 %
-%   NORMALIZE.TYPE
-%       (string, default 'fir_shape') the type of normalization to apply on the 
+%   NORMALIZE
+%       (structure) the type of normalization to apply on the 
 %       FIR estimates. See NIAK_NORMALIZE_FIR.
 %
 %   CLUSTERING

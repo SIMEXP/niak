@@ -8,8 +8,11 @@ function [files_in,files_out,opt] = niak_brick_stability_fir(files_in,files_out,
 % INPUTS:
 %
 % FILES_IN 
-%   (string) The name of a .mat file, which contains one variable ATOMS.FIR_ALL. 
-%   ATOMS.FIR_ALL(:,I,J) is the time series of region I at trial J. 
+%   (string) The name of a .mat file, which contains the following variables:
+%      (NETWORK).FIR_ALL(:,I,J) is the time series of region I at trial J. 
+%      (NETWORK).NORMALIZE.TYPE and (NETWORK).NORMALIZE.TIME_SAMPLING are the 
+%         OPT parameters of NIAK_NORMALIZE_FIR.
+%      The name NETWORK can be changed with OPT.NETWORK below.
 %
 % FILES_OUT
 %   (string) A .mat file which contains the following variables :
@@ -60,16 +63,13 @@ function [files_in,files_out,opt] = niak_brick_stability_fir(files_in,files_out,
 %       (integer, default 100) the number of samples to use in the 
 %       bootstrap Monte-Carlo approximation of stability.
 %
-%   NB_SAMPS_BIAS
-%       (integer, default 100) the number of samples to derive the 
-%       estimation of the bias on the distance between average 
-%       responses under the null hypothesis of no significant 
-%       average responses.
-%
 %   STD_NOISE
 %       (integer, default 0) the standard deviation of the "judo" noise
 %       added to each sample to cover up the effect of spatially
 %       coherent spontaneous fluctuations.
+%
+%   NETWORK
+%       (string, default 'atoms') the name of the variable in FILES_IN.
 %
 %   NB_MIN_FIR
 %       (integer, default 3) the minimal acceptable number of FIR estimates.
@@ -88,10 +88,6 @@ function [files_in,files_out,opt] = niak_brick_stability_fir(files_in,files_out,
 %               'subsample' : a scalar representing the percentage of
 %                   trials that are used to produce a sample of average
 %                   response (default 0.5).
-%
-%   NORMALIZE.TYPE
-%       (string, default 'fir_shape') the type of normalization to apply on the 
-%       FIR estimates. See NIAK_NORMALIZE_FIR.
 %
 %   CLUSTERING
 %       (structure, optional) with the following fields :
@@ -196,14 +192,13 @@ if ~ischar(files_out)
 end
 
 %% Options
-opt_normalize.type   = 'fir_shape';
 opt_clustering.type = 'hierarchical';
 opt_clustering.opt  = struct();
 opt_sampling.type   = 'bootstrap';
 opt_sampling.opt    = [];
 opt_consensus.type   = 'hierarchical';
-list_fields   = { 'nb_min_fir' , 'std_noise' , 'nb_samps_bias' , 'rand_seed' , 'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'sampling'   , 'consensus'   , 'flag_verbose' , 'flag_test'  };
-list_defaults = { 1            , 0           , 100             , []          , opt_normalize , 100        , NaN          , opt_clustering , opt_sampling , opt_consensus , true           , false        };
+list_fields   = { 'network' , 'nb_min_fir' , 'std_noise' , 'nb_samps_bias' , 'rand_seed' , 'nb_samps' , 'nb_classes' , 'clustering'   , 'sampling'   , 'consensus'   , 'flag_verbose' , 'flag_test'  };
+list_defaults = { 'atoms'   , 1            , 0           , 100             , []          , 100        , NaN          , opt_clustering , opt_sampling , opt_consensus , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -220,14 +215,16 @@ end
 if opt.flag_verbose
     fprintf('Read the FIR estimates ...\n');
 end
-load(files_in)
-nb_fir_tot = atoms.nb_fir_tot;
-time_samples = atoms.time_samples;
-fir_all = atoms.fir_all;
+data = load(files_in)
+nb_fir_tot = data.(opt.network).nb_fir_tot;
+time_samples = data.(opt.network).time_samples;
+fir_all = data.(opt.network).fir_all;
+opt.normalize = data.(opt.network).normalize;
 
 %% Stability analysis
 opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_min_fir'});
 if nb_fir_tot < opt.nb_min_fir
+    warning('There were not enough FIR trials in this dataset (see OPT.NB_MIN_FIR). I am skipping the stability analysis.');
     nr = size(fir_all,2);
     stab = niak_mat2vec(zeros(nr,nr));
     plugin = stab;

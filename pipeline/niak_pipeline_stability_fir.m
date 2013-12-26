@@ -128,6 +128,10 @@ function [pipeline,opt] = niak_pipeline_stability_fir(files_in,opt)
 %       parameters may work. This option is also used in
 %       NIAK_BRICK_FIR_TSERIES.
 %
+%   NB_MIN_FIR
+%       (integer, defaut 1) the minimum number of FIR trials for a subject to enter the 
+%       analysis.
+%
 %   REGION_GROWING
 %       (structure) see the OPT argument of NIAK_PIPELINE_REGION_GROWING. 
 %       The default parameters may work.
@@ -241,8 +245,8 @@ if ~exist('files_in','var')||~exist('opt','var')
 end
 
 %% Checking that FILES_IN is in the correct format
-list_fields   = {'timing' , 'atoms'           , 'fmri' , 'mask'            , 'areas'           , 'infos'           };
-list_defaults = {NaN      , 'gb_niak_omitted' , NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+list_fields   = { 'nb_min_fir' , 'timing' , 'atoms'           , 'fmri' , 'mask'            , 'areas'           , 'infos'           };
+list_defaults = { 1            , NaN      , 'gb_niak_omitted' , NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_in      = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 file_timing = files_in.timing;
@@ -365,6 +369,7 @@ if ~opt.flag_roi
     job_opt.neigh                    = opt.neigh;
     job_opt.param                    = opt.param;
     job_opt.stability_ind            = opt.stability_fir;
+    job_opt.stability_ind.nb_min_fir = opt.nb_min_fir;
     job_opt.stability_group          = opt.stability_group;
     job_opt.stability_maps           = opt.stability_maps;
     job_opt.stability_figure         = opt.stability_figure;
@@ -413,6 +418,7 @@ if opt.flag_group&&~opt.flag_roi
     clear job_in job_out job_opt
     job_in.fir_all = files_tseries;
     job_in.atoms = file_atoms;
+    job_opt.nb_min_fir = opt.nb_min_fir;
     job_opt.nb_samps = opt.nb_samps_fdr;
     job_opt.normalize = opt.stability_fir.normalize;
     job_opt.rand_seed = opt.rand_seed;

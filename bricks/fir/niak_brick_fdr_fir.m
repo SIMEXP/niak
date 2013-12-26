@@ -11,10 +11,12 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 %    (structure) with the following fields:
 % 
 %    FIR_ALL
-%        (string or cell of strings) The name of a .mat file, which contains 
-%        one variable FIR_ALL. FIR_ALL(:,I,J) is the time series of region I 
-%        at trial J. If FIR_ALL is a cell of strings, The FIR_ALL variables 
-%        will be averaged across all entries.
+%        (string or cell of strings) Each entry is the name of a .mat file, 
+%        which contains the following variables:
+%       (NETWORK).FIR_ALL(:,I,J) is the time series of region I at trial J. 
+%       (NETWORK).NORMALIZE.TYPE and (NETWORK).NORMALIZE.TIME_SAMPLING are the 
+%          OPT parameters of NIAK_NORMALIZE_FIR.
+%       The name NETWORK can be changed with OPT.NETWORK below.
 %
 %    ATOMS
 %        (string) the name of a file with a 3D volume defining the atoms for 
@@ -50,9 +52,8 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 %       bootstrap approximation of the cumulative distribution functions
 %       and the FDR.
 %
-%   NORMALIZE.TYPE
-%       (string, default 'fir_shape') the type of normalization to apply on the 
-%       FIR estimates. See NIAK_NORMALIZE_FIR.
+%   NETWORK
+%       (string, default 'atoms') the name of the variable in FILES_IN.
 %
 %   NB_MIN_FIR
 %       (integer, default 3) the minimal acceptable number of FIR to run
@@ -121,9 +122,8 @@ list_defaults = {'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
-opt_normalize.type = 'fir_shape';
-list_fields   = {'fdr' , 'type_fdr' , 'nb_min_fir' , 'normalize'   , 'nb_samps' , 'flag_verbose' , 'flag_test'  };
-list_defaults = {0.05  , 'LSL'      , 1            , opt_normalize , 100        , true           , false        };
+list_fields   = {'fdr' , 'type_fdr' , 'nb_min_fir' , 'network' , 'nb_samps' , 'flag_verbose' , 'flag_test'  };
+list_defaults = {0.05  , 'LSL'      , 1            , 'atoms'   , 100        , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -164,8 +164,8 @@ else
             time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular) 
             opt.normalize.time_sampling = time_sampling;
         end
-        if ~mask_ok(num_e)
-            warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
+        if ~mask_ok(num_e)||(size(data.atoms.fir_all,3)<opt.nb_min_fir)
+            warning('The FIR did not have the minimum number of trials required in OPT.NB_MIN_FIR. I am going to use the data from this subject.')
             continue
         end        
         if (ndims(data.atoms.fir_all)==3)
@@ -185,8 +185,8 @@ else
     end
 end
 [nt,nr,ne] = size(fir_all);
-if ne < opt.nb_min_fir
-    warning('The minimal number of FIR samples is not reached. I am going to assume that this dataset is not usable. See OPT.NB_MIN_FIR')
+if ne < 1
+    warning('There were no usable FIR in this dataset. See OPT.NB_MIN_FIR')
     test_fir = struct([]);
     test_diff = struct([]);
     if ~strcmp(files_out.fdr,'gb_niak_omitted')

@@ -315,6 +315,8 @@ for num_m = 1:length(list_mask)
     res = struct();
     res.(list_mask{num_m}).nb_fir_tot = nb_fir_tot(num_m);
     res.(list_mask{num_m}).time_samples = time_samples;
+    res.(list_mask{num_m}).normalize.time_sampling = opt.time_sampling;
+    res.(list_mask{num_m}).normalize.type = opt.type;
     if nb_fir_tot>0
         res.(list_mask{num_m}).fir_mean = fir_mean_tot{num_m}/nb_fir_tot(num_m);
         if strcmp(opt.type_norm,'fir_shape')
