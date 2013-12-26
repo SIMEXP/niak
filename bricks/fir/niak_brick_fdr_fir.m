@@ -135,6 +135,7 @@ end
 if opt.flag_verbose
     fprintf('Read the FIR estimates ...\n');
 end
+network = opt.network;
 if ischar(files_in.fir_all)
     data = load(files_in.fir_all);
     fir_all = data.(network).fir_all;

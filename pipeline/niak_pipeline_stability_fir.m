@@ -245,8 +245,8 @@ if ~exist('files_in','var')||~exist('opt','var')
 end
 
 %% Checking that FILES_IN is in the correct format
-list_fields   = { 'nb_min_fir' , 'timing' , 'atoms'           , 'fmri' , 'mask'            , 'areas'           , 'infos'           };
-list_defaults = { 1            , NaN      , 'gb_niak_omitted' , NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+list_fields   = { 'timing' , 'atoms'           , 'fmri' , 'mask'            , 'areas'           , 'infos'           };
+list_defaults = { NaN      , 'gb_niak_omitted' , NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_in      = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 file_timing = files_in.timing;
@@ -271,8 +271,8 @@ else
 end
 
 %% Options
-list_fields   = {'name_baseline' , 'name_condition' , 'nb_samps_fdr' , 'folder_out' , 'grid_scales' , 'scales_maps' , 'neigh'       , 'param' , 'flag_mixed' , 'flag_group' , 'flag_ind' , 'flag_fir' , 'flag_roi' , 'fir'    , 'region_growing' , 'stability_fir' , 'stability_group' , 'stability_maps' , 'stability_figure' , 'rand_seed' , 'psom'   , 'flag_test' , 'flag_verbose' };
-list_defaults = {''              , ''               , 1000           , NaN          , []            , []            , [0.7 0.1 1.3] , 0.05    , true         , true         , true       , []         , false      , struct() , struct()         , struct()        , struct()          , struct()         , struct()           , 0           , struct() , false       , true           };
+list_fields   = {'nb_min_fir' , 'name_baseline' , 'name_condition' , 'nb_samps_fdr' , 'folder_out' , 'grid_scales' , 'scales_maps' , 'neigh'       , 'param' , 'flag_mixed' , 'flag_group' , 'flag_ind' , 'flag_fir' , 'flag_roi' , 'fir'    , 'region_growing' , 'stability_fir' , 'stability_group' , 'stability_maps' , 'stability_figure' , 'rand_seed' , 'psom'   , 'flag_test' , 'flag_verbose' };
+list_defaults = {1            , ''              , ''               , 1000           , NaN          , []            , []            , [0.7 0.1 1.3] , 0.05    , true         , true         , true       , []         , false      , struct() , struct()         , struct()        , struct()          , struct()         , struct()           , 0           , struct() , false       , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 if ~strcmp(opt.folder_out(end),filesep)
     opt.folder_out = [opt.folder_out filesep];
@@ -285,8 +285,6 @@ end
 list_fields    = {'type_norm' , 'time_sampling' };
 list_defaults  = {'fir_shape' , 0.5             };
 opt.fir = psom_struct_defaults(opt.fir,list_fields,list_defaults,false);
-
-opt.stability_fir.normalize.type = opt.fir.type_norm;
 
 if strcmp(file_atoms,'gb_niak_omitted')
     %% Initial FIR estimation for building ROI
@@ -386,8 +384,7 @@ if opt.flag_ind&&~opt.flag_roi
         clear job_in job_out job_opt
         job_in.fir_all = files_tseries{num_s};
         job_in.atoms = file_atoms;
-        job_opt.nb_samps = opt.nb_samps_fdr;
-        job_opt.normalize = opt.stability_fir.normalize;
+        job_opt.nb_samps = opt.nb_samps_fdr;        
         job_opt.rand_seed = opt.rand_seed;
         for num_sc = 1:nb_scales
             job_in.partition = pipeline.(['stability_maps_ind_' list_subject{num_s}]).files_out.partition_core{num_sc};
@@ -404,8 +401,7 @@ if opt.flag_group&&~opt.flag_roi
         clear job_in job_out job_opt
         job_in.fir_all = files_tseries{num_s};
         job_in.atoms = file_atoms;
-        job_opt.nb_samps = opt.nb_samps_fdr;
-        job_opt.normalize = opt.stability_fir.normalize;
+        job_opt.nb_samps = opt.nb_samps_fdr;        
         job_opt.rand_seed = opt.rand_seed;
         for num_sc = 1:nb_scales
             label_scale = ['sci' num2str(opt.scales_maps(num_sc,1)) '_scg' num2str(opt.scales_maps(num_sc,2)) '_scf' num2str(opt.scales_maps(num_sc,end))];
@@ -419,8 +415,7 @@ if opt.flag_group&&~opt.flag_roi
     job_in.fir_all = files_tseries;
     job_in.atoms = file_atoms;
     job_opt.nb_min_fir = opt.nb_min_fir;
-    job_opt.nb_samps = opt.nb_samps_fdr;
-    job_opt.normalize = opt.stability_fir.normalize;
+    job_opt.nb_samps = opt.nb_samps_fdr;    
     job_opt.rand_seed = opt.rand_seed;
     for num_sc = 1:nb_scales
         label_scale = ['sci' num2str(opt.scales_maps(num_sc,1)) '_scg' num2str(opt.scales_maps(num_sc,2)) '_scf' num2str(opt.scales_maps(num_sc,end))];
@@ -436,8 +431,7 @@ if opt.flag_mixed&&~opt.flag_roi
         clear job_in job_out job_opt
         job_in.fir_all = files_tseries{num_s};
         job_in.atoms = file_atoms;
-        job_opt.nb_samps = opt.nb_samps_fdr;
-        job_opt.normalize = opt.stability_fir.normalize;
+        job_opt.nb_samps = opt.nb_samps_fdr;        
         job_opt.rand_seed = opt.rand_seed;
         for num_sc = 1:nb_scales
             job_in.partition = pipeline.(['stability_maps_mixed_' list_subject{num_s}]).files_out.partition_core{num_sc};
