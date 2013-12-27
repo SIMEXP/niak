@@ -35,7 +35,7 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 %       (scalar, default 0.05) the minimum acceptable false-discovery rate.
 %
 %   TYPE_FDR
-%       (string, default 'BH') type of false-discovery rate procedure
+%       (string, default 'LSL') type of false-discovery rate procedure
 %       Available options: 'LSL', 'TST', 'BH', 'BY'. See NIAK_FDR.
 %       All procedures control for the global false discovery rate
 %       over all tests (i.e. all time point and all regions for test
@@ -109,7 +109,7 @@ files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
 list_fields   = {'fdr' , 'type_fdr' , 'network' , 'flag_verbose' , 'flag_test'  };
-list_defaults = {0.05  , 'BH'       , 'atoms'   , true           , false        };
+list_defaults = {0.05  , 'LSL'      , 'atoms'   , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
