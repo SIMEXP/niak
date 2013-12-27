@@ -44,10 +44,19 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %       spatial location I for the Jth event, for FILES_IN.MASK{n}. If FILES_IN.MASK
 %       is a string, then FIR_ALL is simply a 2D array.
 %
+%   NB_FIR_TOT
+%       (integer) the number of trials used to generate the FIR estimate.
+%
 %   TIME_SAMPLES
 %       (vector) TIME_SAMPLES(T) is the time associated with the Tth row of 
 %       FIR_MEAN{n} and FIR_ALL{n}. Note that time 0 would correspond to the event 
 %       time.
+%
+%   NORMALIZE.TYPE
+%       (string) the type of normalization (see OPT.TYPE_NORM)
+%  
+%   NORMALIZE.TIME_SAMPLING
+%       (scalar) see OPT.TIME_SAMPLING
 %
 % OPT
 %   (structure) with the following fields : 
