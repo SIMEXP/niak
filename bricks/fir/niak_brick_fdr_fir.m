@@ -140,6 +140,7 @@ if any(mask_ok)
 else
     fir_net = zeros(0,0,0);
 end
+[nt,nn,ne] = size(fir_net);
 
 %% Read the partition
 if opt.flag_verbose
