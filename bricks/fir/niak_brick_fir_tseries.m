@@ -13,10 +13,10 @@ function [files_in,files_out,opt] = niak_brick_fir_tseries(files_in,files_out,op
 %   FMRI
 %       (cell of strings) a list of fMRI datasets, all in the same space.
 %
-%   MASK or MASK.(NETWORK)
-%       (string or cell of strings) The name of a 3D volume containing ROIs 
-%       defined through integer labels, i.e. ROI number I is filled with Is. 
-%       0 is the code for background and is ignored.
+%   MASK.(NETWORK)
+%       (string) The name of a 3D volume containing ROIs defined through 
+%       integer labels, i.e. ROI number I is filled with Is. 0 is the code 
+%       for background and is ignored.
 %
 %   TIMING
 %       (cell of strings) a list of .csv files coding for the time of events. 

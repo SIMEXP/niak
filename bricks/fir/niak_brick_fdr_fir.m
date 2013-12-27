@@ -10,17 +10,13 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 % FILES_IN
 %    (structure) with the following fields:
 % 
-%    FIR_ALL
+%    FIR
 %        (string or cell of strings) Each entry is the name of a .mat file, 
 %        which contains the following variables:
-%       (NETWORK).FIR_ALL(:,I,J) is the time series of region I at trial J. 
+%       (NETWORK).FIR(:,I,J) is the time series of region I at trial J. 
 %       (NETWORK).NORMALIZE.TYPE and (NETWORK).NORMALIZE.TIME_SAMPLING are the 
 %          OPT parameters of NIAK_NORMALIZE_FIR.
 %       The name NETWORK can be changed with OPT.NETWORK below.
-%
-%    ATOMS
-%        (string) the name of a file with a 3D volume defining the atoms for 
-%        analysis.
 %
 %    PARTITION
 %        (string) the name of a file with a 3D volume defining a partition.
@@ -39,7 +35,7 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 %       (scalar, default 0.05) the minimum acceptable false-discovery rate.
 %
 %   TYPE_FDR
-%       (string, default 'LSL') type of false-discovery rate procedure
+%       (string, default 'BH') type of false-discovery rate procedure
 %       Available options: 'LSL', 'TST', 'BH', 'BY'. See NIAK_FDR.
 %       All procedures control for the global false discovery rate
 %       over all tests (i.e. all time point and all regions for test
@@ -47,18 +43,8 @@ function [files_in,files_out,opt] = niak_brick_fdr_fir(files_in,files_out,opt)
 %       all pairs of regions for test on the significance of the 
 %       difference of the average FIR).
 %
-%   NB_SAMPS
-%       (integer, default 100) the number of samples to use in the 
-%       bootstrap approximation of the cumulative distribution functions
-%       and the FDR.
-%
 %   NETWORK
 %       (string, default 'atoms') the name of the variable in FILES_IN.
-%
-%   NB_MIN_FIR
-%       (integer, default 3) the minimal acceptable number of FIR to run
-%       the FDR analysis. If this number is not met, TEST_FIR and TEST_DIFF
-%       are both set to empty structures.
 %
 %   FLAG_TEST
 %       (boolean, default 0) if the flag is 1, then the function does not
@@ -112,8 +98,8 @@ if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
 end
    
 %% Files in
-list_fields   = {'fir_all' , 'atoms' , 'partition' };
-list_defaults = {NaN       , NaN     , NaN         };
+list_fields   = {'fir' , 'partition' };
+list_defaults = {NaN   , NaN         };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Files out
@@ -122,8 +108,8 @@ list_defaults = {'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
-list_fields   = {'fdr' , 'type_fdr' , 'nb_min_fir' , 'network' , 'nb_samps' , 'flag_verbose' , 'flag_test'  };
-list_defaults = {0.05  , 'LSL'      , 1            , 'atoms'   , 100        , true           , false        };
+list_fields   = {'fdr' , 'type_fdr' , 'network' , 'flag_verbose' , 'flag_test'  };
+list_defaults = {0.05  , 'BH'       , 'atoms'   , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -136,89 +122,30 @@ if opt.flag_verbose
     fprintf('Read the FIR estimates ...\n');
 end
 network = opt.network;
-if ischar(files_in.fir_all)
-    data = load(files_in.fir_all);
-    fir_all = data.(network).fir_all;
-    time_samples = data.(network).time_samples;
-    if ~any(abs(fir_all(:)))
-        warning('The FIR is filled with zero. I am going to assume the data from this subject was not usable')
-        test_fir = struct([]);
-        test_diff = struct([]);
-        if ~strcmp(files_out.fdr,'gb_niak_omitted')
-            save(files_out.fdr,'test_fir','test_diff')
-        end
-        return
+mask_ok = true(length(files_in.fir),1);
+for num_e = 1:length(files_in.fir)
+    if opt.flag_verbose
+        fprintf('    %s\n',files_in.fir{num_e})
     end
+    data = load(files_in.fir{num_e});
+    mask_ok(num_e) = any(abs(data.(network).fir_mean(:)));
+    if ~mask_ok(num_e)
+        warning('The FIR did not have the minimum number of trials required in OPT.NB_MIN_FIR. I am going to use the data from this subject.')
+        continue
+    end        
+    fir_net(:,:,num_e) = data.(network).fir_mean;
+end    
+if any(mask_ok)
+    fir_net = fir_net(:,:,mask_ok);
 else
-    mask_ok = true(length(files_in.fir_all),1);
-    for num_e = 1:length(files_in.fir_all)
-        if opt.flag_verbose
-            fprintf('    %s\n',files_in.fir_all{num_e})
-        end
-        data = load(files_in.fir_all{num_e});
-        data.(network).fir_all = data.(network).fir_all;
-        mask_ok(num_e) = any(abs(data.(network).fir_all(:)));
-        if ~exist('fir_all','var')&&mask_ok(num_e)
-            [nt,nr,ne] = size(data.(network).fir_all);
-            fir_all = zeros([nt,nr,length(files_in.fir_all)]);
-            time_samples = data.(network).time_samples;
-            time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular) 
-            opt.normalize = data.(network).normalize;
-        end
-        if ~mask_ok(num_e)||(size(data.(network).fir_all,3)<opt.nb_min_fir)
-            warning('The FIR did not have the minimum number of trials required in OPT.NB_MIN_FIR. I am going to use the data from this subject.')
-            continue
-        end        
-        if (ndims(data.(network).fir_all)==3)
-            fir_all(:,:,num_e) = mean(data.(network).fir_all,3);
-        else 
-            fir_all(:,:,num_e) = data.(network).fir_all;
-        end
-        if strcmp(opt.normalize.type,'fir_shape')
-            fir_all(:,:,num_e) = niak_normalize_fir(fir_all(:,:,num_e),[],opt.normalize);
-        end
-    end
-    clear data
-    if any(mask_ok)
-        fir_all = fir_all(:,:,mask_ok);
-    else
-        fir_all = zeros(0,0,0);
-    end
+    fir_net = zeros(0,0,0);
 end
-[nt,nr,ne] = size(fir_all);
-if ne < 1
-    warning('There were no usable FIR in this dataset. See OPT.NB_MIN_FIR')
-    test_fir = struct([]);
-    test_diff = struct([]);
-    if ~strcmp(files_out.fdr,'gb_niak_omitted')
-        save(files_out.fdr,'test_fir','test_diff')
-    end
-    return
-end
-time_sampling = time_samples(2)-time_samples(1); % The TR of the temporal grid (assumed to be regular)
-
-%% Read the atoms 
-if opt.flag_verbose
-    fprintf('Read the volume of atoms ...\n');
-end
-[hdr,atoms] = niak_read_vol(files_in.atoms);
 
 %% Read the partition
 if opt.flag_verbose
     fprintf('Read the partition volume ...\n')
 end
 [hdr,vol_part] = niak_read_vol(files_in.partition);
-
-%% Extract average FIR responses
-list_networks = unique(vol_part(:));
-list_networks = list_networks(list_networks~=0);
-nn = length(list_networks);
-fir_net = zeros([nt nn ne]);
-for num_n = 1:nn
-    list_a = unique(atoms(vol_part==list_networks(num_n)));
-    list_a = list_a(list_a~=0);
-    fir_net(:,num_n,:) = mean(fir_all(:,list_a,:),2); 
-end
 
 %% Run the FDR tests: significance of the FIR
 %% one sample t-test
@@ -240,7 +167,6 @@ switch opt.type_fdr
     otherwise
         error('%s is not a supported FDR procedure')
 end
-
 
 %% Run the FDR tests: significance of the differences in FIR
 %% 2 samples t-test with unequal variance (yet equal sample size)

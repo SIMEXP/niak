@@ -99,22 +99,6 @@ function [pipeline,opt] = niak_pipeline_stability_fir(files_in,opt)
 %       (boolean, default false) if the flag is true, the pipeline is only 
 %       going to perform the region growing.
 %
-%   FLAG_IND
-%       (boolean, default true) if the flag is true, build the individual stable
-%       clusters, stable cores, adjusted clusters as well as associated stability
-%       maps.
-%
-%   FLAG_GROUP
-%       (boolean, default true) if the flag is true, perform the group level
-%       analysis. This includes the analysis of stability, the generation of
-%       group stable clusters, stable cores, adjusted clusters as well as
-%       associated stability maps.
-%
-%   FLAG_MIXED
-%       (boolean, default true) if the flag is true, generate the mixed stability maps,
-%       which are based on the stable cores of the group-level clusters when evaluated for
-%       the individual stability matrices. The adjusted clusters are generated as well.
-%
 %   NAME_CONDITION
 %       (string, default '') NAME_CONDITION is the name of the condition 
 %       of interest. By default (empty string), the first condition is used. 
@@ -151,6 +135,10 @@ function [pipeline,opt] = niak_pipeline_stability_fir(files_in,opt)
 %   STABILITY_FIGURE
 %       (structure) the options that will be passed to
 %       NIAK_BRICK_STABILITY_FIGURE
+%
+%   FDR_FIR
+%       (structure) the options that will be passed to 
+%       NIAK_BRICK_FDR_FIR.
 %
 %   RAND_SEED
 %       (scalar, default 0) The specified value is used to seed the random
@@ -200,6 +188,8 @@ function [pipeline,opt] = niak_pipeline_stability_fir(files_in,opt)
 %      See NIAK_PIPELINE_STABILITY_MULTI
 %   6. Group-level stability analysis
 %      See NIAK_PIPELINE_STABILITY_MULTI
+%   7. Group-level test of significance of the average FIR per network, as 
+%      well as the significance of the difference in FIR across networks.
 %
 % NOTE 2:
 % This pipeline assumes fully preprocessed fMRI data in stereotaxic space
@@ -271,8 +261,8 @@ else
 end
 
 %% Options
-list_fields   = {'nb_min_fir' , 'name_baseline' , 'name_condition' , 'nb_samps_fdr' , 'folder_out' , 'grid_scales' , 'scales_maps' , 'neigh'       , 'param' , 'flag_mixed' , 'flag_group' , 'flag_ind' , 'flag_fir' , 'flag_roi' , 'fir'    , 'region_growing' , 'stability_fir' , 'stability_group' , 'stability_maps' , 'stability_figure' , 'rand_seed' , 'psom'   , 'flag_test' , 'flag_verbose' };
-list_defaults = {1            , ''              , ''               , 1000           , NaN          , []            , []            , [0.7 0.1 1.3] , 0.05    , true         , true         , true       , []         , false      , struct() , struct()         , struct()        , struct()          , struct()         , struct()           , 0           , struct() , false       , true           };
+list_fields   = {'nb_min_fir' , 'name_baseline' , 'name_condition' , 'nb_samps_fdr' , 'folder_out' , 'grid_scales' , 'scales_maps' , 'neigh'       , 'param' , 'flag_fir' , 'flag_roi' , 'fir'    , 'region_growing' , 'stability_fir' , 'stability_group' , 'stability_maps' , 'stability_figure' , 'fdr_fir' , 'rand_seed' , 'psom'   , 'flag_test' , 'flag_verbose' };
+list_defaults = {1            , ''              , ''               , 1000           , NaN          , []            , []            , [0.7 0.1 1.3] , 0.05    , []         , false      , struct() , struct()         , struct()        , struct()          , struct()         , struct()           , struct()  , 0           , struct() , false       , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 if ~strcmp(opt.folder_out(end),filesep)
     opt.folder_out = [opt.folder_out filesep];
@@ -360,9 +350,9 @@ if ~opt.flag_roi
     job_opt.folder_out               = opt.folder_out;
     job_opt.grid_scales              = opt.grid_scales;
     job_opt.scales_maps              = opt.scales_maps;
-    job_opt.flag_ind                 = opt.flag_ind;
-    job_opt.flag_group               = opt.flag_group;
-    job_opt.flag_mixed               = opt.flag_mixed;
+    job_opt.flag_ind                 = false;
+    job_opt.flag_group               = true;
+    job_opt.flag_mixed               = false;
     job_opt.name_brick_stability_ind = 'niak_brick_stability_fir';
     job_opt.neigh                    = opt.neigh;
     job_opt.param                    = opt.param;
@@ -377,69 +367,39 @@ if ~opt.flag_roi
     pipeline = psom_merge_pipeline(pipeline,niak_pipeline_stability_multi(job_in,job_opt));
 end
 
-%% Build individual FIR based on individual clusters along with FDR tests
+%% Group-level FIR estimates
 nb_scales = size(opt.scales_maps,1);
-if opt.flag_ind&&~opt.flag_roi
+if ~isempty(opt.scales_maps)&&~opt.flag_roi
+    %% Response estimate at the group-network level
+    files_fir_group = cell([nb_subject 1]);
     for num_s = 1:nb_subject
+        subject = list_subject{num_s};
         clear job_in job_out job_opt
-        job_in.fir_all = files_tseries{num_s};
-        job_in.atoms = file_atoms;
-        job_opt.nb_samps = opt.nb_samps_fdr;        
-        job_opt.rand_seed = opt.rand_seed;
-        for num_sc = 1:nb_scales
-            job_in.partition = pipeline.(['stability_maps_ind_' list_subject{num_s}]).files_out.partition_core{num_sc};
-            label_scale = ['sci' num2str(opt.scales_maps(num_sc,1)) '_scf' num2str(opt.scales_maps(num_sc,end))];
-            job_out.fdr = [opt.folder_out 'stability_ind' filesep list_subject{num_s} filesep label_scale filesep 'fdr_ind_' list_subject{num_s} '_' label_scale '.mat'];
-            pipeline = psom_add_job(pipeline,['fdr_ind_' list_subject{num_s} '_' label_scale],'niak_brick_fdr_fir',job_in,job_out,job_opt,false);
-        end
-    end
-end
-
-%% Build individual FIR based on group clusters
-if opt.flag_group&&~opt.flag_roi
-    for num_s = 1:nb_subject
-        clear job_in job_out job_opt
-        job_in.fir_all = files_tseries{num_s};
-        job_in.atoms = file_atoms;
-        job_opt.nb_samps = opt.nb_samps_fdr;        
-        job_opt.rand_seed = opt.rand_seed;
+        job_in.fmri       = cell_fmri(ismember({labels_file(:).subject},subject));
         for num_sc = 1:nb_scales
             label_scale = ['sci' num2str(opt.scales_maps(num_sc,1)) '_scg' num2str(opt.scales_maps(num_sc,2)) '_scf' num2str(opt.scales_maps(num_sc,end))];
-            job_in.partition = pipeline.(['stability_maps_group_' label_scale]).files_out.partition_core{1};
-            job_out.fdr = [opt.folder_out 'stability_group' filesep list_subject{num_s} filesep label_scale filesep 'fdr_group_' list_subject{num_s} '_' label_scale '.mat'];
-            pipeline = psom_add_job(pipeline,['fdr_group_' list_subject{num_s} '_' label_scale],'niak_brick_fdr_fir',job_in,job_out,job_opt,false);
+            job_in.mask.(label_scale) = pipeline.(['stability_maps_group_' label_scale]).files_out.partition_core{1};
         end
+        job_in.timing     = cell_timing(ismember({labels_file(:).subject},subject));
+        job_out           = [opt.folder_out 'stability_group' filesep 'fir' filesep 'fir_group_level_' list_subject{num_s} '.mat'];
+        job_opt           = opt.fir;
+        job_opt.name_condition = opt.name_condition;
+        job_opt.name_baseline  = opt.name_baseline;
+        files_fir_group{num_s}  = job_out;
+        pipeline = psom_add_job(pipeline,['fir_group_level_' subject],'niak_brick_fir_tseries',job_in,job_out,job_opt);
     end
-
+    
+    %% Group-level tests
     clear job_in job_out job_opt
-    job_in.fir_all = files_tseries;
-    job_in.atoms = file_atoms;
-    job_opt.nb_min_fir = opt.nb_min_fir;
-    job_opt.nb_samps = opt.nb_samps_fdr;    
-    job_opt.rand_seed = opt.rand_seed;
+    job_in.fir = files_fir_group; 
+    job_opt = opt.fdr_fir;
     for num_sc = 1:nb_scales
         label_scale = ['sci' num2str(opt.scales_maps(num_sc,1)) '_scg' num2str(opt.scales_maps(num_sc,2)) '_scf' num2str(opt.scales_maps(num_sc,end))];
         job_in.partition = pipeline.(['stability_maps_group_' label_scale]).files_out.partition_core{1};
         job_out.fdr = [opt.folder_out 'stability_group' filesep label_scale filesep 'fdr_group_average_' label_scale '.mat'];
+        job_opt.network = label_scale;
         pipeline = psom_add_job(pipeline,['fdr_group_average_' label_scale],'niak_brick_fdr_fir',job_in,job_out,job_opt,false);
-    end
-end
-
-%% Build individual FIR based on mixed clusters
-if opt.flag_mixed&&~opt.flag_roi
-    for num_s = 1:nb_subject
-        clear job_in job_out job_opt
-        job_in.fir_all = files_tseries{num_s};
-        job_in.atoms = file_atoms;
-        job_opt.nb_samps = opt.nb_samps_fdr;        
-        job_opt.rand_seed = opt.rand_seed;
-        for num_sc = 1:nb_scales
-            job_in.partition = pipeline.(['stability_maps_mixed_' list_subject{num_s}]).files_out.partition_core{num_sc};
-            label_scale = ['sci' num2str(opt.scales_maps(num_sc,1)) '_scf' num2str(opt.scales_maps(num_sc,end))];
-            job_out.fdr = [opt.folder_out 'stability_mixed' filesep list_subject{num_s} filesep label_scale filesep 'fdr_mixed_' list_subject{num_s} '_' label_scale '.mat'];
-            pipeline = psom_add_job(pipeline,['fdr_mixed_' list_subject{num_s} '_' label_scale],'niak_brick_fdr_fir',job_in,job_out,job_opt,false);
-        end
-    end
+    end    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%

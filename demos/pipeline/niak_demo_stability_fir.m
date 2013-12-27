@@ -114,10 +114,5 @@ opt.fir.max_interpolation = 15;      % Allow interpolations of up to 15 seconds 
 %% FDR estimation
 opt.nb_samps_fdr = 100; % The number of samples to estimate the false-discovery rate
 
-%% Multi-level options
-opt.flag_ind = false;   % Generate maps/FIR at the individual level
-opt.flag_mixed = false; % Generate maps/FIR at the mixed level (group-level networks mixed with individual stability matrices).
-opt.flag_group = true;  % Generate maps/FIR at the group level
-
 %% Generate the pipeline
 [pipeline,opt_pipe] = niak_pipeline_stability_fir(files_in,opt);
