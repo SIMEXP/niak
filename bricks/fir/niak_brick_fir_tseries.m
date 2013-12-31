@@ -335,13 +335,13 @@ for num_m = 1:length(list_mask)
         end           
    end
    %% Reshape the FIR_ALL array   
+   res.(list_mask{num_m}).fir_all = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
    if max(nb_fir_tot(num_m)) > 0
-        pos = 1;
-        res.(list_mask{num_m}).fir_all = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
+        pos = 1;        
         for num_r = 1:length(files_in.fmri)
             res.(list_mask{num_m}).fir_all(:,:,pos:(pos+nb_events(num_r,num_m)-1),:) = fir_all_tot{num_r,num_m};
             pos = pos + nb_events(num_r,num_m);
-        end
+        end    
     end   
     %% append the results
     save(files_out,'-struct','-append','res');

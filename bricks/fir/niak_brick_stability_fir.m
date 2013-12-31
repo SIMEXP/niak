@@ -215,7 +215,7 @@ end
 if opt.flag_verbose
     fprintf('Read the FIR estimates ...\n');
 end
-data = load(files_in)
+data = load(files_in);
 nb_fir_tot = data.(opt.network).nb_fir_tot;
 time_samples = data.(opt.network).time_samples;
 fir_all = data.(opt.network).fir_all;
