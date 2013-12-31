@@ -333,7 +333,10 @@ for num_m = 1:length(list_mask)
             opt_norm.type = 'fir_shape';    
             res.(list_mask{num_m}).fir_mean = niak_normalize_fir(res.(list_mask{num_m}).fir_mean,[],opt_norm);    
         end           
+   else
+       res.(list_mask{num_m}).fir_mean = fir_mean_tot{num_m};
    end
+   
    %% Reshape the FIR_ALL array   
    res.(list_mask{num_m}).fir_all = zeros([size(fir_all_tot{1,num_m},1) size(fir_all_tot{1,num_m},2) nb_fir_tot(num_m)]);
    if max(nb_fir_tot(num_m)) > 0
