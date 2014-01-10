@@ -43,11 +43,14 @@ function stab = niak_stability_tseries(tseries,opt)
 %
 %       TYPE
 %           (string, default 'bootstrap') how to resample the time series.
-%           Available options : 'bootstrap' , 'mplm', 'scenario'
+%           Available options : 'bootstrap' , 'mplm', 'scenario', 'jackid'
 %
 %       OPT
 %           (structure) the options of the sampling. Depends on
-%           OPT.SAMPLING.TYPE : 
+%           OPT.SAMPLING.TYPE :
+%               'jackid' : jacknife subsampling, identical distribution. By
+%                   default uses 60% timepoints. Can be controlled by
+%                   opt.sampling.opt.perc.
 %               'bootstrap' : see the description of the OPT
 %                   argument in NIAK_BOOTSTRAP_TSERIES. Default is 
 %                   OPT.TYPE = 'CBB' (a circular block bootstrap is
@@ -169,6 +172,11 @@ for num_s = 1:opt.nb_samps
     end
 
     switch opt.sampling.type
+        case 'jackid'
+            opt.sampling.opt = psom_struct_defaults(opt.sampling.opt,{'perc'},{60});
+            ind = randperm(N);
+            ind = ind(1:max(min(floor(opt.sampling.opt.perc*N/100),N),1));
+            tseries_boot = tseries(ind,:);
         case 'subsampling'
             t1 = floor(1+(num_s-1)*delta);
             t2 = t1+L-1;
