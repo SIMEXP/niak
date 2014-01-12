@@ -93,6 +93,10 @@ function tseries_boot = niak_bootstrap_tseries(tseries,opt)
 % THE SOFTWARE.
 
 %% Setting up default inputs
+if nargin < 2
+    opt = struct;
+end
+
 if ~isfield(opt,'dgp')
     opt.dgp = 'CBB';
 end
@@ -126,7 +130,7 @@ end
 flag_ind = opt.independence;
 
 %% In the case an AR1 model is used, estimate the AR1 coefficients
-if strcmp(opt.dgp,'AR1B')|strcmp(opt.dgp,'AR1G')
+if strcmp(opt.dgp,'AR1B')||strcmp(opt.dgp,'AR1G')
     [AR_coeff,res] = sub_estimate_AR(tseries);
     AR_coeff = mean(AR_coeff)*ones(size(AR_coeff));
 end
