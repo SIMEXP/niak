@@ -174,8 +174,8 @@ for num_s = 1:opt.nb_samps
     switch opt.sampling.type
         case 'jackid'
             opt.sampling.opt = psom_struct_defaults(opt.sampling.opt,{'perc'},{60});
-            ind = randperm(N);
-            ind = ind(1:max(min(floor(opt.sampling.opt.perc*N/100),N),1));
+            ind = randperm(T);
+            ind = ind(1:max(min(floor(opt.sampling.opt.perc*N/100),T),1));
             tseries_boot = tseries(ind,:);
         case 'subsampling'
             t1 = floor(1+(num_s-1)*delta);
