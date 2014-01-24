@@ -29,7 +29,7 @@ function [scales,score,scales_final] = niak_msteps(stab,list_scales,opt)
 %       with NaN.
 %
 %   PARAM
-%       (scalar, default 0.5) if PARAM is comprised between 0 and 1, it is 
+%       (scalar, default 0.05) if PARAM is comprised between 0 and 1, it is 
 %       the percentage of squares that need to be explained by the model. 
 %       If PARAM is larger than 1, it is assumed to be an integer, which is 
 %       used directly to set the number of components of the model.
