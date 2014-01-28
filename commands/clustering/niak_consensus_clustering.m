@@ -1,4 +1,4 @@
-function [part,order,sil,intra,inter,hier,nb_classes] = niak_consensus_clustering(stab,opt);
+function [part,order,sil,intra,inter,hier,nb_classes] = niak_brick_consensus_clustering(stab,opt)
 % Consensus clustering based on one or multiple stability matrices
 %
 % SYNTAX :
@@ -82,7 +82,7 @@ function [part,order,sil,intra,inter,hier,nb_classes] = niak_consensus_clusterin
 % See NIAK_BUILD_SILHOUETTE for more infos regarding the un-normalized
 % silhouette criterion, as well as the inter-cluster average stability and
 % the maximal between cluster average stability (noted a and b in the
-% documentation, respectively). 
+% documentation, respectively).
 %
 % If OPT.NB_CLASSES is specified, HIER, INTRA and INTER are not derived 
 % (they are left filled with zeros).
