@@ -243,7 +243,7 @@ for num_s = 1:nb_subject
     job_out = [opt.folder_out 'stability_ind' filesep list_subject{num_s} filesep 'stability_ind_' list_subject{num_s} '.mat'];
     job_opt = opt.stability_ind;
     job_opt.rand_seed = opt.rand_seed;
-    job_opt.nb_classes = list_scales_ind;    
+    job_opt.nb_classes = list_scales_ind;
     if num_s == 1
         pipeline = psom_add_job(pipeline,['stability_ind_' list_subject{num_s}],opt.name_brick_stability_ind,job_in,job_out,job_opt);
     else
@@ -358,7 +358,7 @@ if (opt.flag_ind)&&~isempty(opt.scales_maps)
         else
             pipeline = psom_add_job(pipeline,['stability_maps_ind_' list_subject{num_s}],'niak_brick_stability_maps',job_in,job_out,pipeline.(['stability_maps_ind_' list_subject{1}]).opt,false);
         end
-        
+
         % Figures 
         clear job_in job_out job_opt
         job_in.stability = pipeline.(['stability_ind_' list_subject{num_s}]).files_out;
