@@ -72,10 +72,26 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %       normalization to apply on the individual time series before
 %       clustering. See OPT in NIAK_NORMALIZE_TSERIES.
 %
-%   BOOTSTRAP
-%   	(structure, default circular block bootstrap) specify the
-%       parameters of the bootstrap. See the description of the OPT
-%       argument in NIAK_BOOTSTRAP_TSERIES.
+%   SAMPLING
+%
+%       TYPE
+%           (string, default 'bootstrap') how to resample the time series.
+%           Available options : 'bootstrap' , 'mplm', 'scenario', 'jackid'
+%
+%       OPT
+%           (structure) the options of the sampling. Depends on
+%           OPT.SAMPLING.TYPE :
+%               'jackid' : jacknife subsampling, identical distribution. By
+%                   default uses 60% timepoints. Can be controlled by
+%                   opt.sampling.opt.perc.
+%               'bootstrap' : see the description of the OPT
+%                   argument in NIAK_BOOTSTRAP_TSERIES. Default is 
+%                   OPT.TYPE = 'CBB' (a circular block bootstrap is
+%                   applied).
+%               'mplm' : see the description of the OPT argument in
+%                   NIAK_SAMPLE_MPLM.
+%               'scenario' : see the description of the OPT argument in
+%                   NIAK_SIMUS_SCENARIO
 %
 %   CLUSTERING
 %       (structure, optional) with the following fields :
@@ -84,9 +100,9 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %           (string, default 'hierarchical') the clustering algorithm
 %           Available options : 
 %               'kmeans': k-means (euclidian distance)
-%               'hierarchical': a HAC based on the eta-square distance
+%               'hierarchical_e2': a HAC based on the eta-square distance
 %                   (see NIAK_BUILD_ETA2)
-%               'hierarchical_euclidian' : a HAC based on a squared
+%               'hierarchical' : a HAC based on a squared
 %                   euclidian distance.
 %
 %       OPT
@@ -94,7 +110,7 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %           clustering command. The exact list of options depends on
 %           CLUSTERING.TYPE:
 %               'kmeans' : see OPT in NIAK_KMEANS_CLUSTERING
-%               'hierarchical' or 'hierarchical_euclidian': see OPT in 
+%               'hierarchical' or 'hierarchical_e2': see OPT in 
 %               NIAK_HIERARCHICAL_CLUSTERING
 %
 %   CONSENSUS
