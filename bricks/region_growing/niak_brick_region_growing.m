@@ -49,7 +49,7 @@ function  [files_in,files_out,opt] = niak_brick_region_growing(files_in,files_ou
 %           contains the time series.
 %
 %       VAR_NEIG
-%           (string, default NEIG) the name of the variable that contains
+%           (string, default 'neig') the name of the variable that contains
 %           the neighbourhood structure).
 %
 %       THRE_SIZE
