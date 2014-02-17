@@ -9,8 +9,8 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %
 % FILES_IN 
 %   (string or cell of strings) the name(s) of one or multiple .mat file, 
-%   which contains one variable TSERIES. TSERIES(:,I) is the time series of 
-%   region I. 
+%   which contains one variable TS (OPT.NAME_DATA). TS(:,I) is the time series 
+%   of region I.
 %
 % FILES_OUT
 %   (string) A .mat file which contains the following variables :
@@ -33,7 +33,7 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %
 %   SIL
 %       (matrix S*N) SIL(s,n) is the mean stability contrast associated with
-%       STAB(:,s) and n clusters (the partition being defined using HIER{s}, 
+%       STAB(:,s) and n clusters (the partition being defined using HIER{s},
 %       see below).
 %
 %   INTRA
@@ -50,8 +50,12 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %       (cell of array) HIER{S} is the hierarchy associated with STAB(:,s)
 %
 %
-% OPT           
+% OPT
 %   (structure) with the following fields:
+%
+%   NAME_DATA
+%       (string, default 'tseries'). The name of the variable in the input
+%       file(s) that contains the timeseries
 %
 %   NB_CLASSES
 %       (vector of integer) the number of clusters (or classes) that will
@@ -141,7 +145,7 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%              
+%
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_STABILITY, NIAK_PIPELINE_STABILITY_REST
@@ -156,9 +160,10 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 % Multi-level bootstrap analysis of stable clusters in resting-State fMRI. 
 % Neuroimage 51 (2010), pp. 1126-1139 
 %
-% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2010.
+% Copyright (c) Pierre Bellec
+%   Centre de recherche de l'institut de Gériatrie de Montréal
+%   Département d'informatique et de recherche opérationnelle
+%   Université de Montréal, 2010-2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, stability, bootstrap, time series, consensus
@@ -201,16 +206,31 @@ if ~ischar(files_out)
 end
 
 %% Options
-opt_normalize.type    = 'mean_var';
-opt_clustering.type   = 'hierarchical';
-opt_clustering.opt    = struct();
-opt_sampling.type     = 'bootstrap';
-opt_sampling.opt.type = 'cbb';
-opt_consensus.type    = 'hierarchical';
-list_fields   = {'rand_seed' , 'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'consensus'   , 'sampling'   , 'flag_verbose' , 'flag_test'  };
-list_defaults = {[]          , opt_normalize , 100        , NaN          , opt_clustering , opt_consensus , opt_sampling , true           , false        };
+list_fields   = { 'name_data' , 'rand_seed' , 'normalize' , 'nb_samps' , 'nb_classes' , 'clustering' , 'consensus' , 'sampling' , 'flag_verbose' , 'flag_test'  };
+list_defaults = { 'tseries'   , []          , struct()    , 100        , NaN          , struct()     , struct()    , struct()   , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
-        
+
+% Setup Normalize Defaults
+opt.normalize = psom_struct_defaults(opt.normalize,...
+                { 'type'     },...
+                { 'mean_var' });
+
+% Setup Clustering Defaults
+opt.clustering = psom_struct_defaults(opt.clustering,...
+                 { 'type'         , 'opt'    },...
+                 { 'hierarchical' , struct() });
+
+% Setup Sampling Defaults
+sampling_opt.type = 'cbb';
+opt.sampling = psom_struct_defaults(opt.sampling,...
+               { 'type'      , 'opt'        },...
+               { 'bootstrap' , sampling_opt });
+
+% Setup Consensus Defaults
+opt.consensus = psom_struct_defaults(opt.consensus,...
+                { 'type'         },...
+                { 'hierarchical' });
+
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
     return
@@ -231,14 +251,14 @@ if ischar(files_in)
 end
 
 for num_f = 1:length(files_in)
-    data = load(files_in{num_f});
+    data = load(files_in{num_f}, opt.name_data);
     if num_f == 1
-        tseries = niak_normalize_tseries(data.tseries,opt.normalize);
+        tseries = niak_normalize_tseries(data.(opt.name_data), opt.normalize);
     else
-        tseries = [tseries ; niak_normalize_tseries(data.tseries,opt.normalize)];
+        tseries = [tseries ; niak_normalize_tseries(data.(opt.name_data), opt.normalize)];
     end
 end
-tseries = niak_normalize_tseries(tseries,opt.normalize);
+tseries = niak_normalize_tseries(tseries, opt.normalize);
 
 %% Stability matrix 
 opt_s = rmfield(opt,{'flag_test','consensus','rand_seed'});
