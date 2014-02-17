@@ -41,6 +41,18 @@ function [files_in,files_out,opt] = niak_brick_msteps(files_in,files_out,opt)
 % OPT
 %   (structure) with the following fields.
 %
+%   NAME_SIL
+%       (string, default 'sil') the name of the variable in FILES_IN that
+%       contains the SIL matrix (see FILES_IN).
+%
+%   NAME_STAB
+%       (string, default 'stab') the name of the variable in FILES_IN that
+%       contains the vectorized stability matrix/matrices
+%
+%   NAME_NB_CLASSES
+%       (string, default 'nb_classes') the name of the variable in FILES_IN
+%       that contains the NB_CLASSES vector (see FILES_IN).
+%
 %   PARAM
 %       (scalar, default 0.05) if PARAM is comprised between 0 and 1, it is
 %       the percentage of residual squares unexplained by the model.
@@ -79,9 +91,10 @@ function [files_in,files_out,opt] = niak_brick_msteps(files_in,files_out,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2010-2011
+% Copyright (c) Pierre Bellec
+%   Centre de recherche de l'institut de Gériatrie de Montréal
+%   Département d'informatique et de recherche opérationnelle
+%   Université de Montréal, 2010-2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : BASC, clustering, stability contrast, multi-scale stepwise selection
@@ -123,8 +136,8 @@ list_defaults = {NaN      , NaN     };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
-list_fields   = {'rand_seed' , 'param' , 'neigh'   , 'flag_verbose' , 'flag_test' };
-list_defaults = {[]          , 0.05    , [0.7,1.3] , true           ,false        };
+list_fields   = { 'name_sil' , 'name_stab' , 'name_nb_classes' , 'rand_seed' , 'param' , 'neigh'   , 'flag_verbose' , 'flag_test' };
+list_defaults = { 'sil'      , 'stab'      , 'nb_classes'      , []          , 0.05    , [0.7,1.3] , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if opt.flag_test
@@ -147,13 +160,18 @@ if ischar(files_in)
     if opt.flag_verbose
         fprintf('Reading the stability measure...\n');
     end
-    data = load(files_in);
-    if any(abs(data.sil(:)))
-        [sil_max,scales_max] = niak_build_max_sil(data.sil,data.nb_classes(:),opt.neigh,2);
+    
+    data = load(files_in, opt.name_sil, opt.name_nb_classes, opt.name_stab);
+    sil = data.(opt.name_sil);
+    stab = data.(opt.name_stab);
+    nb_classes = data.(opt.name_nb_classes);
+    
+    if any(abs(sil(:)))
+        [sil_max,scales_max] = niak_build_max_sil(sil, nb_classes(:), opt.neigh, 2);
         opt_msteps.weights = sil_max;
         opt_msteps.param = opt.param;
         opt_msteps.scales_max = scales_max;
-        [scales,score,scales_final] = niak_msteps(data.stab,data.nb_classes(:),opt_msteps);
+        [scales,score,scales_final] = niak_msteps(stab, nb_classes(:), opt_msteps);
     else
         scales_final = [NaN NaN];
         scales = NaN;
