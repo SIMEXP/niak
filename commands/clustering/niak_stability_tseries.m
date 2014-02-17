@@ -43,12 +43,12 @@ function stab = niak_stability_tseries(tseries,opt)
 %
 %       TYPE
 %           (string, default 'bootstrap') how to resample the time series.
-%           Available options : 'bootstrap' , 'mplm', 'scenario', 'jackid'
+%           Available options : 'bootstrap' , 'mplm', 'scenario', 'jacknife'
 %
 %       OPT
 %           (structure) the options of the sampling. Depends on
 %           OPT.SAMPLING.TYPE :
-%               'jackid' : jacknife subsampling, identical distribution. By
+%               'jacknife' : jacknife subsampling, identical distribution. By
 %                   default uses 60% timepoints. Can be controlled by
 %                   opt.sampling.opt.perc.
 %               'bootstrap' : see the description of the OPT
@@ -106,9 +106,9 @@ function stab = niak_stability_tseries(tseries,opt)
 % Neuroimage 51 (2010), pp. 1126-1139
 %
 % Copyright (c) Pierre Bellec
-% Centre de recherche de l'institut de Gériatrie de Montréal,
-% Département d'informatique et de recherche opérationnelle,
-% Université de Montréal, 2010-2011.
+%   Centre de recherche de l'institut de Gériatrie de Montréal
+%   Département d'informatique et de recherche opérationnelle
+%   Université de Montréal, 2010-2014
 % Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, stability, bootstrap, time series
@@ -132,14 +132,25 @@ function stab = niak_stability_tseries(tseries,opt)
 % THE SOFTWARE.
 
 %% Options
-opt_normalize.type    = 'mean_var';
-opt_clustering.type   = 'hierarchical';
-opt_clustering.opt    = struct();
-opt_sampling.type     = 'bootstrap';
-opt_sampling.opt.type = 'cbb';
-list_fields   = {'normalize'   , 'nb_samps' , 'nb_classes' , 'clustering'   , 'sampling'   , 'flag_verbose' };
-list_defaults = {opt_normalize , 100        , NaN          , opt_clustering , opt_sampling , true           };
+list_fields   = { 'nb_classes' , 'nb_samps' , 'normalize'   , 'clustering' , 'sampling' , 'flag_verbose' };
+list_defaults = { NaN          , 100        , struct()      , struct()     , struct()   , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
+
+% Setup Normalize Defaults
+opt.normalize = psom_struct_defaults(opt.normalize,...
+                { 'type'     },...
+                { 'mean_var' });
+
+% Setup Clustering Defaults
+opt.clustering = psom_struct_defaults(opt.clustering,...
+                 { 'type'         , 'opt'    },...
+                 { 'hierarchical' , struct() });
+
+% Setup Sampling Defaults
+sampling_opt.type = 'cbb';
+opt.sampling = psom_struct_defaults(opt.sampling,...
+               { 'type'      , 'opt'        },...
+               { 'bootstrap' , sampling_opt });
 
 %%%%%%%%%%%%%%%%%%%%%%
 %% Stability matrix %%
@@ -172,7 +183,7 @@ for num_s = 1:opt.nb_samps
     end
 
     switch opt.sampling.type
-        case 'jackid'
+        case 'jacknife'
             opt.sampling.opt = psom_struct_defaults(opt.sampling.opt,{'perc'},{60});
             ind = randperm(T);
             ind = ind(1:max(min(floor(opt.sampling.opt.perc*T/100),T),1));
