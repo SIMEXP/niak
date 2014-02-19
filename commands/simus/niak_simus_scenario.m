@@ -24,6 +24,10 @@ function [tseries,opt_s] = niak_simus_scenario(opt)
 %	        (i.e. better SNR at the center of each cluster, and 
 %	        overlaping signals to define the clusters).
 %
+%           'checkerboard': same as mplm, except that (1) clusters are organized as 
+%               dyadic subdivision of a square; (2) a 2D Gaussian filter is applied
+%               in space. 
+%
 %           'stick' : a stick topology, i.e. 1D spatial distance on a segment.
 %               In practice, this is a simple linear model aX + bY + e, 
 %               where X and Y are AR1 independent Gaussian signals, 
@@ -41,6 +45,17 @@ function [tseries,opt_s] = niak_simus_scenario(opt)
 %       N : (integer, default 100) the number of regions.
 %       NB_CLUSTERS : (vector) NB_CLUSTER(I) is the number of clusters 
 %           in partition number I.
+%
+%   Case 'checkerboard'
+%       T : (integer, default 100) the number of time samples.
+%       N : (integer, default 1024) the number of regions. Needs to be 
+%           of the form 2^N
+%       NB_CLUSTERS : (vector, default [2 4 8]) NB_CLUSTER(I) is the number 
+%           of clusters in partition number I. Needs to be of the form 4^N.
+%       FWHM: (scalar, default 1) the full-width at half maximum for a 
+%           2D Gaussian filter applied spatially on the data. 
+%       VARIANCE: (scalar, default 1) the variance of the signal defining clusters. 
+%           The i.i.d. Gaussian noise has a variance of 1.
 %
 %   Case 'two-circles'
 %       N : (integer, default 100) the number of regions (points).
@@ -158,6 +173,48 @@ switch opt.type
         tseries = x*sqrt(var1) + y*sqrt(var2) + sqrt(opt.variance)*randn([opt.t N]);       
         opt_s = NaN;
         
+    case 'checkerboard'
+        opt = psom_struct_defaults(opt,{ 'type' , 't' , 'n'  , 'nb_clusters' , 'variance' , 'fwhm' }, ...
+                                       { NaN    , 100 , 1024 , [4,16]        , 1          , 1      });
+        nb_points = opt.n;
+        if log2(nb_points)~=floor(log2(nb_points))
+            error('Please specify a number of points in the form 2^N')
+        end
+        nb_clusters = opt.nb_clusters;
+        nb_scales = length(nb_clusters);
+        for ss = 1:nb_scales
+            if (log2(nb_clusters(ss))/log2(4))~=floor(log2(nb_clusters(ss))/log2(4))
+                error('Please specify numbers of clusters in the form 4^N')
+            end
+            if nb_clusters(ss)>(nb_points/2)
+                error('The requested number of clusters %i is too large compared to the number of points %i',nb_clusters(ss),nb_points)
+            end
+        end
+        
+        for ss = 1:nb_scales
+            part_tmp = zeros(2^(log2(nb_points)/2),2^(log2(nb_points)/2));
+            nx = sqrt(nb_clusters(ss));
+            dx = size(part_tmp,1)/nx;
+            num_c = 0;
+            for xx = 1:nx
+                for yy = 1:nx
+                    part_tmp(1+(xx-1)*dx:xx*dx,1+(yy-1)*dx:yy*dx) = num_c;
+                    num_c = num_c+1;
+                end
+            end
+            opt_s.space.mpart{ss} = part_tmp(:);
+            opt_s.space.variance{ss} = 1;
+        end        
+        opt_s.time.t = opt.t;
+        opt_s.time.tr = 2;
+        opt_s.time.rho = 0.8;
+        opt_s.noise.variance = 1;        
+        tseries = niak_sample_mplm(opt_s);
+        tseries = reshape(tseries,[opt.t,2^(log2(nb_points)/2),2^(log2(nb_points)/2)]);
+        h = fspecial('gaussian',5,opt.fwhm/sqrt(2*log(2)));
+        for num_t = 1:opt.t
+            tseries(num_t,:,:) = imfilter(squeeze(tseries(num_t,:,:)),h,'same');
+        end
     case 'mplm_var'
         
         nb_points = opt.n;
@@ -175,39 +232,11 @@ switch opt.type
         opt_s.time.rho = 0.8;
         opt_s.noise.variance = 1;
         tseries = niak_sample_mplm(opt_s);
-        
-    case 'squares'
-        list_fields   = {'t' , 'type' };
-        list_defaults = {100 , NaN    };        
-        opt = psom_struct_defaults(opt,list_fields,list_defaults);
-        
-        part1 = zeros([32 32]);
-        part1(1:16,1:16)   = 1;
-        part1(1:16,17:32)  = 2;
-        part1(17:32,1:16)  = 3;
-        part1(17:32,17:32) = 4;
-        
-        part2 = zeros([32 32]);
-        for num1 = 1:4
-            for num2 = 1:4
-                part2((1+(num1-1)*8):(num1*8),(1+(num2-1)*8):(num2*8)) = num1+(num2-1)*8;
-            end            
-        end
-        opt_s.space.mpart{1} = part1(:);
-        opt_s.space.mpart{2} = part2(:);
-        opt_s.space.variance{1} = 1;
-        opt_s.space.variance{2} = 1;
-        opt_s.time.t = opt.t;
-        opt_s.time.tr = 2;
-        opt_s.time.rho = 0.8;
-        opt_s.noise.variance = 1;
-        [tseries,opt_s] = niak_sample_mplm(opt_s);
-        tseries = reshape(tseries,[opt.t 32 32]);
         h = fspecial('gaussian',5,2/sqrt(2*log(2)));
         for num_t = 1:opt.t
             tseries(num_t,:,:) = imfilter(squeeze(tseries(num_t,:,:)),h,'same');
-        end                
-        
+        end
+           
     case 'two-circles'
         list_fields   = {'n' , 'radius', 'std_noise' , 'type' };
         list_defaults = {100 , [1 ; 2] , [0.1 ; 0.1] , NaN    };        

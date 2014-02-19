@@ -181,7 +181,7 @@ for num_k = 1:K
     X(:,nb_c:(nb_c+nb_clust(num_k)-1)) = niak_sample_gsst(opt_t);
     switch opt.space.type
         case 'crisp'
-            B(nb_c:(nb_c+nb_clust(num_k)-1),:) = niak_part2supp(mpart{num_k})';    
+            B(nb_c:(nb_c+nb_clust(num_k)-1),:) = sub_part2supp(mpart{num_k})';    
         case 'gaussian'
             part = mpart{num_k};
             for num_c = 1:nb_clust(num_k)
@@ -206,4 +206,21 @@ if max(opt.noise.variance)>0
     tseries = X*B + E;
 else
     tseries = X*B;
+end
+
+function supp = sub_part2supp(part);
+% Convert a partition of objects using labels into a matrix representation
+% SUPP where SUPP(:,K) is a binary support vector of the Kth cluster.
+% SUPP = SUB_PART2SUPP(PART)
+%
+% INPUTS:
+%   PART (vector length N) a vector of integer labels coding for a partition.
+% OUTPUTS:
+%   SUPP (matrix M*K) where K is the number of labels in PART. 
+N = length(part);
+K = max(part(:));
+
+supp = false([N,K]);
+for num_k = 1:K
+    supp(part == num_k,num_k) = true;
 end
