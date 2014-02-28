@@ -195,7 +195,7 @@ switch opt.type
             part_tmp = zeros(2^(log2(nb_points)/2),2^(log2(nb_points)/2));
             nx = sqrt(nb_clusters(ss));
             dx = size(part_tmp,1)/nx;
-            num_c = 0;
+            num_c = 1;
             for xx = 1:nx
                 for yy = 1:nx
                     part_tmp(1+(xx-1)*dx:xx*dx,1+(yy-1)*dx:yy*dx) = num_c;
