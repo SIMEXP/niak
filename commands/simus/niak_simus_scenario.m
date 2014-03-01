@@ -203,7 +203,7 @@ switch opt.type
                 end
             end
             opt_s.space.mpart{ss} = part_tmp(:);
-            opt_s.space.variance{ss} = 1;
+            opt_s.space.variance{ss} = opt.variance;
         end        
         opt_s.time.t = opt.t;
         opt_s.time.tr = 2;
