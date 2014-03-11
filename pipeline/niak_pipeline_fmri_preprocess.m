@@ -109,7 +109,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       anatomical scan. Additional option:
 %
 %       FLAG_SKIP
-%           (boolean, default false) if the flag is true, do not extract 
+%           (boolean, default true) if the flag is true, do not extract 
 %           PVE maps.
 %
 %   ANAT2FUNC 

@@ -135,7 +135,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       anatomical scan. Additional option:
 %
 %       FLAG_SKIP
-%           (boolean, default false) if the flag is true, do not extract 
+%           (boolean, default true) if the flag is true, do not extract 
 %           PVE maps.
 %
 %   ANAT2FUNC 
@@ -524,7 +524,7 @@ if ischar(opt.civet)
     if isfield(job_opt,'flag_skip')
         job_opt = rmfield(job_opt,'flag_skip');
     end
-    if ~isfield(opt.pve,'flag_skip')||~opt.pve.flag_skip
+    if isfield(opt.pve,'flag_skip')&&~opt.pve.flag_skip
         pipeline = psom_add_job(pipeline,['pve_',subject],'niak_brick_pve',job_in,job_out,job_opt);
     end
     if opt.flag_verbose        
