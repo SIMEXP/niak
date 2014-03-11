@@ -342,7 +342,9 @@ for num_m = 1:length(list_mask)
    if max(nb_fir_tot(num_m)) > 0
         pos = 1;        
         for num_r = 1:length(files_in.fmri)
-            res.(list_mask{num_m}).fir_all(:,:,pos:(pos+nb_events(num_r,num_m)-1),:) = fir_all_tot{num_r,num_m};
+            if nb_events(num_r,num_m)>0
+                res.(list_mask{num_m}).fir_all(:,:,pos:(pos+nb_events(num_r,num_m)-1)) = fir_all_tot{num_r,num_m};
+            end
             pos = pos + nb_events(num_r,num_m);
         end    
     end   
