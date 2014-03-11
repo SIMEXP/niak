@@ -215,6 +215,9 @@ switch opt.type
         for num_t = 1:opt.t
             tseries(num_t,:,:) = imfilter(squeeze(tseries(num_t,:,:)),h,'same');
         end
+        
+        tseries = reshape(tseries, [num_t, nb_points]);
+        
     case 'mplm_var'
         
         nb_points = opt.n;
