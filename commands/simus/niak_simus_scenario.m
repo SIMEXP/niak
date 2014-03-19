@@ -26,7 +26,7 @@ function [tseries,opt_s] = niak_simus_scenario(opt)
 %
 %           'checkerboard': same as mplm, except that (1) clusters are organized as 
 %               dyadic subdivision of a square; (2) a 2D Gaussian filter is applied
-%               in space. 
+%               in space; (3) noise is added (i.e. the noise is not smoothed).
 %
 %           'stick' : a stick topology, i.e. 1D spatial distance on a segment.
 %               In practice, this is a simple linear model aX + bY + e, 
@@ -208,15 +208,23 @@ switch opt.type
         opt_s.time.t = opt.t;
         opt_s.time.tr = 2;
         opt_s.time.rho = 0.8;
-        opt_s.noise.variance = 1;        
+        opt_s.noise.variance = 0;        
         tseries = niak_sample_mplm(opt_s);
-        tseries = reshape(tseries,[opt.t,2^(log2(nb_points)/2),2^(log2(nb_points)/2)]);
-        h = fspecial('gaussian',5,opt.fwhm/sqrt(2*log(2)));
-        for num_t = 1:opt.t
-            tseries(num_t,:,:) = imfilter(squeeze(tseries(num_t,:,:)),h,'same');
+        std_tseries = std(tseries,[],1);        
+        tseries = reshape(tseries,[opt.t,2^(log2(nb_points)/2),2^(log2(nb_points)/2)]);                
+        if opt.fwhm > 0
+            h = fspecial('gaussian',5,opt.fwhm/sqrt(2*log(2)));
+            for num_t = 1:opt.t
+                tseries(num_t,:,:) = imfilter(squeeze(tseries(num_t,:,:)),h,'same');
+            end
         end
+        % Restore original variance
+        tseries = reshape(tseries, [opt.t , nb_points]);
+        std_tseries_new = std(tseries,[],1);
+        weights = std_tseries./std_tseries_new;
+        tseries = tseries .* repmat(weights,[size(tseries,1) 1]);
+        tseries = tseries + randn(size(tseries));
         
-        tseries = reshape(tseries, [num_t, nb_points]);
         
     case 'mplm_var'
         
