@@ -96,10 +96,10 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %         (vector, default []) a list of values to select (if empty, all entries are retained).
 %
 %      MIN
-%         (scalar, default []) only values higher (or equal) than MIN are retained.
+%         (scalar, default []) only values higher (strictly) than MIN are retained.
 %
 %      MAX
-%         (scalar, default []) only values lower (or equal) than MAX are retained. 
+%         (scalar, default []) only values lower (strictly) than MAX are retained. 
 %
 %      OPERATION
 %         (string, default 'or') the operation that is applied to select the frames.
