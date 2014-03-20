@@ -93,7 +93,7 @@ if ~isempty(opt.files_in)
     [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
     for ee = 1:length(fmri_c)
         if strcmp(labels_f(ee).run,'motor')
-            files_in.fmri.(labels(ee).subject).(labels(ee).session).(labels(ee).run) = fmri_c{ee};
+            files_in.fmri.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
         end
     end
 else
