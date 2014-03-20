@@ -40,6 +40,7 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 %   * fMRI preprocessing NIAK_PIPELINE_FMRI_PREPROCESS
 %   * region growing NIAK_PIPELINE_REGION_GROWING
 %   * connectome NIAK_PIPELINE_CONNECTOME
+%   * stability_fir NIAK_PIPELINE_STABILITY_FIR
 %
 % Note that with OPT.FLAG_TARGET on, the region growing and connectome pipelines
 % are fed the output of the preprocessing pipeline. When the flag is off, by contrast,
@@ -131,6 +132,12 @@ path_test_rg.demoniak  = 'gb_niak_omitted'; % The input files are fed directly t
 path_test_rg.reference = [path_test.target 'demoniak_connectome'];
 path_test_rg.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_connectome_demoniak(path_test_rg,opt_pipe),'cc_');
+
+%% Add the test of the connectome pipeline
+path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_fir.reference = [path_test.target 'demoniak_stability_fir'];
+path_test_fir.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,opt_pipe),'fir_');
 
 %% Run the tests
 if ~opt.flag_test

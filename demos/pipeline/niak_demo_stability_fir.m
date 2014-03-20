@@ -83,18 +83,35 @@ if nargin < 2
 end
 
 path_demo = niak_full_path(path_demo);
-opt = psom_struct_defaults(opt,{'folder_out'},{[path_demo,filesep,'stability_fir',filesep]},false);
+opt = psom_struct_defaults(opt, ...
+      {'files_in' , 'folder_out'                                , 'flag_test' }, ...
+      {''         , [path_demo,filesep,'stability_fir',filesep] , false       }, ...
+      false);
 
 %% Grab the results from the NIAK fMRI preprocessing pipeline
-opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
-opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
-files_in = niak_grab_fmri_preprocess(path_demo,opt_g); 
+if ~isempty(opt.files_in)    
+    [cell_files,labels_f] = niak_files2cell(opt.files_in.fmri);
+    for ee = 1:length(cell_files)
+        if strcmp(labels_f(ee).run,'motor')
+            files_in.fmri.(labels(ee).subject).(labels(ee).session).(labels(ee).run) = cell_fmri{ee};
+        end
+    end
+else
+    %% Grab the results from the NIAK fMRI preprocessing pipeline
+    opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
+    opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
+    opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
+    files_in = niak_grab_fmri_preprocess(path_demo,opt_g); 
+end
 
 %% Set the timing of events;
 files_in.timing = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+opt = rmfield(opt,'files_in');
+
+%% Set the conditions
 opt.name_condition = 'motor';
 opt.name_baseline  = 'rest';
+
 %% Set the scales of analysis
 opt.grid_scales = [5 10]'; % Search for stable clusters in the range 10 to 500 
 opt.scales_maps = [  5  5  5  ; ...   % The scales that will be used to generate the maps of brain clusters and stability. 
