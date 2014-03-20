@@ -191,7 +191,7 @@ else
         end
     end
 
-    if isfield(files_in,'areas')&&~isempty(files_in.areas)&&~strcmp(files_in,'gb_niak_omitted')
+    if isfield(files_in,'areas')&&~isempty(files_in.areas)&&~strcmp(files_in.areas,'gb_niak_omitted')
         [path_a,name_a,ext_a] = niak_fileparts(files_in.areas);
         if strcmp(name_a,'template_aal')
             flag_aal = true;
