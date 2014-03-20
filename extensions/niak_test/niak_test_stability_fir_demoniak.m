@@ -1,4 +1,4 @@
-function [pipeline,opt_pipe,files_in] = niak_test_connectome_demoniak(path_test,opt)
+function [pipeline,opt_pipe,files_in] = niak_test_stability_fir_demoniak(path_test,opt)
 % Test the stability_fir pipeline on the preprocessed DEMONIAK dataset
 %
 % SYNTAX:
@@ -17,7 +17,7 @@ function [pipeline,opt_pipe,files_in] = niak_test_connectome_demoniak(path_test,
 %   pipelines will still run. If this flag is used, PATH_TEST.REFERENCE
 %   does not need to be specified.
 % OPT.FILES_IN (structure, default grab the preprocessed demoniak) the input 
-%   files for the connectome pipeline.
+%   files for the stability_fir pipeline.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
@@ -41,7 +41,7 @@ function [pipeline,opt_pipe,files_in] = niak_test_connectome_demoniak(path_test,
 % The preprocessed DEMONIAK dataset can be found in multiple file formats at 
 % the following address: http://www.nitrc.org/frs/?group_id=411
 %
-% This test will apply the connectome pipeline on the preprocessed DEMONIAK
+% This test will apply the stability_fir pipeline on the preprocessed DEMONIAK
 % dataset, and will compare the outputs to a reference version of the
 % results.
 %
@@ -110,7 +110,7 @@ if ~opt.flag_target
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
     opt_c.black_list_target = [path_test.reference 'logs' filesep];
     pipeline = psom_add_job(pipeline,'test_stability_fir_demoniak','niak_test_cmp_files',in_c,out_c,opt_c,false);
-    pipeline.test_connectome.dep = list_jobs;
+    pipeline.test_stability_fir.dep = list_jobs;
 end
 
 %% Run the pipeline

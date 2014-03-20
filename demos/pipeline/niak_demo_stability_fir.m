@@ -90,10 +90,10 @@ opt = psom_struct_defaults(opt, ...
 
 %% Grab the results from the NIAK fMRI preprocessing pipeline
 if ~isempty(opt.files_in)    
-    [cell_files,labels_f] = niak_files2cell(opt.files_in.fmri);
-    for ee = 1:length(cell_files)
+    [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
+    for ee = 1:length(fmri_c)
         if strcmp(labels_f(ee).run,'motor')
-            files_in.fmri.(labels(ee).subject).(labels(ee).session).(labels(ee).run) = cell_fmri{ee};
+            files_in.fmri.(labels(ee).subject).(labels(ee).session).(labels(ee).run) = fmri_c{ee};
         end
     end
 else
