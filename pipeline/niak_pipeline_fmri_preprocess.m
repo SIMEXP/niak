@@ -1,8 +1,5 @@
 function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % Run a pipeline to preprocess fMRI and T1 MRI for a group of subjects.
-% The flowchart of the pipeline is flexible (steps can be skipped using 
-% flags), and the analysis can be further customized by changing the 
-% parameters of any step.
 %
 % SYNTAX:
 % PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT)
@@ -348,6 +345,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 % _________________________________________________________________________
 % COMMENTS:
+% The flowchart of the pipeline is flexible (steps can be skipped using 
+% flags), and the analysis can be further customized by changing the 
+% parameters of any step.
 %
 % NOTE 1:
 % The steps of the pipeline for each individual subjects are the following:
@@ -438,7 +438,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
 % geriatrie de Montreal, Departement d'informatique et recherche 
-% operationnelle, Universite de Montreal, 2010-2012.
+% operationnelle, Universite de Montreal, 2010-2014.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, niak, preprocessing, fMRI, psom
