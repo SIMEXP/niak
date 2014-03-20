@@ -133,7 +133,7 @@ path_test_rg.reference = [path_test.target 'demoniak_connectome'];
 path_test_rg.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_connectome_demoniak(path_test_rg,opt_pipe),'cc_');
 
-%% Add the test of the connectome pipeline
+%% Add the test of the stability_fir pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_stability_fir'];
 path_test_fir.result    = path_test.result;
