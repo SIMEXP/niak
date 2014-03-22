@@ -143,7 +143,7 @@ pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,o
 path_test = [path_test.result 'glm_connectome_unit'];
 opt_glm.flag_test = true;
 opt_glm.psom = opt.psom;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome(path_test,opt_glm,'glmu_');
+pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome(path_test,opt_glm),'glmu_');
 
 %% Run the tests
 if ~opt.flag_test
