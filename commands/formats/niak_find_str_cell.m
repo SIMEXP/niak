@@ -1,44 +1,28 @@
 function mask_f = niak_find_str_cell(cell_str,cell_str2)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_FIND_STR_CELL
-%
 % Test if one of many strings are substrings of another list of strings
 %
 % SYNTAX:
 % MASK_F = NIAK_FIND_STR_CELL(CELL_STR,CELL_STR2)
 % 
-% _________________________________________________________________________
 % INPUTS:
-%
-% CELL_STR      
-%       (string or cell of strings)
-%
-% CELL_STR2     
-%       (string or cell of strings)
+%   CELL_STR  (string or cell of strings)
+%   CELL_STR2 (string or cell of strings)
 % 
-% _________________________________________________________________________
 % OUTPUTS:
-%
-% MASK_F        
-%       (vector) MASK_F(i) equals 1 if CELL_STR{i} contains CELL_STR2{j} 
-%       for any j, 0 otherwise. If one argument is a simple string, it is 
-%       converted into a cell of string with one element.
-%
-% _________________________________________________________________________
+%   MASK_F (vector) MASK_F(i) equals 1 if CELL_STR{i} contains CELL_STR2{j} 
+%      for any j, 0 otherwise. If one argument is a simple string, it is 
+%      converted into a cell of string with one element.
 %
 % SEE ALSO:
+%   NIAK_CMP_STR_CELL
 %
-% NIAK_CMP_STR_CELL
-%
-% _________________________________________________________________________
 % COMMENTS : 
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
-% See licensing information in the code.
-% Keywords : string
-
+%   Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
+%   Centre de recherche de l'institut de geriatrie de Montreal, Departement 
+%   d'informatique et recherche operationnelle, Universite de Montreal, 2010-2014.
+%   Maintainer : pierre.bellec@criugm.qc.ca
+%   See licensing information in the code.
+%   Keywords : string manipulation
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -76,7 +60,7 @@ mask_f = zeros([nb_e 1]);
 
 for num_e = 1:nb_e
     for num_f = 1:nb_f
-        mask_f(num_e) = mask_f(num_e)|~isempty(findstr(cell_str{num_e},cell_str2{num_f}));
+        mask_f(num_e) = mask_f(num_e)||~isempty(strfind(cell_str{num_e},cell_str2{num_f}));
     end
 end
 
