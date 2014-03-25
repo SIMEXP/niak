@@ -110,7 +110,7 @@ if ~opt.flag_target
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
     opt_c.black_list_target = [path_test.reference 'logs' filesep];
     pipeline = psom_add_job(pipeline,'test_stability_fir_demoniak','niak_test_cmp_files',in_c,out_c,opt_c,false);
-    pipeline.test_stability_fir.dep = list_jobs;
+    pipeline.test_stability_fir_demoniak.dep = list_jobs;
 end
 
 %% Run the pipeline
