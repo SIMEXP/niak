@@ -85,7 +85,7 @@ end
 opt = psom_struct_defaults(opt, ...
       { 'files_in'            , 'folder_out'}, ...
       { 'gb_niak_omitted'     , ''          },false);      
-if isemty(opt.folder_out)
+if isempty(opt.folder_out)
     opt.folder_out = [path_demo.stability_fir,'glm_fir',filesep];
 end
 opt.folder_out = niak_full_path(opt.folder_out);
@@ -105,7 +105,7 @@ else
     opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
     opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
     opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
-    files_in = rmfield(niak_grab_fmri_preprocess(path_demo.fmri_preprocess,opt_g),{'mask','areas'}); 
+    files_in = rmfield(niak_grab_fmri_preprocess(path_demo,opt_g),{'mask','areas'}); 
 end
 
 %% Duplicate one run
