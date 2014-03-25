@@ -1,26 +1,26 @@
 function [pipeline,opt_pipe,files_in] = niak_demo_glm_fir(path_demo,opt)
-% This function runs NIAK_PIPELINE_GLM_FIR on the results of NIAK_DEMO_STABILITY_FIR
-% and NIAK_DEMO_FMRI_PREPROCESS
+% This function runs NIAK_PIPELINE_GLM_FIR on the results of NIAK_DEMO_FMRI_PREPROCESS
+%
 % SYNTAX:
 % [PIPELINE,OPT_PIPE,FILES_IN] = NIAK_DEMO_GLM_FIR(PATH_DEMO,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_DEMO.FMRI_PREPROCESS
+% PATH_DEMO
 %   (string) the full path to the preprocessed NIAK demo dataset. The dataset 
 %   can be found at http://www.nitrc.org/frs/?group_id=411
 %
-% PATH_DEMO.STABILITY_FIR
-%   (string) the full path to the results of NIAK_PIPELINE_STABILITY_FIR on the 
-%   demo_niak preprocessed dataset.
-%
 % OPT
 %   (structure, optional) Any argument passed to NIAK_PIPELINE_GLM_FIR
-%   will do here. The demo only changes one default:
+%   will do here. Many parameters are hard-coded though (see code). In addition:
+%
+%   FILES_IN.FMRI
+%      (structure, default grab the preprocessed demoniak) the input files 
+%      from the preprocessing to be fed in the glm_fir pipeline.
 %
 %   FOLDER_OUT
-%      (string, default PATH_DEMO/connectome) where to store the 
+%      (string, default PATH_DEMO/glm_fir) where to store the 
 %      results of the pipeline.
 %
 % _________________________________________________________________________
@@ -77,24 +77,43 @@ niak_gb_vars
 if nargin < 1
     error('Please specify PATH_DEMO')
 end
-path_demo = psom_struct_defaults(path_demo,{'fmri_preprocess','stability_fir'},{NaN,NaN});
-path_demo.fmri_preprocess = niak_full_path(path_demo.fmri_preprocess);
-path_demo.stability_fir = niak_full_path(path_demo.stability_fir);
+path_demo = niak_full_path(path_demo);
+
 if nargin < 2
     opt = struct();
 end
-opt = psom_struct_defaults(opt,{'folder_out'},{[path_demo.stability_fir,'glm_fir',filesep]},false);
+opt = psom_struct_defaults(opt, ...
+      { 'files_in'            , 'folder_out'}, ...
+      { 'gb_niak_omitted'     , ''          },false);      
+if isemty(opt.folder_out)
+    opt.folder_out = [path_demo.stability_fir,'glm_fir',filesep];
+end
 opt.folder_out = niak_full_path(opt.folder_out);
 
+
 %% Grab the results from the NIAK fMRI preprocessing pipeline
-opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
-opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
-files_in = rmfield(niak_grab_fmri_preprocess(path_demo.fmri_preprocess,opt_g),{'mask','areas'}); 
+if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')  
+    files_in = rmfield(opt.files_in,'fmri');
+    [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
+    for ee = 1:length(fmri_c)
+        if strcmp(labels_f(ee).run,'motor')
+            files_in.fmri.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
+        end
+    end
+else
+    %% Grab the results from the NIAK fMRI preprocessing pipeline
+    opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
+    opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
+    opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
+    files_in = rmfield(niak_grab_fmri_preprocess(path_demo.fmri_preprocess,opt_g),{'mask','areas'}); 
+end
+
+%% Duplicate one run
 files_in.fmri.subject1.session2.motor = files_in.fmri.subject1.session1.motor;
 
-%% Now grab the results from the STABILITY_FIR pipeline
-files_in.networks = niak_grab_stability_fir(path_demo.stability_fir).networks;
+%% Now use the NIAK Cambridge s100 template twice 
+files_in.networks.cambridge100 = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
+files_in.networks.cambridge100bis = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
 
 %% Set the timing of events;
 files_in.model.group      = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
@@ -125,4 +144,5 @@ opt.nb_samps = 100;
 opt.nb_batch = 3;
 
 %% Generate the pipeline
+opt = rmfield(opt,'files_in');
 [pipeline,opt_pipe] = niak_pipeline_glm_fir(files_in,opt);
