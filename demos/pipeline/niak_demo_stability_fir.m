@@ -15,6 +15,10 @@ function [pipeline,opt_pipe,files_in] = niak_demo_stability_fir(path_demo,opt)
 %   (structure, optional) Any argument passed to NIAK_PIPELINE_STABILITY_FIR
 %   will do here. The demo only changes one default:
 %
+%   FILES_IN.FMRI
+%      (structure, default grab the preprocessed demoniak) the input files 
+%      from the preprocessing to be fed in the connectome dataset.
+%
 %   FOLDER_OUT
 %      (string, default PATH_DEMO/connectome) where to store the 
 %      results of the pipeline.
