@@ -17,10 +17,10 @@ function [pipeline,opt_pipe,files_in] = niak_demo_stability_fir(path_demo,opt)
 %
 %   FILES_IN.FMRI
 %      (structure, default grab the preprocessed demoniak) the input files 
-%      from the preprocessing to be fed in the connectome dataset.
+%      from the preprocessing to be fed in the stability_fir pipeline.
 %
 %   FOLDER_OUT
-%      (string, default PATH_DEMO/connectome) where to store the 
+%      (string, default PATH_DEMO/stability_fir) where to store the 
 %      results of the pipeline.
 %
 % _________________________________________________________________________
@@ -41,7 +41,7 @@ function [pipeline,opt_pipe,files_in] = niak_demo_stability_fir(path_demo,opt)
 % COMMENTS
 %
 % Note 1:
-% The demo will apply the connectome pipeline on the preprocessed version 
+% The demo will apply the stability_fir pipeline on the preprocessed version 
 % of the DEMONIAK dataset. It is possible to configure the pipeline manager 
 % to use parallel computing using OPT.PSOM, see : 
 % http://code.google.com/p/psom/wiki/PsomConfiguration
@@ -93,7 +93,7 @@ opt = psom_struct_defaults(opt, ...
       false);
 
 %% Grab the results from the NIAK fMRI preprocessing pipeline
-if ~isempty(opt.files_in)    
+if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')    
     files_in = rmfield(opt.files_in,'fmri');
     [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
     for ee = 1:length(fmri_c)

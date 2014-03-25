@@ -93,7 +93,7 @@ opt = psom_struct_defaults(opt,{'files_in','folder_out','flag_test'},{'',[path_d
 %% Set the template
 files_in.network = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
 
-if ~isempty(opt.files_in)
+if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     files_in.fmri = opt.files_in.fmri;
 else
     %% Grab the results from the NIAK fMRI preprocessing pipeline
