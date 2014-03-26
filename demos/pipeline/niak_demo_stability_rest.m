@@ -108,6 +108,7 @@ else
     opt_g.filter.run = {'rest'}; % Just grab the "motor" runs
     files_in = niak_grab_fmri_preprocess(path_demo,opt_g); 
 end
+opt = rmfield(opt,'files_in');
 
 %% Options: grid scales
 if ~isfield(opt,'grid_scales')||isempty(opt.grid_scales)
