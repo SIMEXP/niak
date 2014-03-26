@@ -1,15 +1,15 @@
-function [pipeline,opt_pipe,files_in] = niak_test_glm_fir_demoniak(path_test,opt)
-% Test the glm_fir pipeline on the preprocessed DEMONIAK dataset
+function [pipeline,opt_pipe,files_in] = niak_test_glm_connectome_demoniak(path_test,opt)
+% Test the glm_connectome pipeline on the preprocessed DEMONIAK dataset
 %
 % SYNTAX:
-% [PIPELINE,OPT] = NIAK_TEST_GLM_FIR_DEMONIAK(PATH_TEST,OPT)
+% [PIPELINE,OPT] = NIAK_TEST_GLM_CONNECTOME_DEMONIAK(PATH_TEST,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
 % PATH_TEST.DEMONIAK (string) the path to the (preprocessed) NIAK demo dataset.
 % PATH_TEST.REFERENCE (string) the full path to a reference version of the 
-%   results of the glm_fir pipeline. 
+%   results of the glm_connectome pipeline. 
 % PATH_TEST.RESULT (string) where to store the results of the test.
 %
 % OPT.FLAG_TARGET (boolean, default false) if FLAG_TARGET == true, no comparison
@@ -17,7 +17,7 @@ function [pipeline,opt_pipe,files_in] = niak_test_glm_fir_demoniak(path_test,opt
 %   pipelines will still run. If this flag is used, PATH_TEST.REFERENCE
 %   does not need to be specified.
 % OPT.FILES_IN (structure, default grab the preprocessed demoniak) the input 
-%   files for the glm_fir pipeline.
+%   files for the glm_connectome pipeline.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
@@ -30,10 +30,11 @@ function [pipeline,opt_pipe,files_in] = niak_test_glm_fir_demoniak(path_test,opt
 % PIPELINE (structure) a formal description of the test pipeline. 
 %   See PSOM_RUN_PIPELINE.
 % OPT_PIPE
-%   (structure) the option to call NIAK_PIPELINE_GLM_FIR
+%   (structure) the option to call NIAK_PIPELINE_GLM_CONNECTOME
+%
 % FILES_IN
 %   (structure) the description of input files used to call 
-%   NIAK_PIPELINE_GLM_FIR
+%   NIAK_PIPELINE_GLM_CONNECTOME
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -41,7 +42,7 @@ function [pipeline,opt_pipe,files_in] = niak_test_glm_fir_demoniak(path_test,opt
 % The preprocessed DEMONIAK dataset can be found in multiple file formats at 
 % the following address: http://www.nitrc.org/frs/?group_id=411
 %
-% This test will apply the glm_fir pipeline on the preprocessed DEMONIAK
+% This test will apply the glm_connectome pipeline on the preprocessed DEMONIAK
 % dataset, and will compare the outputs to a reference version of the
 % results.
 %
@@ -84,7 +85,7 @@ path_test.reference = niak_full_path(path_test.reference);
 path_test.result    = niak_full_path(path_test.result);
 path_logs = [path_test.result 'logs'];
 
-%% Generate the glm_fir pipeline
+%% Generate the glm_connectome pipeline
 if nargin < 2
     opt = struct();
 end
@@ -94,23 +95,23 @@ if strcmp(path_test.reference,'gb_niak_omitted')&&opt.flag_target
 end
 
 opt_demo.files_in = opt.files_in;
-opt_demo.folder_out = [path_test.result 'demoniak_glm_fir' filesep];
+opt_demo.folder_out = [path_test.result 'demoniak_glm_connectome' filesep];
 opt_demo.flag_test = true;
-[pipeline,opt_pipe,files_in] = niak_demo_glm_fir(path_test.demoniak,opt_demo);
+[pipeline,opt_pipe,files_in] = niak_demo_glm_connectome(path_test.demoniak,opt_demo);
 list_jobs = fieldnames(pipeline);
 
 if ~opt.flag_target
-    %% Add a test: comparison of the result of the glm_fir pipeline against the reference
+    %% Add a test: comparison of the result of the glm_connectome pipeline against the reference
     clear in_c out_c opt_c
     in_c.source = {};
     in_c.target = {};
-    out_c = [path_test.result 'report_test_regression_glm_fir_demoniak.csv'];
+    out_c = [path_test.result 'report_test_regression_glm_connectome_demoniak.csv'];
     opt_c.base_source = opt_demo.folder_out;
     opt_c.base_target = path_test.reference;
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
     opt_c.black_list_target = [path_test.reference 'logs' filesep];
-    pipeline = psom_add_job(pipeline,'test_glm_fir_demoniak','niak_test_cmp_files',in_c,out_c,opt_c,false);
-    pipeline.test_glm_fir_demoniak.dep = list_jobs;
+    pipeline = psom_add_job(pipeline,'test_glm_connectome_demoniak','niak_test_cmp_files',in_c,out_c,opt_c,false);
+    pipeline.test_glm_connectome_demoniak.dep = list_jobs;
 end
 
 %% Run the pipeline
