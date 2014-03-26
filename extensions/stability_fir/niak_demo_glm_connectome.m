@@ -117,9 +117,9 @@ files_in.networks.cambridge100bis = [gb_niak_path_niak 'template' filesep 'basc_
 
 %% Set the timing of events;
 files_in.model.group      = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
-files_in.model.individual.subject1.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
 
 %% GLM
 opt.fdr = 0.05; % The maximal false-discovery rate that is tolerated both for individual (single-seed) maps and whole-connectome discoveries, at each particular scale (multiple comparisons across scales are addressed via permutation testing)
