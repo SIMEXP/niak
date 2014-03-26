@@ -98,13 +98,13 @@ if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
     for ee = 1:length(fmri_c)
         if strcmp(labels_f(ee).run,'rest')
-            files_in.fmri.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
+            files_in.data.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
         end
     end
 else
     %% Grab the results from the NIAK fMRI preprocessing pipeline
     opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-    opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
+    opt_g.type_files = 'rest'; % Specify to the grabber to prepare the files for the stability FIR pipeline
     opt_g.filter.run = {'rest'}; % Just grab the "motor" runs
     files_in = niak_grab_fmri_preprocess(path_demo,opt_g); 
 end
