@@ -41,6 +41,9 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 %   * region growing NIAK_PIPELINE_REGION_GROWING
 %   * connectome NIAK_PIPELINE_CONNECTOME
 %   * stability_fir NIAK_PIPELINE_STABILITY_FIR
+%   * glm_fir NIAK_PIPELINE_GLM_FIR
+%   * stability_rest NIAK_PIPELINE_STABILITY_REST
+%   * glm_connectome NIAK_PIPELINE_GLM_CONNECTOME
 %
 % Note that with OPT.FLAG_TARGET on, the region growing and connectome pipelines
 % are fed the output of the preprocessing pipeline. When the flag is off, by contrast,
@@ -143,19 +146,19 @@ pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,o
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_glm_fir'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),'fir_');
+pipe = psom_merge_pipeline(pipe,niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),'glmfir_');
 
 %% Add the test of the stability_rest pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_stability_rest'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),'fir_');
+pipe = psom_merge_pipeline(pipe,niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),'rest_');
 
 %% Add the test of the glm_connectome pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_glm_connectome'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),'fir_');
+pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),'glmconn_');
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
