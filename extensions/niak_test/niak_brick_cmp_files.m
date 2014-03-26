@@ -273,10 +273,15 @@ for num_f = 1:length(files)
                 tab(num_f,11) = NaN; % cannot compute the mean difference
             else
                 tab(num_f,4)  = psom_cmp_var(lx_s,lx_t)&psom_cmp_var(ly_s,ly_t);
-                tab(num_f,9)  = max(abs(tab_s(:)-tab_t(:)));
+                mask_nan_s = isnan(tab_s(:));
+                mask_nan_t = isnan(tab_t(:));
+                flag_same_nan = ~any(mask_nan_s~=mask_nan_t);
+                tab_s(mask_nan_s) = 0;
+                tab_t(mask_nan_t) = 0;
+                tab(num_f,9)  = max(abs(tab_s(:)-tab_t(:)));                
                 tab(num_f,10) = min(abs(tab_s(:)-tab_t(:)));
                 tab(num_f,11) = mean(abs(tab_s(:)-tab_t(:)));
-                tab(num_f,3)  = tab(num_f,4) & (tab(num_f,9) <= opt.eps); % if the labels are identical and the differences are smaller than a tolerance level, consider that the two files are identical
+                tab(num_f,3)  = tab(num_f,4) && flag_same_nan && (tab(num_f,9) <= opt.eps); % if the labels are identical and the differences are smaller than a tolerance level, consider that the two files are identical
             end            
             tab(num_f,12) = NaN; % it's not possible to compute the max correlation
             tab(num_f,13) = NaN; % it's not possible to compute the min correlation
