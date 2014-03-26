@@ -139,6 +139,24 @@ path_test_fir.reference = [path_test.target 'demoniak_stability_fir'];
 path_test_fir.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,opt_pipe),'fir_');
 
+%% Add the test of the glm_fir pipeline
+path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_fir.reference = [path_test.target 'demoniak_glm_fir'];
+path_test_fir.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),'fir_');
+
+%% Add the test of the stability_rest pipeline
+path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_fir.reference = [path_test.target 'demoniak_stability_rest'];
+path_test_fir.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),'fir_');
+
+%% Add the test of the glm_connectome pipeline
+path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_fir.reference = [path_test.target 'demoniak_glm_connectome'];
+path_test_fir.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),'fir_');
+
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
 opt_glm.flag_test = true;
