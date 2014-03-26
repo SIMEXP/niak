@@ -60,13 +60,13 @@ files_in.model.group = '/home/toto/database/models/model_group.csv';
 
 %% Subject 1
 files_in.model.individual.subject1.inter_run = '/home/toto/database/models/individual/subject1/model_inter_run.csv';
-files_in.model.individual.subject1.intra_run.session1_rest.event = '/home/toto/database/models/individual/subject1/intra_run/rest/event_rest.csv';
-files_in.model.individual.subject1.intra_run.session1_rest.covariate = '/home/toto/database/models/individual/subject1/intra_run/rest/covariate_rest.csv';
+files_in.model.individual.subject1.intra_run.session1.rest.event = '/home/toto/database/models/individual/subject1/intra_run/rest/event_rest.csv';
+files_in.model.individual.subject1.intra_run.session1.rest.covariate = '/home/toto/database/models/individual/subject1/intra_run/rest/covariate_rest.csv';
 
 % Subject 2
 files_in.model.individual.subject2.inter_run = '/home/toto/database/models/individual/subject1/model_inter_run.csv';
-files_in.model.individual.subject2.intra_run.session1_rest.event = '/home/toto/database/models/individual/subject1/intra_run/rest/event_rest.csv';
-files_in.model.individual.subject2.intra_run.session1_rest.covariate = '/home/toto/database/models/individual/subject1/intra_effect_diseaserun/rest/covariate_rest.csv';
+files_in.model.individual.subject2.intra_run.session1.rest.event = '/home/toto/database/models/individual/subject1/intra_run/rest/event_rest.csv';
+files_in.model.individual.subject2.intra_run.session1.rest.covariate = '/home/toto/database/models/individual/subject1/intra_effect_diseaserun/rest/covariate_rest.csv';
 
 %%%%%%%%%%%%
 %% Options 

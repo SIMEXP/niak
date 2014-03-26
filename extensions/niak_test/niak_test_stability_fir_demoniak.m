@@ -88,11 +88,15 @@ path_logs = [path_test.result 'logs'];
 if nargin < 2
     opt = struct();
 end
-opt = psom_struct_defaults(opt,{'flag_target','files_in','flag_test','psom'},{false,'gb_niak_omitted',false,struct});
-if strcmp(path_test.reference,'gb_niak_omitted')&&opt.flag_target
+opt = psom_struct_defaults(opt, ...
+      {'flag_target' , 'files_in'        , 'flag_test' , 'psom' }, ...
+      {false         , 'gb_niak_omitted' , false       , struct });
+if strcmp(path_test.reference,'gb_niak_omitted') && ~opt.flag_target
     error('Please specify PATH_TEST.REFERENCE')
 end
 
+path_demo.demoniak = path_test.demoniak;
+path_demo.stability_fir = path_test.stability_fir;
 opt_demo.files_in = opt.files_in;
 opt_demo.folder_out = [path_test.result 'demoniak_stability_fir' filesep];
 opt_demo.flag_test = true;
