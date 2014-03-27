@@ -187,9 +187,9 @@ if opt.nb_samps>0
                     error('%s is an unkown type of measure',type_measure)
             end
             if any(test_null(:))
-                vol_disc_null(num_s) = vol_disc_null(num_s) + sum(ttest_mat(test_null(:))).^2;
+                vol_disc_null(num_s) = vol_disc_null(num_s) + sum(ttest_mat(test_null(:)).^2);
             else
-                vol_disc_null(num_s) = vol_disc_null(num_s) + max(ttest_mat(:))^2;
+                vol_disc_null(num_s) = vol_disc_null(num_s) + max(ttest_mat(:).^2);
             end            
         end
         p_vol_disc = p_vol_disc + double(vol_disc_null(num_s)>=vol_disc);
