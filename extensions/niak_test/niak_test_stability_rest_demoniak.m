@@ -95,8 +95,6 @@ if strcmp(path_test.reference,'gb_niak_omitted') && ~opt.flag_target
     error('Please specify PATH_TEST.REFERENCE')
 end
 
-path_demo.demoniak = path_test.demoniak;
-path_demo.stability_rest = path_test.stability_rest;
 opt_demo.files_in = opt.files_in;
 opt_demo.folder_out = [path_test.result 'demoniak_stability_rest' filesep];
 opt_demo.flag_test = true;
