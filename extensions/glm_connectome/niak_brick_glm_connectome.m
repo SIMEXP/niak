@@ -409,6 +409,11 @@ q = opt.fdr;
 [fdr,test_q] = niak_glm_fdr(pce,opt.type_fdr,q,type_measure);
 nb_discovery = sum(test_q,1);
 perc_discovery = nb_discovery/size(fdr,1);
+if any(niak_mat2lvec(test_q(:)));
+    vol_discovery = sum(ttest_mat(test_q(:))).^2;
+else
+    vol_discovery = max(ttest)^2;
+end
 
 %% Build volumes
 [hdr,mask] = niak_read_vol(files_in.networks);
@@ -465,5 +470,5 @@ end
 
 %% Save results in mat form
 if ~strcmp(files_out.results,'gb_niak_omitted')
-    save(files_out.results,'type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery')
+    save(files_out.results,'type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
 end

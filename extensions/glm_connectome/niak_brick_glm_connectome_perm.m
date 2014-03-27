@@ -144,16 +144,18 @@ if ~isempty(opt.rand_seed)
 end
 
 %% Read the inputs
-nb_disc = 0;
+vol_disc = 0;
 nb_disc_scale = zeros(length(files_in),1);
 perc_disc_scale = zeros(length(files_in),1);
+vol_disc_scale = zeros(length(files_in),1);
 q_hetero = Inf;
 for num_e = 1:length(files_in);
     results = load(files_in{num_e},'model_group','nb_discovery','perc_discovery','test_white','type_measure');
     glm(num_e) = results.model_group;
     nb_disc_scale(num_e) = sum(results.nb_discovery);
     perc_disc_scale(num_e) = mean(results.perc_discovery);
-    nb_disc = nb_disc + nb_disc_scale(num_e);
+    vol_disc_scale(num_e) = results.vol_discovery;
+    vol_disc = vol_disc + vol_disc_scale(num_e);
     q_hetero = min(q_hetero,min(results.test_white.fdr));
     if num_e == 1
         type_measure = results.type_measure;
@@ -165,8 +167,8 @@ if opt.nb_samps>0
     if opt.flag_verbose
         fprintf('Estimate the significance of the number of findings ...\n')
     end
-    p_nb_disc = 0;
-    nb_disc_null = zeros([opt.nb_samps 1]);
+    p_vol_disc = 0;
+    vol_disc_null = zeros([opt.nb_samps 1]);
     opt_glm.test = 'ttest';
     for num_s = 1:opt.nb_samps
         if opt.flag_verbose
@@ -176,15 +178,27 @@ if opt.nb_samps>0
         for num_e = 1:length(glm_null)
             res_null = niak_glm(glm_null(num_e),opt_glm);            
             [fdr_null,test_null] = niak_glm_fdr(res_null.pce,opt.type_fdr,opt.fdr,type_measure);
-            nb_disc_null(num_s) = nb_disc_null(num_s) + double(sum(test_null(:)));
+            switch type_measure
+                case 'correlation'
+                    ttest_mat = niak_lvec2mat (res_null.ttest);        
+                case 'glm'
+                    ttest_mat = reshape (res_null.ttest,[sqrt(length(res_null.ttest)),sqrt(length(res_null.ttest))]);
+                otherwise
+                    error('%s is an unkown type of measure',type_measure)
+            end
+            if any(niak_mat2lvec(test_null(:)));
+                vol_disc_null(num_s) = vol_disc_null(num_s) + sum(ttest_mat(test_null(:))).^2;
+            else
+                vol_disc_null(num_s) = vol_disc_null(num_s) + max(ttest_mat(:))^2;
+            end            
         end
-        p_nb_disc = p_nb_disc + double(nb_disc_null(num_s)>=nb_disc);
+        p_vol_disc = p_vol_disc + double(vol_disc_null(num_s)>=vol_disc);
     end
-    p_nb_disc = p_nb_disc / opt.nb_samps;
+    p_vol_disc = p_vol_disc / opt.nb_samps;
 else
-    p_nb_disc = NaN;
-    nb_disc_null = NaN;    
+    p_vol_disc = NaN;
+    vol_disc_null = NaN;    
 end
 
 %% Save the results 
-save(files_out,'nb_disc','nb_disc_scale','perc_disc_scale','p_nb_disc','nb_disc_null','q_hetero');
+save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null','q_hetero');

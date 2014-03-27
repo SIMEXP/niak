@@ -102,25 +102,42 @@ end
 
 %% The brick starts here
 list_test = fieldnames(files_in);
-nb_disc = zeros([length(list_test) length(opt.label_network)]);
 perc_disc = zeros([length(list_test) length(opt.label_network)]);
-p_nb_disc = zeros([length(list_test) 1]);
+p_vol_disc = zeros([length(list_test) 1]);
 hetero = zeros([length(list_test) 1]);
 for num_test = 1:length(list_test)
     test = list_test{num_test};
     for num_b = 1:length(files_in.(test))
-        data = load(files_in.(test){num_b},'p_nb_disc','nb_disc_scale','perc_disc_scale','q_hetero');
-        if num_b == 1
-            nb_disc(num_test,:) = data.nb_disc_scale(:)';
+        data = load(files_in.(test){num_b},'p_vol_disc','vol_disc_scale','perc_disc_scale','q_hetero');
+        if num_b == 1            
             perc_disc(num_test,:) = data.perc_disc_scale(:)';
             hetero(num_test) = data.q_hetero;
         end
-        p_nb_disc(num_test) = p_nb_disc(num_test) + data.p_nb_disc;
+        p_vol_disc(num_test) = p_vol_disc(num_test) + data.p_vol_disc;
     end    
-    p_nb_disc(num_test) = p_nb_disc(num_test) / length(files_in.(test));
+    p_vol_disc(num_test) = p_vol_disc(num_test) / length(files_in.(test));
 end
 
+%% Sort scales
+scale_num = zeros(length(opt.label_network(:)),1);
+for ss = 1:length(scale_num)
+    scale = opt.label_network(ss);
+    ind = regexp(scale,'\d');
+    if ~isempty(ind)
+        if length(ind)==1
+            scale_num = str2num(scale(ind));
+        else
+            ind_s = find((ind(2:end)-ind(1:end-1))>1,1,'last');
+            if isempty(ind_s)
+                scale_num = str2num(scale(ind(1):ind(end)));
+            else
+                scale_num = str2num(scale(ind(ind_s):ind(end)));
+            end
+        end
+    end
+end
+[val,order] = sort(scale_num);
 %% Write results
 opt_w.labels_x = list_test;
-opt_w.labels_y = [opt.label_network(:)' {'p','sig','heteroscedasticity_q_min','heteroscedasticity_test'}];
-niak_write_csv(files_out,[perc_disc,p_nb_disc,p_nb_disc<=(opt.p/length(list_test)),hetero,hetero<=(0.2/(length(opt.label_network)*length(list_test)))],opt_w);
+opt_w.labels_y = [opt.label_network(order)' {'p'}];
+niak_write_csv(files_out,[perc_disc(:,order),p_vol_disc],opt_w);
