@@ -409,7 +409,7 @@ q = opt.fdr;
 [fdr,test_q] = niak_glm_fdr(pce,opt.type_fdr,q,type_measure);
 nb_discovery = sum(test_q,1);
 perc_discovery = nb_discovery/size(fdr,1);
-if any(niak_mat2lvec(test_q(:)));
+if any(test_q(:))
     vol_discovery = sum(ttest_mat(test_q(:))).^2;
 else
     vol_discovery = max(ttest)^2;
