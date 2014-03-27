@@ -412,7 +412,7 @@ perc_discovery = nb_discovery/size(fdr,1);
 if any(test_q(:))
     vol_discovery = sum(ttest_mat(test_q(:))).^2;
 else
-    vol_discovery = max(ttest)^2;
+    vol_discovery = max(ttest.^2);
 end
 
 %% Build volumes
