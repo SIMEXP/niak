@@ -121,17 +121,17 @@ end
 %% Sort scales
 scale_num = zeros(length(opt.label_network(:)),1);
 for ss = 1:length(scale_num)
-    scale = opt.label_network(ss);
+    scale = opt.label_network{ss};
     ind = regexp(scale,'\d');
     if ~isempty(ind)
         if length(ind)==1
-            scale_num = str2num(scale(ind));
+            scale_num(ss) = str2num(scale(ind));
         else
             ind_s = find((ind(2:end)-ind(1:end-1))>1,1,'last');
             if isempty(ind_s)
-                scale_num = str2num(scale(ind(1):ind(end)));
+                scale_num(ss) = str2num(scale(ind(1):ind(end)));
             else
-                scale_num = str2num(scale(ind(ind_s):ind(end)));
+                scale_num(ss) = str2num(scale(ind(ind_s+1):ind(end)));
             end
         end
     end
