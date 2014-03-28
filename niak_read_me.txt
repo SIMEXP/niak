@@ -3,12 +3,14 @@ Details about the project can be found at https://code.google.com/p/niak
 
 = Active contributors = 
 
-Pierre Bellec (1,2,4), Christian Danserau (1,2), Felix Carbonell (3,4)
+Pierre Bellec (1,2,4*), Yassine Benhajali (1,5), Felix Carbonell (3,4*), Francois Chouinard-Decortes (1,4), Christian Danserau (1,2), Sebastian Urchs (1,4), 
 
 1: Centre de recherche de l'institut de gériatrie de Montréal
 2: Département d'informatique et de recherche opérationnelle, Université de Montréal, Canada
 3: Biospective Inc., Canada (biospective.com)
-4: Former affiliation: Montreal Neurological Institute, McGill University, Canada
+4: Montreal Neurological Institute, McGill University, Canada
+5: Département d'anthropologie, Université de Montréal, Canada
+*: former affiliation
 
 = License =
 
