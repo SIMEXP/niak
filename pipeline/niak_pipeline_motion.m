@@ -234,7 +234,8 @@ end
 %% Estimate the between-session motion parameters 
 list_run_ref = fieldnames(fmri_s.(subject).(session_ref));
 for num_s = 1:length(list_session)
-    session = list_session{num_s};   
+    session = list_session{num_s};  
+    list_run = fieldnames(fmri_s.(subject).(session)); 
     if ~strcmp(session,session_ref)        
         clear job_in job_out job_opt
         name_job_source     = ['motion_target_'   subject '_' session     '_' list_run{run_ref} ];           
