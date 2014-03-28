@@ -193,3 +193,21 @@ end
 
 %% Save the results 
 save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null');
+
+%%%%%%%
+%% SUBFUNCTION
+%%%%%%%
+function [fdr,test_q] = sub_fdr(pce,type_fdr,q,nt,nn)
+
+pce_m = reshape(pce,[nt nn]);
+
+switch type_fdr
+    case 'global'
+        [fdr,test_q] = niak_fdr(pce(:),'BH',q);
+        fdr = niak_lvec2mat(fdr');
+        test_q = niak_lvec2mat(test_q',0);    
+    case 'LSL'
+        [fdr,test_q] = niak_fdr(pce_m,'LSL',q);    
+    otherwise
+        error('%s is an unknown procedure to control the FDR',type_fdr)
+end
