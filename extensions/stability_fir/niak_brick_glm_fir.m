@@ -405,6 +405,11 @@ q = opt.fdr;
 [fdr,test_q] = sub_fdr(pce,opt.type_fdr,q,nt,nn);
 nb_discovery = sum(test_q,1);
 perc_discovery = nb_discovery/size(fdr,1);
+if any(test_q(:))
+    vol_discovery = sum(ttest(test_q(:)).^2);
+else
+    vol_discovery = max(ttest(:).^2);
+end
 
 %% Build volumes
 if ~strcmp(files_out.(network).perc_discovery,'gb_niak_omitted')||~strcmp(files_out.(network).fdr,'gb_niak_omitted')||~strcmp(files_out.(network).effect,'gb_niak_omitted')||~strcmp(files_out.(network).std_effect,'gb_niak_omitted')
@@ -460,7 +465,7 @@ end
 
 %% Save results in mat form
 if ~strcmp(files_out.(network).results,'gb_niak_omitted')
-    save(files_out.(network).results,'model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery')
+    save(files_out.(network).results,'model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
 end
 end
 

@@ -144,19 +144,21 @@ if ~isempty(opt.rand_seed)
 end
 
 %% Read the inputs
-nb_disc = 0;
+vol_disc = 0;
 nb_disc_scale = zeros(length(files_in),1);
 perc_disc_scale = zeros(length(files_in),1);
+vol_disc_scale = zeros(length(files_in),1);
 q_hetero = Inf;
 nt = zeros([length(files_in),1]);
 nn = zeros([length(files_in),1]);
 for num_e = 1:length(files_in);    
-    results = load(files_in{num_e},'model_group','nb_discovery','perc_discovery','type_measure','ttest');
+    results = load(files_in{num_e},'model_group','nb_discovery','perc_discovery','type_measure','ttest','vol_discovery');
     [nt(num_e),nn(num_e)] = size(results.ttest);    
     glm(num_e) = results.model_group;
     nb_disc_scale(num_e) = sum(results.nb_discovery);
     perc_disc_scale(num_e) = mean(results.perc_discovery);
-    nb_disc = nb_disc + nb_disc_scale(num_e);        
+    vol_disc_scale(num_e) = results.vol_discovery;
+    vol_disc = vol_disc + vol_disc_scale(num_e);
 end
 
 %% Generate samples under the null 
@@ -164,8 +166,8 @@ if opt.nb_samps>0
     if opt.flag_verbose
         fprintf('Estimate the significance of the number of findings ...\n')
     end
-    p_nb_disc = 0;
-    nb_disc_null = zeros([opt.nb_samps 1]);
+    p_vol_disc = 0;
+    vol_disc_null = zeros([opt.nb_samps 1]);
     opt_glm.test = 'ttest';
     for num_s = 1:opt.nb_samps
         if opt.flag_verbose
@@ -175,33 +177,19 @@ if opt.nb_samps>0
         for num_e = 1:length(glm_null)
             res_null = niak_glm(glm_null(num_e),opt_glm);                        
             [fdr_null,test_null] = sub_fdr(res_null.pce,opt.type_fdr,opt.fdr,nt(num_e),nn(num_e));
-            nb_disc_null(num_s) = nb_disc_null(num_s) + double(sum(test_null(:)));
+            if any(test_null(:))
+                vol_disc_null(num_s) = vol_disc_null(num_s) + sum(res_null.ttest(test_null(:)).^2);
+            else
+                vol_disc_null(num_s) = vol_disc_null(num_s) + max(res_null.ttest(:).^2);
+            end  
         end
-        p_nb_disc = p_nb_disc + double(nb_disc_null(num_s)>=nb_disc);
+        p_vol_disc = p_vol_disc + double(vol_disc_null(num_s)>=vol_disc);
     end
-    p_nb_disc = p_nb_disc / opt.nb_samps;
+    p_vol_disc = p_vol_disc / opt.nb_samps;
 else
-    p_nb_disc = NaN;
-    nb_disc_null = NaN;    
+    p_vol_disc = NaN;
+    vol_disc_null = NaN;    
 end
 
 %% Save the results 
-save(files_out,'nb_disc','nb_disc_scale','perc_disc_scale','p_nb_disc','nb_disc_null');
-
-%%%%%%%
-%% SUBFUNCTION
-%%%%%%%
-function [fdr,test_q] = sub_fdr(pce,type_fdr,q,nt,nn)
-
-pce_m = reshape(pce,[nt nn]);
-
-switch type_fdr
-    case 'global'
-        [fdr,test_q] = niak_fdr(pce(:),'BH',q);
-        fdr = niak_lvec2mat(fdr');
-        test_q = niak_lvec2mat(test_q',0);    
-    case 'LSL'
-        [fdr,test_q] = niak_fdr(pce_m,'LSL',q);    
-    otherwise
-        error('%s is an unknown procedure to control the FDR',type_fdr)
-end
+save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null');
