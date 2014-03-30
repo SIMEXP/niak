@@ -92,7 +92,7 @@ for kk = 1:k2
         ovlp_tmp(ll) = sum(part1(mask_kk)==ind_ovlp(ll))/k12;
     end
     [ovlp(kk),ind_max] = max(ovlp_tmp);
-    ind2_to_1(kk) = ind_ovlp(ind_max);
+    ind2_to_1(kk) = ind_ovlp(ind_max(ceil(length(ind_max)*rand(1))));
 end
 
 part2_to_1 = zeros(size(part2));
