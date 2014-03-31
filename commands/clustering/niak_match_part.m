@@ -10,7 +10,7 @@ function match = niak_match_part(part1,part2)
 %      or 0, 3, 7, etc or 99100, 99101, etc
 %
 % OUTPUT:
-%   MATCH.IND<1,2> (vector 1xK<1,2>) is the list of cluster in PART<1,2> 
+%   MATCH.INDl<1,2> (vector 1xK<1,2>) is the list of cluster in PART<1,2> 
 %      This is the result of find(part<1,2>
 %   MATCH.OVLP (vector 1xK2) OVLP(k) is the maximal overlap between the kth 
 %      cluster in PART2 and a cluster of PART1.
@@ -23,7 +23,7 @@ function match = niak_match_part(part1,part2)
 %   PART1 and PART2 can also be N-dimensional array, e.g. an image, a volume, etc.
 %
 % EXAMPLE:
-%   f = fspecial("average", 3);
+%   f = fspecial('average', 3);
 %   data = imfilter(rand(8,8),f,'same');
 %   part1 = reshape(niak_kmeans_clustering(data(:)',struct('nb_classes',2)),size(data));
 %   part2 = reshape(niak_kmeans_clustering(data(:)',struct('nb_classes',4)),size(data));
