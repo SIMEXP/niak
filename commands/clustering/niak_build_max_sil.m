@@ -28,7 +28,7 @@ function [sil_max,scales_max] = niak_build_max_sil(sil,scales,ww,method)
 % INPUTS:
 %
 % SIL
-%       (array) SIL(L,K) is the silhouette with effective scale L and other 
+%       (array) SIL(S,K) is the silhouette with effective scale S and other 
 %       scale parameters K
 %
 % SCALES
@@ -36,7 +36,7 @@ function [sil_max,scales_max] = niak_build_max_sil(sil,scales,ww,method)
 %
 % WW
 %       (scalar) it is a percentage used to set the window search around
-%       each effective scale L. If WW is a vector, the first and last
+%       each effective scale S. If WW is a vector, the first and last
 %       element will be used to set the percentages.
 %
 % METHOD
