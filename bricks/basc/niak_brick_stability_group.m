@@ -24,7 +24,7 @@ function [files_in,files_out,opt] = niak_brick_stability_group(files_in,files_ou
 %       (string, default 'gb_niak_omitted') the name of a CSV file. 
 %       Example :
 %                 , SEX , HANDEDNESS
-%       <SUBJECT> , 0   , 0 
+%       <SUBJECT> , 0   , 0
 %       This type of file can be generated with Excel (save under CSV).
 %       The infos will be used to "stratify" the data, i.e. resampling of
 %       the data will be restricted within groups of subjects that share 
@@ -147,13 +147,13 @@ function [files_in,files_out,opt] = niak_brick_stability_group(files_in,files_ou
 %   FLAG_VERBOSE 
 %       (boolean, default 1) if the flag is 1, then the function prints 
 %       some infos during the processing.
-%           
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%              
+%
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_STABILITY_REST, NIAK_PIPELINE_STABILITY_MULTI

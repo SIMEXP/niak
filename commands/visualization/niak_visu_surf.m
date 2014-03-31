@@ -1,4 +1,4 @@
-function [ a, cb ] = niak_visu_surf( data, surf, opt);
+function [ a, cb ] = niak_visu_surf( data, surf, opt)
 % Basic viewer for surface data.
 % 
 % SYNTAX:
@@ -12,7 +12,7 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 %
 % SURFACE
 %   (structure) with the following fields:
-%   
+%
 %   COORD
 %      (matrix 3 x V) coordinates of nodes
 %
@@ -30,7 +30,7 @@ function [ a, cb ] = niak_visu_surf( data, surf, opt);
 %      Available options:
 %         'full': left/right bottom/top back/front
 %         'lr'  : left/right
-%       
+% 
 %   LIMIT
 %      (vector 1 x 2, default [min(DATA) max(DATA)]) Min/Max for the scale 
 %      associated with DATA.
@@ -91,7 +91,7 @@ end
 list_fields   = { 'style' , 'limit' , 'title'      , 'background' , 'lighting' , 'material' , 'shading' , 'colormap' };
 list_defaults = { 'lr'    , clim    , inputname(1) , 'white'      , 'phong'    , 'dull'     , 'flat'    , cm         };
 
-if nargin<3 
+if nargin<3
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 else
     opt = psom_struct_defaults(opt,list_fields,list_defaults);

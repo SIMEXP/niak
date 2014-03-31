@@ -6,7 +6,7 @@ function [sil_max,scales_max] = niak_build_max_sil(sil,scales,ww,method)
 % 
 %   N(S) = {K : (1-WW)*S <= SCALES(K,L) <= (1+WW)*S for all L}
 %
-% The maximal silhouette (as a function of S, method 1) is then defined as: 
+% The maximal silhouette (as a function of S, method 1) is then defined as:
 %
 %   SIL_MAX(S) = max_{K in N(S)} ( SIL(S,K) )
 %

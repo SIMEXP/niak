@@ -196,13 +196,13 @@ if strcmp(opt.color_map,'hot_cold')
         per_hot = 1;
     end
     c = niak_hot_cold(256,per_hot);    
-    colormap(c)   
+    colormap(gca, c)   
 elseif strcmp(opt.color_map,'jet_rev')
     c = jet(256);
     c = c(end:-1:1,:);
-    colormap(c)
+    colormap(gca, c)
 else
-    colormap(opt.color_map)
+    colormap(gca, opt.color_map)
 end
 
 if flag_bar
