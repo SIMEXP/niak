@@ -198,10 +198,8 @@ function [num_comp,num_comp_cell,Freq,nb_regions,Inert]=niak_sub_get_stepwise_co
 nb_regions = size(data_tc,2);
 num_comp_tmp = [];
 thr_p = thr_p_s/nb_regions;
-%thr_p = thr_p_s;
 X = regressors;
 clear regressors;
-%h1 = waitbar(0,'Please wait...');
 Freq = zeros(1,size(X,2));
 Inert = zeros(1,size(X,2));
 for k=1:nb_regions
@@ -215,10 +213,8 @@ for k=1:nb_regions
     if nargin == 4
         Inert(num_X) = Inert(num_X)+inertia(k);
     end
-    %waitbar(k/nb_regions,h1)
 end
 num_comp = unique(num_comp_tmp);
-%close(h1)
 
 function [M,num_X,F_out,p_out]=niak_sub_do_stepwise_regression(Y,X,thr,visu)
 
@@ -473,7 +469,7 @@ as = [	[size(x),ones(1,rd-ad(1))];...
 	[size(w),ones(1,rd-ad(3))]     ];
 rs = max(as);
 xa = prod(as,2)>1;
-if sum(xa)>1 & any(any(diff(as(xa,:)),1))
+if (sum(xa)>1) && any(any(diff(as(xa,:)),1))
 	error('non-scalar args must match in size'), end
 
 %-Computation

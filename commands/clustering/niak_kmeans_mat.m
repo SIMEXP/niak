@@ -355,7 +355,11 @@ k2 = max(part2);
 mdice = zeros(k1,k2);
 for nk1 = 1:k1
     for nk2 = 1:k2
-        mdice(nk1,nk2) = 2*sum((part1==nk1)&(part2==nk2))/(sum(part1==nk1)+sum(part2==nk2));
+        if (sum(part1==nk1)~=0)||(sum(part2==nk2)~=0)
+            mdice(nk1,nk2) = 2*sum((part1==nk1)&(part2==nk2))/(sum(part1==nk1)+sum(part2==nk2));
+        else
+            mdice(nk1,nk2) = 1;
+        end
     end
 end
 return
