@@ -134,8 +134,8 @@ for num_e = 1:nb_events
         fprintf('%i - ',num_e);
     end
     %% Test that there are enough time points to perform a reasonable interpolation
-    ind_start = find(time_frames>opt.time_events(num_e),1);
-    ind_end = find(time_frames>(opt.time_events(num_e)+time_samples(end)),1);
+    ind_start = find(time_frames<=opt.time_events(num_e),1,'last');
+    ind_end = find(time_frames>=(opt.time_events(num_e)+time_samples(end)),1,'first');
     if isempty(ind_start)||isempty(ind_end)
         mask_nan(num_e) = true;
         continue
