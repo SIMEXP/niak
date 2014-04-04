@@ -4,7 +4,7 @@ function [files_in, files_out, opt] = niak_brick_stability_average(files_in, fil
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_STABILITY_AVERAGE(FILES_IN, FILES_OUT, OPT)
 %
-% _________________________________________________________________________
+% __________TEST_______________________________________________________________
 % INPUTS:
 % FILES_IN
 %   (string or cell of strings) path or paths to the files to be averaged.
