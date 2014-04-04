@@ -226,7 +226,11 @@ opt_s = rmfield(opt,{'flag_test','consensus','rand_seed','nb_min_fir'});
 if nb_fir_tot < opt.nb_min_fir
     warning('There were not enough FIR trials in this dataset (see OPT.NB_MIN_FIR). I am skipping the stability analysis.');
     nr = size(fir_all,2);
-    stab = niak_mat2vec(zeros(nr,nr));
+    if nr>0
+        stab = niak_mat2vec(zeros(nr,nr));
+    else
+        stab = [];
+    end
     plugin = stab;
 else
     mask_zeros = reshape(fir_all,[size(fir_all,1)*size(fir_all,2),size(fir_all,3)]);
@@ -238,7 +242,16 @@ end
 %% Consensus clustering
 opt_c.clustering = opt.consensus;
 opt_c.flag_verbose = opt.flag_verbose;
-[part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt_c);
+if ~isempty(stab)
+    [part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt_c);
+else
+    part = [];
+    order = [];
+    sil = [];
+    intra = [];
+    inter = [];
+    hier = [];
+end
 
 %% Save outputs
 if opt.flag_verbose
