@@ -8,9 +8,9 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_cores(files_in,fil
 % INPUTS:
 %
 % FILES_IN
-%   CONS
-%   (string) path to the .mat file containing the outputs of the consensus
-%   clustering. The required fieldnames in the file can be specified by
+%   STAB
+%   (string) path to the .mat file containing the estimated stability based on 
+%   the current dataset. The required fieldnames in the file can be specified by
 %   OPT. It contains the following fields:
 %
 %       STAB 
@@ -118,7 +118,8 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_cores(files_in,fil
 %   Montreal Neurological Institute, 2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : BASC, clustering, stability contrast, multi-scale stepwise selection
+% Keywords : BASC, clustering, stability contrast, 
+%            multi-scale stepwise selection
 %
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -147,8 +148,8 @@ if ~exist('files_in','var')||~exist('files_out','var')
 end
 
 %% Files in
-list_fields   = {'cons' , 'part' , 'roi' };
-list_defaults = {NaN    , NaN    , NaN   };
+list_fields   = {'stab' , 'part' , 'roi' };
+list_defaults = { NaN   , NaN    , NaN   };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Files out
@@ -183,12 +184,12 @@ if opt.flag_verbose
         fprintf('Reading the input data...\n');
 end
 
-cons = load(files_in.cons, opt.name_stab);
+stab = load(files_in.stab, opt.name_stab);
 part = load(files_in.part, opt.name_scale, opt.name_part);
 roi  = load(files_in.roi, opt.name_part_roi);
 
 % Grab the data
-stab        = cons.(opt.name_stab);
+stab        = stab.(opt.name_stab);
 scale       = part.(opt.name_scale);
 part        = part.(opt.name_part);
 part_roi    = roi.(opt.name_part_roi);
@@ -204,7 +205,7 @@ for sc_id = 1:nb_scales
     % Capture the correct values
     tmp_stab = stab(:, sc_id);
     tmp_part = part(:, sc_id);
-    
+
     % Make a matrix of the stability vector
     tmp_stab_mat = niak_vec2mat(tmp_stab);
     % Bring the partition into roi space

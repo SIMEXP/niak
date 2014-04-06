@@ -2,7 +2,7 @@ function [files_in,files_out,opt] = niak_brick_stability_consensus(files_in,file
 % Generate consensus clusters based on estimated stability matrices
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = niak_brick_stability_consensus(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_STABILITY_CONSENSUS(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -22,7 +22,11 @@ function [files_in,files_out,opt] = niak_brick_stability_consensus(files_in,file
 %
 %   SCALE
 %       (vector of K integers) the target scales to be
-%       investigated. This has to be specified, even if OPT.FLAG_SCALE_FREE
+%       investigated. This has to be specified
+%
+%   SCALE_TARGET
+%       (vector, optional) the target scales to be investigated when
+%       OPT.FLAG_FIX is set
 %
 %   CLUSTERING
 %      (structure, optional) with the following fields :
@@ -54,6 +58,9 @@ function [files_in,files_out,opt] = niak_brick_stability_consensus(files_in,file
 %   FLAG_VERBOSE
 %      (boolean, default true) turn on/off the verbose.
 %
+%   FLAG_FIND_SCALE
+%       (boolean, default false) find the optimal K clusters for L
+%
 %   FLAG_TEST
 %      (boolean, default false) if the flag is true, the brick does not do anything
 %      but updating the values of FILES_IN, FILES_OUT and OPT.
@@ -75,7 +82,7 @@ function [files_in,files_out,opt] = niak_brick_stability_consensus(files_in,file
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, surface analysis, cortical thickness, stability
-% analysis, bootstrap, jacknife.
+%            analysis, bootstrap, jacknife.
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -122,12 +129,18 @@ end
 opt_clustering.type   = 'hierarchical';
 opt_clustering.opt    = struct();
 
-list_fields   = { 'clustering'   , 'name_stab' , 'name_roi' , 'flag_verbose' , 'scale' , 'rand_seed' , 'flag_test' };
-list_defaults = { opt_clustering , 'stab'      , 'roi'      , true           , NaN     , []          , false       };
+list_fields   = { 'clustering'   , 'name_stab' , 'name_roi' , 'flag_verbose' , 'scale' , 'rand_seed' , 'flag_test' , 'flag_find_scale' , 'scale_target' };
+list_defaults = { opt_clustering , 'stab'      , 'roi'      , true           , NaN     , []          , false       , false             , []          };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 opt.clustering.opt.flag_verbose = opt.flag_verbose;
 opt.clustering = psom_struct_defaults(opt.clustering,{'type','opt'},{'hierarchical',struct});
+
+% If the find_scale flag is set, check if any scales are provided to search
+if opt.flag_find_scale && isempty(opt.scale_target)
+    error(['FLAG_FIND is set but there are no target scales '...
+           'selected for search. Please supply scales to OPT.SCALE_TARGET!\n']);
+end
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -145,14 +158,16 @@ part_roi = roi.(opt.name_roi);
 
 data = load(files_in.stab);
 if ~isfield(data,opt.name_stab)
-    error('I could not find the variable called %s in the file %s',opt.name_stab, files_in.stab)
+    error('I could not find the variable called %s in the file %s',...
+          opt.name_stab, files_in.stab)
 else
     stab = data.(opt.name_stab);
 end
 
 %% Generate consensus clustering
 if isempty(opt.scale)
-    error('Please specify the scale of the stability matrix in OPT.SCALE. Current scale is empty.\n');
+    error(['Please specify the scale of the stability matrix in OPT.SCALE. '...
+           'Current scale is empty.\n']);
 end
 
 % Perform the consensus clustering
@@ -160,11 +175,15 @@ opt_c.clustering = opt.clustering;
 opt_c.flag_verbose = opt.flag_verbose;
 opt_c.nb_classes = opt.scale;
 
-[tmp_part, order, sil, intra, inter, hier, nb_classes] = niak_consensus_clustering(stab,opt_c);
+[tmp_part, order,sil,...
+ intra, inter, hier, nb_classes] = niak_consensus_clustering(stab,opt_c);
 
 for sc_id = 1:length(opt.scale);
     mat = niak_vec2mat(stab(:,sc_id));
-    [sil(:,sc_id),intra(:,sc_id),inter(:,sc_id)] = niak_build_avg_silhouette(mat,hier{sc_id},false);
+    [sil(:,sc_id),...
+     intra(:,sc_id), inter(:,sc_id)] = niak_build_avg_silhouette(mat,...
+                                                                 hier{sc_id},...
+                                                                 false);
 end
 
 % Bring the partition back into the original space
@@ -175,6 +194,25 @@ for part_index = 1:num_part
     part(:,part_index) = niak_part2vol(tmp_part(:, part_index),part_roi);
 end
 
-%% Save the results
-scale = opt.scale;
-save(files_out,'part','scale','order','sil','intra','inter','hier','stab','nb_classes');
+if opt.flag_find_scale
+    % Set the fixed neighbourhood
+    neigh = [0.7,1.3];
+    
+    [sil_max, scales_max] = niak_build_max_sil(sil, opt.scale(:), neigh, 1);
+    
+    % Find the optimal stochastic scales for the target scales
+    scale = scales_max(opt.scale_target)';
+    % Find the indices of the optimal stochastic scales in opt.scale
+    k_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), scale);
+    % Truncate the inputs to reflect the adapted stochastic scales
+    sil = sil(:, k_ind);
+    part = part(:, k_ind);
+    stab = stab(:, k_ind);
+    hier = hier(k_ind);
+    save(files_out,'part','scale','order','sil','intra','inter','hier','stab','nb_classes');
+    
+else
+    %% Save the results
+    scale = opt.scale;
+    save(files_out,'part','scale','order','sil','intra','inter','hier','stab','nb_classes');
+end

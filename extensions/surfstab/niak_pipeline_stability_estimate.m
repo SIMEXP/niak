@@ -159,7 +159,8 @@ stab_files = cell(opt.estimation.nb_batch,1);
 
 % Checking the contents of the file
 for stab_batch_id = 1:opt.estimation.nb_batch
-    stab_batch_out = [opt.folder_out sprintf('stability_atom_%d.mat',stab_batch_id)];
+    stab_batch_out = [opt.folder_out...
+                      sprintf('stability_atom_%d.mat',stab_batch_id)];
 
     stab_batch_opt = rmfield(opt.estimation, 'nb_batch');
     stab_batch_opt.rand_seed = stab_batch_id;
@@ -167,8 +168,10 @@ for stab_batch_id = 1:opt.estimation.nb_batch
     stab_batch_clean = sprintf('clean_%s', stab_batch_name);
 
     pipeline = psom_add_job(pipeline, stab_batch_name, ...
-                        'niak_brick_stability_tseries',files_in, stab_batch_out, stab_batch_opt);
-    pipeline = psom_add_clean(pipeline, stab_batch_clean, pipeline.(stab_batch_name).files_out);
+                            'niak_brick_stability_tseries',files_in,...
+                            stab_batch_out, stab_batch_opt);
+    pipeline = psom_add_clean(pipeline, stab_batch_clean,...
+                              pipeline.(stab_batch_name).files_out);
     stab_files{stab_batch_id} = stab_batch_out;
 end
 
