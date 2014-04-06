@@ -2,7 +2,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 % Estimation of surface space cluster stability
 %
 % SYNTAX:
-% [PIPELINE,OPT] = NIAK_PIPELINE_SURFACE_STABILITY(IN,OPT)
+% [PIPELINE,OPT] = NIAK_PIPELINE_STABILITY_SURF(IN,OPT)
 % ______________________________________________________________________________
 %
 % INPUTS:
@@ -102,6 +102,13 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %   CONSENSUS
 %       (structure, optional) with the following fields
 %
+%       SCALE_TARGET
+%           (vector, default []) The range of the scales for the target
+%           clusters L. If this vector is not empty, then optimal
+%           stochastic clusters K will be determined for each L during the
+%           consensus clustering brick (See 'help
+%           niak_brick_stability_consensus'). Additionally
+%
 %       RAND_SEED
 %           (scalar, default 2) The specified value is used to seed the random
 %           number generator with PSOM_SET_RAND_SEED. If left empty, no action
@@ -160,6 +167,23 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %       argument of PSOM_RUN_PIPELINE. Default values can be used here.
 %       Note that the field PSOM.PATH_LOGS will be set up by the pipeline.
 %
+%   TYPE_TARGET
+%       (string, default 'cons') specifies the type of the target
+%       clustering. Possible values are:
+%
+%           'cons'   : Consensus clustering based on the estimated stability
+%                      of the data in IN.DATA. The scale space for the consensus
+%                      clusters will be taken from OPT.SCALE
+%           'plugin' : Plugin clustering based on a single pass of
+%                      hierarchical clustering on the data in IN.DATA. The
+%                      scale space for the plugin clustering will be taken
+%                      from OPT.SCALE
+%           'manual' : The target cluster will be supplied by the user. If
+%                      this option is selected by the user, an appropriate
+%                      target partition must be supplied in IN.PART.
+%                      Alternatively, if IN.PART contains a file path,
+%                      OPT.TYPE_TARGET will automatically be set to MANUAL.
+%
 %   FLAG_CONS
 %       (boolean, default true) If this is false, we use plugin clustering,
 %       provided no partition is supplied
@@ -192,7 +216,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %
 % See licensing information in the code.
 % Keywords : clustering, surface analysis, cortical thickness, stability
-% analysis, bootstrap, jacknife.
+%            analysis, bootstrap, jacknife.
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -215,7 +239,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 
 %% Seting up default arguments
 if ~exist('in','var')||~exist('opt','var')
-    error('niak:pipeline','syntax: [IN,OPT] = NIAK_PIPELINE_SURFACE_STABILITY(IN,OPT).\n Type ''help niak_pipeline_surface_stability'' for more info.')
+    error('niak:pipeline','syntax: [IN,OPT] = NIAK_PIPELINE_STABILITY_SURF(IN,OPT).\n Type ''help niak_pipeline_stability_surf'' for more info.')
 end
 
 % IN
@@ -224,8 +248,8 @@ list_defaults = { NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' };
 in = psom_struct_defaults(in,list_fields,list_defaults);
 
 % OPT
-list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale'                  ,  'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'flag_cons' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
-list_defaults   = { 'data'      , 'part'      , 'neigh'      , floor(logspace(1,3,10))' ,  NaN          , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , false       , false        , false       , true           , false       };
+list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale'                  ,  'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'type_target' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
+list_defaults   = { 'data'      , 'part'      , 'neigh'      , floor(logspace(1,3,10))' ,  NaN          , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , 'manual'      , false        , false       , true           , false       };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs'];
@@ -254,10 +278,9 @@ opt.stability_atom.average.name_job = 'average_atom';
 opt.stability_atom.sampling = opt.sampling;
 
 % Setup Consensus Clustering Defaults
-cons_opt.flag_scale_free = true;
 opt.consensus = psom_struct_defaults(opt.consensus,...
-                { 'rand_seed' },...
-                { 2           });
+                { 'scale_target' , 'rand_seed' },...
+                { []             , 2           });
 opt.consensus.name_roi = 'part_roi';
 opt.consensus.scale = opt.scale;
 
@@ -292,57 +315,75 @@ if ~isempty(opt.scale) && ~strcmp(in.part, 'gb_niak_omitted')
     end
     warning('You supplied a scale AND a partition file. Please note that the scale you supplied will be overwritten by whatever is in the partition file (%s).\n', in.part);
     opt.scale = [];
+
 elseif isempty(opt.scale) && strcmp(in.part, 'gb_niak_omitted')
     error('You did not supply a scale in opt.scale and you also did not specify a partition in in.part.\n Please supply either a partition or a scale.\n');
+
+end
+
+if ~strcmp(in.part, 'gb_niak_omitted') && ~strcmp(opt.type_target, 'manual')
+    % A partition has been supplied, the target type will be forced to
+    % manual
+    warning('A target partition was supplied by the user. Target cluster type will be forced to manual!\n    old target type: %s\n    target: %s\n', opt.target_type, in.part);
+    opt.target_type = 'manual';
+    
+elseif strcmp(in.part, 'gb_niak_omitted') && strcmp(opt.type_target, 'manual')
+    % User does not provide a target partition but wants to use manual mode
+    error('A target partition was expected because of OPT.TYPE_TARGET = ''manual'' but none was supplied by the user!\n');
+
 end
 
 % Set up the pipeline
 pipe = struct;
 
 %% Start assembling the pipeline
-if ~strcmp(in.part, 'gb_niak_omitted')
-    % A partition was supplied
-    in.part = in.part;
+% Get the neighbourhood matrix if none has been specified
+if strcmp(in.neigh,'gb_niak_omitted')
+    pipe.adjacency_matrix.command = sprintf(['ssurf = niak_read_surf('''','...
+                                             'true,true); %s = ssurf.neigh;'...
+                                             'save(out,''%s'');'],...
+                                            opt.name_neigh, opt.name_neigh);
+    pipe.adjacency_matrix.files_out = [opt.folder_out 'neighbourhood.mat'];
 
 else
-    % Remove the part field in the structure since it only contains a
-    % string
-    in = rmfield(in, 'part');
-    % Get the neighbourhood matrix if none has been specified
-    if strcmp(in.neigh,'gb_niak_omitted')
-        pipe.adjacency_matrix.command = sprintf('ssurf = niak_read_surf('''',true,true); %s = ssurf.neigh; save(out,''%s'');', opt.name_neigh, opt.name_neigh);
-        pipe.adjacency_matrix.files_out = [opt.folder_out 'neighbourhood.mat'];
-        
-    else
-        input = in.neigh;
-        output = [opt.folder_out 'neighbourhood.mat'];
-        pipe.adjacency_matrix.command = sprintf('copyfile(''%s'',''%s'');', input, output);
-        pipe.adjacency_matrix.files_out = output;
-    end
-    
-    in.neigh = pipe.adjacency_matrix.files_out;
-    
-    % Run Region Growing
-    reg_in = in;
-    reg_out = [opt.folder_out sprintf('%s_region_growing_thr%d.mat',opt.name_data, opt.region_growing.thre_size)];
-    reg_opt.region_growing = opt.region_growing;
-    reg_opt.name_data = opt.name_data;
-    pipe = psom_add_job(pipe, 'region_growing', ...
-                        'niak_brick_stability_surf_region_growing',reg_in, reg_out, reg_opt);
+    input = in.neigh;
+    output = [opt.folder_out 'neighbourhood.mat'];
+    pipe.adjacency_matrix.command = sprintf('copyfile(''%s'',''%s'');',...
+                                            input, output);
+    pipe.adjacency_matrix.files_out = output;
+end
 
-    % Check if Consensus Clustering should be performed
-    if opt.flag_cons
+in.neigh = pipe.adjacency_matrix.files_out;
+
+% Run Region Growing
+reg_in = in;
+reg_out = [opt.folder_out sprintf('%s_region_growing_thr%d.mat',...
+           opt.name_data, opt.region_growing.thre_size)];
+reg_opt.region_growing = opt.region_growing;
+reg_opt.name_data = opt.name_data;
+pipe = psom_add_job(pipe, 'region_growing', ...
+                    'niak_brick_stability_surf_region_growing',...
+                    reg_in, reg_out, reg_opt);
+
+% Check if we need to run the stability estimation
+if opt.flag_cores || strcmp(opt.type_target, 'cons')
+    % We need to run the stability estimation
+    fprintf('Stability Estimation will be run\n');
+    
+    % Stability Estimation
+    stab_est_in = pipe.region_growing.files_out;
+    stab_est_opt = opt.stability_atom;
+    pipe_stab_est = niak_pipeline_stability_estimate(stab_est_in, stab_est_opt);
+    % Merge back the stability estimation pipeline with this pipeline
+    pipe = psom_merge_pipeline(pipe, pipe_stab_est);
+    
+end
+
+% See which target option is requested
+switch opt.type_target
+    case 'cons'
         % Perform Consensus Clustering
-        if opt.flag_verbose
-           fprintf('Consensus Clustering selected\n'); 
-        end
-
-        % Stability Estimation
-        stab_est_in = pipe.region_growing.files_out;
-        stab_est_opt = opt.stability_atom;
-        pipe_stab_est = niak_pipeline_stability_estimate(stab_est_in, stab_est_opt);
-        % Merge back the stability estimation pipeline with this pipeline
-        pipe = psom_merge_pipeline(pipe, pipe_stab_est);
+        fprintf('Consensus Clustering selected\n'); 
 
         % Consensus Clustering
         cons_out = sprintf('%sconsensus_partition.mat',opt.folder_out);
@@ -350,64 +391,84 @@ else
         cons_in.roi = pipe.region_growing.files_out;
         cons_opt = opt.consensus;
         pipe = psom_add_job(pipe, 'consensus', ...
-                                'niak_brick_stability_consensus', cons_in, cons_out, cons_opt);
+                            'niak_brick_stability_consensus', ...
+                            cons_in, cons_out, cons_opt);
         sil_in.part = pipe.consensus.files_out;
         core_in.part = pipe.consensus.files_out;
+        core_in.stab = pipe.consensus.files_out;
+        
+        % See if mstep should run
+        if isempty(opt.consensus.scale_target)
+            % Perform Consensus Clustering
+            fprintf(['Mstep will run since OPT.CONSENSUS.SCALE_TARGET '...
+                      'is emtpy\n']);
+            
+            % Run MSTEPS
+            mstep_in = pipe.consensus.files_out;
+            mstep_out.msteps = sprintf('%smsteps.mat',opt.folder_out);
+            mstep_out.table = sprintf('%smsteps_table.mat',opt.folder_out);
+            mstep_opt = opt.msteps;
+            mstep_opt.rand_seed = 1;
 
-        % Run MSTEPS
-        mstep_in = pipe.consensus.files_out;
-        mstep_out.msteps = sprintf('%smsteps.mat',opt.folder_out);
-        mstep_out.table = sprintf('%smsteps_table.mat',opt.folder_out);
-        mstep_opt.rand_seed = 1;
-        mstep_opt = opt.msteps;
+            pipe = psom_add_job(pipe,'msteps',...
+                                'niak_brick_msteps',...
+                                mstep_in, mstep_out, mstep_opt);
 
-        pipe = psom_add_job(pipe,'msteps',...
-                            'niak_brick_msteps',...
-                            mstep_in, mstep_out, mstep_opt);
+            % Create partition from mstep
+            mpart_in.cons       = pipe.consensus.files_out;
+            mpart_in.roi        = pipe.region_growing.files_out;
+            mpart_in.msteps     = pipe.msteps.files_out.msteps;
+            mpart_out = sprintf('%smsteps_part.mat',opt.folder_out);
+            mpart_opt = struct;
 
-        % Create partition from mstep
-        mpart_in.cons       = pipe.consensus.files_out;
-        mpart_in.roi        = pipe.region_growing.files_out;
-        mpart_in.msteps     = pipe.msteps.files_out.msteps;
-        mpart_out = sprintf('%smsteps_part.mat',opt.folder_out);
-        mpart_opt = struct;
+            pipe = psom_add_job(pipe, 'msteps_part',...
+                                'niak_brick_stability_surf_msteps_part',...
+                                mpart_in, mpart_out, mpart_opt);
 
-        pipe = psom_add_job(pipe, 'msteps_part',...
-                            'niak_brick_stability_surf_msteps_part',...
-                            mpart_in, mpart_out, mpart_opt);
-
-        in.part = pipe.msteps_part.files_out;
-        sil_in.part = pipe.msteps_part.files_out;
-        core_in.part = pipe.msteps_part.files_out;
-
-        if opt.flag_cores
-
-            % Run Stable Cores
-            core_in.cons = pipe.consensus.files_out;
-            core_in.roi = pipe.region_growing.files_out;
-            core_out = sprintf('%sstab_core.mat',opt.folder_out);
-            core_opt = struct;
-
-            pipe = psom_add_job(pipe, 'stable_cores', ...
-                                'niak_brick_stability_surf_cores', core_in, core_out, core_opt);
-            in.part = pipe.stable_cores.files_out;
-            sil_in.part = pipe.stable_cores.files_out;
+            in.part = pipe.msteps_part.files_out;
+            sil_in.part = pipe.msteps_part.files_out;
+            core_in.stab = pipe.msteps_part.files_out;
         end
-
-    else
+        
+    case 'plugin'
         % Perform Plugin Clustering
+        fprintf('Plugin Clustering selected\n'); 
+        
+        % Plugin Clustering
         plug_in = pipe.region_growing.files_out;
         plug_opt.scale = opt.scale;
         plug_out = sprintf('%splugin_partition.mat',opt.folder_out);
         pipe = psom_add_job(pipe, 'plugin', ...
-                            'niak_brick_stability_surf_plugin', plug_in, plug_out, plug_opt);
+                            'niak_brick_stability_surf_plugin',...
+                            plug_in, plug_out, plug_opt);
         in.part = pipe.plugin.files_out;
         sil_in.part = pipe.plugin.files_out;
-
-    end
+        core_in.stab = pipe.average_atom.files_out;
+        
+    case 'manual'
+        % Manual Partition was supplied
+        fprintf('An external partition was supplied\n');
+        core_in.stab = pipe.average_atom.files_out;
 
 end
 
+% Check if stable cores are to be performed
+if opt.flag_cores
+    % Run Stable Cores
+    core_in.part = in.part;
+    
+    core_in.roi = pipe.region_growing.files_out;
+    core_out = sprintf('%sstab_core.mat',opt.folder_out);
+    core_opt = struct;
+
+    pipe = psom_add_job(pipe, 'stable_cores', ...
+                        'niak_brick_stability_surf_cores',...
+                        core_in, core_out, core_opt);
+    in.part = pipe.stable_cores.files_out;
+    sil_in.part = pipe.stable_cores.files_out;
+end
+
+% Run the vertex level stability estimation
 for boot_batch_id = 1:opt.stability_vertex.nb_batch
     % Options
     boot_batch_opt = rmfield(opt.stability_vertex, 'nb_batch');
@@ -417,11 +478,13 @@ for boot_batch_id = 1:opt.stability_vertex.nb_batch
     end
 
     % Add job
-    boot_batch_out = sprintf('%sstab_vertex_%d.mat',opt.folder_out, boot_batch_id);
+    boot_batch_out = sprintf('%sstab_vertex_%d.mat',...
+                             opt.folder_out, boot_batch_id);
     batch_name = sprintf('stab_vertex_%d', boot_batch_id);
     batch_clean_name = sprintf('clean_%s', batch_name);
     pipe = psom_add_job(pipe,batch_name, ...
-                        'niak_brick_stability_surf',in,boot_batch_out,boot_batch_opt);
+                        'niak_brick_stability_surf',...
+                        in,boot_batch_out,boot_batch_opt);
     pipe = psom_add_clean(pipe,batch_clean_name,pipe.(batch_name).files_out);
     avg_in{boot_batch_id} = boot_batch_out;
 end
@@ -438,7 +501,7 @@ pipe = psom_add_job(pipe,'average','niak_brick_stability_average', ...
 sil_in.stab = pipe.average.files_out;
 sil_out = [opt.folder_out 'surf_silhouette.mat'];
 sil_opt.flag_verbose = opt.flag_verbose;
-pipe = psom_add_job(pipe, 'silhouette', 'niak_brick_stability_surf_contrast', ...
+pipe = psom_add_job(pipe, 'silhouette', 'niak_brick_stability_surf_contrast',...
                     sil_in, sil_out, sil_opt);
 
                 % Run the pipeline
