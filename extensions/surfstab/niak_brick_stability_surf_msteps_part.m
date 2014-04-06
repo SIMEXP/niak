@@ -51,6 +51,9 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_msteps_part(files_
 %   NAME_HIER
 %       (string, default: 'hier')
 %
+%   NAME_STAB
+%       (string, default: 'stab')
+%
 %   FLAG_VERBOSE
 %       (boolean, default 1) if the flag is 1, then the function
 %       prints some infos during the processing.
@@ -65,7 +68,7 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_msteps_part(files_
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%
+%'part', 'scale', 'scales_clust','part_roi', 'hier', 'stab'
 % OUTPUT VARIABLES:
 %   PART
 %       (array) the target partitions for the desired scales in
@@ -73,12 +76,18 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_msteps_part(files_
 %       dimensions V by K where V is the number of verteces on the surface
 %       and K is the number of scales.
 %
-%   SCALE_CLUST
-%       (vector) the vector with the scales of the output clusters.
+%   SCALE
+%       (vector) the vector with the stochastic scales K used for
+%       replication of the target clusters in SCALE_TARGET
 %
-%   SCALE_REP
-%       (vector) the vector with the optimal scale for the replication of
-%       the target clusters during stability estimation.
+%   SCALE_TARGET
+%       (vector) the vector with the scales of the target clusters.
+%
+%   PART_ROI
+%       (array)
+%
+%   HIER
+%       (cell array) containing the hierarchy corresponding
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -130,8 +139,8 @@ if ~ischar(files_out)
 end
 
 %% Options
-list_fields   = { 'name_part_roi' , 'name_scales_final' , 'name_scales_max' , 'name_hier' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 'part_roi'      , 'scales_final'      , 'scales_max'      , 'hier'      , true           , false       };
+list_fields   = { 'name_part_roi' , 'name_scales_final' , 'name_scales_max' , 'name_hier' , 'name_stab' , 'flag_verbose' , 'flag_test' };
+list_defaults = { 'part_roi'      , 'scales_final'      , 'scales_max'      , 'hier'      , 'stab'      , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if opt.flag_test
@@ -172,28 +181,28 @@ else
     roi = load(files_in.roi, opt.name_part_roi);
     part_roi = roi.(opt.name_part_roi);
     
-    msteps = load(files_in.msteps, opt.name_scales_final, opt.name_scales_max);
+    msteps = load(files_in.msteps, opt.name_scales_final,...
+                  opt.name_scales_max, opt.name_stab);
     scales_final = msteps.(opt.name_scales_final);
     scales_max = msteps.(opt.name_scales_max);
 end
-    
+
 %% Generating the mstep based partition
 num_scales = size(scales_final, 1);
 % Get the optimal scales for the final clusters
-scales_clust = scales_final(:, 2);
+scales_target = scales_final(:, 2);
 % Get the corresponding optimal scales of the stochastic clusters that were
 % used to generate the stability matrices
 scales_stoc = scales_final(:, 1);
 % Get the index of the stochastic scales so we know which hierarchy to pick up
-scales_ind = find(ismember(scales_max(:, 1), scales_stoc));
+k_ind = arrayfun(@(x) find(scales_max(:, 1) == x,1,'first'), scales_stoc);
 
 V = size(part_roi, 1);
 part = zeros(V, num_scales);
-    
+
 for sc_id = 1:num_scales
-    sc_stoc = scales_stoc(sc_id);
-    stoc_ind = scales_ind(sc_id);
-    sc_clust = scales_clust(sc_id);
+    stoc_ind = k_ind(sc_id);
+    sc_clust = scales_target(sc_id);
     sc_hier = hier{stoc_ind};
 
     opt_t.thresh = sc_clust;
@@ -203,9 +212,13 @@ for sc_id = 1:num_scales
     part(:, sc_id) = niak_part2vol(tmp_part, part_roi);
 end
 
+% Truncate the stability matrix to the selected stochastic scales
+stab = stab(:, k_ind);
+hier = hier(k_ind);
+
 %% Save outputs
 if opt.flag_verbose
     fprintf('Saving outputs in a mat file at %s\n',files_out);
 end
 scale = scales_stoc;
-save(files_out, 'part', 'scale', 'scales_clust','part_roi', 'hier');    
+save(files_out, 'part', 'scale', 'scales_target', 'part_roi', 'hier', 'stab');    
