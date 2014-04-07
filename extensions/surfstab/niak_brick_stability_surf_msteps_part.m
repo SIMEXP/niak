@@ -213,7 +213,8 @@ for sc_id = 1:num_scales
 end
 
 % Truncate the stability matrix to the selected stochastic scales
-stab = stab(:, k_ind);
+tmp_stab = msteps.(opt.name_stab);
+stab = tmp_stab(:, k_ind);
 hier = hier(k_ind);
 
 %% Save outputs
