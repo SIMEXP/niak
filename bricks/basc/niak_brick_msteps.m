@@ -177,6 +177,7 @@ if ischar(files_in)
         scales = NaN;
         scales_max = [NaN NaN];
         score = NaN;
+        stab = [NaN NaN]
         warning('All silhouette measures are equal to zero. I am assuming that the data for this subject was not usable')
     end
 
@@ -239,7 +240,7 @@ end
 if opt.flag_verbose
     fprintf('Saving outputs in a mat file\n');
 end
-save(files_out.msteps,'scales','scales_max','score','scales_final');
+save(files_out.msteps,'scales','scales_max','score','scales_final', 'stab');
 
 if opt.flag_verbose
     fprintf('Saving a table of selected scale parameters\n');
