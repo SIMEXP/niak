@@ -201,9 +201,11 @@ if ~isempty(opt.scale_target)
     scale = scales_max(opt.scale_target)';
     % Find the indices of the optimal stochastic scales in opt.scale
     k_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), scale);
+    % Find the indices of the target scales in opt.scale
+    p_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), opt.scale_target);
     % Truncate the inputs to reflect the adapted stochastic scales
     sil = sil(:, k_ind);
-    part = part(:, k_ind);
+    part = part(:, p_ind);
     stab = stab(:, k_ind);
     hier = hier(k_ind);
     save(files_out,'part','scale','order','sil','intra','inter','hier','stab','nb_classes');
