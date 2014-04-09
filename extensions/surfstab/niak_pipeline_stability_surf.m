@@ -393,8 +393,7 @@ switch opt.type_target
         pipe = psom_add_job(pipe, 'consensus', ...
                             'niak_brick_stability_consensus', ...
                             cons_in, cons_out, cons_opt);
-        sil_in.part = pipe.consensus.files_out;
-        core_in.part = pipe.consensus.files_out;
+        in.part = pipe.consensus.files_out;
         core_in.stab = pipe.consensus.files_out;
         
         % See if mstep should run
@@ -426,7 +425,6 @@ switch opt.type_target
                                 mpart_in, mpart_out, mpart_opt);
 
             in.part = pipe.msteps_part.files_out;
-            sil_in.part = pipe.msteps_part.files_out;
             core_in.stab = pipe.msteps_part.files_out;
         end
         
@@ -442,7 +440,6 @@ switch opt.type_target
                             'niak_brick_stability_surf_plugin',...
                             plug_in, plug_out, plug_opt);
         in.part = pipe.plugin.files_out;
-        sil_in.part = pipe.plugin.files_out;
         core_in.stab = pipe.average_atom.files_out;
         
     case 'manual'
@@ -455,6 +452,7 @@ end
 % Check if stable cores are to be performed
 if opt.flag_cores
     % Run Stable Cores
+    core_in.part = in.part;
     core_in.roi = pipe.region_growing.files_out;
     core_out = sprintf('%sstab_core.mat',opt.folder_out);
     core_opt = struct;
@@ -463,7 +461,7 @@ if opt.flag_cores
                         'niak_brick_stability_surf_cores',...
                         core_in, core_out, core_opt);
     in.part = pipe.stable_cores.files_out;
-    sil_in.part = pipe.stable_cores.files_out;
+    
 end
 
 % Run the vertex level stability estimation
@@ -497,6 +495,7 @@ pipe = psom_add_job(pipe,'average','niak_brick_stability_average', ...
 
 % And connect the outputs to the silhouette criterion machine
 sil_in.stab = pipe.average.files_out;
+sil_in.part = in.part;
 sil_out = [opt.folder_out 'surf_silhouette.mat'];
 sil_opt.flag_verbose = opt.flag_verbose;
 pipe = psom_add_job(pipe, 'silhouette', 'niak_brick_stability_surf_contrast',...
