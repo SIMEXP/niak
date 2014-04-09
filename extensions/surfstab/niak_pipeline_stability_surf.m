@@ -167,7 +167,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %       argument of PSOM_RUN_PIPELINE. Default values can be used here.
 %       Note that the field PSOM.PATH_LOGS will be set up by the pipeline.
 %
-%   TYPE_TARGET
+%   TARGET_TYPE
 %       (string, default 'cons') specifies the type of the target
 %       clustering. Possible values are:
 %
@@ -182,7 +182,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %                      this option is selected by the user, an appropriate
 %                      target partition must be supplied in IN.PART.
 %                      Alternatively, if IN.PART contains a file path,
-%                      OPT.TYPE_TARGET will automatically be set to MANUAL.
+%                      OPT.TARGET_TYPE will automatically be set to MANUAL.
 %
 %   FLAG_CONS
 %       (boolean, default true) If this is false, we use plugin clustering,
@@ -321,15 +321,15 @@ elseif isempty(opt.scale) && strcmp(in.part, 'gb_niak_omitted')
 
 end
 
-if ~strcmp(in.part, 'gb_niak_omitted') && ~strcmp(opt.type_target, 'manual')
+if ~strcmp(in.part, 'gb_niak_omitted') && ~strcmp(opt.target_type, 'manual')
     % A partition has been supplied, the target type will be forced to
     % manual
     warning('A target partition was supplied by the user. Target cluster type will be forced to manual!\n    old target type: %s\n    target: %s\n', opt.target_type, in.part);
     opt.target_type = 'manual';
     
-elseif strcmp(in.part, 'gb_niak_omitted') && strcmp(opt.type_target, 'manual')
+elseif strcmp(in.part, 'gb_niak_omitted') && strcmp(opt.target_type, 'manual')
     % User does not provide a target partition but wants to use manual mode
-    error('A target partition was expected because of OPT.TYPE_TARGET = ''manual'' but none was supplied by the user!\n');
+    error('A target partition was expected because of OPT.TARGET_TYOE = ''manual'' but none was supplied by the user!\n');
 
 end
 
@@ -366,7 +366,7 @@ pipe = psom_add_job(pipe, 'region_growing', ...
                     reg_in, reg_out, reg_opt);
 
 % Check if we need to run the stability estimation
-if opt.flag_cores || strcmp(opt.type_target, 'cons')
+if opt.flag_cores || strcmp(opt.target_type, 'cons')
     % We need to run the stability estimation
     fprintf('Stability Estimation will be run\n');
     
@@ -380,7 +380,7 @@ if opt.flag_cores || strcmp(opt.type_target, 'cons')
 end
 
 % See which target option is requested
-switch opt.type_target
+switch opt.target_type
     case 'cons'
         % Perform Consensus Clustering
         fprintf('Consensus Clustering selected\n'); 
