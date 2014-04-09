@@ -248,7 +248,7 @@ list_defaults = { NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' };
 in = psom_struct_defaults(in,list_fields,list_defaults);
 
 % OPT
-list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale'                  ,  'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'type_target' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
+list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale'                  ,  'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'target_type' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
 list_defaults   = { 'data'      , 'part'      , 'neigh'      , floor(logspace(1,3,10))' ,  NaN          , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , 'manual'      , false        , false       , true           , false       };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
