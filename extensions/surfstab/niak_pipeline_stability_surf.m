@@ -455,8 +455,6 @@ end
 % Check if stable cores are to be performed
 if opt.flag_cores
     % Run Stable Cores
-    core_in.part = in.part;
-    
     core_in.roi = pipe.region_growing.files_out;
     core_out = sprintf('%sstab_core.mat',opt.folder_out);
     core_opt = struct;
