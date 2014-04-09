@@ -58,9 +58,6 @@ function [files_in,files_out,opt] = niak_brick_stability_consensus(files_in,file
 %   FLAG_VERBOSE
 %      (boolean, default true) turn on/off the verbose.
 %
-%   FLAG_FIND_SCALE
-%       (boolean, default false) find the optimal K clusters for L
-%
 %   FLAG_TEST
 %      (boolean, default false) if the flag is true, the brick does not do anything
 %      but updating the values of FILES_IN, FILES_OUT and OPT.
@@ -194,7 +191,7 @@ for part_index = 1:num_part
     part(:,part_index) = niak_part2vol(tmp_part(:, part_index),part_roi);
 end
 
-if opt.flag_find_scale
+if ~isempty(opt.scale_target)
     % Set the fixed neighbourhood
     neigh = [0.7,1.3];
     
