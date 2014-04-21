@@ -19,6 +19,9 @@ function [tseries,opt_s] = niak_simus_scenario(opt)
 %           'mplm_var' : a simplified version of the multi-partition linear
 %               model (see NIAK_SAMPLE_MPLM) with hetereogeneous variances.
 %
+%           'onescale' : same as 'mplm' but with a single scale, but the
+%               variance can be specified on a cluster-by-cluster basis.
+%
 %	    'mplm_gaussian' : same as mplm, but with a gaussian spatial 
 %               distribution of the variance associated with each cluster 
 %	        (i.e. better SNR at the center of each cluster, and 
@@ -45,6 +48,15 @@ function [tseries,opt_s] = niak_simus_scenario(opt)
 %       N : (integer, default 100) the number of regions.
 %       NB_CLUSTERS : (vector) NB_CLUSTER(I) is the number of clusters 
 %           in partition number I.
+%
+%   Case 'onescale'
+%       T : (integer, default 100) the number of time samples.
+%       N : (integer, default 1024) the number of regions. Needs to be a multiple of NB_CLUSTERS.
+%       NB_CLUSTERS : (vector, 4) NB_CLUSTER is the number 
+%           of clusters.
+%       VARIANCE: (scalar, default 1) VARIANCE(I) is the variance of the signal 
+%           defining clusters #I. If a single value is specified, all clusters have 
+%           identical variance. The i.i.d. Gaussian noise has a variance of 1.
 %
 %   Case 'checkerboard'
 %       T : (integer, default 100) the number of time samples.
@@ -157,6 +169,25 @@ switch opt.type
         opt_s.noise.variance = 1;
         tseries = niak_sample_mplm(opt_s);
 
+     case 'onescale'
+        opt = psom_struct_defaults(opt,{ 'type' , 't' , 'n'  , 'nb_clusters' , 'variance' }, ...
+                                       { NaN    , 100 , 1024 , 4             , 1          });
+        nb_points = opt.n;
+        nb_clusters = opt.nb_clusters;        
+        part = zeros([1 nb_points]);
+        size_c = (nb_points/nb_clusters);
+        if size_c ~= round(size_c)
+            error('The number of points must be a multiple of the number of clusters');
+        end
+        tmp = repmat(1:nb_clusters,[size_c 1]);
+        opt_s.space.mpart{1} = tmp(:);
+        opt_s.space.variance{1} = opt.variance(:);
+        opt_s.time.t = opt.t;
+        opt_s.time.tr = 2;
+        opt_s.time.rho = 0.8;
+        opt_s.noise.variance = 1;   
+        tseries = niak_sample_mplm(opt_s);
+        
      case 'stick'
         
         N = opt.n;
