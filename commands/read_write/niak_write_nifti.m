@@ -1,67 +1,45 @@
 function [] = niak_write_nifti(hdr,vol)
-% Write a 3D or 3D+t dataset into a NIFTI file (.NII or .IMG/.HDR) or an
-% Analyze 7.5 file (.IMG/.HDR/.MAT).
-% See http://nifti.nimh.nih.gov/nifti-1
+% Write a 3D or 3D+t dataset into a NIFTI file 
 %
-% SYNTAX:
-% [] = NIAK_WRITE_NIFTI(HDR,VOL)
+% SYNTAX: [] = NIAK_WRITE_NIFTI(HDR,VOL)
 %
-% _________________________________________________________________________
 % INPUTS:
+% VOL           (3D or 4D array) a 3D or 3D+t dataset
+% HDR.FILE_NAME (string) the name of the file that will be written.
+% HDR.TYPE      (string, default 'nii') the output format (either 'nii' for 
+%               NIFTI-1 one file data, 'img' for a couple '*.img'/'*.hdr' in 
+%               NIFTI-1 format or 'analyze' for a '*.img'/'*.hdr'/'*.mat')
+% HDR.INFO      (structure) The subfields are optional, yet they give control 
+%               on critical space information. See NIAK_WRITE_VOL for more info.
+% HDR.DETAILS   (structure) the fields are the standard list of a NIFTI header.
 %
-% VOL           
-%       (3D or 4D array) a 3D or 3D+t dataset
-%
-% HDR           
-%       (structure) a header structure (usually modified from the output 
-%       of NIAK_READ_VOL). The relevant fields of HDR are :
-%
-%       FILE_NAME   
-%           (string) the name of the file that will be written.
-%
-%       TYPE   
-%           (string, default 'nii') the output format (either 'nii' for 
-%           NIFTI-1 one file data, 'img' for a couple '*.img'/'*.hdr' in 
-%           NIFTI-1 format or 'analyze' for a '*.img'/'*.hdr'/'*.mat')
-%
-%       INFO 
-%           (structure) The subfields are optional, yet they give control 
-%           on critical space information. See NIAK_WRITE_VOL for more 
-%           info.
-%
-%       DETAILS 
-%           (structure) the fields are the standard list of a NIFTI header.
-%
-% _________________________________________________________________________
 % OUTPUTS:
-%
 % The data called VOL is stored into a file called FILENAME written in
-% nifti format.
-% In the case of ANALYZE 7.5 file format, a file '.MAT' will also be
-% created with the affin transform.
+% nifti format. In the case of ANALYZE 7.5 file format, a file '.MAT' will 
+% also be created with the affine transform.
 % 
-% _________________________________________________________________________
 % SEE ALSO:
-%
 % NIAK_READ_HDR_NIFTI, NIAK_READ_NIFTI, NIAK_WRITE_VOL, NIAK_READ_VOL
 %
-% _________________________________________________________________________
 % COMMENTS:
-%
-% Part of this file is copied and modified under GNU license from
-% MRI_TOOLBOX developed by CNSP in Flinders University, Australia
-%
-% Important parts of this code are copied and modified from a matlab
-% toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
-% toolbox did not include a copyright notice.
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
-% 8797&objectType=file
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
+% Maintainer : pierre.bellec@criugm.qc.ca
 % Keywords : medical imaging, I/O, writer, nifti
 
+%   Part of this file is copied and modified under GNU license from
+%   MRI_TOOLBOX developed by CNSP in Flinders University, Australia
+%
+%   Important parts of this code are copied and modified from a matlab
+%   toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
+%   toolbox did not include a copyright notice.
+%   http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
+%   8797&objectType=file
+%
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
