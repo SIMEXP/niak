@@ -80,16 +80,21 @@ end
 
 for numx = 1:nx
     for numy = 1:ny        
-        if numy ~= ny
-            if ischar(csv_cell{numx,numy})
-                fprintf(hf,'%s,',csv_cell{numx,numy});
-            elseif isnumeric(csv_cell{numx,numy})
-                fprintf(hf,'%1.15f,',csv_cell{numx,numy});
+        if ischar(csv_cell{numx,numy})
+            sw = '%s';
+        elseif isnumeric(csv_cell{numx,numy})
+            if csv_cell{numx,numy}==round(csv_cell{numx,numy})
+                sw = '%i';
             else
-                error('all cells should be either string or numeric variables')
-            end 
+                sw = '%1.15f';
+            end
         else
-            fprintf(hf,'%s\n',csv_cell{numx,numy});
+            error('all cells should be either string or numeric variables')
+        end 
+        if numy ~= ny
+            fprintf(hf,[sw ','],csv_cell{numx,numy});            
+        else
+            fprintf(hf,[sw '\n'],csv_cell{numx,numy});
         end     
     end    
 end
