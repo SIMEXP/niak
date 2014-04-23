@@ -480,7 +480,7 @@ switch type_fdr
     case 'global'
         [fdr,test_q] = niak_fdr(pce(:),'BH',q);
         fdr = niak_lvec2mat(fdr');
-        test_q = niak_lvec2mat(test_q',0);    
+        test_q = niak_lvec2mat(test_q',0)>0; 
     case 'LSL'
         [fdr,test_q] = niak_fdr(pce_m,'LSL',q);    
     otherwise
