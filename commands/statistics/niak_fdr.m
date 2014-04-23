@@ -167,7 +167,7 @@ fdr = zeros(size(pce));
 ind = n./(1:n)';
 w = sum((1:n).^(-1));
 if nargout>1
-    test = zeros(size(fdr));
+    test = false(size(fdr));
 end
 for num_c = 1:size(pce,2)
     switch method
@@ -183,9 +183,9 @@ for num_c = 1:size(pce,2)
     if nargout>1
         ind_c = find(fdr_c>q,1);
         if ind_c>1
-            test(order(1:(ind_c-1),num_c),num_c) = 1;
+            test(order(1:(ind_c-1),num_c),num_c) = true;
         elseif isempty(ind_c)
-            test(:,num_c) = 1;
+            test(:,num_c) = true;
         end
     end
 end
