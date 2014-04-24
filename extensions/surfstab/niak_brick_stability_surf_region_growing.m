@@ -136,7 +136,6 @@ f_neigh = load(files_in.neigh, opt.name_neigh);
 neigh = f_neigh.(opt.name_neigh);
                                                                                                                                                                                                                                                                       
 %% Conduct Region Growing
-
 if opt.flag_verbose
     fprintf('Region growing:\n')
 end

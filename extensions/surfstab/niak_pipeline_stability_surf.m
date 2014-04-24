@@ -258,6 +258,8 @@ opt.psom.path_logs = [opt.folder_out 'logs'];
 opt.region_growing.region_growing = psom_struct_defaults(opt.region_growing,...
                                     { 'thre_size' },...
                                     { 80          });
+opt.region_growing.name_data = opt.name_data;
+opt.region_growing.name_neigh = opt.name_neigh;
 
 % Setup Sampling Defaults
 opt.sampling = psom_struct_defaults(opt.sampling,...
@@ -359,8 +361,7 @@ in.neigh = pipe.adjacency_matrix.files_out;
 reg_in = in;
 reg_out = [opt.folder_out sprintf('%s_region_growing_thr%d.mat',...
            opt.name_data, opt.region_growing.thre_size)];
-reg_opt.region_growing = opt.region_growing;
-reg_opt.name_data = opt.name_data;
+reg_opt = opt.region_growing;
 pipe = psom_add_job(pipe, 'region_growing', ...
                     'niak_brick_stability_surf_region_growing',...
                     reg_in, reg_out, reg_opt);
@@ -440,7 +441,9 @@ switch opt.target_type
                             'niak_brick_stability_surf_plugin',...
                             plug_in, plug_out, plug_opt);
         in.part = pipe.plugin.files_out;
-        core_in.stab = pipe.average_atom.files_out;
+        if opt.flag_cores
+            core_in.stab = pipe.average_atom.files_out;
+        end
         
     case 'manual'
         % Manual Partition was supplied
