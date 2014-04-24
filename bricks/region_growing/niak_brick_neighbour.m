@@ -131,7 +131,9 @@ if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
 end
 
-files_out = cat(2,opt.folder_out,filesep,name_f,'_neig.mat');
+if isempty(files_out)
+    files_out = cat(2,opt.folder_out,filesep,name_f,'_neig.mat');
+end
 
 %% If the test flag is true, stop here !
 if flag_test == 1
