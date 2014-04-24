@@ -67,7 +67,11 @@ if size(part,1)>1 && size(part,2)>1
     vol = zeros(size(part,1),length(mask(:)));
     vol(:,mask>0) = part(:,mask(mask>0));
     vol = vol';
-    vol = reshape(vol,[size(mask) size(part,1)]);    
+    if (ndims(mask)==2) && ( (size(mask,1) == 1) || (size(mask,2) == 1))
+        vol = reshape(vol,[length(mask) size(part,1)]);    % It's a vector Joe !
+    else
+        vol = reshape(vol,[size(mask) size(part,1)]);    % That is a N-D N>=3 array
+    end
 else
     vol = zeros(size(mask));
     vol(mask>0) = part(mask(mask>0));
