@@ -58,6 +58,7 @@ function [files_in,files_out,opt] = niak_brick_stability_surf(files_in,files_out
 %         (string, default 'hierarchical') the clustering algorithm
 %         Available options :
 %            'hierarchical': a HAC based on correlation.
+%            'kcores'      : kmeans cores
 %
 %      OPT
 %         (structure, optional) options that will be  sent to the
@@ -287,30 +288,33 @@ for rr = 1:opt.nb_samps
             data_s = niak_simus_scenario (opt.sampling.opt);
     end
 
-    % Generate a replication of the partition
-    part_roi_s = niak_region_growing(data_s,ssurf.neigh,opt.region_growing);
-    % See that we have enough regions to meaningfully continue
-    if length(unique(part_roi_s)) == 1
-        error('Region growing for subsample #%d resulted in only one region.\nPossibly this is due to your region growing threshold of %d. Consider changing the threshold!\n', rr, opt.region_growing.thre_size);
-    elseif length(unique(part_roi_s)) < 4
-        warning('Region growing for subsample #%d resulted in only %d regions.\nIf this is not enough, consider changing your region growing threshold of currently %d to something else.\n', rr, length(unique(part_roi_s)), opt.region_growing.thre_size);
-    end
-        
-    data_roi_s = niak_build_tseries(data_s,part_roi_s);
-
-    % Store things
-    tmp_store.part_roi_s = part_roi_s;
-
     switch opt.clustering.type
         case 'hierarchical'
+            % Generate a replication of the partition
+            part_roi_s = niak_region_growing(data_s,ssurf.neigh,opt.region_growing);
+            % See that we have enough regions to meaningfully continue
+            if length(unique(part_roi_s)) == 1
+                error('Region growing for subsample #%d resulted in only one region.\nPossibly this is due to your region growing threshold of %d. Consider changing the threshold!\n', rr, opt.region_growing.thre_size);
+            elseif length(unique(part_roi_s)) < 4
+                warning('Region growing for subsample #%d resulted in only %d regions.\nIf this is not enough, consider changing your region growing threshold of currently %d to something else.\n', rr, length(unique(part_roi_s)), opt.region_growing.thre_size);
+            end
+
+            data_roi_s = niak_build_tseries(data_s,part_roi_s);
+
+            % Store things
+            tmp_store.part_roi_s = part_roi_s;
+            % Build the hierarchy
             R = niak_build_correlation(data_roi_s);
             hier_s = niak_hierarchical_clustering(R,opt_m);
             opt_t.thresh = opt.scale;
             % Store more things
             tmp_store.hier = hier_s;
+            
+        case 'kcores'
+            tmp_store.data_s = data_s;
 
         otherwise
-            error('%s is an unknown type of partition',opt.clustering.type)
+            error('%s is an unimplemented type of clustering',opt.clustering.type)
 
     end
     % Store the whole tmp storage
@@ -359,21 +363,53 @@ for scale_id = rand_inds
     out.(scale_name) = zeros(scale_tar,V);
     for b_id = 1:opt.nb_samps
         tmp = boot_store{b_id};
-        part_s = niak_threshold_hierarchy(tmp.hier,opt_t);
-        part_s_sc = niak_part2vol(part_s,tmp.part_roi_s);
+        
+        switch opt.clustering.type
+            case 'hierarchical'
+                part_s = niak_threshold_hierarchy(tmp.hier,opt_t);
+                part_s_sc = niak_part2vol(part_s,tmp.part_roi_s);
+                
+            case 'kcores'
+                data_bs = tmp.data_s;
+
+        end
 
         % Loop through the clusters in the target partition
         for ss = 1:scale_tar
-            % Find the clusters in the replication-partition that lie in the target cluster
-            list_inter = unique(part_s_sc(part_t==ss));
-            val_inter = zeros(scale_rep,1);
-            % Loop through the overlapping clusters and see how much they overlap
-            for num_i = 1:length(list_inter)
-                val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
+            switch opt.clustering.type
+                case 'hierarchical'
+                    % Find the clusters in the replication-partition that lie in the target cluster
+                    list_inter = unique(part_s_sc(part_t==ss));
+                    val_inter = zeros(scale_rep,1);
+                    % Loop through the overlapping clusters and see how much they overlap
+                    for num_i = 1:length(list_inter)
+                        val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
+                    end
+                    % store the stability scores for all verteces for the current
+                    % cluster
+                    out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
+                
+                case 'kcores'
+                    % Correlate the timeseries in the target cluster with
+                    % the data time series
+                    t_seed_glob = mean(data_bs(:, part_t==ss),2);
+                    corr_map_glob = corr(t_seed_glob, data_bs);
+                    % Build the core of the correlation map with a 3 kmeans
+                    % clustering
+                    k_ind = kmeans(corr_map_glob, 3);
+                    % Find the cluster with the highest average
+                    % connectivity
+                    k_mean = zeros(3,1);
+                    for i = 1:3
+                        k_mean(i,1) = mean(corr_map_glob(k_ind == i));
+                    end
+                    k_tar = find(k_mean==max(k_mean));
+                    % Seed again on the individual core
+                    t_seed_ind = mean(data_bs(:, k_ind==k_tar),2);
+                    corr_map_ind = corr(t_seed_ind, data_bs);
+                    % Store the vectorized map
+                    out.(scale_name)(ss,:) = (out.(scale_name)(ss,:)) + corr_map_ind;
             end
-            % store the stability scores for all verteces for the current
-            % cluster
-            out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
         end
     end
     % Average

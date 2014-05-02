@@ -260,6 +260,7 @@ opt.region_growing.region_growing = psom_struct_defaults(opt.region_growing,...
                                     { 80          });
 opt.region_growing.name_data = opt.name_data;
 opt.region_growing.name_neigh = opt.name_neigh;
+opt.region_growing = rmfield(opt.region_growing, 'thre_size');
 
 % Setup Sampling Defaults
 opt.sampling = psom_struct_defaults(opt.sampling,...
@@ -300,8 +301,8 @@ opt.cores.cores = psom_struct_defaults(opt.cores,...
 
 % Setup Stability Vertex Defaults
 opt.stability_vertex = psom_struct_defaults(opt.stability_vertex,...
-                       { 'nb_samps' , 'nb_batch' },...
-                       { 10         , 100        });
+                       { 'nb_samps' , 'nb_batch', 'clustering' },...
+                       { 10         , 100       , struct       });
 opt.stability_vertex.name_data = opt.name_data;
 opt.stability_vertex.name_part = opt.name_part;
 opt.stability_vertex.name_neigh = opt.name_neigh;
@@ -360,7 +361,7 @@ in.neigh = pipe.adjacency_matrix.files_out;
 % Run Region Growing
 reg_in = in;
 reg_out = [opt.folder_out sprintf('%s_region_growing_thr%d.mat',...
-           opt.name_data, opt.region_growing.thre_size)];
+           opt.name_data, opt.region_growing.region_growing.thre_size)];
 reg_opt = opt.region_growing;
 pipe = psom_add_job(pipe, 'region_growing', ...
                     'niak_brick_stability_surf_region_growing',...
@@ -396,13 +397,13 @@ switch opt.target_type
                             cons_in, cons_out, cons_opt);
         in.part = pipe.consensus.files_out;
         core_in.stab = pipe.consensus.files_out;
-        
+
         % See if mstep should run
         if isempty(opt.consensus.scale_target)
             % Perform Consensus Clustering
             fprintf(['Mstep will run since OPT.CONSENSUS.SCALE_TARGET '...
                       'is emtpy\n']);
-            
+
             % Run MSTEPS
             mstep_in = pipe.consensus.files_out;
             mstep_out.msteps = sprintf('%smsteps.mat',opt.folder_out);
@@ -450,6 +451,10 @@ switch opt.target_type
         fprintf('An external partition was supplied\n');
         core_in.stab = pipe.average_atom.files_out;
 
+    otherwise
+        % The selected target is not implemented yet
+        error(['The selected OPT.TARGET_TYPE (%s) is not implemented yet.\n'...
+               'Exiting!\n'],opt.target_type);
 end
 
 % Check if stable cores are to be performed
