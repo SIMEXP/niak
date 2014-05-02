@@ -104,6 +104,7 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %           (string, default 'hierarchical') the clustering algorithm
 %           Available options : 
 %               'kmeans': k-means (euclidian distance)
+%               'kcores' : k-means cores
 %               'hierarchical_e2': a HAC based on the eta-square distance
 %                   (see NIAK_BUILD_ETA2)
 %               'hierarchical' : a HAC based on a squared

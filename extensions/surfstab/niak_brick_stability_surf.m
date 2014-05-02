@@ -408,7 +408,25 @@ for scale_id = rand_inds
                     t_seed_ind = mean(data_bs(:, k_ind==k_tar),2);
                     corr_map_ind = corr(t_seed_ind, data_bs);
                     % Store the vectorized map
-                    out.(scale_name)(ss,:) = (out.(scale_name)(ss,:)) + corr_map_ind;
+                    store[ss,:] = corr_map_ind;
+            end
+        end
+        % If we are running the kmeans cores, find overlap here
+        if strcmp(opt.clustering.type, 'kcores')
+            % Find the target cluster that has the maximal correlation map
+            % with each location and assign the location to it
+            [~, part_s] = max(store);
+            % Now compute the overlap again
+            for ss = 1:scale_tar
+                list_inter = unique(part_s_sc(part_t==ss));
+                val_inter = zeros(scale_rep,1);
+                % Loop through the overlapping clusters and see how much they overlap
+                for num_i = 1:length(list_inter)
+                    val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
+                end
+                % store the stability scores for all verteces for the current
+                % cluster
+                out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
             end
         end
     end
