@@ -107,7 +107,7 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %
 %   FDR
 %      (string, default 'gb_niak_omitted') the file name of a 4D dataset. 
-%      FDR(:,:,:,n) is the t-stat map corresponding to TTEST. All the 
+%      FDR(:,:,:,n) is the t-stat map corresponding to network n. All the 
 %      t-values associated with a global false-discovery rate below 
 %      OPT.FDR are put to zero.
 %
@@ -115,8 +115,7 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %      (string, default 'gb_niak_omitted') the file name of a 3D volume. 
 %      PERC_DISCOVERY(:,:,:) is the map of the number of discovery 
 %      associated with each network, expressed as a percentage of the 
-%      number of networks - 1 (i.e. the max possible number of discoveries 
-%      associated with a network).
+%      number of networks.
 %
 % OPT
 %   (structure) with the following fields:
