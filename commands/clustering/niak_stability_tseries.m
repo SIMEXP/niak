@@ -71,6 +71,7 @@ function stab = niak_stability_tseries(tseries,opt)
 %                   distance.
 %               'hierarchical_e2' : a HAC based on the eta-square 
 %                   distance (see NIAK_BUILD_ETA2)
+%               'kcores' : k-means cores for a reference partition
 %
 %       OPT
 %           (structure, optional) options that will be  sent to the
@@ -78,6 +79,10 @@ function stab = niak_stability_tseries(tseries,opt)
 %           CLUSTERING.TYPE:
 %               'kmeans' : see OPT in NIAK_KMEANS_CLUSTERING
 %               'hierarchical' : see OPT in NIAK_HIERARCHICAL_CLUSTERING
+%               'kcores' : target_part (array NxK) where N is the number of
+%                          regions and K is the number of clusters
+%                          requested in OPT.NB_CLASSES. If kcores is
+%                          selected, this has to be set
 %
 %   FLAG_VERBOSE
 %       (boolean, default 1) if the flag is 1, then the function prints
@@ -145,6 +150,11 @@ opt.normalize = psom_struct_defaults(opt.normalize,...
 opt.clustering = psom_struct_defaults(opt.clustering,...
                  { 'type'         , 'opt'    },...
                  { 'hierarchical' , struct() });
+if strcmp(opt.clustering.type, 'kcores')
+    opt.clustering.opt = psom_struct_defaults(opt.clustering.opt,...
+                         { 'target_part' },...
+                         { NaN           });
+end
 
 % Setup Sampling Defaults
 sampling_opt.type = 'cbb';
@@ -232,6 +242,9 @@ for num_s = 1:opt.nb_samps
                 case 'neural-gas'
 
                     part = niak_neural_gas(tseries_boot,opt.clustering.opt);
+                    
+                case 'kcores'
+                    part = niak_kmeans_cores(tseries_boot, opt.clustering.opt.target_part(:, num_sc));
 
                 otherwise
 
