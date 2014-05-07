@@ -1,4 +1,4 @@
-function [part,order,sil,intra,inter,hier,nb_classes] = niak_brick_consensus_clustering(stab,opt)
+function [part,order,sil,intra,inter,hier,nb_classes] = niak_consensus_clustering(stab,opt)
 % Consensus clustering based on one or multiple stability matrices
 %
 % SYNTAX :
