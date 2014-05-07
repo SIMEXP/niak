@@ -333,7 +333,13 @@ if ~strcmp(in.part, 'gb_niak_omitted') && ~strcmp(opt.target_type, 'manual')
 elseif strcmp(in.part, 'gb_niak_omitted') && strcmp(opt.target_type, 'manual')
     % User does not provide a target partition but wants to use manual mode
     error('A target partition was expected because of OPT.TARGET_TYOE = ''manual'' but none was supplied by the user!\n');
+end
 
+if ~isempty(opt.consensus.scale_target) && any(~ismember(opt.consensus.scale_target, opt.scale)) && strcmp(opt.target_type, 'cons')
+    % The user has requested a target scale for consensus clustering that
+    % is not part of the investigated scale space
+    error(['If specified, the target scale for consensus clustering must be '...
+           'present in the scales for which stability is estimated!\n']);
 end
 
 % Set up the pipeline
@@ -449,7 +455,9 @@ switch opt.target_type
     case 'manual'
         % Manual Partition was supplied
         fprintf('An external partition was supplied\n');
-        core_in.stab = pipe.average_atom.files_out;
+        if opt.flag_cores
+            core_in.stab = pipe.average_atom.files_out;
+        end
 
     otherwise
         % The selected target is not implemented yet
