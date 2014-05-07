@@ -184,10 +184,6 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %                      Alternatively, if IN.PART contains a file path,
 %                      OPT.TARGET_TYPE will automatically be set to MANUAL.
 %
-%   FLAG_CONS
-%       (boolean, default true) If this is false, we use plugin clustering,
-%       provided no partition is supplied
-%
 %   FLAG_CORES
 %       (boolean, default true) If this is set, we use the stable clusters
 %       of the consensus partition.
@@ -260,7 +256,6 @@ opt.region_growing.region_growing = psom_struct_defaults(opt.region_growing,...
                                     { 80          });
 opt.region_growing.name_data = opt.name_data;
 opt.region_growing.name_neigh = opt.name_neigh;
-opt.region_growing = rmfield(opt.region_growing, 'thre_size');
 
 % Setup Sampling Defaults
 opt.sampling = psom_struct_defaults(opt.sampling,...
@@ -269,8 +264,8 @@ opt.sampling = psom_struct_defaults(opt.sampling,...
 
 % Setup Stability Atom Defaults
 opt.stability_atom = psom_struct_defaults(opt.stability_atom,...
-                     { 'nb_samps' , 'nb_batch' , 'sampling'   },...
-                     { 100        , 100        , opt.sampling });
+                     { 'nb_samps' , 'nb_batch' , 'sampling'   , 'clustering' },...
+                     { 100        , 100        , opt.sampling , struct()     });
 opt.stability_atom.estimation = rmfield(opt.stability_atom, 'sampling');
 opt.stability_atom = rmfield(opt.stability_atom, {'nb_samps' , 'nb_batch'});
 opt.stability_atom.folder_out = opt.folder_out;
@@ -365,7 +360,7 @@ end
 in.neigh = pipe.adjacency_matrix.files_out;
 
 % Run Region Growing
-reg_in = in;
+reg_in = rmfield(in, 'part');
 reg_out = [opt.folder_out sprintf('%s_region_growing_thr%d.mat',...
            opt.name_data, opt.region_growing.region_growing.thre_size)];
 reg_opt = opt.region_growing;

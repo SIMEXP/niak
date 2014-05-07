@@ -51,6 +51,27 @@ function [pipeline] = niak_pipeline_stability_estimate(files_in, opt)
 %               jacknife  : OPT.PERC is the percentage of observations
 %                           retained in each sample (default 60%)
 %
+%   CLUSTERING
+%       (structure, optional) with the following fields :
+%
+%       TYPE
+%           (string, default 'hierarchical') the clustering algorithm
+%           Available options : 
+%               'kmeans': k-means (euclidian distance)
+%               'kcores' : k-means cores
+%               'hierarchical_e2': a HAC based on the eta-square distance
+%                   (see NIAK_BUILD_ETA2)
+%               'hierarchical' : a HAC based on a squared
+%                   euclidian distance.
+%
+%       OPT
+%           (structure, optional) options that will be  sent to the
+%           clustering command. The exact list of options depends on
+%           CLUSTERING.TYPE:
+%               'kmeans' : see OPT in NIAK_KMEANS_CLUSTERING
+%               'hierarchical' or 'hierarchical_e2': see OPT in 
+%               NIAK_HIERARCHICAL_CLUSTERING
+%
 %   AVERAGE
 %       (structure)
 %
@@ -131,8 +152,8 @@ if ~ischar(files_in)&&~iscellstr(files_in)
 end
 
 %% Options
-list_fields   = { 'folder_out' , 'estimation' , 'sampling' , 'average' , 'psom'   , 'flag_verbose' , 'flag_test' };
-list_defaults = { NaN          , struct()     , struct()   , struct()  , struct() , true           , false       };
+list_fields   = { 'folder_out' , 'estimation' , 'sampling' , 'clustering' , 'average' , 'psom'   , 'flag_verbose' , 'flag_test' };
+list_defaults = { NaN          , struct()     , struct()   , struct()     , struct()  , struct() , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.psom.path_logs = [opt.folder_out 'logs'];
 
@@ -141,11 +162,15 @@ opt.sampling = psom_struct_defaults(opt.sampling,...
                { 'type'      , 'opt'    },...
                { 'jacknife'  , struct() });
            
+% Setup Clustering Defaults
+opt.clustering = psom_struct_defaults(opt.clustering,...
+                 { 'type'         , 'opt'    },...
+                 { 'hierarchical' , struct() });
+           
 % Setup Estimation Defaults
 opt.estimation = psom_struct_defaults(opt.estimation,...
-                 { 'nb_classes' , 'name_data' ,  'nb_samps' , 'nb_batch' },...
-                 { NaN          , 'data'      ,  100        , 100        });
-opt.estimation.sampling = opt.sampling;
+                 { 'nb_classes' , 'name_data' ,  'nb_samps' , 'nb_batch' , 'clustering'   , 'sampling'   },...
+                 { NaN          , 'data'      ,  100        , 100        , opt.clustering , opt.sampling });
            
 % Setup Average Defaults
 opt.average = psom_struct_defaults(opt.average,...
