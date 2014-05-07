@@ -371,68 +371,28 @@ for scale_id = rand_inds
                 
             case 'kcores'
                 data_bs = tmp.data_s;
-
+                part_s_sc = niak_kmeans_cores(data_bs, part_t)';
         end
 
         % Loop through the clusters in the target partition
         for ss = 1:scale_tar
-            switch opt.clustering.type
-                case 'hierarchical'
-                    % Find the clusters in the replication-partition that lie in the target cluster
-                    list_inter = unique(part_s_sc(part_t==ss));
-                    val_inter = zeros(scale_rep,1);
-                    % Loop through the overlapping clusters and see how much they overlap
-                    for num_i = 1:length(list_inter)
-                        val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
-                    end
-                    % store the stability scores for all verteces for the current
-                    % cluster
-                    out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
-                
-                case 'kcores'
-                    % Correlate the timeseries in the target cluster with
-                    % the data time series
-                    t_seed_glob = mean(data_bs(:, part_t==ss),2);
-                    corr_map_glob = corr(t_seed_glob, data_bs);
-                    % Build the core of the correlation map with a 3 kmeans
-                    % clustering
-                    k_ind = kmeans(corr_map_glob, 3);
-                    % Find the cluster with the highest average
-                    % connectivity
-                    k_mean = zeros(3,1);
-                    for i = 1:3
-                        k_mean(i,1) = mean(corr_map_glob(k_ind == i));
-                    end
-                    k_tar = find(k_mean==max(k_mean));
-                    % Seed again on the individual core
-                    t_seed_ind = mean(data_bs(:, k_ind==k_tar),2);
-                    corr_map_ind = corr(t_seed_ind, data_bs);
-                    % Store the vectorized map
-                    store[ss,:] = corr_map_ind;
+            % Find the clusters in the replication-partition that lie in the target cluster
+            list_inter = unique(part_s_sc(part_t==ss));
+            val_inter = zeros(scale_rep,1);
+            % Loop through the overlapping clusters and see how much they overlap
+            for num_i = 1:length(list_inter)
+                val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
             end
+            % store the stability scores for all verteces for the current
+            % cluster
+            out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
         end
-        % If we are running the kmeans cores, find overlap here
-        if strcmp(opt.clustering.type, 'kcores')
-            % Find the target cluster that has the maximal correlation map
-            % with each location and assign the location to it
-            [~, part_s] = max(store);
-            % Now compute the overlap again
-            for ss = 1:scale_tar
-                list_inter = unique(part_s_sc(part_t==ss));
-                val_inter = zeros(scale_rep,1);
-                % Loop through the overlapping clusters and see how much they overlap
-                for num_i = 1:length(list_inter)
-                    val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
-                end
-                % store the stability scores for all verteces for the current
-                % cluster
-                out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
-            end
-        end
+
     end
     % Average
     out.(scale_name) = out.(scale_name) / opt.nb_samps;
     % Done with scale
+    
     if opt.flag_verbose
         fprintf('Updating stab.%s results ...\n     %s\n',scale_name, files_out);
     end

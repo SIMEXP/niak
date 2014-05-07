@@ -209,7 +209,8 @@ for sc_id = 1:nb_scales
     % Make a matrix of the stability vector
     tmp_stab_mat = niak_vec2mat(tmp_stab);
     % Bring the partition into roi space
-    tmp_part_roi = niak_vol2part(tmp_part, part_roi);
+    vp_opt.match = 'mode';
+    tmp_part_roi = niak_stability_vol2part(tmp_part, part_roi, vp_opt);
     clusters = unique(tmp_part_roi);
     nb_vertex = length(tmp_part_roi);
     nb_clusters = length(clusters);
