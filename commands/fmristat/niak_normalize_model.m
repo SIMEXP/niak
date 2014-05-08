@@ -261,7 +261,22 @@ if isfield(opt.select(1),'label')
 end
 
 %% Keep only variables of interest in the model
-list_cont = fieldnames(opt.contrast);
+list_cont = fieldnames(opt.contrast); % Covariates listed in the contrast
+if ~isempty(opt.projection)&&isfield(opt.projection(1),'space') % Add the covariates used for orthogonalisation
+   for num_e = 1:length(opt.projection)  
+       list_cont = union(list_cont,opt.projection(num_e).space);
+   end
+end
+if ~isempty(opt.interaction) % Add the covariates used in interaction terms
+    for num_i = 1:length(opt.interaction)
+        if iscellstr(opt.interaction(num_i).factor) && (length(opt.interaction(num_i).factor) > 1)      
+            list_cont = union(list_cont,opt.interaction(num_i).factor;          
+        else 
+            error('factor should be a cell of string and choose more than 1 factor ');
+        end
+    end
+end 
+
 mask_var = ismember(model.labels_y,list_cont);
 model.x = model.x(:,mask_var);
 model.labels_y = model.labels_y(mask_var);
