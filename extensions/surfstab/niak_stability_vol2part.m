@@ -17,12 +17,11 @@ function part = niak_stability_vol2part(vol,mask, opt)
 %   total of V elements) 
 %   MASK==I is a binary mask of region I.
 %
-% OPT
-%   Match
-%       (string, default 'mean') Determines whether how the values in a
-%       partition are generated. Possible entries are:
-%           mean    : take the mean of all values in the partition
-%           mode  : take the most frequent value in the partition
+% OPT.MATCH
+%   (string, default 'mean') Determines whether how the values in a
+%   partition are generated. Possible entries are:
+%      'mean'  : take the mean of all values in the partition
+%      'mode'  : take the most frequent value in the partition
 %
 % _________________________________________________________________________
 % OUTPUTS:
