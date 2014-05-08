@@ -270,7 +270,7 @@ end
 if ~isempty(opt.interaction) % Add the covariates used in interaction terms
     for num_i = 1:length(opt.interaction)
         if iscellstr(opt.interaction(num_i).factor) && (length(opt.interaction(num_i).factor) > 1)      
-            list_cont = union(list_cont,opt.interaction(num_i).factor;          
+            list_cont = union(list_cont,opt.interaction(num_i).factor);          
         else 
             error('factor should be a cell of string and choose more than 1 factor ');
         end
