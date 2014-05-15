@@ -53,7 +53,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %       (string, must be set) where to write the default outputs.
 %
 %   SAMPLING
-%       (structure)
+%       (structure, optional)
 %
 %       TYPE
 %           (string, default 'bootstrap') how to resample the time series.
@@ -345,7 +345,7 @@ pipe = struct;
 if strcmp(in.neigh,'gb_niak_omitted')
     pipe.adjacency_matrix.command = sprintf(['ssurf = niak_read_surf('''','...
                                              'true,true); %s = ssurf.neigh;'...
-                                             'save(out,''%s'');'],...
+                                             'save(files_out,''%s'');'],...
                                             opt.name_neigh, opt.name_neigh);
     pipe.adjacency_matrix.files_out = [opt.folder_out 'neighbourhood.mat'];
 
@@ -491,7 +491,7 @@ for boot_batch_id = 1:opt.stability_vertex.nb_batch
     batch_clean_name = sprintf('clean_%s', batch_name);
     pipe = psom_add_job(pipe,batch_name, ...
                         'niak_brick_stability_surf',...
-                        in,boot_batch_out,boot_batch_opt);
+                        in, boot_batch_out, boot_batch_opt);
     pipe = psom_add_clean(pipe,batch_clean_name,pipe.(batch_name).files_out);
     avg_in{boot_batch_id} = boot_batch_out;
 end
@@ -512,7 +512,7 @@ sil_opt.flag_verbose = opt.flag_verbose;
 pipe = psom_add_job(pipe, 'silhouette', 'niak_brick_stability_surf_contrast',...
                     sil_in, sil_out, sil_opt);
 
-                % Run the pipeline
+% Run the pipeline
 if ~opt.flag_test
     psom_run_pipeline(pipe,opt.psom);
 end
