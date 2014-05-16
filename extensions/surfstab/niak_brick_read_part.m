@@ -14,12 +14,12 @@ function [files_in,files_out,opt] = niak_brick_read_part(files_in,files_out,opt)
 %      (string or cell of string) A collection of partition files.
 %
 %   MASK
-%      (string or cell of strings) A mask of regions of interest
-%      (region I is defined by MASK==I).
+%      (string or cell of strings) A file containing non-zero values for
+%      regions in the volume that should be included. The mask will be
+%      interpreted in a boolean way (mask = FILES_IN.MASK ~= 0;)
 %
 % FILES_OUT
 %   (string) a matlab file containing the partitons
-%
 %
 % OPT
 %   (structure) with the following fields.
