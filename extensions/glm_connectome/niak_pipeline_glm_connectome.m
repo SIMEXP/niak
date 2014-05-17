@@ -11,8 +11,8 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 %   (structure) with the following fields : 
 %
 %   FMRI.(SUBJECT).(SESSION).(RUN)
-%      (string) a 3D+t fMRI dataset. The fields (SUBJECt), (SESSION) and (RUN) can be any 
-%      arbitrary field names.
+%      (string) a 3D+t fMRI dataset. The fields (SUBJECT), (SESSION) and (RUN) are 
+%      arbitrary.
 %
 %   NETWORKS.(NETWORK)
 %      (string) a file name of a mask of brain networks (network I is filled 
