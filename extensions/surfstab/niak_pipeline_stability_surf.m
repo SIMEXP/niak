@@ -14,7 +14,7 @@ function [pipe,opt] = niak_pipeline_stability_surf(in,opt)
 %   
 % IN.PART
 %   (string, optional, default 'gb_niak_omitted') path to .mat file that
-%   contains a matrix of VxK where V is the number of verteces on the
+%   contains a matrix of VxK where V is the number of vertices on the
 %   surface and K is the number of scales to be computed.
 %
 % IN.NEIGH
