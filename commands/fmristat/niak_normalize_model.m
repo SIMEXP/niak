@@ -217,7 +217,7 @@ if isfield(opt.select(1),'label')
         if isempty(opt_s.operation)
             opt_s.operation = 'or';
         end
-        if strcmp(opt_s.operation,'or')
+        if strcmp(opt_s.operation,'or')&&(num_s==1)
             mask = false([size(model.labels_x,1) 1]);
         else
             mask = true([size(model.labels_x,1) 1]);
