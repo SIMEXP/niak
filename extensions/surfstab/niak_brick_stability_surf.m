@@ -380,8 +380,13 @@ for scale_id = rand_inds
             list_inter = unique(part_s_sc(part_t==ss));
             val_inter = zeros(scale_rep,1);
             % Loop through the overlapping clusters and see how much they overlap
-            for num_i = 1:length(list_inter)
-                val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
+            try
+                for num_i = 1:length(list_inter)
+                    val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
+                end
+            catch
+                fprintf('All is shite for ss %d, scale_tar %d\n', ss, scale_tar);
+                pass
             end
             % store the stability scores for all verteces for the current
             % cluster
