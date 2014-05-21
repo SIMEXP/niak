@@ -268,7 +268,7 @@ neigh_out = [opt.folder_out 'neighbourhood.mat'];
 neigh_opt = struct;
 pipeline = psom_add_job(pipeline, 'neighbour', 'niak_brick_neighbour',...
                         neigh_in, neigh_out, neigh_opt);
-                    
+
 % If target partition(s) are supplied, load them and store them in a mat
 % file - unless they are already in a mat file
 if ~strcmp(files_in.part, 'gb_niak_omitted')
@@ -303,7 +303,7 @@ for num_e = 1:length(cell_fmri)
     files_out_tseries.tseries{1} = [opt.folder_out 'tseries' filesep 'tseries_rois_' labels_file{num_e} '.mat'];
     pipeline = psom_add_job(pipeline,name_job,'niak_brick_tseries', files_in_tseries, files_out_tseries, opt.tseries, false);
     files_tseries{num_e} = pipeline.(name_job).files_out;
-    
+
 end
 
 %% New things

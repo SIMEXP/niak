@@ -13,7 +13,7 @@ function  [files_in,files_out,opt] = niak_brick_region_growing(files_in,files_ou
 %       (structure) with the following fields:
 %
 %       TSERIES
-%           (cell of strings) FILES_IN.TSERIES{I} is the name of a .mat
+%           (cell of strings) edFILES_IN.TSERIES{I} is the name of a .mat
 %           file with one variable named <OPT.VAR_TSERIES>. This variable
 %           is a time*space array, where the Ith column is the time series
 %           of the Ith voxel of the area.
