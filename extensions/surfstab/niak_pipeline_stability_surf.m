@@ -466,7 +466,7 @@ if opt.flag_cores
     core_in.part = in.part;
     core_in.roi = pipe.region_growing.files_out;
     core_out = sprintf('%sstab_core.mat',opt.folder_out);
-    core_opt = struct;
+    core_opt = opt.cores;
 
     pipe = psom_add_job(pipe, 'stable_cores', ...
                         'niak_brick_stability_surf_cores',...
