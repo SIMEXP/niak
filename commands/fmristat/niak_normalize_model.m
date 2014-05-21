@@ -219,7 +219,7 @@ if isfield(opt.select(1),'label')
         end
         if strcmp(opt_s.operation,'or')&&(num_s==1)
             mask = false([size(model.labels_x,1) 1]);
-        else
+        elseif strcmp(opt_s.operation,'and')&&(num_s==1)
             mask = true([size(model.labels_x,1) 1]);
         end
         ind = find(ismember(model.labels_y,opt_s.label));
