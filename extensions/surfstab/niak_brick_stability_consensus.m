@@ -153,6 +153,17 @@ end
 roi = load(files_in.roi);
 part_roi = roi.(opt.name_roi);
 
+% If target scale is set, check if there are even enough ROIs for the scale
+% we are looking for
+if ~isempty(opt.scale_target)
+    num_roi = max(part_roi);
+    if num_roi < max(opt.scale_target)
+        error(['You want more scales (%d) from the consensus ',...
+                'step than we have ROIs (%d). ',...
+                'This will not work!\n'], max(opt.scale_target), num_roi);
+    end
+end
+
 data = load(files_in.stab);
 if ~isfield(data,opt.name_stab)
     error('I could not find the variable called %s in the file %s',...
@@ -172,7 +183,7 @@ opt_c.clustering = opt.clustering;
 opt_c.flag_verbose = opt.flag_verbose;
 opt_c.nb_classes = opt.scale;
 
-[tmp_part, order,sil,...
+[tmp_part, order, sil,...
  intra, inter, hier, nb_classes] = niak_consensus_clustering(stab,opt_c);
 
 for sc_id = 1:length(opt.scale);

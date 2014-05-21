@@ -236,7 +236,6 @@ opt.pipeline.name_neigh = 'neig';
 opt.pipeline.psom.flag_pause = false;
 opt.pipeline.flag_test = true;
 
-
 % Flag for partition
 is_part = 0;
 
