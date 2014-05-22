@@ -75,7 +75,9 @@ for tar_clust = 1:scale
     seed_glob = mean(data(:, target==tar_clust),2);
     corr_map_glob = corr(seed_glob, data);
     % Build the core of the correlation map with a 3 kmeans clustering
-    k_ind = kmeans(corr_map_glob, 3);
+    core_opt = struct;
+    core_opt.nb_classes = 3;
+    k_ind = niak_kmeans_clustering(corr_map_glob, core_opt);
     % Find the cluster with the highest average connectivity
     k_mean = zeros(3,1);
     for i = 1:3

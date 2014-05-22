@@ -260,7 +260,9 @@ for sc_id = 1:nb_scales
                 % Average across the rows to get an average of the
                 % stability with the cluster of every region on the surface 
                 avg_cl_stab = mean(cl_stab, 2);
-                k_ind = kmeans(avg_cl_stab, 3);
+                core_opt = struct;
+                core_opt.nb_classes = 3;
+                k_ind = niak_kmeans_clustering(avg_cl_stab, core_opt);
                 % Find the cluster with the highest average stability
                 k_mean = zeros(3,1);
                 for i = 1:3
