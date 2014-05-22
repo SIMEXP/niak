@@ -197,7 +197,7 @@ part_roi    = roi.(opt.name_part_roi);
 % Prepare the outputs
 nb_scales   = length(scale);
 core_part = zeros(size(part));
-core_stab = zeros(size(stab));
+core_stab_mat = zeros(size(stab));
 
 %% Find Stable Cores
 
@@ -214,9 +214,12 @@ for sc_id = 1:nb_scales
     clusters = unique(tmp_part_roi);
     nb_vertex = length(tmp_part_roi);
     nb_clusters = length(clusters);
-    % Build an empty range of partitions for each cluster to deal with
-    % overlapping clusters
-    stab_part = zeros(nb_clusters, nb_vertex);
+    % Build an empty matrix to store the average stability of regions
+    % inside each cluster with the rest of the brain
+    core_stab = zeros(nb_clusters, nb_vertex);
+    % Build an identical empty matrix for the mask of the stable cores so
+    % we can identify overlapping stable cores
+    core_mask = zeros(nb_clusters, nb_vertex);
     
     % Loop through the clusters
     for cl_id = 1:nb_clusters
@@ -251,7 +254,8 @@ for sc_id = 1:nb_scales
                 cl_part = cl_part .* cl_mask;
 
                 % And write the result back into the partition array
-                stab_part(cl_id, cl_ind) = cl_part;
+                core_stab(cl_id, cl_ind) = cl_part;
+                core_mask(cl_id, :) = cl_mask;
 
             case 'kmeans'
                 % We will divide the cluster into three parts and keep the
@@ -260,25 +264,22 @@ for sc_id = 1:nb_scales
                 % Average across the rows to get an average of the
                 % stability with the cluster of every region on the surface 
                 avg_cl_stab = mean(cl_stab, 2);
-                core_opt = struct;
-                core_opt.nb_classes = 3;
-                k_ind = niak_kmeans_clustering(avg_cl_stab, core_opt);
+                k_ind = niak_kmeans_clustering(avg_cl_stab', struct('nb_classes', 3));
                 % Find the cluster with the highest average stability
                 k_mean = zeros(3,1);
                 for i = 1:3
                     k_mean(i,1) = mean(cl_stab(k_ind == i));
                 end
-                k_tar = find(k_mean==max(k_mean));
-                % Find the minimal value in the target cluster
-                thre = min(cl_stab(k_ind == k_tar));
+                [tmp, k_tar] = max(k_mean);
                 % Mask the elements of the surface by the stability
                 % threshold of the target cluster
-                cl_mask = avg_cl_stab > thre;
+                cl_mask = k_ind==k_tar;
                 
                 % Mask the stability vector and store it in the partition
                 % array to later find the maximium of overlapping clusters
                 mask_stab = avg_cl_stab .* cl_mask;
-                stab_part(cl_id, :) = mask_stab;
+                core_stab(cl_id, :) = mask_stab;
+                core_mask(cl_id, :) = cl_mask;
                 
             otherwise
                 error('Unknown thresholding method in opt.core.type\n');
@@ -287,12 +288,27 @@ for sc_id = 1:nb_scales
    
     end
     
-    % Get the cluster with maximium stability for each vertex - this will
-    % force a cluster in every case
-    [val, tmp_part_roi] = max(stab_part, [], 1);
-    % To remove verteces that should be excluded, we will set all
-    % partitions of verteces with stability 0 to 0
-    tmp_part_roi(val==0) = 0;
+    % Identify the vertices that belong to several clusters
+    overlap = sum(core_mask, 1);
+    overlap_vert = overlap > 1;
+    % Make a mask of the vertices that belong to only one cluster
+    single_vert = overlap == 1;
+    % Make a mask of the vertices that belong to no cluster
+    no_vert = overlap == 0;
+    
+    % Generate a temporary partition container
+    tmp_part_roi = zeros(size(overlap));
+    % Get the clusters for the non-overlapping vertices
+    [single_val, tmp_part_roi(single_vert)] = max(core_mask(:, single_vert), [], 1);
+    % Get the clusters for the overlapping vertices based on a winner takes
+    % all stability ranking
+    [overlap_val, tmp_part_roi(overlap_vert)] = max(core_stab(:, overlap_vert), [], 1);
+    
+    % As a sanity check, see if all values of vertices that belong to no
+    % cluster are zero
+    if ~all(tmp_part_roi(no_vert)==0)
+        error('Something is wrong with the stable core partition.');
+    end
     
     % Write the updated partition back
     core_part(:, sc_id) = niak_part2vol(tmp_part_roi, part_roi);
@@ -300,13 +316,13 @@ for sc_id = 1:nb_scales
     dropped_ind = tmp_part_roi == 0;
     tmp_stab_mat(dropped_ind, dropped_ind) = 0;
     % Write the updated partition back
-    core_stab(:, sc_id) = niak_mat2vec(tmp_stab_mat);
+    core_stab_mat(:, sc_id) = niak_mat2vec(tmp_stab_mat);
     
 end
 
 % Store the new outputs in the structure
 data.scale  = scale;
-data.stab   = core_stab;
+data.stab   = core_stab_mat;
 data.part   = core_part;
 
 %% Save outputs
