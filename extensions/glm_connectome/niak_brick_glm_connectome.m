@@ -366,7 +366,7 @@ if opt.test.(test).flag_global_mean
     gb_mean = mean(model_group.y,2);
     gb_mean = gb_mean - mean(gb_mean);
     model_group.x = [model_group.x gb_mean];
-    model_group.labels_x = [model_group.labels_x {'global_mean'}];
+    model_group.labels_y = [model_group.labels_y ; {'global_mean'}];
     model_group.c = [model_group.c ; 0];
 end
 
