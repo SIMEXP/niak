@@ -155,6 +155,12 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 %         (boolean, default true) if FLAG_INTERCEPT is true, a constant covariate will be
 %         added to the model.
 %
+%      FLAG_GLOBAL_MEAN
+%         (boolean, default false) if FLAG_GLOBAL_MEAN is true, the average connectivity is
+%         computed for each subject, and is added as a confound in the group regression. The name 
+%         of the covariate added to the model is 'global_mean'. This option is only available in 
+%         group level tests.
+%
 %      SELECT
 %         (structure, optional) with multiple entries and the following fields:           
 %

@@ -183,6 +183,11 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %         (boolean, default true) if FLAG_INTERCEPT is true, a constant covariate will be
 %         added to the model.
 %
+%      FLAG_GLOBAL_MEAN
+%         (boolean, default false) if FLAG_GLOBAL_MEAN is true, the average connectivity is
+%         computed for each subject, and is added as a confound in the group regression. The name 
+%         of the covariate added to the model is 'global_mean'.
+%
 %      SELECT
 %         (structure, optional) with multiple entries and the following fields:           
 %
@@ -283,8 +288,8 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults);
 test = fieldnames(opt.test);
 test = test{1};
 def_contrast.intercept = 1;
-list_fields   = { 'select' , 'contrast'   , 'projection' , 'flag_intercept' , 'interaction' , 'normalize_x' , 'normalize_y' };
-list_defaults = { struct() , def_contrast , struct()     , true             , {}            , true          , false         };
+list_fields   = { 'select' , 'contrast'   , 'projection' , 'flag_intercept' , 'flag_global_mean' , 'interaction' , 'normalize_x' , 'normalize_y' };
+list_defaults = { struct() , def_contrast , struct()     , true             , false              , {}            , true          , false         };
 opt.test.(test)   = psom_struct_defaults(opt.test.(test),list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -355,6 +360,13 @@ nb_vol = nb_vol(mask_subject_ok);
 
 %% Generate the group model
 model_group.y = spc_subject;
+
+%% If specified by the user, add the global mean to the model
+gb_mean = mean(model_group.y,2);
+gb_mean = gb_mean - mean(gb_mean);
+model_group.x = [model_group.x gb_mean];
+model_group.labels_x = [model_group.labels_x {'global_mean'}];
+model_group.c = [model_group.x ; 0];
 
 %% Estimate the group-level model
 if opt.flag_verbose
