@@ -315,7 +315,7 @@ else
     opt.test.(test).group.flag_intercept = 1 ;
     opt.test.(test).group.contrast.intercept = 1 ;
 end 
-model_group = niak_normalize_model(model_group, opt.test.(test));
+model_group = niak_normalize_model(model_group, rmfield(opt.test.(test),'flag_global_mean'));
 
 %% Load individual connectomes
 list_subject = model_group.labels_x;
@@ -362,11 +362,13 @@ nb_vol = nb_vol(mask_subject_ok);
 model_group.y = spc_subject;
 
 %% If specified by the user, add the global mean to the model
-gb_mean = mean(model_group.y,2);
-gb_mean = gb_mean - mean(gb_mean);
-model_group.x = [model_group.x gb_mean];
-model_group.labels_x = [model_group.labels_x {'global_mean'}];
-model_group.c = [model_group.x ; 0];
+if opt.test.(test).flag_global_mean
+    gb_mean = mean(model_group.y,2);
+    gb_mean = gb_mean - mean(gb_mean);
+    model_group.x = [model_group.x gb_mean];
+    model_group.labels_x = [model_group.labels_x {'global_mean'}];
+    model_group.c = [model_group.c ; 0];
+end
 
 %% Estimate the group-level model
 if opt.flag_verbose
