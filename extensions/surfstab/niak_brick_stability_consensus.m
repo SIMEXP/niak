@@ -20,13 +20,15 @@ function [files_in,files_out,opt] = niak_brick_stability_consensus(files_in,file
 % OPT
 %   (structure) with the following fields:
 %
-%   SCALE
-%       (vector of K integers) the target scales to be
-%       investigated. This has to be specified
+%   SCALE_GRID
+%       (vector of K integers) the scales used to generate the stability
+%       maps in FILES_IN.STAB. This has to be specified.
 %
-%   SCALE_TARGET
-%       (vector, optional) the target scales to be investigated when
-%       OPT.FLAG_FIX is set
+%   SCALE_TAR
+%       (vector, optional) when this is not empty, the target scales
+%       requested here will be selected and the optimal replication scales
+%       will be chosen such that the silhouette criterion is maximized.
+%       Note that SCALE_TAR must be a subset of SCALE_GRID.
 %
 %   CLUSTERING
 %      (structure, optional) with the following fields :
@@ -126,18 +128,12 @@ end
 opt_clustering.type   = 'hierarchical';
 opt_clustering.opt    = struct();
 
-list_fields   = { 'clustering'   , 'name_stab' , 'name_roi' , 'flag_verbose' , 'scale' , 'rand_seed' , 'flag_test' , 'flag_find_scale' , 'scale_target' };
-list_defaults = { opt_clustering , 'stab'      , 'roi'      , true           , NaN     , []          , false       , false             , []          };
+list_fields   = { 'clustering'   , 'name_stab' , 'name_roi' , 'flag_verbose' , 'scale_grid' , 'scale_tar' , 'rand_seed' , 'flag_test' };
+list_defaults = { opt_clustering , 'stab'      , 'roi'      , true           , NaN          , []          , []          , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 opt.clustering.opt.flag_verbose = opt.flag_verbose;
 opt.clustering = psom_struct_defaults(opt.clustering,{'type','opt'},{'hierarchical',struct});
-
-% If the find_scale flag is set, check if any scales are provided to search
-if opt.flag_find_scale && isempty(opt.scale_target)
-    error(['FLAG_FIND is set but there are no target scales '...
-           'selected for search. Please supply scales to OPT.SCALE_TARGET!\n']);
-end
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -152,19 +148,21 @@ end
 %% Read the data
 roi = load(files_in.roi);
 part_roi = roi.(opt.name_roi);
+data = load(files_in.stab);
 
+%% Sanity Checks
 % If target scale is set, check if there are even enough ROIs for the scale
 % we are looking for
-if ~isempty(opt.scale_target)
+if ~isempty(opt.scale_tar)
     num_roi = max(part_roi);
-    if num_roi < max(opt.scale_target)
+    if num_roi < max(opt.scale_tar)
         error(['You want more scales (%d) from the consensus ',...
                 'step than we have ROIs (%d). ',...
-                'This will not work!\n'], max(opt.scale_target), num_roi);
+                'This will not work!\n'], max(opt.scale_tar), num_roi);
     end
 end
 
-data = load(files_in.stab);
+% See if the requested stability variable exists in FILES_IN.STAB
 if ~isfield(data,opt.name_stab)
     error('I could not find the variable called %s in the file %s',...
           opt.name_stab, files_in.stab)
@@ -172,57 +170,89 @@ else
     stab = data.(opt.name_stab);
 end
 
-%% Generate consensus clustering
-if isempty(opt.scale)
-    error(['Please specify the scale of the stability matrix in OPT.SCALE. '...
-           'Current scale is empty.\n']);
+% See if a grid scale was supplied
+if isempty(opt.scale_grid)
+    error(['Please specify the scale of the stability matrix in '...
+           'OPT.SCALE_GRID. Current scale is empty.\n']);
 end
 
-% Perform the consensus clustering
+% Check if the scale in OPT.SCALE_GRID has the same number of values as the
+% stability map has entries
+stab_num_sc = size(stab, 2);
+opt_num_sc = length(opt.scale_grid);
+if stab_num_sc ~= opt_num_sc
+    % We don't have the correct number of grid scale values supplied
+    error(['The number of scales in OPT.SCALE_GRID (%d) does not match '...
+           'the number of stability maps (%d).', opt_num_sc, stab_num_sc);
+end
+% If available, check if the grid scales in the stability file and in
+% opt.grid_scale match
+if isfield(data, 'scale_grid')
+    if ~all(data.scale_grid == opt.scale_grid)
+        warning(['The grid scale in FILES_IN.STAB does not match with the '...
+                 'grid scale in OPT.SCALE_GRID. This could be a problem.');
+    end
+end
+
+%% Generate consensus clustering
+% Perform the consensus clustering - here, every stability map will be
+% clustered into the same number of targets that it was generated with
 opt_c.clustering = opt.clustering;
 opt_c.flag_verbose = opt.flag_verbose;
-opt_c.nb_classes = opt.scale;
+opt_c.nb_classes = opt.scale_grid;
 
 [tmp_part, order, sil,...
- intra, inter, hier, nb_classes] = niak_consensus_clustering(stab,opt_c);
+ intra, inter, hier, scale_tar] = niak_consensus_clustering(stab,opt_c);
 
-for sc_id = 1:length(opt.scale);
-    mat = niak_vec2mat(stab(:,sc_id));
+for sc_id = 1:length(opt.scale_grid);
+    stab_mat = niak_vec2mat(stab(:,sc_id));
     [sil(:,sc_id),...
-     intra(:,sc_id), inter(:,sc_id)] = niak_build_avg_silhouette(mat,...
+     intra(:,sc_id), inter(:,sc_id)] = niak_build_avg_silhouette(stab_mat,...
                                                                  hier{sc_id},...
                                                                  false);
 end
 
 % Bring the partition back into the original space
-num_part = numel(opt.scale);
+num_part = numel(opt.scale_grid);
 V = length(part_roi);
 part = zeros(V,num_part);
 for part_index = 1:num_part
     part(:,part_index) = niak_part2vol(tmp_part(:, part_index),part_roi);
 end
 
-if ~isempty(opt.scale_target)
+% Get the scale of the partiton - here still equivalent to opt.scale_grid
+scale_tar = max(part);
+scale_rep = opt.scale_grid;
+
+if ~isempty(opt.scale_tar)
+    % Find the replication clusters that would maximize silhouette for the
+    % target clusters we just generated
     % Set the fixed neighbourhood
     neigh = [0.7,1.3];
     
-    [sil_max, scales_max] = niak_build_max_sil(sil, opt.scale(:), neigh, 1);
+    [sil_max, scales_max] = niak_build_max_sil(sil, opt.scale_grid(:), neigh, 1);
     
     % Find the optimal stochastic scales for the target scales
-    scale = scales_max(opt.scale_target)';
-    % Find the indices of the optimal stochastic scales in opt.scale
-    k_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), scale);
-    % Find the indices of the target scales in opt.scale
-    p_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), opt.scale_target);
+    scale_rep = scales_max(opt.scale_tar)';
+    % Find the indices of the optimal stochastic scales in opt.scale_grid
+    k_ind = arrayfun(@(x) find(opt.scale_grid == x,1,'first'), scale_rep);
+    % Find the indices of the target scales in opt.scale_grid
+    p_ind = arrayfun(@(x) find(opt.scale_grid == x,1,'first'), opt.scale_tar);
     % Truncate the inputs to reflect the adapted stochastic scales
     sil = sil(:, k_ind);
     part = part(:, p_ind);
+    % Get the scale of the partition
+    scale_tar = max(part);
+    % Get the grid scale for saving it
+    scale_grid = opt.scale_grid(k_ind);
     stab = stab(:, k_ind);
     hier = hier(k_ind);
-    save(files_out,'part','scale','order','sil','intra','inter','hier','stab','nb_classes');
+    save(files_out, 'part', 'scale_tar', 'scale_rep', 'scale_grid', 'order',...
+         'sil', 'intra', 'inter', 'hier', 'stab');
     
 else
     %% Save the results
-    scale = opt.scale;
-    save(files_out,'part','scale','order','sil','intra','inter','hier','stab','nb_classes');
+    scale_grid = opt.scale_grid;
+    save(files_out,'part', 'scale_tar', 'scale_rep', 'scale_grid', 'order',...
+         'sil','intra','inter','hier','stab');
 end
