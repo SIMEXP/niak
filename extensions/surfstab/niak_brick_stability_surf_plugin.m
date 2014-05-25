@@ -17,14 +17,18 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_plugin(files_in,fi
 % FILES_OUT
 %   (string, optional) the name of a .mat file with the variables:
 %       PART is a VxK matrix, where the k-th column is the partition associated 
-%       with the number of cluster OPT.SCALE(k).
+%       with the number of cluster OPT.SCALE_TAR(k).
 %
 % OPT
 %   (structure) with the following fields:
 %
-%   SCALE
-%       (vector of K integers, default 2:2:100) the target scales 
-%       (i.e. number of final clusters).
+%   SCALE_TAR
+%       (vector) of K integers. The target scales  (i.e. number of final 
+%       clusters).
+%
+%   SCALE_REP
+%       (vector, default same as OPT.SCALE_TAR) The desired scales to be used 
+%       for generating the replication clusters at a later point.
 %
 %   NAME_DATA
 %       (string, default 'data') the name of the variable that contains
@@ -104,9 +108,13 @@ end
 if nargin < 3
     opt = struct;
 end
-list_fields   = { 'scale' , 'name_data' , 'name_part' ,  'rand_seed' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 2:2:100 , 'data_roi'  , 'part_roi'  , []           , true           , false       };
+list_fields   = { 'scale_tar' , 'scale_rep' , 'name_data' , 'name_part' ,  'rand_seed' , 'flag_verbose' , 'flag_test' };
+list_defaults = { NaN         , []          , 'data_roi'  , 'part_roi'  , []           , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
+
+if isempty(opt.scale_rep)
+    opt.scale_rep = opt.scale_tar;
+end
 
 if opt.flag_test
     return
@@ -138,10 +146,10 @@ end
 
 R = niak_build_correlation(data_roi);
 hier = niak_hierarchical_clustering(R);
-opt_t.thresh = opt.scale;
+opt_t.thresh = opt.opt.scale_tar;
 part_tmp = niak_threshold_hierarchy(hier,opt_t);
 V = length(part_roi);
-num_scale = length(opt.scale);
+num_scale = length(opt.scale_tar);
 part = zeros(V,num_scale);
 % TODO: replace this with only one line when the new
 % niak_part2vol becomes available
@@ -153,5 +161,6 @@ end
 if opt.flag_verbose
     fprintf('Saving outputs to %s\n', files_out);
 end
-scale = opt.scale;
-save(files_out,'part','scale','hier');
+scale_tar = opt.scale_tar;
+scale_rep = opt.scale_rep;
+save(files_out, 'part', 'scale_tar', 'scale_rep', 'hier');

@@ -14,19 +14,19 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_cores(files_in,fil
 %   OPT. It contains the following fields:
 %
 %       STAB 
-%           (array; OPT.NAME_STAB) Array of dimension [S K] where STAB(:,K) is
+%           (array) Array of dimension [S K] where STAB(:,K) is
 %           the vectorized estimated stability matrix at scale SCALE(K).
+%
+%       SCALE_GRID
+%           (vector) Vector of length K that specifies the scales used in 
+%           FILES_IN.STAB.STAB.
 %
 %   PART
 %
 %       PART
-%           (array; OPT.NAME_PART) Array of dimension [V K] where PART(:,K) is 
+%           (array) Array of dimension [V K] where PART(:,K) is 
 %           the partition of the V surface verteces into clusters based on
 %           STAB(:, K).
-%
-%       SCALE
-%           (vector; OPT.NAME_SCALE) Vector of length K that specifies the 
-%           scales used in FILES_IN.STAB.
 %
 %   ROI
 %   (string) path to the .mat file containing the outputs of the region
@@ -54,19 +54,6 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_cores(files_in,fil
 %
 % OPT
 %   (structure) with the following fields.
-%
-%   NAME_STAB
-%       (string, default: 'stab') variable in FILES_IN.STAB that contains
-%       the array of vectorized stability matrices
-%
-%   NAME_SCALE
-%       (string, default: 'scale') variable in FILES_IN.PART that contains
-%       the scale vector corresponding to the scales of the stability
-%       matrices in FILES_IN.STAB
-%
-%   NAME_PART
-%       (string, default: 'part') variable in FILES_IN.PART that contains
-%       the partition.
 %
 %   NAME_PART_ROI
 %       (string, default: 'part_roi') variable in FILES_IN.PART that
@@ -158,8 +145,8 @@ if ~ischar(files_out)&&~iscellstr(files_out)
 end
 
 %% Options
-list_fields   = { 'name_stab' , 'name_scale' , 'name_part' , 'name_part_roi' , 'cores' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 'stab'      , 'scale'      , 'part'      , 'part_roi'      , struct  , true           , false       };
+list_fields   = { 'name_part_roi' , 'cores' , 'flag_verbose' , 'flag_test' };
+list_defaults = { 'part_roi'      , struct  , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % Setup Cores Option Defaults
@@ -184,20 +171,22 @@ if opt.flag_verbose
         fprintf('Reading the input data...\n');
 end
 
-stab = load(files_in.stab, opt.name_stab);
-part = load(files_in.part, opt.name_scale, opt.name_part);
+stab = load(files_in.stab, 'stab', 'scale_grid');
+part = load(files_in.part, 'part', 'scale_tar', 'scale_rep');
 roi  = load(files_in.roi, opt.name_part_roi);
 
 % Grab the data
-stab        = stab.(opt.name_stab);
-scale       = part.(opt.name_scale);
-part        = part.(opt.name_part);
+stab        = stab.stab;
+scale_grid  = stab.scale_grid;
+scale_tar   = part.scale_tar;
+scale_rep   = part.scale_rep;
+part        = part.part;
 part_roi    = roi.(opt.name_part_roi);
 
 % Prepare the outputs
-nb_scales   = length(scale);
-core_part = zeros(size(part));
-core_stab_mat = zeros(size(stab));
+nb_scales       = length(scale_grid);
+core_part       = zeros(size(part));
+core_stab_mat   = zeros(size(stab));
 
 %% Find Stable Cores
 
@@ -320,13 +309,28 @@ for sc_id = 1:nb_scales
     
 end
 
+% See if the core run has changed the target scale somehow
+core_scale = sort(unique(core_part));
+if length(core_scale) ~= length(scale_tar)
+    % Different length means we lost some
+    warning(['After running the stable cores, some cores were removed. '...
+             'This can happen but may not be desired.']);
+    scale_tar = core_scale;
+elseif all(core_scale == scale_tar)
+    % Different values would mean something miraculous has happened
+    error(['After running the stable cores, the number of scales is the '...
+          'but the values have changed. This is not supposed to happen!']);
+end    
+
 % Store the new outputs in the structure
-data.scale  = scale;
-data.stab   = core_stab_mat;
-data.part   = core_part;
+data.scale_tar  = scale_tar;
+data.scale_rep  = scale_rep;
+data.scale_grid = scale_grid;
+data.stab       = core_stab_mat;
+data.part       = core_part;
 
 %% Save outputs
 if opt.flag_verbose
-    fprintf('Saving outputs in a mat file at %s\n',files_out);
+    fprintf('Saving outputs in a mat file at %s\n', files_out);
 end
 save(files_out,'-struct','data');

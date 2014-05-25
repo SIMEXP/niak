@@ -23,6 +23,15 @@ function [files_in, files_out, opt] = niak_brick_stability_average(files_in, fil
 %       (string) the name of the variable in the input file that contains one of
 %       either a cell of strings or a matrix. See FILES_IN for an
 %       explanation.
+%
+%   NAME_SCALE_IN
+%       (string, default 'scale') the name of the variable that contains
+%       the vector of scales corresponding to the stability matrices.
+%
+%   NAME_SCALE_OUT
+%       (string, default 'scale') the name of the variable that contains
+%       the vector of scales corresponding to the stability matrices.
+%
 %   CASE
 %       (integer, default 1) the case variable that selects whether the
 %       variable OPT.NAME_DATA in FILES_IN will be expected to be a cell of 
@@ -39,10 +48,6 @@ function [files_in, files_out, opt] = niak_brick_stability_average(files_in, fil
 %       CASE = 2
 %           (OPT.NAME_DATA is a Matrix)
 %           The matrix in OPT.NAME_DATA is averaged across the input files.
-%
-%   NAME_SCALE
-%       (string, default 'scale') the name of the variable that contains
-%       the vector of scales corresponding to the stability matrices.
 %
 %   FLAG_VERBOSE
 %      (boolean, default true) turn on/off the verbose.
@@ -112,8 +117,8 @@ if nargin < 3
     opt = struct;
 end
 
-list_fields   = { 'name_data' , 'case' , 'name_scale' , 'flag_verbose' , 'flag_test' };
-list_defaults = { NaN         , 1      , 'scale'      , true           , false       };
+list_fields   = { 'name_data' , 'name_scale_in' , 'name_scale_out' , 'case' , 'flag_verbose' , 'flag_test' };
+list_defaults = { NaN         , 'scale'         , 'scale'          , 1      , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % If the test flag is true, stop here !
@@ -139,30 +144,35 @@ switch opt.case
             data = load(data_file);
 
             if opt.flag_verbose
-                fprintf(sprintf('I am loading file #%d now.\n    %s\n', f_ind, data_file));
+                fprintf(sprintf('I am loading file #%d now.\n    %s\n',...
+                                f_ind, data_file));
             end
 
             fields = fieldnames(data);
-            sought_fields = { opt.name_data, opt.name_scale };
+            sought_fields = { opt.name_data, opt.name_scale_in };
 
             % Checks
             if ~all(isfield(data, sought_fields))
                 % we are missing fields
                 miss_ind = ~isfield(data, sought_fields);
-                error('Could not find field %s in %s\n',sought_fields{miss_ind}, data_file);
+                error('Could not find field %s in %s\n',...
+                      sought_fields{miss_ind}, data_file);
             elseif ~iscellstr(data.(opt.name_data))
-                error('A cell of strings was expected but %s in %s was of type %s\n', opt.name_data, data_file, class(data.(opt.name_data))); 
+                error(['A cell of strings was expected but %s in %s was of '...
+                       'type %s\n'], opt.name_data, data_file,...
+                      class(data.(opt.name_data))); 
             end
             
             if f_ind == 1
                 % first file
                 out.scale_names = data.(opt.name_data);
-                out.scale = data.(opt.name_scale);
+                out.(opt.name_scale_out) = data.(opt.name_scale_in);
                 out.scale_rep = data.scale_rep;
                 num_scales = length(out.scale_names);
             else
-                if out.scale ~= data.(opt.name_scale)
-                    error('The scale in %s doesn''t match the previous scales\n', data_file);
+                if out.(opt.name_scale_out) ~= data.(opt.name_scale_in)
+                    error(['The scale in %s doesn''t match the previous '...
+                           'scales\n'], data_file);
                 end
             end
 
@@ -211,7 +221,7 @@ switch opt.case
                 fprintf(sprintf('I am loading file #%d now.\n    %s\n', f_ind, data_file));
             end
             
-            sought_fields = {opt.name_data, opt.name_scale};
+            sought_fields = {opt.name_data, opt.name_scale_in};
             % Checks
             if ~all(isfield(data, sought_fields))
                 % we are missing fields
@@ -224,10 +234,10 @@ switch opt.case
             if f_ind == 1
                 % first file, populate the array
                 stab = data.(opt.name_data);
-                out.scale = data.(opt.name_scale);
+                out.(opt.name_scale_out) = data.(opt.name_scale_in);
             else
                 stab = stab + data.(opt.name_data);
-                if ~out.scale == data.(opt.name_scale)
+                if ~out.(opt.name_scale_out) == data.(opt.name_scale_in)
                     error('The scale in %s doesn''t match the previous scales\n', data_file);
                 end
             end

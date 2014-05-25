@@ -16,8 +16,9 @@ function [files_in,files_out,opt] = niak_brick_stability_surf_contrast(files_in,
 %      cluster by vertex vertex-stability scores such that S(c,v)
 %      corresponds to the stability of the vertex v in cluster c.
 %
-%   SCALE
-%       (array) list of scales
+%   SCALE_TAR
+%       (array) list of the target scales used to generate the stability
+%       maps
 %
 %   SCALE_NAMES
 %
@@ -111,11 +112,11 @@ end
 part_file = load(files_in.part);
 stab_file = load(files_in.stab);
 
-nb_scales = length(stab_file.scale);
+nb_scales = length(stab_file.scale_tar);
 sil = zeros(nb_scales,1);
 
 % Prepare the output
-out.scale = zeros(numel(stab_file.scale),1);
+out.scale_tar = zeros(numel(stab_file.scale_tar),1);
 out.scale_names = stab_file.scale_names;
 
 if opt.flag_verbose
@@ -124,20 +125,22 @@ end
 
 % Sanity check for the scales
 for sc_ind = 1:nb_scales
-    scale = stab_file.scale(sc_ind);
+    scale = stab_file.scale_tar(sc_ind);
     scale_name = stab_file.scale_names{sc_ind};
     [stab_scale, N] = size(stab_file.stab.(scale_name));
     part_scale = max(part_file.part(:, sc_ind));
     if scale ~= stab_scale
-        error('stab.scale(%d) = %d but stab.stab.%s has scale %d and part.part(:, %d) has scale %d\n',sc_ind, scale, scale_name, stab_scale, part_scale);
+        error(['stab.scale(%d) = %d but stab.stab.%s has scale %d and '...
+               'part.part(:, %d) has scale %d\n'],...
+               sc_ind, scale, scale_name, stab_scale, part_scale);
     end
 end
 % Sanity check for the order of the scales
-[scale_ord, scale_ind] = sort(out.scale);
-if scale_ord ~= out.scale
+[scale_ord, scale_ind] = sort(out.scale_tar);
+if scale_ord ~= out.scale_tar
     warning('The input ordering of the scales does not seem to be sorted\n');
 end
-out.scale = stab_file.scale;
+out.scale_tar = stab_file.scale_tar;
 fprintf('All scales and scale_names and partitions make sense. Carry on.\n');
 
 for num_sc = 1:nb_scales
@@ -148,7 +151,8 @@ for num_sc = 1:nb_scales
     [scale, N] = size(stab);
     
     if opt.flag_verbose
-        fprintf('Computing stability contrast for scale %d (%s)\n',scale,scale_name);
+        fprintf('Computing stability contrast for scale %d (%s)\n',...
+                scale,scale_name);
         start_loc = tic;
     end
     
@@ -166,7 +170,8 @@ for num_sc = 1:nb_scales
         % clusters
         inter = max(stab((1:scale)~=num_c,:),[],1);
         intra_surf(part==num_c) = intra(part==num_c);
-        fprintf('    surf: %d, inter: %d, part_numc: %d, num_c: %d\n',size(inter_surf),size(inter),size(part==num_c),num_c);
+        fprintf('    surf: %d, inter: %d, part_numc: %d, num_c: %d\n',...
+                size(inter_surf),size(inter),size(part==num_c),num_c);
         inter_surf(part==num_c) = inter(part==num_c);        
     end
     % Get silhouette
