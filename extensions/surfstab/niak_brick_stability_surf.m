@@ -36,12 +36,23 @@ function [files_in,files_out,opt] = niak_brick_stability_surf(files_in,files_out
 % OPT
 %   (structure) with the following fields:
 %
-%   SCALE
-%      (vector of K integers, default same as FILES_IN.PART, if specified) the target
-%      scales (i.e. number of final clusters).
+%   SCALE_REP
+%       (vector, optional) the scales for the replication clusters. There
+%       has to be exactly the same number of replication and target scales
+%       (see OPT.SACLE_TAR for reference).
+%      
+%   SCALE_TAR
+%       (vector, optional) if not specified this will be taken from the
+%       partition in FILES_IN.PART. 
+%       There may be cases when the scales cannot be accurately retrieved 
+%       from FILES_IN.PART - for example if some clusters in the target 
+%       partition were removed by stable core masking and the true target 
+%       scale was not saved in a variable called SCALE_TAR inside the 
+%       partition structure. In these cases, it is necessary to set 
+%       OPT.SCALE_TAR to the correct values.
 %
 %   NB_SAMPS
-%      (integer, default 100) the number of replications.
+%       (integer, default 100) the number of replications.
 %
 %   REGION_GROWING
 %      (structure, optional) the options of NIAK_REGION_GROWING. The most
@@ -153,7 +164,7 @@ files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 % FILES_OUT
 if ~ischar(files_out)
-    error('FILES_OUT should be a string');    
+    error('FILES_OUT should be a string');
 end
 
 % Options
@@ -166,25 +177,31 @@ if isfield(opt, 'flag_cores')
         opt.name_part = 'core_part';
     end
 end
-        
 
-list_fields   = { 'sampling' , 'nb_samps' , 'flag_verbose' , 'name_data' , 'name_neigh' , 'name_part' ,  'scale' , 'region_growing' , 'clustering' , 'rand_seed' , 'flag_test' };
-list_defaults = { struct     , 100        , true           , 'data'      , 'neigh'      , 'part'      , []       , struct           , struct       , []          , false       };
+list_fields   = { 'scale_rep' , 'scale_tar' , 'nb_samps' , 'region_growing' , 'clustering' , 'sampling' , 'name_neigh' , 'name_data' , 'name_part' , 'rand_seed' , 'flag_verbose' , 'flag_test' };
+list_defaults = { []          , []          , 100        , struct()         , struct()     , struct()   , 'neigh'      , 'data'      , 'part'      , []          , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if ~isfield(opt.region_growing,'thre_size')
     opt.region_growing.thre_size = 80;
 end
+
 opt.region_growing.flag_verbose = false;
 opt.clustering.opt.flag_verbose = opt.flag_verbose;
 
-opt.clustering = psom_struct_defaults(opt.clustering,{'type','opt'},{'hierarchical',struct()});
-opt.sampling   = psom_struct_defaults(opt.sampling,{'type','opt'},{'jacknife',struct()});
+opt.clustering = psom_struct_defaults(opt.clustering,...
+                 { 'type'         ,   'opt'  },...
+                 { 'hierarchical' , struct() });
+opt.sampling   = psom_struct_defaults(opt.sampling,...
+                 { 'type'     , 'opt'    },...
+                 { 'jacknife' , struct() });
 
 switch opt.sampling.type
     case 'bootstrap'
     case 'jacknife'
-        opt.sampling.opt = psom_struct_defaults(opt.sampling.opt,{'perc'},{60});
+        opt.sampling.opt = psom_struct_defaults(opt.sampling.opt,...
+                           { 'perc' },...
+                           { 60     });
     case 'scenario'
     otherwise
         error('%s is an unknown method of sampling',opt.sampling.type)
@@ -204,7 +221,8 @@ end
 data = load(files_in.data);
 
 if ~isfield(data,opt.name_data)
-    error('I could not find the variable called %s in the file IN.DATA',opt.name_data)
+    error(['I could not find the variable called %s in '...
+           'the file IN.DATA'],opt.name_data)
 else
     data = data.(opt.name_data);
 end
@@ -221,7 +239,8 @@ else
     ssurf.neigh = in_neigh.(opt.name_neigh);
 end
 if size(ssurf.neigh,1)~=V
-    error('The data does not have the expected number of vertices (%i)',size(ssurf.neigh,1))
+    error(['The data does not have the expected number '...
+           'of vertices (%i)'],size(ssurf.neigh,1))
 end
 
 %% Load the target cluster
@@ -230,41 +249,76 @@ opt_m.flag_verbose = false;
 % Get the partition
 part_file = load(files_in.part);
 part = part_file.(opt.name_part);
-[pV, num_part] = size(part);
+part_scales = max(part);
+[pV, ~] = size(part);
 
-% Checks
+%% Checks
 if ~pV == V
     % Something is wrong
-    error('Partition at %s does not have the expected number of verteces:\n    # verteces: %d (expected %d)\n',files_in.part, pV, V);
-% See if a scale was supplied
-elseif isempty(opt.scale)
+    error(['Partition at %s does not have the expected number of '...
+           'verteces:\n    # verteces: %d (expected %d)\n'],files_in.part, ...
+          pV, V)
+end
+
+% Find the desired scale of targets
+scale_tar = [];
+if isfield(part_file, 'scale_tar')
+    % We have a target scale supplied, all is well
+    scale_tar = part_file.scale_tar;
+elseif all(sort(unique(part_scales)) == 1:max(part_scales))
+    % There is no scale_tar file but the partition is continuous
+    scale_tar = 1:max(part_scales);
+    warning(['No target scale was supplied but the scale of the partition '...
+             'is continuous so we will use the partition scale as a '...
+             'replication scale.'])
+else
+    % The partition is not continuous - possibly some clusters got removed
+    % through the stable core process. We will assume that the biggest
+    % cluster in the partition is also the maximal desired scale
+    scale_tar = 1:max(part_scales);
+    warning(['No target scale was supplied and the scale of the partition '...
+             'is not continuous. There are %d clusters in the partition '...
+             'and the largest one is %d. We will assume that the desired '...
+             'scales are 1:%d.'], length(unique(part_scales)), ...
+             max(part_scales), max(part_scales))
+end
+
+num_scale_tar = length(opt.scale_tar);
+
+% Find the desired scale of the repetition if it hasn't been set yet
+if isempty(opt.scale_rep)
     % The supplied scale is empty, see if the partition file has a scale
     % field
-    if isfield(part_file, 'scale')
+    if isfield(part_file, 'scale_rep')
         % Take the scale field from the partition and use it for the
         % replication
-        opt.scale = part_file.scale;
-        warning('No scales were supplied. But I found a scales field in %s and will use these.\n', files_in.part);
+        opt.scale_rep = part_file.scale_rep;
+        warning(['No scales were supplied. But I found a scale_rep field '...
+                 'in %s and will use this.\n'], files_in.part)
     else
-        % Just use the scales inside the partition for the replications
-        opt.scale = max(part,[],1);
-        warning('No scales were supplied. Using the scales of the partitions in %s now.\n', files_in.part);
+        % Just take the scale of the partition
+        opt.scale_rep = opt.scale_tar;
+        warning(['No scales were supplied. Using the scales of the '...
+                 'partitions in %s now.\n'], files_in.part)
     end
 end
 
-num_scale = length(opt.scale);
+num_scale_rep = length(opt.scale_rep);
 
-if ~num_scale == num_part
-    % The number of scales doesn't match the number of partitions. Since we
-    % only work by order at this point, this is a problem
-    error('I got %d scales but %d partitions from %s. I need the same number of scales and partitions in the same order.\n', num_scale, num_part, files_in.part);
+% See if we have exactly one replication scale per target scale
+if num_scale_tar ~= num_scale_rep
+    error(['We have a different number of target (%d) and replication '...
+           '(%d) scales. Please make sure they are the same! One reason '...
+           'could be that stable cores has removed some target clusters.'],...
+          num_scale_tar, num_scale_rep);
 end
 
 if opt.flag_verbose
-    fprintf('This analysis has %d scale(s):\n', num_scale);
-    disp(opt.scale);
+    fprintf('This analysis has %d scale(s):\n', num_scale_rep);
+    disp(opt.scale_rep);
 end
 
+%% Begin the stability estimation
 % Prepare storage variables for the main partition and the stability
 boot_store = cell(opt.nb_samps,1);
 
@@ -291,12 +345,21 @@ for rr = 1:opt.nb_samps
     switch opt.clustering.type
         case 'hierarchical'
             % Generate a replication of the partition
-            part_roi_s = niak_region_growing(data_s,ssurf.neigh,opt.region_growing);
+            part_roi_s = niak_region_growing(data_s,...
+                                             ssurf.neigh,opt.region_growing);
             % See that we have enough regions to meaningfully continue
             if length(unique(part_roi_s)) == 1
-                error('Region growing for subsample #%d resulted in only one region.\nPossibly this is due to your region growing threshold of %d. Consider changing the threshold!\n', rr, opt.region_growing.thre_size);
+                error(['Region growing for subsample #%d resulted in only '...
+                       'one region.\nPossibly this is due to your region '...
+                       'growing threshold of %d. Consider changing the '...
+                       'threshold!\n'], rr, opt.region_growing.thre_size)
             elseif length(unique(part_roi_s)) < 4
-                warning('Region growing for subsample #%d resulted in only %d regions.\nIf this is not enough, consider changing your region growing threshold of currently %d to something else.\n', rr, length(unique(part_roi_s)), opt.region_growing.thre_size);
+                warning(['Region growing for subsample #%d resulted in '...
+                         'only %d regions.\nIf this is not enough, consider '...
+                         'changing your region growing threshold of '...
+                         'currently %d to something else.\n'], rr, ...
+                         length(unique(part_roi_s)), ...
+                         opt.region_growing.thre_size)
             end
 
             data_roi_s = niak_build_tseries(data_s,part_roi_s);
@@ -306,7 +369,7 @@ for rr = 1:opt.nb_samps
             % Build the hierarchy
             R = niak_build_correlation(data_roi_s);
             hier_s = niak_hierarchical_clustering(R,opt_m);
-            opt_t.thresh = opt.scale;
+            opt_t.thresh = opt.scale_rep;
             % Store more things
             tmp_store.hier = hier_s;
             
@@ -314,7 +377,8 @@ for rr = 1:opt.nb_samps
             tmp_store.data_s = data_s;
 
         otherwise
-            error('%s is an unimplemented type of clustering',opt.clustering.type)
+            error('%s is an unimplemented type of clustering',...
+                  opt.clustering.type)
 
     end
     % Store the whole tmp storage
@@ -323,11 +387,11 @@ end
 
 % Store scale information in the output file ahead of the replications
 out = struct;
-out.scale_rep = opt.scale;
-out.scale_tar = max(part,[],1);
+out.scale_rep = opt.scale_rep;
+out.scale_tar = opt.scale_tar;
 
-out.scale_name = cell(num_scale,1);
-for sc_id = 1:num_scale
+out.scale_name = cell(num_scale_rep,1);
+for sc_id = 1:num_scale_rep
     out.scale_name{sc_id} = sprintf('sc%d', out.scale_tar(sc_id));
 end
 
@@ -338,25 +402,26 @@ save(files_out,'-struct','out');
 
 % Randomize the scale order so two batches won't run the same scale at the
 % same time
-rand_inds = randperm(num_scale);
+rand_inds = randperm(num_scale_rep);
 
 % Loop through the scales
 for scale_id = rand_inds
     % Reset the output structre
     out = struct;
-    scale_rep = opt.scale(scale_id);
+    scale_rep = opt.scale_rep(scale_id);
 
     % Get the vertex level target partition for the current scale
     part_t = part(:, scale_id);
     size_part_t = niak_build_size_roi(part_t);
-    scale_tar = max(part_t);
+    scale_tar = opt.scale_tar(scale_id);
 
     scale_name = sprintf('sc%d', scale_tar);
 
     % Threshold the replication data on the replication scale
     opt_t.thresh = scale_rep;
     if opt.flag_verbose
-        fprintf('Computing stability for scale %d\n',scale_rep);
+        fprintf(['Computing stability for replication scale %d '...
+                 'with target scale %d.\n'], scale_rep, scale_tar);
     end
 
     % loop through the bootstrap samples
@@ -376,21 +441,30 @@ for scale_id = rand_inds
 
         % Loop through the clusters in the target partition
         for ss = 1:scale_tar
-            % Find the clusters in the replication-partition that lie in the target cluster
-            list_inter = unique(part_s_sc(part_t==ss));
-            val_inter = zeros(scale_rep,1);
-            % Loop through the overlapping clusters and see how much they overlap
-            try
+            % See if the current target cluster is empty
+            if ~any(part_t==ss)
+                % The target cluster is empty - possibly removed by the
+                % stable core step. Raise a warning and create an empty
+                % stability map.
+                warning(['Target cluster %d at scale %d is empty. There '...
+                         'will be an empty stability matrix for this '...
+                         'cluster.'], ss, scale_tar);
+                out.(scale_name)(ss,:) = 0;
+            else
+                
+                % Find the clusters in the replication-partition that lie in 
+                % the target cluster
+                list_inter = unique(part_s_sc(part_t==ss));
+                val_inter = zeros(scale_rep,1);
+                % Loop through the overlapping clusters and see how much they
+                % overlap
                 for num_i = 1:length(list_inter)
                     val_inter(list_inter(num_i)) = sum((part_s_sc==list_inter(num_i))&(part_t==ss))/size_part_t(ss);
                 end
-            catch
-                fprintf('All is shite for ss %d, scale_tar %d\n', ss, scale_tar);
-                pass
+                % store the stability scores for all verteces for the current
+                % cluster
+                out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
             end
-            % store the stability scores for all verteces for the current
-            % cluster
-            out.(scale_name)(ss,:) = (out.(scale_name)(ss,:) + niak_part2vol(val_inter,part_s_sc'));
         end
 
     end
@@ -399,7 +473,8 @@ for scale_id = rand_inds
     % Done with scale
     
     if opt.flag_verbose
-        fprintf('Updating stab.%s results ...\n     %s\n',scale_name, files_out);
+        fprintf('Updating stab.%s results ...\n     %s\n',...
+                scale_name, files_out);
     end
     save(files_out,'-append','-struct','out');
 end
