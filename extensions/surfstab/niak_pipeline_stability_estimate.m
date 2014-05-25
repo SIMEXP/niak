@@ -21,9 +21,9 @@ function [pipeline] = niak_pipeline_stability_estimate(files_in, opt)
 %   ESTIMATE
 %       (structure)
 %
-%       NB_CLASSES
-%           (vector) the number of clusters (or classes) that will be 
-%           investigated. This must be set
+%       SCALE_GRID
+%           (vector) The vector of scales for which stability shall be
+%           estimated.
 %
 %       NAME_DATA
 %           (string, default 'data') the name of the variable in the input
@@ -79,8 +79,8 @@ function [pipeline] = niak_pipeline_stability_estimate(files_in, opt)
 %           (string, default 'average') the name given to the job that averages
 %           the stability estimates
 %
-%       NAME_SCALE
-%           (string, default 'nb_classes') the name of the variable in the
+%       NAME_SCALE_IN
+%           (string, default 'scale_grid') the name of the variable in the
 %           stability estimate outputs that contains the scale vector
 %
 %       NAME_DATA
@@ -169,13 +169,13 @@ opt.clustering = psom_struct_defaults(opt.clustering,...
            
 % Setup Estimation Defaults
 opt.estimation = psom_struct_defaults(opt.estimation,...
-                 { 'nb_classes' , 'name_data' ,  'nb_samps' , 'nb_batch' , 'clustering'   , 'sampling'   },...
+                 { 'scale_grid' , 'name_data' ,  'nb_samps' , 'nb_batch' , 'clustering'   , 'sampling'   },...
                  { NaN          , 'data'      ,  100        , 100        , opt.clustering , opt.sampling });
            
 % Setup Average Defaults
 opt.average = psom_struct_defaults(opt.average,...
-              { 'name_job' , 'name_scale' , 'name_data' },...
-              { 'average'  , 'nb_classes' , 'stab'      });
+              { 'name_job' , 'name_scale_in' , 'name_data' },...
+              { 'average'  , 'scale_grid'    , 'stab'      });
 opt.average.case = 2;
 
 %% The pipeline starts here
