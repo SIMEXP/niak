@@ -19,8 +19,8 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %       (array) STAB(:,s) is the vectorized version of the stability matrix
 %       associated with OPT.NB_CLASSES(s) clusters.
 %
-%   NB_CLASSES
-%       (vector) Identical to OPT.NB_CLASSES (see below).
+%   SCALE_GRID
+%       (vector) The vector of scales for which stability was estimated.
 %
 %   PART
 %       (matrix N*S) PART(:,s) is the consensus partition associated with 
@@ -57,10 +57,12 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 %       (string, default 'tseries'). The name of the variable in the input
 %       file(s) that contains the timeseries
 %
-%   NB_CLASSES
+%   SCALE_GRID
 %       (vector of integer) the number of clusters (or classes) that will
-%       be investigated. This parameter will overide the parameters
-%       specified in CLUSTERING.OPT_CLUST
+%       be investigated. This will be exposed to NIAK_STABILITY_TSERIES as
+%       OPT.NB_CLASSES in order to keep naming conventions
+%       This parameter will overide the parameters specified in 
+%       CLUSTERING.OPT_CLUST
 %
 %   RAND_SEED
 %       (scalar, default []) The specified value is used to seed the random
@@ -150,7 +152,6 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_STABILITY, NIAK_PIPELINE_STABILITY_REST
-%
 % _________________________________________________________________________
 % COMMENTS:
 %
@@ -207,9 +208,16 @@ if ~ischar(files_out)
 end
 
 %% Options
-list_fields   = { 'name_data' , 'rand_seed' , 'normalize' , 'nb_samps' , 'nb_classes' , 'clustering' , 'consensus' , 'sampling' , 'flag_verbose' , 'flag_test'  };
+list_fields   = { 'name_data' , 'rand_seed' , 'normalize' , 'nb_samps' , 'scale_grid' , 'clustering' , 'consensus' , 'sampling' , 'flag_verbose' , 'flag_test'  };
 list_defaults = { 'tseries'   , []          , struct()    , 100        , NaN          , struct()     , struct()    , struct()   , true           , false        };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
+
+% Save scale_grid for saving
+scale_grid = opt.scale_grid;
+
+% Expose scale_grid as nb_classes to niak_stability_tseries
+opt.nb_classes = opt.scale_grid;
+%opt = rmfield(opt, 'scale_grid');
 
 % Setup Normalize Defaults
 opt.normalize = psom_struct_defaults(opt.normalize,...
@@ -268,11 +276,11 @@ stab = niak_stability_tseries(tseries,opt_s);
 %% Consensus clustering
 opt_c.clustering = opt.consensus;
 opt_c.flag_verbose = opt.flag_verbose;
-[part,order,sil,intra,inter,hier] = niak_consensus_clustering(stab,opt_c);
+[part, order, sil, intra, inter, hier] = niak_consensus_clustering(stab,opt_c);
 
 %% Save outputs
 if opt.flag_verbose
     fprintf('Save outputs ...\n');
 end
-nb_classes = opt.nb_classes;
-save(files_out,'stab','nb_classes','part','hier','order','sil','intra','inter')
+
+save(files_out,'stab','scale_grid','part','hier','order','sil','intra','inter')

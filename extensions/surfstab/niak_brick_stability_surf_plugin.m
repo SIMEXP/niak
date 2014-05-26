@@ -146,7 +146,7 @@ end
 
 R = niak_build_correlation(data_roi);
 hier = niak_hierarchical_clustering(R);
-opt_t.thresh = opt.opt.scale_tar;
+opt_t.thresh = opt.scale_tar;
 part_tmp = niak_threshold_hierarchy(hier,opt_t);
 V = length(part_roi);
 num_scale = length(opt.scale_tar);

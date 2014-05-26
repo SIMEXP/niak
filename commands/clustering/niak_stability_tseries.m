@@ -154,6 +154,17 @@ if strcmp(opt.clustering.type, 'kcores')
     opt.clustering.opt = psom_struct_defaults(opt.clustering.opt,...
                          { 'target_part' },...
                          { NaN           });
+    
+    % Check if the file is already loaded
+    if exist(opt.clustering.opt, 'file')
+        % The file is not loaded yet
+        tmp = load(opt.clustering.opt);
+        opt.clustering.opt = tmp.part;
+    elseif ~exist('opt.clustering.opt', 'var')
+        % The file is not a file and not loaded
+        error('OPT.CLUSTERIN.OPT is not a file and not loaded.');
+    end
+
 end
 
 % Setup Sampling Defaults
