@@ -183,14 +183,14 @@ opt_num_sc = length(opt.scale_grid);
 if stab_num_sc ~= opt_num_sc
     % We don't have the correct number of grid scale values supplied
     error(['The number of scales in OPT.SCALE_GRID (%d) does not match '...
-           'the number of stability maps (%d).', opt_num_sc, stab_num_sc);
+           'the number of stability maps (%d).'], opt_num_sc, stab_num_sc);
 end
 % If available, check if the grid scales in the stability file and in
 % opt.grid_scale match
 if isfield(data, 'scale_grid')
     if ~all(data.scale_grid == opt.scale_grid)
         warning(['The grid scale in FILES_IN.STAB does not match with the '...
-                 'grid scale in OPT.SCALE_GRID. This could be a problem.');
+                 'grid scale in OPT.SCALE_GRID. This could be a problem.']);
     end
 end
 
