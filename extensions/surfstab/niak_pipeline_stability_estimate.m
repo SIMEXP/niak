@@ -18,7 +18,7 @@ function [pipeline] = niak_pipeline_stability_estimate(files_in, opt)
 %   FOLDER_OUT
 %       (string, must be set) where to write the default outputs.
 %
-%   ESTIMATE
+%   ESTIMATION
 %       (structure)
 %
 %       SCALE_GRID
@@ -205,6 +205,7 @@ avg_in = stab_files;
 avg_out = [opt.folder_out 'stability_estimate.mat'];
 avg_name = opt.average.name_job;
 avg_opt = rmfield(opt.average, 'name_job');
+avg_opt.name_scale_out = 'scale_grid';
 
 pipeline = psom_add_job(pipeline, avg_name, 'niak_brick_stability_average', ...
            avg_in, avg_out, avg_opt);
