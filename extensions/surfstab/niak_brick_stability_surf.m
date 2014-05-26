@@ -261,13 +261,13 @@ if ~pV == V
 end
 
 % Find the desired scale of targets
-scale_tar = [];
+opt.scale_tar = [];
 if isfield(part_file, 'scale_tar')
     % We have a target scale supplied, all is well
-    scale_tar = part_file.scale_tar;
+    opt.scale_tar = part_file.scale_tar;
 elseif all(sort(unique(part_scales)) == 1:max(part_scales))
     % There is no scale_tar file but the partition is continuous
-    scale_tar = 1:max(part_scales);
+    opt.scale_tar = 1:max(part_scales);
     warning(['No target scale was supplied but the scale of the partition '...
              'is continuous so we will use the partition scale as a '...
              'replication scale.'])
@@ -275,7 +275,7 @@ else
     % The partition is not continuous - possibly some clusters got removed
     % through the stable core process. We will assume that the biggest
     % cluster in the partition is also the maximal desired scale
-    scale_tar = 1:max(part_scales);
+    opt.scale_tar = 1:max(part_scales);
     warning(['No target scale was supplied and the scale of the partition '...
              'is not continuous. There are %d clusters in the partition '...
              'and the largest one is %d. We will assume that the desired '...
@@ -409,14 +409,34 @@ for scale_id = rand_inds
     % Reset the output structre
     out = struct;
     scale_rep = opt.scale_rep(scale_id);
+    scale_tar = opt.scale_tar(scale_id);
+    scale_name = sprintf('sc%d', scale_tar);
 
     % Get the vertex level target partition for the current scale
     part_t = part(:, scale_id);
+    % Check if any of the partitions are missing
+    scale_part = unique(part_t);
+    scale_ref = 1:scale_tar;
+    scale_index = ismember(scale_ref, scale_part);
+    % Get the size of each target cluster
     size_part_t = niak_build_size_roi(part_t);
-    scale_tar = opt.scale_tar(scale_id);
-
-    scale_name = sprintf('sc%d', scale_tar);
-
+    if any(~scale_index)
+        % There are missing scales
+        missing = scale_ref(~scale_index);
+        warning('Scale %s has missing clusters:', scale_name);
+        warning('\n    Missing cluster %d.', missing);
+        % Fix the size vector for the clusters
+        for miss = missing
+            if miss == 1
+                % if the first cluster is missing we add a 0 in front
+                size_part_t = [ 0 size_part_t ];
+            else
+                % Add a zero at the correct location in the vector
+                size_part_t = [size_part_t(1:miss-1); 0;size_part_t(miss:end)];
+            end
+        end
+    end
+    
     % Threshold the replication data on the replication scale
     opt_t.thresh = scale_rep;
     if opt.flag_verbose
@@ -444,11 +464,7 @@ for scale_id = rand_inds
             % See if the current target cluster is empty
             if ~any(part_t==ss)
                 % The target cluster is empty - possibly removed by the
-                % stable core step. Raise a warning and create an empty
-                % stability map.
-                warning(['Target cluster %d at scale %d is empty. There '...
-                         'will be an empty stability matrix for this '...
-                         'cluster.'], ss, scale_tar);
+                % stable core step. Create an empty stability map
                 out.(scale_name)(ss,:) = 0;
             else
                 
