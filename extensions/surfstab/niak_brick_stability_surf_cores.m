@@ -310,7 +310,7 @@ for sc_id = 1:nb_scales
 end
 
 % See if the core run has changed the target scale somehow
-core_scale = max(core_part);
+core_scale = max(core_part)';
 if ~all(core_scale == scale_tar)
     % Different length means we lost some
     warning(['After running the stable cores, some cores were removed. '...

@@ -291,7 +291,7 @@ opt.consensus.scale_grid = opt.scale_grid;
 opt.msteps = psom_struct_defaults(opt.msteps,...
              { 'param' , 'neigh'   },...
              { 0.05    , [0.7 1.3] });
-opt.msteps.name_nb_classes = 'scale';
+opt.msteps.name_nb_classes = 'scale_grid';
 
 % Setup Cores Defaults - put them in stacked hierarchy because this is what
 % niak_brick_stability_surf_cores expects
