@@ -1,4 +1,4 @@
-function part = niak_vol2part(vol,mask)
+function part = niak_vol2part(vol, mask, opt)
 % Convert a partition of N individual regions into 3D maps of clusters.
 %
 % SYNTAX:
@@ -17,6 +17,14 @@ function part = niak_vol2part(vol,mask)
 %   total of V elements) 
 %   MASK==I is a binary mask of region I.
 %
+% OPT
+%   (structure, optional)
+%   
+%   METRIC
+%       (string, default 'mean') chooses the summary metric across elements 
+%       inside one roi
+%           'mean' : average
+%           'mode' : most frequent element inside the roi
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -55,11 +63,26 @@ function part = niak_vol2part(vol,mask)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+if nargin < 3
+    opt = psom_struct_defaults(struct(),...
+          { 'metric' },...
+          { 'mean'   });
+elseif ~strcmp(opt.metric, 'mean') && ~strcmp(opt.metric, 'mode')
+    % The option that was chosen is not implemented
+    error('The option chosen for OPT.METRIC is not implemented!');
+end
+    
+
 N = length(unique(mask));
 S = size(vol,2);
 
 part = zeros(N,S);
 
 for roi_ind = 1:N
-    part(roi_ind,:) = mean(vol(mask == roi_ind,:),1);
+    switch opt.metric
+        case 'mean'
+            part(roi_ind,:) = mean(vol(mask == roi_ind,:),1);
+        case 'mode'
+            part(roi_ind,:) = mode(vol(mask == roi_ind,:),1);
+    end
 end
