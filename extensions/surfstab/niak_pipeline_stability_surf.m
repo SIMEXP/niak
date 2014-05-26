@@ -333,7 +333,7 @@ end
 switch opt.target_type
     case 'manual'
         % User wants to use an external partition
-        warning('External partition selected\n\n');
+        fprintf('External partition selected\n\n');
         if strcmp(in.part, 'gb_niak_omitted')
             % User has not supplied an external partition
             error(['A target partition is required because of OPT.TARGET_TYPE '...
@@ -353,7 +353,7 @@ switch opt.target_type
 
     case 'plugin'
         % User wants to use a plugin clustering
-        warning('Plugin Clustering selected.\n\n');
+        fprintf('Plugin Clustering selected.\n\n');
         if isempty(opt.scale_tar)
             % User has not supplied a scale to generate plugin clusters with
             error(['A plugin clustering will be generated because '...
@@ -373,7 +373,7 @@ switch opt.target_type
 
     case 'cons'
         % User wants to generate a consensus clustering
-        warning('Consensus Clustering selected.\n\n');
+        fprintf('Consensus Clustering selected.\n\n');
         if isempty(opt.scale_grid)
             % User has not specified the grid scale to generate atom level
             % stability on
@@ -385,7 +385,7 @@ switch opt.target_type
         if isempty(opt.scale_tar)
             % User has not specified a target scale - thus MSTEP will be
             % run to determine a target scale
-            warning(['MSTEP will be run because no target scales were '...
+            fprintf(['MSTEP will be run because no target scales were '...
                      'supplied in OPT.SCALE_TAR.\n']);
         elseif any(~ismember(opt.scale_tar, opt.scale_grid))
             % User has specified a target scale of which at least some
@@ -400,7 +400,7 @@ switch opt.target_type
             % consensus brick
             warning(['A target scale and a replication scale were supplied. '...
                      'The replication scale in OPT.SCALE_REP will be '...
-                     'by the consensus clustering process.\n']);
+                     'overwritten by the consensus clustering process.\n']);
             opt.scale_rep = [];
         end
         
@@ -472,7 +472,7 @@ switch opt.target_type
         core_in.stab = pipe.consensus.files_out;
 
         % See if mstep should run
-        if isempty(opt.consensus.scale_target)
+        if isempty(opt.consensus.scale_tar)
             % Perform Consensus Clustering
             fprintf(['Mstep will run since OPT.CONSENSUS.SCALE_TARGET '...
                       'is emtpy\n']);
