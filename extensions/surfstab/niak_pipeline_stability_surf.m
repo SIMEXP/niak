@@ -250,7 +250,7 @@ in = psom_struct_defaults(in,list_fields,list_defaults);
 
 % OPT
 list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale_grid' , 'scale_tar' , 'scale_rep' ,  'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'target_type' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
-list_defaults   = { 'data'      , 'part'      , 'neigh'      , []           , []          , []          , NaN          , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , 'cons'        , false        , false       , true           , false       };
+list_defaults   = { 'data'      , 'part'      , 'neigh'      , []           , []          , []          , NaN           , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , 'cons'        , false        , false       , true           , false       };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs'];
@@ -309,44 +309,110 @@ opt.stability_vertex.name_neigh = opt.name_neigh;
 opt.stability_vertex.region_growing = opt.region_growing.region_growing;
 opt.stability_vertex.sampling = opt.sampling;
 
-% A number of sanity checks for the configuration
-if ~isempty(opt.scale_rep) && ~strcmp(in.part, 'gb_niak_omitted')
-    % The user supplied a scale and a partition. Announce that the scale
-    % will be discarded
-    if ~ischar(in.part)
-        error('IN.PART should be a string!');
-    end
-    warning('You supplied a scale AND a partition file. Please note that the scale you supplied will be overwritten by whatever is in the partition file (%s).\n', in.part);
-    opt.scale_rep = [];
-% 
-% elseif isempty(opt.scale) && strcmp(in.part, 'gb_niak_omitted')
-%     error('You did not supply a scale in opt.scale and you also did not specify a partition in in.part.\n Please supply either a partition or a scale.\n');
-% 
-% end
-end
+%% Sanity checks
+% Conditions:
+%   - External Partition without cores (no scales - rep from part)
+%   - External Partition with cores (grid - could be taken from part but
+%     isn't)
+%   - Plugin without cores (tar - rep can be set to tar)
+%   - Plugin with cores (tar - grid can be set to tar)
+%   - Consensus without cores (grid + tar - rep is determined by consensus)
+%   - Consensus with cores (grid + tar - cores use the same grid)
+%   - MSTEP without cores (grid - tar and rep are determined by mstep)
+%   - MSTEP with cores (grid - core uses the same grid)
 
 if ~strcmp(in.part, 'gb_niak_omitted') && ~strcmp(opt.target_type, 'manual')
     % A partition has been supplied, the target type will be forced to
     % manual
-    warning('A target partition was supplied by the user. Target cluster type will be forced to manual!\n    old target type: %s\n    target: %s\n', opt.target_type, in.part);
+    warning(['\n\nA target partition was supplied by the user. Target cluster '...
+             'type will be forced to manual!\n    old target type: '...
+             '%s\n    target: %s\n\n'], opt.target_type, in.part);
     opt.target_type = 'manual';
-    
-elseif strcmp(in.part, 'gb_niak_omitted') && strcmp(opt.target_type, 'manual')
-    % User does not provide a target partition but wants to use manual mode
-    error('A target partition was expected because of OPT.TARGET_TYPE = ''manual'' but none was supplied by the user!\n');
 end
 
-if ~isempty(opt.consensus.scale_tar) && any(~ismember(opt.consensus.scale_tar, opt.scale_grid)) && strcmp(opt.target_type, 'cons')
-    % The user has requested a target scale for consensus clustering that
-    % is not part of the investigated scale space
-    error(['If specified, the target scale for consensus clustering must be '...
-           'present in the grid scales for which stability is estimated!\n']);
-end
+switch opt.target_type
+    case 'manual'
+        % User wants to use an external partition
+        warning('External partition selected\n\n');
+        if strcmp(in.part, 'gb_niak_omitted')
+            % User has not supplied an external partition
+            error(['A target partition is required because of OPT.TARGET_TYPE '...
+                   '= ''manual'' but none was supplied by the user!\n']);
+        end
 
-% Set up the pipeline
-pipe = struct;
+        if opt.flag_cores && isempty(opt.scale_grid)
+            % User wants to compute stable cores for the external partition but
+            % hasn't supplied a scale to compute stability for - this could be
+            % taken from the partition at some point but at the moment it has
+            % to be supplied
+            error(['Stable cores will be computed because of OPT.FLAG_CORES = '...
+                   'true but OPT.SCALE_GRID is empty. Please provide a grid '...
+                   'scale for every supplied external partition to compute '...
+                   'stable cores!\n']);
+        end
+
+    case 'plugin'
+        % User wants to use a plugin clustering
+        warning('Plugin Clustering selected.\n\n');
+        if isempty(opt.scale_tar)
+            % User has not supplied a scale to generate plugin clusters with
+            error(['A plugin clustering will be generated because '...
+                   'OPT.TARGET_TYPE = ''plugin'' but OPT.SCALE_TAR is empty. '...
+                   'Please provide the scales to generate the plugin clusters '...
+                   'with in OPT.SCALE_TAR!\n']);
+        elseif opt.flag_cores && isempty(opt.scale_grid)
+            % User wants to generate stable cores of the plugin cluster but
+            % has not specified the grid scale for the atom level stability
+            % estimation. OPT.SCALE_GRID will be set to OPT.SCALE_TAR
+            warning(['Stable cores will be computed for the plugin clusters.'...
+                     ' Since no dedicated grid scale was supplied in '...
+                     'OPT.SCALE_GRID the values in OPT.SCALE_TAR will '...
+                     'be used.\n']);
+            opt.scale_grid = opt.scale_tar;
+        end
+
+    case 'cons'
+        % User wants to generate a consensus clustering
+        warning('Consensus Clustering selected.\n\n');
+        if isempty(opt.scale_grid)
+            % User has not specified the grid scale to generate atom level
+            % stability on
+            error(['Consensus clustering will be run because of '...
+                   'OPT.TARGET_TYPE = ''cons'' but OPT.SCALE_GRID is empty. '...
+                   'Please provide the grid scales in OPT.SCALE_GRID!\n']);
+        end
+        
+        if isempty(opt.scale_tar)
+            % User has not specified a target scale - thus MSTEP will be
+            % run to determine a target scale
+            warning(['MSTEP will be run because no target scales were '...
+                     'supplied in OPT.SCALE_TAR.\n']);
+        elseif any(~ismember(opt.scale_tar, opt.scale_grid))
+            % User has specified a target scale of which at least some
+            % scales are not members in the grid scale
+            error(['At least some target scales in OPT.SCALE_TAR are not '...
+                   'present in the provided grid scale OPT.SCALE_GRID. '...
+                   'When consensus clustering is selected, OPT.SCALE_TAR '...
+                   'must be a subset of OPT.SCALE_GRID!\n']);
+        elseif ~isempty(opt.scale_rep)
+            % User has specified a target scale and a replication scale. In
+            % this case, the replication scale will be overwritten by the
+            % consensus brick
+            warning(['A target scale and a replication scale were supplied. '...
+                     'The replication scale in OPT.SCALE_REP will be '...
+                     'by the consensus clustering process.\n']);
+            opt.scale_rep = [];
+        end
+        
+    otherwise
+        % User has specified a target type that is not implemented
+        error(['The target type specified in OPT.TARGET_TYPE is '...
+               'not implemented\n\n']);
+  
+end
 
 %% Start assembling the pipeline
+pipe = struct;
 % Get the neighbourhood matrix if none has been specified
 if strcmp(in.neigh,'gb_niak_omitted')
     pipe.adjacency_matrix.command = sprintf(['ssurf = niak_read_surf('''','...
