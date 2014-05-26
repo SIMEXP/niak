@@ -176,8 +176,8 @@ part = load(files_in.part, 'part', 'scale_tar', 'scale_rep');
 roi  = load(files_in.roi, opt.name_part_roi);
 
 % Grab the data
-stab        = stab.stab;
 scale_grid  = stab.scale_grid;
+stab        = stab.stab;
 scale_tar   = part.scale_tar;
 scale_rep   = part.scale_rep;
 part        = part.part;
@@ -310,16 +310,15 @@ for sc_id = 1:nb_scales
 end
 
 % See if the core run has changed the target scale somehow
-core_scale = sort(unique(core_part));
-if length(core_scale) ~= length(scale_tar)
+core_scale = max(core_part);
+if ~all(core_scale == scale_tar)
     % Different length means we lost some
     warning(['After running the stable cores, some cores were removed. '...
              'This can happen but may not be desired.']);
-    scale_tar = core_scale;
-elseif all(core_scale == scale_tar)
+elseif length(core_scale) ~= length(scale_tar)
     % Different values would mean something miraculous has happened
     error(['After running the stable cores, the number of scales is the '...
-          'but the values have changed. This is not supposed to happen!']);
+          'same but the values have changed. This is not supposed to happen!']);
 end    
 
 % Store the new outputs in the structure
