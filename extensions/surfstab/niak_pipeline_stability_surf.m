@@ -249,8 +249,8 @@ list_defaults = { NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' };
 in = psom_struct_defaults(in,list_fields,list_defaults);
 
 % OPT
-list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale_grid' , 'scale_tar' , 'scale_rep' ,  'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'target_type' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
-list_defaults   = { 'data'      , 'part'      , 'neigh'      , []           , []          , []          , NaN           , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , 'cons'        , false        , false       , true           , false       };
+list_fields     = { 'name_data' , 'name_part' , 'name_neigh' , 'scale_grid' , 'scale_tar' , 'scale_rep' , 'folder_out' , 'sampling' , 'region_growing' , 'stability_atom' , 'consensus' , 'msteps' , 'cores'  , 'stability_vertex' , 'psom'   , 'target_type' , 'flag_cores' , 'flag_rand' , 'flag_verbose' , 'flag_test' };
+list_defaults   = { 'data'      , 'part'      , 'neigh'      , []           , []          , []          , NaN          , struct()   , struct()         , struct()         , struct()    , struct() , struct() , struct()           , struct() , 'cons'        , false        , false       , true           , false       };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs'];
@@ -267,7 +267,7 @@ opt.sampling = psom_struct_defaults(opt.sampling,...
                { 'type'     , 'opt'    },...
                { 'jacknife' , struct() });
 
-% Setup Stability Atom Defaults (XX WIP XX)
+% Setup Stability Atom Defaults
 opt.stability_atom = psom_struct_defaults(opt.stability_atom,...
                      { 'nb_samps' , 'nb_batch' , 'sampling'   , 'clustering' },...
                      { 100        , 100        , opt.sampling , struct()     });
@@ -446,7 +446,10 @@ if opt.flag_cores || strcmp(opt.target_type, 'cons')
     fprintf('Stability Estimation will be run\n');
     
     % Stability Estimation
-    stab_est_in = pipe.region_growing.files_out;
+    stab_est_in = struct('data', pipe.region_growing.files_out,...
+                         'part_ref', in.part,...
+                         'part_roi', pipe.region_growing.files_out);
+    stab_est_in.data = pipe.region_growing.files_out;
     stab_est_opt = opt.stability_atom;
     pipe_stab_est = niak_pipeline_stability_estimate(stab_est_in, stab_est_opt);
     % Merge back the stability estimation pipeline with this pipeline

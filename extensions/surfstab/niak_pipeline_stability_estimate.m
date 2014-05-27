@@ -8,9 +8,23 @@ function [pipeline] = niak_pipeline_stability_estimate(files_in, opt)
 % INPUTS:
 %
 % FILES_IN
-%   (string or cell of strings) the name(s) of one or multiple .mat file, 
-%   which contains one variable TS (OPT.NAME_DATA). TS(:,I) is the time series 
-%   of region I.
+% (struct)
+%   TSERIES
+%       (string or cell of strings) the name(s) of one or multiple .mat file, 
+%       which contains one variable TS (OPT.NAME_DATA). TS(:,I) is the time 
+%       series of region I.
+%
+%   PART_REF
+%       (string, optional) path to a .mat file containing a variable called
+%       PART which is the reference partition. If kcores is used to generate 
+%       the atom level stability maps, part_ref has to be set as the 
+%       reference partition.
+%
+%   PART_ROI
+%       (string, optional) path to a .mat file containing the region
+%       growing results for the current dataset. This is needed to bring
+%       the reference partition in FILES_IN.PART_REF into atom space so we
+%       can use it if kcores is selected in OPT.CLUSTERING.TYPE
 %
 % OPT
 %   (structure) with the following fields.
@@ -147,9 +161,9 @@ if ~exist('files_in','var')
 end
 
 %% Files in
-if ~ischar(files_in)&&~iscellstr(files_in)
-    error('FILES_IN should be a cell of strings');    
-end
+list_fields   = { 'data' , 'part_ref'        , 'part_roi'        };
+list_defaults = { NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' };
+files_in = psom_struct_defaults(files_in, list_fields, list_defaults);
 
 %% Options
 list_fields   = { 'folder_out' , 'estimation' , 'sampling' , 'clustering' , 'average' , 'psom'   , 'flag_verbose' , 'flag_test' };
@@ -161,29 +175,64 @@ opt.psom.path_logs = [opt.folder_out 'logs'];
 opt.sampling = psom_struct_defaults(opt.sampling,...
                { 'type'      , 'opt'    },...
                { 'jacknife'  , struct() });
-           
+
 % Setup Clustering Defaults
 opt.clustering = psom_struct_defaults(opt.clustering,...
                  { 'type'         , 'opt'    },...
                  { 'hierarchical' , struct() });
-           
+
 % Setup Estimation Defaults
 opt.estimation = psom_struct_defaults(opt.estimation,...
                  { 'scale_grid' , 'name_data' ,  'nb_samps' , 'nb_batch' , 'clustering'   , 'sampling'   },...
                  { NaN          , 'data'      ,  100        , 100        , opt.clustering , opt.sampling });
-           
+
 % Setup Average Defaults
 opt.average = psom_struct_defaults(opt.average,...
               { 'name_job' , 'name_scale_in' , 'name_data' },...
               { 'average'  , 'scale_grid'    , 'stab'      });
 opt.average.case = 2;
 
+%% Sanity checks
+if strcmp(opt.clustering.type, 'kcores')
+    % User wants to run atom level stability estimation with kcores. We
+    % need to have both the reference partition and the region growing
+    % input
+    if (strcmp(files_in.part_ref, 'gb_niak_omitted') || ...
+        strcmp(files_in.part_roi, 'gb_niak_omitted'))
+        % The user has not specified the necessary reference partition
+        error(['When running k-cores for atom level stability estimation, '...
+               'FILES_IN.PART_REF and FILES_IN.PART_ROI must be defined!']);
+    end
+end
+
 %% The pipeline starts here
 pipeline = struct;
 stab_files = cell(opt.estimation.nb_batch,1);
 
+% See if we need to load the reference partition
+if strcmp(opt.clustering.type, 'kcores')
+    pipeline.get_ref.command = sprintf(['part_f = load(files_in.part);'...
+                                        'roi_f = load(files_in.roi);'...
+                                        'part = part_f.part;'...
+                                        'roi = roi_f.part_roi;'...
+                                        'part = niak_vol2part(part, roi, opt);'...
+                                        'if isfield(part_f, ''scale_tar'');'...
+                                        'scale_tar = part_f.scale_tar;'...
+                                        'else;'...
+                                        'scale_tar = max(part);'...
+                                        'end;'...
+                                        'save(files_out, ''part'', ''scale_tar'');']);
+    pipeline.get_ref.opt.metric = 'mode';
+    pipeline.get_ref.files_in = struct('part', files_in.part_ref,...
+                                       'roi', files_in.part_roi);
+    pipeline.get_ref.files_out = [opt.folder_out 'ref_part_roi.mat'];
+end
+
 % Checking the contents of the file
 for stab_batch_id = 1:opt.estimation.nb_batch
+    % Set the inputs for the brick
+    stab_batch_in = struct('data', files_in.data,...
+                           'part_ref', pipeline.get_ref.files_out);
     stab_batch_out = [opt.folder_out...
                       sprintf('stability_atom_%d.mat',stab_batch_id)];
 
@@ -193,7 +242,7 @@ for stab_batch_id = 1:opt.estimation.nb_batch
     stab_batch_clean = sprintf('clean_%s', stab_batch_name);
 
     pipeline = psom_add_job(pipeline, stab_batch_name, ...
-                            'niak_brick_stability_tseries',files_in,...
+                            'niak_brick_stability_tseries',stab_batch_in,...
                             stab_batch_out, stab_batch_opt);
     pipeline = psom_add_clean(pipeline, stab_batch_clean,...
                               pipeline.(stab_batch_name).files_out);

@@ -1,4 +1,4 @@
-function [part] = niak_kmeans_cores(data,target)
+function [part] = niak_kmeans_cores(data,target, target_scale)
 % k-means clustering.
 %
 % SYNTAX :
@@ -14,6 +14,9 @@ function [part] = niak_kmeans_cores(data,target)
 %       (partition vector of length N) where max(TARGET) denotes the scale
 %       of the partition
 %
+% TARGET_SCALE
+%       (integer, optional) contains the scale of the 
+%       target partition
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -52,43 +55,44 @@ function [part] = niak_kmeans_cores(data,target)
 % THE SOFTWARE.
 
 %% Options
-if (nargin < 2)
-   error('Required input not specified for niak_kmeans_cores. Usage: NIAK_KMEANS_CORES(DATA,TARGET)\n');
+if (nargin < 3)
+   error('Required input not specified for niak_kmeans_cores. Usage: NIAK_KMEANS_CORES(DATA,TARGET, TARGET_SCALE)\n');
 end
 
 [Dt, Dn] = size(data);
 Tn = length(target);
 if Dn ~= Tn
-    error('Target and data must have the same number of regions\n');
+    error('Target and data must have the same number of regions');
 end
 
-scale = max(target);
-if ~all(unique(target(target~=0))' == 1:scale)
-    error('The clusters in the partition must be continuously labeled from 1 to max_scale\n');
-end
-
-store = zeros(scale, Tn);
+store = zeros(target_scale, Tn);
 
 %% Find the clusters in the data that correspond best to the target
-for tar_clust = 1:scale
-    % use the current target cluster as a seed on the data
-    seed_glob = mean(data(:, target==tar_clust),2);
-    corr_map_glob = corr(seed_glob, data);
-    % Build the core of the correlation map with a 3 kmeans clustering
-    core_opt = struct;
-    core_opt.nb_classes = 3;
-    k_ind = niak_kmeans_clustering(corr_map_glob, core_opt);
-    % Find the cluster with the highest average connectivity
-    k_mean = zeros(3,1);
-    for i = 1:3
-        k_mean(i,1) = mean(corr_map_glob(k_ind == i));
+for tar_clust = 1:target_scale
+    % Check if the current cluster has any elements
+    if ~any(target==tar_clust)
+        % Cluster is empty, create an empty map
+        store(tar_clust,:) = 0;
+    else
+        % use the current target cluster as a seed on the data
+        seed_glob = mean(data(:, target==tar_clust),2);
+        corr_map_glob = corr(seed_glob, data);
+        % Build the core of the correlation map with a 3 kmeans clustering
+        core_opt = struct;
+        core_opt.nb_classes = 3;
+        k_ind = niak_kmeans_clustering(corr_map_glob, core_opt);
+        % Find the cluster with the highest average connectivity
+        k_mean = zeros(3,1);
+        for i = 1:3
+            k_mean(i,1) = mean(corr_map_glob(k_ind == i));
+        end
+        [~, k_tar] = max(k_mean);
+        % Seed again on the individual core
+        t_seed_ind = mean(data(:, k_ind==k_tar), 2);
+        corr_map_ind = corr(t_seed_ind, data);
+        % Store the vectorized map
+        store(tar_clust,:) = corr_map_ind;
     end
-    [~, k_tar] = max(k_mean);
-    % Seed again on the individual core
-    t_seed_ind = mean(data(:, k_ind==k_tar), 2);
-    corr_map_ind = corr(t_seed_ind, data);
-    % Store the vectorized map
-    store(tar_clust,:) = corr_map_ind;
 end
     
 % Find the target cluster that has the maximal correlation map with each 

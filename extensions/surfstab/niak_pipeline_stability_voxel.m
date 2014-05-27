@@ -65,16 +65,6 @@ function [pipeline,opt] = niak_pipeline_stability_voxel(files_in,opt)
 %   SCALE_REP
 %       (vector, optional)
 %
-%   SCALE (DEPRECATED)
-%       (integer, default same as IN.PART, otherwise 
-%       floor(logspace(1,3,10)) ) the target scale (i.e. number of final 
-%       clusters). If you specify a partition in FILES_IN.PART, any value
-%       in OPT.SCALE will be ignored. This means that if your partition in
-%       FILES_IN.PART does not contain a dedicated scale variable, the
-%       scale of the stochastic clusters for the vertex level stability
-%       estimation will be equal to the scale of your partitions. See
-%       NIAK_BRICK_STABILITY_SURF for details.
-%
 %   REGION_GROWING
 %       (structure, optional) the options of NIAK_REGION_GROWING.
 %
@@ -228,8 +218,8 @@ list_defaults = { NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omit
 files_in      = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 % OPT
-list_fields     = { 'folder_out' , 'scale' , 'scale_grid' , 'scale_tar' , 'scale_rep' , 'region_growing' , 'sampling' , 'stability_atom' , 'consensus' , 'cores'  , 'stability_vertex' , 'target_type' , 'psom' , 'flag_cores' , 'flag_rand' , 'flag_test' , 'flag_verbose' };
-list_defaults   = { NaN          , NaN     , []           , []          , []          , struct()         , struct()   , struct()         , struct()    , struct() , struct()           , 'cons'        , struct , false        , true        , false       , true           };
+list_fields     = { 'folder_out' , 'scale_grid' , 'scale_tar' , 'scale_rep' , 'region_growing' , 'sampling' , 'stability_atom' , 'consensus' , 'cores'  , 'stability_vertex' , 'target_type' , 'psom' , 'flag_cores' , 'flag_rand' , 'flag_test' , 'flag_verbose' };
+list_defaults   = { NaN          , []           , []          , []          , struct()         , struct()   , struct()         , struct()    , struct() , struct()           , 'cons'        , struct , false        , true        , false       , true           };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 
