@@ -7,10 +7,19 @@ function [files_in,files_out,opt] = niak_brick_stability_tseries(files_in,files_
 % _________________________________________________________________________
 % INPUTS:
 %
-% FILES_IN 
-%   (string or cell of strings) the name(s) of one or multiple .mat file, 
-%   which contains one variable TS (OPT.NAME_DATA). TS(:,I) is the time series 
-%   of region I.
+% FILES_IN
+% (struct)
+%   TSERIES
+%       (string or cell of strings) the name(s) of one or multiple .mat file, 
+%       which contains one variable TS (OPT.NAME_DATA). TS(:,I) is the time 
+%       series of region I.
+%
+%   PART_REF
+%       (string, optional) path to a .mat fie containing an array of dimensions 
+%       V by K where V is the number of atoms in FILES_IN.TSERIES and K is 
+%       the number of scales to be investigated. If kcores is used to generate 
+%       the atom level stability maps, part_ref has to be set as the 
+%       reference partition.
 %
 % FILES_OUT
 %   (string) A .mat file which contains the following variables :
@@ -198,9 +207,9 @@ if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
 end
 
 %% Files in
-if ~ischar(files_in)&&~iscellstr(files_in)
-    error('FILES_IN should be a string or a cell of strings !')
-end
+list_fields   = { 'data' , 'part_ref'        };
+list_defaults = { NaN    , 'gb_niak_omitted' };
+files_in = psom_struct_defaults(files_in, list_fields, list_defaults);
 
 %% Files out
 if ~ischar(files_out)
@@ -245,6 +254,22 @@ if opt.flag_test == 1
     return
 end
 
+%% Check if we need to get a reference partition for kcores
+if strcmp(opt.clustering.type, 'kcores')
+    if ~strcmp(files_in.part_ref, 'gb_niak_omitted')
+        % Get the reference partition and hand it over to the clustering
+        % options field
+        part_f = load(files_in.part_ref);
+        opt.clustering.opt.target_part = part_f.part;
+        if isfield(part_f, 'scale_tar')
+            opt.clustering.opt.target_scale = part_f.scale_tar;
+        end
+    else
+        error(['FILES_IN.PART_REF has to be set when OPT.CLUSTERING.TYPE '...
+               'is kcores']);
+    end
+end 
+
 %% Seed the random generator
 if ~isempty(opt.rand_seed)
     psom_set_rand_seed(opt.rand_seed);
@@ -255,12 +280,12 @@ if opt.flag_verbose
     fprintf('Read the time series ...\n');
 end
 
-if ischar(files_in)
-    files_in = {files_in};
+if ischar(files_in.data)
+    files_in.data = {files_in.data};
 end
 
-for num_f = 1:length(files_in)
-    data = load(files_in{num_f}, opt.name_data);
+for num_f = 1:length(files_in.data)
+    data = load(files_in.data{num_f}, opt.name_data);
     if num_f == 1
         tseries = niak_normalize_tseries(data.(opt.name_data), opt.normalize);
     else

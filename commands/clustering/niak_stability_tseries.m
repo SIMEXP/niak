@@ -152,19 +152,8 @@ opt.clustering = psom_struct_defaults(opt.clustering,...
                  { 'hierarchical' , struct() });
 if strcmp(opt.clustering.type, 'kcores')
     opt.clustering.opt = psom_struct_defaults(opt.clustering.opt,...
-                         { 'target_part' },...
-                         { NaN           });
-    
-    % Check if the file is already loaded
-    if exist(opt.clustering.opt, 'file')
-        % The file is not loaded yet
-        tmp = load(opt.clustering.opt);
-        opt.clustering.opt = tmp.part;
-    elseif ~exist('opt.clustering.opt', 'var')
-        % The file is not a file and not loaded
-        error('OPT.CLUSTERIN.OPT is not a file and not loaded.');
-    end
-
+                         { 'target_part' , 'target_scale'                      },...
+                         { NaN           , max(opt.clustering.opt.target_part) });
 end
 
 % Setup Sampling Defaults
@@ -255,7 +244,9 @@ for num_s = 1:opt.nb_samps
                     part = niak_neural_gas(tseries_boot,opt.clustering.opt);
                     
                 case 'kcores'
-                    part = niak_kmeans_cores(tseries_boot, opt.clustering.opt.target_part(:, num_sc));
+                    part = niak_kmeans_cores(tseries_boot, ...
+                           opt.clustering.opt.target_part(:, num_sc),...
+                           opt.clustering.opt.target_scale(:, num_sc));
 
                 otherwise
 
