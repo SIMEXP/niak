@@ -231,8 +231,10 @@ end
 % Checking the contents of the file
 for stab_batch_id = 1:opt.estimation.nb_batch
     % Set the inputs for the brick
-    stab_batch_in = struct('data', files_in.data,...
-                           'part_ref', pipeline.get_ref.files_out);
+    stab_batch_in = struct('data', files_in.data);
+    if strcmp(opt.clustering.type, 'kcores')
+        stab_batch_in.part_ref = pipeline.get_ref.files_out;
+    end
     stab_batch_out = [opt.folder_out...
                       sprintf('stability_atom_%d.mat',stab_batch_id)];
 
