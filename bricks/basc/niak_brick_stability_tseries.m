@@ -268,6 +268,17 @@ if strcmp(opt.clustering.type, 'kcores')
         error(['FILES_IN.PART_REF has to be set when OPT.CLUSTERING.TYPE '...
                'is kcores']);
     end
+    
+    % Check if the number of scales in the reference partition is
+    % sufficient for the number of scales defined in opt.scale_grid
+    if length(opt.clustering.opt.target_scale) < length(opt.nb_classes)
+        % The supplied partition does not have enough scales
+        error(['The reference partition supplied in FILES_IN.PART_REF '...
+               'has only %d scales but %d scales are requested in '...
+               'OPT.SCALE_GRID. Please supply a reference partition with '...
+               'the same number of scales as OPT.SCALE_GRID'],...
+              length(opt.clustering.opt.target_scale), length(opt.nb_classes));
+    end
 end 
 
 %% Seed the random generator
