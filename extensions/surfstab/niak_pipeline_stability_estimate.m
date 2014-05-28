@@ -226,6 +226,7 @@ if strcmp(opt.clustering.type, 'kcores')
     pipeline.get_ref.files_in = struct('part', files_in.part_ref,...
                                        'roi', files_in.part_roi);
     pipeline.get_ref.files_out = [opt.folder_out 'ref_part_roi.mat'];
+    % See if the reference partition has enough scales for our grid scales
 end
 
 % Checking the contents of the file

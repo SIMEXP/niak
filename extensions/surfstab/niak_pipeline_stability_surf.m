@@ -419,13 +419,14 @@ if strcmp(in.neigh,'gb_niak_omitted')
                                              'true,true); %s = ssurf.neigh;'...
                                              'save(files_out,''%s'');'],...
                                             opt.name_neigh, opt.name_neigh);
+    pipe.adjacency_matrix.files_in = in.neigh;
     pipe.adjacency_matrix.files_out = [opt.folder_out 'neighbourhood.mat'];
 
 else
-    input = in.neigh;
+    pipe.adjacency_matrix.files_in = in.neigh;
     output = [opt.folder_out 'neighbourhood.mat'];
-    pipe.adjacency_matrix.command = sprintf('copyfile(''%s'',''%s'');',...
-                                            input, output);
+    pipe.adjacency_matrix.command = sprintf('copyfile(files_in,''%s'');',...
+                                            output);
     pipe.adjacency_matrix.files_out = output;
 end
 

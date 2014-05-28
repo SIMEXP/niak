@@ -325,8 +325,9 @@ for num_s = 1:nb_subject
                  'I''ll use only the first one!\n'], list_subject{num_s});
     end
     
-    in.data = sub_data{1}.tseries{1};
+    in = struct;
     in.neigh = pipeline.neighbour.files_out;
+    in.data = sub_data{1}.tseries{1};
     % Check if a partition has been generated
     if is_part
         if is_part == 1
