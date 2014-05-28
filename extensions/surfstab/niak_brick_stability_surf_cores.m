@@ -171,17 +171,29 @@ if opt.flag_verbose
         fprintf('Reading the input data...\n');
 end
 
-stab = load(files_in.stab, 'stab', 'scale_grid');
-part = load(files_in.part, 'part', 'scale_tar', 'scale_rep');
-roi  = load(files_in.roi, opt.name_part_roi);
+stab_f = load(files_in.stab, 'stab', 'scale_grid');
+part_f = load(files_in.part, 'part', 'scale_tar', 'scale_rep');
+roi_f  = load(files_in.roi, opt.name_part_roi);
 
 % Grab the data
-scale_grid  = stab.scale_grid;
-stab        = stab.stab;
-scale_tar   = part.scale_tar;
-scale_rep   = part.scale_rep;
-part        = part.part;
-part_roi    = roi.(opt.name_part_roi);
+scale_grid  = stab_f.scale_grid;
+stab        = stab_f.stab;
+part        = part_f.part;
+if isfield(part_f, 'scale_tar')
+    scale_tar = part_f.scale_tar;
+else
+    scale_tar = max(part);
+end
+scale_tar = scale_tar(:);
+
+if isfield(part_f, 'scale_rep')
+    scale_rep   = part_f.scale_rep;
+else
+    scale_rep = scale_tar;
+end
+scale_rep = scale_rep(:);
+
+part_roi    = roi_f.(opt.name_part_roi);
 
 % Prepare the outputs
 nb_scales       = length(scale_grid);
@@ -310,7 +322,8 @@ for sc_id = 1:nb_scales
 end
 
 % See if the core run has changed the target scale somehow
-core_scale = max(core_part)';
+tmp_core = max(core_part)';
+core_scale = tmp_core(:);
 if ~all(core_scale == scale_tar)
     % Different length means we lost some
     warning(['After running the stable cores, some cores were removed. '...

@@ -233,11 +233,11 @@ if ~isempty(opt.scale_tar)
     [sil_max, scales_max] = niak_build_max_sil(sil, opt.scale_grid(:), neigh, 1);
     
     % Find the optimal stochastic scales for the target scales
-    scale_rep = scales_max(opt.scale_tar)';
-    % Find the indices of the optimal stochastic scales in opt.scale_grid
-    k_ind = arrayfun(@(x) find(opt.scale_grid == x,1,'first'), scale_rep);
-    % Find the indices of the target scales in opt.scale_grid
-    p_ind = arrayfun(@(x) find(opt.scale_grid == x,1,'first'), opt.scale_tar);
+    scale_rep = scales_max(opt.scale_target)';
+    % Find the indices of the optimal stochastic scales in opt.scale
+    k_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), scale_rep);
+    % Find the indices of the target scales in opt.scale
+    p_ind = arrayfun(@(x) find(opt.scale == x,1,'first'), opt.scale_target);
     % Truncate the inputs to reflect the adapted stochastic scales
     sil = sil(:, k_ind);
     part = part(:, p_ind);
