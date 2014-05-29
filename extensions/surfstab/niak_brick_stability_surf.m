@@ -250,6 +250,7 @@ opt_m.flag_verbose = false;
 part_file = load(files_in.part);
 part = part_file.(opt.name_part);
 part_scales = max(part);
+part_scales = part_scales(:);
 [pV, ~] = size(part);
 
 %% Checks
@@ -265,9 +266,11 @@ opt.scale_tar = [];
 if isfield(part_file, 'scale_tar')
     % We have a target scale supplied, all is well
     opt.scale_tar = part_file.scale_tar;
+    opt.scale_tar = opt.scale_tar(:);
 elseif all(sort(unique(part_scales)) == 1:max(part_scales))
     % There is no scale_tar file but the partition is continuous
     opt.scale_tar = 1:max(part_scales);
+    opt.scale_tar = opt.scale_tar(:);
     warning(['No target scale was supplied but the scale of the partition '...
              'is continuous so we will use the partition scale as a '...
              'replication scale.'])
@@ -276,6 +279,7 @@ else
     % through the stable core process. We will assume that the biggest
     % cluster in the partition is also the maximal desired scale
     opt.scale_tar = 1:max(part_scales);
+    opt.scale_tar = opt.scale_tar(:);
     warning(['No target scale was supplied and the scale of the partition '...
              'is not continuous. There are %d clusters in the partition '...
              'and the largest one is %d. We will assume that the desired '...
@@ -315,7 +319,7 @@ end
 
 if opt.flag_verbose
     fprintf('This analysis has %d scale(s):\n', num_scale_rep);
-    disp(opt.scale_rep);
+    disp(opt.scale_rep(:)');
 end
 
 %% Begin the stability estimation
@@ -387,8 +391,8 @@ end
 
 % Store scale information in the output file ahead of the replications
 out = struct;
-out.scale_rep = opt.scale_rep;
-out.scale_tar = opt.scale_tar;
+out.scale_rep = opt.scale_rep(:);
+out.scale_tar = opt.scale_tar(:);
 
 out.scale_name = cell(num_scale_rep,1);
 for sc_id = 1:num_scale_rep
@@ -409,7 +413,9 @@ for scale_id = rand_inds
     % Reset the output structre
     out = struct;
     scale_rep = opt.scale_rep(scale_id);
+    scale_rep = scale_rep(:);
     scale_tar = opt.scale_tar(scale_id);
+    scale_tar = scale_tar(:);
     scale_name = sprintf('sc%d', scale_tar);
 
     % Get the vertex level target partition for the current scale
@@ -429,7 +435,7 @@ for scale_id = rand_inds
         for miss = missing
             if miss == 1
                 % if the first cluster is missing we add a 0 in front
-                size_part_t = [ 0 size_part_t ];
+                size_part_t = [ 0; size_part_t ];
             else
                 % Add a zero at the correct location in the vector
                 size_part_t = [size_part_t(1:miss-1); 0;size_part_t(miss:end)];
@@ -456,7 +462,7 @@ for scale_id = rand_inds
                 
             case 'kcores'
                 data_bs = tmp.data_s;
-                part_s_sc = niak_kmeans_cores(data_bs, part_t)';
+                part_s_sc = niak_kmeans_cores(data_bs, part_t, scale_tar)';
         end
 
         % Loop through the clusters in the target partition

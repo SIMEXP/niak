@@ -56,7 +56,7 @@ function [part] = niak_kmeans_cores(data,target, target_scale)
 
 %% Options
 if (nargin < 3)
-   error('Required input not specified for niak_kmeans_cores. Usage: NIAK_KMEANS_CORES(DATA,TARGET, TARGET_SCALE)\n');
+   error('Required input not specified for niak_kmeans_cores. Usage: NIAK_KMEANS_CORES(DATA,TARGET, TARGET_SCALE)');
 end
 
 [Dt, Dn] = size(data);
