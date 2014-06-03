@@ -87,6 +87,7 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type'      , 'opt'    }, ...
       { 'bootstrap' , struct() });
 
+[nt,nn] = size(data);
 switch opt.sampling.type
     case 'bootstrap'
     case 'jacknife'
@@ -102,13 +103,13 @@ switch opt.sampling.type
             { 'length'     }, ...
             { ceil(0.6*nt) });
 end
-[nt,nn] = size(data);
+
 if length(part)~=nn
     error('the length of PART should be equal to the size of the second dimension of DATA');
 end
 nk = max(part);
 if strcmp(opt.sampling.type,'window')    
-    opt.nb_samps  = max(nt - opt.sampling.opt + 1,1);    
+    opt.nb_samps  = max(nt - opt.sampling.opt.length + 1,1);    
 end    
 
 %% Set up resampling options
@@ -128,7 +129,13 @@ end
 %% Build maps of stable cores
 opt_k.nb_classes = 3;
 res.stab_cores = zeros(nn,nk);
+if opt.flag_verbose 
+    fprintf('Estimation of stable cores ...\n   ')
+end
 for ss = 1:opt.nb_samps
+    if opt.flag_verbose
+        niak_progress(ss,opt.nb_samps);
+    end
     % resample data    
     switch opt.sampling.type
         case {'bootstrap','CBB'}
@@ -138,7 +145,7 @@ for ss = 1:opt.nb_samps
             ind = ind(1:min(floor(perc*nt),nt));
             data_r = data(ind,:);
         case 'window'
-            ind = ss:min(ss+lw,nt);
+            ind = ss:min(ss+lw-1,nt);
             data_r = data(ind,:);
     end
     
@@ -149,7 +156,7 @@ for ss = 1:opt.nb_samps
     % Build cores
     cores = false(nn,nk);
     for kk = 1:nk
-        [part_k,gi] = niak_kmeans_clustering(rmap(:,kk),opt_k);
+        [part_k,gi] = niak_kmeans_clustering(rmap(:,kk)',opt_k);
         [val,ind_max] = max(gi);
         cores(:,kk) = part_k == ind_max;
     end
@@ -159,7 +166,14 @@ res.stab_cores = res.stab_cores / opt.nb_samps;
 
 %% Now build stability maps for full brain clusters, based on the stable cores
 res.stab_maps = zeros(nn,nk);
+if opt.flag_verbose 
+    fprintf('Estimation of stability_maps ...\n   ')
+end
+
 for ss = 1:opt.nb_samps
+    if opt.flag_verbose
+        niak_progress(ss,opt.nb_samps);
+    end
     % resample data    
     switch opt.sampling.type
         case {'bootstrap','CBB'}
@@ -169,7 +183,7 @@ for ss = 1:opt.nb_samps
             ind = ind(1:min(floor(perc*nt),nt));
             data_r = data(ind,:);
         case 'window'
-            ind = ss:min(ss+lw,nt);
+            ind = ss:min(ss+lw-1,nt);
             data_r = data(ind,:);
     end
     
@@ -181,7 +195,7 @@ for ss = 1:opt.nb_samps
     % build stability maps
     [val,part_r] = max(rmap,[],2);   
     for kk = 1:nk                
-        res.stab_maps = res.stab_maps + double(part_r==kk);
+        res.stab_maps(:,kk) = res.stab_maps(:,kk) + double(part_r==kk);
     end
 end
 res.stab_maps = res.stab_maps / opt.nb_samps;
@@ -190,8 +204,8 @@ res.stab_maps = res.stab_maps / opt.nb_samps;
 [res.stab_intra,res.part_cores] = max(res.stab_maps,[],2);
 res.stab_inter = zeros(size(res.stab_intra));
 for kk = 1:nk
-    mask = true(1,nk);
-    mask(res.part_cores==kk) = false;
+    mask = true (1,nk);
+    mask(kk) = false;
     val = max(res.stab_maps(:,mask),[],2);
     res.stab_inter(res.part_cores==kk) = val(res.part_cores==kk);
 end
