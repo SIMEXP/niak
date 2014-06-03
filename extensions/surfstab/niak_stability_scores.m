@@ -1,4 +1,4 @@
-function res = niak_stability_scores(data,part,opt)
+function [res,opt] = niak_stability_scores(data,part,opt)
 % Build stable cores and stability maps based on an a priori partition
 %
 % SYNTAX: RES = NIAK_STABILITY_SCORES(DATA,PART,OPT)
@@ -25,8 +25,7 @@ function res = niak_stability_scores(data,part,opt)
 %                  NIAK_BOOTSTRAP_TSERIES for default options.
 %      window    : OPT.LENGTH is the length of the window, expressed in time points
 %                  (default 60% of the # of features).
-%   FLAG_VERBOSE
-%      (boolean, default true) turn on/off the verbose.
+%   FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
 %
 % RES
 %   (structure) with the following fields:
@@ -153,10 +152,17 @@ for ss = 1:opt.nb_samps
     tseed = niak_build_tseries(data_r,part);
     rmap = corr(data_r,tseed);
     
+    rmap2 = zeros(size(rmap));
+    for kk = 1:nk
+        mask = true(1,nk);
+        mask(kk) = false;
+        rmap2(:,kk) = rmap(:,kk) - max(rmap(:,mask),[],2);
+    end
+    
     % Build cores
     cores = false(nn,nk);
     for kk = 1:nk
-        [part_k,gi] = niak_kmeans_clustering(rmap(:,kk)',opt_k);
+        [part_k,gi] = niak_kmeans_clustering(rmap2(:,kk)',opt_k);
         [val,ind_max] = max(gi);
         cores(:,kk) = part_k == ind_max;
     end
@@ -190,7 +196,7 @@ for ss = 1:opt.nb_samps
     % Build correlation maps    
     tcores = data_r * res.stab_cores;
     rmap = corr(data_r,tcores);
-    rmap(isnan(rmap)) = -Inf;
+    rmap(isnan(rmap)) = -Inf;   
     
     % build stability maps
     [val,part_r] = max(rmap,[],2);   
