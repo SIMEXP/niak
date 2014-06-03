@@ -102,7 +102,7 @@ if ~isfield(opt,'dgp')
 end
 
 if strcmp(opt.dgp,'CBB')
-    if ~isfield(opt,'block_length')
+    if ~isfield(opt,'block_length')||isempty(opt.block_length)
         block_length = [2*ceil(sqrt(size(tseries,1))) 3*ceil(sqrt(size(tseries,1)))];
     else
         block_length = opt.block_length;
