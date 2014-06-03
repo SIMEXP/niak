@@ -111,15 +111,27 @@ if ~isempty(opt.rand_seed)
 end
 
 %% Read the data
-[hdr,vol] = niak_read_vol(in.fmri);
+if ischar(in.fmri)
+    in.fmri = {in.fmri};
+end
+[hdr,vol] = niak_read_vol(in.fmri{1});
 [hdr2,part] = niak_read_vol(in.part);
 if any(size(vol(:,:,:,1))~=size(part))
     error('the fMRI dataset and the partition should have the same spatial dimensions')
 end
-
 mask = part>0;
-tseries = niak_vol2tseries(vol,mask);
 part_v = part(mask);
+for rr = 1:length(in.fmri)
+    if rr>1
+        [hdr,vol] = niak_read_vol(in.fmri{rr});
+    end    
+    tseries_r = niak_vol2tseries(vol,mask);
+    if rr == 1
+         tseries = niak_normalize_tseries(niak_vol2tseries(vol,mask));
+    else
+         tseries = [tseries ; niak_normalize_tseries(niak_vol2tseries(vol,mask))];
+    end
+end
 
 %% Run the stability estimation
 opt_score = rmfield(opt,{'rand_seed','flag_test'});
