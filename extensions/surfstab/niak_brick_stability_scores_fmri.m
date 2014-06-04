@@ -23,9 +23,14 @@ function [in,out,opt] = niak_brick_stability_scores_fmri(in,out,opt)
 %   outside of its own.
 % FILES_OUT.STABILITY_CONTRAST
 %   (string) the difference between the intra- and inter- cluster stability.
+% FILES_OUT.PARTITION_THRESH
+%   (string) same as PARTITION_CORES, but only voxels with stability contrast > OPT.THRESH appear
+%   in a cluster.
 %
 % OPT.NB_SAMPS (integer, default 100) the number of replications to 
 %      generate stability cores & maps.
+% OPT.THRESH (scalar, default 0.5) the threshold applied on stability contrast to 
+%      generate PARTITION_THRESH.
 % OPT.SAMPLING.TYPE (string, default 'CBB') how to resample the features.
 %      Available options : 'bootstrap' , 'jacknife', 'window', 'CBB'
 % OPT.SAMPLING.OPT (structure) the options of the sampling. 
@@ -86,16 +91,16 @@ in = psom_struct_defaults(in, ...
 
 % FILES_OUT
 out = psom_struct_defaults(out, ...
-           { 'stability_cores' , 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' }, ...
-           { NaN               , NaN              , NaN               , NaN               , NaN               , NaN                  });
+           { 'stability_cores' , 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' }, ...
+           { NaN               , NaN              , NaN               , NaN               , NaN               , NaN                  , NaN                });
 
 % Options
 if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      { 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_verbose' , 'flag_test' } , ...
-      { []          , 100        , struct()   , true           , false       });
+      { 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_verbose' , 'flag_test' } , ...
+      { 0.5      , []          , 100        , struct()   , true           , false       });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type' , 'opt'    }, ...
       { 'CBB'  , struct() });
@@ -135,7 +140,7 @@ for rr = 1:length(in.fmri)
 end
 
 %% Run the stability estimation
-opt_score = rmfield(opt,{'rand_seed','flag_test'});
+opt_score = rmfield(opt,{'thresh','rand_seed','flag_test'});
 res = niak_stability_scores(tseries,part_v,opt_score);
 
 %% Write outputs
@@ -179,4 +184,11 @@ if opt.flag_verbose
 end
 part_cores = niak_part2vol(res.part_cores',mask);
 hdr.file_name = out.partition_cores;
+niak_write_vol(hdr,part_cores);
+
+if opt.flag_verbose
+    fprintf('Writing partition based on cores, thresholded on stability\n')
+end
+hdr.file_name = out.partition_thresh;
+part_cores(stab_contrast<opt.thresh) = 0;
 niak_write_vol(hdr,part_cores);
