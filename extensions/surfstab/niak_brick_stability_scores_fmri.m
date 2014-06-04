@@ -75,17 +75,17 @@ function [in,out,opt] = niak_brick_stability_scores_fmri(in,out,opt)
 %% Initialization and syntax checks
 
 % Syntax
-if ~exist('files_in','var')||~exist('files_out','var')
+if ~exist('in','var')||~exist('out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_STABILITY_SCORES_FMRI(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_stability_scores_fmri'' for more info.')
 end
 
 % FILES_IN
-files_in = psom_struct_defaults(files_in, ...
+in = psom_struct_defaults(in, ...
            { 'fmri' , 'part' }, ...
            { NaN    , NaN    });
 
 % FILES_OUT
-files_in = psom_struct_defaults(files_in, ...
+out = psom_struct_defaults(out, ...
            { 'stability_cores' , 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' }, ...
            { NaN               , NaN              , NaN               , NaN               , NaN               , NaN                  });
 
@@ -116,6 +116,7 @@ if ischar(in.fmri)
 end
 [hdr,vol] = niak_read_vol(in.fmri{1});
 [hdr2,part] = niak_read_vol(in.part);
+part = round(part);
 if any(size(vol(:,:,:,1))~=size(part))
     error('the fMRI dataset and the partition should have the same spatial dimensions')
 end
@@ -140,42 +141,42 @@ res = niak_stability_scores(tseries,part_v,opt_score);
 %% Write outputs
 if opt.flag_verbose
     fprintf('Writing stability cores\n')
-    stab_cores = niak_part2vol(res.stab_cores',mask);
-    hdr.file_name = out.stability_cores;
-    niak_write_vol(hdr,stab_cores);
 end
+stab_cores = niak_part2vol(res.stab_cores',mask);
+hdr.file_name = out.stability_cores;
+niak_write_vol(hdr,stab_cores);
 
 if opt.flag_verbose
     fprintf('Writing stability maps\n')
-    stab_maps = niak_part2vol(res.stab_maps',mask);
-    hdr.file_name = out.stability_maps;
-    niak_write_vol(hdr,stab_maps);
 end
+stab_maps = niak_part2vol(res.stab_maps',mask);
+hdr.file_name = out.stability_maps;
+niak_write_vol(hdr,stab_maps);
 
 if opt.flag_verbose
     fprintf('Writing intra-cluster stability\n')
-    stab_intra = niak_part2vol(res.stab_intra',mask);
-    hdr.file_name = out.stability_intra;
-    niak_write_vol(hdr,stab_intra);
 end
+stab_intra = niak_part2vol(res.stab_intra',mask);
+hdr.file_name = out.stability_intra;
+niak_write_vol(hdr,stab_intra);
 
 if opt.flag_verbose
     fprintf('Writing inter-cluster stability\n')
-    stab_inter = niak_part2vol(res.stab_inter',mask);
-    hdr.file_name = out.stability_inter;
-    niak_write_vol(hdr,stab_inter);
 end
+stab_inter = niak_part2vol(res.stab_inter',mask);
+hdr.file_name = out.stability_inter;
+niak_write_vol(hdr,stab_inter);
 
 if opt.flag_verbose
     fprintf('Writing stability contrast\n')
-    stab_contrast = niak_part2vol(res.stab_contrast',mask);
-    hdr.file_name = out.stability_contrast;
-    niak_write_vol(hdr,stab_contrast);
 end
+stab_contrast = niak_part2vol(res.stab_contrast',mask);
+hdr.file_name = out.stability_contrast;
+niak_write_vol(hdr,stab_contrast);
 
 if opt.flag_verbose
     fprintf('Writing partition based on cores\n')
-    part_cores = niak_part2vol(res.part_cores',mask);
-    hdr.file_name = out.partition_cores;
-    niak_write_vol(hdr,part_cores);
 end
+part_cores = niak_part2vol(res.part_cores',mask);
+hdr.file_name = out.partition_cores;
+niak_write_vol(hdr,part_cores);
