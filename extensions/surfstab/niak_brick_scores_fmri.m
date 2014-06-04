@@ -1,8 +1,8 @@
-function [in,out,opt] = niak_brick_stability_scores_fmri(in,out,opt)
+function [in,out,opt] = niak_brick_scores_fmri(in,out,opt)
 % Build stability maps using stable cores of an a priori partition
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_STABILITY_SCORES_FMRI(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(FILES_IN,FILES_OUT,OPT)
 %
 % FILES_IN.FMRI
 %   (string or cell of strings) One or multiple 3D+t dataset.
@@ -81,7 +81,7 @@ function [in,out,opt] = niak_brick_stability_scores_fmri(in,out,opt)
 
 % Syntax
 if ~exist('in','var')||~exist('out','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_STABILITY_SCORES_FMRI(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_stability_scores_fmri'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_scores_fmri'' for more info.')
 end
 
 % FILES_IN
