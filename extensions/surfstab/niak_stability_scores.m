@@ -126,7 +126,7 @@ switch opt.sampling.type
 end
         
 %% Build maps of stable cores
-opt_k.nb_classes = 3;
+%opt_k.nb_classes = 3;
 res.stab_cores = zeros(nn,nk);
 if opt.flag_verbose 
     fprintf('Estimation of stable cores ...\n   ')
@@ -150,7 +150,7 @@ for ss = 1:opt.nb_samps
     
     % Build correlation maps
     tseed = niak_build_tseries(data_r,part);
-    rmap = corr(data_r,tseed);
+    rmap = niak_fisher(corr(data_r,tseed));
     
     rmap2 = zeros(size(rmap));
     for kk = 1:nk
@@ -162,8 +162,9 @@ for ss = 1:opt.nb_samps
     % Build cores
     cores = false(nn,nk);
     for kk = 1:nk
-        [part_k,gi] = niak_kmeans_clustering(rmap2(:,kk)',opt_k);
-        [val,ind_max] = max(gi);
+%          [part_k,gi] = niak_kmeans_clustering(rmap2(:,kk)',opt_k);
+%          [val,ind_max] = max(gi);
+        %% changes here !!
         cores(:,kk) = part_k == ind_max;
     end
     res.stab_cores = res.stab_cores + double(cores);
