@@ -169,19 +169,22 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %            when the model does not have an intercept).
 %
 %      NORMALIZE_X
-%         (structure or boolean, default false) If a boolean and true, all covariates of the 
-%         model are normalized to a zero mean and unit variance. If a structure, the 
-%         fields <NAME> need to correspond to the label of a column in the 
-%         file FILES_IN.MODEL, and the normalization will only be applied to the listed 
-%         variables.
+%         (structure or boolean, default true) If a boolean and true, all covariates of the 
+%         model are normalized (see NORMALIZE_TYPE below).
+%         If a structure, the fields <NAME> need to correspond to the label of a column in the 
+%         file FILES_IN.MODEL.GROUP):
+%
+%         <NAME>
+%            (arbitrary value) if <NAME> is present, then the covariate is normalized
+%            (see NORMALIZE_TYPE below).
 %
 %      NORMALIZE_Y
-%         (boolean, default false) If true, the data is corrected to a zero mean and unit variance,
-%         in this case across subjects.
-%
-%      FLAG_INTERCEPT
-%         (boolean, default true) if FLAG_INTERCEPT is true, a constant covariate will be
-%         added to the model.
+%         (boolean, default false) If true, the data is normalized (see NORMALIZE_TYPE below).
+% 
+%      NORMALIZE_TYPE
+%         (string, default 'mean') Available options:
+%            'mean': correction to a zero mean (for each column)
+%            'mean_var': correction to a zero mean and unit variance (for each column)
 %
 %      FLAG_GLOBAL_MEAN
 %         (boolean, default false) if FLAG_GLOBAL_MEAN is true, the average connectivity is
@@ -209,6 +212,14 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %            'or' : merge the current selection SELECT(E) with the result of the previous one.
 %            'and' : intersect the current selection SELECT(E) with the result of the previous one.
 %
+%      MULTISITE
+%         (string, default '') If non-empty, it selects one of the variable of FILES_IN.MODEL
+%         **as specified in the .csv** (i.e., no demean etc). Each value in this variable is 
+%         coding for a different site per subject. The results at each site are aggregated using 
+%         a simple averaging, akin to statistics used in a meta-analysis, see COMMENTS below.
+%         If left empty, this step is ignored. Note that the MULTISTE variable will not 
+%         be included in the model.
+%
 %   FLAG_TEST
 %       (boolean, default 0) if the flag is 1, then the function does not
 %       do anything but update the defaults of FILES_IN, FILES_OUT and OPT.
@@ -231,6 +242,18 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 % _________________________________________________________________________
 % COMMENTS:
 %
+% The multi-site model averaging is estimating contrasts independently at each 
+% site, and then generated an average weighted by the standard deviation of the 
+% effect at each site. See Table 1, method "inverse variance based" from the 
+% METAL software described in the following publication:
+% Cristen J. Willer, Yun Li and Gonçalo R. Abecasis
+% METAL: fast and efficient meta-analysis of genomewide association scans
+% bioinformatics application notes Vol. 26 no. 17 2010, pages 2190–2191
+% doi:10.1093/bioinformatics/btq340
+% This is well adapted for multisite data with unequal sample size, and possibly
+% unbalanced groups.
+% Thanks to Thomas Nichols for suggesting this method. 
+% 
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
 % Gériatrie de Montréal, Département d'informatique et de recherche 
 % opérationnelle, Université de Montréal, 2010-2013.
@@ -288,8 +311,8 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults);
 test = fieldnames(opt.test);
 test = test{1};
 def_contrast.intercept = 1;
-list_fields   = { 'select' , 'contrast'   , 'projection' , 'flag_intercept' , 'flag_global_mean' , 'interaction' , 'normalize_x' , 'normalize_y' };
-list_defaults = { struct() , def_contrast , struct()     , true             , false              , {}            , true          , false         };
+list_fields   = { 'select' , 'contrast'   , 'projection' , 'flag_intercept' , 'flag_global_mean' , 'interaction' , 'normalize_x' , 'normalize_y' , 'multisite' };
+list_defaults = { struct() , def_contrast , struct()     , true             , false              , {}            , true          , false         , ''          };
 opt.test.(test)   = psom_struct_defaults(opt.test.(test),list_fields,list_defaults);
 
 %% If the test flag is true, stop here !
@@ -315,10 +338,31 @@ else
     opt.test.(test).group.flag_intercept = 1 ;
     opt.test.(test).group.contrast.intercept = 1 ;
 end 
-model_group = niak_normalize_model(model_group, rmfield(opt.test.(test),'flag_global_mean'));
+
+%% Normalize the model
+opt_norm = rmfield(opt.test.(test),'flag_global_mean','multisite');
+var_site = opt.test.(test).multisite;
+flag_multisite = ~isempty(var_site);
+model_init = niak_normalize_model(model_group, opt_norm);
+multisite = struct();
+
+%% Multiple sites
+if flag_multisite       
+    opt_norm_init = opt_norm;
+    if ~isfield(opt_norm_init.contrast,var_site)
+        opt_norm_init.contrast.(var_site) = 0;
+    end
+    opt_norm_init.normalize_y = false;
+    opt_norm_init.normalize_x = false;
+    model_init = niak_normalize_model(model_group, opt_norm_init);
+    multisite.site = model_init.y(ismember(model_group.labels_y,var_multisite));    
+    multisite.name = var_multisite;
+    multisite.list_site = unique(multisite.id);
+    multisite.list_subject = model_init.labels_x;        
+end
 
 %% Load individual connectomes
-list_subject = model_group.labels_x;
+list_subject = model_init.labels_x;
 mask_subject_ok = true(length(list_subject),1);
 nb_vol = zeros(length(list_subject),1);
 for num_s = 1:length(list_subject);
@@ -354,6 +398,8 @@ end
 
 %% Filter out subjects with missing data
 spc_subject = spc_subject(mask_subject_ok,:);
+opt_norm.labels_x = list_subject(mask_subject_ok);
+model_group = niak_normalize_model(model_group,opt_norm);
 model_group.x = model_group.x(mask_subject_ok,:);
 model_group.labels_x = model_group.labels_x(mask_subject_ok);
 nb_vol = nb_vol(mask_subject_ok);
@@ -370,31 +416,40 @@ if opt.test.(test).flag_global_mean
     model_group.c = [model_group.c ; 0];
 end
 
-%% Estimate the group-level model
-if opt.flag_verbose
-   fprintf('Estimate model...\n')
-end
-opt_glm_gr.test  = 'ttest' ;
-opt_glm_gr.flag_beta = true ; 
-opt_glm_gr.flag_residuals = true ;
-y_x_c.x = model_group.x;
-y_x_c.y = model_group.y;
-y_x_c.c = model_group.c; 
-[results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
+if ~flag_multisite
+    %% Estimate the group-level model -- single site data
+    if opt.flag_verbose
+    fprintf('Estimate model...\n')
+    end
+    opt_glm_gr.test  = 'ttest' ;
+    opt_glm_gr.flag_beta = true ; 
+    opt_glm_gr.flag_residuals = true ;
+    y_x_c.x = model_group.x;
+    y_x_c.y = model_group.y;
+    y_x_c.c = model_group.c; 
+    [results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
 
-%% Run White's test of heteroscedasticity
-model_white.y = model_group.y;
-model_white.labels_x = model_group.labels_x;
-model_white.labels_y = model_group.labels_y;
-if length(unique(nb_vol))>1
-    model_white.x = [model_group.x nb_vol];
-    model_white.labels_y{end+1} = 'nb_vol';
-else
-    model_white.x = model_group.x;
+    %% Run White's test of heteroscedasticity
+    model_white.y = model_group.y;
+    model_white.labels_x = model_group.labels_x;
+    model_white.labels_y = model_group.labels_y;
+    if length(unique(nb_vol))>1
+        model_white.x = [model_group.x nb_vol];
+        model_white.labels_y{end+1} = 'nb_vol';
+    else
+        model_white.x = model_group.x;
+    end
+    [test_white.p,model_white] = niak_white_test_hetero(model_white);
+    model_white = rmfield(model_white,'y'); % remove the square residuals from the model, as this is very large data & is easy to regenerate
+    [test_white.fdr,test_white.result] = niak_fdr(test_white.p(:),'BH',0.2);
+    
+else %% Multisite data 
+
+    for ss = 1:length(multisite.list_site)
+        site = multisite.list_site(ss);
+        mask_site = multisite.id == site;
+    end
 end
-[test_white.p,model_white] = niak_white_test_hetero(model_white);
-model_white = rmfield(model_white,'y'); % remove the square residuals from the model, as this is very large data & is easy to regenerate
-[test_white.fdr,test_white.result] = niak_fdr(test_white.p(:),'BH',0.2);
 
 %% Reformat the results of the group-level model
 beta =  results.beta; 

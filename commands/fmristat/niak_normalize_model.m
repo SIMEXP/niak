@@ -66,16 +66,16 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %
 %   NORMALIZE_X
 %      (structure or boolean, default true) If a boolean and true, all covariates of the 
-%      model are normalized to a zero mean and unit variance.  
+%      model are normalized (see NORMALIZE_TYPE below).
 %      If a structure, the fields <NAME> need to correspond to the label of a column in the 
 %      file FILES_IN.MODEL.GROUP):
 %
 %      <NAME>
 %         (arbitrary value) if <NAME> is present, then the covariate is normalized
-%         to a zero mean and a unit variance. 
+%         (see NORMALIZE_TYPE below).
 %
 %   NORMALIZE_Y
-%      (boolean, default false) If true, the data is corrected to a zero mean and unit variance.
+%      (boolean, default false) If true, the data is normalized (see NORMALIZE_TYPE below).
 %
 %   NORMALIZE_TYPE
 %      (string, default 'mean') Available options:

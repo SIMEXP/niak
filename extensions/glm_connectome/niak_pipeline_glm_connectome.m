@@ -141,15 +141,22 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 %            when the model does not have an intercept).
 %
 %      NORMALIZE_X
-%         (structure or boolean, default false) If a boolean and true, all covariates of the 
-%         model are normalized to a zero mean and unit variance. If a structure, the 
-%         fields <NAME> need to correspond to the label of a column in the 
-%         file FILES_IN.MODEL.GROUP, and the normalization will only be applied to the listed 
-%         variables.
+%         (structure or boolean, default true) If a boolean and true, all covariates of the 
+%         model are normalized (see NORMALIZE_TYPE below).
+%         If a structure, the fields <NAME> need to correspond to the label of a column in the 
+%         file FILES_IN.MODEL.GROUP):
+%
+%         <NAME>
+%            (arbitrary value) if <NAME> is present, then the covariate is normalized
+%            (see NORMALIZE_TYPE below).
 %
 %      NORMALIZE_Y
-%         (boolean, default false) If true, the data is corrected to a zero mean and unit variance,
-%         in this case across subjects.
+%         (boolean, default false) If true, the data is normalized (see NORMALIZE_TYPE below).
+% 
+%      NORMALIZE_TYPE
+%         (string, default 'mean') Available options:
+%            'mean': correction to a zero mean (for each column)
+%            'mean_var': correction to a zero mean and unit variance (for each column)
 %
 %      FLAG_INTERCEPT
 %         (boolean, default true) if FLAG_INTERCEPT is true, a constant covariate will be
