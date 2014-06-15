@@ -339,30 +339,28 @@ else
     opt.test.(test).group.contrast.intercept = 1 ;
 end 
 
-%% Normalize the model
+%% Check which subjects will be included in the analysis based on test specifications
+opt_sel.select = opt.test.(test).select;
+opt_sel.flag_filter_nan = true;
+opt_sel.labels_x = fieldnames(files_in.connectome);
+list_subject = niak_model_select(mode_group,opt_sel);
+
+%% Initialize model normalization (including multisite)
 opt_norm = rmfield(opt.test.(test),'flag_global_mean','multisite');
 var_site = opt.test.(test).multisite;
 flag_multisite = ~isempty(var_site);
-model_init = niak_normalize_model(model_group, opt_norm);
 multisite = struct();
-
-%% Multiple sites
-if flag_multisite       
-    opt_norm_init = opt_norm;
-    if ~isfield(opt_norm_init.contrast,var_site)
-        opt_norm_init.contrast.(var_site) = 0;
+if flag_multisite           
+    mask_multi = ismember(model_group.labels_y,var_multisite);
+    if ~any(mask_multi)
+        error('I could not find the variable %s coding for multiple sites',var_site)
     end
-    opt_norm_init.normalize_y = false;
-    opt_norm_init.normalize_x = false;
-    model_init = niak_normalize_model(model_group, opt_norm_init);
-    multisite.site = model_init.y(ismember(model_group.labels_y,var_multisite));    
-    multisite.name = var_multisite;
-    multisite.list_site = unique(multisite.id);
-    multisite.list_subject = model_init.labels_x;        
+    multisite.site = model_group.y(:,mask_multi);
+    multisite.name = var_site;
+    multisite.list_site = unique(multisite.site);    
 end
 
 %% Load individual connectomes
-list_subject = model_init.labels_x;
 mask_subject_ok = true(length(list_subject),1);
 nb_vol = zeros(length(list_subject),1);
 for num_s = 1:length(list_subject);
@@ -398,25 +396,25 @@ end
 
 %% Filter out subjects with missing data
 spc_subject = spc_subject(mask_subject_ok,:);
-opt_norm.labels_x = list_subject(mask_subject_ok);
-model_group = niak_normalize_model(model_group,opt_norm);
-model_group.x = model_group.x(mask_subject_ok,:);
-model_group.labels_x = model_group.labels_x(mask_subject_ok);
+list_subject = list_subject(mask_subject_ok);
+opt_norm.labels_x = list_subject;
 nb_vol = nb_vol(mask_subject_ok);
 
-%% Generate the group model
-model_group.y = spc_subject;
-
-%% If specified by the user, add the global mean to the model
-if opt.test.(test).flag_global_mean
-    gb_mean = mean(model_group.y,2);
-    gb_mean = gb_mean - mean(gb_mean);
-    model_group.x = [model_group.x gb_mean];
-    model_group.labels_y = [model_group.labels_y ; {'global_mean'}];
-    model_group.c = [model_group.c ; 0];
-end
-
 if ~flag_multisite
+
+    %% Generate the group model
+    model_group = niak_normalize_model(model_group,opt_norm);
+    model_group.y = spc_subject;
+
+    %% If specified by the user, add the global mean to the model
+    if opt.test.(test).flag_global_mean
+        gb_mean = mean(model_group.y,2);
+        gb_mean = gb_mean - mean(gb_mean);
+        model_group.x = [model_group.x gb_mean];
+        model_group.labels_y = [model_group.labels_y ; {'global_mean'}];
+        model_group.c = [model_group.c ; 0];
+    end
+
     %% Estimate the group-level model -- single site data
     if opt.flag_verbose
     fprintf('Estimate model...\n')
