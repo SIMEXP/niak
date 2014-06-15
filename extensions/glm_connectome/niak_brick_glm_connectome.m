@@ -325,16 +325,16 @@ if ~strcmp(files_in.model,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Reading the group model ...\n');
     end
-    [model_group.x,model_group.labels_x,model_group.labels_y] = niak_read_csv(files_in.model);
+    [model_csv.x,model_csv.labels_x,model_csv.labels_y] = niak_read_csv(files_in.model);
     % choosing the subjects of the model
     opt.test.(test).labels_x = fieldnames(files_in.connectome) ;
 else 
     if opt.flag_verbose
         fprintf('No group model was specified ! I will use default values ...\n')
     end
-    model_group.x  = [] ; 
-    model_group.labels_x = fieldnames(files_in.connectome);
-    model_group.labels_y ={};
+    model_csv.x  = [] ; 
+    model_csv.labels_x = fieldnames(files_in.connectome);
+    model_csv.labels_y ={};
     opt.test.(test).group.flag_intercept = 1 ;
     opt.test.(test).group.contrast.intercept = 1 ;
 end 
@@ -343,7 +343,7 @@ end
 opt_sel.select = opt.test.(test).select;
 opt_sel.flag_filter_nan = true;
 opt_sel.labels_x = fieldnames(files_in.connectome);
-list_subject = niak_model_select(mode_group,opt_sel);
+[list_subject,ind_s] = niak_model_select(mode_group,opt_sel);
 
 %% Initialize model normalization (including multisite)
 opt_norm = rmfield(opt.test.(test),'flag_global_mean','multisite');
@@ -351,13 +351,13 @@ var_site = opt.test.(test).multisite;
 flag_multisite = ~isempty(var_site);
 multisite = struct();
 if flag_multisite           
-    mask_multi = ismember(model_group.labels_y,var_multisite);
+    mask_multi = ismember(model_csv.labels_y,var_multisite);
     if ~any(mask_multi)
         error('I could not find the variable %s coding for multiple sites',var_site)
     end
-    multisite.site = model_group.y(:,mask_multi);
+    multisite.site = model_csv.y(ind_s,mask_multi);
     multisite.name = var_site;
-    multisite.list_site = unique(multisite.site);    
+    multisite.list_site = unique(multisite.site);
 end
 
 %% Load individual connectomes
@@ -400,10 +400,55 @@ list_subject = list_subject(mask_subject_ok);
 opt_norm.labels_x = list_subject;
 nb_vol = nb_vol(mask_subject_ok);
 
-if ~flag_multisite
+%% Estimate the group-level model 
+opt_glm_gr.test  = 'ttest' ;
+opt_glm_gr.flag_beta = true ; 
+opt_glm_gr.flag_residuals = true ;
+
+if flag_multisite
+    multisite.site = multisite(mask_subject_ok,:);
+    for ss = 1:length(multisite.list_site)
+        if opt.flag_verbose
+            fprintf('Estimate model site %i ...\n',ss)
+        end
+
+        site = multisite.list_site(ss);
+        mask_site = multisite.site == site;
+        opt_norm.labels_x = list_subject(mask_site);
+        multisite.model(ss) = niak_normalize_model(model_csv,opt_norm);
+        multisite.model(ss).y = spc_subject(mask_site,:);
+        
+        %% If specified by the user, add the global mean to the model
+        if opt.test.(test).flag_global_mean
+            gb_mean = mean(multisite.model(ss).y,2);
+            gb_mean = gb_mean - mean(gb_mean);
+            multisite.model(ss).x        = [multisite.model(ss).x gb_mean];
+            multisite.model(ss).labels_y = [multisite.model(ss).labels_y ; {'global_mean'}];
+            multisite.model(ss).c        = [multisite.model(ss).c ; 0];
+        end
+        
+        %% Estimate the group-level model -- single site data
+        y_x_c.x = multisite.model(ss).x;
+        y_x_c.y = multisite.model(ss).y;
+        y_x_c.c = multisite.model(ss).c; 
+        [multisite.results(ss), opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
+    end
+       
+    eff = zeros(size(multisite.results(ss).eff);
+    std_eff = zeros(size(multisite.results(ss).std_eff);    
+    for ss = 1:length(multisite.list_site)
+        eff = eff + multisite.results(ss).eff./(multisite.results(ss).eff).^2;
+        std_eff = std_eff + 1./(multisite.results(ss).eff).^2;
+    end
+    eff = eff ./ std_eff;
+    std_eff = sqrt(1./std_eff);
+    ttest = eff./std_eff;
+    pce = 2*(1-normcdf(abs(ttest)));
+    
+else
 
     %% Generate the group model
-    model_group = niak_normalize_model(model_group,opt_norm);
+    model_group = niak_normalize_model(model_csv,opt_norm);
     model_group.y = spc_subject;
 
     %% If specified by the user, add the global mean to the model
@@ -419,14 +464,12 @@ if ~flag_multisite
     if opt.flag_verbose
     fprintf('Estimate model...\n')
     end
-    opt_glm_gr.test  = 'ttest' ;
-    opt_glm_gr.flag_beta = true ; 
-    opt_glm_gr.flag_residuals = true ;
     y_x_c.x = model_group.x;
     y_x_c.y = model_group.y;
     y_x_c.c = model_group.c; 
     [results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
-
+    beta =  results.beta; 
+    
     %% Run White's test of heteroscedasticity
     model_white.y = model_group.y;
     model_white.labels_x = model_group.labels_x;
@@ -439,24 +482,15 @@ if ~flag_multisite
     end
     [test_white.p,model_white] = niak_white_test_hetero(model_white);
     model_white = rmfield(model_white,'y'); % remove the square residuals from the model, as this is very large data & is easy to regenerate
-    [test_white.fdr,test_white.result] = niak_fdr(test_white.p(:),'BH',0.2);
-    
-else %% Multisite data 
-
-    for ss = 1:length(multisite.list_site)
-        site = multisite.list_site(ss);
-        mask_site = multisite.id == site;
-    end
+    [test_white.fdr,test_white.result] = niak_fdr(test_white.p(:),'BH',0.2);   
 end
 
 %% Reformat the results of the group-level model
-beta =  results.beta; 
-e  = results.e ;
-std_e = results.std_e ;
 ttest = results.ttest ;
 pce = results.pce ; 
 eff =  results.eff ;
 std_eff =  results.std_eff ; 
+
 switch type_measure
     case 'correlation'
         ttest_mat = niak_lvec2mat (ttest);
@@ -536,5 +570,9 @@ end
 
 %% Save results in mat form
 if ~strcmp(files_out.results,'gb_niak_omitted')
-    save(files_out.results,'type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
+    if flag_multisite 
+        save(files_out.results,'flag_multisite','type_measure','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','multisite')
+    else 
+        save(files_out.results,'flag_multisite','type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
+    end
 end

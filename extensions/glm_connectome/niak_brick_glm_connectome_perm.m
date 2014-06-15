@@ -150,13 +150,18 @@ perc_disc_scale = zeros(length(files_in),1);
 vol_disc_scale = zeros(length(files_in),1);
 q_hetero = Inf;
 for num_e = 1:length(files_in);
-    results = load(files_in{num_e},'model_group','nb_discovery','perc_discovery','test_white','type_measure','vol_discovery');
-    glm(num_e) = results.model_group;
+    d = load(files_in{num_e},'flag_multisite');
+    if d.flag_multisite
+        results = load(files_in{num_e},'multisite','nb_discovery','perc_discovery','type_measure','vol_discovery');
+        glm(num_e) = results.multisite.model;
+    else
+        results = load(files_in{num_e},'model_group','nb_discovery','perc_discovery','type_measure','vol_discovery');        
+        glm(num_e) = results.model_group;
+    end    
     nb_disc_scale(num_e) = sum(results.nb_discovery);
     perc_disc_scale(num_e) = mean(results.perc_discovery);
     vol_disc_scale(num_e) = results.vol_discovery;
-    vol_disc = vol_disc + vol_disc_scale(num_e);
-    q_hetero = min(q_hetero,min(results.test_white.fdr));
+    vol_disc = vol_disc + vol_disc_scale(num_e);    
     if num_e == 1
         type_measure = results.type_measure;
     end
@@ -174,23 +179,41 @@ if opt.nb_samps>0
         if opt.flag_verbose
             niak_progress(num_s,opt.nb_samps);
         end
-        glm_null = niak_permutation_glm(glm);        
-        for num_e = 1:length(glm_null)
-            res_null = niak_glm(glm_null(num_e),opt_glm);            
-            [fdr_null,test_null] = niak_glm_fdr(res_null.pce,opt.type_fdr,opt.fdr,type_measure);
-            switch type_measure
-                case 'correlation'
-                    ttest_mat = niak_lvec2mat (res_null.ttest);        
-                case 'glm'
-                    ttest_mat = reshape (res_null.ttest,[sqrt(length(res_null.ttest)),sqrt(length(res_null.ttest))]);
-                otherwise
-                    error('%s is an unkown type of measure',type_measure)
+        if d.flag_multisite
+            for ss = 1:length(glm)
+                glm_null = niak_permutation_glm(glm(ss));
+                res_null(ss) = niak_glm(glm_null(num_e),opt_glm);
             end
-            if any(test_null(:))
-                vol_disc_null(num_s) = vol_disc_null(num_s) + sum(ttest_mat(test_null(:)).^2);
-            else
-                vol_disc_null(num_s) = vol_disc_null(num_s) + max(ttest_mat(:).^2);
-            end            
+            eff = zeros(size(res_null(1).eff);
+            std_eff = zeros(size(res_null(1).std_eff);            
+            for ss = 1:length(multisite.list_site)
+                eff = eff + res_null(ss).eff./(res_null.eff).^2;
+                std_eff = std_eff + 1./(res_null(ss).eff).^2;
+            end
+            eff = eff ./ std_eff;
+            std_eff = sqrt(1./std_eff);
+            ttest = eff./std_eff;
+            pce = 2*(1-normcdf(abs(ttest)));
+            [fdr_null,test_null] = niak_glm_fdr(pce,opt.type_fdr,opt.fdr,type_measure);
+        else
+            glm_null = niak_permutation_glm(glm);        
+            for num_e = 1:length(glm_null)
+                res_null = niak_glm(glm_null(num_e),opt_glm);            
+                [fdr_null,test_null] = niak_glm_fdr(res_null.pce,opt.type_fdr,opt.fdr,type_measure);
+                switch type_measure
+                    case 'correlation'
+                        ttest_mat = niak_lvec2mat (res_null.ttest);        
+                    case 'glm'
+                        ttest_mat = reshape (res_null.ttest,[sqrt(length(res_null.ttest)),sqrt(length(res_null.ttest))]);
+                    otherwise
+                        error('%s is an unkown type of measure',type_measure)
+                end
+                if any(test_null(:))
+                    vol_disc_null(num_s) = vol_disc_null(num_s) + sum(ttest_mat(test_null(:)).^2);
+                else
+                    vol_disc_null(num_s) = vol_disc_null(num_s) + max(ttest_mat(:).^2);
+                end            
+            end
         end
         p_vol_disc = p_vol_disc + double(vol_disc_null(num_s)>=vol_disc);
     end
@@ -201,4 +224,4 @@ else
 end
 
 %% Save the results 
-save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null','q_hetero');
+save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null');
