@@ -114,11 +114,7 @@ function [model_n,opt] = niak_normalize_model (model, opt)
 %   LABELS_X
 %      (cell of strings, default {}) The list of entries (rows) used 
 %      to build the model (the order will be used as well). If left empty, 
-%      all entries are used (but they are re-ordered based on alphabetical order). 
-%      Contrary to MODEL.LABELS_X, the labels listed in OPT.LABELS_X need to be unique. 
-%      For example, OPT.LABELS_X = { 'motion' , 'confounds' }; will first put all the 
-%      covariates labeled 'motion' in the model and then all the covariates labeled 
-%      'confounds', regardless of their numbers.
+%      all entries are used. 
 %
 %_________________________________________________________________________________________
 % OUTPUTS:
@@ -171,93 +167,17 @@ else
    opt = psom_struct_defaults(struct,list_fields,list_defaults);
 end
 
-%% Reorder (and reduce) the model using opt.labels_x 
-if ~isempty(opt.labels_x)
-    if length(unique(opt.labels_x))~=length(opt.labels_x)
-        error('The labels provided in OPT.LABELS_X should be unique')
-    end
-    [mask_x,ind_m] = ismember(opt.labels_x,model.labels_x) ; 
-    if any(ind_m==0)
-        ind_0 = find(ind_m == 0);
-        fprintf('Warning: the following entries that were specified in the CSV were not associated with any data and will be omitted:\n')
-        for num_m = 1:length(ind_0)
-            fprintf('    %s\n',opt.labels_x{ind_0(num_m)});
-        end
-    end
-    ind_m = ind_m(ind_m~=0);
-
-    labx_tmp = {};
-    x_tmp = [];
-    y_tmp = [];
-    model.labels_x = model.labels_x(:);
-    model.labels_y = model.labels_y(:);
-
-    for num_m = 1:length(ind_m)
-        mask_tmp = ismember(model.labels_x,model.labels_x{ind_m(num_m)});
-        labx_tmp = [ labx_tmp ; model.labels_x(mask_tmp)];
-        if ~isempty(model.x)
-            x_tmp = [x_tmp ; model.x(mask_tmp,:)];
-        end
-        if ~isempty(model.y)
-            y_tmp = [y_tmp ; model.y(mask_tmp,:)];
-        end
-    end
-    model.x = x_tmp;
-    model.y = y_tmp;
-    model.labels_x = labx_tmp;
+%% Filter the entries of the model 
+opt_sel.labels_x = opt.labels_x;
+opt_sel.labels_y = fieldnames(opt.contrast);
+opt_sel.select = opt.select;
+opt_sel.flag_filter_nan = opt.flag_filter_nan;
+[model.labels_x,ind_x] = niak_model_select(model,opt_sel);
+if ~isempty(model.x)
+    model.x = model.x(ind_x,:);
 end
-
-%% Select a subset of entries
-if isfield(opt.select(1),'label')
-    for num_s = 1:length(opt.select)
-        if ~isfield(opt.select(num_s),'label')
-           continue
-        end
-        opt_s = psom_struct_defaults(opt.select(num_s),{'label','values','min','max','operation'},{NaN,[],[],[],'or'}); 
-        if isempty(opt_s.operation)
-            opt_s.operation = 'or';
-        end
-        if strcmp(opt_s.operation,'or')&&(num_s==1)
-            mask = false([size(model.labels_x,1) 1]);
-        elseif strcmp(opt_s.operation,'and')&&(num_s==1)
-            mask = true([size(model.labels_x,1) 1]);
-        end
-        ind = find(ismember(model.labels_y,opt_s.label));
-        if isempty(ind)
-            error('I could not find the "%s" covariate in the model to select a subset of observations',opt_s.label)
-        end
-        switch opt_s.operation
-            case 'or'
-                if ~isempty(opt_s.values)           
-                    mask = mask|min(ismember(model.x(:,ind),opt_s.values),[],2);
-                end
-                if ~isempty(opt_s.min)
-                   mask = mask|min(model.x(:,ind)>opt_s.min,[],2);
-                end
-                if ~isempty(opt_s.max)
-                   mask = mask|min((model.x(:,ind)<opt_s.max),[],2);
-                end
-            case 'and'
-                if ~isempty(opt_s.values)           
-                    mask = mask&min(ismember(model.x(:,ind),opt_s.values),[],2);
-                end
-                if ~isempty(opt_s.min)
-                   mask = mask&min(model.x(:,ind)>opt_s.min,[],2);
-                end
-                if ~isempty(opt_s.max)
-                   mask = mask&min((model.x(:,ind)<opt_s.max),[],2);
-                end
-            otherwise
-                error('%s is an unkown operation in SELECT',opt_s.operation)
-        end
-    end
-    if ~isempty(model.x)
-        model.x = model.x(mask,:);
-    end
-    if ~isempty(model.y)
-        model.y = model.y(mask,:);
-    end
-    model.labels_x = model.labels_x(mask);    
+if ~isempty(model.y)
+    model.y = model.y(ind_x,:);
 end
 
 %% Keep only variables of interest in the model
@@ -280,17 +200,6 @@ end
 mask_var = ismember(model.labels_y,list_cont);
 model.x = model.x(:,mask_var);
 model.labels_y = model.labels_y(mask_var);
-
-%% Filter out the NaN entries
-if (opt.flag_filter_nan)&&~isempty(model.x)
-    mask_nan = max(isnan(model.x),[],2);
-    model.x = model.x(~mask_nan,:);
-    if any(mask_nan)
-        warning('The following entries were suppressed because they were associated to NaNs')
-        char(model.labels_x{mask_nan})
-    end
-    model.labels_x = model.labels_x(~mask_nan,:);
-end
 
 %% Orthogonalization of covariates
 if ~isempty(opt.projection)&&isfield(opt.projection(1),'space')
