@@ -138,6 +138,10 @@ jopt.base_source = [path_test 'ground_truth' filesep];
 jopt.base_target = path_test;
 pipe = psom_add_job(pipe,name,'niak_test_cmp_files',in,out,jopt);
 
+%% Add some more unit tests on the "select" mechanism
+opt_select.rand_seed = 0;
+pipe = psom_merge_pipeline(pipe,niak_test_model_select(opt_select),'select_');
+
 %% Run the pipeline
 opt.psom.path_logs = path_logs;
 if ~opt.flag_test
