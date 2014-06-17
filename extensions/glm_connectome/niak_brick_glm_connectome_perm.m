@@ -191,8 +191,8 @@ if opt.nb_samps>0
                         eff = zeros(size(res_null(1).eff));
                         std_eff = zeros(size(res_null(1).std_eff));
                     end
-                    eff = eff + res_null(ss).eff./(res_null(ss).eff).^2;
-                    std_eff = std_eff + 1./(res_null(ss).eff).^2;
+                    eff = eff + res_null(ss).eff./(res_null(ss).std_eff).^2;
+                    std_eff = std_eff + 1./(res_null(ss).std_eff).^2;
                 end
                 eff = eff ./ std_eff;
                 std_eff = sqrt(1./std_eff);

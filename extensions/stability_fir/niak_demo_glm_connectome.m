@@ -165,6 +165,9 @@ opt.test.mean_motor_site.intra_run.select.label = 'motor';
 opt.test.mean_motor_site.intra_run.select.min   = 0.8;
 opt.test.mean_motor_site.group.multisite = 'site';
 
+opt.test.mean_subjects_site.group.contrast.intercept = 1;
+opt.test.mean_subjects_site.group.multisite = 'site';
+
 %% Generate the pipeline
 opt = rmfield(opt,'files_in');
 [pipeline,opt_pipe] = niak_pipeline_glm_connectome(files_in,opt);

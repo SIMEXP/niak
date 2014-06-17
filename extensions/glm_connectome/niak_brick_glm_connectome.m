@@ -437,8 +437,8 @@ if flag_multisite
     eff = zeros(size(multisite.results(ss).eff));
     std_eff = zeros(size(multisite.results(ss).std_eff));
     for ss = 1:length(multisite.list_site)
-        eff = eff + multisite.results(ss).eff./(multisite.results(ss).eff).^2;
-        std_eff = std_eff + 1./(multisite.results(ss).eff).^2;
+        eff = eff + (multisite.results(ss).eff./(multisite.results(ss).std_eff).^2);
+        std_eff = std_eff + (1./(multisite.results(ss).std_eff).^2);
     end
     eff = eff ./ std_eff;
     std_eff = sqrt(1./std_eff);
