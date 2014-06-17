@@ -108,10 +108,9 @@ hetero = zeros([length(list_test) 1]);
 for num_test = 1:length(list_test)
     test = list_test{num_test};
     for num_b = 1:length(files_in.(test))
-        data = load(files_in.(test){num_b},'p_vol_disc','vol_disc_scale','perc_disc_scale','q_hetero');
+        data = load(files_in.(test){num_b},'p_vol_disc','vol_disc_scale','perc_disc_scale');
         if num_b == 1            
-            perc_disc(num_test,:) = data.perc_disc_scale(:)';
-            hetero(num_test) = data.q_hetero;
+            perc_disc(num_test,:) = data.perc_disc_scale(:)';            
         end
         p_vol_disc(num_test) = p_vol_disc(num_test) + data.p_vol_disc;
     end    
