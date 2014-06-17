@@ -185,7 +185,7 @@ if opt.nb_samps>0
                 glm_null(:,ss) = niak_permutation_glm(glm(:,ss));                
             end
             for num_e = 1:size(glm_null,1)                            
-                for ss = 1:length(multisite.list_site)
+                for ss = 1:length(results.multisite.list_site)
                     res_null(ss) = niak_glm(glm_null(num_e,ss),opt_glm);
                     if ss == 1
                         eff = zeros(size(res_null(1).eff));
