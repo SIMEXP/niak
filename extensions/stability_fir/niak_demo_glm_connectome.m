@@ -109,7 +109,18 @@ else
 end
 
 %% Duplicate one run
-files_in.fmri.subject1.session2.motor = files_in.fmri.subject1.session1.motor;
+files_du = struct();
+files_du.fmri.subject1a.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1a.session2.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1b.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject2a.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2a.session2.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2b.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session1.motor;
+files_in = files_du;
 
 %% Now use the NIAK Cambridge s100 template twice 
 files_in.networks.cambridge100 = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
@@ -117,9 +128,16 @@ files_in.networks.cambridge100bis = [gb_niak_path_niak 'template' filesep 'basc_
 
 %% Set the timing of events;
 files_in.model.group      = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
-files_in.model.individual.subject1.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1a.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1a.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1b.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1c.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1d.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2b.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2c.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2d.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
 
 %% GLM
 opt.fdr = 0.05; % The maximal false-discovery rate that is tolerated both for individual (single-seed) maps and whole-connectome discoveries, at each particular scale (multiple comparisons across scales are addressed via permutation testing)
@@ -135,11 +153,11 @@ opt.test.effect_subject1.group.contrast.subject1 = 1;
 
 opt.test.mean_motor.group.contrast.intercept     = 1;
 opt.test.mean_motor.intra_run.select.label = 'motor';
-opt.test.mean_motor.intra_run.select.min   = 1;
+opt.test.mean_motor.intra_run.select.min   = 0.8;
 
 opt.test.mean_motor_nofisher.group.contrast.intercept = 1;
 opt.test.mean_motor_nofisher.intra_run.select.label   = 'motor';
-opt.test.mean_motor_nofisher.intra_run.select.min     = 1;
+opt.test.mean_motor_nofisher.intra_run.select.min     = 0.8;
 opt.test.mean_motor_nofisher.intra_run.flag_fisher    = false;
 
 %% Generate the pipeline

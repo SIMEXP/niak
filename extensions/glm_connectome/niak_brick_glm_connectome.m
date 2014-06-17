@@ -343,10 +343,10 @@ end
 opt_sel.select = opt.test.(test).select;
 opt_sel.flag_filter_nan = true;
 opt_sel.labels_x = fieldnames(files_in.connectome);
-[list_subject,ind_s] = niak_model_select(mode_group,opt_sel);
+[list_subject,ind_s] = niak_model_select(model_csv,opt_sel);
 
 %% Initialize model normalization (including multisite)
-opt_norm = rmfield(opt.test.(test),'flag_global_mean','multisite');
+opt_norm = rmfield(opt.test.(test),{'flag_global_mean','multisite'});
 var_site = opt.test.(test).multisite;
 flag_multisite = ~isempty(var_site);
 multisite = struct();
@@ -434,8 +434,8 @@ if flag_multisite
         [multisite.results(ss), opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
     end
        
-    eff = zeros(size(multisite.results(ss).eff);
-    std_eff = zeros(size(multisite.results(ss).std_eff);    
+    eff = zeros(size(multisite.results(ss).eff));
+    std_eff = zeros(size(multisite.results(ss).std_eff));
     for ss = 1:length(multisite.list_site)
         eff = eff + multisite.results(ss).eff./(multisite.results(ss).eff).^2;
         std_eff = std_eff + 1./(multisite.results(ss).eff).^2;

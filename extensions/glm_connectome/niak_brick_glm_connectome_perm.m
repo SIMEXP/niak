@@ -153,7 +153,7 @@ for num_e = 1:length(files_in);
     d = load(files_in{num_e},'flag_multisite');
     if d.flag_multisite
         results = load(files_in{num_e},'multisite','nb_discovery','perc_discovery','type_measure','vol_discovery');
-        glm(num_e) = results.multisite.model;
+        glm(num_e,:) = results.multisite.model;
     else
         results = load(files_in{num_e},'model_group','nb_discovery','perc_discovery','type_measure','vol_discovery');        
         glm(num_e) = results.model_group;
@@ -180,21 +180,39 @@ if opt.nb_samps>0
             niak_progress(num_s,opt.nb_samps);
         end
         if d.flag_multisite
+            res_null = struct();
             for ss = 1:length(glm)
-                glm_null = niak_permutation_glm(glm(ss));
-                res_null(ss) = niak_glm(glm_null(num_e),opt_glm);
+                glm_null(:,ss) = niak_permutation_glm(glm(:,ss));                
             end
-            eff = zeros(size(res_null(1).eff);
-            std_eff = zeros(size(res_null(1).std_eff);            
-            for ss = 1:length(multisite.list_site)
-                eff = eff + res_null(ss).eff./(res_null.eff).^2;
-                std_eff = std_eff + 1./(res_null(ss).eff).^2;
-            end
-            eff = eff ./ std_eff;
-            std_eff = sqrt(1./std_eff);
-            ttest = eff./std_eff;
-            pce = 2*(1-normcdf(abs(ttest)));
-            [fdr_null,test_null] = niak_glm_fdr(pce,opt.type_fdr,opt.fdr,type_measure);
+            for num_e = 1:size(glm_null,1)                            
+                for ss = 1:length(multisite.list_site)
+                    res_null(ss) = niak_glm(glm_null(num_e,ss),opt_glm);
+                    if ss == 1
+                        eff = zeros(size(res_null(1).eff));
+                        std_eff = zeros(size(res_null(1).std_eff));
+                    end
+                    eff = eff + res_null(ss).eff./(res_null(ss).eff).^2;
+                    std_eff = std_eff + 1./(res_null(ss).eff).^2;
+                end
+                eff = eff ./ std_eff;
+                std_eff = sqrt(1./std_eff);
+                ttest = eff./std_eff;
+                pce = 2*(1-normcdf(abs(ttest)));
+                [fdr_null,test_null] = niak_glm_fdr(pce,opt.type_fdr,opt.fdr,type_measure);    
+                switch type_measure
+                    case 'correlation'
+                        ttest_mat = niak_lvec2mat (ttest);        
+                    case 'glm'
+                        ttest_mat = reshape (ttest,[sqrt(length(ttest)),sqrt(length(ttest))]);
+                    otherwise
+                        error('%s is an unkown type of measure',type_measure)
+                end
+                if any(test_null(:))
+                    vol_disc_null(num_s) = vol_disc_null(num_s) + sum(ttest_mat(test_null(:)).^2);
+                else
+                    vol_disc_null(num_s) = vol_disc_null(num_s) + max(ttest_mat(:).^2);
+                end 
+            end            
         else
             glm_null = niak_permutation_glm(glm);        
             for num_e = 1:length(glm_null)
