@@ -181,7 +181,7 @@ if opt.nb_samps>0
         end
         if d.flag_multisite
             res_null = struct();
-            for ss = 1:length(glm)
+            for ss = 1:length(results.multisite.list_site)
                 glm_null(:,ss) = niak_permutation_glm(glm(:,ss));                
             end
             for num_e = 1:size(glm_null,1)                            

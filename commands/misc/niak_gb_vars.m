@@ -39,7 +39,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % where to store temporary files
-gb_niak_tmp = [tempdir filesep]; 
+gb_niak_tmp = ['/localscratch/' getenv('PBS_JOBID') filesep];
+
+if ~psom_exist(gb_niak_tmp)
+    gb_niak_tmp = '/tmp/';
+end
+ 
 
 % The command to zip files
 gb_niak_zip = 'gzip -f'; 
