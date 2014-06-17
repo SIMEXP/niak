@@ -351,11 +351,11 @@ var_site = opt.test.(test).multisite;
 flag_multisite = ~isempty(var_site);
 multisite = struct();
 if flag_multisite           
-    mask_multi = ismember(model_csv.labels_y,var_multisite);
+    mask_multi = ismember(model_csv.labels_y,var_site);
     if ~any(mask_multi)
         error('I could not find the variable %s coding for multiple sites',var_site)
     end
-    multisite.site = model_csv.y(ind_s,mask_multi);
+    multisite.site = model_csv.x(ind_s,mask_multi);
     multisite.name = var_site;
     multisite.list_site = unique(multisite.site);
 end
@@ -406,7 +406,7 @@ opt_glm_gr.flag_beta = true ;
 opt_glm_gr.flag_residuals = true ;
 
 if flag_multisite
-    multisite.site = multisite(mask_subject_ok,:);
+    multisite.site = multisite.site(mask_subject_ok,:);
     for ss = 1:length(multisite.list_site)
         if opt.flag_verbose
             fprintf('Estimate model site %i ...\n',ss)
@@ -483,14 +483,15 @@ else
     [test_white.p,model_white] = niak_white_test_hetero(model_white);
     model_white = rmfield(model_white,'y'); % remove the square residuals from the model, as this is very large data & is easy to regenerate
     [test_white.fdr,test_white.result] = niak_fdr(test_white.p(:),'BH',0.2);   
+    
+    %% Reformat the results of the group-level model
+    ttest = results.ttest ;
+    pce = results.pce ; 
+    eff =  results.eff ;
+    std_eff =  results.std_eff ; 
 end
 
-%% Reformat the results of the group-level model
-ttest = results.ttest ;
-pce = results.pce ; 
-eff =  results.eff ;
-std_eff =  results.std_eff ; 
-
+%% Reshape the results intro matrix form
 switch type_measure
     case 'correlation'
         ttest_mat = niak_lvec2mat (ttest);

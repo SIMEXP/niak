@@ -189,6 +189,15 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 %            'or' : merge the current selection SELECT(E) with the result of the previous one.
 %            'and' : intersect the current selection SELECT(E) with the result of the previous one.
 %
+%      MULTISITE
+%         (string, default '') If non-empty, it selects one of the variable of FILES_IN.MODEL
+%         **as specified in the .csv** (i.e., no demean etc). Each value in this variable is 
+%         coding for a different site per subject. The results at each site are aggregated using 
+%         a simple averaging, akin to statistics used in a meta-analysis, see COMMENTS below.
+%         If left empty, this step is ignored. Note that the MULTISTE variable will not 
+%         be included in the model. This option is only available in TEST.(LABEL).GROUP,
+%         not in TEST.(LABEL).INTER_RUN or TEST.(LABEL).INTRA_RUN.
+%
 %   TEST.(LABEL).INTER_RUN
 %      (structure, optional) The same fields as TEST.(LABEL).GROUP are supported, except that 
 %      the name of the covariates must be the same as those used in 
