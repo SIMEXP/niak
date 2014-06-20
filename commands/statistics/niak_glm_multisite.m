@@ -23,6 +23,10 @@ function [results,opt] = niak_glm_multisite(model,opt)
 % OPT
 %   (structure, optional) with the following fields:
 %
+%   MULTISITE
+%      (vector optional) When provided this vector code for the various
+%      sites and the glm will be corrected in function of those sites. 0 is
+%      an excluded entry and all other values are considered as sites id's.
 %
 % _________________________________________________________________________
 % OUTPUTS:
