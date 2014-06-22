@@ -24,6 +24,8 @@ function [in,out,opt] = niak_brick_scores_fmri_v2(in,out,opt)
 % FILES_OUT.PARTITION_THRESH
 %   (string) same as PARTITION_CORES, but only voxels with stability contrast > OPT.THRESH appear
 %   in a cluster.
+% FILES_OUT.EXTRA
+%   (string) extra info in a .mat file.
 %
 % OPT.FOLDER_OUT (string, default empty) if non-empty, use that to generate default results.
 % OPT.NB_SAMPS (integer, default 100) the number of replications to 
@@ -93,8 +95,8 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      { 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_verbose' , 'flag_test' } , ...
-      { ''           , 0.5      , []          , 100        , struct()   , true           , false       });
+      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_verbose' , 'flag_test' } , ...
+      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , true           , false       });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type' , 'opt'    }, ...
       { 'CBB'  , struct() });
@@ -104,12 +106,12 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     [~,~,ext] = niak_fileparts(in.fmri);
     out = psom_struct_defaults(out, ...
-            { 'partition_cores'                , 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_thresh'                }, ...
-            { [path_out 'partition_cores' ext] , [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_thresh' ext] });
+            { 'partition_cores'                , 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_thresh'                , 'extra'                }, ...
+            { [path_out 'partition_cores' ext] , [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_thresh' ext] , [path_out 'extra.mat'] });
 else
     out = psom_struct_defaults(out, ...
-            { 'partition_cores' , 'stability_maps' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' }, ...
-            { NaN               , NaN              , NaN               , NaN               , NaN                  , NaN                });
+            { 'partition_cores' , 'stability_maps' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' , 'extra' }, ...
+            { NaN               , NaN              , NaN               , NaN               , NaN                  , NaN                , NaN     });
 end
 
 % If the test flag is true, stop here !
@@ -191,3 +193,10 @@ end
 hdr.file_name = out.partition_thresh;
 part_cores(stab_contrast<opt.thresh) = 0;
 niak_write_vol(hdr,part_cores);
+
+if opt.flag_verbose
+    fprintf('Writing extra info\n')
+end
+nb_iter = res.nb_iter;
+changes = res.changes;
+save(out.extra,'nb_iter','changes')

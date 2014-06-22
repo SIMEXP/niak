@@ -25,6 +25,10 @@ function [res,opt] = niak_stability_scores(data,part,opt)
 %                  NIAK_BOOTSTRAP_TSERIES for default options.
 %      window    : OPT.LENGTH is the length of the window, expressed in time points
 %                  (default 60% of the # of features).
+%   TYPE_CENTER (string, default 'median') how to extract cluster signal. Available
+%      options: 'mean' and 'median'
+%   NB_ITER (scalar, default 1) Number of max iterations. The algorithm stops as soon
+%      as there is no change in the cluster maps.
 %   FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
 %
 % RES
@@ -80,8 +84,8 @@ if nargin < 3
    opt = struct();
 end
 opt = psom_struct_defaults(opt, ...
-      { 'nb_samps' , 'sampling' , 'flag_verbose' } , ...
-      { 100        , struct()   , true           });
+      { 'type_center' , 'nb_iter' , 'nb_samps' , 'sampling' , 'flag_verbose' } , ...
+      { 'median'      , 1         , 100        , struct()   , true           });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type'      , 'opt'    }, ...
       { 'bootstrap' , struct() });
@@ -131,6 +135,8 @@ res.stab_cores = zeros(nn,nk);
 if opt.flag_verbose 
     fprintf('Estimation of stable cores ...\n   ')
 end
+opt_r.type_center = opt.type_center;
+opt_r.correction = 'mean_var';
 for ss = 1:opt.nb_samps
     if opt.flag_verbose
         niak_progress(ss,opt.nb_samps);
@@ -149,7 +155,7 @@ for ss = 1:opt.nb_samps
     end
     
     % Build correlation maps
-    tseed = niak_build_tseries(data_r,part);
+    tseed = niak_build_tseries(data_r,part,opt_r);
     rmap = niak_fisher(corr(data_r,tseed));
     
     rmap2 = zeros(size(rmap));
