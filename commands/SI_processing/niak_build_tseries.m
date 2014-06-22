@@ -19,6 +19,10 @@ function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 %   option. If a field was not specified, then the default value is
 %   assumed.
 %
+%   TYPE_CENTER
+%      (string, default 'mean') how to extract regional signal. Available
+%      options: 'mean' and 'median'
+%
 %   CORRECTION
 %      (structure, default CORRECTION.TYPE = 'none') the temporal 
 %      normalization to apply on the individual time series before 
@@ -45,6 +49,9 @@ function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 %
 % _________________________________________________________________________
 % COMMENTS:
+%
+% If the type of centers is 'median', the estimator of std is the median
+% absolute deviation from the median (MAD), see niak_mad
 %
 % Copyright (c) Pierre Bellec, 
 %   McConnell Brain Imaging Center,Montreal
@@ -77,8 +84,8 @@ function [tseries,std_tseries,labels_roi] = niak_build_tseries(vol,mask,opt)
 %% Setting up default inputs
 opt_norm.type = 'none';
 gb_name_structure = 'opt';
-gb_list_fields = {'flag_all','correction'};
-gb_list_defaults = {false,opt_norm};
+gb_list_fields   = {'type_center' , 'flag_all' , 'correction'};
+gb_list_defaults = {'mean'        , false      , opt_norm};
 niak_set_defaults
 
 %% Extracting the labels of regions and reorganizing the data 
@@ -101,10 +108,24 @@ if flag_all
     std_tseries = sparse(size(tseries));
 else
     tseries = zeros([size(tseries_mask,1) nb_rois]);
-    std_tseries = zeros([size(tseries_mask,1) nb_rois]);    
+    if nargout > 1
+        std_tseries = zeros([size(tseries_mask,1) nb_rois]);    
+    end
 
     for num_r = 1:nb_rois
-        tseries(:,num_r) = mean(tseries_mask(:,mask_v == labels_roi(num_r)),2);
-        std_tseries(:,num_r) = std(tseries_mask(:,mask_v == labels_roi(num_r)),0,2);
+        switch opt.type_center
+            case 'mean' 
+                tseries(:,num_r) = mean(tseries_mask(:,mask_v == labels_roi(num_r)),2);
+                if nargout > 1
+                    std_tseries(:,num_r) = std(tseries_mask(:,mask_v == labels_roi(num_r)),0,2);
+                end
+            case 'median' 
+                tseries(:,num_r) = median(tseries_mask(:,mask_v == labels_roi(num_r)),2);
+                if nargout > 1                    
+                    std_tseries(:,num_r) = niak_mad(tseries_mask(:,mask_v == labels_roi(num_r))')';
+                end
+            otherwise
+                error('%s is an unkown type of center',opt.type_center)
+        end
     end
 end
