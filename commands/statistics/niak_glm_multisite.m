@@ -152,18 +152,18 @@ if ~isempty(opt.multisite) && size(model,2)<2
     model = multisite.model;
 end
     
-    %% Compute the models
-    for ss = 1:size(model,2)
-        if opt.flag_verbose
-            fprintf('Estimate model site %i ...\n',ss)
-        end
-        opt_glm_gr = rmfield(opt,{'flag_verbose','multisite'});
-        %% Estimate the group-level model -- single site data
-        y_x_c.x = model(ss).x;
-        y_x_c.y = model(ss).y;
-        y_x_c.c = model(ss).c; 
-        [multisite.results(ss), opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
+%% Compute the models
+for ss = 1:size(model,2)
+    if opt.flag_verbose
+        fprintf('Estimate model site %i ...\n',ss)
     end
+    opt_glm_gr = rmfield(opt,{'flag_verbose','multisite'});
+    %% Estimate the group-level model -- single site data
+    y_x_c.x = model(ss).x;
+    y_x_c.y = model(ss).y;
+    y_x_c.c = model(ss).c; 
+    [multisite.results(ss), opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
+end
        
     if size(model,2)>1
         
