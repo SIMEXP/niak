@@ -3,7 +3,7 @@ The neuroimaging analysis kit (NIAK) is a library of functions for the preproces
 http://www.nitrc.org/projects/niak
 
 ###Contributors
-The NIAK is developed and maintained by the laboratory of Pierre Bellec, Department of Computer Science and Operations research, Geriatric institute of Montreal (CRIUGM), Montreal University. Many of the functions of the kit are based on software developed over the years by members and collaborators of the Brain Imaging Center, McGill University. 
+The NIAK is developed and maintained by members and collaborators of the laboratory of Pierre Bellec, Department of Computer Science and Operations research, Geriatric institute of Montreal (CRIUGM), Montreal University. Many of the functions of the kit are based on software developed over the years by members and collaborators of the Brain Imaging Center, McGill University. See the [contributors](http://www.nitrc.org/plugins/mwiki/index.php/niak:NiakContributions) page for more details.
 
 ###News
 
