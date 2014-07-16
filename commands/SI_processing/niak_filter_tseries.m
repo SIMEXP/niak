@@ -1,83 +1,47 @@
 function [tseries_f,extras] = niak_filter_tseries(tseries,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_FILTER_TSERIES
-%
 % Filter time series using Discrete-Cosine (DC) least-square linear 
 % regression.
 %
-% SYNTAX:
-% TSERIES_F = NIAK_FILTER_TSERIES(TSERIES,OPT) 
+% SYNTAX: TSERIES_F = NIAK_FILTER_TSERIES(TSERIES,OPT) 
 %
-% _________________________________________________________________________
 % INPUTS:
+%   TSERIES (2D array, size T*N) a time*space array of time series.
+%   OPT.TR (real) the repetition time of the time series (s)
+%   OPT.HP (real, default -Inf) the cut-off frequency for high pass
+%      filtering. opt.hp = -Inf means no high-pass filtering.
+%   OPT.LP (real, default Inf) the cut-off frequency for low pass
+%      filtering. opt.lp = Inf means no low-pass filtering.
+%   OPT.FLAG_MEAN (boolean, default: 0) if FLAG_MEAN is 1, the funtion does 
+%      leave the mean of the time series after filtering (it is otherwise
+%      suppressed as soon as a high-pass filter is applied with a
+%      threshold greater than 0).
 %
-% TSERIES       
-%       (2D array, size T*N) a time*space array of time series.
-%
-% OPT           
-%       (structure) with the following fields:
-%
-%       TR 
-%           (real) the repetition time of the time series (s)
-%           which is the inverse of the sampling frequency (Hz).
-%
-%       HP 
-%           (real, default -Inf) the cut-off frequency for high pass
-%           filtering. opt.hp = -Inf means no high-pass filtering.
-%           
-%       LP 
-%           (real, default Inf) the cut-off frequency for low pass
-%           filtering. opt.lp = Inf means no low-pass filtering.
-%
-%       FLAG_MEAN
-%           (boolean, default: 0) if FLAG_MEAN is 1, the funtion does leave
-%           the mean of the time series after filtering (it is otherwise
-%           suppressed as soon as a high-pass filter is applied with a
-%           threshold greater than 0).
-%
-% _________________________________________________________________________
 % OUTPUTS:
+%   TSERIES_F (2D array, size T*N) a time*space array of filtered tseries.
+%   EXTRAS (structure) with the following fields :
+%      TSERIES_DC_LOW (2D array, size T*Kl) a (time*nb cosines)
+%         array of discrete cosines covering the frequency window that is 
+%         to be suppressed in high-pass filtering.
+%      BETA_DC_LOW (2D ARRAY, size Kl*N) a (nb cosines * space)
+%         array such that BETA_DC_LOW(k,n) is the weight of the
+%         low-frequency discrete cosine number k at location n.
+%      FREQ_DC_LOW (vector, size Kl*1) FREQ_DC_LOW(k) is the frequency 
+%         associated to cosine TSERIES_DC_LOW(:,k)
+%      TSERIES_DC_HIGH (2D array, size T*Kh) a (time*nb cosines)
+%         array of discrete cosines covering the frequency window that is 
+%         to be suppressed in low-pass filtering.  
+%      BETA_DC_HIGH (2D ARRAY, size Kl*N) a (nb cosines * space)
+%         array such that BETA_DC_HIGH(k,n) is the weight of the
+%         high-frequency discrete cosine number k at location n.
+%      FREQ_DC_HIGH (vector, size Kl*1) FREQ_DC_HIGH(k) is the frequency 
+%         associated to cosine TSERIES_DC_HIGH(:,k)
 %
-% TSERIES_F    
-%       (2D array, size T*N) a time*space array of filtered tseries.
-%
-% EXTRAS       
-%       (structure) with the following fields :
-%
-%       TSERIES_DC_LOW  
-%           (2D array, size T*Kl) a (time*nb cosines)
-%           array of discrete cosines covering the frequency window that is 
-%           to be suppressed in high-pass filtering.
-%
-%       BETA_DC_LOW  
-%           (2D ARRAY, size Kl*N) a (nb cosines * space)
-%           array such that BETA_DC_LOW(k,n) is the weight of the
-%           low-frequency discrete cosine number k at location n.
-%           
-%       FREQ_DC_LOW 
-%           (vector, size Kl*1) FREQ_DC_LOW(k) is the frequency associated 
-%           to cosine TSERIES_DC_LOW(:,k)
-%           
-%       TSERIES_DC_HIGH  
-%           (2D array, size T*Kh) a (time*nb cosines)
-%           array of discrete cosines covering the frequency window that is 
-%           to be suppressed in low-pass filtering.
-%           
-%       BETA_DC_HIGH  
-%           (2D ARRAY, size Kl*N) a (nb cosines * space)
-%           array such that BETA_DC_HIGH(k,n) is the weight of the
-%           high-frequency discrete cosine number k at location n.
-%
-%       FREQ_DC_HIGH 
-%           (vector, size Kl*1) FREQ_DC_HIGH(k) is the frequency associated 
-%           to cosine TSERIES_DC_HIGH(:,k)
-%
-% _________________________________________________________________________
-% COMMENTS:
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : Signal Processing, Filtering, Discrete Cosine, Time series
 
@@ -109,12 +73,12 @@ gb_list_fields = {'flag_mean','tr','hp','lp'};
 gb_list_defaults = {false,NaN,-Inf,Inf};
 niak_set_defaults
 
-if ~(isinf(opt.lp)==1)&((opt.lp<0)|(opt.lp>(1/(2*tr))))
+if ~(isinf(opt.lp)==1)&&((opt.lp<0)||(opt.lp>(1/(2*tr))))
     error('niak:SI_processing : Please specify a cut-off frequency for low-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))
     return
 end
     
-if ~(isinf(opt.hp)==1)&((opt.hp<0)|(opt.hp>(1/(2*tr))))
+if ~(isinf(opt.hp)==1)&&((opt.hp<0)||(opt.hp>(1/(2*tr))))
     error('niak:SI_processing : Please specify a cut-off frequency for high-pass filtering that is larger than 0 and smaller than the Nyquist frequency %1.2f Hz\n',1/(2*tr))   
 end
 
@@ -153,4 +117,3 @@ if nargout > 1
     extras.beta_dc_high = beta(size(Q_low,2)+1:end,:);
     extras.freq_dc_high = freq_high;
 end
-
