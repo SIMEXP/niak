@@ -141,7 +141,7 @@ end
 opt_t.type_center = opt.type_center;
 opt_t.correction = 'mean_var';
 nb_iter = zeros(opt.nb_samps,1);
-changes = zeros(opt.nb_samps,nb_iter);
+changes = zeros(opt.nb_samps,opt.nb_iter);
 for ss = 1:opt.nb_samps
     if opt.flag_verbose
         niak_progress(ss,opt.nb_samps);
