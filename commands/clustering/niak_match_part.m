@@ -2,7 +2,7 @@ function match = niak_match_part(part1,part2)
 % Establish a correspondance between two clustering
 %
 % SYNTAX:
-% MATCH = NIAK_M(FILES_IN,FILES_OUT,OPT)
+% MATCH = NIAK_MATCH_PART(PART1,PART2)
 %
 % INPUTS:
 %   PART<1,2> (vector 1xN) (PART1 == I) defines the Ith region of PART1 (same
