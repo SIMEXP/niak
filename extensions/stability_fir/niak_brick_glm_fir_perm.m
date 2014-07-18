@@ -45,8 +45,16 @@ function [files_in,files_out,opt] = niak_brick_glm_fir_perm(files_in,files_out,o
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL_sym') how the FDR is controled. 
-%      See the TYPE argument of NIAK_GLM_FDR.
+%      (string, default 'LSL') how the FDR is controled. 
+%      Available options:
+%         'BH': a BH procedure on the full set of FIR.
+%         'LSL': a GBH procedure controlling the FDR on the full set of FIR
+%             but using the grouping of tests per FIR, with a least-slope 
+%             estimation of the number of discoveries. See NIAK_FDR.
+%         'local': only control of the FDR across time points for each network. 
+%             Do not correct for the number of networks.
+%         'uncorrected': do not correct p-values, OPT.FDR is used as significance
+%             threshold on the p-values.
 %
 %   NB_SAMPS
 %      (integer, default 1000) the number of samples under the null hypothesis
@@ -202,12 +210,22 @@ function [fdr,test_q] = sub_fdr(pce,type_fdr,q,nt,nn)
 pce_m = reshape(pce,[nt nn]);
 
 switch type_fdr
+
     case 'global'
         [fdr,test_q] = niak_fdr(pce(:),'BH',q);
         fdr = niak_lvec2mat(fdr');
-        test_q = niak_lvec2mat(test_q',0)>0;    
+        test_q = niak_lvec2mat(test_q',0)>0; 
+        
     case 'LSL'
-        [fdr,test_q] = niak_fdr(pce_m,'LSL',q);    
+        [fdr,test_q] = niak_fdr(pce_m,'LSL',q);
+        
+    case 'local'
+        [fdr,test_q] = niak_fdr(pce_m,'BH',q);
+        
+    case 'uncorrected'
+        fdr = pce_m;
+        test_q = fdr <= q;
+        
     otherwise
         error('%s is an unknown procedure to control the FDR',type_fdr)
 end
