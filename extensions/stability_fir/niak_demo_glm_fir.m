@@ -93,18 +93,11 @@ opt.folder_out = niak_full_path(opt.folder_out);
 
 %% Grab the results from the NIAK fMRI preprocessing pipeline
 if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')  
-    files_in = struct();
-    [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
-    for ee = 1:length(fmri_c)
-        if strcmp(labels_f(ee).run,'motor')
-            files_in.fmri.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
-        end
-    end
+    files_in.fmri = opt.files_in.fmri;
 else
     %% Grab the results from the NIAK fMRI preprocessing pipeline
     opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-    opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
-    opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
+    opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline    
     files_in = rmfield(niak_grab_fmri_preprocess(path_demo,opt_g),{'mask','areas'}); 
 end
 
@@ -113,13 +106,13 @@ files_du = struct();
 files_du.fmri.subject1a.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1a.session2.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1b.session1.motor = files_in.fmri.subject1.session1.motor;
-files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.motor;
-files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.rest;
+files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.rest;
 files_du.fmri.subject2a.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session2.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2b.session1.motor = files_in.fmri.subject2.session1.motor;
-files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session1.motor;
-files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session2.rest;
+files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session2.rest;
 files_in = files_du;
 
 %% Now use the NIAK Cambridge s100 template twice 
@@ -128,16 +121,16 @@ files_in.networks.cambridge100bis = [gb_niak_path_niak 'template' filesep 'basc_
 
 %% Set the timing of events;
 files_in.model.group      = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
-files_in.model.individual.subject1a.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1a.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1b.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1c.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1d.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2a.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2a.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2b.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2c.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2d.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1a.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1a.session2.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1b.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1c.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1d.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.session2.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2b.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2c.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2d.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
 
 %% FIR estimation
 opt.fir.name_condition = 'motor';

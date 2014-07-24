@@ -36,6 +36,27 @@ function [tseries_f,extras] = niak_filter_tseries(tseries,opt)
 %      FREQ_DC_HIGH (vector, size Kl*1) FREQ_DC_HIGH(k) is the frequency 
 %         associated to cosine TSERIES_DC_HIGH(:,k)
 %
+% EXAMPLES:
+% tseries = randn([128,20]) + ([0:127]'/127)*rand([1 20]); % simulate time series with linear drift
+% opt.tr = 3;
+% opt.hp = 0.01;
+% opt.lp = Inf;
+% [tseries_f,extras] = niak_filter_tseries(tseries,opt);
+% ftseries = fft(tseries);
+% ftseries_f = fft(tseries_f);
+% figure
+% subplot(1,2,1)
+% slow_drifts = extras.tseries_dc_low * extras.beta_dc_low;
+% plot(0:3:(3*127),[tseries(:,1),tseries_f(:,1),slow_drifts(:,1)]);
+% legend({'example raw signal','example filtered signal','slow drift'})
+% subplot(1,2,2)
+% plot([0:1/(3*128):1/6],[mean(abs(ftseries(1:65,:)).^2,2) mean(abs(ftseries_f(1:65,:)).^2,2)]);
+% legend({'Average power spectrum','average filtered power spectrum'});
+%
+% figure
+% plot(extras.tseries_dc_low)
+% title('the low-frequency discrete cosines');
+%
 % Copyright (c) Pierre Bellec
 % Montreal Neurological Institute, 2008-2010
 % Centre de recherche de l'institut de gériatrie de Montréal, 

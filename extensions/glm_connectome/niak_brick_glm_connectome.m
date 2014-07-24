@@ -343,6 +343,7 @@ end
 opt_sel.select = opt.test.(test).select;
 opt_sel.flag_filter_nan = true;
 opt_sel.labels_x = fieldnames(files_in.connectome);
+opt_sel.labels_y = fieldnames(opt.test.(test).contrast);
 [list_subject,ind_s] = niak_model_select(model_csv,opt_sel);
 
 %% Initialize model normalization (including multisite)

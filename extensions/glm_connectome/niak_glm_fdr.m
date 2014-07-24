@@ -25,6 +25,8 @@ function [fdr,test_q] = niak_glm_fdr(pce,method,q,type_measure)
 %          approaches, and the results of the test are made symmetric.
 %      'GBH-LSL+sym' or 'LSL_sym': a combination of LSL and famil y 
 %          approaches, and the results of the test are made symmetric.
+%      'uncorrected': just threshold the p-values using Q as a threshold. No FDR estimation
+%          is actually applied
 %
 % Q
 %   (scalar, default 0.05) the threshold on an acceptable level of false-discovery
@@ -144,6 +146,10 @@ switch method
         [fdr,test_q] = niak_fdr(pce_m,'LSL',q/2);       
         test_q = test_q | test_q';
     
+    case 'uncorrected'
+        fdr = pce_m;
+        test_q = fdr <= q;
+        
     otherwise
         error('%s is an unknown procedure to control the FDR',method)
         
