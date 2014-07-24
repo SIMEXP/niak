@@ -23,7 +23,7 @@ function [in, out, opt] = niak_brick_scores_fmri_v2(in, out, opt)
 %   (string) the difference between the intra- and inter- cluster stability.
 % FILES_OUT.PARTITION_THRESH
 %   (string) same as PARTITION_CORES, but only voxels with stability contrast > OPT.THRESH appear
-%   in a clhuster.
+%   in a cluster.
 % FILES_OUT.EXTRA
 %   (string) extra info in a .mat file.
 % FILES_OUT.RMAP_PART
