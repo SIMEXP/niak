@@ -89,12 +89,12 @@ for j_id = 1:j_number
     for out_id = 1:length(o_names)
         out_name = o_names{out_id};
         if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
-            s_out.(out_name) = [opt.folder_out filesep out_name filesep s_name filesep out_name ext];
+            s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
         elseif ~opt.files_out.(out_name)
             s_out.(out_name) = 'gb_niak_omitted';
             continue
         elseif ischar(opt.files_out.(out_name))
-            s_out.(out_name) = [opt.files_out.(out_name) filesep s_name filesep out_name ext];
+            s_out.(out_name) = [opt.files_out.(out_name) filesep sprintf('%s_%s%s',s_name, out_name, ext)];
         end
         if ~isdir(s_out.(out_name))
                 psom_mkdir(s_out.(out_name));
