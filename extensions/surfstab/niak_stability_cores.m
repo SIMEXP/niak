@@ -116,9 +116,11 @@ if (size(part,1)>1)&&(size(part,2)>1)
     mask_target = part(:,2)>0;
     if size(part,2) > 2
         mask_rois = part(:,3);
+        mask_target_rois = niak_match_part (mask_target,mask_rois);
+        mask_target_rois = mask_target_rois.part2_to_1;
+        mask_target_rois = niak_build_tseries(mask_target_rois(:)',mask_rois)>0;        
         flag_rois = true;
     else 
-        mask_rois = true(size(mask_target));
         flag_rois = false;
     end
     part = part(:,1);
@@ -187,8 +189,8 @@ for ss = 1:opt.nb_samps
         if flag_target
             if flag_rois
                 ttarget = niak_build_tseries(data_r,mask_rois,opt_t);
-                maps_seed = niak_fisher(corr(ttarget,tseed));
-                maps_all = niak_fisher(corr(ttarget,data_r));
+                maps_seed = niak_fisher(corr(ttarget(:,mask_target_rois),tseed));
+                maps_all = niak_fisher(corr(ttarget(:,mask_target_rois),data_r));
                 rmap = niak_fisher(corr(maps_all,maps_seed));
             else
                 maps_seed = niak_fisher(corr(data_r(:,mask_target),tseed));
