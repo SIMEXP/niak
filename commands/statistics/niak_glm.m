@@ -142,8 +142,8 @@ K = size(x,2);
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
-
-beta = (x'*x)^(-1)*x'*y;         % Regression coefficients
+ 
+beta = (x'*x)\x'*y;              % Regression coefficient 
 e = y-x*beta;                    % Residuals
 
 if isfield(opt,'test')
@@ -155,7 +155,7 @@ if isfield(opt,'test')
             if ~isfield(model,'c')
                 error('Please specify MODEL.C for performing a t-test')
             end
-            c = model.c;
+            c = model.c(:);
             std_e = sqrt(sum(e.^2,1)/(N-K));        % Standard deviation of the noise
 
             d     = sqrt(c'*(x'*x)^(-1)*c);         % Intermediate result for the t-test
@@ -177,7 +177,7 @@ if isfield(opt,'test')
             if ~isfield(model,'c')
                 error('Please specify MODEL.C for performing a F test')
             end
-            c = model.c;
+            c = model.c(:);
             s  = sum(e.^2,1);  % Estimate of the residual sum-of-square of the full model
             x0 = x(:,~model.c);
             p0 = size(x0,2);
