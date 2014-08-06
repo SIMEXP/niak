@@ -940,7 +940,9 @@ elseif strcmp(sphering,'off') %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             fprintf('Using the sphering matrix as the starting weight matrix ...\n');
             fprintf('Returning the identity matrix in variable "sphere" ...\n');
         end
-        [sphere,rcond_data] = inv(sqrtm(cov(data'))); % find the "sphering" matrix = spher()
+        cov_data = sqrtm(cov(data'));
+        rcond_data = inv(cov_data);
+        sphere = inv(cov_data); % find the "sphering" matrix = spher()
         sphere = 2.0*sphere;        
         weights = eye(ncomps,chans)*sphere; % begin with the identity matrix
         sphere = eye(chans);                 % return the identity matrix
