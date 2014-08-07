@@ -1,4 +1,4 @@
-function R = niak_build_correlation(tseries,flag_vec);
+function R = niak_build_correlation(tseries,flag_vec)
 % Compute the correlation matrix from regional time series.
 %
 % SYNTAX:
