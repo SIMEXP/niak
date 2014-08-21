@@ -1,8 +1,4 @@
 function [] = niak_visu_part(part,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_VISU_PART
-%
 % Give a representation of a partition as a binary adjacency square matrix.
 %
 % SYNTAX :
@@ -24,9 +20,10 @@ function [] = niak_visu_part(part,opt)
 %           (cell of strings) LABELS{J} is the label of cluster J.
 %
 %       TYPE_MAP
-%           (string, default []) the colormap used to display the clusters 
-%           (options: 'jet' or 'hotcold' or 'none').
+%           (string, default 'jet') the colormap used to display the clusters 
+%           (options: 'boxjet', 'jet' or 'hotcold' or 'none').
 %           If map is 'none', the current colormap is used.
+%           'jet': same as matlab's jet, except that zero is mapped to white.
 %
 %       FLAG_LABELS
 %           (boolean, default false) If FLAG_LABELS is true, labels of the
@@ -73,8 +70,8 @@ function [] = niak_visu_part(part,opt)
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields = {'nb_clusters','labels','type_map','flag_labels','flag_colorbar'};
-gb_list_defaults = {[],[],'none',false,true};
+gb_list_fields   = { 'nb_clusters' , 'labels' , 'type_map' , 'flag_labels' , 'flag_colorbar' };
+gb_list_defaults = { []            , []       , 'jet'      , false         , true            };
 niak_set_defaults
 
 if isempty(nb_clusters)
@@ -94,15 +91,29 @@ for num_c = list_clusters
     end
 end
 
-if strcmp(type_map,'jet')
-    coul_masks = jet(nb_clusters+1);
-    coul_masks(1,:) = [1,1,1];    
-    colormap(coul_masks);
-elseif strcmp(type_map,'hotcold')
-    c1 = hot(128);
-    c2 = c1(:,[3 2 1]);
-    coul_masks = [c2(length(c1):-1:1,:) ; c1];    
-    colormap(coul_masks);
+switch type_map
+    case 'jet'
+        coul_masks = jet(nb_clusters*10);
+        for num_u = 1:(nb_clusters+1)
+            if num_u==1
+                coul_masks(1:5,:) = repmat([1 1 1],[5 1]);
+            elseif num_u == (nb_clusters+1)
+                coul_masks((nb_clusters*10)-4:(nb_clusters*10),:) = repmat(coul_masks((num_u-1)*10,:),[5 1]); 
+            else
+                coul_masks((6+(num_u-2)*10):(5+(num_u-1)*10),:) = repmat(coul_masks((num_u-1)*10,:),[10 1]);               
+            end
+        end
+        size(coul_masks)
+        colormap(coul_masks);
+    case 'hotcold'
+        c1 = hot(128);
+        c2 = c1(:,[3 2 1]);
+        coul_masks = [c2(length(c1):-1:1,:) ; c1];    
+        colormap(coul_masks);
+    case 'none'
+    otherwise
+        warning('%s is an unknown color map, I am not setting the color map',type_map)
+    
 end
 
 nb_rois = length(part);
@@ -112,10 +123,12 @@ for num_c = list_clusters
     part_m(part==num_c,part==num_c) = num_c;
 end
 
-if strcmp(type_map,'hotcold')   
-    imagesc(part_m,[-nb_clusters,nb_clusters]);
-else
-    imagesc(part_m,[0,nb_clusters]);
+switch type_map
+    case 'hotcold'
+        imagesc(part_m,[-nb_clusters,nb_clusters]);
+    otherwise
+        imagesc(part_m,[0,nb_clusters]);
+    
 end
 
 if flag_labels
@@ -125,11 +138,6 @@ if flag_labels
             yt = mean(find(part==num_c2));
             if num_c1 == num_c2
                 h = text(xt,yt,labels{num_c1},'HorizontalAlignment','center','VerticalAlignment','middle');
-%             else
-%                 h = text(xt,yt,cat(2,labels{num_c1},',',labels{num_c2}),'HorizontalAlignment','center','VerticalAlignment','middle');
-%                 if strcmp(type_map,'hotcold')
-%                     set(h,'color',[1 1 1]);
-%                 end
             end
             set(h,'fontSize',12);
         end
