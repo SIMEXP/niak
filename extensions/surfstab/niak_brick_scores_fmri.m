@@ -1,4 +1,4 @@
-function [in, out, opt] = niak_brick_scores_fmri_v2(in, out, opt)
+function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 % Build stability maps using stable cores of an a priori partition
 %
 % SYNTAX:
