@@ -51,6 +51,20 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 % OPT.RAND_SEED (scalar, default []) The specified value is used to seed the random
 %   number generator with PSOM_SET_RAND_SEED. If left empty, no action is taken.
 % OPT.FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
+% OPT.FLAG_TARGET (boolean, default false)
+%       If FILES_IN.PART has a second column, then this column is used as a binary mask to define 
+%       a "target": clusters are defined based on the similarity of the connectivity profile 
+%       in the target regions, rather than the similarity of time series.
+%       If FILES_IN.PART has a third column, this is used as a parcellation to reduce the space 
+%       before computing connectivity maps, which are then used to generate seed-based 
+%       correlation maps (at full available resolution).
+% OPT.FLAG_FOCUS (boolean, default false)
+%       If FILES_IN.PART has a two additional columns (three in total) then the
+%       second column is treated as a binary mask of an ROI that should be
+%       clustered and the third column is treated as a binary mask of a
+%       reference region. The ROI will be clustered based on the similarity
+%       of its connectivity profile with the prior partition in column 1 to
+%       the connectivity profile of the reference.
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does not do anything
 %      but update FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
@@ -105,8 +119,8 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_verbose' , 'flag_test' } , ...
-      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , true           , false       });
+      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_focus' , 'flag_target' , 'flag_verbose' , 'flag_test' } , ...
+      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , true         , true          , true           , false       });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type' , 'opt'    }, ...
       { 'CBB'  , struct() });
@@ -139,8 +153,18 @@ if ischar(in.fmri)
     in.fmri = {in.fmri};
 end
 [hdr,vol] = niak_read_vol(in.fmri{1});
-[hdr2,part] = niak_read_vol(in.part);
+[~,part] = niak_read_vol(in.part);
 part = round(part);
+if opt.flag_target || opt.flag_focus
+    % We expect the partition to be 4D
+    if size(part,4) > 1
+        % We do have a 4D partition, take the first one
+        add_part = part(:,:,:,2:end);
+        part = part(:,:,:,1);
+    else
+        error('You need to supply a 4D partition file because of your choice of flags.');
+    end
+end
 if any(size(vol(:,:,:,1))~=size(part))
     error('the fMRI dataset and the partition should have the same spatial dimensions')
 end
@@ -157,9 +181,20 @@ for rr = 1:length(in.fmri)
     end
 end
 
+if opt.flag_target || opt.flag_focus
+    % We still need to mask the other bits of the partition
+    part_hold = part_v;
+    for part_id = 1:size(add_part,4)
+        part_tmp = add_part(:,:,:,part_id);
+        part_tmp_v = part_tmp(mask);
+        part_hold = cat(2, part_hold, part_tmp_v);
+    end
+    part_v = part_hold;
+end 
+
 %% Run the stability estimation
 opt_score = rmfield(opt,{'folder_out','thresh','rand_seed','flag_test'});
-res = niak_stability_scores_v2(tseries,part_v,opt_score);
+res = niak_stability_scores(tseries,part_v,opt_score);
 
 if ~strcmp(out.stability_maps,'gb_niak_omitted')
     if opt.flag_verbose
