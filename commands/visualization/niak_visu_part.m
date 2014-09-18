@@ -20,8 +20,8 @@ function [] = niak_visu_part(part,opt)
 %           (cell of strings) LABELS{J} is the label of cluster J.
 %
 %       TYPE_MAP
-%           (string, default 'jet') the colormap used to display the clusters 
-%           (options: 'boxjet', 'jet' or 'hotcold' or 'none').
+%           (string, default 'none') the colormap used to display the clusters 
+%           (options: 'jet' or 'hotcold' or 'none').
 %           If map is 'none', the current colormap is used.
 %           'jet': same as matlab's jet, except that zero is mapped to white.
 %
@@ -71,7 +71,7 @@ function [] = niak_visu_part(part,opt)
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields   = { 'nb_clusters' , 'labels' , 'type_map' , 'flag_labels' , 'flag_colorbar' };
-gb_list_defaults = { []            , []       , 'jet'      , false         , true            };
+gb_list_defaults = { []            , []       , 'none'     , false         , true            };
 niak_set_defaults
 
 if isempty(nb_clusters)
