@@ -1,3 +1,4 @@
-The following pipelines are available in NIAK:
 
-  * [Preprocessing](pipe_preprocessing.html) of structural and functional magnetic resonance imaging.
+ * fMRI/T1 preprocessing 
+  * [Documentation](pipe_preprocessing.html) 
+  * [Outputs](pipe_preprocessing_outputs.html)

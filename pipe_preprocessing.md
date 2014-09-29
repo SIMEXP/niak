@@ -47,7 +47,8 @@ Possible values are:
 
 ## Slice timing correction
 
-This step is performed [niak_brick_slice_timing](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_slice_timing.m), and its options can be set using `opt.slice_timing`. The full list of option is available through the Matlab/Octave's `help` command. This processing step is performing a temporal interpolation for each slice of each volume to a time of reference corresponding to one slice of reference of the volume. Specifying the parameters for slice timing correction essentially involves to specify the slice timing scheme (sequential or interleaved, ascending or descending), the scanner type (Siemens has sometimes a different way of defining interleaved) and the delay in TR. Note that the slice-timing correction is changing the timing of the acquisition. For this reason, a companion `_extra.mat` file is created for each fMRI dataset. This .mat file contains (amongst other things) a variable time_frames, with the time associated with each time frame (in the same unit as the TR, typically seconds).
+This step is performed [niak_brick_slice_timing](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_slice_timing.m), and its options can be set using `opt.slice_timing`. The full list of option is available through the Matlab/Octave's `help` command. This processing step is performing a temporal interpolation for each slice of each volume to a time of reference corresponding to one slice of reference of the volume. Specifying the parameters for slice timing correction essentially involves to specify the slice timing scheme (sequential or interleaved, ascending or descending), the scanner type (Siemens has sometimes a different way of defining interleaved) and the delay in TR. Note that the slice-timing correction is changing the timing of the acquisition. For this reason, a companion `_extra.mat` file is created for each fMRI dataset. This .mat file contains (amongst other things) a variable time_frames, with the time associated with each time frame (in the same unit as the TR, 
+typically seconds).
 ```matlab
  % Slice timing order. Available options: 
  % 'sequential ascending'  , 'sequential descending', 
@@ -72,18 +73,18 @@ The slice timing correction module is used to apply several minor additional ope
 It is first possible to suppress "dummy" volumes. Dummy scans are the first volumes of an fMRI run, when the signal values have not yet stabilized. Modern scanners typically discard the dummy scans automatically.
 ```matlab
 % Number of dummy scans to suppress.
-opt.slice_timing.suppress_vol     = 0;
+opt.slice_timing.suppress_vol = 0;
 ```
 
 Modern coils feature large number of channels (32 and more), which is associated with massive intensity inhomogeneities throughout the image. It is possible to apply an a posteriori (multiplicative) correction for these inhomogeneities, which may improve the T1-fMRI coregistration. This step is experimental, and should only be applied with caution. 
 ```matlab
 % Apply a correction for non-uniformities on the EPI volumes (1: on, 0: of)
-opt.slice_timing.flag_nu_correct  = 1;
+opt.slice_timing.flag_nu_correct = 1;
 % The distance between control points for non-uniformity correction 
 % (in mm, lower values can capture faster varying slow spatial drifts).
 % That parameter should be tweaked on an individual basis if large non-uniformities remain
 % on the average functional volume
-opt.slice_timing.arg_nu_correct   = '-distance 200';
+opt.slice_timing.arg_nu_correct = '-distance 200';
 ```
 
 When the conversion from DICOM to NIFTI or MINC somehow did not work properly, the origin of the field of view can be very far from the center of the brain. This typically causes problems in coregistration steps. It is possible to ask NIAK to place the center of the field of view at the center of mass of the brain. 
@@ -134,7 +135,8 @@ This step is performed by [niak_brick_resample_vol](https://github.com/SIMEXP/ni
 ```matlab
  % The resampling scheme. 
  % The fastest and most robust method is trilinear. 
- % Available options are: 'nearest_neighbour', 'trilinear', 'tricubic', 'sinc' 
+ % Available options are: 'nearest_neighbour', 
+ % 'trilinear', 'tricubic', 'sinc' 
  opt.resample_vol.interpolation = 'trilinear';
  
  % The voxel size to use in the stereotaxic space. 
@@ -142,9 +144,18 @@ This step is performed by [niak_brick_resample_vol](https://github.com/SIMEXP/ni
 ```
 
 ## Regression of confounds
-In order to reduce the influence of spatially structured noise on the fMRI time series, a number of confounds are regressed out from the time series using `niak_brick_regress_confounds`, along with a few additional operations. The full list of options is accessible through Matlab/Octave's `help`.
+In order to reduce the influence of spatially structured noise on the fMRI time series, a number of confounds are regressed out from the time series using `niak_brick_regress_confounds`, after censoring of time points with an excessive amount of motion. The full list of options is accessible through Matlab/Octave's `help`. Flags are avaible to turn on/off each group of confounding factors: slow time drifts, high frequencies, motion parameters, average signal of the white matter and ventricles, and the global signal. All the confounds are saved in the companion `_extra.mat` file that comes with every fMRI dataset, see the confounds and labels_confounds variables. 
+```matlab
+% 1: include the specified confounds in the regression, 
+% 0: exclude 
+opt.regress_confounds.flag_wm = 1;            
+opt.regress_confounds.flag_vent = 1;
+opt.regress_confounds.flag_motion_params = true; 
+opt.regress_confounds.flag_gsc = false;
+```
 
-**Scrubbing**. Before any regression of confounds is implemented, the time frames with excessive motion are removed from the dataset following Power et al. (Neuroimage 2012). The censoring is based solely on one of the indices defined by Power and coll. (frame displacement, FD). Note that the scrubbing is changing the temporal grid of the dataset (i.e. some volumes are now missing). Most neuroimaging software will not handle these changes properly. In particular, if NIAK is used to preprocess dataset before a GLM analysis in another software package such as FSL or fMRIstat, it is important to skip scrubbing. A binary vector (named `mask_suppressed`) describing all the volumes that were removed from the original time series can be found in the `_extra.mat` companion file of each fMRI dataset. This includes the suppression of dummy scans from the slice timing correction as well as the scrubbing. The vector `time_frames` describe the time of each frame present in the dataset (i.e. excluding the volumes that have been removed). 
+**Scrubbing** Before any regression of confounds is implemented, the time frames with excessive motion are removed from the dataset following Power et al. (Neuroimage 2012). The censoring is based solely on one of the indices defined by Power and coll. (frame displacement, FD). Note that the scrubbing is changing the temporal grid of the dataset (i.e. some volumes are now missing). Most neuroimaging software will not handle these changes properly. In particular, if NIAK is used to preprocess dataset before a GLM analysis in another software package such as FSL or fMRIstat, it is important to skip scrubbing. A binary vector (named `mask_suppressed`) describing all the volumes that were removed from the original time series can be found in the `_extra.mat` companion file of each fMRI dataset. This includes the suppression of dummy scans from the slice timing correction as well as the scrubbing. The vector `time_frames` describe the time of each frame present in the dataset (i.e. excluding the volumes that 
+have been removed). 
 ```matlab
 % (1: apply scrubing / 0: don't apply)
 opt.regress_confounds.flag_scrubbing = true;
@@ -154,7 +165,7 @@ opt.regress_confounds.flag_scrubbing = true;
 opt.regress_confounds.thre_fd = 0.5;
 ```
 
-**Slow time drifts**. A model of low-frequency temporal drifts as well as high frequency noise is generated using [niak_brick_time_filter](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_time_filter.m). The correction of slow time drifts is highly recommended because the frequencies below 0.01 Hz explain a large portion of the variance of the data, and mainly reflect motion artifacts. The correction of high-frequency noise is reducing the degrees of freedom of the time series without significant gain in SNR, so it is in general not advisable. It still seems to be common practice to filter out frequency above 0.08 Hz is the resting-state community, but this is not the default parameter in NIAK. 
+**Slow time drifts/high frequencies** A model of low-frequency temporal drifts as well as high frequency noise is generated using [niak_brick_time_filter](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_time_filter.m). The correction of slow time drifts is highly recommended because the frequencies below 0.01 Hz explain a large portion of the variance of the data, and mainly reflect motion artifacts. The correction of high-frequency noise is reducing the degrees of freedom of the time series without significant gain in SNR, so it is in general not advisable. It still seems to be common practice to filter out frequency above 0.08 Hz is the resting-state community, but this is not the default parameter in NIAK. 
 ```matlab
  % Cut-off frequency for removal of low frequencies (in Hz). 
  % A cut-off of -Inf will result in no high-pass filtering.
@@ -164,62 +175,46 @@ opt.regress_confounds.thre_fd = 0.5;
 % A cut-off of Inf will result in no low-pass filtering.
 opt.time_filter.lp = Inf; 
 ```
+**Motion parameters** The 6 rigid-body motion parameters (3 translations and 3 rotations) are not entered as such in the model. First a twelve parameters model is built by including the original 6 parameters as well as their square (Lund et al. 2006, reference below). Then a principal component analysis is used to retain 95% of the variance of these twelve parameters, which typically entail around 8 covariates but may vary from dataset to dataset. 
 
-**Regression**. Finally, the following confounds are regressed out from the time series: 
- * slow time drift (see slow time drifts above) 
- * high frequencies (see slow time drifts above) 
- * motion parameters 
- * average signal of a conservative mask of the white matter 
- * average signal of a conservative mask of the ventricles 
- * global average (in a brain mask)
+**White matter & ventricular signals** The masks of the ventricle and the white matter have been built to be very conservative. This is to avoid getting influenced by the surrounding grey matter tissue maps (see Saad et al. 2012, reference below), in which case the average of the white matter mask becomes highly correlated with the global average. 
 
-Several technical details have to be clarified. (1) The 6 rigid-body motion parameters (3 translations and 3 rotations) are not entered as such in the model. First a twelve parameters model is built by including the original 6 parameters as well as their square (Lund et al. 2006, reference below). Then a principal component analysis is used to retain 95% of the variance of these twelve parameters, which typically entail around 8 covariates but may vary from dataset to dataset. (2) the masks of the ventricle and the white matter have been built to be very conservative. This is to avoid getting influenced by the surrounding grey matter tissue maps (see Saad et al. 2012, reference below), in which case the average of the white matter mask becomes highly correlated with the global average. (3) the global average estimator is not the traditional estimator, but rather the estimator based on a principal component analysis as described in (Carbonell et al. 2012, reference below). This estimator alleviates some of 
-the theoretical limitations of the classical estimator, as reported by Murphy et al., 2010 (reference below). However, as this correction may introduce some bias in the group comparison (Saad et al. 2012), the regression of the global average is turned off by default. All the confounds are saved in the companion _extra.mat file that comes with every fMRI dataset, see the confounds and labels_confounds variables. The main options of this step are: 
-
- &nbsp;% Turn on/off the regression of the average white matter signal (true: apply / false&nbsp;: don't apply)
- opt.regress_confounds.flag_wm = true;            
-
- &nbsp;% Turn on/off the regression of the average of the ventricles (true: apply / false&nbsp;: don't apply)
- opt.regress_confounds.flag_vent = true;          
- 
- &nbsp;% Turn on/off the regression of the motion parameters (true: apply / false&nbsp;: don't apply)
- opt.regress_confounds.flag_motion_params = true; 
-
- &nbsp;% Turn on/off the regression of the PCA-based estimation of the global signal (true: apply / false&nbsp;: don't apply)
- opt.regress_confounds.flag_gsc = false;
+**Global signal** The global average estimator is not the traditional estimator, but rather the estimator based on a principal component analysis as described in (Carbonell et al. 2012, reference below). This estimator alleviates some of the theoretical limitations of the classical estimator, as reported by Murphy et al., 2010 (reference below). However, as this correction may introduce some bias in the group comparison (Saad et al. 2012), the regression of the global average is turned off by default. 
 
 ## CORSICA
 
-The method of correction of structured (physiological and motion-related) noise based on component selection in ICA (CORSICA) is implemented in ''niak_pipeline_corsica''. After some extensive evaluation, our current conclusion is that the CORSICA selection is not stable enough to be used in a completely unsupervised way. This step is thus skipped by default. Note that the ICA and selection of noise components is still generated for quality control, but no components are removed from the data. The option of this subpipeline can be changed using ''opt.corsica''. The steps of the pipeline are the following&nbsp;: 
+The method of correction of structured (physiological and motion-related) noise based on component selection in independent component analysis (CORSICA) is implemented in [niak_pipeline_corsica](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_corsica.m). After some extensive evaluation, our current conclusion is that the CORSICA selection is not stable enough to be used in a completely unsupervised way. This step is thus skipped by default. Note that the ICA and selection of noise components is still generated for quality control, but no components are removed from the data. The option of this subpipeline can be changed using `opt.corsica`. The steps of the pipeline are the following&nbsp;: 
 
-*Generation of spatial priors on the noise, i.e. masks of the ventricle and a part of the brain stem in individual native functional space (''niak_brick_mask_corsica'') 
-*Individual spatial independent component analysis of each functional run (''niak_brick_sica''). 
-*Selection of independent component related to physiological noise, using spatial priors (''niak_brick_component_sel''). 
-*Generation of a "physiological noise corrected" fMRI dataset for each run, where the effect of the selected independent components has been removed (''niak_brick_component_supp'').
+ * Generation of spatial priors on the noise, i.e. masks of the ventricle and a part of the brain stem in individual native functional space ([niak_brick_mask_corsica](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_mask_corsica.m)) 
+ * Individual spatial independent component analysis of each functional run ([niak_brick_sica](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_sica.m)). 
+ * Selection of independent component related to physiological noise, using spatial priors ([niak_brick_component_sel](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_component_sel.m)). 
+ * Generation of a "physiological noise corrected" fMRI dataset for each run, where the effect of the selected independent components has been removed ([niak_brick_component_supp](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_component_supp.m)).
 
-A complete list of options can be found in the help of ''niak_pipeline_corsica''. The following example illustrates the most useful (or simply necessary) options&nbsp;: 
-
- opt.corsica.sica.nb_comp = 60; &nbsp;% Number of components estimated during the ICA. 20 is a minimal number, 60 was used in the validation of CORSICA. 
-
- opt.corsica.threshold = 0.15; &nbsp;% Threshold to select noise-related compoenents (between 0 and 1). This threshold has been calibrated on a validation database to provide good sensitivity with excellent specificity. 
-
- opt.corsica.flag_skip = 0; &nbsp;% Skip CORSICA (0: don't skip, 1&nbsp;: skip)
+A complete list of options can be found in the help of [niak_pipeline_corsica](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_corsica.m). The following example illustrates the most useful (or simply necessary) options.
+```matlab
+% Number of ICA components  
+opt.corsica.sica.nb_comp = 60;
+% Threshold to select noise-related compoenents (between 0 and 1).
+opt.corsica.threshold = 0.15;
+% Skip CORSICA (0: don't skip, 1: skip)
+opt.corsica.flag_skip = 0;
+```
 
 ## Spatial smoothing
 
-This step is performed using ''niak_brick_smooth_vol'', and its options can be set using ''opt.smooth_vol''. The brick is a simple wrapper of the minc tool called ''mincblur''. It is implementing spatial smoothing using a Gaussian kernel. A complete list of options for this brick can be found in the help of ''niak_brick_smooth_vol''. The following example illustrates the most useful (or simply necessary) options&nbsp;: 
-
- opt.smooth_vol.fwhm = 6; &nbsp;% Field width at half maximum of the bluring kernel. 
- opt.smooth_vol.flag_skip = 0; &nbsp;% Skip spatial smoothing (0: don't skip, 1&nbsp;: skip)
-
-# Outputs and quality control
-
-A complete list of outputs for the pipeline can be found [[niak:FmriPreprocessingOutputs|here]]. These outputs are generated in the opt.folder_out folder once the pipeline has been successfully completed. These typically represent a 250% increase in size compared to the raw datasets if opt.size_output is equal to 'quality_control' (and much more if opt.size_output is equal to 'all'). We are in the process of setting up guidelines for quality control of these outputs. 
+The spatial smoothing is performed using [niak_brick_smooth_vol](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_smooth_vol.m), and its options can be set using `opt.smooth_vol`. The brick is a simple wrapper of the minc tool called `mincblur`. It is implementing spatial smoothing using a Gaussian kernel. A complete list of options for this brick can be found using Matlab/Octave's `help`. The following example illustrates the most useful (or simply necessary) options.
+```matlab
+% Field width at half maximum of the bluring kernel
+opt.smooth_vol.fwhm = 6;
+% Skip spatial smoothing (0: don't skip, 1 skip)
+opt.smooth_vol.flag_skip = 0;
+```
 
 # Publication guidelines
 
-Here is a short description of the fMRI preprocessing pipeline that can be adapted in a publication. You are encouraged to include the script that was used to preprocess the fMRI database as supplementary material of the article.
->The fMRI database was preprocessed using the Neuroimaging Analysis Kit (NIAK) release 0.7 (Bellec et al. 2011, NIAK website). The three first volumes of each run were suppressed to allow the magnetisation to reach equilibrium. Each fMRI dataset was corrected of inter-slice difference in acquisition time and the parameters of a rigid-body motion was estimated for each time frame. Rigid-body motion was estimated within as well as between runs. The median volume of one selected fMRI run for each subject was coregistered with a T1 individual scan using Minctracc (Collins et al. 1997), which was itself non-linearly transformed to the Montreal Neurological Institute (MNI) template (Fonov et al 2011) using the CIVET pipeline (Zijdenbos et al. 2002). The MNI symmetric template was generated from the ICBM152 sample of 152 young adults, after 40 iterations of non-linear coregistration. The rigid-body transform, fMRI-to-T1 transform and T1-to-stereotaxic transform were all combined, and the functional volumes were resampled in the MNI space at a 3 mm isotropic resolution. The “scrubbing” method of Power et al., 2012, was used to remove the volumes with excessive motion (frame displacement greater than 0.5). The following nuisance parameters were regressed out from the time series at each voxel: slow time drifts (basis of discrete cosines with a 0.01 Hz high-pass cut-off), average signals in conservative masks of the white matter and the lateral ventricles as well as the first principal components (95% energy) of the six rigid-body motion parameters and their squares (Lund et al. 2006, Giove et al. 2009). The fMRI volumes were finally spatially smoothed with a 6 mm isotropic Gaussian blurring kernel. A more detailed description of the pipeline can be found on the NIAK website. 
+Here is a short description of the fMRI preprocessing pipeline that can be adapted in a publication. You are encouraged to include the script that was used to preprocess the fMRI database as supplementary material of the article. 
+
+The fMRI database was preprocessed using the Neuroimaging Analysis Kit (NIAK) release 0.12.4 (Bellec et al. 2011, NIAK website). The three first volumes of each run were suppressed to allow the magnetisation to reach equilibrium. Each fMRI dataset was corrected of inter-slice difference in acquisition time and the parameters of a rigid-body motion was estimated for each time frame. Rigid-body motion was estimated within as well as between runs. The median volume of one selected fMRI run for each subject was coregistered with a T1 individual scan using Minctracc (Collins et al. 1997), which was itself non-linearly transformed to the Montreal Neurological Institute (MNI) template (Fonov et al 2011) using the CIVET pipeline (Zijdenbos et al. 2002). The MNI symmetric template was generated from the ICBM152 sample of 152 young adults, after 40 iterations of non-linear coregistration. The rigid-body transform, fMRI-to-T1 transform and T1-to-stereotaxic transform were all combined, and the functional volumes were resampled in the MNI space at a 3 mm isotropic resolution. The “scrubbing” method of Power et al., 2012, was used to remove the volumes with excessive motion (frame displacement greater than 0.5). The following nuisance parameters were regressed out from the time series at each voxel: slow time drifts (basis of discrete cosines with a 0.01 Hz high-pass cut-off), average signals in conservative masks of the white matter and the lateral ventricles as well as the first principal components (95% energy) of the six rigid-body motion parameters and their squares (Lund et al. 2006, Giove et al. 2009). The fMRI volumes were finally spatially smoothed with a 6 mm isotropic Gaussian blurring kernel. A more detailed description of the pipeline can be found on the NIAK website. 
 
 Relevant references for the fMRI preprocessing pipeline are listed below.
 
