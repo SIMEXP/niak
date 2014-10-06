@@ -33,7 +33,11 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %
 %   RESULTS
 %      (string, default 'gb_niak_omitted') a .mat file with the following matlab variables:
-%      
+%       et Guy Cloutier mercredi de la semaine prochaine
+
+Pour la coordination du cours d’imagerie. Je  communique avec vous
+
+Immédiatement après cette réunion
 %      MODEL_GROUP
 %         (structure) with the following fields:
 %         X (matrix N*K) each column is a covariate of the model
@@ -125,7 +129,7 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL_sym') how the FDR is controled. 
+%      (string, default 'BH-global') how the FDR is controled. 
 %      See the TYPE argument of NIAK_GLM_FDR.
 %
 %   TEST.<LABEL>
@@ -303,8 +307,8 @@ list_defaults = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'g
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
-list_fields   = { 'min_nb_vol' , 'type_fdr' , 'fdr' , 'test' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 10           , 'LSL_sym'  , 0.05  , NaN    , true           ,   false     };
+list_fields   = { 'min_nb_vol' , 'type_fdr'  , 'fdr' , 'test' , 'flag_verbose' , 'flag_test' };
+list_defaults = { 10           , 'BH-global' , 0.05  , NaN    , true           ,   false     };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% Default for the test

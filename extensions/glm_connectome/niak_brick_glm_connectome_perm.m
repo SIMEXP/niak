@@ -45,7 +45,7 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome_perm(files_in,file
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL_sym') how the FDR is controled. 
+%      (string, default 'BH-global') how the FDR is controled. 
 %      See the TYPE argument of NIAK_GLM_FDR.
 %
 %   NB_SAMPS
@@ -125,8 +125,8 @@ if ~ischar(files_out)
 end
 
 %% Options
-list_fields   = { 'nb_samps' , 'fdr' , 'type_fdr' , 'rand_seed' , 'flag_verbose' , 'flag_test'  };
-list_defaults = { 1000       , 0.05  , 'LSL_sym'  , []          , true           , false        };
+list_fields   = { 'nb_samps' , 'fdr' , 'type_fdr'  , 'rand_seed' , 'flag_verbose' , 'flag_test'  };
+list_defaults = { 1000       , 0.05  , 'BH-global' , []          , true           , false        };
 if nargin < 3
     opt = psom_struct_defaults(struct,list_fields,list_defaults);
 else
