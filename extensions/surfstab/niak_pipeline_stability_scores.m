@@ -10,21 +10,23 @@ function [pipeline, opt] = niak_pipeline_stability_scores(files_in, opt)
 %     Each file needs to be defined here with the default being yes.
 %   - Maybe a folder that we want to store everything in
 %
-% What do we need:
-%   - FILES_IN (structure) with fields:
-%       - FMRI (structure) where each field corresponds to a subject
-%       - PART (string) a file that contains the target partition
-%   - OPT.FILES_OUT (structure) with the fields corresponding to the files
-%     that can be generated and the contents are either strings or boolean
-%     values. The boolean values default to true and end up in a specific
-%     subfolder of the OPT.FOLDER_OUT folder. Or, if strings are
-%     defined then they are treated as directories for this type of file.
-%     If they are false, then this file is not generated.
-%   - OPT.FOLDER_OUT (string) if this is not defined then all values in
-%     OPT.FILES_OUT must be either strings or false. Not sure how to check
-%     this properly.
-%   - OPT.SCORES (structure) defaults empty. Contains all the options that
-%     the brick expects
+% OPT.FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
+% OPT.FLAG_TARGET (boolean, default false)
+%       If FILES_IN.PART has a second column, then this column is used as a binary mask to define 
+%       a "target": clusters are defined based on the similarity of the connectivity profile 
+%       in the target regions, rather than the similarity of time series.
+%       If FILES_IN.PART has a third column, this is used as a parcellation to reduce the space 
+%       before computing connectivity maps, which are then used to generate seed-based 
+%       correlation maps (at full available resolution).
+% OPT.FLAG_FOCUS (boolean, default false)
+%       If FILES_IN.PART has a two additional columns (three in total) then the
+%       second column is treated as a binary mask of an ROI that should be
+%       clustered and the third column is treated as a binary mask of a
+%       reference region. The ROI will be clustered based on the similarity
+%       of its connectivity profile with the prior partition in column 1 to
+%       the connectivity profile of the reference.
+% OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does not do anything
+%      but update FILES_IN, FILES_OUT and OPT.
 
 % FILES IN DEFAULTS
 files_in = psom_struct_defaults(files_in, ...
@@ -44,8 +46,8 @@ opt.files_out = psom_struct_defaults(opt.files_out,...
                 { true             , true              , true              , true              , true                 , true               , true    , true       , true        , true              });
 
 opt.scores = psom_struct_defaults(opt.scores, ...
-             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_verbose' , 'flag_test' } , ...
-             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()   , true           , false       });
+             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_verbose' , 'flag_test' } , ...
+             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , true           , false       });
 
 opt.scores.sampling = psom_struct_defaults(opt.scores.sampling, ...
                       { 'type' , 'opt'    }, ...
@@ -101,7 +103,7 @@ for j_id = 1:j_number
         end
     end
     s_opt = opt.scores;
-    pipeline = psom_add_job(pipeline, j_name, 'niak_brick_scores_fmri_v2',...
+    pipeline = psom_add_job(pipeline, j_name, 'niak_brick_scores_fmri',...
                             s_in, s_out, s_opt);
 end
 
