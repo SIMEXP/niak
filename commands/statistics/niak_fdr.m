@@ -101,27 +101,23 @@ if nargin < 2
     method = 'BY';
 end
 
-if strcmp(method,'TST')
-    method = 'GBH';
-end
-
 if nargin < 3
     q = 0.05;
 end
 
-if strcmp(method,'GBH')||strcmp(method,'LSL')
+if ismember(method,{'TST','GBH','LSL'})
 
     n = size(pce,1);
     m = size(pce,2);
     % estimate the number of discoveries
 
     switch method
-        case 'GBH'
+        case {'GBH','TST'}
 
             % The two-stage method: family-wise BH procedure
             q = q/(1+q);
             [fdr_bh,test_bh] = niak_fdr(pce,'BH',q); 
-            pi_g_0 = (n-sum(test_bh,1))/n;        
+            pi_g_0 = (n-sum(test_bh,1))/n;
   
         case 'LSL'
 
@@ -181,11 +177,9 @@ for num_c = 1:size(pce,2)
             error('%s is an unknown procedure for FDR estimation',method)
     end
     if nargout>1
-        ind_c = find(fdr_c>q,1);
-        if ind_c>1
-            test(order(1:(ind_c-1),num_c),num_c) = true;
-        elseif isempty(ind_c)
-            test(:,num_c) = true;
+        ind_c = max(find(fdr_c<=q));
+        if ~isempty(ind_c)
+            test(order(1:ind_c,num_c),num_c) = true;
         end
     end
 end
