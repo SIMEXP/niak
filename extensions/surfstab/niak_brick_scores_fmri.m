@@ -58,6 +58,12 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %       If FILES_IN.PART has a third column, this is used as a parcellation to reduce the space 
 %       before computing connectivity maps, which are then used to generate seed-based 
 %       correlation maps (at full available resolution).
+% OPT.FLAG_DEAL
+%       If the partition supplied by the user does not have the appropriate
+%       number of columns, this flag can force the brick to duplicate the
+%       first column. This may be useful if you want to use the same mask
+%       for the OPT.FLAG_TARGET flag as you use in the cluster partition.
+%       Use with care.
 % OPT.FLAG_FOCUS (boolean, default false)
 %       If FILES_IN.PART has a two additional columns (three in total) then the
 %       second column is treated as a binary mask of an ROI that should be
@@ -66,7 +72,7 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %       of its connectivity profile with the prior partition in column 1 to
 %       the connectivity profile of the reference.
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does not do anything
-%      but update FILES_IN, FILES_OUT and OPT.
+%       but update FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % COMMENTS:
 % For "window" sampling, the OPT.NB_SAMPS argument is ignored, 
@@ -119,8 +125,8 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_focus' , 'flag_target' , 'flag_verbose' , 'flag_test' } , ...
-      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , false        , false         , true           , false       });
+      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
+      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , false        , false         , false       , true           , false       });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type' , 'opt'    }, ...
       { 'CBB'  , struct() });
@@ -161,6 +167,9 @@ if opt.flag_target || opt.flag_focus
         % We do have a 4D partition, take the first one
         add_part = part(:,:,:,2:end);
         part = part(:,:,:,1);
+    elseif opt.flag_deal
+        warning('Your partition only has 3 dimensions but needs 4. I will repeat the first dimension for you because OPT.FLAG_DEAL is true.');
+        add_part = part;
     else
         error('You need to supply a 4D partition file because of your choice of flags.');
     end

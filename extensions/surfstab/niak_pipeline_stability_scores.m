@@ -18,6 +18,12 @@ function [pipeline, opt] = niak_pipeline_stability_scores(files_in, opt)
 %       If FILES_IN.PART has a third column, this is used as a parcellation to reduce the space 
 %       before computing connectivity maps, which are then used to generate seed-based 
 %       correlation maps (at full available resolution).
+% OPT.FLAG_DEAL
+%       If the partition supplied by the user does not have the appropriate
+%       number of columns, this flag can force the brick to duplicate the
+%       first column. This may be useful if you want to use the same mask
+%       for the OPT.FLAG_TARGET flag as you use in the cluster partition.
+%       Use with care.
 % OPT.FLAG_FOCUS (boolean, default false)
 %       If FILES_IN.PART has a two additional columns (three in total) then the
 %       second column is treated as a binary mask of an ROI that should be
@@ -46,8 +52,8 @@ opt.files_out = psom_struct_defaults(opt.files_out,...
                 { true             , true              , true              , true              , true                 , true               , true    , true       , true        , true              });
 
 opt.scores = psom_struct_defaults(opt.scores, ...
-             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_verbose' , 'flag_test' } , ...
-             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , true           , false       });
+             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
+             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , false       , true           , false       });
 
 opt.scores.sampling = psom_struct_defaults(opt.scores.sampling, ...
                       { 'type' , 'opt'    }, ...
@@ -61,6 +67,10 @@ for o_id = 1:length(o_names)
     if opt.files_out.(o_name) && ~ischar(opt.files_out.(o_name))
         files_out_set = true;
     end
+end
+
+if opt.scores.flag_deal
+    warning('OPT.SCORES.FLAG_DEAL is set to true. Check your partition to make sure it does what you expect.');
 end
 
 if strcmp('gb_niak_omitted' , opt.folder_out) && files_out_set
