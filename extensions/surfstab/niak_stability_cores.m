@@ -34,7 +34,7 @@ function [res,opt] = niak_stability_cores(data,part,opt)
 %       before computing connectivity maps, which are then used to generate seed-based 
 %       correlation maps (at full available resolution).
 %   FLAG_FOCUS (boolean, default false)
-%       If PART has a two additional columns (three in total) then the
+%       If PART has two additional columns (three in total) then the
 %       second column is treated as a binary mask of an ROI that should be
 %       clustered and the third column is treated as a binary mask of a
 %       reference region. The ROI will be clustered based on the similarity
