@@ -168,15 +168,29 @@ if opt.flag_target || opt.flag_focus
         add_part = part(:,:,:,2:end);
         part = part(:,:,:,1);
     elseif opt.flag_deal
-        warning('Your partition only has 3 dimensions but needs 4. I will repeat the first dimension for you because OPT.FLAG_DEAL is true.');
+        warning(['Your partition only has 3 dimensions but needs 4. ',...
+                 'I will repeat the first dimension for you because ',...
+                 'OPT.FLAG_DEAL is true.']);
+        % Run Region Growing if there are too many voxels
         add_part = part;
+        if sum(logical(part(:)))>5000
+            [neigh, ~] = niak_build_neighbour(logical(part), struct);
+            sz = size(vol);
+            flat_vol = reshape(vol,[],sz(end));
+            roi_part = niak_region_growing(vol, neigh, struct('thre_size', 100));
+            
+            add_part = cat(4, add_part, roi_part);
+        end
+
     else
         error('You need to supply a 4D partition file because of your choice of flags.');
     end
 end
+
 if any(size(vol(:,:,:,1))~=size(part))
     error('the fMRI dataset and the partition should have the same spatial dimensions')
 end
+
 mask = part>0;
 part_v = part(mask);
 for rr = 1:length(in.fmri)
@@ -203,7 +217,7 @@ end
 
 %% Run the stability estimation
 opt_score = rmfield(opt,{'folder_out','thresh','rand_seed','flag_test'});
-res = niak_stability_scores(tseries,part_v,opt_score);
+res = niak_stability_cores(tseries,part_v,opt_score);
 
 if ~strcmp(out.stability_maps,'gb_niak_omitted')
     if opt.flag_verbose
