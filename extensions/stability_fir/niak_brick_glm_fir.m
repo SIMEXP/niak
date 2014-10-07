@@ -123,7 +123,7 @@ function [files_in,files_out,opt] = niak_brick_glm_fir(files_in,files_out,opt)
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL') how the FDR is controled. 
+%      (string, default 'BH') how the FDR is controled. 
 %      Available options:
 %         'BH': a BH procedure on the full set of FIR.
 %         'LSL': a GBH procedure controlling the FDR on the full set of FIR
@@ -309,7 +309,7 @@ end
 
 %% Options
 list_fields   = { 'type_fdr'   , 'fdr' , 'test' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 'LSL'        , 0.05  , NaN    , true           ,   false     };
+list_defaults = { 'BH'         , 0.05  , NaN    , true           ,   false     };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% Test 
@@ -484,7 +484,7 @@ pce_m = reshape(pce,[nt nn]);
 
 switch type_fdr
 
-    case 'global'
+    case {'global','BH'}
         [fdr,test_q] = niak_fdr(pce(:),'BH',q);
         fdr = niak_lvec2mat(fdr');
         test_q = niak_lvec2mat(test_q',0)>0; 
@@ -492,7 +492,7 @@ switch type_fdr
     case 'LSL'
         [fdr,test_q] = niak_fdr(pce_m,'LSL',q);
         
-    case 'local'
+    case {'local','BH-local'}
         [fdr,test_q] = niak_fdr(pce_m,'BH',q);
         
     case 'uncorrected'
