@@ -33,11 +33,7 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %
 %   RESULTS
 %      (string, default 'gb_niak_omitted') a .mat file with the following matlab variables:
-%       et Guy Cloutier mercredi de la semaine prochaine
-
-Pour la coordination du cours d’imagerie. Je  communique avec vous
-
-Immédiatement après cette réunion
+%
 %      MODEL_GROUP
 %         (structure) with the following fields:
 %         X (matrix N*K) each column is a covariate of the model
