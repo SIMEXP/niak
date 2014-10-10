@@ -1,26 +1,15 @@
 function path_name_f = niak_full_path(path_name)
 % convert a path name (either relative or absolute) into a full path name
 %
-% SYNTAX:
 % PATH_NAME_F = NIAK_FULL_PATH(PATH_NAME)
 %
-% _________________________________________________________________________
-% INPUTS:
+% PATH_NAME   (string, default pwd) a relative or absolute path name.
+% PATH_NAME_F (string) same as PATH_NAME, but in a absolute form and with a
+%   filesep appended at the end.
 %
-% PATH_NAME
-%    (string, default pwd) a relative or absolute path name.
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% PATH_NAME_F 
-%       (string) same as PATH_NAME, but in a absolute form and with a
-%       filesep appended at the end.
-%
-% _________________________________________________________________________
-% COMMENTS:
-%
-% Copyright (c) Pierre Bellec, 
+% The default PATH_NAME if used if missing or empty
+% Copyright (c) Pierre Bellec, see license in the code.
+
 % Centre de recherche de l'institut de Gériatrie de Montréal,
 % Département d'informatique et de recherche opérationnelle,
 % Université de Montréal, 2012.
@@ -46,7 +35,7 @@ function path_name_f = niak_full_path(path_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-if nargin == 0
+if (nargin == 0)||isempty(path_name)
     path_name = pwd;
 end
 
