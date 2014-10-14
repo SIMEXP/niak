@@ -173,12 +173,28 @@ if opt.flag_target || opt.flag_focus
                  'OPT.FLAG_DEAL is true.']);
         % Run Region Growing if there are too many voxels
         add_part = part;
+        % See if the number of voxels exceeds 5000. If so, make an ROI
+        % partition
         if sum(logical(part(:)))>5000
-            [neigh, ~] = niak_build_neighbour(logical(part), struct);
+            warning(['The number of voxels in your partition exceeds 5000. ',...
+                     'This will lead to very big correlation matrices. ',...
+                     'I will generate a region growing partition to ',...
+                     'dimensionality.']);
+            mask = logical(part);
             sz = size(vol);
-            flat_vol = reshape(vol,[],sz(end));
-            roi_part = niak_region_growing(vol, neigh, struct('thre_size', 100));
-            
+            [neigh, ~] = niak_build_neighbour(mask, struct);
+            % Loop through time and mask the volume
+            mask_vol = zeros(sum(mask(:)), sz(end));
+            for t = 1:sz(end)
+                tmp_vol = vol(:,:,:,t);
+                mask_vol(:, t) = tmp_vol(mask);
+            end
+            mask_vol = mask_vol';
+            roi_part = niak_region_growing(mask_vol, neigh, struct('thre_size', 100));
+            % Shape it back into 3D space
+            tmp = zeros(size(mask));
+            tmp(mask) = roi_part;
+            roi_part = tmp;
             add_part = cat(4, add_part, roi_part);
         end
 
@@ -206,18 +222,17 @@ end
 
 if opt.flag_target || opt.flag_focus
     % We still need to mask the other bits of the partition
-    part_hold = part_v;
+    part_run = part_v;
     for part_id = 1:size(add_part,4)
         part_tmp = add_part(:,:,:,part_id);
         part_tmp_v = part_tmp(mask);
-        part_hold = cat(2, part_hold, part_tmp_v);
+        part_run = cat(2, part_run, part_tmp_v);
     end
-    part_v = part_hold;
 end 
 
 %% Run the stability estimation
-opt_score = rmfield(opt,{'folder_out','thresh','rand_seed','flag_test'});
-res = niak_stability_cores(tseries,part_v,opt_score);
+opt_score = rmfield(opt,{'folder_out','thresh','rand_seed','flag_test', 'flag_deal'});
+res = niak_stability_cores(tseries,part_run,opt_score);
 
 if ~strcmp(out.stability_maps,'gb_niak_omitted')
     if opt.flag_verbose
