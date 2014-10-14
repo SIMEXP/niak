@@ -152,7 +152,6 @@ if ~isempty(opt.rand_seed)
 end
 
 %% Read the inputs
-vol_disc = 0;
 nb_disc_scale = zeros(length(files_in),1);
 perc_disc_scale = zeros(length(files_in),1);
 vol_disc_scale = zeros(length(files_in),1);
@@ -166,8 +165,9 @@ for num_e = 1:length(files_in);
     nb_disc_scale(num_e) = sum(results.nb_discovery);
     perc_disc_scale(num_e) = mean(results.perc_discovery);
     vol_disc_scale(num_e) = results.vol_discovery;
-    vol_disc = vol_disc + vol_disc_scale(num_e);
 end
+vol_disc = sum(vol_disc_scale);
+perc_disc = mean(perc_disc_scale);
 
 %% Generate samples under the null 
 if opt.nb_samps>0
@@ -175,7 +175,9 @@ if opt.nb_samps>0
         fprintf('Estimate the significance of the number of findings ...\n')
     end
     p_vol_disc = 0;
+    p_perc_disc = 0;
     vol_disc_null = zeros([opt.nb_samps 1]);
+    perc_disc_null = zeros([opt.nb_samps 1]);
     opt_glm.test = 'ttest';
     for num_s = 1:opt.nb_samps
         if opt.flag_verbose
@@ -185,22 +187,28 @@ if opt.nb_samps>0
         for num_e = 1:length(glm_null)
             res_null = niak_glm(glm_null(num_e),opt_glm);                        
             [fdr_null,test_null] = sub_fdr(res_null.pce,opt.type_fdr,opt.fdr,nt(num_e),nn(num_e));
+            nb_disc_null = sum(test_null,1);
+            perc_disc_null(num_s) = perc_disc_null(num_s) + mean(nb_disc_null/size(fdr_null,1));
             if any(test_null(:))
                 vol_disc_null(num_s) = vol_disc_null(num_s) + sum(res_null.ttest(test_null(:)).^2);
             else
                 vol_disc_null(num_s) = vol_disc_null(num_s) + max(res_null.ttest(:).^2);
             end  
         end
+        perc_disc_null = perc_disc_null/length(files_in);
         p_vol_disc = p_vol_disc + double(vol_disc_null(num_s)>=vol_disc);
+        p_perc_disc = p_perc_disc + double(perc_disc_null(num_s)>=perc_disc);
     end
+    p_perc_disc = p_vol_disc / opt.nb_samps;
     p_vol_disc = p_vol_disc / opt.nb_samps;
 else
+    p_perc_disc = NaN;
     p_vol_disc = NaN;
     vol_disc_null = NaN;    
 end
 
 %% Save the results 
-save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null');
+save(files_out,'vol_disc','nb_disc_scale','perc_disc_scale','vol_disc_scale','p_vol_disc','vol_disc_null','perc_disc','perc_disc_null','p_perc_disc');
 
 %%%%%%%
 %% SUBFUNCTION
@@ -213,8 +221,8 @@ switch type_fdr
 
     case {'global','BH'}
         [fdr,test_q] = niak_fdr(pce(:),'BH',q);
-        fdr = niak_lvec2mat(fdr');
-        test_q = niak_lvec2mat(test_q',0)>0; 
+        fdr = reshape(fdr,[nt nn]);
+        test_q = reshape(test_q,[nt nn])>0; 
         
     case 'LSL'
         [fdr,test_q] = niak_fdr(pce_m,'LSL',q);

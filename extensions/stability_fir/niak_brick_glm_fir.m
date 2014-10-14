@@ -486,8 +486,8 @@ switch type_fdr
 
     case {'global','BH'}
         [fdr,test_q] = niak_fdr(pce(:),'BH',q);
-        fdr = niak_lvec2mat(fdr');
-        test_q = niak_lvec2mat(test_q',0)>0; 
+        fdr = reshape(fdr,[nt nn]);
+        test_q = reshape(test_q,[nt nn])>0; 
         
     case 'LSL'
         [fdr,test_q] = niak_fdr(pce_m,'LSL',q);
