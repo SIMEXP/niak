@@ -246,7 +246,7 @@ if opt.nb_samps>0
         p_vol_disc = p_vol_disc + double(vol_disc_null(num_s)>=vol_disc);
         p_perc_disc = p_perc_disc + double(perc_disc_null(num_s)>=perc_disc);
     end
-    p_perc_disc = p_vol_disc / opt.nb_samps;
+    p_perc_disc = p_perc_disc / opt.nb_samps;
     p_vol_disc = p_vol_disc / opt.nb_samps;
 else
     p_perc_disc = NaN;
