@@ -7,10 +7,11 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_TEST.DEMONIAK (string) the path to the (raw) NIAK demo dataset.
-% PATH_TEST.TARGET (string) the folder where the results of reference for the 
-%   tests have previously been generated (see OPT.FLAG_TARGET below).
-% PATH_TEST.RESULT (string) where to store the results of the tests.
+% PATH_TEST.DEMONIAK (string, default download minc1 test data in 'test_niak_minc1') 
+%   the path to the (raw, small) NIAK demo dataset.
+% PATH_TEST.TARGET (string, default download minc1 target data in 'target') 
+% PATH_TEST.RESULT (string, default 'result') where to store the results of 
+%   the tests.
 %
 % OPT.FLAG_TARGET (boolean, default false) if FLAG_TARGET == true, no comparison
 %   with reference version of the results will be performed, but all test 
@@ -18,6 +19,8 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 %   need to be specified.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
+%   the folder where the results of reference for the tests have previously 
+%   been generated (see OPT.FLAG_TARGET below).
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
 %   argument of PSOM_RUN_PIPELINE. Note that the field PSOM.PATH_LOGS will be 
 %   set up by the pipeline.
@@ -90,12 +93,31 @@ opt = psom_struct_defaults(opt, ...
 
 %% Check the input paths
 path_test = psom_struct_defaults(path_test, ...
-    { 'target'          , 'demoniak' , 'result'}, ...
-    { 'gb_niak_omitted' , NaN        , NaN     });
+    { 'target' , 'demoniak' , 'result'}, ...
+    { ''       , ''         , ''      });
     
-if ~opt.flag_target && strcmp(path_test.target,'gb_niak_omitted')
-    error('Please specify PATH_TEST.TARGET or turn on OPT.FLAG_TARGET')
+if isempty(path_test.demoniak)
+    path_test.demoniak = [pwd filesep 'test_niak_minc1' filesep];
+    if ~psom_exist(path_test.demoniak)
+        [succ,msg] = system('wget http://www.nitrc.org/frs/download.php/7154/test_niak_minc1.zip');
+        if ~succ
+            error('There was a problem downloading the test data: %s',msg)
+        end
+        [succ,msg] = system('gunzip test_niak_minc1.zip');
+        if ~succ
+            error('There was a problem unzipping the test data: %s',msg)
+        end
+    end
 end
+
+if isempty(path_test.target)&&~opt.flag_target
+    error('Download of the target data is not supported for this version of NIAK')
+end
+
+if isempty(path_test.result)
+    path_test.result = 'result';
+end
+
 path_test.target   = niak_full_path(path_test.target);
 path_test.demoniak = niak_full_path(path_test.demoniak);
 path_test.result   = niak_full_path(path_test.result);
