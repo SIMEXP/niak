@@ -78,7 +78,7 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL_sym') how the FDR is controled. 
+%      (string, default 'BH-global') how the FDR is controled. 
 %      See the TYPE argument of NIAK_GLM_FDR.
 %
 %   NB_SAMPS
@@ -319,8 +319,8 @@ list_defaults = { NaN        , NaN     , NaN    };
 files_in      = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Options
-list_fields   = { 'min_nb_vol' , 'nb_samps' , 'nb_batch' , 'fdr' , 'type_fdr' , 'flag_rand' , 'flag_maps' , 'fwe'  , 'psom'   , 'folder_out' , 'test' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 10           , 1000       , 10         , 0.05  , 'LSL_sym'  , false       , true        , 0.05   , struct() , NaN           , NaN   ,    true        , false       };
+list_fields   = { 'min_nb_vol' , 'nb_samps' , 'nb_batch' , 'fdr' , 'type_fdr'  , 'flag_rand' , 'flag_maps' , 'fwe'  , 'psom'   , 'folder_out' , 'test' , 'flag_verbose' , 'flag_test' };
+list_defaults = { 10           , 1000       , 10         , 0.05  , 'BH-global' , false       , true        , 0.05   , struct() , NaN           , NaN   ,    true        , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [folder_out 'logs' filesep];

@@ -68,12 +68,12 @@ function [files_in,files_out,opt] = niak_brick_fir(files_in,files_out,opt);
 %       interpolation between points that are too far apart will be excluded.
 % 
 %   NAME_CONDITION
-%       (string, default '') NAME_CONDITION is the name of the condition of 
-%       interest. By default (empty string), the first condition is used. 
+%       (string) NAME_CONDITION is the name of the condition of 
+%       interest. If empty, the first condition is used. 
 %
 %   NAME_BASELINE
-%       (string, default '') NAME_BASELINE is the name of the condition 
-%       to use as baseline. By default (empty string), the first condition is used. 
+%       (string) NAME_BASELINE is the name of the condition 
+%       to use as baseline. If empty, the first condition is used. 
 %
 %   FLAG_VERBOSE
 %       (boolean, default 1) if FLAG_VERBOSE == 1, print some information 
@@ -139,7 +139,7 @@ files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% Default options
 list_fields    = { 'name_baseline' , 'nb_min_baseline' , 'name_condition' , 'type_norm' , 'time_window' , 'time_sampling' , 'interpolation' , 'max_interpolation' , 'flag_verbose' , 'flag_test' };
-list_defaults  = { ''              , []                , ''               , 'fir_shape' , 10            , 0.5             , 'linear'        , []                  , true           , false       };
+list_defaults  = { NaN             , []                , NaN              , 'fir_shape' , 10            , 0.5             , 'linear'        , []                  , true           , false       };
 if nargin < 3
     opt = psom_struct_defaults(struct(),list_fields,list_defaults);
 else

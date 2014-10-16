@@ -1,4 +1,4 @@
-function [in,out,opt] = niak_brick_scores_fmri_v2(in,out,opt)
+function [in, out, opt] = niak_brick_scores_fmri_v2(in, out, opt)
 % Build stability maps using stable cores of an a priori partition
 %
 % SYNTAX:
@@ -105,12 +105,12 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_verbose' , 'flag_test' } , ...
-      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , true           , false       });
+      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_verbose' , 'flag_test' } , ...
+      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , true           , false       });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type' , 'opt'    }, ...
       { 'CBB'  , struct() });
-
+  
 % FILES_OUT
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);

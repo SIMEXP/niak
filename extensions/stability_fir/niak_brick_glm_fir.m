@@ -123,7 +123,7 @@ function [files_in,files_out,opt] = niak_brick_glm_fir(files_in,files_out,opt)
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL') how the FDR is controled. 
+%      (string, default 'BH') how the FDR is controled. 
 %      Available options:
 %         'BH': a BH procedure on the full set of FIR.
 %         'LSL': a GBH procedure controlling the FDR on the full set of FIR
@@ -309,7 +309,7 @@ end
 
 %% Options
 list_fields   = { 'type_fdr'   , 'fdr' , 'test' , 'flag_verbose' , 'flag_test' };
-list_defaults = { 'LSL'        , 0.05  , NaN    , true           ,   false     };
+list_defaults = { 'BH'         , 0.05  , NaN    , true           ,   false     };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 %% Test 
@@ -338,143 +338,141 @@ if isempty(list_subject)
     error('There was no usable subject with the specified parameters');
 end
 for nn = 1:length(list_network)
-network = list_network{nn};
+    network = list_network{nn};
 
-%% Read the FIR estimates
-if opt.flag_verbose
-    fprintf('Read the FIR estimates ...\n');
-end
-mask_ok = false(length(list_subject),1);
-for num_e = 1:length(list_subject)    
-    subject = list_subject{num_e};
-    if ~isfield(files_in.fir,subject)
-        warning('I could not find a FIR file associated with subject %s. I am skipping it.',subject)
-        continue
-    end    
+    %% Read the FIR estimates
     if opt.flag_verbose
-        fprintf('    %s\n',files_in.fir.(subject))
+        fprintf('Read the FIR estimates ...\n');
     end
-    data = load(files_in.fir.(subject),network);
-    mask_ok(num_e) = any(abs(data.(network).fir_mean(:)));
-    if ~mask_ok(num_e)
-        warning('The FIR did not have the minimum number of trials required in OPT.NB_MIN_FIR. I am going to use the data from this subject.')
-        continue
-    end        
-    if num_e == 1        
-        fir_net = zeros([size(data.(network).fir_mean) length(list_subject)]);
-    end
-    fir_net(:,:,num_e) = data.(network).fir_mean;
-end    
-if any(mask_ok)
-    fir_net = fir_net(:,:,mask_ok);
-else
-    fir_net = zeros(0,0,0);
-end
-[nt,nn,ne] = size(fir_net);
-model_group.labels_x = model_group.labels_x(mask_ok);
-model_group.x = model_group.x(mask_ok,:);
-model_group.y = reshape(fir_net,[nt*nn ne])';
-list_subject  = list_subject(mask_ok);
-
-%% Read the partition
-if opt.flag_verbose
-    fprintf('Read the partition volume ...\n')
-end
-[hdr,vol_part] = niak_read_vol(files_in.mask.(network));
-
-%% Estimate the group-level model
-if opt.flag_verbose
-   fprintf('Estimate model...\n')
-end
-opt_glm_gr.test  = 'ttest' ;
-opt_glm_gr.flag_beta = true ; 
-opt_glm_gr.flag_residuals = true ;
-y_x_c.x = model_group.x;
-y_x_c.y = model_group.y;
-y_x_c.c = model_group.c; 
-[results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
-
-%% Reformat the results of the group-level model
-beta    =  results.beta; 
-e       = results.e ;
-std_e   = results.std_e ;
-ttest   = results.ttest ;
-pce     = results.pce ; 
-eff     =  results.eff ;
-std_eff =  results.std_eff ; 
-ttest(isnan(pce)) = 0;
-pce(isnan(pce)) = 1;
-ttest = reshape (ttest,[nt nn]);
-eff = reshape (eff,[nt nn]);
-std_eff   = reshape (std_eff,[nt nn]);
-
-%% Run the FDR estimation
-q = opt.fdr;
-[fdr,test_q] = sub_fdr(pce,opt.type_fdr,q,nt,nn);
-nb_discovery = sum(test_q,1);
-perc_discovery = nb_discovery/size(fdr,1);
-if any(test_q(:))
-    vol_discovery = sum(ttest(test_q(:)).^2);
-else
-    vol_discovery = max(ttest(:).^2);
-end
-
-%% Build volumes
-if ~strcmp(files_out.(network).perc_discovery,'gb_niak_omitted')||~strcmp(files_out.(network).fdr,'gb_niak_omitted')||~strcmp(files_out.(network).effect,'gb_niak_omitted')||~strcmp(files_out.(network).std_effect,'gb_niak_omitted')
-    if opt.flag_verbose
-       fprintf('Generating volumes ...\n')
+    mask_ok = false(length(list_subject),1);
+    for num_e = 1:length(list_subject)    
+        subject = list_subject{num_e};
+        if ~isfield(files_in.fir,subject)
+            warning('I could not find a FIR file associated with subject %s. I am skipping it.',subject)
+            continue
+        end    
+        if opt.flag_verbose
+            fprintf('    %s\n',files_in.fir.(subject))
+        end
+        data = load(files_in.fir.(subject),network);
+        mask_ok(num_e) = any(abs(data.(network).fir_mean(:)));
+        if ~mask_ok(num_e)
+            warning('The FIR did not have the minimum number of trials required in OPT.NB_MIN_FIR. I am not going to use the data from this subject.')
+            continue
+        end        
+        if num_e == 1        
+            fir_net = zeros([size(data.(network).fir_mean) length(list_subject)]);
+        end
+        fir_net(:,:,num_e) = data.(network).fir_mean;
     end    
-    nb_net = size(ttest,1);
-    vol_part(vol_part>nb_net) = 0;
-    t_maps   = zeros([size(vol_part) nt]);
-    fdr_maps = zeros([size(vol_part) nt]);
-    eff_maps = zeros([size(vol_part) nt]);
-    std_maps = zeros([size(vol_part) nt]);
-    for num_t = 1:nt
-        t_maps(:,:,:,num_t)   = niak_part2vol(ttest(num_t,:)',vol_part);    
-        eff_maps(:,:,:,num_t) = niak_part2vol(eff(num_t,:)',vol_part);
-        std_maps(:,:,:,num_t) = niak_part2vol(std_eff(num_t,:)',vol_part);
-        ttest_thre = ttest(num_t,:)';
-        ttest_thre( ~test_q(num_t,:)' ) = 0;
-        fdr_maps(:,:,:,num_t) = niak_part2vol(ttest_thre,vol_part);
+    if any(mask_ok)
+        fir_net = fir_net(:,:,mask_ok);
+    else
+        fir_net = zeros(0,0,0);
     end
-    discovery_maps = niak_part2vol(perc_discovery,vol_part);
-end
+    [nt,nn,ne] = size(fir_net);
+    model_group.labels_x = model_group.labels_x(mask_ok);
+    model_group.x = model_group.x(mask_ok,:);
+    model_group.y = reshape(fir_net,[nt*nn ne])';
+    list_subject  = list_subject(mask_ok);
 
-% t-test maps
-if ~strcmp(files_out.(network).ttest,'gb_niak_omitted')
-    hdr.file_name = files_out.(network).ttest;
-    niak_write_vol(hdr,t_maps);
-end
+    %% Read the partition
+    if opt.flag_verbose
+        fprintf('Read the partition volume ...\n')
+    end
+    [hdr,vol_part] = niak_read_vol(files_in.mask.(network));
 
-% perc_discovery
-if ~strcmp(files_out.(network).perc_discovery,'gb_niak_omitted')
-    hdr.file_name = files_out.(network).perc_discovery;
-    niak_write_vol(hdr,discovery_maps);
-end
+    %% Estimate the group-level model
+    if opt.flag_verbose
+    fprintf('Estimate model...\n')
+    end
+    opt_glm_gr.test  = 'ttest' ;
+    opt_glm_gr.flag_beta = true ; 
+    opt_glm_gr.flag_residuals = true ;
+    y_x_c.x = model_group.x;
+    y_x_c.y = model_group.y;
+    y_x_c.c = model_group.c; 
+    [results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
 
-% FDR-thresholded t-test maps
-if ~strcmp(files_out.(network).fdr,'gb_niak_omitted')
-    hdr.file_name = files_out.(network).fdr;
-    niak_write_vol(hdr,fdr_maps);
-end
+    %% Reformat the results of the group-level model
+    beta    =  results.beta; 
+    e       = results.e ;
+    std_e   = results.std_e ;
+    ttest   = results.ttest ;
+    pce     = results.pce ; 
+    eff     =  results.eff ;
+    std_eff =  results.std_eff ; 
+    ttest(isnan(pce)) = 0;
+    pce(isnan(pce)) = 1;
+    ttest = reshape (ttest,[nt nn]);
+    eff = reshape (eff,[nt nn]);
+    std_eff   = reshape (std_eff,[nt nn]);
 
-% effect maps
-if ~strcmp(files_out.(network).effect,'gb_niak_omitted')
-    hdr.file_name = files_out.(network).effect;
-    niak_write_vol(hdr,eff_maps);
-end
+    %% Run the FDR estimation
+    q = opt.fdr;
+    [fdr,test_q] = sub_fdr(pce,opt.type_fdr,q,nt,nn);
+    nb_discovery = sum(test_q,1);
+    perc_discovery = nb_discovery/size(fdr,1);
+    if any(test_q(:))
+        vol_discovery = sum(ttest(test_q(:)).^2);
+    else
+        vol_discovery = max(ttest(:).^2);
+    end
 
-% std maps
-if ~strcmp(files_out.(network).std_effect,'gb_niak_omitted')
-    hdr.file_name = files_out.(network).std_effect;
-    niak_write_vol(hdr,std_maps);
-end
+    %% Build volumes
+    if ~strcmp(files_out.(network).perc_discovery,'gb_niak_omitted')||~strcmp(files_out.(network).fdr,'gb_niak_omitted')||~strcmp(files_out.(network).effect,'gb_niak_omitted')||~strcmp(files_out.(network).std_effect,'gb_niak_omitted')
+        if opt.flag_verbose
+        fprintf('Generating volumes ...\n')
+        end    
+        t_maps   = zeros([size(vol_part) nt]);
+        fdr_maps = zeros([size(vol_part) nt]);
+        eff_maps = zeros([size(vol_part) nt]);
+        std_maps = zeros([size(vol_part) nt]);
+        for num_t = 1:nt
+            t_maps(:,:,:,num_t)   = niak_part2vol(ttest(num_t,:)',vol_part);    
+            eff_maps(:,:,:,num_t) = niak_part2vol(eff(num_t,:)',vol_part);
+            std_maps(:,:,:,num_t) = niak_part2vol(std_eff(num_t,:)',vol_part);
+            ttest_thre = ttest(num_t,:)';
+            ttest_thre( ~test_q(num_t,:)' ) = 0;
+            fdr_maps(:,:,:,num_t) = niak_part2vol(ttest_thre,vol_part);
+        end
+        discovery_maps = niak_part2vol(perc_discovery,vol_part);
+    end
 
-%% Save results in mat form
-if ~strcmp(files_out.(network).results,'gb_niak_omitted')
-    save(files_out.(network).results,'model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
-end
+    % t-test maps
+    if ~strcmp(files_out.(network).ttest,'gb_niak_omitted')
+        hdr.file_name = files_out.(network).ttest;
+        niak_write_vol(hdr,t_maps);
+    end
+
+    % perc_discovery
+    if ~strcmp(files_out.(network).perc_discovery,'gb_niak_omitted')
+        hdr.file_name = files_out.(network).perc_discovery;
+        niak_write_vol(hdr,discovery_maps);
+    end
+
+    % FDR-thresholded t-test maps
+    if ~strcmp(files_out.(network).fdr,'gb_niak_omitted')
+        hdr.file_name = files_out.(network).fdr;
+        niak_write_vol(hdr,fdr_maps);
+    end
+
+    % effect maps
+    if ~strcmp(files_out.(network).effect,'gb_niak_omitted')
+        hdr.file_name = files_out.(network).effect;
+        niak_write_vol(hdr,eff_maps);
+    end
+
+    % std maps
+    if ~strcmp(files_out.(network).std_effect,'gb_niak_omitted')
+        hdr.file_name = files_out.(network).std_effect;
+        niak_write_vol(hdr,std_maps);
+    end
+
+    %% Save results in mat form
+    if ~strcmp(files_out.(network).results,'gb_niak_omitted')
+        save(files_out.(network).results,'model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
+    end
 end
 
 %%%%%%%
@@ -486,15 +484,15 @@ pce_m = reshape(pce,[nt nn]);
 
 switch type_fdr
 
-    case 'global'
+    case {'global','BH'}
         [fdr,test_q] = niak_fdr(pce(:),'BH',q);
-        fdr = niak_lvec2mat(fdr');
-        test_q = niak_lvec2mat(test_q',0)>0; 
+        fdr = reshape(fdr,[nt nn]);
+        test_q = reshape(test_q,[nt nn])>0; 
         
     case 'LSL'
         [fdr,test_q] = niak_fdr(pce_m,'LSL',q);
         
-    case 'local'
+    case {'local','BH-local'}
         [fdr,test_q] = niak_fdr(pce_m,'BH',q);
         
     case 'uncorrected'

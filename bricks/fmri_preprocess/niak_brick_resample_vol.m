@@ -1,9 +1,6 @@
 function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,opt)
-% Resample a volume or a 4D volume with a transformation to a target space. 
-% The function allows to change the target resolution, and to resample the 
-% data such that the direction cosines are exactly x, y and z.
+% Resample a 3D/4D volume with a transformation to a target space. 
 %
-% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
@@ -16,8 +13,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           (string) name of the file to resample (can be 3D+t).
 %
 %       TARGET 
-%           (string) name of the file defining space (can be the same as 
-%           SOURCE).
+%           (string, default SOURCE) name of the file defining space.
 %
 %       TRANSFORMATION 
 %           (string or cell of strings, default identity) the name of a XFM 
@@ -124,8 +120,11 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % an affine transformation [M T ; 0 0 0 1] for (y=M*x+T) 
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
-% Montreal Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, minc, resampling
 
@@ -157,8 +156,11 @@ niak_gb_vars
 % Setting up inputs
 gb_name_structure = 'files_in';
 gb_list_fields    = {'source', 'target' , 'transformation' , 'transformation_stereo' };
-gb_list_defaults  = {NaN     , NaN      , ''               , 'gb_niak_omitted'       };
+gb_list_defaults  = {NaN     , ''       , ''               , 'gb_niak_omitted'       };
 niak_set_defaults
+if isempty(target)
+    target = source;
+end
 
 % Setting up options
 gb_name_structure = 'opt';

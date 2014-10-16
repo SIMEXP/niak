@@ -102,19 +102,18 @@ end
 
 %% The brick starts here
 list_test = fieldnames(files_in);
-perc_disc = zeros([length(list_test) length(opt.label_network)]);
-p_vol_disc = zeros([length(list_test) 1]);
-hetero = zeros([length(list_test) 1]);
+perc_disc_scale = zeros([length(list_test) length(opt.label_network)]);
+p_perc_disc = zeros([length(list_test) 1]);
 for num_test = 1:length(list_test)
     test = list_test{num_test};
     for num_b = 1:length(files_in.(test))
-        data = load(files_in.(test){num_b},'p_vol_disc','vol_disc_scale','perc_disc_scale','q_hetero');
+        data = load(files_in.(test){num_b},'p_perc_disc','perc_disc_scale');
         if num_b == 1            
-            perc_disc(num_test,:) = data.perc_disc_scale(:)';
+            perc_disc_scale(num_test,:) = data.perc_disc_scale(:)';
         end
-        p_vol_disc(num_test) = p_vol_disc(num_test) + data.p_vol_disc;
+        p_perc_disc(num_test) = p_perc_disc(num_test) + data.p_perc_disc;
     end    
-    p_vol_disc(num_test) = p_vol_disc(num_test) / length(files_in.(test));
+    p_perc_disc(num_test) = p_perc_disc(num_test) / length(files_in.(test));
 end
 
 %% Sort scales
@@ -138,5 +137,5 @@ end
 [val,order] = sort(scale_num);
 %% Write results
 opt_w.labels_x = list_test;
-opt_w.labels_y = [opt.label_network(order)' {'p'}];
-niak_write_csv(files_out,[perc_disc(:,order),p_vol_disc],opt_w);
+opt_w.labels_y = [opt.label_network(order)' {'per_disc','p'}];
+niak_write_csv(files_out,[perc_disc_scale(:,order),mean(perc_disc_scale,2),p_perc_disc],opt_w);
