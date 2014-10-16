@@ -7,7 +7,7 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_TEST.DEMONIAK (string, default download minc1 test data in 'test_niak_minc1') 
+% PATH_TEST.DEMONIAK (string, default download minc1 test data in 'test_niak_mnc1') 
 %   the path to the (raw, small) NIAK demo dataset.
 % PATH_TEST.TARGET (string, default download minc1 target data in 'target') 
 % PATH_TEST.RESULT (string, default 'result') where to store the results of 
@@ -92,19 +92,24 @@ opt = psom_struct_defaults(opt, ...
       {false         , false      , struct });
 
 %% Check the input paths
+if nargin < 1
+    path_test = struct();
+end
 path_test = psom_struct_defaults(path_test, ...
     { 'target' , 'demoniak' , 'result'}, ...
     { ''       , ''         , ''      });
     
 if isempty(path_test.demoniak)
-    path_test.demoniak = [pwd filesep 'test_niak_minc1' filesep];
+    path_test.demoniak = [pwd filesep 'test_niak_mnc1' filesep];
     if ~psom_exist(path_test.demoniak)
-        [succ,msg] = system('wget http://www.nitrc.org/frs/download.php/7154/test_niak_minc1.zip');
-        if ~succ
+        psom_clean('test_niak_mnc1.zip')
+        [status,msg] = system('wget http://www.nitrc.org/frs/download.php/7155/test_niak_mnc1.zip');
+        if status
             error('There was a problem downloading the test data: %s',msg)
         end
-        [succ,msg] = system('gunzip test_niak_minc1.zip');
-        if ~succ
+        [status,msg] = system('unzip test_niak_mnc1.zip');
+        psom_clean('test_niak_mnc1.zip')
+        if status
             error('There was a problem unzipping the test data: %s',msg)
         end
     end
