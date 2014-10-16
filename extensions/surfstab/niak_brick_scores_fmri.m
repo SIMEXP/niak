@@ -158,7 +158,15 @@ end
 if ischar(in.fmri)
     in.fmri = {in.fmri};
 end
-[hdr,vol] = niak_read_vol(in.fmri{1});
+[FDhdr,vol] = niak_read_vol(in.fmri{1});
+% Make header for 3D files
+TDhdr = FDhdr;
+tmp = size(vol);
+td_size = tmp(1:3);
+dim = ones(1,8);
+dim(2:4) = td_size;
+TDhdr.details.dim = dim;
+
 [~,part] = niak_read_vol(in.part);
 part = round(part);
 if opt.flag_target || opt.flag_focus
@@ -211,7 +219,7 @@ mask = part>0;
 part_v = part(mask);
 for rr = 1:length(in.fmri)
     if rr>1
-        [hdr,vol] = niak_read_vol(in.fmri{rr});
+        [FDhdr,vol] = niak_read_vol(in.fmri{rr});
     end        
     if rr == 1
          tseries = niak_normalize_tseries(niak_vol2tseries(vol,mask));
@@ -239,8 +247,8 @@ if ~strcmp(out.stability_maps,'gb_niak_omitted')
         fprintf('Writing stability maps\n')
     end
     stab_maps = niak_part2vol(res.stab_maps',mask);
-    hdr.file_name = out.stability_maps;
-    niak_write_vol(hdr,stab_maps);
+    FDhdr.file_name = out.stability_maps;
+    niak_write_vol(FDhdr,stab_maps);
 end
 
 if ~strcmp(out.stability_intra,'gb_niak_omitted')
@@ -248,8 +256,8 @@ if ~strcmp(out.stability_intra,'gb_niak_omitted')
         fprintf('Writing intra-cluster stability\n')
     end
     stab_intra = niak_part2vol(res.stab_intra',mask);
-    hdr.file_name = out.stability_intra;
-    niak_write_vol(hdr,stab_intra);
+    TDhdr.file_name = out.stability_intra;
+    niak_write_vol(TDhdr,stab_intra);
 end
 
 if ~strcmp(out.stability_inter,'gb_niak_omitted')
@@ -257,8 +265,8 @@ if ~strcmp(out.stability_inter,'gb_niak_omitted')
         fprintf('Writing inter-cluster stability\n')
     end
     stab_inter = niak_part2vol(res.stab_inter',mask);
-    hdr.file_name = out.stability_inter;
-    niak_write_vol(hdr,stab_inter);
+    TDhdr.file_name = out.stability_inter;
+    niak_write_vol(TDhdr,stab_inter);
 end
 
 if ~strcmp(out.stability_contrast,'gb_niak_omitted')
@@ -266,8 +274,8 @@ if ~strcmp(out.stability_contrast,'gb_niak_omitted')
         fprintf('Writing stability contrast\n')
     end
     stab_contrast = niak_part2vol(res.stab_contrast',mask);
-    hdr.file_name = out.stability_contrast;
-    niak_write_vol(hdr,stab_contrast);
+    TDhdr.file_name = out.stability_contrast;
+    niak_write_vol(TDhdr,stab_contrast);
 end
 
 if ~strcmp(out.partition_cores,'gb_niak_omitted')
@@ -275,17 +283,17 @@ if ~strcmp(out.partition_cores,'gb_niak_omitted')
         fprintf('Writing partition based on cores\n')
     end
     part_cores = niak_part2vol(res.part_cores',mask);
-    hdr.file_name = out.partition_cores;
-    niak_write_vol(hdr,part_cores);
+    FDhdr.file_name = out.partition_cores;
+    niak_write_vol(FDhdr,part_cores);
 end
 
 if ~strcmp(out.partition_thresh,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing partition based on cores, thresholded on stability\n')
     end
-    hdr.file_name = out.partition_thresh;
+    FDhdr.file_name = out.partition_thresh;
     part_cores(stab_contrast<opt.thresh) = 0;
-    niak_write_vol(hdr,part_cores);
+    niak_write_vol(FDhdr,part_cores);
 end
 
 if ~strcmp(out.extra,'gb_niak_omitted')
@@ -305,8 +313,8 @@ if ~strcmp(out.rmap_part,'gb_niak_omitted')
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,part_v,opt_t);
     rmap = niak_part2vol(niak_fisher(corr(tseries,tseed))',mask);
-    hdr.file_name = out.rmap_part;   
-    niak_write_vol(hdr,rmap);  
+    FDhdr.file_name = out.rmap_part;   
+    niak_write_vol(FDhdr,rmap);  
 end
 
 if ~strcmp(out.rmap_cores,'gb_niak_omitted')
@@ -317,8 +325,8 @@ if ~strcmp(out.rmap_cores,'gb_niak_omitted')
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,res.part_cores,opt_t);
     rmap = niak_part2vol(niak_fisher(corr(tseries,tseed))',mask);
-    hdr.file_name = out.rmap_cores;   
-    niak_write_vol(hdr,rmap);  
+    FDhdr.file_name = out.rmap_cores;   
+    niak_write_vol(FDhdr,rmap);  
 end
 
 if ~strcmp(out.dual_regression,'gb_niak_omitted')
@@ -337,6 +345,6 @@ if ~strcmp(out.dual_regression,'gb_niak_omitted')
         beta = zeros(size(tseries,1),max(part_v));
     end
     beta = niak_part2vol(beta,mask);
-    hdr.file_name = out.dual_regression;
-    niak_write_vol(hdr,beta);
+    FDhdr.file_name = out.dual_regression;
+    niak_write_vol(FDhdr,beta);
 end
