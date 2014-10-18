@@ -1,6 +1,24 @@
-# GLM connectome pipeline
+# BASC FIR pipeline
 
-This page describes the steps of the region growing pipeline. The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. 
+This page describes the steps of the BASC FIR pipeline. This pipline is dedicated to the analysis of stable clusters using finite-impulse response (FIR) in fMRI. In this pipeline, a method called bootstrap analysis of stable clusters (BASC), that has the potential to identify stable, group-level task-evoked networks at multiple scales, up to tens or even hundreds of networks (Bellec et al. 2010), is applied to FIR estimates. BASC uses hierarchical clustering at the individual level, to identify networks of regions exhibiting similar FIR shapes. Then, at the group level, BASC delineates networks that are spatially consistent across subjects.Thus, The BASC analysis of FIR responses operete at the multi-scale (as in different number of clusters) and multi-level (as in individual, group, and consensus group). 
+
+The steps of the pipeline are the following :
+1. First ordered list item
+2. dfg
+3. dfg
+4. xgg
+1 Masking the brain in functional data
+2. Extracting the time series and estimated FIR in each area 
+3. Performing region growing in each area independently based on FIR estimates.
+4. Merging all regions of all areas into one mask of regions, along with the corresponding time series for each functional run.
+5. Individual-level stability analysis of FIR estimates. See NIAK_PIPELINE_STABILITY_MULTI
+6. Group-level stability analysis See NIAK_PIPELINE_STABILITY_MULTI
+7. Group-level test of significance of the average FIR per network, as well as the significance of the difference in FIR across networks.
+
+
+
+
+The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. 
 
 >* Combine the analysis mask and the areas. 
 >* Extract the time series in each area. 
