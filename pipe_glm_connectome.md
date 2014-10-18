@@ -1,17 +1,29 @@
 # GLM connectome pipeline
 
-This page describes the steps of the region growing pipeline. The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. 
+This page describes the steps of the GLM connectome pipeline. 
+
+
+The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. 
 
 >* Combine the analysis mask and the areas. 
 >* Extract the time series in each area. 
 >* Perform region growing in each area independently. 
 >* Merge all regions of all areas into one mask of regions, along with the corresponding time series for each functional run (if FLAG_TSERIES is true).
 
-The pipeline is invoked by `niak_pipeline_region_growing`. 
-The argument `files_in` is a structure describing how the dataset is organized, and `opt` is a structure describing the options of the pipeline. The code of [niak_template_region_growing](https://github.com/SIMEXP/niak/blob/master/template/niak_template_region_growing.m) would be a good starting point to write your own script. 
+The pipeline is invoked by `niak_pipeline_glm_connectome`. 
+The argument `files_in` is a structure describing how the dataset is organized, and `opt` is a structure describing the options of the pipeline. The code of [niak_template_glm_connectome](https://github.com/SIMEXP/niak/blob/master/template/niak_template_glm_connectome.m) would be a good starting point to write your own script. 
 ```matlab
-niak_pipeline_region_growing(files_in,opt) 
+niak_pipeline_glm_connectome(files_in,opt) 
 ```
+
+
+
+
+
+
+
+
+
 
 You can test the region growing on a [demo data](http://www.nitrc.org/frs/?group_id=411). After uncompressing and unarchiving the demo data in a folder, the demo can be started using niak_demo_pipeline_region_growing.
 ```matlab
