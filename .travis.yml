@@ -4,7 +4,7 @@ before_script:
   - sudo apt-get install octave -y
   - sudo apt-get install liboctave-dev -y
 script:
-  - sh -c "octave tests/runalltests.m"
+  - sh -c "octave testi.m"
 
 notifications:
   email: false
