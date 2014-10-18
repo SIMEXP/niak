@@ -10,7 +10,7 @@ Click the "Download" button above for the latest release. Once the library has b
 ``` 
 # MINC tools
 
-To read MINC files or run the fMRI preprocessing pipeline, it is necessary to install the [minc toolkit](http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit). 
+To read MINC files or run the fMRI preprocessing pipeline, it is necessary to install the [minc toolkit](http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) version 1.0.01. 
 > * Binaries/packages are currently available for Ubuntu, Debian and Mac OSX, making the installation seamless on those systems.
 > * Compilation is usually required on other platforms.
 
