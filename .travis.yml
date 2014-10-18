@@ -3,10 +3,6 @@ before_script:
   - sudo apt-get update -y
   - sudo apt-get install octave -y
   - sudo apt-get install liboctave-dev -y
-  - echo $PWD
-  - ls
-  - git clone https://github.com/SIMEXP/psom.git
-  - ls
 script:
   - octave demos/run_test.m
 
