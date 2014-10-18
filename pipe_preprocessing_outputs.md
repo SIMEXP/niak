@@ -1,7 +1,3 @@
-tttesttttttt
-
-
-
 # Outputs 
 
 These outputs of the fMRI/T1 preprocessing pipeline are generated in the `opt.folder_out` folder. These typically represent a 250% increase in size compared to the raw datasets if `opt.size_output` is equal to `'quality_control'` (and much more if `opt.size_output` is equal to `'all'`). The exact outputs are listed below. The files that are generated only if ''opt.size_output'' equals 'all' are indicated with a *. In the following `subject`, `session` and `run` are the IDs used in the `files_in` argument of the pipeline, and `ext` is the extension of the images (same as inputs, either `.mnc` or `.mnc.gz`). 
