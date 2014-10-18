@@ -1,4 +1,5 @@
 addpath(genpath('niak'));
 addpath(genpath('psom'));
-fprintf('Hello World, all is great\n');
-
+fprintf('Running super cool test now\n');
+niak_test_all (struct, struct('flag_test', true));
+fprintf('\nJust ran supercool test\n');
