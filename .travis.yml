@@ -3,8 +3,9 @@ before_script:
   - sudo apt-get update -y
   - sudo apt-get install octave -y
   - sudo apt-get install liboctave-dev -y
+  - git clone git@github.com:SIMEXP/psom.git
 script:
-  - sh -c "octave testi.m"
+  - sh -c "octave demos/run_test.m"
 
 notifications:
   email: false
