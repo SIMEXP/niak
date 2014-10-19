@@ -1,0 +1,6 @@
+\beamer@endinputifotherversion {3.10pt}
+\beamer@sectionintoc {1}{The fMRI preprocessing pipeline}{5}{0}{1}
+\beamer@sectionintoc {2}{The region growing pipeline}{41}{0}{2}
+\beamer@sectionintoc {3}{The connectome pipeline}{41}{0}{3}
+\beamer@sectionintoc {4}{Pipeline manager}{48}{0}{4}
+\beamer@sectionintoc {5}{Installation, contributions and further resources}{51}{0}{5}

@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="457.98627"
+   height="208.89949"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.46"
+   sodipodi:docname="fig_motion2.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.0">
+  <defs
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+    <inkscape:perspective
+       id="perspective2481"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2548"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2615"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2682"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2749"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2816"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2883"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2950"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3017"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3084"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3151"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3218"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3285"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3352"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3419"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3486"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3553"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3620"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3718"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="240.62317"
+     inkscape:cy="110.51538"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1279"
+     inkscape:window-height="744"
+     inkscape:window-x="0"
+     inkscape:window-y="25" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-96.874559,-81.148807)">
+    <g
+       id="g3649"
+       transform="matrix(0.3632031,0,0,0.3632031,82.969071,46.538843)">
+      <image
+         xlink:href="raw_x.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/raw_x.png"
+         width="187.14957"
+         height="123.69543"
+         id="image2483"
+         x="38.285709"
+         y="96.301079" />
+      <image
+         xlink:href="raw_y.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/raw_y.png"
+         width="190.29747"
+         height="124.70557"
+         id="image2550"
+         x="259.97931"
+         y="95.290939" />
+      <image
+         xlink:href="raw_z.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/raw_z.png"
+         width="124.85484"
+         height="124.24875"
+         id="image2617"
+         x="473.32031"
+         y="95.747757" />
+    </g>
+    <g
+       id="g3644"
+       transform="matrix(0.3632031,0,0,0.3632031,82.969071,69.545557)">
+      <image
+         xlink:href="gradient_x.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/gradient_x.png"
+         width="189.92657"
+         height="124.71573"
+         id="image2684"
+         x="38.285709"
+         y="301.3519" />
+      <image
+         xlink:href="gradient_y.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/gradient_y.png"
+         width="190.29747"
+         height="124.70557"
+         id="image2751"
+         x="259.97931"
+         y="301.36206" />
+      <image
+         xlink:href="gradient_z.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/gradient_z.png"
+         width="124.8519"
+         height="124.24875"
+         id="image2818"
+         x="473.32031"
+         y="301.81888" />
+    </g>
+    <g
+       id="g3737"
+       transform="matrix(0.3632031,0,0,0.3632031,82.969071,44.670879)">
+      <image
+         xlink:href="mean_x.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/mean_x.png"
+         width="191"
+         height="126"
+         id="image3287"
+         x="729.71429"
+         y="101.43397" />
+      <image
+         xlink:href="mean_y.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/mean_y.png"
+         width="193"
+         height="127"
+         id="image3354"
+         x="951.4079"
+         y="100.43397" />
+      <image
+         xlink:href="mean_z.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/mean_z.png"
+         width="123.54314"
+         height="124.27416"
+         id="image3421"
+         x="1164.7489"
+         y="103.1598" />
+    </g>
+    <g
+       id="g3731"
+       transform="matrix(0.3632031,0,0,0.3632031,82.969076,72.209882)">
+      <g
+         transform="translate(-5.7143095,0)"
+         id="g3724">
+        <image
+           y="295.01627"
+           x="735.42859"
+           id="image3488"
+           height="125"
+           width="192"
+           sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/mask_x.png"
+           xlink:href="mask_x.png" />
+        <image
+           y="294.01627"
+           x="957.12219"
+           id="image3555"
+           height="126"
+           width="193"
+           sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/mask_y.png"
+           xlink:href="mask_y.png" />
+      </g>
+      <image
+         xlink:href="mask_z.png"
+         sodipodi:absref="/home/pbellec/Documents/presentations/niak/user/figures/fig_motion/mask_z.png"
+         width="122.52283"
+         height="123.24355"
+         id="image3720"
+         x="1164.7489"
+         y="294.01627" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="97.142853"
+       y="141.57324"
+       id="text3762"><tspan
+         sodipodi:role="line"
+         id="tspan3764"
+         x="97.142853"
+         y="141.57324"
+         style="font-size:10px">The raw functional volumes (top) are </tspan><tspan
+         sodipodi:role="line"
+         x="97.142853"
+         y="154.07324"
+         id="tspan3766"
+         style="font-size:10px">first converted into smoothed gradient </tspan><tspan
+         sodipodi:role="line"
+         x="97.142853"
+         y="166.57324"
+         style="font-size:10px"
+         id="tspan3768">volumes (bottom)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="97.230049"
+       y="239.90669"
+       id="text3778"><tspan
+         sodipodi:role="line"
+         x="97.230049"
+         y="239.90669"
+         style="font-size:10px"
+         id="tspan3784">The gradient volumes are coregistered</tspan><tspan
+         sodipodi:role="line"
+         x="97.230049"
+         y="252.40669"
+         style="font-size:10px"
+         id="tspan3791">to the target using an LSQ6 </tspan><tspan
+         sodipodi:role="line"
+         x="97.230049"
+         y="264.90668"
+         style="font-size:10px"
+         id="tspan3793">transformation. Optimal parameters </tspan><tspan
+         sodipodi:role="line"
+         x="97.230049"
+         y="277.40668"
+         style="font-size:10px"
+         id="tspan3795">are estimated using MINCTRACC and </tspan><tspan
+         sodipodi:role="line"
+         x="97.230049"
+         y="289.90668"
+         style="font-size:10px"
+         id="tspan3799">an xcorr cost function. </tspan><tspan
+         sodipodi:role="line"
+         x="97.230049"
+         y="302.40668"
+         style="font-size:10px"
+         id="tspan3797" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="346.51578"
+       y="141.57324"
+       id="text3801"><tspan
+         sodipodi:role="line"
+         x="346.51578"
+         y="141.57324"
+         style="font-size:10px"
+         id="tspan3807">Each volume is resampled with a sinc </tspan><tspan
+         sodipodi:role="line"
+         x="346.51578"
+         y="154.07324"
+         style="font-size:10px"
+         id="tspan3814">scheme in the space of the target. The </tspan><tspan
+         sodipodi:role="line"
+         x="346.51578"
+         y="166.57324"
+         style="font-size:10px"
+         id="tspan3816">mean volume for each subject is derived.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="346.43311"
+       y="239.90669"
+       id="text3818"><tspan
+         sodipodi:role="line"
+         x="346.43311"
+         y="239.90669"
+         style="font-size:10px"
+         id="tspan3824">A mask common to all volumes is </tspan><tspan
+         sodipodi:role="line"
+         x="346.43311"
+         y="252.40669"
+         style="font-size:10px"
+         id="tspan3831">derived, and the time series outside the </tspan><tspan
+         sodipodi:role="line"
+         x="346.43311"
+         y="264.90668"
+         style="font-size:10px"
+         id="tspan3833">mask are set to zero to limit edges effect.</tspan></text>
+  </g>
+</svg>

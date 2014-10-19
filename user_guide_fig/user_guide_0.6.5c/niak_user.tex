@@ -1,0 +1,1009 @@
+\documentclass[11pt]{beamer}
+
+% This is a LaTeX document to produce a user guide to NIAK. The document can  
+% be compiled using LaTeX 2e and the LaTeX beamer package.
+%
+% _________________________________________________________________________
+% COMMENTS
+%
+% This version of the guide is for NIAK release 0.6.5.
+%
+% _________________________________________________________________________
+% Copyright (c) Pierre Bellec, 
+%   Montreal Neurological Institute, 2009-2010.
+%   Research Centre of the Montreal Geriatric Institute
+%   & Department of Computer Science and Operations Research
+%   University of Montreal, Québec, Canada 2010-2012
+% Maintainer : pierre.bellec@criugm.qc.ca
+% Keywords : NIAK, user's guide
+%
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
+
+\usepackage{pgf}
+\usetheme{JuanLesPins}
+\usepackage[framed,autolinebreaks,useliterate]{mcode}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+
+\definecolor{command}{rgb}{0.95,0,0.05}
+\definecolor{comment}{rgb}{0.7,0.05,0.65}
+\definecolor{string}{rgb}{0.45,0.25,0.15}
+\definecolor{in}{rgb}{0.15,0.68,0.15}
+\definecolor{out}{rgb}{0.15,0.68,0.15}
+\definecolor{clean}{rgb}{0.15,0.68,0.15}
+\definecolor{opt}{rgb}{0.05,0.1,0.75}
+
+\begin{document}
+
+\pgfdeclareimage[height=1cm]{logo_mcgill}{mcgill}
+\pgfdeclareimage[height=1cm]{logo_mni}{neurolog}
+\pgfdeclareimage[height=1cm]{angelniak}{angelniak}
+\pgfdeclareimage[height=1.5cm]{angelniak_big}{angelniak}
+\pgfdeclareimage[height=1cm]{demoniak}{demoniak}
+\pgfdeclareimage[height=1.5cm]{demoniak_big}{demoniak}
+\pgfdeclareimage[height=1cm]{logo_psom}{logo_psom}
+\pgfdeclareimage[height=1cm]{package}{package}
+\title{Neuroimaging Analysis Kit -- NIAK -- user's guide}
+\author[P. Bellec]{\pgfuseimage{angelniak_big}\\ \url{http://www.nitrc.org/projects/niak/}}
+\date[R0.7]{Release 0.7 -- June 2013}
+
+
+\frame{\titlepage}
+
+\frame{\tableofcontents}
+
+\frame[containsverbatim]{
+\frametitle[What's NIAK ?]{What's NIAK ?}
+\begin{itemize}
+\item The neuroimaging analysis kit (NIAK) is an opensource (MIT license) library of functions dedicated to process functional magnetic resonance images (fMRI) using Octave or Matlab(r). 
+\item Currently NIAK supports Linux operating systems (Ubuntu recommended) and the MINC file format.
+\item Running NIAK on a dataset consists of editing a small Matlab/Octave script to describe where the data is located, where to store the outputs as well as the options of the processing tools.
+\end{itemize}
+}
+
+\frame[containsverbatim]{
+\frametitle[What's NIAK ?]{What's NIAK ?}
+The current version of NIAK (0.6.5) features~:
+\begin{itemize}
+ \item Reader/writer of medical images, supporting MINC1 and MINC2 file formats.
+ \item The pipeline system for Octave and Matlab (PSOM).
+ \item A pipeline for T$_1$ image preprocessing.
+ \item A pipeline for fMRI preprocessing.
+ \item A pipeline for region growing and the generation of full brain parcelations \& connectomes.
+ \end{itemize} 
+}
+
+\section{The fMRI preprocessing pipeline}
+
+\subsection{Overview of the pipeline}
+
+\frame[containsverbatim]{
+\frametitle[How to run the fMRI preprocessing pipeline ?]{How to start the fMRI preprocessing pipeline ?}
+Running (or restarting) the pipeline in a matlab session is just one call to the following function~:
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+niak_pipeline_fmri_preprocess(files_in,opt)
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{enumerate}
+ \item \texttt{files\_in} is a structure describing how the dataset is organized.
+ \item \texttt{opt} is a structure describing the options of the pipeline.  
+\end{enumerate}
+
+The list of the results and a detailed tutorial of the pipeline can be found at :\\ 
+\begin{scriptsize}\url{http://www.nitrc.org/plugins/mwiki/index.php/niak:FmriPreprocessing}\end{scriptsize}.
+}
+
+\frame[shrink]{
+\frametitle{Overview of the pipeline}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_flowchart_fmri_preprocess}\\
+\smallskip
+ Simplified flowchart of the fMRI preprocessing pipeline for one subject.
+\end{center}
+}
+
+\subsection{Input files}
+
+\frame[containsverbatim,shrink]{
+\frametitle[Describing the dataset]{Describing the dataset}
+An example of script to build the \texttt{files\_in} structure for the small example dataset available to test NIAK~:
+\begin{beamerboxesrounded}{}
+\tiny{
+\begin{verbatim}
+ %% Subject 1 
+
+ % The structural scan
+ files_in.subject1.anat                = '/home/pbellec/demo_niak/anat_subject1.mnc';       
+ 
+ % fMRI - motor condition
+ files_in.subject1.fmri.session1.motor = '/home/pbellec/demo_niak/func_motor_subject1.mnc'; 
+ 
+ % fMRI - rest
+ files_in.subject1.fmri.session1.rest  = '/home/pbellec/demo_niak/func_rest_subject1.mnc';  
+
+ %% Subject 2 
+
+ % The structural scan
+ files_in.subject2.anat                = '/home/pbellec/demo_niak/anat_subject2.mnc';       
+ 
+ % fMRI - motor condition
+ files_in.subject2.fmri.session1.motor = '/home/pbellec/demo_niak/func_motor_subject2.mnc'; 
+ 
+ % fMRI - rest
+ files_in.subject2.fmri.session1.rest  = '/home/pbellec/demo_niak/func_rest_subject2.mnc';  
+\end{verbatim}
+}
+\end{beamerboxesrounded}
+}
+\subsection{Pipeline options}
+\frame[containsverbatim,allowframebreaks]{
+\frametitle[General options]{General options}
+\begin{beamerboxesrounded}{Specifying the output directories of the pipeline}
+The field \texttt{opt.folder\_out} is a string that specifies the folder where the results of the pipeline will be saved. The pipeline manager will create but can also delete files and subfolders in that location. Example :
+\begin{beamerboxesrounded}{}
+\small
+\begin{verbatim}
+opt.folder_out = '/database/data_demo/fmri_preprocess/';
+\end{verbatim}
+\end{beamerboxesrounded}
+\end{beamerboxesrounded}
+
+\begin{beamerboxesrounded}{Size of outputs}
+The option \texttt{opt.size\_output} can be used to adjust the quantity of intermediate results that are generated by the pipeline. Example :
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+opt.size_output = 'quality_control';
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{enumerate}
+\item \texttt{'quality\_control'} : some outputs are generated at each step of the analysis for the purposes of quality control. Intermediate steps are deleted as soon as they are no longer necessary.
+\item \texttt{'all'} : all possible outputs are generated at each stage of the pipeline.
+\end{enumerate}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[Slice timing correction]{Slice timing correction I}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_slice_timing}\\
+\tiny Courtesy of Dr M. P\'el\'egrini-Issac.
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Slice timing correction]{Slice timing correction II}
+
+A complete list of options for this brick can be found in the help of \texttt{niak\_brick\_slice\_timing}. 
+
+\begin{beamerboxesrounded}{}
+\scriptsize
+\begin{verbatim}
+% Number of dummy scans to suppress.
+opt.slice_timing.suppress_vol = 0;
+
+% Slice timing order. Available options : 
+% 'sequential ascending'  , 'sequential descending', 
+% 'interleaved ascending' , 'interleaved descending'
+opt.slice_timing.type_acquisition = 'interleaved ascending'; 
+
+% Scanner manufacturer.
+% Only the value 'Siemens' will actually have an impact
+opt.slice_timing.type_scanner     = 'Bruker';
+
+% The delay in TR ("blank" time between two volumes)
+opt.slice_timing.delay_in_tr      = 0;
+
+% Skip the slice timing (0: don't skip, 1 : skip)
+opt.slice_timing.flag_skip        = 0;
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[Motion correction]{Motion estimation: within-run}
+\begin{center}
+\pgfimage[width=0.8\linewidth]{fig_motion_within_run}\\
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[Motion correction]{Motion estimation: between-run / within-session}
+\begin{center}
+\pgfimage[width=0.8\linewidth]{fig_motion_within_session}\\
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[Motion correction]{Motion estimation: between sessions}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_motion_between_session}\\
+\smallskip
+ Estimation of between-run (between-session) rigid-body motion.
+\end{center}
+}
+
+% \frame[containsverbatim,shrink]{
+% \frametitle[Motion correction]{Motion estimation: target}
+% \begin{center}
+% \pgfimage[width=\linewidth]{fig_motion2}\\
+% \end{center}
+% }
+
+\frame[containsverbatim]{
+\frametitle[Motion correction]{Motion estimation: parameters}
+
+A complete list of options for this brick can be found in the help of \texttt{niak\_brick\_motion\_correction}. Example :
+
+\begin{beamerboxesrounded}{}
+\scriptsize
+\begin{verbatim}
+
+% The session that is used as a reference. 
+% In general, use the session including the acqusition of the T1 scan.
+opt.motion_correction.session_ref  = 'session1'; 
+
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: linear template}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_template_lin}\\
+\smallskip
+ Linear ICBM template (average of 152 subjects)
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: linear coregistration}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_subject_lin}\\
+\smallskip
+ Individual structural scan (linear coregistration)
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: non-linear coregistration}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_subject_nl}\\
+\smallskip
+ Individual structural scan (non-linear coregistration)
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: nonlinear template}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_template_nl}\\
+\smallskip
+ Symmetric non-linear ICBM template (average of 152 subjects) release 2009a.\\
+\scriptsize{\url{http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009}}
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: group average}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_average_nl}\\
+\smallskip
+ Average of 17 subjects (non-linear coregistration)
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: Flowchart of the CIVET pipeline}
+\begin{center}
+\pgfimage[width=0.9\linewidth]{fig_civet_flowchart}\\
+\smallskip
+ \small Flowchart of the T1 preprocessing.\\
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[CIVET]{T$_1$ processing: main outputs}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_civet}\\
+\smallskip
+ The main outputs of the T$_1$ processing pipeline.
+\end{center}
+}
+
+
+\frame[containsverbatim]{
+\frametitle[CIVET]{T$_1$ processing: parameters}
+
+A complete list of options for this brick can be found in the help of \texttt{niak\_brick\_t1\_preprocess}. Example :
+
+\begin{beamerboxesrounded}{}
+\scriptsize
+\begin{verbatim}
+% Parameter for non-uniformity correction. 
+% Suggested values : 
+% 200 for 1.5T images,
+%  50 for 3T images. 
+
+opt.t1_preprocess.nu_correct.arg = '-distance 50'; 
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[Coregister T$_1$ and fMRI]{Coregistration between the T$_1$ and fMRI volumes I}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_coregister_t1_t2}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Coregister T$_1$ and fMRI]{Coregistration between the T$_1$ and fMRI volumes II}
+
+A complete list of options for this brick can be found in the help of \texttt{niak\_brick\_anat2func}. Example :
+
+\begin{beamerboxesrounded}{}
+\scriptsize
+\begin{verbatim}
+% An initial guess of the transform. 
+% Possible values 'identity', 'center'. 
+% 'identity' is self-explanatory. 
+% The 'center' option usually does more harm than good. 
+% Use it only if you have very big misrealignement between 
+% the two images (say, > 2 cm).
+
+opt.anat2func.init = 'identity';
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[Spatial resampling]{Spatial resampling I}
+\begin{center}
+\pgfimage[width=0.8\linewidth]{fig_resample}\\
+\end{center}
+\scriptsize
+The transformations to correct for rigid-body motion during the fMRI acquisition and the transformation to match the T$_1$ image and then (non-linearly) coregister into stereotaxic space are all combined, and a single step of spatial resampling is applied.
+}
+
+\frame[containsverbatim]{
+\frametitle[Spatial resampling]{Spatial resampling II}
+A complete list of options for this step can be found in the help of \texttt{niak\_brick\_resample\_vol}. Example :
+\begin{beamerboxesrounded}{Spatial resampling}
+\scriptsize
+\begin{verbatim}
+% The resampling scheme.
+% The most accurate is 'sinc' but it is awfully slow
+opt.resample_vol.interpolation       = 'trilinear'; 
+
+% The voxel size to use in the stereotaxic space
+opt.resample_vol.voxel_size          = [3 3 3];
+
+% Skip resampling 
+% (data will stay in native functional space 
+% after slice timing/motion correction) 
+% (0: don't skip, 1 : skip)
+opt.resample_vol.flag_skip           = 0;
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[Scrubbing]{Scrubbing: frame displacement}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_fd}\\
+\end{center}
+\scriptsize Frame displacement is the sum of absolute displacements in translation and rotation motion parameters. For each frame with excessive FD (here FD$>0.5$), four frames are suppressed (the target one + one before + two after, marked with red stars on the figure). The original method was proposed by Power et al. Neuroimage 2012. Note that, unlike the original method, only FD is used in NIAK (and not DVARS). 
+}
+
+\frame[containsverbatim]{
+\frametitle[Scrubbing]{Scrubbing: example of impact on the DMN}
+\begin{center}
+\pgfimage[width=0.8\linewidth]{fig_scrubbing}\\
+\end{center}
+See Power et al. Neuroimage 2012 for more infos. 
+}
+
+\frame[containsverbatim]{
+\frametitle[Scrubbing]{Scrubbing: parameters}
+
+The scrubbing is implemented as part of \texttt{niak\_brick\_regress\_confounds}. WARNING: the scrubbing is changing the temporal grid of the dataset. Most software will not handle these changes properly. If NIAK is used to preprocess a dataset before analysis in another software package such as FSL, \textbf{it is important to skip scrubbing}. Example of options:
+
+\begin{beamerboxesrounded}{}
+\scriptsize
+\begin{verbatim}
+% Turn on/off the scrubbing of time frames 
+% with excessive motion 
+%(true: apply / false : don't apply)
+opt.regress_confounds.flag_scrubbing = true;     
+
+% The threshold on frame displacement that is used to 
+% determine frames with excessive motion 
+opt.regress_confounds.thre_fd = 0.5;             
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[Confounds]{Regress confounds: model}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_regress_confounds}\\
+\end{center}
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[Confounds]{Regress confounds: parameters}
+
+A complete list of options for this brick can be found in the help of \texttt{niak\_brick\_time\_filter} and \texttt{niak\_brick\_regress\_confounds}. Example :
+
+\begin{beamerboxesrounded}{}
+\scriptsize
+\begin{verbatim}
+% Cut-off frequency for high-pass filtering (in Hz). 
+opt.time_filter.hp = 0.01;
+
+% Cut-off frequency for low-pass filtering (in Hz). 
+opt.time_filter.lp = Inf;
+
+% Turn on/off the regression of the average white matter signal 
+opt.regress_confounds.flag_wm = true;            
+ 
+% Turn on/off the regression of the average of the ventricles 
+opt.regress_confounds.flag_vent = true;          
+
+% Turn on/off the regression of the motion parameters 
+opt.regress_confounds.flag_motion_params = true; 
+
+% Turn on/off the regression of the PCA-based estimation 
+% of the global signal 
+opt.regress_confounds.flag_gsc = false;          
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[CORSICA]{CORSICA: sources of structured noise}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_physio}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[CORSICA]{CORSICA: independent component analysis}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_ica}\\
+spatially independent components analysis\\ \tiny Perlbarg et al. Magnetic Resonance Imaging, 2007, 25: 35-46.
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[CORSICA]{CORSICA: selection of ``noise'' components}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_corsica}\\
+Flowchart of the CORSICA algorithm for correcting structured noise in fMRI\\
+
+\tiny Perlbarg et al. Magnetic Resonance Imaging, 2007, 25: 35-46.
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[CORSICA]{CORSICA: effect map}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_var_physio}\\
+\small Relative variance of estimated structured noise using CORSICA. Average on 40 subjects, 5 tasks per subject.\\
+
+\tiny P. Bellec, V. Perlbarg and A. C. Evans, Magnetic Resonance Imaging, 2009, pp. 1382-1396..
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[CORSICA]{CORSICA: parameters}
+Although generally beneficial, the CORSICA selection is not stable enough to be used completely unsupervised. It is usually better to skip this step. A complete list of options for this brick can be found in the help of \texttt{niak\_pipeline\_corsica}. Example :
+
+\begin{beamerboxesrounded}{CORSICA}
+\scriptsize
+\begin{verbatim}
+% Number of components estimated during the ICA. 
+% 20 at a minimum, 60 was used in the validation of CORSICA.
+opt.corsica.sica.nb_comp = 60;
+
+% Threshold for selecting noise components.
+% 0.15 has been calibrated on a validation database.
+opt.corsica.threshold    = 0.15;
+
+% Skip CORSICA (0: don't skip, 1 : skip).
+opt.corsica.flag_skip    = 1;
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[Spatial smoothing]{Spatial smoothing I}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_smooth}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Spatial smoothing]{Spatial smoothing II}
+
+A complete list of options for this step can be found in the help of \texttt{niak\_brick\_smooth\_vol}. Example :
+\begin{beamerboxesrounded}{Spatial smoothing}
+\begin{verbatim}
+% Full-width at half maximum (FWHM) of the 
+% Gaussian blurring kernel, in mm.
+opt.smooth_vol.fwhm      = 6;  
+
+% Skip spatial smoothing (0: don't skip, 1 : skip)
+opt.smooth_vol.flag_skip = 0;  
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\subsection{Quality control}
+
+\frame[containsverbatim]{
+\frametitle[Coregistration]{Structural group average vs template}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Average T1 across all subjects in stereotaxic space (non-linear) : 
+FOLDER_OUT/quality_control/group_coregistration/anat_mean_average_stereonl.mnc.gz 
+T1 template = stereotaxic space (non-linear) :
+PATH_NIAK/template/mni-models_icbm152-nl-2009-1.0/mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz 
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_qc_coregister_t1}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Coregistration]{Structural group average vs functional group average}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Average T1 across all subjects in stereotaxic space (non-linear) : 
+FOLDER_OUT/quality_control/group_coregistration/anat_mean_average_stereonl.mnc.gz 
+Average mean fMRI volume across all subjects in stereotaxic space (non-linear) : 
+FOLDER_OUT/quality_control/group_coregistration/func_mean_average_stereonl.mnc.gz 
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_qc_coregister_epi}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Coregistration]{Quantitative metrics for coregistration (T1 and fMRI) I}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+T1   : FOLDER_OUT/quality_control/group_coregistration/anat_fig_qc_coregister_stereonl.pdf
+fMRI : FOLDER_OUT/quality_control/group_coregistration/func_fig_qc_coregister_stereonl.pdf
+blue : percentage of overlap between individual brain masks and group brain mask (check FOV).
+red  : spatial correlation of individual scans and the group average (Check coregistration).
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.75\linewidth]{fig_qc_coregister_t1_bars}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Coregistration]{Quantitative metrics for coregistration (T1 and fMRI) II}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+T1   : FOLDER_OUT/quality_control/group_coregistration/anat_tab_qc_coregister_stereonl.csv
+fMRI : FOLDER_OUT/quality_control/group_coregistration/func_tab_qc_coregister_stereonl.csv
+Same info as last slide, but in a CSV file (view with open office or excel).
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.7\linewidth]{fig_qc_coregister_t1_tab}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Coregistration]{Individual coregistration : T1 vs template}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Individual T1 in stereotaxic space (non-linear) : 
+FOLDER_OUT/anat/<SUBJECT>/anat_subject_<SUBJECT>_nuc_stereonl.mnc.gz
+T1 template (non-linear) : 
+PATH_NIAK/template/mni-models_icbm152-nl-2009-1.0/mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz 
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_qc_coregister_t1_ind}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Coregistration]{Individual coregistration : T1 vs fMRI}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Individual T1 scan in native functional space : 
+FOLDER_OUT/anat/<SUBJECT>/anat_subject_<SUBJECT>_nuc_nativefun_hires.mnc.gz
+Individual mean fMRI volume in native functional space :
+FOLDER_OUT/anat/<SUBJECT>/func_subject_<SUBJECT>_mean_nativefunc.mnc.gz
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_qc_coregister_epi_ind}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Motion]{Group summary of maximal transition in motion}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Bar plot in PDF : FOLDER_OUT/quality_control/group_motion/qc_motion_group.pdf
+Table in CSV    : FOLDER_OUT/quality_control/group_motion/qc_motion_group.csv
+Blue : maximal transition in rotation (degree) for each subject.
+Red  : maximal transition in translation (mm) for each subject.
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.75\linewidth]{fig_qc_motion_Wrun}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Motion]{Individual within-run motion parameters}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Individual within-run motion parameters in PDF : 
+FOLDER_OUT/quality_control/<SUBJECT>/motion/fig_motion_within_run.pdf
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_qc_motion_Wrun_ind}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Motion]{Group summary of between-run motion correction}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Bar plot in pdf : 
+   FOLDER_OUT/quality_control/group_motion/qc_coregister_between_runs_group.pdf
+Table in CSV : 
+   FOLDER_OUT/quality_control/group_motion/qc_coregister_between_runs_group.csv
+blue : Min over all runs of the percentage of overlap between brain masks of individual runs 
+       and the individual brain mask for each subject.
+red : Min over all runs of the spatial correlation of the mean volume of individual runs and 
+       the average of all runs for each subject (check coregistration).
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.75\linewidth]{fig_qc_motion_Brun}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Motion]{Individual quality measure of between-run motion correction}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Bar plot in pdf : 
+   FOLDER_OUT/quality_control/group_motion/<subject>/motion/tab_coregister_motion.pdf
+Table in CSV : 
+   FOLDER_OUT/quality_control/group_motion/<subject>/motion/tab_coregister_motion.csv
+blue (check FOV) : 
+   percentage of overlap between brain masks of individual runs and the individual brain mask.
+red (check coregistration) : 
+   spatial correlation of the mean volume of individual runs and the average of all runs.
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.75\linewidth]{fig_qc_motion_Brun_ind}\\
+\end{center}
+}
+
+\frame[containsverbatim]{
+\frametitle[Motion]{Evaluation of the motion correction between runs}
+\tiny
+Back to the intermediate results ! Let's check the targets for motion correction of different runs, before motion correction :
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+Target of motion correction per subject & run : 
+FOLDER_OUT/intermediate/<subject>/motion_correction/motion_target_<subject>_<session>_<run>_a.mnc.gz
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.5\linewidth]{fig_qc_motion_Brun_ind_run}\\
+\end{center}
+Whoa ! That's a big between-run motion ! In this case, it seems that two subjects were mixed up when converting data from DICOM to MINC. A good thing we found out ...
+}
+
+\frame[containsverbatim]{
+\frametitle[SICA]{Evaluation of the physiological noise correction (CORSICA)}
+\tiny
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+PDF summary of the analysis per subject and per run in FOLDER_OUT/quality_control/<subject>/corsica/
+fmri_<SUBJECT>_<SESSION>_<RUN>_a_mc_f_sica_space_qc_corsica.pdf
+\end{verbatim}
+\end{beamerboxesrounded}
+\begin{center}
+\pgfimage[width=0.9\linewidth]{fig_qc_corsica}\\
+\end{center}
+For each component, the spatial component is shown in ``montage'' style, and the time course is plotted along with the power spectrum and a time-frequency analysis. The selection score for CORSICA (ventricle mask, stem mask) is indicated. A star means that the component was identified as physiological noise.
+}
+
+\section{The region growing pipeline}
+
+\section{Connectome pipeline}
+
+
+\frame[containsverbatim]{
+\frametitle[Flowchart]{Flowchart}
+\centering
+Connectome pipeline
+\pgfimage[width=0.8\linewidth]{fig_flowchart_connectome}\\
+\centering
+\tiny The \texttt{networks} and \texttt{seeds} input files have not been included for clarity.
+}
+
+\frame[containsverbatim]{
+\frametitle[template]{User template}
+\fontsize{7}{10}\selectfont
+\begin{beamerboxesrounded}{Grab preprocessed data}
+\begin{Verbatim}[numbers=left,commandchars=\\\{\},codes={\catcode`$=3\catcode`^=7\catcode`_=8}]
+opt\_g.min\_nb\_vol = 100;     
+opt\_g.min\_xcorr\_func = 0.5; 
+opt\_g.type\_files = 'glm\_connectome'; 
+{\color{in}files\_in}.fmri = niak\_grab\_fmri\_preprocess({\color{string}'/data/fmri\_preprocess'},opt\_g).fmri; 
+\end{Verbatim}
+\end{beamerboxesrounded}
+\begin{enumerate}
+ \item Set the minimum acceptable number of time frames that passed scrubbing.
+ \item Minimum spatial correlation between the individual BOLD volume and a group average (QC tool on coregistration).
+ \item Prepare the files to feed in the connectome pipeline
+ \item Grab the files
+\end{enumerate}
+}
+
+\frame[containsverbatim]{
+\frametitle[Input files]{Input files}
+\centering
+\pgfimage[width=0.9\linewidth]{fig_files_in_connectome}\\
+\centering
+}
+
+\frame[containsverbatim]{
+\frametitle[template]{User template ... continued}
+\tiny
+\begin{beamerboxesrounded}{Input file: brain parcellation}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`^=7\catcode`\_=8}]
+files\_in.networks = \color{string}'/home/pbellec/svn/niak/template/roi\_aal\_3mm.mnc.gz';
+\end{Verbatim}
+\end{beamerboxesrounded}
+\vspace{0.5cm}
+\begin{beamerboxesrounded}{Input file: seed regions (csv files)}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`^=7\catcode`\_=8}]
+files\_in.seeds    = \color{string}'/home/toto/database/list\_seeds.csv';
+\end{Verbatim}
+\end{beamerboxesrounded}
+\vspace{0.5cm}
+\begin{beamerboxesrounded}{Options}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`^=7\catcode`_=8}]
+opt.connectome.type = \color{string}'Z';                   \color{comment}% The type of connectome.
+opt.connectome.thresh.type = \color{string}'sparsity\_pos'; \color{comment}% how to binarize the connectome.
+opt.connectome.thresh.param = 0.2;           \color{comment}% the cut-off on connectivity
+\end{Verbatim}
+\end{beamerboxesrounded}
+\vspace{0.5cm}
+\begin{beamerboxesrounded}{Run the pipeline}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`^=7\catcode`_=8}]
+pipeline = niak\_pipeline\_connectome({\color{in}files\_in},{\color{opt}opt\_pipe});
+\end{Verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[Graph properties]{Output: individual connectomes}
+\centering
+\pgfimage[width=0.9\linewidth]{fig_corr_map}\\
+\small Saved in individual .mat files.
+}
+
+\frame[containsverbatim]{
+\frametitle[Graph properties]{Output: graph properties}
+\centering
+\pgfimage[width=0.9\linewidth]{fig_connectome}\\
+\small Graph properties are generated with the brain connectivity toolbox \url{https://sites.google.com/site/bctnet/Home/functions}. See Rubinov and Sporns, Neuroimage 2010.
+}
+
+
+\frame[containsverbatim]{
+\frametitle[Connectivity maps]{Output: connectivity maps}
+\centering
+\pgfimage[width=0.6\linewidth]{fig_rmap}\\
+}
+
+\section{Pipeline manager}
+
+\frame[containsverbatim,shrink]{
+\frametitle[PSOM]{The pipeline system for Octave and Matlab (PSOM)}
+The pipeline execution is powered by a generic manager called PSOM. PSOM has many interesting features :
+\begin{itemize}
+\item \textbf{Parallel computing} : If you have access to multiple cpus or computers, PSOM can run multiple jobs in parallel.
+\item \textbf{Job failures} : Job failures will not crash the pipeline. You will have access to the logs to fix the problem, and restarting the pipeline will reprocess the failed jobs only.
+\item \textbf{Pipeline update} : If for some reason you decide to restart the pipeline after changing some options, PSOM will examine the changes made to the pipeline and restart only the jobs that need to be reprocessed. You can also add some subjects and restart the pipeline, PSOM will process only these new subjects.
+\end{itemize}
+More info can be found in the paper Bellec et al. Fontiers in Neuroinformatics, 2012.
+}
+
+\frame[containsverbatim,shrink]{
+\frametitle[PSOM]{Example of execution history}
+
+\small Example of pipeline running history on the BIC cluster for the demo NIAK dataset~:
+\begin{beamerboxesrounded}{}
+\tiny
+\begin{verbatim}
+*****************************************
+The pipeline PIPE is now being processed.
+Started on 25-Mar-2009 14:53:32
+user: pbellec, host: zeus, system: unix
+*****************************************
+25-Mar-2009 14:53:34 - The job anat_subject1 has been submitted to the queue (1 jobs in queue).
+25-Mar-2009 14:53:35 - The job anat_subject2 has been submitted to the queue (2 jobs in queue).
+25-Mar-2009 14:53:36 - The job motion_correction_subject1 has been submitted to the queue (3 jobs in queue).
+25-Mar-2009 14:53:37 - The job motion_correction_subject2 has been submitted to the queue (4 jobs in queue).
+.........
+25-Mar-2009 15:05:49 - The job motion_correction_subject1 has been successfully completed (3 jobs in queue).
+25-Mar-2009 15:05:50 - The job sica_subject1_run1 has been submitted to the queue (4 jobs in queue).
+25-Mar-2009 15:05:51 - The job sica_subject1_run2 has been submitted to the queue (5 jobs in queue).
+25-Mar-2009 15:06:41 - The job motion_correction_subject2 has been successfully completed (4 jobs in queue).
+25-Mar-2009 15:06:51 - The job sica_subject2_run1 has been submitted to the queue (5 jobs in queue).
+25-Mar-2009 15:06:52 - The job sica_subject2_run2 has been submitted to the queue (6 jobs in queue).
+25-Mar-2009 15:08:07 - The job sica_subject1_run1 has been successfully completed (5 jobs in queue).
+25-Mar-2009 15:09:04 - The job sica_subject2_run2 has been successfully completed (4 jobs in queue).
+25-Mar-2009 15:09:19 - The job sica_subject1_run2 has been successfully completed (3 jobs in queue).
+25-Mar-2009 15:09:31 - The job sica_subject2_run1 has been successfully completed (2 jobs in queue).
+.........
+(... Some history lines were omitted to fit everything on one slide ...)
+*********************************************
+The processing of the pipeline was completed.
+25-Mar-2009 16:05:46
+*********************************************
+All jobs have been successfully completed.
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+
+\frame[containsverbatim]{
+\frametitle[PSOM]{Configuration of the pipeline manager}
+A complete list of options for this step can be found in the web tutorial :\\
+\url{http://code.google.com/p/psom/wiki/ConfigurationPsom}.\\
+The configuration can be set up by editing a configuration file.
+\begin{beamerboxesrounded}{PSOM}
+\begin{verbatim}
+% Number of jobs that can run in parallel.
+% This is usually the number of cores.
+opt.psom.max_queued            = 2;
+\end{verbatim}
+\end{beamerboxesrounded}
+}
+\section{Installation, contributions and further resources}
+
+\frame[containsverbatim,allowframebreaks]{
+\frametitle[Installation]{Installation}
+\begin{beamerboxesrounded}{Downloading and installing the NIAK library}
+\small
+The latest stable version can be found here: \\
+\url{http://www.nitrc.org/frs/?group_id=411}\\
+\normalsize
+Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all its subfolders) to your search path, example :
+\begin{beamerboxesrounded}{}
+\begin{verbatim}
+path_niak = '/home/pbellec/public/niak/';
+P = genpath(path_niak);
+addpath(P);
+\end{verbatim}
+\end{beamerboxesrounded}
+Current requirements : Matlab 7+/Octave 3+ and Linux.\\
+More detailed instructions can be found at :\\ \scriptsize \url{http://www.nitrc.org/plugins/mwiki/index.php/niak:Installation}
+\end{beamerboxesrounded}
+
+\begin{beamerboxesrounded}{Demo data}
+\small
+There is also a small demo dataset you can download in various formats at \url{http://www.nitrc.org/frs/?group_id=411}\\
+The main functions available in NIAK have demonstrations (invoked by \texttt{niak\_demo\_}) that run on this data. You can either copy the demo data in the \texttt{/niak/data\_demo/} folder (default location) or in an arbitrary folder that will need to be passed as an argument to the demo functions.
+\end{beamerboxesrounded}
+
+\begin{beamerboxesrounded}{Minc tools}
+\small
+For most operations you will need to install a version of the MINC tools. The MINC tools are publicly available for LINUX and MAC OSX  at \texttt{http://packages.bic.mni.mcgill.ca/}\\Instructions for installation can be found at :\\ \url{http://en.wikibooks.org/wiki/MINC/Installation}
+\end{beamerboxesrounded}
+}
+
+\frame[shrink]{
+\frametitle[Contributions]{Who contributed to NIAK ? People}
+\small{The kit was originally designed by Pierre Bellec in the lab of Alan C. Evans, Canada, 2008-10. The following people contribute to NIAK, either through code or ideas :}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_authors}\\
+\end{center}
+}
+
+\frame[shrink]{
+\frametitle[Contributions]{Who contributed to NIAK ? Institutions}
+\small{The following institutions support the authors of NIAK. NITRC and Google Code are generously hosting the project.}
+\begin{center}
+\pgfimage[width=\linewidth]{fig_institutions}\\
+\end{center}
+}
+ 
+\frame[shrink]{
+\frametitle[Contributions]{Who contributed to NIAK ? Software and testing}
+NIAK is including or depending on a number of software~:
+\begin{enumerate}
+\item The MINC tools that have been developed by members and collaborators of the MNI over the past 15 years.
+\item The linear model analysis is a port of the fMRIstat project developed by the late Keith Worsley, who will be sorely missed.
+\item Some functions were based upon existing open-source software. See the NIAK website for a detailed list of contributions.
+\end{enumerate}
+A lot of people have been involved in beta-testing the project and gave very precious feedback over the past two years. A non-exhaustive list includes Benjamin D'hont, Pr Christophe Grova's lab, Pr Jean Gotman's lab, Pr Alain Dhager's lab, Pr Pedro Rosa-Neto's lab and S\'ebastien Lavoie-Courchesne.
+}
+
+\frame{
+\frametitle[Links]{Useful links}
+\begin{enumerate}
+
+\item \pgfuseimage{package}\hspace{0.2cm}The download page, with this pdf presentation, NIAK releases and the demo dataset\\ \tiny{\url{http://www.nitrc.org/frs/?group_id=411}}
+
+\item \normalsize\pgfuseimage{angelniak}\hspace{0.2cm}The NIAK online user's guide\\ \tiny{\url{http://www.nitrc.org/plugins/mwiki/index.php/niak:MainPage}}
+
+\item \normalsize\pgfuseimage{demoniak}\hspace{0.2cm}The NIAK project page and developer's guide\\ \tiny{\url{http://code.google.com/p/niak/}}
+
+\item \normalsize\pgfuseimage{logo_psom}\hspace{0.2cm}The PSOM project page\\ \tiny{\url{http://code.google.com/p/psom/}}
+\end{enumerate}
+}
+
+\frame[containsverbatim]{
+\frametitle[License]{License}
+\tiny
+\begin{beamerboxesrounded}{The NIAK project is under an MIT opensource license}
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+\end{beamerboxesrounded}
+}
+\end{document}

@@ -1,0 +1,3 @@
+qc_raw_dat_ok : ABIDE subject 0050142 from OHSU
+qc_raw_data_center_fail: ABIDE subject 0050711 from Leuven_1 ,I download it from nitrc because the one we have the center is already corrected
+qc_raw_data_coregist_fail: twins subject ABL_2039584

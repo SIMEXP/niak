@@ -1,0 +1,18 @@
+% These definitions for minimizing list spacing come from Michel Goossens,
+% as put together by Bruce Donald (http://www.cs.duke.edu/brd/).
+% 
+% You may freely use, modify and/or distribute this file.
+% 
+% Prevent infinite loops
+\typeout{Style New lists - dense lists}
+
+\let\Otemize =\itemize
+\let\Onumerate =\enumerate
+\let\Oescription =\description
+% Zero the vertical spacing parameters
+\def\Nospacing{\itemsep=0pt\topsep=0pt\partopsep=0pt\parskip=0pt\parsep=0pt}
+% Redefine the environments in terms of the original values
+\newenvironment{Itemize}{\Otemize\Nospacing}{\endlist}
+\newenvironment{Enumerate}{\Onumerate\Nospacing}{\endlist}
+\newenvironment{Description}{\Oescription\Nospacing}{\endlist}
+
