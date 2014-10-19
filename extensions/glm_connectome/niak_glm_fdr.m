@@ -11,10 +11,10 @@ function [fdr,test_q] = niak_glm_fdr(pce,method,q,type_measure)
 %   (vector) A list of per-comparison error associated with different tests.
 %
 % METHOD
-%   (string, default 'GBH-LSL+sym') the method to estimate the false-discovery rate.
+%   (string, default 'BH') the method to estimate the false-discovery rate.
 %   Available options:
 %      'BH-local' or 'family': a BH FDR procedure per map.
-%      'BH-global' or 'global': a BH procedure on the full connectome.
+%      'BH-global' or 'BH' or 'global': a BH procedure on the full connectome.
 %      'GBH-TST' or 'TST': a GBH procedure controlling the FDR on the full connectome
 %         but using the grouping of tests into maps, with a two-step
 %         estimation of the number of discoveries. See NIAK_FDR.
@@ -109,7 +109,7 @@ function [fdr,test_q] = niak_glm_fdr(pce,method,q,type_measure)
 % THE SOFTWARE.
 
 if nargin < 2 
-    method = 'GBH-LSL+sym';
+    method = 'BH';
 end
 
 if nargin < 3 
