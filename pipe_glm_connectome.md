@@ -3,12 +3,9 @@
 This page describes the steps of the GLM connectome pipeline. 
 
 
-The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. 
 
->* Combine the analysis mask and the areas. 
->* Extract the time series in each area. 
->* Perform region growing in each area independently. 
->* Merge all regions of all areas into one mask of regions, along with the corresponding time series for each functional run (if FLAG_TSERIES is true).
+>* (...) 
+>* (...)
 
 The pipeline is invoked by `niak_pipeline_glm_connectome`. 
 The argument `files_in` is a structure describing how the dataset is organized, and `opt` is a structure describing the options of the pipeline. The code of [niak_template_glm_connectome](https://github.com/SIMEXP/niak/blob/master/template/niak_template_glm_connectome.m) would be a good starting point to write your own script. 
@@ -27,7 +24,7 @@ niak_pipeline_glm_connectome(files_in,opt)
 
 You can test the region growing on a [demo data](http://www.nitrc.org/frs/?group_id=411). After uncompressing and unarchiving the demo data in a folder, the demo can be started using niak_demo_pipeline_region_growing.
 ```matlab
-niak_demo_region_growing('/home/bic/my_login/data/demo_niak_preproc/')
+niak_demo_region_growing('/path/demo_niak_preproc/')
 ```
 
 # Inputs
@@ -54,9 +51,9 @@ More options for the grabber are available, see `help niak_grab_fmri_preprocess`
 If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field `fmri` lists the preprocessed fMRI datasets, organized by subject, session and runs. 
 ```matlab
 files_in.fmri.subject1.session1.rest = ...
-   '/home/pbellec/demo_niak_preproc/fmri/fmri_sub1_sess1_rest.nii.gz';
+   '/path/demo_niak_preproc/fmri/fmri_sub1_sess1_rest.nii.gz';
 files_in.fmri.subject2.session1.rest = ...
-   '/home/pbellec/demo_niak_preproc/fmri/fmri_sub2_sess1_rest.nii.gz';
+   '/path/demo_niak_preproc/fmri/fmri_sub2_sess1_rest.nii.gz';
 ```
 
 Labels for subjects, sessions and runs are arbitrary, however Octave and Matlab impose some restrictions. Please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'. 
