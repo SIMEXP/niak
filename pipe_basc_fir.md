@@ -1,18 +1,15 @@
 # BASC FIR pipeline
 
-This page describes the steps of the BASC FIR pipeline. This pipline is dedicated to the analysis of stable clusters using finite-impulse response (FIR) in fMRI. In this pipeline, a method called bootstrap analysis of stable clusters (BASC), that has the potential to identify stable, group-level task-evoked networks at multiple scales, up to tens or even hundreds of networks (Bellec et al. 2010), is applied to FIR estimates. BASC uses hierarchical clustering at the individual level, to identify networks of regions exhibiting similar FIR shapes. Then, at the group level, BASC delineates networks that are spatially consistent across subjects.Thus, The BASC analysis of FIR responses operete at the multi-scale (as in different number of clusters) and multi-level (as in individual, group, and consensus group). 
+This page describes the steps of the BASC FIR pipeline. This pipline is dedicated to the analysis of stable clusters using finite-impulse response (FIR) in fMRI. In this pipeline, a method called bootstrap analysis of stable clusters (BASC), that has the potential to identify stable, group-level task-evoked networks at multiple scales, up to tens or even hundreds of networks ([Bellec et al. 2010](http://www.ncbi.nlm.nih.gov/pubmed/20226257)), is applied to FIR estimates. BASC uses hierarchical clustering at the individual level, to identify networks of regions exhibiting similar FIR shapes. Then, at the group level, BASC delineates networks that are spatially consistent across subjects.Thus, The BASC analysis of FIR responses operete at the multi-scale (as in different number of clusters) and multi-level (as in individual, group, and consensus group). 
 
-The steps of the pipeline are the following :
-1. First ordered list item
-2. dfg
-3. dfg
-4. xgg
-1 Masking the brain in functional data
-2. Extracting the time series and estimated FIR in each area 
-3. Performing region growing in each area independently based on FIR estimates.
+The steps of the pipeline are the following:
+
+1. Masking the brain in functional data.
+2. Extracting the time series and estimated FIR in each area.
+3. Performing region growing in each area independently based on FIR estimates. See [NIAK_PIPELINE_REGION_GROWING]( https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_region_growing.m)
 4. Merging all regions of all areas into one mask of regions, along with the corresponding time series for each functional run.
-5. Individual-level stability analysis of FIR estimates. See NIAK_PIPELINE_STABILITY_MULTI
-6. Group-level stability analysis See NIAK_PIPELINE_STABILITY_MULTI
+5. Individual-level stability analysis of FIR estimates. See [NIAK_PIPELINE_STABILITY_MULTI](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_stability_multi.m)
+6. Group-level stability analysis See [NIAK_PIPELINE_STABILITY_MULTI](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_stability_multi.m)
 7. Group-level test of significance of the average FIR per network, as well as the significance of the difference in FIR across networks.
 
 
