@@ -1,7 +1,7 @@
 # BASC FIR pipeline
 
 This pipline is dedicated to the analysis of stable clusters using finite-impulse response (FIR) in fMRI. In this pipeline, a method called bootstrap analysis of stable clusters (BASC) ([Bellec et al. 2010](http://www.ncbi.nlm.nih.gov/pubmed/20226257)), that has the potential to identify stable, group-level task-evoked networks at multiple scales, up to tens or even hundreds of networks , is applied to FIR estimates. BASC uses hierarchical clustering at the individual level, to identify networks of regions exhibiting similar FIR shapes. Then, at the group level, BASC delineates networks that are spatially consistent across subjects.Thus, The BASC analysis of FIR responses operete at the multi-scale (as in different number of clusters) and multi-level (as in individual, group, and consensus group).
->![An example of FIR estimation](https://github.com/SIMEXP/niak/blob/gh-pages/user_guide_fig/basc_fir/Screenshot%20at%202014-10-19%2015.03.19.png)
+>![An example of FIR estimation](https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/user_guide_fig/basc_fir/Screenshot%20at%202014-10-19%2015.03.19.png)
 
 The steps of the pipeline are the following:
 
