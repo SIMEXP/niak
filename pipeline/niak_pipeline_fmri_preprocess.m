@@ -7,20 +7,13 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-% FILES_IN  
-%   (structure) with the following fields : 
-%
-% FILES_IN  
-%   (structure) with the following fields : 
+% FILES_IN (structure) with the following fields : 
 %
 %   <SUBJECT>.FMRI.<SESSION>.<RUN>
 %       (string) a list of fMRI datasets, acquired in the same 
 %       session (small displacements). 
 %       The field names <SUBJECT>, <SESSION> and <RUN> can be any arbitrary 
 %       strings.
-%       All data in FILES_IN.<SUBJECT> should be from the same subject.
-%       Note that <SUBJECT>.<SESSION> can also be a cell of strings, in 
-%       which case RUN1, RUN2 etc will be used as tags for each run.
 %
 %   <SUBJECT>.ANAT 
 %       (string) anatomical volume, from the same subject as in 
@@ -42,19 +35,26 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           * With the option ‘all’, all possible outputs are generated at 
 %             each stage of the pipeline, and the intermediate results are
 %             kept
-%       
-%   TEMPLATE_FMRI
-%       (string, default '<~niak>/template/roi_aal_3mm.mnc.gz') a volume that
-%       will be used to resample the fMRI datasets. 
 %
-%   TEMPLATE_T1
+%   TEMPLATE
 %       (string, default 'mni_icbm152_nlin_sym_09a') the template that 
-%       will be used as a target for the coregistration of the T1 image. 
+%       will be used as a target for brain coregistration. 
 %       Available choices: 
-%         'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
-%             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
-%         'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
+%           'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
+%              (18.5 - 43 y.o., 40 iterations of non-linear fit). 
+%           'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
 %             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
+%       It is also possible to manually specify the template files with the following fields:
+%           T1 (string) the T1 template
+%           FMRI (string) the fMRI template 
+%              -- used for resolution and field of view for resampling in stereotaxic space
+%           AAL (string) the AAL parcellation
+%           MASK_BRAIN (string) a brain mask
+%           MASK_DILATED (string) a dilated brain mask
+%           MASK_ERODED (string) an eroded brain mask
+%           MASK_WM (string) a (conservative) white matter brain mask
+%           MASK_VENT (string) a (conservative) mask of the lateral ventricles
+%           MASK_WILLIS (string) a loose mask of the basal artery and the circle of Willis
 %
 %   GRANULARITY
 %       (string, default 'cleanup') the level of granularity of the pipeline.
@@ -480,9 +480,9 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
-template_fmri = [gb_niak_path_template filesep 'roi_aal_3mm.mnc.gz'];
-list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template_fmri' , 'template_t1'              , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , template_fmri   , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
+
+list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
@@ -501,8 +501,42 @@ if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of
     error('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''quality_control'', ''all''',opt.size_output)
 end
 
-if ~ismember(opt.template_t1,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
-    error('%s is an unkown T1 template space',opt.template_t1)
+if ischar(opt.template)&&~ismember(opt.template,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
+    error('%s is an unkown T1 template space',opt.template)
+end
+
+if ischar(opt.template)
+    switch opt.template
+    case 'mni_icbm152_nlin_sym_09a'
+        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average
+        template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the functional stereotaxic space (is only using the FOV and resolution)
+        template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the AAL parcellation
+        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];             % The brain mask
+        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
+        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
+        template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_2mm.mnc.gz']; % The white matter mask
+        template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                             % The venticle mask 
+        template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                  % The mask of the stem + basal artery + circle of Willis
+        opt.template = template;
+    case 'mni_icbm152_nlin_asym_09a'
+        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                  % The T1 non-linear average
+        template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the functional stereotaxic space (is only using the FOV and resolution)
+        template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the AAL parcellation
+        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz'];             % The brain mask
+        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
+        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
+        template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_2mm.mnc.gz']; % The white matter mask
+        template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                             % The venticle mask 
+        template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                  % The mask of the stem + basal artery + circle of Willis
+        opt.template = template;
+    otherwise
+        error('%s is an unkown template space',opt.template)
+    end
+end
+if ~ischar(opt.template)
+    opt.template = psom_struct_defaults(opt.template, ...
+                   { 't1' , 'fmri' , 'aal' , 'mask_brain' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
+                   { NaN  , NaN    , NaN   , NaN          , NaN            , NaN           , NaN       , NaN         , NaN           });
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -513,14 +547,20 @@ pipeline = struct();
 %% Resample the AAL template 
 clear job_in job_out job_opt
 [path_t,name_t,ext_t] = niak_fileparts(opt.template_fmri);
-job_in.source      = opt.template_fmri;
-job_in.target      = opt.template_fmri;
+job_in.source      = opt.template.aal;
+job_in.target      = opt.template.aal;
 job_out            = [opt.folder_out 'anat' filesep 'template_aal' ext_t];
 job_opt            = opt.resample_vol;
 job_opt.interpolation    = 'nearest_neighbour';
 pipeline = psom_add_job(pipeline,'resample_aal','niak_brick_resample_vol',job_in,job_out,job_opt);
+opt.template.aal = pipeline.resample_aal.files_out;
 
-opt.template_fmri = pipeline.resample_aal.files_out;
+%% Resample the fMRI stereotaxic space, if needed
+pipeline.resample_fmri_stereo = pipeline.resample_aal;
+pipeline.resample_fmri_stereo.files_in.source = opt.template.fmri;
+pipeline.resample_fmri_stereo.files_in.target = opt.template.fmri;
+pipeline.resample_fmri_stereo.files_out = [opt.folder_out 'anat' filesep 'template_fmri_stereo' ext_t];
+opt.template.fmri = pipeline.resample_fmri_stereo.files_out;
 
 %% Build individual pipelines
 if opt.flag_verbose
@@ -860,6 +900,10 @@ end
 
 function opt = sub_backwards(opt)
 %% Fiddling with OPT for backwards compatibility
+if isfield(opt,'template_t1')
+    opt.template = opt.template_t1;
+    opt = rmfield(opt,'template_t1');
+end
 
 if isfield(opt,'bricks')
     opt = psom_merge_pipeline(opt,opt.bricks);
@@ -894,14 +938,28 @@ if isfield(opt.tune,'subject')
             opt.tune(num_e).type = 'exact';
         end
         switch opt.tune(num_e).type
-            case 'exact'
-                if strcmp(opt.tune(num_e).subject,subject)
-                    opt_ind = psom_merge_pipeline(opt_ind,opt.tune(num_e).param);
+        case 'exact'
+            if strcmp(opt.tune(num_e).subject,subject)
+                list_tune = fieldnames(opt.tune(num_e).param);
+                for ll = 1:length(list_tune)
+                    if ischar(opt.tune(num_e).param.(list_tune{ll}))
+                        opt_ind.(list_tune{ll}) = opt.tune(num_e).param.(list_tune{ll});
+                    else 
+                        opt_ind.(list_tune{ll}) = psom_merge_pipeline(opt_ind.(list_tune{ll}),opt.tune(num_e).param.(list_tune{ll}));
+                    end
                 end
-            case 'regexp'
-                if any(regexp(subject,opt.tune(num_e).subject))
-                    opt_ind = psom_merge_pipeline(opt_ind,opt.tune(num_e).param);
-                end  
+            end
+        case 'regexp'
+            if any(regexp(subject,opt.tune(num_e).subject))
+                list_tune = fieldnames(opt.tune(num_e).param);
+                for ll = 1:length(list_tune)
+                    if ischar(opt.tune(num_e).param.(list_tune{ll}))
+                        opt_ind.(list_tune{ll}) = opt.tune(num_e).param.(list_tune{ll});
+                    else 
+                        opt_ind.(list_tune{ll}) = psom_merge_pipeline(opt_ind.(list_tune{ll}),opt.tune(num_e).param.(list_tune{ll}));
+                    end                        
+                end
+            end  
         end
     end
 end
