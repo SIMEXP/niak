@@ -58,7 +58,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       FMRI (string) the fMRI template 
 %          -- used for resolution and field of view for resampling in stereotaxic space
 %       AAL (string) the AAL parcellation
-%       MASK_BRAIN (string) a brain mask
+%       MASK (string) a brain mask
 %       MASK_DILATED (string) a dilated brain mask
 %       MASK_ERODED (string) an eroded brain mask
 %       MASK_WM (string) a (conservative) white matter brain mask
@@ -441,8 +441,8 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
 opt.template = psom_struct_defaults(opt.template, ...
-               { 't1' , 'fmri' , 'aal' , 'mask_brain' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
-               { NaN  , NaN    , NaN   , NaN          , NaN            , NaN           , NaN       , NaN         , NaN           });
+               { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
+               { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN       , NaN         , NaN           });
 
 if ~ischar(opt.civet)
     list_fields   = { 'folder' , 'id' , 'prefix' };

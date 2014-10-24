@@ -49,7 +49,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           FMRI (string) the fMRI template 
 %              -- used for resolution and field of view for resampling in stereotaxic space
 %           AAL (string) the AAL parcellation
-%           MASK_BRAIN (string) a brain mask
+%           MASK (string) a brain mask
 %           MASK_DILATED (string) a dilated brain mask
 %           MASK_ERODED (string) an eroded brain mask
 %           MASK_WM (string) a (conservative) white matter brain mask
@@ -535,8 +535,8 @@ if ischar(opt.template)
 end
 if ~ischar(opt.template)
     opt.template = psom_struct_defaults(opt.template, ...
-                   { 't1' , 'fmri' , 'aal' , 'mask_brain' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
-                   { NaN  , NaN    , NaN   , NaN          , NaN            , NaN           , NaN       , NaN         , NaN           });
+                   { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
+                   { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN       , NaN         , NaN           });
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -546,7 +546,7 @@ pipeline = struct();
 
 %% Resample the AAL template 
 clear job_in job_out job_opt
-[path_t,name_t,ext_t] = niak_fileparts(opt.template_fmri);
+[path_t,name_t,ext_t] = niak_fileparts(opt.template.fmri);
 job_in.source      = opt.template.aal;
 job_in.target      = opt.template.aal;
 job_out            = [opt.folder_out 'anat' filesep 'template_aal' ext_t];
