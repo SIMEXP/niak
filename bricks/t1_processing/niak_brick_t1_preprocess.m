@@ -67,14 +67,19 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % OPT        
 %    (structure) with the following fields:
 %
-%   TEMPLATE_T1
+%   TEMPLATE
 %       (string, default 'mni_icbm152_nlin_sym_09a') the template that 
-%       will be used as a target for the coregistration of the T1 image. 
+%       will be used as a target for brain coregistration. 
 %       Available choices: 
-%         'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
-%             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
-%         'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
+%           'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
+%              (18.5 - 43 y.o., 40 iterations of non-linear fit). 
+%           'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
 %             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
+%       It is also possible to manually specify the template files with the following fields:
+%           T1 (string) the T1 template
+%           MASK (string) a brain mask
+%           MASK_DILATED (string) a dilated brain mask
+%           MASK_ERODED (string) an eroded brain mask
 %
 %    MASK_BRAIN_T1
 %        (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
@@ -303,13 +308,37 @@ end
 %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_all' , 'template_t1'              , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_fields    = {'flag_all' , 'template'                 , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
 gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
 niak_set_defaults
 
-if ~ismember(opt.template_t1,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
-    error('%s is an unkown T1 template space',opt.template_t1)
+if ischar(opt.template)
+    switch opt.template
+    case 'mni_icbm152_nlin_sym_09a'
+        file_template             = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average
+        file_template_mask        = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];             % The brain mask
+        file_template_mask_erode  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
+        file_template_mask_dilate = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
+        opt.template = template;
+    case 'mni_icbm152_nlin_asym_09a'
+        file_template             = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                  % The T1 non-linear average
+        file_template_mask        = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz'];             % The brain mask
+        file_template_mask_erode  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
+        file_template_mask_dilate = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm        opt.template = template;
+    otherwise
+        error('%s is an unkown template space',opt.template)
+    end
 end
+if ~ischar(opt.template)
+    opt.template = psom_struct_defaults(opt.template, ...
+                   { 't1' , 'mask' , 'mask_dilated' , 'mask_eroded' }, ...
+                   { NaN  , NaN    , NaN            , NaN           });
+    file_template             = opt.template.t1;           % The T1 non-linear average
+    file_template_mask        = opt.template.mask;         % The brain mask
+    file_template_mask_erode  = opt.template.mask_dilated; % The brain mask eroded of 5 mm
+    file_template_mask_dilate = opt.template.mask_eroded;  % The brain mask dilated of 5 mm        opt.template = template;
+end
+
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
@@ -389,20 +418,6 @@ end
 if flag_verbose
     fprintf('***********************************\nPreprocessing of a T1 brain volume\n***********************************\n');
     fprintf('Original brain volume : %s\n',files_in);
-end
-
-%% Generate template file names
-switch opt.template_t1
-    case 'mni_icbm152_nlin_sym_09a'
-        file_template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz']; % The T1 non-linear average
-        file_template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz']; % The brain mask
-        file_template_mask_erode = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz']; % The brain mask eroded of 5 mm
-        file_template_mask_dilate = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz']; % The brain mask dilated of 5 mm
-     case 'mni_icbm152_nlin_asym_09a'
-        file_template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz']; % The T1 non-linear average
-        file_template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz']; % The brain mask
-        file_template_mask_erode = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz']; % The brain mask eroded of 5 mm
-        file_template_mask_dilate = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz']; % The brain mask dilated of 5 mm
 end
 
 %% Generate temporary file names
