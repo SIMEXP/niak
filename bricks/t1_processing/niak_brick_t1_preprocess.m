@@ -77,7 +77,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
 %       It is also possible to manually specify the template files with the following fields:
 %           T1 (string) the T1 template
-%           MASK_BRAIN (string) a brain mask
+%           MASK (string) a brain mask
 %           MASK_DILATED (string) a dilated brain mask
 %           MASK_ERODED (string) an eroded brain mask
 %
@@ -331,10 +331,10 @@ if ischar(opt.template)
 end
 if ~ischar(opt.template)
     opt.template = psom_struct_defaults(opt.template, ...
-                   { 't1' , 'mask_brain' , 'mask_dilated' , 'mask_eroded' }, ...
-                   { NaN  , NaN          , NaN            , NaN           });
-    file_template             = opt.template.t1            % The T1 non-linear average
-    file_template_mask        = opt.template.mask_brain;   % The brain mask
+                   { 't1' , 'mask' , 'mask_dilated' , 'mask_eroded' }, ...
+                   { NaN  , NaN    , NaN            , NaN           });
+    file_template             = opt.template.t1;           % The T1 non-linear average
+    file_template_mask        = opt.template.mask;         % The brain mask
     file_template_mask_erode  = opt.template.mask_dilated; % The brain mask eroded of 5 mm
     file_template_mask_dilate = opt.template.mask_eroded;  % The brain mask dilated of 5 mm        opt.template = template;
 end
