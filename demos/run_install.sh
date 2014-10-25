@@ -50,6 +50,8 @@ if [ -z "$check" ]
   echo more off >> ${octconf}
   echo \% Use the same .mat files as Matlab >> ${octconf}
   echo save_default_options\(\'-7\'\)\; >> ${octconf}
+  echo \% Set plot engine to gnuplot, to work around an issue with fltk >> ${octconf}
+  echo graphics_toolkit gnuplot >> ${octconf}
   echo \% Add NIAK to the Octave path >> ${octconf}
   echo addpath\(genpath\(\"${ndir}\"\)\)\; >> ${octconf}
 fi
