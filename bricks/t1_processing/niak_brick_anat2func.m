@@ -60,19 +60,19 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %   (structure) with the following fields:
 %
 %   LIST_FWHM
-%       (vector, default [8,4,8,4,3]) LIST_FWHM(I) is the FWHM of the
+%       (vector, default [8,3,8,3]) LIST_FWHM(I) is the FWHM of the
 %       Gaussian smoothing applied at iteration I.
 %
 %   LIST_STEP
-%       (vector, default [4,4,4,2,1]) LIST_STEP(I) is the step of MINCTRACC 
+%       (vector, default [4,4,4,2]) LIST_STEP(I) is the step of MINCTRACC 
 %       at iteration I.
 %
 %   LIST_SIMPLEX
-%       (vector, default [8,4,2,2,1]) LIST_SIMPLEX(I) is the simplex 
+%       (vector, default [8,4,2,2]) LIST_SIMPLEX(I) is the simplex 
 %       parameter of MINCTRACC at iteration I.
 %
 %   LIST_MES
-%       (cell of string, default {'mi','mi','mi','mi','mi'}) 
+%       (cell of string, default {'nmi','nmi','nmi','nmi'}) 
 %       LIST_MES{I} is the measure (cost function) used to coregister the 
 %       two volumes in MINCTRACC at iteration I.
 %
