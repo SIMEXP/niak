@@ -79,7 +79,7 @@ gb_niak_ps2pdf = 'ps2pdf';
 
 %% NIAK version
 gb_niak_version = '0.12.18'; 
-gb_niak_url_test_niak = '';
+gb_niak_url_test_niak = 'http://www.nitrc.org/frs/download.php/7162/data_test_niak_mnc1.zip';
 gb_niak_url_target_niak = '';
 
 %% Is the environment Octave or Matlab ?
