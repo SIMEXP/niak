@@ -209,8 +209,8 @@ niak_set_defaults
 
 %% OPTIONS
 gb_name_structure   = 'opt';
-gb_list_fields      = { 'arg_nu_correct' , 'flag_nu_correct' , 'fwhm_masking' , 'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                 , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
-gb_list_defaults    = { '-distance 200'  , false             , 8              , false                       , false                     , {'mi','mi','mi','mi','mi'} , [8,3,8,4,3]   , [4,4,4,2,1]   , [8,4,2,2,1]      , 0              , ''             , 1              , 'identity'};
+gb_list_fields      = { 'arg_nu_correct' , 'flag_nu_correct' , 'fwhm_masking' , 'flag_invert_transf_output' , 'flag_invert_transf_init' , 'list_mes'                      , 'list_fwhm'   , 'list_step'   , 'list_simplex'   , 'flag_test'    , 'folder_out'   , 'flag_verbose' , 'init'};
+gb_list_defaults    = { '-distance 200'  , false             , 8              , false                       , false                     , {'nmi','nmi','nmi','nmi'}       , [8,3,8,3]     , [4,4,4,2]     , [8,4,2,2]        , 0              , ''             , 1              , 'identity'};
 niak_set_defaults
 
 if ~strcmp(opt.init,'center')&&~strcmp(opt.init,'identity')
@@ -478,7 +478,6 @@ for num_i = 1:length(list_fwhm)
     % Crop the anatomical volume
     [hdr_anat,vol_anat]    = niak_read_vol(file_tmp2);
     vol_anat(~mask_anat_c) = 0;  
-    vol_anat(mask_anat_c)  = vol_anat(mask_anat_c)-median(vol_anat(mask_anat_c));  
     hdr_anat.file_name     = file_anat_crop;
     niak_write_vol(hdr_anat,vol_anat);
     
@@ -497,7 +496,6 @@ for num_i = 1:length(list_fwhm)
     % Crop the functional volume
     [hdr_func,vol_func]    = niak_read_vol(file_tmp);
     vol_func(~mask_func_c) = 0;    
-    vol_func(mask_func_c)  = vol_func(mask_func_c) - median(vol_func(mask_func_c));
     hdr_func.file_name     = file_func_crop;
     niak_write_vol(hdr_func,vol_func);        
 
