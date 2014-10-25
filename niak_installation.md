@@ -27,6 +27,8 @@ For Octave users, we suggest editing the `~/.octaverc` to change octave's defaul
 more off
 % Use the same .mat files as Matlab
 default_save_options('-7');
+% Set plot engine to gnuplot, to work around an issue with fltk
+graphics_toolkit gnuplot
 ```
 
 # The brain connectivity toolbox  
