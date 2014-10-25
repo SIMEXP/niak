@@ -100,15 +100,19 @@ path_test = psom_struct_defaults(path_test, ...
     { ''       , ''         , ''      });
     
 if isempty(path_test.demoniak)
-    path_test.demoniak = [pwd filesep 'test_niak_mnc1' filesep];
+    path_test.demoniak = [pwd filesep 'data_test_niak_mnc1' filesep];
     if ~psom_exist(path_test.demoniak)
-        psom_clean('test_niak_mnc1.zip')
-        [status,msg] = system('wget http://www.nitrc.org/frs/download.php/7161/test_niak_mnc1.zip');
-        if status
-            error('There was a problem downloading the test data: %s',msg)
+        psom_clean('data_test_niak_mnc1.zip')
+        if exist('gb_niak_url_test_niak','var')&&~isempty(gb_niak_url_test_niak)
+            [status,msg] = system(['wget ' gb_niak_url_test_niak]');
+            if status
+                error('There was a problem downloading the test data: %s',msg)
+            end
+        else
+            error('Automatic download of the test data is not supported for this version of NIAK')
         end
-        [status,msg] = system('unzip test_niak_mnc1.zip');
-        psom_clean('test_niak_mnc1.zip')
+        [status,msg] = system('unzip data_test_niak_mnc1.zip');
+        psom_clean('data_test_niak_mnc1.zip')
         if status
             error('There was a problem unzipping the test data: %s',msg)
         end
@@ -116,7 +120,24 @@ if isempty(path_test.demoniak)
 end
 
 if isempty(path_test.target)&&~opt.flag_target
-    error('Download of the target data is not supported for this version of NIAK')
+    name_target = ['target_test_niak_mnc1-' gb_niak_version];
+    path_test.target = [pwd filesep name_target filesep];
+    if ~psom_exist(path_test.target)
+        psom_clean([name_target '.zip'])
+        if exist('gb_niak_url_target_niak','var')&&~isempty(gb_niak_url_target_niak)
+            [status,msg] = system(['wget ' gb_niak_url_target_niak]');
+            if status
+                error('There was a problem downloading the target data: %s',msg)
+            end
+        else
+            error('Automatic download of the test data is not supported for this version of NIAK')
+        end
+        [status,msg] = system(['unzip ' name_target '.zip']);
+        psom_clean([name_target '.zip'])
+        if status
+            error('There was a problem unzipping the target data: %s',msg)
+        end
+    end
 end
 
 if isempty(path_test.result)
