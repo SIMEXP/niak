@@ -104,7 +104,7 @@ if isempty(path_test.demoniak)
     if ~psom_exist(path_test.demoniak)
         psom_clean('data_test_niak_mnc1.zip')
         if exist('gb_niak_url_test_niak','var')&&~isempty(gb_niak_url_test_niak)
-            [status,msg] = system(['wget ' gb_niak_url_test_niak]');
+            [status,msg] = system(['wget ' gb_niak_url_test_niak]);
             if status
                 error('There was a problem downloading the test data: %s',msg)
             end
@@ -125,7 +125,7 @@ if isempty(path_test.target)&&~opt.flag_target
     if ~psom_exist(path_test.target)
         psom_clean([name_target '.zip'])
         if exist('gb_niak_url_target_niak','var')&&~isempty(gb_niak_url_target_niak)
-            [status,msg] = system(['wget ' gb_niak_url_target_niak]');
+            [status,msg] = system(['wget ' gb_niak_url_target_niak]);
             if status
                 error('There was a problem downloading the target data: %s',msg)
             end
