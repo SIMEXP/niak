@@ -494,7 +494,8 @@ if ischar(opt.civet)
         fprintf('T1 preprocess (');
     end
     clear job_in job_out job_opt
-    job_in                          = files_in.anat;
+    job_in.anat                     = files_in.anat;
+    job_in.template                 = rmfield(opt.template,{'fmri','aal','mask_wm','mask_vent','mask_willis'});    
     job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
     job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
@@ -505,7 +506,6 @@ if ischar(opt.civet)
     job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
     job_opt                         = opt.t1_preprocess;
-    job_opt.template                = rmfield(opt.template,{'fmri','aal','mask_wm','mask_vent','mask_willis'});
     job_opt.folder_out              = opt.folder_anat;
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess',job_in,job_out,job_opt);
     if opt.flag_verbose        
