@@ -10,8 +10,8 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 % FILES_IN
 %
 %    VOL
-%        (cell of string) multiple file names of 3D dataset in the same
-%        space.
+%        (cell of string) multiple file names of 3D or 4D datasets in the same
+%        space. See notes below for 4D data.
 %
 %    MASK
 %        (string or cell of strings) one or multiple brain masks. If
