@@ -259,6 +259,7 @@ for num_f = 1:length(files_in.vol)
             curr_perc = new_perc;
         end
     end
+    clear vol
     [hdr,vol] = niak_read_vol(files_in.vol{num_f});
         
     if num_f == 1
