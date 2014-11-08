@@ -78,6 +78,10 @@ function [results,opt] = niak_glm(model,opt)
 %      (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
 %      TTEST(n) (bilateral test). (only available if OPT.TEST is 'ttest')
 %
+%   DEGFREE
+%      (scalar value) is the degrees of freedom left after regression.
+%      Will be 2 scalar values for ftest.
+%
 %   EFF
 %      (vector, size [1 N]) the effect associated with the contrast and the 
 %      regression coefficients (only available if OPT.TEST is 'ttest')
@@ -170,6 +174,7 @@ if isfield(opt,'test')
             results.pce = pce;
             results.eff = eff;
             results.std_eff = std_eff;
+            results.degfree = size(x,1)-size(x,2); % degrees of freedom
 
         case 'ftest'
 
@@ -188,8 +193,9 @@ if isfield(opt,'test')
             else 
                 s0 = sum(y.^2,1);
             end
-            results.ftest=((s0-s)/(K-p0))./(s/(N-K)); % F-Test
-            
+            results.ftest = ((s0-s)/(K-p0))./(s/(N-K)); % F-Test
+            results.pce = 1-fcdf(results.ftest,K-p0,N-K); % p-value
+            results.degfree = [K-p0,N-K]; % degrees of freedom
         case 'none'
             
             % Do nothing
