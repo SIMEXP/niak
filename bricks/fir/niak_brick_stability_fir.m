@@ -72,7 +72,7 @@ function [files_in,files_out,opt] = niak_brick_stability_fir(files_in,files_out,
 %       (string, default 'atoms') the name of the variable in FILES_IN.
 %
 %   NB_MIN_FIR
-%       (integer, default 3) the minimal acceptable number of FIR estimates.
+%       (integer, default 1) the minimal acceptable number of FIR estimates.
 %
 %   SAMPLING
 %
