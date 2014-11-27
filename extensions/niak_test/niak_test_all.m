@@ -130,12 +130,16 @@ if isempty(path_test.target)&&~opt.flag_target
                 error('There was a problem downloading the target data: %s',msg)
             end
         else
-            error('Automatic download of the test data is not supported for this version of NIAK')
+            warning('Automatic download of the test data is not supported for this version of NIAK. I am forcing the generation of a target, without further testing.'
+    )
+            opt.flag_target = true;
         end
-        [status,msg] = system(['unzip ' name_target '.zip']);
-        psom_clean([name_target '.zip'])
-        if status
-            error('There was a problem unzipping the target data: %s',msg)
+        if ~opt.flag_target
+            [status,msg] = system(['unzip ' name_target '.zip']);
+            psom_clean([name_target '.zip'])
+            if status
+                error('There was a problem unzipping the target data: %s',msg)
+            end
         end
     end
 end
