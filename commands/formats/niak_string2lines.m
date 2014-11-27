@@ -36,6 +36,7 @@ if isempty(vec_string)
     cell_lines{1} = '';
     return
 end
+vec_string=strrep(vec_string,char(13),char(10));
 if ~strcmp(vec_string(end),char(10));
     vec_string = [vec_string char(10)];
 end

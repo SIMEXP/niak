@@ -234,7 +234,7 @@ if ~ischar(files_out.tseries)
         for num_e = 1:nb_areas
             num_a = list_area(num_e);
             var_name = ['tseries_',num2str(num_a)];
-            if flag_init&&~isempty(data.(var_name))
+            if flag_init&&isfield(data,var_name)&&~isempty(data.(var_name))
                 nt = size(data.(var_name),1);
                 tseries = zeros([nt,nb_rois]);
                 flag_init = false;
@@ -242,6 +242,9 @@ if ~ischar(files_out.tseries)
             for num_r = list_num_roi{num_e}
                 tseries(:,num_r) = mean(niak_normalize_tseries(data.(var_name)(:,part_merge{num_e}==num_r),opt.correction),2);
             end
+        end
+        if ~flag_init
+            tseries = [];
         end
         save(files_out.tseries{num_f},'tseries');
     end

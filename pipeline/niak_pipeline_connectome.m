@@ -269,12 +269,13 @@ network = opt.label_network;
 
 %% Copy the networks
 pipeline = struct();
-in = files_in.network;
-[path_f,name_f,ext_f] = niak_fileparts(in);
-out = [folder_out 'network_' network ext_f];
-pipeline.(['mask_' network]).command   = 'system([''cp "'' files_in ''" "'' files_out ''"'']);';
-pipeline.(['mask_' network]).files_in  = in;
-pipeline.(['mask_' network]).files_out = out;
+clear job_in job_out job_opt
+job_in.source      = files_in.network;
+[path_f,name_f,ext_f] = niak_fileparts(files_in.network);
+job_in.target      = files_tseries.(list_subject{1}){1};
+job_out            = [folder_out 'network_' network ext_f];
+job_opt.interpolation    = 'nearest_neighbour';
+pipeline = psom_add_job(pipeline,['mask_' network],'niak_brick_resample_vol',job_in,job_out,job_opt);
 
 %% Run the estimation of connectomes
 for num_s = 1:length(list_subject)

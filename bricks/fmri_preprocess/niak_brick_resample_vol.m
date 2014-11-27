@@ -1,9 +1,6 @@
 function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,opt)
-% Resample a volume or a 4D volume with a transformation to a target space. 
-% The function allows to change the target resolution, and to resample the 
-% data such that the direction cosines are exactly x, y and z.
+% Resample a 3D/4D volume with a transformation to a target space. 
 %
-% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_RESAMPLE_VOL(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
@@ -16,8 +13,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %           (string) name of the file to resample (can be 3D+t).
 %
 %       TARGET 
-%           (string) name of the file defining space (can be the same as 
-%           SOURCE).
+%           (string, default SOURCE) name of the file defining space.
 %
 %       TRANSFORMATION 
 %           (string or cell of strings, default identity) the name of a XFM 
@@ -124,8 +120,11 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % an affine transformation [M T ; 0 0 0 1] for (y=M*x+T) 
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
-% Montreal Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, minc, resampling
 
@@ -155,22 +154,28 @@ niak_gb_vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Setting up inputs
-gb_name_structure = 'files_in';
-gb_list_fields    = {'source', 'target' , 'transformation' , 'transformation_stereo' };
-gb_list_defaults  = {NaN     , NaN      , ''               , 'gb_niak_omitted'       };
-niak_set_defaults
+files_in = psom_struct_defaults(files_in, ...
+           {'source', 'target' , 'transformation' , 'transformation_stereo' },  ...
+           {NaN     , ''       , ''               , 'gb_niak_omitted'       });
+
+if isempty(files_in.target)
+    files_in.target = files_in.source;
+end
 
 % Setting up options
-gb_name_structure = 'opt';
-gb_list_fields    = { 'flag_skip' , 'transf_name' , 'interpolation' , 'flag_tfm_space' , 'voxel_size' , 'folder_out' , 'flag_test' , 'flag_invert_transf' , 'flag_verbose' , 'flag_adjust_fov' , 'flag_keep_range' };
-gb_list_defaults  = { 0           , 'transf'      , 'trilinear'     , 0                , 0            , ''           , 0           , 0                    , 1              , 0                 , 0                 };
-niak_set_defaults
+if nargin < 3
+    opt = struct();
+end
+opt = psom_struct_defaults(opt, ...
+      { 'flag_skip' , 'transf_name' , 'interpolation' , 'flag_tfm_space' , 'voxel_size' , 'folder_out' , 'flag_test' , 'flag_invert_transf' , 'flag_verbose' , 'flag_adjust_fov' , 'flag_keep_range' }, ...
+      { 0           , 'transf'      , 'trilinear'     , 0                , 0            , ''           , 0           , 0                    , 1              , 0                 , 0                 });
 
+voxel_size = opt.voxel_size;
 if (length(voxel_size)==1)&&(voxel_size~=0)&&(voxel_size~=1)
     voxel_size = repmat(voxel_size,[1 3]);
 end
 
-if flag_keep_range
+if opt.flag_keep_range
     instr_range = '-keep_real_range ';
 else
     instr_range = '-nokeep_real_range ';
@@ -194,11 +199,11 @@ if isempty(files_out)
     files_out = cat(2,folder_write,filesep,name_f,'_res',ext_f);
 end
 
-if flag_test == 1
+if opt.flag_test == 1
     return
 end
 
-if flag_skip
+if opt.flag_skip
     instr_copy = cat(2,'cp ',files_in.source,' ',files_out);
     
     [status,msg] = system(instr_copy);
@@ -218,12 +223,12 @@ if ~isempty(files_in.transformation)
     [path_t,name_t,ext_t] = niak_fileparts(files_in.transformation);
     
     if strcmp(ext_t,'.mat')
-        if flag_verbose
+        if opt.flag_verbose
             fprintf('\n Converting transformation %s into XFM format ...\n',files_in.transformation);
         end
         
         data = load(files_in.transformation);
-        transf = data.(transf_name);
+        transf = data.(opt.transf_name);
         nb_transf = size(transf,3);
         file_transf = cell([nb_transf 1]);
         for num_t = 1:nb_transf
@@ -238,7 +243,7 @@ end
 %% Reading the source space information %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if flag_verbose
+if opt.flag_verbose
     fprintf('\n Reading source volume information %s ...\n',files_in.source);
 end
 
@@ -263,7 +268,7 @@ end
 %% Reading the target space information %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if flag_verbose
+if opt.flag_verbose
     fprintf('\n Reading target volume information %s ...\n',files_in.target);
 end
 
@@ -289,7 +294,7 @@ nz2 = hdr_target.info.dimensions(3);
 
 if min(voxel_size(:)==abs(step2(:)))==0
     
-    if ~flag_tfm_space % If a change of resolution occurs, but there is no resample-to-self
+    if ~opt.flag_tfm_space % If a change of resolution occurs, but there is no resample-to-self
          
         %% Setting up the new number of voxels
         nx3 = ceil((abs(step2(1))/voxel_size(1))*nx2);
@@ -315,16 +320,16 @@ if min(voxel_size(:)==abs(step2(:)))==0
     end
 end
 
-if flag_tfm_space 
+if opt.flag_tfm_space 
     
-    if flag_verbose
+    if opt.flag_verbose
         fprintf('\n Resampling target space to get rid of "voxel-to-world" transformation (except voxel size)...\n');
     end
     
     %% Extract the brain in native space 
     
     [hdr_source,vol_source] = niak_read_vol(files_in.source);
-    if flag_adjust_fov
+    if opt.flag_adjust_fov
         mask_source = niak_mask_brain(mean(abs(vol_source),4));
     else
         mask_source = true(size(vol_source));
@@ -388,7 +393,7 @@ end
 if nt1 == 1
 
     %% Case of a single 3D volume    
-    if flag_verbose
+    if opt.flag_verbose
         fprintf('\n Resampling source on target ...\n');
     end
 
@@ -403,10 +408,10 @@ if nt1 == 1
             instr_resample = [instr_resample ' -transform ',files_in.transformation{1}];
         end
     end
-    if flag_invert_transf
+    if opt.flag_invert_transf
         instr_resample = [instr_resample ' -invert_transformation'];
     end
-    instr_resample = [instr_resample ' -',interpolation,' -like ',file_target_tmp,' -clobber'];            
+    instr_resample = [instr_resample ' -',opt.interpolation,' -like ',file_target_tmp,' -clobber'];            
     [status,msg] = system(instr_resample);    
     if status~=0
         error(msg);
@@ -419,7 +424,7 @@ if nt1 == 1
 else
     
     %% Case of 3D + t data
-    if flag_verbose
+    if opt.flag_verbose
         fprintf('\n Resampling source on target, volume : ');
     end        
         
@@ -438,7 +443,7 @@ else
     
     for num_t = 1:nt1
         
-        if flag_verbose
+        if opt.flag_verbose
             fprintf('%i ',num_t)
         end
 
@@ -466,10 +471,10 @@ else
             end
             instr_resample = [instr_resample ' -transform ' file_transf_tmp];
         end
-        if flag_invert_transf
+        if opt.flag_invert_transf
             instr_resample = [instr_resample ' -invert_transformation'];
         end
-        instr_resample = [instr_resample ' -',interpolation,' -like ',file_target_tmp,' -clobber'];
+        instr_resample = [instr_resample ' -',opt.interpolation,' -like ',file_target_tmp,' -clobber'];
         [status,msg] = system(instr_resample);
         if status~=0
             error(msg);
@@ -483,7 +488,7 @@ else
     
         
     %% write the resampled volumes in a 3D+t dataset
-    if flag_verbose
+    if opt.flag_verbose
         fprintf('Writing the 3D+t output\n')
     end
     
@@ -496,14 +501,14 @@ else
     niak_write_vol(hdr_target,vol_resampled);    
     
     %% clean the temporary files
-    if flag_verbose
+    if opt.flag_verbose
         fprintf('Cleaning temporary files\n')
     end
     
 end
 
 %% Clean temporary stuff
-if flag_verbose
+if opt.flag_verbose
     fprintf('Cleaning temporary files\n')
 end
 instr_clean = sprintf('rm -rf %s',folder_tmp);
@@ -512,6 +517,6 @@ if status ~= 0
     error(msg);
 end
 
-if flag_verbose
+if opt.flag_verbose
     fprintf('Done!\n')
 end

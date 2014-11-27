@@ -100,12 +100,12 @@ function [pipeline,opt] = niak_pipeline_stability_fir(files_in,opt)
 %       going to perform the region growing.
 %
 %   NAME_CONDITION
-%       (string, default '') NAME_CONDITION is the name of the condition 
-%       of interest. By default (empty string), the first condition is used. 
+%       (string) NAME_CONDITION is the name of the condition 
+%       of interest. If empty, the first condition is used. 
 %
 %   NAME_BASELINE
-%       (string, default '') NAME_BASELINE is the name of the condition 
-%       to use as baseline. By default (empty string), the first condition is used. 
+%       (string) NAME_BASELINE is the name of the condition 
+%       to use as baseline. If empty, the first condition is used. 
 %
 %   FIR
 %       (structure) see the OPT argument of NIAK_BRICK_FIR. The default
@@ -262,7 +262,7 @@ end
 
 %% Options
 list_fields   = {'nb_min_fir' , 'name_baseline' , 'name_condition' , 'nb_samps_fdr' , 'folder_out' , 'grid_scales' , 'scales_maps' , 'neigh'       , 'param' , 'flag_fir' , 'flag_roi' , 'fir'    , 'region_growing' , 'stability_fir' , 'stability_group' , 'stability_maps' , 'stability_figure' , 'fdr_fir' , 'rand_seed' , 'psom'   , 'flag_test' , 'flag_verbose' };
-list_defaults = {1            , ''              , ''               , 1000           , NaN          , []            , []            , [0.7 0.1 1.3] , 0.05    , []         , false      , struct() , struct()         , struct()        , struct()          , struct()         , struct()           , struct()  , 0           , struct() , false       , true           };
+list_defaults = {1            , NaN             , NaN              , 1000           , NaN          , []            , []            , [0.7 0.1 1.3] , 0.05    , []         , false      , struct() , struct()         , struct()        , struct()          , struct()         , struct()           , struct()  , 0           , struct() , false       , true           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 if ~strcmp(opt.folder_out(end),filesep)
     opt.folder_out = [opt.folder_out filesep];

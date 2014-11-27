@@ -1,59 +1,30 @@
 function [pipeline,opt_pipe,files_in] = niak_demo_glm_connectome(path_demo,opt)
-% This function runs NIAK_PIPELINE_GLM_CONNECTOME on the results of NIAK_DEMO_FMRI_PREPROCESS
+% Run NIAK_PIPELINE_GLM_CONNECTOME on the results of NIAK_DEMO_FMRI_PREPROCESS
 %
-% SYNTAX:
 % [PIPELINE,OPT_PIPE,FILES_IN] = NIAK_DEMO_GLM_CONNECTOME(PATH_DEMO,OPT)
 %
-% _________________________________________________________________________
-% INPUTS:
-%
-% PATH_DEMO
-%   (string) the full path to the preprocessed NIAK demo dataset. The dataset 
+% PATH_DEMO (string) the full path to the preprocessed NIAK demo dataset. The dataset 
 %   can be found at http://www.nitrc.org/frs/?group_id=411
-%
-% OPT
-%   (structure, optional) Any argument passed to NIAK_PIPELINE_GLM_CONNECTOME
+% OPT (structure, optional) Any argument passed to NIAK_PIPELINE_GLM_CONNECTOME
 %   will do here. Many parameters are hard-coded though (see code). In addition:
+% OPT.FILES_IN.FMRI (structure, default grab the preprocessed demoniak) the input files 
+%   from the preprocessing to be fed in the glm_connectome pipeline.
+% OPT.FOLDER_OUT (string, default PATH_DEMO/glm_connectome) where to store the 
+%   results of the pipeline.
 %
-%   FILES_IN.FMRI
-%      (structure, default grab the preprocessed demoniak) the input files 
-%      from the preprocessing to be fed in the glm_connectome pipeline.
+% PIPELINE (structure) a formal description of the pipeline. See PSOM_RUN_PIPELINE.
+% OPT_PIPE (structure) the option of NIAK_PIPELINE_GLM_CONNECTOME
+% FILES_IN (structure) the description of input files for NIAK_PIPELINE_GLM_CONNECTOME
 %
-%   FOLDER_OUT
-%      (string, default PATH_DEMO/glm_connectome) where to store the 
-%      results of the pipeline.
-%
-% _________________________________________________________________________
-% OUTPUT
-%
-% PIPELINE
-%   (structure) a formal description of the pipeline. See
-%   PSOM_RUN_PIPELINE.
-%
-% OPT_PIPE
-%   (structure) the option to call NIAK_PIPELINE_GLM_FIR
-%
-% FILES_IN
-%   (structure) the description of input files used to call 
-%   NIAK_PIPELINE_GLM_FIR
-%
-% _________________________________________________________________________
-% COMMENTS
-%
-% Note 1:
-% It is possible to configure the pipeline manager 
-% to use parallel computing using OPT.PSOM, see : 
-% http://code.google.com/p/psom/wiki/PsomConfiguration
-%
-% _________________________________________________________________________
-% Copyright (c) Pierre Bellec
+% Copyright (c) Pierre Bellec, see license in the code.
+
 % Centre de recherche de l'institut de gériatrie de Montréal, 
 % Department of Computer Science and Operations Research
 % University of Montreal, Québec, Canada, 2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : FIR, GLM
-
+% Keywords : connectome, GLM
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights

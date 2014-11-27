@@ -55,7 +55,7 @@ function [pipeline,opt] = niak_pipeline_glm_fir(files_in,opt)
 %      for the t-maps.
 %
 %   TYPE_FDR
-%      (string, default 'LSL') how the FDR is controled. Families correspond to all the FIR time points for 
+%      (string, default 'BH') how the FDR is controled. Families correspond to all the FIR time points for 
 %      one region. See the TYPE argument of NIAK_FDR.
 %
 %   NB_SAMPS
@@ -260,19 +260,23 @@ end
 
 %% Options
 list_fields   = { 'fir'  , 'nb_samps' , 'nb_batch' , 'fdr' , 'type_fdr' , 'flag_rand' , 'flag_maps' , 'fwe'  , 'psom'   , 'folder_out' , 'test' , 'flag_verbose' , 'flag_test' };
-list_defaults = { struct , 1000       , 10         , 0.05  , 'LSL'      , false       , true        , 0.05   , struct() , NaN           , NaN   ,    true        , false       };
+list_defaults = { struct , 1000       , 10         , 0.05  , 'BH'       , false       , true        , 0.05   , struct() , NaN           , NaN   ,    true        , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [folder_out 'logs' filesep];
 
-%% copy the networks
+%% Resample the networks
 pipeline = struct();
 [path_f,name_f,ext_f] = niak_fileparts(files_in.networks.(list_network{1}));
 for num_n = 1:length(list_network)
-    network = list_network{num_n};    
-    pipeline.(['networks_' network]).command   = 'system([''cp '' files_in '' '' files_out]);';
-    pipeline.(['networks_' network]).files_in  = files_in.networks.(network);
-    pipeline.(['networks_' network]).files_out = [folder_out network filesep 'networks_' network ext_f];
+    clear job_in job_out job_opt
+    network = list_network{num_n};  
+    job_in.source = files_in.networks.(network);
+    job_in.target = cell_fmri{1};
+    job_out = [folder_out network filesep 'networks_' network ext_f];
+    job_opt.interpolation    = 'nearest_neighbour';
+    pipeline = psom_add_job(pipeline,['networks_' network],'niak_brick_resample_vol',job_in,job_out,job_opt);
+    files_in.networks.(network) = job_out;
 end
 
 %% Run the estimation of FIR response at the run level

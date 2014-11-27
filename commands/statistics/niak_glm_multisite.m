@@ -139,14 +139,14 @@ if ~isempty(opt.multisite) && size(model,2)<2
         c  = model.c;
         c = [0;c];
 
-        if(sum(x1(:,2)==x1(:,4))/size(x1,1)) < 1 % to prevend degenerated model
+        %if(sum(x1(:,2)==x1(:,4))/size(x1,1)) < 1 % to prevend degenerated model
             
             k=k+1;
             multisite.model(k).c = c;
             multisite.model(k).x = x1;
             multisite.model(k).y = model.y(mask_site,:);
             
-        end
+        %end
 
     end
     model = multisite.model;

@@ -52,18 +52,18 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %             each stage of the pipeline, and the intermediate results are
 %             kept
 %       
-%   TEMPLATE_FMRI
-%       (string, default '<~niak>/template/roi_aal_3mm.mnc.gz') a volume that
-%       will be used to resample the fMRI datasets. 
-%
-%   TEMPLATE_T1
-%       (string, default 'mni_icbm152_nlin_sym_09a') the template that 
-%       will be used as a target for the coregistration of the T1 image. 
-%       Available choices: 
-%         'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
-%             (18.5 - 43 y.o., 40 iterations of non-linear fit). 
-%         'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
-%             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
+%   TEMPLATE
+%       (structure) 
+%       T1 (string) the T1 template
+%       FMRI (string) the fMRI template 
+%          -- used for resolution and field of view for resampling in stereotaxic space
+%       AAL (string) the AAL parcellation
+%       MASK (string) a brain mask
+%       MASK_DILATED (string) a dilated brain mask
+%       MASK_ERODED (string) an eroded brain mask
+%       MASK_WM (string) a (conservative) white matter brain mask
+%       MASK_VENT (string) a (conservative) mask of the lateral ventricles
+%       MASK_WILLIS (string) a loose mask of the basal artery and the circle of Willis
 %
 %   TARGET_SPACE
 %       (string, default 'stereonl') which space will be used to resample
@@ -95,7 +95,14 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       preprocessed anatomical volumes as well as the results related to 
 %       T1-T2 coregistration.
 %
-%   FOLDER_QC
+%   FOLDER_QCthe template that 
+%       will be used as a target for brain coregistration. 
+%       Available choices: 
+%           'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
+%              (18.5 - 43 y.o., 40 iterations of non-linear fit). 
+%           'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
+%             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
+%       It is also possible to manually specify the template files with the following fields:
 %       (string, default FOLDER_OUT/quality_control/) where to write the 
 %       results of the quality control.
 %
@@ -428,11 +435,14 @@ end
 files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correct format
 
 %% OPT
-file_template = [gb_niak_path_template filesep 'roi_aal_3mm.mnc.gz'];
-list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template_fmri' ,  'template_t1'              , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , file_template   ,  'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
+
+opt.template = psom_struct_defaults(opt.template, ...
+               { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
+               { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN       , NaN         , NaN           });
 
 if ~ischar(opt.civet)
     list_fields   = { 'folder' , 'id' , 'prefix' };
@@ -464,10 +474,6 @@ if isempty(opt.folder_intermediate)
     opt.folder_intermediate = [opt.folder_out 'intermediate' filesep subject filesep];
 end
 
-if ~ismember(opt.template_t1,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
-    error('%s is an unkown T1 template space',opt.template_t1)
-end
-
 opt.psom.path_logs = opt.folder_logs;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -488,7 +494,8 @@ if ischar(opt.civet)
         fprintf('T1 preprocess (');
     end
     clear job_in job_out job_opt
-    job_in                          = files_in.anat;
+    job_in.anat                     = files_in.anat;
+    job_in.template                 = rmfield(opt.template,{'fmri','aal','mask_wm','mask_vent','mask_willis'});    
     job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
     job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
@@ -499,7 +506,6 @@ if ischar(opt.civet)
     job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
     job_opt                         = opt.t1_preprocess;
-    job_opt.template_t1             = opt.template_t1;
     job_opt.folder_out              = opt.folder_anat;
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess',job_in,job_out,job_opt);
     if opt.flag_verbose        
@@ -641,7 +647,7 @@ end
 for num_e = 1:length(fmri);
     clear job_in job_out job_opt     
     job_in.source = pipeline.(['slice_timing_' label(num_e).name]).files_out;
-    job_in.target = opt.template_fmri;
+    job_in.target = opt.template.fmri;
     job_in.transformation = files_motion.final.(label(num_e).subject).(label(num_e).session).(label(num_e).run);
     switch opt.target_space
         case 'stereolin'
@@ -690,16 +696,11 @@ if opt.flag_verbose
     fprintf('corsica (');
 end
 clear job_in job_out job_opt 
-job_in.mask_vent_stereo   = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
-switch opt.template_t1
-    case 'mni_icbm152_nlin_sym_09a'
-        job_in.mask_wm_stereo     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_2mm.mnc.gz'];
-    case 'mni_icbm152_nlin_asym_09a'
-        job_in.mask_wm_stereo     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_2mm.mnc.gz'];
-end
-job_in.mask_stem_stereo   = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];
+job_in.mask_vent_stereo   = opt.template.mask_vent;
+job_in.mask_wm_stereo     = opt.template.mask_wm;
+job_in.mask_stem_stereo   = opt.template.mask_willis;
 job_in.mask_brain         = pipeline.(['qc_motion_' subject]).files_out.mask_group;
-job_in.aal                = [gb_niak_path_niak 'template' filesep 'roi_aal.mnc.gz'];
+job_in.aal                = opt.template.aal;
 job_in.functional_space   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.transformation_nl  = pipeline.(['t1_preprocess_',subject]).files_out.transformation_nl;
 job_in.segmentation       = pipeline.(['t1_preprocess_' subject]).files_out.classify;
