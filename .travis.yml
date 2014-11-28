@@ -1,5 +1,7 @@
 script:
   - sudo bash ./demos/run_install.sh
+  - ls
+  - cat ~/.octaverc
 
 notifications:
   email: false
