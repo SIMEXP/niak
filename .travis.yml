@@ -1,5 +1,5 @@
 script:
-  - sudo "./demo/run-tests.sh"
+  - sudo "./demos/run-tests.sh"
 
 notifications:
   email: false
