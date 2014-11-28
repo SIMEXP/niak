@@ -3,7 +3,7 @@ before_script:
   - sudo apt-get update -y
   - sudo apt-get install octave -y
   - sudo apt-get install liboctave-dev -y
-  - sudo demos/run_install.m
+  - sudo demos/run_install.sh
 script:
   - octave demos/run_test.m
 
