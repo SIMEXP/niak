@@ -1,4 +1,5 @@
 script:
+  - echo /home/${usr}
   - pwd
   - ls -lha
   - ls -lha ~
