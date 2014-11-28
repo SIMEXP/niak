@@ -325,11 +325,27 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults);
 folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [folder_out 'logs' filesep];
 
-%% Generate individual connectomes
+%% Initialize the pipeline
 pipeline = struct();
 list_subject = fieldnames(files_in.fmri);
 list_test = fieldnames(opt.test);
 list_network = fieldnames(files_in.networks);
+[path_f,name_f,ext_f] = niak_fileparts(files_in.networks.(list_network{1}));
+[cell_fmri,labels] = niak_fmri2cell(files_in.fmri);
+
+%% Resample the networks
+for num_n = 1:length(list_network)
+    clear job_in job_out job_opt
+    network = list_network{num_n};  
+    job_in.source = files_in.networks.(network);
+    job_in.target = cell_fmri{1};
+    job_out = [folder_out network filesep 'networks_' network ext_f];
+    job_opt.interpolation    = 'nearest_neighbour';
+    pipeline = psom_add_job(pipeline,['networks_' network],'niak_brick_resample_vol',job_in,job_out,job_opt);
+    files_in.networks.(network) = job_out;
+end
+
+%% Generate individual connectomes
 for ss = 1:length(list_subject)
     clear in out jopt
     subject = list_subject{ss};
@@ -353,15 +369,6 @@ for ss = 1:length(list_subject)
     jopt.min_nb_vol   = opt.min_nb_vol;
     jopt.flag_verbose = opt.flag_verbose;
     pipeline = psom_add_job(pipeline,['connectome_' subject],'niak_brick_connectome_multiscale',in,out,jopt);
-end
-
-%% Copy the networks
-for nn = 1:length(list_network)
-    network = list_network{nn};            
-    [path_f,name_f,ext_f] = niak_fileparts(files_in.networks.(network));
-    pipeline.(['networks_' network]).command   = 'system([''cp '' files_in '' '' files_out]);';
-    pipeline.(['networks_' network]).files_in  = files_in.networks.(network);
-    pipeline.(['networks_' network]).files_out = [folder_out network filesep 'networks_' network ext_f];
 end
 
 %% Run GLM estimation 

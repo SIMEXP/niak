@@ -82,7 +82,7 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
+niak_gb_vars
 %% Options
 if nargin < 2
     opt = struct;
@@ -100,15 +100,19 @@ path_test = psom_struct_defaults(path_test, ...
     { ''       , ''         , ''      });
     
 if isempty(path_test.demoniak)
-    path_test.demoniak = [pwd filesep 'test_niak_mnc1' filesep];
+    path_test.demoniak = [pwd filesep 'data_test_niak_mnc1' filesep];
     if ~psom_exist(path_test.demoniak)
-        psom_clean('test_niak_mnc1.zip')
-        [status,msg] = system('wget http://www.nitrc.org/frs/download.php/7155/test_niak_mnc1.zip');
-        if status
-            error('There was a problem downloading the test data: %s',msg)
+        psom_clean('data_test_niak_mnc1.zip')
+        if exist('gb_niak_url_test_niak','var')&&~isempty(gb_niak_url_test_niak)
+            [status,msg] = system(['wget ' gb_niak_url_test_niak]);
+            if status
+                error('There was a problem downloading the test data: %s',msg)
+            end
+        else
+            error('Automatic download of the test data is not supported for this version of NIAK')
         end
-        [status,msg] = system('unzip test_niak_mnc1.zip');
-        psom_clean('test_niak_mnc1.zip')
+        [status,msg] = system('unzip data_test_niak_mnc1.zip');
+        psom_clean('data_test_niak_mnc1.zip')
         if status
             error('There was a problem unzipping the test data: %s',msg)
         end
@@ -116,7 +120,28 @@ if isempty(path_test.demoniak)
 end
 
 if isempty(path_test.target)&&~opt.flag_target
-    error('Download of the target data is not supported for this version of NIAK')
+    name_target = ['target_test_niak_mnc1-' gb_niak_version];
+    path_test.target = [pwd filesep name_target filesep];
+    if ~psom_exist(path_test.target)
+        psom_clean([name_target '.zip'])
+        if exist('gb_niak_url_target_niak','var')&&~isempty(gb_niak_url_target_niak)
+            [status,msg] = system(['wget ' gb_niak_url_target_niak]);
+            if status
+                error('There was a problem downloading the target data: %s',msg)
+            end
+        else
+            warning('Automatic download of the test data is not supported for this version of NIAK. I am forcing the generation of a target, without further testing.'
+    )
+            opt.flag_target = true;
+        end
+        if ~opt.flag_target
+            [status,msg] = system(['unzip ' name_target '.zip']);
+            psom_clean([name_target '.zip'])
+            if status
+                error('There was a problem unzipping the target data: %s',msg)
+            end
+        end
+    end
 end
 
 if isempty(path_test.result)
@@ -137,6 +162,16 @@ pipe = struct;
 path_test_fp.demoniak  = path_test.demoniak;
 path_test_fp.reference = [path_test.target 'demoniak_preproc'];
 path_test_fp.result    = path_test.result;
+opt_pipe.resample_vol.voxel_size = [10 10 10];
+opt_pipe.template.t1           = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_5mm.mnc.gz'];
+opt_pipe.template.mask         = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_5mm.mnc.gz'];
+opt_pipe.template.mask_eroded  = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm.mnc.gz'];
+opt_pipe.template.mask_dilated = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm.mnc.gz'];
+opt_pipe.template.mask_wm      = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_5mm.mnc.gz'];
+opt_pipe.template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
+opt_pipe.template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
+opt_pipe.template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                         
+opt_pipe.template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                              
 [pipe_fp,opt_p,files_fp] = niak_test_fmripreproc_demoniak(path_test_fp,opt_pipe);
 pipe = psom_merge_pipeline(pipe,pipe_fp,'fp_');
 
@@ -148,6 +183,9 @@ else
     % In test mode, use the provided target to feed into the region growing pipeline
     files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
 end
+opt_pipe = struct;
+opt_pipe.flag_test = true;
+opt_pipe.flag_target = opt.flag_target;
 files_rf.fmri  = files_all.fmri.vol;
 files_rf.mask  = files_all.quality_control.group_coregistration.func.mask_group;
 files_rf.areas = files_all.template_aal;

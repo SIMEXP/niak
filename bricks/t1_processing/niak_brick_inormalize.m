@@ -1,77 +1,41 @@
 function [files_in,files_out,opt] = niak_brick_inormalize(files_in,files_out,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_BRICK_INORMALIZE
-%
 % Normalize the intensities of a brain volume.
 %
-% SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_INORMALIZE(FILES_IN,FILES_OUT,OPT)
 %
-% _________________________________________________________________________
-% INPUTS
+% FILES_IN.VOL (string) the file name of a brain volume.
+% FILES_IN.MODEL (string) the file name a model volume.
+% FILES_OUT (string, default <FILES_IN.T1>_IN.<EXT>) The brain volume 
+%   after intensity normalization.
+% OPT.ARG (string, default '') any argument that will be passed to the
+%   NU_CORRECT command (see comments below). 
+% OPT.FLAG_VERBOSE (boolean, default: 1) If FLAG_VERBOSE == 1, write
+%   messages indicating progress.
+% OPT.FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the brick does 
+%   not do anything but update the default values in FILES_IN, FILES_OUT and OPT.
+% OPT.FOLDER_OUT (string, default: path of FILES_IN) If present, all default 
+%   outputs will be created in the folder FOLDER_OUT. The folder needs to be 
+%   created beforehand.
 %
-%  * FILES_IN        
-%       (structure) with the following fields :
-%
-%       VOL
-%           (string) the file name of a brain volume.
-%
-%       MODEL
-%           (string) the file name a model volume.
-%
-%  * FILES_OUT
-%       (string, default <FILES_IN.T1>_IN.<EXT>) The brain volume after
-%       intensity normalization.
-%
-%  * OPT           
-%       (structure) with the following fields:
-%
-%       ARG
-%           (string, default '') any argument that will be passed to the
-%           NU_CORRECT command (see comments below). 
-%
-%       FLAG_VERBOSE 
-%           (boolean, default: 1) If FLAG_VERBOSE == 1, write
-%           messages indicating progress.
-%
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
-%
-%       FOLDER_OUT 
-%           (string, default: path of FILES_IN) If present, all default 
-%           outputs will be created in the folder FOLDER_OUT. The folder 
-%           needs to be created beforehand.
-%               
-% _________________________________________________________________________
-% OUTPUTS
-%
-% The structures FILES_IN, FILES_OUT and OPT are updated with default
-% valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%
-% _________________________________________________________________________
-% SEE ALSO:
-% NIAK_BRICK_MASK_BRAIN_T1, NIAK_PIPELINE_BRICK_PREPROCESS
-%
-% _________________________________________________________________________
-% COMMENTS:
-%
-% NOTE 1:
-%   This function is a simple NIAK-compliant wrapper around the minc tool
+% * The structures FILES_IN, FILES_OUT and OPT are updated with default
+%   valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
+% * This function is a simple NIAK-compliant wrapper around the minc tool
 %   called INORMALIZE. Type "inormalize -help" in a terminal for more
 %   infos.
+% * The source and the model need to have the same sampling.
 %
-% NOTE 2:
-%   The source and the model need to have the same sampling.
-%
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, 
-% Montreal Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec. See license in the code.
+% SEE ALSO: NIAK_BRICK_MASK_BRAIN_T1, NIAK_PIPELINE_BRICK_PREPROCESS
+
+% McConnell Brain Imaging Center, 
+% Montreal Neurological Institute, McGill University, 2008-2010.
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, intensity normalization
-
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -98,7 +62,7 @@ niak_gb_vars; % load important NIAK variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Syntax
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_INORMALIZE(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_inormalize'' for more info.')
 end
 

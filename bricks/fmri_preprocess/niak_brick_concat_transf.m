@@ -1,48 +1,30 @@
 function [files_in,files_out,opt] = niak_brick_concat_transf(files_in,files_out,opt)
 % Concatenate multiple transformations in xfm format.
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CONCAT_TRANSF(FILES_IN,FILES_OUT,OPT)
 %
-% SYNTAX:
-%   [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CONCAT_TRANSF(FILES_IN,FILES_OUT,OPT)
+% FILES_IN (cell of strings) FILES_IN{I} is the name of the Ith transformation 
+%   file in xfm format.
+% FILES_OUT (string) the concatenated transformation.
+% OPT.FLAG_TEST (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
+%   do anything but update the default values in FILES_IN, FILES_OUT and OPT.
 %
-% _________________________________________________________________________
-% INPUTS
-%
-%  * FILES_IN 
-%       (cell of strings) FILES_IN{I} is the name of the Ith transformation 
-%       file in xfm format.
-%
-%  * FILES_OUT  
-%       (string) the concatenated transformation.
-%
-%  * OPT   
-%       (structure) with the following fields:
-%
-%       FLAG_TEST 
-%           (boolean, default: 0) if FLAG_TEST equals 1, the brick does not 
-%           do anything but update the default values in FILES_IN, 
-%           FILES_OUT and OPT.
-%
-% _________________________________________________________________________
-% OUTPUTS
-%
-%   The structures FILES_IN, FILES_OUT and OPT are updated with default
+% Note 1: The structures FILES_IN, FILES_OUT and OPT are updated with default
 %   values. If OPT.FLAG_TEST == 0, the specified outputs are written.
 %
-% _________________________________________________________________________
-% SEE ALSO:
-% NIAK_TRANSF2PARAM, NIAK_PARAM2TRANSF
+% Note 2: If f(I) is the Ith transformation, the concantenated transformation is
+%   f(end)(...(f(1))...).
+
+% SEE ALSO: NIAK_TRANSF2PARAM, NIAK_PARAM2TRANSF
 %
-% _________________________________________________________________________
-% COMMENTS
-%
-% If f(I) is the Ith transformation, the concantenated transformation is
-% f(end)(...(f(1))...).
-%
-% _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, see license information in the code.
+
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : medical imaging, filtering, fMRI
+% Keywords : medical imaging, transformation
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +49,7 @@ function [files_in,files_out,opt] = niak_brick_concat_transf(files_in,files_out,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SYNTAX
-if ~exist('files_in','var')|~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('SYNTAX: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CONCAT_TRANSF(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_concat_transf'' for more info.')
 end
 
