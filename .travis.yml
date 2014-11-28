@@ -1,7 +1,8 @@
 script:
+  - pwd
   - ls -lha
   - ls -lha ~
-  - pwd
+  - echo ~
 
 notifications:
   email: false
