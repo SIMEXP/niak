@@ -1,18 +1,5 @@
-before_script:
-	- echo Installing dependencies
-	- sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex /
-						   freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev \
-						   libxmu-headers imagemagick libjpeg62 -y 
-  
-	- check=`cat /etc/apt/sources.list | grep 'deb http://http.debian.net/debian wheezy-backports main'`
-	  if [ -z "${check}" ]
-		  then
-		  echo Adding the Backports because they were not there yet
-		  sudo apt-get install python-software-properties
-		  sudo add-apt-repository "deb http://http.debian.net/debian wheezy-backports main"
-	  fi
 script:
-  - octave demos/run_test.m
+  - sudo "./demo/run-tests.sh"
 
 notifications:
   email: false
