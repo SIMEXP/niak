@@ -1,6 +1,6 @@
 script:
   - sudo bash ./demos/run_install.sh
-  - ls
+  - ls -lha
   - cat ~/.octaverc
 
 notifications:
