@@ -1,7 +1,6 @@
 script:
-  - sudo bash ./demos/run_install.sh
   - ls -lha
-  - cat ~/.octaverc
+  - ls -lha ~
   - pwd
 
 notifications:
