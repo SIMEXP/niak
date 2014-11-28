@@ -1,5 +1,5 @@
 script:
-  - sudo "bash /demos/run_install.sh"
+  - sudo "bash ./demos/run_install.sh"
 
 notifications:
   email: false
