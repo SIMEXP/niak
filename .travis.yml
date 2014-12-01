@@ -4,7 +4,9 @@ script:
   - ls -lha
   - ls -lha ~
   - echo ~
-  - demos/quick_test.sh
+  - sudo chmod +x demos/quick_test.sh
+  - cd demos
+  - sudo ./quick_test.sh
 
 notifications:
   email: false
