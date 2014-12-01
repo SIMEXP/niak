@@ -1,9 +1,5 @@
 script:
-  - echo /home/${usr}
-  - pwd
-  - ls -lha
-  - ls -lha ~
-  - echo ~
+  - ls -lha /home/travis/.gnupg/gpg.conf
   - sudo chmod +x demos/more_test.sh
   - sudo demos/more_test.sh
 
