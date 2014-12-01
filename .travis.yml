@@ -1,7 +1,7 @@
 script:
   - ls -lha /home/travis/.gnupg/gpg.conf
-  - sudo chmod +x demos/more_test.sh
-  - sudo demos/more_test.sh
+  - gpg --keyserver pgpkeys.mit.edu --recv-key  8B48AD6246925553      
+  - gpg -a --export 8B48AD6246925553 | sudo apt-key add -
 
 notifications:
   email: false
