@@ -9,6 +9,10 @@ sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex \
  freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev \
  libxmu-headers imagemagick libjpeg62 -y 
 
+# Add the certificate for the backports
+gpg --keyserver pgpkeys.mit.edu --recv-key  8B48AD6246925553      
+gpg -a --export 8B48AD6246925553 | sudo apt-key add -
+
 # Add the backports
 check=`cat /etc/apt/sources.list | grep 'deb http://http.debian.net/debian wheezy-backports main'`
 if [ -z "${check}" ]
