@@ -1,7 +1,44 @@
-script:
-  - ls -lha /home/travis/.gnupg/gpg.conf
+before_install:
+  # Update the sources
+  - sudo apt-get update
+  # Add the certificate for the backports
   - gpg --keyserver pgpkeys.mit.edu --recv-key  8B48AD6246925553      
   - gpg -a --export 8B48AD6246925553 | sudo apt-key add -
+  # Add the backports to the sources
+  - sudo apt-get install python-software-properties
+  - sudo add-apt-repository "deb http://http.debian.net/debian wheezy-backports main"
+  # Update the sources again
+  - sudo apt-get update
+
+install:
+  # Install dependencies
+  - sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev libxmu-headers imagemagick libjpeg62 -y
+  # Install Octave
+  - sudo apt-get -t wheezy-backports install "octave" -y
+  # Install octave dependecies
+  - sudo apt-get -t wheezy-backports install "liboctave-dev" -y
+  - sudo octave --eval "pkg install -auto -global -forge control general signal image io statistics"
+  # Get the minc toolkit
+  - wget http://packages.bic.mni.mcgill.ca/minc-toolkit/Debian/minc-toolkit-1.0.01-20131211-Debian_7.1-x86_64.deb -P /home/travis
+  # Install the minc toolkit
+  - sudo dpkg -i /home/travis/minc-toolkit-1.0.01-20131211-Debian_7.1-x86_64.deb
+  # Install psom
+  - sudo mkdir -p /home/travis/SIMEXP/psom
+  - cd /home/travis/SIMEXP/psom
+  - git clone https://github.com/SIMEXP/psom.git
+
+before_script:
+  # Set up the octave config file
+  - touch /home/travis/.octaverc
+  - echo more off >> /home/travis/.octaverc
+  - echo save_default_options\(\'-7\'\)\; >> /home/travis/.octaverc
+  - echo graphics_toolkit gnuplot >> /home/travis/.octaverc
+  - echo addpath\(genpath\(\"/home/travis/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
+  # Add the minc toolkit to the bash config
+  - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
+
+script:
+  - echo Hello World
 
 notifications:
   email: false
