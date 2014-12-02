@@ -1,4 +1,4 @@
 script:
   # Add the backports to the sources
   - sudo apt-get install python-software-properties
-  - add-apt-repository ppa:mtmiller/3.8.1-1ubuntu1~octave1~precise1
+  - sudo add-apt-repository ppa:mtmiller/3.8.1-1ubuntu1~octave1~precise1
