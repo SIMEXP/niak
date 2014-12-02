@@ -3,7 +3,5 @@ script:
   - gpg -a --export 8B48AD6246925553 | sudo apt-key add -
   # Add the backports to the sources
   - sudo apt-get install python-software-properties
-  - sudo add-apt-repository "deb http://http.debian.net/debian wheezy-backports main"
-  # Update the sources again
-  - sudo apt-get update
-  - sudo apt-get -t wheezy-backports install "octave" -y
+  - sudo apt-cache search libblas.so.3
+  - sudo apt-cache search libatlas3-base
