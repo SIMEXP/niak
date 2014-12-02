@@ -159,13 +159,21 @@ if ischar(in.fmri)
     in.fmri = {in.fmri};
 end
 [FDhdr,vol] = niak_read_vol(in.fmri{1});
+    
 % Make header for 3D files
 TDhdr = FDhdr;
 tmp = size(vol);
 td_size = tmp(1:3);
-dim = ones(1,8);
-dim(2:4) = td_size;
-TDhdr.details.dim = dim;
+% See if we have a nifti or a minc
+if ~isempty(findstr(ext, 'mnc'))
+    TDhdr.info.dimensions = td_size;
+elseif ~isempty(findstr(ext, 'nii'))
+    dim = ones(1,8);
+    dim(2:4) = td_size;
+    TDhdr.details.dim = dim;
+else
+    error('I do not recognize the input file type\n');
+end
 
 [~,part] = niak_read_vol(in.part);
 part = round(part);
