@@ -4,4 +4,5 @@ script:
   - sudo apt-add-repository ppa:octave/stable -y
   - sudo apt-get update
   - sudo apt-get install octave
+  - octave --version
   
