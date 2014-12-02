@@ -31,7 +31,7 @@ before_script:
   - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
 
 script:
-  - echo Hello World
+  - octave niak_test_all
 
 notifications:
   email: false
