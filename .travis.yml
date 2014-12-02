@@ -16,7 +16,7 @@ install:
   # Install the minc toolkit
   - sudo dpkg -i /home/travis/minc-toolkit-1.0.01-20131211-Debian_7.1-x86_64.deb
   # Install psom
-  - sudo mkdir -p /home/travis/SIMEXP/psom
+  - mkdir -p /home/travis/SIMEXP/psom
   - cd /home/travis/SIMEXP/psom
   - git clone https://github.com/SIMEXP/psom.git
 
