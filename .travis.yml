@@ -20,6 +20,7 @@ install:
   - cd /home/travis/SIMEXP/psom
   - git clone https://github.com/SIMEXP/psom.git
   - cd ${HOME}
+  - cat .octaverc
 
 before_script:
   # Set up the octave config file
