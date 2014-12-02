@@ -1,3 +1,2 @@
 script:
-  - sudo apt-cache search libblas3
-  - sudo apt-cache search liblapack3
+  - sudo apt-get install liblapack3gf libblas3gf
