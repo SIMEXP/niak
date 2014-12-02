@@ -7,7 +7,7 @@ before_install:
 
 install:
   # Install dependencies
-  - sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev libxmu-headers imagemagick libjpeg62 libblas3 liblapack3 -y
+  - sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev libxmu-headers imagemagick libjpeg62 -y
   # Install octave dependecies
   - sudo apt-get  install "liboctave-dev" -y
   - sudo octave --eval "pkg install -auto -global -forge control general signal image io statistics"
