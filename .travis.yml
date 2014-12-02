@@ -1,4 +1,7 @@
 script:
   # Add the backports to the sources
   - sudo apt-get install python-software-properties
-  - sudo add-apt-repository ppa:mtmiller/3.8.1-1ubuntu1~octave1~precise1
+  - sudo apt-add-repository ppa:octave/stable
+  - sudo apt-get update
+  - sudo apt-get install octave
+  
