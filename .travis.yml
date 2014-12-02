@@ -1,7 +1,3 @@
 script:
-  - gpg --keyserver pgpkeys.mit.edu --recv-key  8B48AD6246925553      
-  - gpg -a --export 8B48AD6246925553 | sudo apt-key add -
   # Add the backports to the sources
-  - sudo apt-get install python-software-properties
-  - sudo apt-cache search libblas.so.3
-  - sudo apt-cache search libatlas3-base
+  - sudo apt-cache search octave
