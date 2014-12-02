@@ -19,8 +19,7 @@ install:
   - mkdir -p /home/travis/SIMEXP/psom
   - cd /home/travis/SIMEXP/psom
   - git clone https://github.com/SIMEXP/psom.git
-  - cd ${HOME}
-  - cat .octaverc
+  - cd /home/travis
 
 before_script:
   # Set up the octave config file
@@ -31,6 +30,7 @@ before_script:
   - echo addpath\(genpath\(\"/home/travis/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
   # Add the minc toolkit to the bash config
   - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
+  - cat .octaverc
 
 script:
   - octave niak_test_all
