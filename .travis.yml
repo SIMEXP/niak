@@ -1,6 +1,9 @@
 before_install:
   # Add the backports to the sources
+  - ls -lh
   - ls /home/travis -lh
+  - ls /home/travis/build -lh
+  - ls /home/travis/builds -lh
   - sudo apt-get install python-software-properties
   - sudo apt-add-repository ppa:octave/stable -y
   - sudo apt-get update
