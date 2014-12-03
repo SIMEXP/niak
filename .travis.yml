@@ -30,10 +30,10 @@ before_script:
   - echo addpath\(genpath\(\"/home/travis/build/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
   # Add the minc toolkit to the bash config
   - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
-  - cat /home/travis/.octaverc
 
 script:
-  - sudo octave --eval 'niak_test_all'
+  - minccopy
+  #- sudo octave --eval 'niak_test_all'
 
 notifications:
   email: false
