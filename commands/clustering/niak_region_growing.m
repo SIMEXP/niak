@@ -1,4 +1,4 @@
-function part = niak_region_growing(tseries,neig,opt);
+function part = niak_region_growing(tseries,neig,opt)
 % Region growing : build connex region that are functionally homogeneous.
 %
 % SYNTAX:
