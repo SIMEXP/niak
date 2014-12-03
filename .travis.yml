@@ -16,8 +16,8 @@ install:
   # Install the minc toolkit
   - sudo dpkg -i /home/travis/minc-toolkit-1.0.01-20131211-Debian_7.1-x86_64.deb
   # Install psom
-  - mkdir -p /home/travis/SIMEXP/psom
-  - cd /home/travis/SIMEXP/psom
+  - mkdir -p /home/travis/build/SIMEXP/psom
+  - cd /home/travis/build/SIMEXP/psom
   - git clone https://github.com/SIMEXP/psom.git
   - cd /home/travis
 
@@ -27,10 +27,11 @@ before_script:
   - echo more off >> /home/travis/.octaverc
   - echo save_default_options\(\'-7\'\)\; >> /home/travis/.octaverc
   - echo graphics_toolkit gnuplot >> /home/travis/.octaverc
-  - echo addpath\(genpath\(\"/home/travis/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
+  - echo addpath\(genpath\(\"/home/travis/build/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
   # Add the minc toolkit to the bash config
   - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
-  - cat .octaverc
+  - cat /home/travis/.octaverc
+  - ls /home/travis -lh
 
 script:
   - octave niak_test_all
