@@ -3,6 +3,7 @@ install:
   - wget http://packages.bic.mni.mcgill.ca/minc-toolkit/Debian/minc-toolkit-1.0.01-20131211-Ubuntu_12.04-x86_64.deb -P /home/travis
   # Install the minc toolkit
   - sudo dpkg -i /home/travis/minc-toolkit-1.0.01-20131211-Ubuntu_12.04-x86_64.deb
+  - source /opt/minc/minc-toolkit-config.sh
 
 script:
-  - ls -lha /opt/minc
+  - minccopy -h
