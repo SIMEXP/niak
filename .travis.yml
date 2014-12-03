@@ -33,7 +33,7 @@ before_script:
   - cat /home/travis/.octaverc
 
 script:
-  - octave --eval 'niak_test_all'
+  - sudo octave --eval 'niak_test_all'
 
 notifications:
   email: false
