@@ -32,7 +32,7 @@ before_script:
   - source /opt/minc/minc-toolkit-config.sh
 
 script:
-  - sudo octave --eval 'niak_test_all'
+  - octave --eval 'niak_test_all'
 
 notifications:
   email: false
