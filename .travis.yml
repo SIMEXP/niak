@@ -30,6 +30,7 @@ before_script:
   - echo addpath\(genpath\(\"/home/travis/build/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
   # Add the minc toolkit to the bash config
   - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
+  - source /home/travis/.bashrc
 
 script:
   - minccopy
