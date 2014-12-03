@@ -10,7 +10,7 @@ install:
   - sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev libxmu-headers imagemagick libjpeg62 -y
   # Install octave dependecies
   - sudo apt-get  install "liboctave-dev" -y
-  - octave --eval "pkg install -auto -global -forge control general signal image io statistics"
+  - sudo octave --eval "pkg install -auto -global -forge general signal image io statistics"
   # Get the minc toolkit
   - wget http://packages.bic.mni.mcgill.ca/minc-toolkit/Debian/minc-toolkit-1.0.01-20131211-Debian_7.1-x86_64.deb -P /home/travis
   # Install the minc toolkit
