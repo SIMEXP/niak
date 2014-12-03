@@ -1,5 +1,6 @@
 before_install:
   # Add the backports to the sources
+  - ls /home/travis -lh
   - sudo apt-get install python-software-properties
   - sudo apt-add-repository ppa:octave/stable -y
   - sudo apt-get update
@@ -31,7 +32,6 @@ before_script:
   # Add the minc toolkit to the bash config
   - echo source /opt/minc/minc-toolkit-config.sh >> /home/travis/.bashrc
   - cat /home/travis/.octaverc
-  - ls /home/travis -lh
 
 script:
   - octave niak_test_all
