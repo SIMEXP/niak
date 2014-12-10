@@ -116,7 +116,6 @@ if psom_exist(file_qc)
     qc_report = niak_read_csv_cell(file_qc);  
     if size(qc_report,1) < size(list_subject,1)+1 
 	% add new subjects to the current qc_report
-	%idx_new_subj = find(~ismember(list_subject,qc_report(:,1)));
 	new_qc_report = sub_init_report(list_subject);
 	for i = 2:size(new_qc_report,1)
 		idx = find(ismember(qc_report(:,1),new_qc_report(i)));
@@ -128,16 +127,6 @@ if psom_exist(file_qc)
     end
 else         
     qc_report = sub_init_report(list_subject);
-    %% Initialize the QC report
-    %qc_report = cell(length(list_subject)+1,6);
-    %qc_report(2:end,1) = list_subject;
-    %qc_report(1) = 'id_subject';
-    %qc_report(1,2) = 'status';
-    %qc_report(1,3) = 'anat';
-    %qc_report(1,4) = 'comment_anat';
-    %qc_report(1,5) = 'func';
-    %qc_report(1,6) = 'comment_func';
-    %qc_report(2:end,2:end) = repmat({''},[length(list_subject),5]);
 end
 
 %% Sort subjects by selected option
