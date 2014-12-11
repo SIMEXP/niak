@@ -592,7 +592,7 @@ if ~strcmp(files_out.anat_hires,'gb_niak_omitted')||~strcmp(files_out.anat_lowre
 end
 
 %% Get rid of the temporary file
-rmdir(path_tmp,'s');
+psom_clean(path_tmp);
 
 if flag_verbose
     fprintf('\nDone !\n');
