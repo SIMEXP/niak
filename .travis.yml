@@ -32,7 +32,7 @@ before_script:
   - source /opt/minc/minc-toolkit-config.sh
 
 script:
-  - octave --eval "niak_test_all('',struct('psom', struct('flag_pause', false)))"
+  - octave --eval "niak_test_all(struct(),struct('psom',struct('flag_pause',false)))"
 
 notifications:
   email: false
