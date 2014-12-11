@@ -1,42 +1,24 @@
-function R = niak_build_correlation(tseries,flag_vec);
+function [R,pce] = niak_build_correlation(tseries,flag_vec);
 % Compute the correlation matrix from regional time series.
-%
-% SYNTAX:
 % R = NIAK_BUILD_CORRELATION(TSERIES,FLAG_VEC)
 %
-% _________________________________________________________________________
-% INPUTS:
-%
-% TSERIES       
-%       (array) time series. First dimension is time.
-%
-% FLAG_VEC
-%       (boolean, default false) if FLAG_VEC == true, the matrix is
-%       "vectorized" and the redundant elements are suppressed. Use
-%       NIAK_VEC2MAT to unvectorize it.
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% R             
-%       (square matrix or vector) Empirical correlation matrix. R is 
-%       symmetrical with ones on the diagonal.
-%
-% _________________________________________________________________________
-% SEE ALSO:
-% NIAK_BUILD_MEASURE, NIAK_MAT2VEC, NIAK_MAT2LVEC, NIAK_VEC2MAT,
-% NIAK_LVEC2MAT, NIAK_BUILD_COVARIANCE, NIAK_BUILD_CORRELATION,
-% NIAK_BUILD_CONCENTRATION, NIAK_BUILD_PARTIAL_CORRELATION.
-%
-% _________________________________________________________________________
-% COMMENTS:
-%
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, Montreal 
+% TSERIES (array) time series. First dimension is time.
+% FLAG_VEC (boolean, default false) if FLAG_VEC == true, the matrix is
+%   "vectorized" and the redundant elements are suppressed. Use
+%   NIAK_VEC2MAT to unvectorize it.
+% R (square matrix or vector) Empirical correlation matrix. R is 
+%   symmetrical with ones on the diagonal.
+% PCE (same size as R) PCE(i) is the p-value of significant testing of R, 
+%   under a Gaussian i.i.d. assumption.
+%   
+% See licensing information in the code.
+
+% Copyright (c) Pierre Bellec, 
+% McConnell Brain Imaging Center, Montreal 
 %               Neurological Institute, McGill University, 2007.
 % Maintainer : pbellec@bic.mni.mcgill.ca
-% See licensing information in the code.
 % Keywords : statistics, correlation
-
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -58,3 +40,7 @@ if nargin < 2
     flag_vec = false;
 end
 [S,R] = niak_build_srup(tseries,flag_vec);
+T = sqrt(size(tseries,1)-2)*R(:)./sqrt(1-R(:).^2);
+pce(~isnan(T)) = 2*niak_cdf_t(-abs(T(~isnan(T))),size(tseries,1)-2);
+pce(isnan(T)) = 0;
+pce = reshape(pce,size(R));
