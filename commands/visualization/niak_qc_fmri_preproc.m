@@ -113,18 +113,20 @@ end
 %% Look for an existing QC report
 file_qc = [path_qc 'qc_report.csv'];
 if psom_exist(file_qc)
-    qc_report = niak_read_csv_cell(file_qc);   
+    qc_report = niak_read_csv_cell(file_qc);  
+    if size(qc_report,1) < size(list_subject,1)+1 
+	% add new subjects to the current qc_report
+	new_qc_report = sub_init_report(list_subject);
+	for i = 2:size(new_qc_report,1)
+		idx = find(ismember(qc_report(:,1),new_qc_report(i)));
+		if ~isempty(idx)	
+			new_qc_report(i,:) = qc_report(idx,:);
+		end
+	end
+	qc_report = new_qc_report;
+    end
 else         
-    %% Initialize the QC report
-    qc_report = cell(length(list_subject)+1,6);
-    qc_report(2:end,1) = list_subject;
-    qc_report(1) = 'id_subject';
-    qc_report(1,2) = 'status';
-    qc_report(1,3) = 'anat';
-    qc_report(1,4) = 'comment_anat';
-    qc_report(1,5) = 'func';
-    qc_report(1,6) = 'comment_func';
-    qc_report(2:end,2:end) = repmat({''},[length(list_subject),5]);
+    qc_report = sub_init_report(list_subject);
 end
 
 %% Sort subjects by selected option
@@ -292,4 +294,17 @@ for num_s = order
     niak_write_csv_cell(file_qc,qc_report);
  end
     
+ function qc_report = sub_init_report(list_subject)
     
+    %% Initialize the QC report
+    qc_report = cell(length(list_subject)+1,6);
+    qc_report(2:end,1) = list_subject;
+    qc_report(1) = 'id_subject';
+    qc_report(1,2) = 'status';
+    qc_report(1,3) = 'anat';
+    qc_report(1,4) = 'comment_anat';
+    qc_report(1,5) = 'func';
+    qc_report(1,6) = 'comment_func';
+    qc_report(2:end,2:end) = repmat({''},[length(list_subject),5]);
+
+end   
