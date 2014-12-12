@@ -298,6 +298,10 @@ function [scales,score] = sub_msteps_optim(list_scales,scales,M,weights,N,score,
 scales = sort(scales);
 mask_scales = true([1 length(list_scales)]);
 mask_scales(ismember(list_scales,scales)) = 0;
+if ~any(mask_scales)
+    score = 0;
+    return
+end
 nb_scales = length(scales);
 flag_rep = true;
 ss_tot = sum(M(eye(size(M))>0).*weights);
