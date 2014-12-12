@@ -229,7 +229,7 @@ path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly 
 path_test_fir.reference = [path_test.target 'demoniak_glm_connectome'];
 path_test_fir.result    = path_test.result;
 path_logs = [path_test.result 'demoniak_glm_connectome' filesep 'logs'];
-pipe.demoniak_stability_rest = psom_pipeline2job(niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),path_logs);
+pipe.demoniak_glm_connectome = psom_pipeline2job(niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),path_logs);
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
