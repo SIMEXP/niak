@@ -40,7 +40,9 @@ if nargin < 2
     flag_vec = false;
 end
 [S,R] = niak_build_srup(tseries,flag_vec);
-T = sqrt(size(tseries,1)-2)*R(:)./sqrt(1-R(:).^2);
-pce(~isnan(T)) = 2*niak_cdf_t(-abs(T(~isnan(T))),size(tseries,1)-2);
-pce(isnan(T)) = 0;
-pce = reshape(pce,size(R));
+if nargout > 1
+    T = sqrt(size(tseries,1)-2)*R(:)./sqrt(1-R(:).^2);
+    pce(~isnan(T)) = 2*niak_cdf_t(-abs(T(~isnan(T))),size(tseries,1)-2);
+    pce(isnan(T)) = 0;
+    pce = reshape(pce,size(R));
+end
