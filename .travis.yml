@@ -21,7 +21,7 @@ install:
   - git clone https://github.com/SIMEXP/psom.git
   - mkdir -p /home/travis/build/SIMEXP/BCT
   - cd /home/travis/build/SIMEXP/BCT
-  - wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip?attredirects=0
+  - wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip
   - unzip BCT.zip
   - cd /home/travis
 
