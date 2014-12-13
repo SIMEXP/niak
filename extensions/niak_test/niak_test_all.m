@@ -1,8 +1,8 @@
-function [pipe,opt] = niak_test_all(path_test,opt)
+function [pipe,opt,status] = niak_test_all(path_test,opt)
 % Run all main tests available for NIAK
 %
 % SYNTAX:
-% [PIPELINE,OPT] = NIAK_TEST_ALL(PATH_TEST,OPT)
+% [PIPELINE,OPT,STATUS] = NIAK_TEST_ALL(PATH_TEST,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -30,6 +30,9 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 %
 % PIPELINE (structure) a formal description of the test pipeline. 
 %   See PSOM_RUN_PIPELINE.
+% OPT (structure) same as the input, updated
+% STATUS (integer) returns 0 if all tests pass, 1 if there are failures, and 
+%    [] if OPT.FLAG_TEST is true.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -240,5 +243,7 @@ pipe.glm_connectome_unit = psom_pipeline2job(niak_test_glm_connectome(path_test,
 
 %% Run the tests
 if ~opt.flag_test
-    psom_run_pipeline(pipe,opt.psom);
+    status = psom_run_pipeline(pipe,opt.psom);
+else 
+    status = [];
 end
