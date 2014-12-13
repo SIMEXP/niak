@@ -83,7 +83,7 @@ flag_miss = any(tab(:,1)==0)||any(tab(:,2)==0);
 if flag_diff    
     error('Some files are different in SOURCE and TARGET. See %s for more details.',out);        
 elseif flag_miss    
-    warning('All files in common were identical, both some files were unique to either SOURCE or TARGET. See %s for more details.',out);
+    warning('All files in common were identical, but some files were unique to either SOURCE or TARGET. See %s for more details.',out);
 else     
     fprintf('All files are identical.');
 end
