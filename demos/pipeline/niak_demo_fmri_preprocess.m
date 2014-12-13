@@ -122,11 +122,9 @@ end
 %% Setting up input files
 files_in.subject1.anat                = [path_demo 'anat_subject1' ext];
 files_in.subject1.fmri.session1.motor = [path_demo 'func_motor_subject1' ext];
-files_in.subject1.fmri.session1.rest  = [path_demo 'func_rest_subject1' ext];
         
 files_in.subject2.anat                = [path_demo 'anat_subject2' ext];
 files_in.subject2.fmri.session1.motor = [path_demo 'func_motor_subject2' ext];
-files_in.subject2.fmri.session2.rest  = [path_demo 'func_rest_subject2' ext];
         
 %% Build (and possibly run) the fmri_preprocess pipeline  
 [pipeline,opt_pipe] = niak_pipeline_fmri_preprocess(files_in,opt);

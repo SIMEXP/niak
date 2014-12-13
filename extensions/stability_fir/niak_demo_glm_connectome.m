@@ -77,13 +77,13 @@ files_du = struct();
 files_du.fmri.subject1a.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1a.session2.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1b.session1.motor = files_in.fmri.subject1.session1.motor;
-files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.rest;
-files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.rest;
+files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject2a.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session2.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2b.session1.motor = files_in.fmri.subject2.session1.motor;
-files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session2.rest;
-files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session2.rest;
+files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session1.motor;
 files_in = files_du;
 
 
@@ -107,7 +107,7 @@ files_in.model.individual.subject2d.intra_run.session1.motor.event = [gb_niak_pa
 %% GLM
 opt.fdr = 0.05; % The maximal false-discovery rate that is tolerated both for individual (single-seed) maps and whole-connectome discoveries, at each particular scale (multiple comparisons across scales are addressed via permutation testing)
 opt.fwe = 0.05; % The overall family-wise error, i.e. the probablity to have the observed number of discoveries, agregated across all scales, under the global null hypothesis of no association.
-opt.nb_samps = 10; % The number of samples in the permutation test. This number has to be multiplied by OPT.NB_BATCH below to get the effective number of samples
+opt.nb_samps = 3; % The number of samples in the permutation test. This number has to be multiplied by OPT.NB_BATCH below to get the effective number of samples
 opt.nb_batch = 2; % The permutation tests are separated into NB_BATCH independent batches, which can run on parallel if sufficient computational resources are available
 opt.flag_rand = false; % if the flag is false, the pipeline is deterministic. Otherwise, the random number generator is initialized based on the clock for each job.
 

@@ -97,37 +97,34 @@ if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     files_in = rmfield(opt.files_in,'fmri');
     [fmri_c,labels_f] = niak_fmri2cell(opt.files_in.fmri);
     for ee = 1:length(fmri_c)
-        if strcmp(labels_f(ee).run,'rest')
-            files_in.data.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
-        end
+        files_in.data.(labels_f(ee).subject).(labels_f(ee).session).(labels_f(ee).run) = fmri_c{ee};
     end
 else
     %% Grab the results from the NIAK fMRI preprocessing pipeline
     opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
     opt_g.type_files = 'rest'; % Specify to the grabber to prepare the files for the stability FIR pipeline
-    opt_g.filter.run = {'rest'}; % Just grab the "motor" runs
     files_in = niak_grab_fmri_preprocess(path_demo,opt_g); 
 end
 opt = rmfield(opt,'files_in');
 
 %% Options: grid scales
 if ~isfield(opt,'grid_scales')||isempty(opt.grid_scales)
-    opt.grid_scales = [2 5 10:10:40]'; 
+    opt.grid_scales = [5 10]'; 
 end
 
 %% Options: scales to generate stability maps & time series
 if ~isfield(opt,'scales_maps')||isempty(opt.scales_maps)
-    opt.scales_maps = [ 2 2 2 ; 5 5 5 ; 10 10 10; 30 30 30]; % The scales that will be used to generate the maps of brain clusters and stability
+    opt.scales_maps = [ 5 5 5 ; 10 10 10]; % The scales that will be used to generate the maps of brain clusters and stability
 end
 
 %% Options: number of bootstrap samples (individual stability)
 if ~isfield(opt,'stability_tseries')||~isfield(opt.stability_tseries,'nb_samps')||isempty(opt.stability_tseries.nb_samps)
-    opt.stability_tseries.nb_samps = 50;
+    opt.stability_tseries.nb_samps = 10;
 end
 
 %% Options: number of bootstrap samples (group stability)
 if ~isfield(opt,'stability_group')||~isfield(opt.stability_group,'nb_samps')||isempty(opt.stability_group.nb_samps)
-    opt.stability_group.nb_samps = 50; 
+    opt.stability_group.nb_samps = 10; 
 end
 
 %% Options: generate results at the indiviudal level

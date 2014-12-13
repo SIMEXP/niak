@@ -1,8 +1,8 @@
-function [pipe,opt] = niak_test_all(path_test,opt)
+function [pipe,opt,status] = niak_test_all(path_test,opt)
 % Run all main tests available for NIAK
 %
 % SYNTAX:
-% [PIPELINE,OPT] = NIAK_TEST_ALL(PATH_TEST,OPT)
+% [PIPELINE,OPT,STATUS] = NIAK_TEST_ALL(PATH_TEST,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -30,6 +30,9 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 %
 % PIPELINE (structure) a formal description of the test pipeline. 
 %   See PSOM_RUN_PIPELINE.
+% OPT (structure) same as the input, updated
+% STATUS (integer) returns 0 if all tests pass, 1 if there are failures, and 
+%    [] if OPT.FLAG_TEST is true.
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -193,45 +196,54 @@ opt_pipe.files_in = files_rf;
 path_test_rg.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_rg.reference = [path_test.target 'demoniak_region_growing'];
 path_test_rg.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_region_growing_demoniak(path_test_rg,opt_pipe),'rg_');
+path_logs = [path_test.result 'demoniak_region_growing' filesep 'logs'];
+pipe.demoniak_region_growing = psom_pipeline2job(niak_test_region_growing_demoniak(path_test_rg,opt_pipe),path_logs);
 
 %% Add the test of the connectome pipeline
 path_test_rg.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_rg.reference = [path_test.target 'demoniak_connectome'];
 path_test_rg.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_connectome_demoniak(path_test_rg,opt_pipe),'cc_');
+path_logs = [path_test.result 'demoniak_connectome' filesep 'logs'];
+pipe.demoniak_connectome = psom_pipeline2job(niak_test_connectome_demoniak(path_test_rg,opt_pipe),path_logs);
 
 %% Add the test of the stability_fir pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_stability_fir'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,opt_pipe),'fir_');
+path_logs = [path_test.result 'demoniak_stability_fir' filesep 'logs'];
+pipe.demoniak_stability_fir = psom_pipeline2job(niak_test_stability_fir_demoniak(path_test_fir,opt_pipe),path_logs);
 
 %% Add the test of the glm_fir pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_glm_fir'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),'glmfir_');
+path_logs = [path_test.result 'demoniak_glm_fir' filesep 'logs'];
+pipe.demoniak_glm_fir = psom_pipeline2job(niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),path_logs);
 
 %% Add the test of the stability_rest pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_stability_rest'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),'rest_');
+path_logs = [path_test.result 'demoniak_stability_rest' filesep 'logs'];
+pipe.demoniak_stability_rest = psom_pipeline2job(niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),path_logs);
 
 %% Add the test of the glm_connectome pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_glm_connectome'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),'glmconn_');
+path_logs = [path_test.result 'demoniak_glm_connectome' filesep 'logs'];
+pipe.demoniak_glm_connectome = psom_pipeline2job(niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),path_logs);
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
 opt_glm.flag_test = true;
 opt_glm.psom = opt.psom;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome(path_test,opt_glm),'glmu_');
+path_logs = [path_test filesep 'logs'];
+pipe.glm_connectome_unit = psom_pipeline2job(niak_test_glm_connectome(path_test,opt_glm),path_logs);
 
 %% Run the tests
 if ~opt.flag_test
-    psom_run_pipeline(pipe,opt.psom);
+    status = psom_run_pipeline(pipe,opt.psom);
+else 
+    status = [];
 end

@@ -106,13 +106,13 @@ files_du = struct();
 files_du.fmri.subject1a.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1a.session2.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1b.session1.motor = files_in.fmri.subject1.session1.motor;
-files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.rest;
-files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.rest;
+files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject2a.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session2.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2b.session1.motor = files_in.fmri.subject2.session1.motor;
-files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session2.rest;
-files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session2.rest;
+files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session1.motor;
 files_in = files_du;
 
 %% Now use the NIAK Cambridge s100 template twice 
@@ -151,8 +151,8 @@ opt.test.sub1_m_sub2.contrast.intercept = 0;
 opt.test.sub1_m_sub2.contrast.subject1  = 1;
 
 % The permutation tests
-opt.nb_samps = 100;
-opt.nb_batch = 3;
+opt.nb_samps = 3;
+opt.nb_batch = 2;
 
 %% Generate the pipeline
 opt = rmfield(opt,'files_in');

@@ -333,18 +333,20 @@ for num_s = 1:nb_subject
         %%%%%%%%
         %% QC %%
         %%%%%%%%
-        clear files_in_tmp files_out_tmp opt_tmp
-        name_job_qc          = cat(2,'qc_corsica_',subject,'_',run);
-        files_in_tmp.space   = pipeline.(name_job_sica).files_out.space;
-        files_in_tmp.time    = pipeline.(name_job_sica).files_out.time;
-        files_in_tmp.score   = files_sel;        
-        files_in_tmp.mask    = files_in.(subject).mask_brain;
-        files_out_tmp        = '';        
-        opt_tmp              = opt.qc_corsica;
-        opt_tmp.threshold    = opt.threshold;
-        opt_tmp.folder_out   = opt.folder_sica;
-        pipeline = psom_add_job(pipeline,name_job_qc,'niak_brick_qc_corsica',files_in_tmp,files_out_tmp,opt_tmp);
-        files_out.qc_corsica.(subject){num_r} = pipeline.(name_job_qc).files_out;
+        if ~flag_skip
+            clear files_in_tmp files_out_tmp opt_tmp
+            name_job_qc          = cat(2,'qc_corsica_',subject,'_',run);
+            files_in_tmp.space   = pipeline.(name_job_sica).files_out.space;
+            files_in_tmp.time    = pipeline.(name_job_sica).files_out.time;
+            files_in_tmp.score   = files_sel;        
+            files_in_tmp.mask    = files_in.(subject).mask_brain;
+            files_out_tmp        = '';        
+            opt_tmp              = opt.qc_corsica;
+            opt_tmp.threshold    = opt.threshold;
+            opt_tmp.folder_out   = opt.folder_sica;
+            pipeline = psom_add_job(pipeline,name_job_qc,'niak_brick_qc_corsica',files_in_tmp,files_out_tmp,opt_tmp);
+            files_out.qc_corsica.(subject){num_r} = pipeline.(name_job_qc).files_out;
+        end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% COMPONENT SUPPRESSION %%

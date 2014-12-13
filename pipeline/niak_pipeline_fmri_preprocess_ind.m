@@ -290,7 +290,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           from 0 to 1).
 %
 %       FLAG_SKIP
-%           (boolean, default false) if FLAG_SKIP is true, the brick does 
+%           (boolean, default true) if FLAG_SKIP is true, the brick does 
 %           not do anything, just copying the inputs to the outputs (the 
 %           ICA decomposition will still be generated and the component 
 %           selection will still be generated for quality control purposes)
@@ -439,6 +439,8 @@ list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' 
 list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
+
+opt.corsica = psom_struct_defaults(opt.corsica,{'flag_skip'},{true},false); % Skip CORSICA by default
 
 opt.template = psom_struct_defaults(opt.template, ...
                { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...

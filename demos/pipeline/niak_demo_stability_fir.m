@@ -121,9 +121,9 @@ opt.name_baseline  = 'rest';
 opt.grid_scales = [5 10]'; % Search for stable clusters in the range 10 to 500 
 opt.scales_maps = [  5  5  5  ; ...   % The scales that will be used to generate the maps of brain clusters and stability. 
                     10 10 10  ];                   
-opt.stability_fir.nb_samps = 20;     % Number of bootstrap samples at the individual level. 100: the CI on indidividual stability is +/-0.1
+opt.stability_fir.nb_samps = 10;     % Number of bootstrap samples at the individual level. 100: the CI on indidividual stability is +/-0.1
 opt.stability_fir.std_noise = 0;     % The standard deviation of the judo noise. The value 0 will not use judo noise. 
-opt.stability_group.nb_samps = 20;   % Number of bootstrap samples at the group level. 500: the CI on group stability is +/-0.05
+opt.stability_group.nb_samps = 10;   % Number of bootstrap samples at the group level. 500: the CI on group stability is +/-0.05
 opt.stability_group.min_subject = 2; % Lower the min number of subject ... there are only two subjects in the demo_niak. 
 
 %% FIR estimation

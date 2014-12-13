@@ -209,6 +209,9 @@ opt_visu.type_color = 'jet';
 [tmp,order] = sort(score_max,'descend');
 order = order(:)';
 
+hspatial = figure;
+htime = figure;
+
 for num_c = order        
     
     %% Score title
@@ -233,16 +236,16 @@ for num_c = order
     end
     
     %% Spatial distribution
-    hf = figure;
+    set(0, 'CurrentFigure', hspatial);
     subplot(1,1,1)
     vol_c = niak_correct_vol(vol_space(:,:,:,num_c),mask);
     niak_montage(abs(vol_c),opt_visu);    
     title(sprintf('Component %i %s',num_c,title_score));        
     print(files_out,'-dpdf','-append');    
-    close(hf)
+    clf reset
     
     %% temporal distribution
-    hf = figure;
+    set(0, 'CurrentFigure', htime);
     nt = size(tseries,1);
     subplot(3,1,1)
     
@@ -284,9 +287,10 @@ for num_c = order
         niak_visu_wft(tseries(:,num_c),1);
     end    
     print(files_out,'-dpdf','-append');
-    close(hf)    
+    clf reset
 end
-
+close(hspatial)
+close(htime)
 if flag_verbose
     fprintf('Done!\n');
 end
