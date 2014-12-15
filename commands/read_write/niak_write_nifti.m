@@ -109,9 +109,11 @@ if ~isfield(hdr.details,'dim')
     hdr.details.dim = [ndims(vol) ones(1,4) 1 0 0];    
 end
 if ndims(vol)==2
-    hdr.details.dim(2:3) = size(vol);    
+    hdr.details.dim(2:3) = size(vol); 
+    hdr.details.dim(4:5) = 1;
 elseif ndims(vol)==3    
     hdr.details.dim(2:4) = size(vol);    
+    hdr.details.dim(5) = 1;
 elseif ndims(vol)==4
     hdr.details.dim(2:5) = size(vol);       
 else
