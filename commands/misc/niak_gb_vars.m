@@ -78,9 +78,9 @@ gb_niak_ps2pdf = 'ps2pdf';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-gb_niak_version = '0.12.19'; 
+gb_niak_version = '0.12.20'; 
 gb_niak_url_test_niak = 'http://www.nitrc.org/frs/download.php/7241/data_test_niak_mnc1.zip';
-gb_niak_url_target_niak = '';
+gb_niak_url_target_niak = 'http://www.nitrc.org/frs/download.php/7256/target_test_niak_mnc1-0.12.20.zip';
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION','builtin')    

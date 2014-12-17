@@ -247,10 +247,10 @@ files.quality_control.group_coregistration.func.mean_average = [path_qc 'group_c
 files.quality_control.group_coregistration.func.mean_std     = [path_qc 'group_coregistration' filesep 'func_mean_std_stereonl' ext];
 
 %% Grab the results of quality control -- CORSICA
-files.quality_control.group_corsica.pdf  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.pdf'];
-files.quality_control.group_corsica.csv  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.csv'];
-files.quality_control.group_corsica.mean = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_mean' ext];
-files.quality_control.group_corsica.std  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_std' ext];
+% files.quality_control.group_corsica.pdf  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.pdf'];  % Commented out because this is an optional output
+% files.quality_control.group_corsica.csv  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.csv'];  % Commented out because this is an optional output
+% files.quality_control.group_corsica.mean = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_mean' ext]; % Commented out because this is an optional output
+% files.quality_control.group_corsica.std  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_std' ext];  % Commented out because this is an optional output 
 
 %% Grab the results of quality control -- MOTION
 files.quality_control.group_motion.between_run.csv = [path_qc 'group_motion' filesep 'qc_coregister_between_runs_group.csv'];
@@ -285,8 +285,8 @@ for num_s = 1:length(list_subject)
             run = list_run{num_r};
             
             % CORSICA
-            files.quality_control.individual.(subject).corsica.pdf.(session).(run)  = [path_qc subject filesep 'corsica' filesep 'fmri_' subject '_' session '_' run '_cor_sica_space_qc_corsica.pdf'];
-            files.quality_control.individual.(subject).corsica.var.(session).(run)  = [path_qc subject filesep 'corsica' filesep 'qc_corsica_var_' subject '_' session '_' run '_funcstereonl' ext];
+            % files.quality_control.individual.(subject).corsica.pdf.(session).(run)  = [path_qc subject filesep 'corsica' filesep 'fmri_' subject '_' session '_' run '_cor_sica_space_qc_corsica.pdf']; % Commented out because this is an optional output
+            % files.quality_control.individual.(subject).corsica.var.(session).(run)  = [path_qc subject filesep 'corsica' filesep 'qc_corsica_var_' subject '_' session '_' run '_funcstereonl' ext]; % Commented out because this is an optional output
             
             % CONFOUNDS
             for num_c = 1:length(list_conf)
