@@ -1,33 +1,14 @@
 function ind = niak_sub2ind_3d(siz,subx,suby,subz)
 % Convert 3D coordinates into linear indices
 %
-% SYNTAX :
-% IND = NIAK_SUB2IND_3D(SIZ,SUB)
+% IND = NIAK_SUB2IND_3D(SIZ,SUBX,SUBY,SUBZ)
 %
-% _________________________________________________________________________
-% INPUTS :
-%
-% SIZ
-%       (vector 1*3) the size of the 3D array
-%
-% SUBX
-%       (vector N*1) SUBX(M) is the X coordinate of the Mth element
-%
-% SUBY
-%       (vector N*1) SUBY(M) is the Y coordinate of the Mth element
-%
-% SUBZ
-%       (vector N*1) SUBZ(M) is the Z coordinate of the Mth element
-%
-% _________________________________________________________________________
-% OUTPUTS :
-%
-% IND
-%       (vector N*1) IND(M) is the linear index corresponding to 
+% SIZ  (vector 1*3) the size of the 3D array 
+% SUBX (vector N*1) SUBX(M) is the X coordinate of the Mth element
+% SUBY (vector N*1) SUBY(M) is the Y coordinate of the Mth element
+% SUBZ (vector N*1) SUBZ(M) is the Z coordinate of the Mth element
+% IND  (vector N*1) IND(M) is the linear index corresponding to 
 %       [SUBX(M) SUBY(M) SUBZ(M)]
-%
-% _________________________________________________________________________
-% COMMENTS : 
 %
 % This implementation of the classic matlab SUB2IND is markedly faster
 % because it notably avoids to check that the coordinates are valid (i.e. 
@@ -36,11 +17,14 @@ function ind = niak_sub2ind_3d(siz,subx,suby,subz)
 % SUBX can also be a M*3 array. In that case, the first column corresponds
 % to SUBX, the second to SUBY and the third to SUBZ.
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
-% See licensing information in the code.
-% Keywords : indices, matlab
+% Copyright (c) Pierre Bellec, See licensing information in the code.
+% Maintainer : pierre.bellec@criugm.qc.ca
 
+% Montreal Neurological Institute, 2008-2010.
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2014
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
