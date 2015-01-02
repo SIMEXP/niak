@@ -6,7 +6,7 @@ function [results,opt] = niak_glm_multisite(model,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-% MODELS (multiple models can be provided)
+% MODEL (multiple models can be provided)
 %   (structure) with the following fields:
 %
 %   Y
@@ -77,9 +77,30 @@ function [results,opt] = niak_glm_multisite(model,opt)
 %   Stefan J. Kiebel  &  Thomas E. Nichols. Springer, 2007.
 %   Chapter 7: "The general linear model", S.J. Kiebel, A.P. Holmes.
 %
+% On the METAL approach to combine multisite statistics:
+%
+% Cristen J. Willer, Yun Li and Gonçalo R. Abecasis. METAL: fast and efficient 
+% meta-analysis of genomewide association scans. Bioinformatics, application note,
+% Vol. 26 no. 17 2010, pages 2190–2191 doi:10.1093/bioinformatics/btq340
+%
 % _________________________________________________________________________
 % COMMENTS:
 %
+% If OPT.MULTISITE is used, there should not be intercepts in the model. Those are 
+% automatically added to the model. 
+%
+% _________________________________________________________________________
+% EXAMPLE:
+%
+%  model = struct();
+%  nb_sites = 7;
+%  nb_subject = 5;
+%  model.x = randn(nb_subject*nb_sites,2);
+%  model.y = randn(nb_subject*nb_sites,100000);
+%  model.c = [1;0];
+%  opt.multisite = repmat(1:nb_sites,[nb_subject 1]);
+%  opt.multisite = opt.multisite(:);
+%  res = niak_glm_multisite(model,opt);
 % Copyright (c) Christian L. Dansereau, Pierre Bellec
 % Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2014.
 % Maintainer : pierre.bellec@criugm.qc.ca
@@ -111,14 +132,6 @@ end
 list_fields    = { 'flag_verbose', 'test' , 'multisite'};
 list_defaults  = {  true         , 'ttest', []         };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
-
-% y = model.y;
-% x = model.x;
-% [N,S] = size(y);
-% K = size(x,2);
-% if size(x,1)~=N
-%     error('X should have the same number of rows as Y');
-% end
   
 if ~isempty(opt.multisite) && size(model,2)<2
     
@@ -132,21 +145,16 @@ if ~isempty(opt.multisite) && size(model,2)<2
         site = list_site(ss);
         mask_site = (opt.multisite == site);
 
-        x1 = model.x(mask_site,:);
-        %% Normalize
+        x1 = model.x(mask_site,:);        
         x1 = niak_normalize_tseries(x1,'mean');
         x1 = [ones(size(x1,1),1),x1]; % add intercept;
         c  = model.c;
         c = [0;c];
-
-        %if(sum(x1(:,2)==x1(:,4))/size(x1,1)) < 1 % to prevend degenerated model
-            
-            k=k+1;
-            multisite.model(k).c = c;
-            multisite.model(k).x = x1;
-            multisite.model(k).y = model.y(mask_site,:);
-            
-        %end
+          
+        k=k+1;
+        multisite.model(k).c = c;
+        multisite.model(k).x = x1;
+        multisite.model(k).y = model.y(mask_site,:);
 
     end
     model = multisite.model;
@@ -165,33 +173,29 @@ for ss = 1:size(model,2)
     [multisite.results(ss), opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
 end
        
-    if size(model,2)>1
-        
-        eff = zeros(size(multisite.results(ss).eff));
-        std_eff = zeros(size(multisite.results(ss).std_eff));
+if size(model,2)>1
+    
+    eff = zeros(size(multisite.results(ss).eff));
+    std_eff = zeros(size(multisite.results(ss).std_eff));
 
-        for ss = 1:size(model,2)
-            eff = eff + (multisite.results(ss).eff./(multisite.results(ss).std_eff).^2);
-            std_eff = std_eff + (1./(multisite.results(ss).std_eff).^2);
-        end
-
-        %% Multisite stats
-        eff     = eff ./ std_eff;
-        std_eff = sqrt(1./std_eff);
-        ttest   = eff./std_eff;
-        pce     = 2*(1-normcdf(abs(ttest)));
-        
-        results.ttest   = ttest;
-        results.pce     = pce;
-        results.eff     = eff;
-        results.std_eff = std_eff;
-        
-    else
-        %% Single site
-        results = multisite.results;
+    for ss = 1:size(model,2)
+        eff = eff + (multisite.results(ss).eff./(multisite.results(ss).std_eff).^2);
+        std_eff = std_eff + (1./(multisite.results(ss).std_eff).^2);
     end
-    
-    
-    results.single_site = multisite;
-   
 
+    %% Multisite stats
+    eff     = eff ./ std_eff;
+    std_eff = sqrt(1./std_eff);
+    ttest   = eff./std_eff;
+    pce     = 2*(1-normcdf(abs(ttest)));
+    
+    results.ttest   = ttest;
+    results.pce     = pce;
+    results.eff     = eff;
+    results.std_eff = std_eff;
+    
+else
+    %% Single site
+    results = multisite.results;
+end
+results.single_site = multisite;
