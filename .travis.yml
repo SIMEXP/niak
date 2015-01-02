@@ -1,8 +1,8 @@
 before_install:
   # Add the backports to the sources
+  - sudo apt-get update
   - sudo apt-get install python-software-properties
   - sudo apt-add-repository ppa:octave/stable -y
-  - sudo apt-get update
   - sudo apt-get install octave
 
 install:
