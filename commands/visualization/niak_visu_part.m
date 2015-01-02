@@ -23,7 +23,8 @@ function [] = niak_visu_part(part,opt)
 %           (string, default 'jet') the colormap used to display the clusters 
 %           (options: 'jet', 'hotcold' or 'none').
 %           If map is 'none', the current colormap is used.
-%           'jet': same as matlab's jet, except that zero is mapped to white.
+%           'jet': matlab's jet
+%           'jet_white': same as matlab's jet, except that zero is mapped to white.
 %
 %       FLAG_LABELS
 %           (boolean, default false) If FLAG_LABELS is true, labels of the
@@ -94,6 +95,9 @@ end
 switch type_map
     case 'jet'
         coul_masks = jet(nb_clusters*10);
+        colormap(coul_masks);
+    case 'jet_white'
+        coul_masks = jet(nb_clusters*10);
         for num_u = 1:(nb_clusters+1)
             if num_u==1
                 coul_masks(1:5,:) = repmat([1 1 1],[5 1]);
@@ -103,7 +107,6 @@ switch type_map
                 coul_masks((6+(num_u-2)*10):(5+(num_u-1)*10),:) = repmat(coul_masks((num_u-1)*10,:),[10 1]);               
             end
         end
-        size(coul_masks)
         colormap(coul_masks);
     case 'hotcold'
         c1 = hot(128);

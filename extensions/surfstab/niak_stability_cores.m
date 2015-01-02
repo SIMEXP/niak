@@ -1,7 +1,7 @@
 function [res,opt] = niak_stability_cores(data,part,opt)
 % Build stable cores and stability maps based on an a priori partition
 %
-% SYNTAX: RES = NIAK_STABILITY_SCORES(DATA,PART,OPT)
+% SYNTAX: RES = NIAK_STABILITY_CORES(DATA,PART,OPT)
 %
 % DATA (array NxV) with N the number of features and V the number of units.
 % PART (array Vx1) where V is the number of units and K is the number of clusters.
