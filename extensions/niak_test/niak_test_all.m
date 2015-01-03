@@ -23,7 +23,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   been generated (see OPT.FLAG_TARGET below).
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
 %   argument of PSOM_RUN_PIPELINE. Note that the field PSOM.PATH_LOGS will be 
-%   set up by the pipeline.
+%   set up by the pipeline. By default OPT.PSOM.FLAG_PAUSE is false (do 
+%   not wait for the user to confirm starting the tests).
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -93,6 +94,10 @@ end
 opt = psom_struct_defaults(opt, ...
       {'flag_target' , 'flag_test', 'psom' }, ...
       {false         , false      , struct });
+
+if ~isfield(opt.psom,'flag_pause')
+    opt.psom.flag_pause = false;
+end
 
 %% Check the input paths
 if nargin < 1
