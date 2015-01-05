@@ -350,6 +350,7 @@ for num_c = 0:nb_clust1
         end
         if ~ischar(files_out.subcluster)
             hdr.file_name = files_out.subcluster{num_c};
+            niak_write_vol(hdr,vol_sub);
         end
 
         %% SUB-TTEST
@@ -384,7 +385,7 @@ for num_c = 0:nb_clust1
             end
             save(files_out.subfir{num_c},'test_fir','test_diff');
         end
-        niak_write_vol(hdr,vol_sub);
+        
         if flag_verbose
             fprintf('Cluster number %i was decomposed into %i subclusters : %s\n',num_c,length(ind_sub{num_c}),files_out.subcluster{num_c});
         end
