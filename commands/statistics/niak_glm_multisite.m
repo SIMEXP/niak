@@ -86,8 +86,8 @@ function [results,opt] = niak_glm_multisite(model,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
-% If OPT.MULTISITE is used, there should not be intercepts in the model. Those are 
-% automatically added to the model. 
+% For multisite analysis, an intercept is automatically added to the intra-site model,
+% if not already in the model.
 %
 % _________________________________________________________________________
 % EXAMPLE:
@@ -129,8 +129,8 @@ if (nargin<2)||(isempty(opt))
 end
 
 %% Default options
-list_fields    = { 'flag_verbose', 'test' , 'multisite'};
-list_defaults  = {  true         , 'ttest', []         };
+list_fields    = { 'test'  , 'flag_verbose', 'multisite'};
+list_defaults  = { 'ttest' , true         , []         };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
   
 if ~isempty(opt.multisite) && size(model,2)<2
@@ -146,10 +146,14 @@ if ~isempty(opt.multisite) && size(model,2)<2
         mask_site = (opt.multisite == site);
 
         x1 = model.x(mask_site,:);        
-        x1 = niak_normalize_tseries(x1,'mean');
-        x1 = [ones(size(x1,1),1),x1]; % add intercept;
-        c  = model.c;
-        c = [0;c];
+        mask_intercept = min(x1==repmat(x1(1,:),[size(x1,1) 1]),[],1)>0;
+        x1(:,~mask_intercept) = niak_normalize_tseries(x1(:,~mask_intercept),'mean');
+        % Check if there is already an intercept, if not add one
+        if ~any(mask_intercept)
+            x1 = [ones(size(x1,1),1),x1]; % add intercept;
+            c = [0;c];
+        end
+        c  = model.c;        
           
         k=k+1;
         multisite.model(k).c = c;
@@ -166,6 +170,7 @@ for ss = 1:size(model,2)
         fprintf('Estimate model site %i ...\n',ss)
     end
     opt_glm_gr = rmfield(opt,{'flag_verbose','multisite'});
+
     %% Estimate the group-level model -- single site data
     y_x_c.x = model(ss).x;
     y_x_c.y = model(ss).y;

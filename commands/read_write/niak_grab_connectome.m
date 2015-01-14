@@ -66,7 +66,7 @@ files = struct;
 %% Grab connectomes
 path_conn = [path_data 'connectomes' filesep];
 if psom_exist(path_conn)
-    list_conn = dir([path_conn 'connectome_basc_*.mat']);
+    list_conn = dir([path_conn 'connectome_rois_*.mat']);
     list_conn = {list_conn.name};
     ind_start = length('connectome_rois_')+1;
     for num_c = 1:length(list_conn)

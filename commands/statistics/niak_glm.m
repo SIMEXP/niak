@@ -159,7 +159,7 @@ if isfield(opt,'test')
             if ~isfield(model,'c')
                 error('Please specify MODEL.C for performing a t-test')
             end
-            c = model.c;
+            c = model.c(:);
             std_e = sqrt(sum(e.^2,1)/(N-K));        % Standard deviation of the noise
 
             d     = sqrt(c'*(x'*x)^(-1)*c);         % Intermediate result for the t-test
@@ -182,7 +182,7 @@ if isfield(opt,'test')
             if ~isfield(model,'c')
                 error('Please specify MODEL.C for performing a F test')
             end
-            c = model.c;
+            c = model.c(:);
             s  = sum(e.^2,1);  % Estimate of the residual sum-of-square of the full model
             x0 = x(:,~model.c);
             p0 = size(x0,2);
@@ -223,6 +223,6 @@ if opt.flag_eff
     if ~isfield(model,'c')
         error('Please specify MODEL.C to estimate the effects')
     end        
-    eff = (model.c)'*beta;                          % The effect matrix
+    eff = (model.c(:))'*beta;                          % The effect matrix
     results.eff = eff; % Beta
 end
