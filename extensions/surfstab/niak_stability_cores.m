@@ -21,6 +21,8 @@ function [res,opt] = niak_stability_cores(data,part,opt)
 %                  NIAK_BOOTSTRAP_TSERIES for default options.
 %      window    : OPT.LENGTH is the length of the window, expressed in time points
 %                  (default 60% of the # of features).
+%      scenario  : OPT.TYPE is the type of simulation. Refer to
+%                  niak_simus_scenario for details on the options
 %   TYPE_CENTER (string, default 'median') how to extract cluster signal. Available
 %      options: 'mean' and 'median'
 %   NB_ITER (scalar, default 1) Number of max iterations. The algorithm stops as soon
@@ -117,6 +119,9 @@ switch opt.sampling.type
         opt.sampling.opt = psom_struct_defaults(opt.sampling.opt, ...
             { 'length'     }, ...
             { ceil(0.6*nt) });
+    case 'scenario'
+    otherwise
+        error('%s is not an implemented method of sampling',opt.sampling.type)
 end
 
 % See if choices make sense
@@ -218,6 +223,8 @@ for ss = 1:opt.nb_samps
         case 'window'
             ind = ss:min(ss+opt_r-1,nt);
             data_r = data(ind,:);
+        case 'scenario'
+            data_r = niak_simus_scenario(opt.sampling.opt);
     end
     
     % Build correlation maps    
