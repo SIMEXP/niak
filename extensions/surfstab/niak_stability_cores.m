@@ -239,22 +239,20 @@ for ss = 1:opt.nb_samps
         if opt.flag_target
             if flag_rois
                 ttarget = niak_build_tseries(data_r,mask_rois,opt_t);
-                maps_seed = niak_fisher(corr(ttarget(:,mask_target_rois),tseed));
-                maps_all = niak_fisher(corr(ttarget(:,mask_target_rois),data_r));
-                rmap = niak_fisher(corr(maps_all,maps_seed));
+                maps_seed = corr(ttarget(:,mask_target_rois),tseed);
+                maps_all = corr(ttarget(:,mask_target_rois),data_r);
+                rmap = corr(maps_all,maps_seed);
             else
-                maps_seed = niak_fisher(corr(data_r(:,mask_target),tseed));
-                maps_all = niak_fisher(corr(data_r(:,mask_target),data_r));
-                rmap = niak_fisher(corr(maps_all,maps_seed));
-                rmap(isnan(rmap)) = -Inf;
+                maps_seed = corr(data_r(:,mask_target),tseed);
+                maps_all = corr(data_r(:,mask_target),data_r);
+                rmap = corr(maps_all,maps_seed);
             end
         elseif opt.flag_focus
-            maps_seed = niak_fisher(corr(data_r(:,mask_reference), tseed));
-            maps_reference = niak_fisher(corr(data_r(:,mask_reference), data_r(:,mask_roi)));
-            rmap = niak_fisher(corr(maps_reference,maps_seed));
+            maps_seed = corr(data_r(:,mask_reference), tseed);
+            maps_reference = corr(data_r(:,mask_reference), data_r(:,mask_roi));
+            rmap = corr(maps_reference,maps_seed);
         else
             rmap = niak_fisher(corr(data_r,tseed));
-            rmap(isnan(rmap)) = -Inf;
         end
         [val,part_r2] = max(rmap,[],2);
         changes(ss,ii) = sum(part_r~=part_r2)/length(part_r);
