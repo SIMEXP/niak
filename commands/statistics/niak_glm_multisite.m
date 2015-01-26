@@ -149,11 +149,11 @@ if ~isempty(opt.multisite) && size(model,2)<2
         mask_intercept = min(x1==repmat(x1(1,:),[size(x1,1) 1]),[],1)>0;
         x1(:,~mask_intercept) = niak_normalize_tseries(x1(:,~mask_intercept),'mean');
         % Check if there is already an intercept, if not add one
+        c  = model.c;                
         if ~any(mask_intercept)
             x1 = [ones(size(x1,1),1),x1]; % add intercept;
             c = [0;c];
         end
-        c  = model.c;        
           
         k=k+1;
         multisite.model(k).c = c;
