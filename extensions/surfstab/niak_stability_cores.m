@@ -141,7 +141,7 @@ if opt.flag_target
     else
         % There is a problem
         error(['You want to run the flag_target option but did not supply ',...
-               'the correct number of columns in part. There need to be 2',...
+               'the correct number of columns in part. There need to be 2 ',...
                'columns in part or 3 if you want the ROI option as well!']);
     end
 elseif opt.flag_focus
@@ -246,6 +246,7 @@ for ss = 1:opt.nb_samps
                 maps_seed = niak_fisher(corr(data_r(:,mask_target),tseed));
                 maps_all = niak_fisher(corr(data_r(:,mask_target),data_r));
                 rmap = niak_fisher(corr(maps_all,maps_seed));
+                rmap(isnan(rmap)) = -Inf;
             end
         elseif opt.flag_focus
             maps_seed = niak_fisher(corr(data_r(:,mask_reference), tseed));
