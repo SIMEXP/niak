@@ -159,7 +159,7 @@ if ischar(in.fmri)
     in.fmri = {in.fmri};
 end
 [FDhdr,vol] = niak_read_vol(in.fmri{1});
-    
+[~,~,ext] = niak_fileparts(in.fmri{1}); 
 % Make header for 3D files
 TDhdr = FDhdr;
 tmp = size(vol);
