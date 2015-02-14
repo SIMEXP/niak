@@ -1,6 +1,19 @@
 # fMRI preprocessing
 
-This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline is invoked by `niak_pipeline_fmri_preprocess`. 
+This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI:
+ * Slice timing correction.
+ * Estimation of rigid-body motion in fMRI runs, both within- and between sessions.
+ * Linear or non-linear coregistration of the structural scan in stereotaxic space.
+ * Individual coregistration between structural and functional scans.
+ * Resampling of functional scans in stereotaxic space.
+ * Scrubbing.
+ * regression of confounds (average of white matter and CSF, motion parameters, COMPCOR).
+ * ICA-based correction of structured noise.
+ * Spatial smooting.
+>![The fMRI preprocessing workflow](https://github.com/SIMEXP/niak_manual/blob/master/user_guide_dev/figures/fig_flowchart_fmri_preprocess/fig_flowchart_fmri_preprocess.png)
+
+# Syntax
+The pipeline is invoked by `niak_pipeline_fmri_preprocess`. 
 The argument `files_in` is a structure describing how the dataset is organized, and `opt` is a structure describing the options of the pipeline. The code of [niak_template_fmri_preprocess](https://github.com/SIMEXP/niak/blob/master/template/niak_template_fmri_preprocess.m) would be a good starting point to write your own script. 
 ```matlab
  niak_pipeline_fmri_preprocess(files_in,opt) 
