@@ -1,9 +1,11 @@
 # fMRI preprocessing
 
+## Overview
+
 This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI: (1) Slice timing correction; (2) Estimation of rigid-body motion in fMRI runs, both within- and between sessions; (3) Linear or non-linear coregistration of the structural scan in stereotaxic space; (4) Individual coregistration between structural and functional scans; (5) Resampling of functional scans in stereotaxic space; (6) Scrubbing; (7) regression of confounds (average of white matter and CSF, motion parameters, COMPCOR); (8) ICA-based correction of structured noise (CORSICA); (9) Spatial smooting.
 >![The fMRI preprocessing workflow](https://github.com/SIMEXP/niak_manual/blob/master/user_guide_dev/figures/fig_flowchart_fmri_preprocess/fig_flowchart_fmri_preprocess.png)
 
-# Syntax
+## Syntax
 The pipeline is invoked by `niak_pipeline_fmri_preprocess`. 
 The argument `files_in` is a structure describing how the dataset is organized, and `opt` is a structure describing the options of the pipeline. The code of [niak_template_fmri_preprocess](https://github.com/SIMEXP/niak/blob/master/template/niak_template_fmri_preprocess.m) would be a good starting point to write your own script. 
 ```matlab
@@ -31,8 +33,6 @@ files_in.subject1.fmri.session1.rest = ...
 Labels for subjects, sessions and runs are arbitrary, however Octave and Matlab impose some restrictions. Please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'. 
 >None of these restrictions apply on the naming convention of the raw files, just to the labels that are used to build the structure files_in in Matlab/Octave.
 
-# Pipeline options
-
 ## General
 
 The option `opt.folder_out` is used to specify the folder where the results of the pipeline will be saved. The pipeline manager will create but also delete many files and subfolders in that location. 
@@ -50,8 +50,10 @@ Possible values are:
  * `'all'`: all possible outputs are generated at each stage of the pipeline.
 
 ## Slice timing correction
+In echo-planar imaging (EPI), the most common form of functional MRI sequences, different slices are acquired at different times. This can confound task-based regression analysis (especially with event-related designs), as well as connectivity analysis that rely on the correlation of fMRI time series located in different parts of the brain. 
+>![Slice timing correction](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_slice_timing.jpg)
 
-This step is performed [niak_brick_slice_timing](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_slice_timing.m), and its options can be set using `opt.slice_timing`. The full list of option is available through the Matlab/Octave's `help` command. This processing step is performing a temporal interpolation for each slice of each volume to a time of reference corresponding to one slice of reference of the volume. Specifying the parameters for slice timing correction essentially involves to specify the slice timing scheme (sequential or interleaved, ascending or descending), the scanner type (Siemens has sometimes a different way of defining interleaved) and the delay in TR. Note that the slice-timing correction is changing the timing of the acquisition. For this reason, a companion `_extra.mat` file is created for each fMRI dataset. This .mat file contains (amongst other things) a variable time_frames, with the time associated with each time frame (in the same unit as the TR, 
+The slice timing correction is performed with [niak_brick_slice_timing](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_slice_timing.m), and its options can be set in the pipeline using `opt.slice_timing`. The full list of option is available through the Matlab/Octave's `help` command. This processing step is performing a temporal interpolation for each slice of each volume to a time of reference corresponding to one slice of reference of the volume. Specifying the parameters for slice timing correction essentially involves to specify the slice timing scheme (sequential or interleaved, ascending or descending), the scanner type (Siemens has sometimes a different way of defining interleaved) and the delay in TR. Note that the slice-timing correction is changing the timing of the acquisition. For this reason, a companion `_extra.mat` file is created for each fMRI dataset. This .mat file contains (amongst other things) a variable time_frames, with the time associated with each time frame (in the same unit as the TR, 
 typically seconds).
 ```matlab
  % Slice timing order. Available options: 
