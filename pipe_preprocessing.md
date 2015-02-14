@@ -1,15 +1,6 @@
 # fMRI preprocessing
 
-This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI:
- * Slice timing correction.
- * Estimation of rigid-body motion in fMRI runs, both within- and between sessions.
- * Linear or non-linear coregistration of the structural scan in stereotaxic space.
- * Individual coregistration between structural and functional scans.
- * Resampling of functional scans in stereotaxic space.
- * Scrubbing.
- * regression of confounds (average of white matter and CSF, motion parameters, COMPCOR).
- * ICA-based correction of structured noise.
- * Spatial smooting.
+This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI: (1) Slice timing correction; (2) Estimation of rigid-body motion in fMRI runs, both within- and between sessions; (3) Linear or non-linear coregistration of the structural scan in stereotaxic space; (4) Individual coregistration between structural and functional scans; (5) Resampling of functional scans in stereotaxic space; (6) Scrubbing; (7) regression of confounds (average of white matter and CSF, motion parameters, COMPCOR); (8) ICA-based correction of structured noise (CORSICA); (9) Spatial smooting.
 >![The fMRI preprocessing workflow](https://github.com/SIMEXP/niak_manual/blob/master/user_guide_dev/figures/fig_flowchart_fmri_preprocess/fig_flowchart_fmri_preprocess.png)
 
 # Syntax
