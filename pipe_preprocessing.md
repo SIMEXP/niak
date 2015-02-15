@@ -32,7 +32,7 @@ files_in.subject1.fmri.session1.rest = ...
 Labels for subjects, sessions and runs are arbitrary, however Octave and Matlab impose some restrictions. Please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'. 
 >None of these restrictions apply on the naming convention of the raw files, just to the labels that are used to build the structure files_in in Matlab/Octave.
 
-## General
+## General options
 
 The option `opt.folder_out` is used to specify the folder where the results of the pipeline will be saved. The pipeline manager will create but also delete many files and subfolders in that location. 
 ```matlab
@@ -119,6 +119,10 @@ A complete list of options for this brick can be found in the help of [niak_pipe
 ```
 
 ## T1 normalization 
+
+To be able to automatically compare features of a given brain areas in the brain of many subjects, each individual brain is coregistered into a common stereotaxic space. By default, NIAK uses the MNI template, which is the average of 152 young healthy subjects. The coregistration is done first by linear transformation, i.e. translation, rotation and scaling, then a non-linear deformation is applied to correct for local differences in the volume and shape of brain areas. 
+>![Within-run motion estimation](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_stereonl.jpg
+)
 
 This step of the analysis is performed by [niak_brick_t1_preprocess](https://github.com/SIMEXP/niak/blob/master/bricks/t1_processing/niak_brick_t1_preprocess.m), and its options can be set using `opt.t1_preprocess`. This brick essentially implements the method for non-linear coregistration of a T1 scan in stereotaxic space found in the [CIVET pipeline](http://www.bic.mni.mcgill.ca/users/yaddab/Yasser-HBM2006-Poster.pdf). 
 > * Non-uniformity correction of the T1 image; 
