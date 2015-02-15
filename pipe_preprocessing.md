@@ -100,6 +100,10 @@ opt.slice_timing.flag_center      = 0;
 
 ## Motion estimation
 
+The motion of subjects over long period of time can cause severe misrealignement between fMRI brain volumes. Even small motion (say, less than one millimeter in translation or 1 degree in rotation) can cause substantial motion artefacts. A range of techniques exist to mitigate the impact of motion on fMRI time series, and it all starts by estimating the subject's motion over time. This is done by estimating a rigid-body (three translation parameters, three rotation parameters) transform between each individual volume and one volume of reference (typically the median volume of the run). When multiple runs are acquired, possibly spread over multiple sessions, a single transformation is estimated across runs within session to a single reference run, and then a single transformation is estimated between sessions, using one session of reference.
+>![Within-run motion estimation](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_motion_within_run.jpg
+)
+
 The motion of the subject during the fMRI runs is estimated using [niak_pipeline_motion](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_motion.m) and its options can be set using `opt.motion`. The method is based on `minctracc` and performs a rigid-body registration of each fMRI volume to one volume of reference. The registration is actually performed on smoothed gradient images. The motion correction follows a hierachical strategy: within-run, within-session, then between-session.
 > * Rigid-body transforms are first estimated within each run independently by registering all volumes of the run to the median of the volumes. 
 > * The median volume of each run is coregistered to the median volume of a run of reference within each session. 
