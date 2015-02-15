@@ -217,6 +217,8 @@ opt.corsica.flag_skip = 0;
 ```
 
 ## Spatial smoothing
+The application of spatial smoothing has the potental to slightly increase the signal-to-noise ratio, and also mitigate the impact of misregistration between functional areas, that were not perfectly aligned across subjects by the non-linear coregistration in stereotaxic space.
+>![Spatial smoothing of 3D volumes](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_smooth.jpg)
 
 The spatial smoothing is performed using [niak_brick_smooth_vol](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_smooth_vol.m), and its options can be set using `opt.smooth_vol`. The brick is a simple wrapper of the minc tool called `mincblur`. It is implementing spatial smoothing using a Gaussian kernel. A complete list of options for this brick can be found using Matlab/Octave's `help`. The following example illustrates the most useful (or simply necessary) options.
 ```matlab
