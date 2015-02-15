@@ -139,7 +139,7 @@ More details about the flowchart as well as a complete list of options for this 
 
 ## BOLD-T1 coregistration 
 
-Even when acquired in the same session, the functional and structural scans need to be coregistered. Subjects indeed often move quite a lot between runs. This is a within-subject (rigid-body transform), between-modality (the images have inverted contrasts, amongst other differences) problem. NIAK implements a variant of the multi-step progressive fit implemented in the CIVET pipeline. 
+Even when acquired in the same session, the functional and structural scans need to be coregistered. Subjects indeed often move quite a lot between runs. This is a within-subject (rigid-body transform), between-modality (the images have inverted contrasts, amongst other differences) problem.
 >![Within-run motion estimation](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_coregister_t1_t2.jpg)
 
 This step is implemented by [niak_brick_anat2func](https://github.com/SIMEXP/niak/blob/master/bricks/t1_processing/niak_brick_anat2func.m), and its options can be set using `opt.anat2func`. The brick is based on `minctracc` and performs a rigid-body registration of a BOLD volume with a T1-weighted volume from a single subject. In the pipeline, the BOLD volume is the median of all fMRI volumes of the run of reference of the session of reference of each subject (as defined during the motion estimation). A complete list of options for this brick can be found in the help of ''niak_brick_anat2func''.
