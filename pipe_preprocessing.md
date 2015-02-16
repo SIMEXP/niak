@@ -104,12 +104,8 @@ The motion of subjects over long period of time can cause severe misrealignement
 >![Within-run motion estimation](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_motion_within_run.jpg
 )
 
-The motion of the subject during the fMRI runs is estimated using [niak_pipeline_motion](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_motion.m) and its options can be set using `opt.motion`. The method is based on `minctracc` and performs a rigid-body registration of each fMRI volume to one volume of reference. The registration is actually performed on smoothed gradient images. The motion correction follows a hierachical strategy: within-run, within-session, then between-session.
-> * Rigid-body transforms are first estimated within each run independently by registering all volumes of the run to the median of the volumes. 
-> * The median volume of each run is coregistered to the median volume of a run of reference within each session. 
-> * The median volume of the runs of reference for all sessions are coregistered to the median volume of the run of reference of the session of reference. 
-> * The within-run, within-session and between-session estimates are combined to produce the final motion parameters 
-> * Each volume is resampled to the space of the run of reference of the session of reference using the estimated motion parameters.
+The motion of the subject during the fMRI runs is estimated using [niak_pipeline_motion](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_motion.m) and its options can be set using `opt.motion`. The method is based on `minctracc` and performs a rigid-body registration of each fMRI volume to one volume of reference. The registration is actually performed on smoothed gradient images. The motion correction follows a hierachical strategy: **(1)** Rigid-body transforms are first estimated within each run independently by registering all volumes of the run to the median of the volumes. **(2)** The median volume of each run is coregistered to the median volume of a run of reference within each session. **(3)** The median volume of the runs of reference for all sessions are coregistered to the median volume of the run of reference of the session of reference. **(4)** The within-run, within-session and between-session estimates are combined to produce the final motion parameters. **(5)** Each volume is resampled to the space of the run of reference of the session of reference using the estimated motion parameters.
+>![Within-run motion estimation](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_motion_within_session.jpg)
  
 A complete list of options for this brick can be found in the help of [niak_pipeline_motion](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_motion.m). The following example illustrates the most useful (or simply necessary) options. 
 ```matlab
