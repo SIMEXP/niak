@@ -143,6 +143,7 @@ This step is implemented by [niak_brick_anat2func](https://github.com/SIMEXP/nia
 
 ## Spatial resampling 
 For each brain volume, the estimated parameters for motion with the run/session of reference as target are combined with the transformation from the run/session of reference (functional volume) to the structural volume, and then combined with the non-linear transformation to stereotaxic space. The functional brain volumes are resamples in one pass to the stereotaxic space using the combined (non-linear) transformation. 
+>![The fMRI preprocessing workflow](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_resample.jpg)
 
 This step is performed by [niak_brick_resample_vol](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_resample_vol.m), and its options can be set using `opt.resample_vol`. The brick is a simple overlay of the minc tool called `mincresample`. It is performing spatial resampling of 3D or 3D+t volumes, using a number of interpolation methods. A complete list of options for this brick can be found in the help of [niak_brick_resample_vol](https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_resample_vol.m). The following example illustrates the most useful (or simply necessary) option.
 ```matlab
