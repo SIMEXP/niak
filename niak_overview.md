@@ -11,8 +11,6 @@ You can use the following resources to learn more about NIAK:
  * Read the [pdf overview](https://niak.googlecode.com/svn/user_guide/user_guide_0.6.5c/niak_user.pdf) of NIAK. 
  * If you have a question regarding NIAK, please search the archive of the [forum](http://www.nitrc.org/forum/forum.php?forum_id=1821), or post if the question has not yet been addressed before. 
 
-NIAK is developed by the [SIMEXP lab](http://simexp-lab.org), located at "[Unité de Neuroimagerie Fonctionnelle](http://www.unf-montreal.ca/)" (UNF), "[Centre de Recherche de l'Institut de Gériatrie de Montréal](http://www.criugm.qc.ca/)" (CRIUGM), "[Département d'Informatique et de Recherche Opérationnelle](http://www.iro.umontreal.ca/)" (DIRO), [Université de Montréal](http://www.umontreal.ca/). 
-> * The project was started by [Pierre Bellec](http://simexp-lab.org/brainwiki/doku.php?id=pierrebellec) when he worked as a post-doctoral fellow in the lab of [Alan Evans](http://www.bic.mni.mcgill.ca/~alan/) at [McGill University](http://www.mcgill.ca/), Canada. 
-> * A list of all contributors can be found on the [github wiki](https://github.com/SIMEXP/niak/wiki/NIAK-contributors).
+NIAK is developed by the [SIMEXP lab](http://simexp-lab.org), located at "[Unité de Neuroimagerie Fonctionnelle](http://www.unf-montreal.ca/)" (UNF), "[Centre de Recherche de l'Institut de Gériatrie de Montréal](http://www.criugm.qc.ca/)" (CRIUGM), "[Département d'Informatique et de Recherche Opérationnelle](http://www.iro.umontreal.ca/)" (DIRO), [Université de Montréal](http://www.umontreal.ca/). A list of all contributors can be found on the [github wiki](https://github.com/SIMEXP/niak/wiki/NIAK-contributors).
 
 ![UDM and CRIUGM](logos_criugm_udm.png)
