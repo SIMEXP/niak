@@ -1,7 +1,5 @@
 The neuroimaging analysis kit (NIAK) is a library of pipelines for the preprocessing and mining of connectomes extracted from large functional magnetic resonance imaging data, using GNU [Octave](http://www.gnu.org/software/octave/) or [Matlab](http://www.mathworks.com/)(r). NIAK is an open-source software distributed under [MIT license](http://opensource.org/licenses/MIT). The current version of NIAK ("BOSS" 0.12.4) is an unstable (beta) release. Linux operating systems and MINC imaging files are currently supported. 
 
-> You can use the following resources to learn more about NIAK:
-> * Read the NIAK [tutorials](niak_tutorials.html).
 > * Read the [pdf overview](https://niak.googlecode.com/svn/user_guide/user_guide_0.6.5c/niak_user.pdf) of NIAK. 
 > * If you have a question regarding NIAK, please search the archive of the [forum](http://www.nitrc.org/forum/forum.php?forum_id=1821), or post if the question has not yet been addressed before. 
 
