@@ -4,4 +4,4 @@ The neuroimaging analysis kit (NIAK) is a library of pipelines for the preproces
 
 NIAK is developed by the [SIMEXP lab](http://simexp-lab.org), located at "[Unité de Neuroimagerie Fonctionnelle](http://www.unf-montreal.ca/)" (UNF), "[Centre de Recherche de l'Institut de Gériatrie de Montréal](http://www.criugm.qc.ca/)" (CRIUGM), "[Département d'Informatique et de Recherche Opérationnelle](http://www.iro.umontreal.ca/)" (DIRO), [Université de Montréal](http://www.umontreal.ca/). A list of all contributors can be found on the [github wiki](https://github.com/SIMEXP/niak/wiki/NIAK-contributors).
 
-![UDM and CRIUGM](logos_criugm_udm.png)
+> ![UDM and CRIUGM](logos_criugm_udm.png)
