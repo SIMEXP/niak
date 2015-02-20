@@ -1,11 +1,14 @@
 # Region growing pipeline
 
-This page describes the steps of the region growing pipeline. The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. 
+The functional MRI data have a fairly good spatial resolution, with 10s of thousands of voxels covering the gray matter at a typical 3 mm isotropic resolution. This dimensionaility is too high for fast analysis of whole-brain connectome, which examines the connectivity between every possible pairs of brain regions. In NIAK, a region growing algorithm is generally applied to reduce the computational burden of subsequent analysis, by extracting functionally homogeneous brain regions that are connected in space and have a controlled size. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects. The pipeline can be applied to individual fMRI datasets, or multiple datasets (or subjects) can be combined by concatenation. 
+>![Brain parcellations](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_region_growing.jpg)
 
->* Combine the analysis mask and the areas. 
->* Extract the time series in each area. 
->* Perform region growing in each area independently. 
->* Merge all regions of all areas into one mask of regions, along with the corresponding time series for each functional run (if FLAG_TSERIES is true).
+The steps of the pipeline are the following:
+
+ * Combine the analysis mask and the areas. 
+ * Extract the time series in each area. 
+ * Perform region growing in each area independently. 
+ * Merge all regions of all areas into one mask of regions, along with the corresponding time series for each functional run (if FLAG_TSERIES is true).
 
 The pipeline is invoked by `niak_pipeline_region_growing`. 
 The argument `files_in` is a structure describing how the dataset is organized, and `opt` is a structure describing the options of the pipeline. The code of [niak_template_region_growing](https://github.com/SIMEXP/niak/blob/master/template/niak_template_region_growing.m) would be a good starting point to write your own script. 
