@@ -4,7 +4,7 @@ Before any statistical or pattern recognition model is applied on fMRI data, a n
 
 # [Region growing](pipe_region_growing.html)
 The region growing algorithm is extracting functionally homogeneous brain regions that are connected in space and have a controlled size. The pipeline can be applied to individual fMRI datasets, or multiple datasets (or subjects) can be combined by concatenation. 
-> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_region_growing.jpg" width="350px" />](pipe_region_growing.html)
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_region_growing.jpg" width="300px" />](pipe_region_growing.html)
 
 # [BASC-FIR](pipe_basc_fir.html)
 
