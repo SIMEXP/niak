@@ -166,7 +166,7 @@ tmp = size(vol);
 td_size = tmp(1:3);
 % See if we have a nifti or a minc
 if ~isempty(findstr(ext, 'mnc'))
-    warning("This is a minc file, I won't do anything\n");
+    warning('This is a minc file, I won''t do anything\n');
 elseif ~isempty(findstr(ext, 'nii'))
     dim = ones(1,8);
     dim(2:4) = td_size;
