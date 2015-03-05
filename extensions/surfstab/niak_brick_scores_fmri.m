@@ -244,6 +244,8 @@ if opt.flag_target || opt.flag_focus
         part_tmp_v = part_tmp(mask);
         part_run = cat(2, part_run, part_tmp_v);
     end
+else
+    part_run = part_v;
 end 
 
 %% Run the stability estimation
