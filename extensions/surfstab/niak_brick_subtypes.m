@@ -19,11 +19,11 @@ function [in,out,opt] = niak_brick_subtypes(in,out,opt)
 %      any arbitrary string. 
 %
 % FILES_OUT.MAPS
-%    (cell of strings) FILES_OUT.MAPS{I} is the mean stability of network I.
+%    (cell of strings) FILES_OUT.MAPS{I} is the mean volility of network I.
 %
 % FILES_OUT.MAPS_DEMEANED
-%    (cell of strings) FILES_OUT.MAPS_DEMEANED{I} is the mean stability of network I,
-%    minus the grand average of all stability maps.
+%    (cell of strings) FILES_OUT.MAPS_DEMEANED{I} is the mean volility of network I,
+%    minus the grand average of all volility maps.
 %
 % FILES_OUT.WEIGHTS
 %    (string) a .mat file with 
@@ -79,7 +79,7 @@ end
 
 % FILES_IN
 in = psom_struct_defaults(in, ...
-           { 'stab_maps' , 'mask' }, ...
+           { 'vol_maps' , 'mask' }, ...
            { NaN         , NaN    });
 
 % Options
@@ -95,25 +95,42 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
   
 % FILES_OUT
 out = psom_struct_defaults(out, ...
-           { 'maps' , 'maps_demeaned' , 'weights' }, ...
-           { NaN    , NaN             , NaN       });
+           { 'list_net' , 'maps' , 'maps_demeaned' , 'weights' }, ...
+           { []         , NaN    , NaN             , NaN       });
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
     return
 end
 
+%% reorganize inputs
+[files,labels] = niak_fmri2cell(in.fmri);
+list_subject = unique({labels.subject});
 
-for ind_net = 1:length(list_net)
-    num_net = list_net(ind_net);
+%% If list_net is empty check the number of networks and iterate on all of them
+hdr = niak_read_vol({1});
+if isempty(opt.list_net)    
+    opt.list_net = 1:hdr.info.dimensions(4);
+end
+vol = zeros([hdr.dimensions(1:3) length(list_subject)]);
+
+for ind_net = 1:length(opt.list_net)
+    num_net = opt.list_net(ind_net);
     path_res = [path_data 'cluster_' num2str(num_net) 'R_diff' filesep];
 
-    %% Load data
-    file_stack = [path_data,'netstack_net',num2str(num_net),'.nii.gz'];
-
-    [hdr,stab] = niak_read_vol(file_stack);
+    %% Load maps
+    for ss = 1:length(list_subject)
+        subject = list_subject{ss};
+        list_ind = find(ismember({labels.subject},subject));
+        for ii = 1:length(list_ind)
+            [hdr,vol_ii] = niak_read_vol(files{ii});
+            vol(:,:,:,ss) = vol(:,:,:,ss)+vol_ii(:,:,:,num_net);
+        end
+        vol(:,:,:,ss) = vol(:,:,:,ss)/length(list_ind);
+    end
+    
     [hdr,mask] = niak_read_vol([path_data 'mask.nii.gz']);
-    tseries = niak_vol2tseries(stab,mask);
+    tseries = niak_vol2tseries(vol,mask);
 
     %% correct for the mean
     tseries_ga = niak_normalize_tseries(tseries,'mean');
