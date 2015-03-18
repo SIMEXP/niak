@@ -82,7 +82,7 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 % Otherwise, no output is generated. Individual outputs can be turned on/off
 % by assigning the output the value 'gb_niak_omitted'
 %
-% Copyright (c) Pierre Bellec,
+% Copyright (c) Pierre Bellec, Sebastian Urchs
 %   Centre de recherche de l'institut de Geriatrie de Montreal
 %   Departement d'informatique et de recherche operationnelle
 %   Universite de Montreal, 2014
