@@ -8,7 +8,7 @@ The region growing algorithm is extracting functionally homogeneous brain region
 
 # [BASC](pipe_basc.html)
 The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual level, extract group clusters and assess the reproducibility of group clusters as well. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks.  
-> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/basc_logo_large.jpg" width="250px" />](pipe_region_growing.html)
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/basc_logo_large.jpg" width="150px" />](pipe_region_growing.html)
 
 # [BASC-FIR](pipe_basc_fir.html)
 
