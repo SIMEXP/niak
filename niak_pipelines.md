@@ -6,6 +6,11 @@ Before any statistical or pattern recognition model is applied on fMRI data, a n
 The region growing algorithm is extracting functionally homogeneous brain regions that are connected in space and have a controlled size. The pipeline can be applied to individual fMRI datasets, or multiple datasets (or subjects) can be combined by concatenation. 
 > [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_region_growing.jpg" width="250px" />](pipe_region_growing.html)
 
-# [BASC-FIR](pipe_basc_fir.html)
+# [BASC](pipe_basc.html)
+The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks.  
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/basc_logo_large.jpg" width="150px" />](pipe_basc.html)
 
+# [BASC-FIR](pipe_basc_fir.html)
+The bootstrap analysis of stable clusters (BASC) on finite-impulse response (FIR) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual estimated FIR, in block or slow event-related tasks. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks.  
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/user_guide_fig/basc_fir/Screenshot%20at%202014-10-19%2015.03.19.png" width="300px" />](pipe_basc_fir.html)
 # [GLM-connectome](pipe_glm_connectome.html)
