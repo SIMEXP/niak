@@ -1,4 +1,4 @@
-This [tutorial]() shows how to read and write volumes using the NIAK tools, as well as perform some basic operations. It does not generate figures.
+This tutorial shows how to read and write volumes using the NIAK tools, as well as perform some basic operations. It does not generate figures. The script can be downloaded [here](https://raw.githubusercontent.com/SIMEXP/niak_tutorials/master/read_write_vol/niak_tutorial_read_write_vol.m).
 
 ```matlab
 clear
