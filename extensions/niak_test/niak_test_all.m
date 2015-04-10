@@ -59,8 +59,8 @@ function [pipe,opt] = niak_test_all(path_test,opt)
 % http://code.google.com/p/psom/wiki/PsomConfiguration
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2013-2014.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2013-2014.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : test, NIAK, fMRI preprocessing, pipeline, DEMONIAK
@@ -98,24 +98,12 @@ end
 path_test = psom_struct_defaults(path_test, ...
     { 'target' , 'demoniak' , 'result'}, ...
     { ''       , ''         , ''      });
-    
+
+%% Grab the demoniak dataset    
 if isempty(path_test.demoniak)
-    path_test.demoniak = [pwd filesep 'data_test_niak_mnc1' filesep];
-    if ~psom_exist(path_test.demoniak)
-        psom_clean('data_test_niak_mnc1.zip')
-        if exist('gb_niak_url_test_niak','var')&&~isempty(gb_niak_url_test_niak)
-            [status,msg] = system(['wget ' gb_niak_url_test_niak]);
-            if status
-                error('There was a problem downloading the test data: %s',msg)
-            end
-        else
-            error('Automatic download of the test data is not supported for this version of NIAK')
-        end
-        [status,msg] = system('unzip data_test_niak_mnc1.zip');
-        psom_clean('data_test_niak_mnc1.zip')
-        if status
-            error('There was a problem unzipping the test data: %s',msg)
-        end
+    [status,err,path_test.demoniak] = niak_grab_test_demoniak;
+    if status
+        error('There was a problem unzipping the test data: %s',msg)
     end
 end
 
