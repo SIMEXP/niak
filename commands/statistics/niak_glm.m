@@ -76,7 +76,7 @@ function [results,opt] = niak_glm(model,opt)
 %
 %   PCE
 %      (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
-%      TTEST(n) (bilateral test). (only available if OPT.TEST is 'ttest')
+%      TTEST(n) (bilateral test). (unless OPT.TEST is 'none')
 %
 %   DEGFREE
 %      (scalar value) is the degrees of freedom left after regression.
