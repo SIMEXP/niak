@@ -8,9 +8,9 @@
 % COMMENT:
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
-% Département d'informatique et de recherche opérationnelle
-% Centre de recherche de l'institut de Gériatrie de Montréal
-% Université de Montréal, 2010-2011
+% Dpartement d'informatique et de recherche oprationnelle
+% Centre de recherche de l'institut de Griatrie de Montral
+% Universit de Montral, 2010-2011
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : NIAK
@@ -79,8 +79,6 @@ gb_niak_ps2pdf = 'ps2pdf';
 
 %% NIAK version
 gb_niak_version = '0.12.21'; 
-gb_niak_url_test_niak = 'http://www.nitrc.org/frs/download.php/7241/data_test_niak_mnc1.zip';
-gb_niak_url_target_niak = 'http://www.nitrc.org/frs/download.php/7301/target_test_niak_mnc1-0.12.21.zip';
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION','builtin')    

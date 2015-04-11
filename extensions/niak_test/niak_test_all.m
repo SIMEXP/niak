@@ -106,49 +106,20 @@ end
 path_test = psom_struct_defaults(path_test, ...
     { 'target' , 'demoniak' , 'result'}, ...
     { ''       , ''         , ''      });
-    
-if isempty(path_test.demoniak)
-    path_test.demoniak = [pwd filesep 'data_test_niak_mnc1' filesep];
-    if ~psom_exist(path_test.demoniak)
-        psom_clean('data_test_niak_mnc1.zip')
-        if exist('gb_niak_url_test_niak','var')&&~isempty(gb_niak_url_test_niak)
-            [status,msg] = system(['wget ' gb_niak_url_test_niak]);
-            if status
-                error('There was a problem downloading the test data: %s',msg)
-            end
-        else
-            error('Automatic download of the test data is not supported for this version of NIAK')
-        end
-        [status,msg] = system('unzip data_test_niak_mnc1.zip');
-        psom_clean('data_test_niak_mnc1.zip')
-        if status
-            error('There was a problem unzipping the test data: %s',msg)
-        end
-    end
+
+%% Grab the demoniak dataset    
+[status,err,data_demoniak] = niak_wget(struct('type','data_test_niak_mnc1'));
+path_test.demoniak = data_demoniak.path;
+if status
+    error('There was a problem downloading the test data')
 end
 
-if isempty(path_test.target)&&~opt.flag_target
-    name_target = ['target_test_niak_mnc1-' gb_niak_version];
-    path_test.target = [pwd filesep name_target filesep];
-    if ~psom_exist(path_test.target)
-        psom_clean([name_target '.zip'])
-        if exist('gb_niak_url_target_niak','var')&&~isempty(gb_niak_url_target_niak)
-            [status,msg] = system(['wget ' gb_niak_url_target_niak]);
-            if status
-                error('There was a problem downloading the target data: %s',msg)
-            end
-        else
-            warning('Automatic download of the test data is not supported for this version of NIAK. I am forcing the generation of a target, without further testing.'
-    )
-            opt.flag_target = true;
-        end
-        if ~opt.flag_target
-            [status,msg] = system(['unzip ' name_target '.zip']);
-            psom_clean([name_target '.zip'])
-            if status
-                error('There was a problem unzipping the target data: %s',msg)
-            end
-        end
+%% Grab the demoniak dataset    
+if ~opt.flag_target
+    [status,err,data_target] = niak_wget(struct('type','target_test_niak_mnc1'));
+    path_test.target = data_target.path;
+    if status
+        error('There was a problem downloading the target data')
     end
 end
 
