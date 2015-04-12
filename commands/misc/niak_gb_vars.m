@@ -78,7 +78,7 @@ gb_niak_ps2pdf = 'ps2pdf';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-gb_niak_version = '0.12.21'; 
+gb_niak_version = '0.13.0'; 
 
 %% Is the environment Octave or Matlab ?
 if exist('OCTAVE_VERSION','builtin')    
