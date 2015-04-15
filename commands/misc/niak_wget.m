@@ -1,6 +1,7 @@
 function [status,msg,data] = niak_wget(data)
-% Fetch the test demoniak dataset
-%% SYNTAX: [STATUS,MSG,DATA] = NIAK_WGET(DATA)
+% Fetch a dataset using wget
+%
+% SYNTAX: [STATUS,MSG,DATA] = NIAK_WGET(DATA)
 %
 % DATA.TYPE (string, default '') If provided, this sets the default 
 %    name/url for a number of datasets. 
