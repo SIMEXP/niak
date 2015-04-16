@@ -3,106 +3,136 @@
 This tutorial describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of fMRI datasets acquired on multiple subjects. The BASC pipeline supports both NIFTI (4D) and MINC image formats. The command to run the pipeline in a Matlab/Octave session is: 
 ```matlab
 niak_pipeline_stability_rest(files_in,opt) 
-```s
+```
 where ''files_in'' is a structure describing how the dataset is organized, and ''opt'' is a structure describing the options of the pipeline. You can test the fMRI preprocessing on a demo data (see [[niak:Installation|instructions for download]]). After uncompressing and unarchiving the preprocessed demo data in a folder, e.g. ''/home/bic/my_login/data/fmri_preproc_demoniak/'', the demo can be started using&nbsp;: 
 
- niak_demo_stability_rest('/home/bic/my_login/data/fmri_preproc_demoniak/')
+```matlab
+niak_demo_stability_rest('/home/bic/my_login/data/fmri_preproc_demoniak/')
+```
 
 The following sections of this tutorial will also guide you through setting up ''files_in'' and ''opt''. A summary of those two arguments can be found using the standard matlab help&nbsp;: 
 
-  help niak_pipeline_stability_rest
+```matlab
+help niak_pipeline_stability_rest
+```
 
-The code of [http://code.google.com/p/niak/source/browse/trunk/template/niak_template_stability_rest.m niak_template_stability_rest] would be a good starting point to write your own script. 
+The code of [https://raw.githubusercontent.com/SIMEXP/niak/master/template/niak_template_stability_rest.m](niak_template_stability_rest) would be a good starting point to write your own script. 
 
-== Input files  ==
+## Input files 
 
 The inputs of the pipelines are: 
 
-#The pipeline requires fully preprocessed fMRI datasets. This is typically the output of ''niak_pipeline_fmri_preprocessing'', but the preprocessing can be done with any package. 
-#An analysis mask. This is a (3D) binary mask, at the same resolution and in the same space as the preprocessed datasets. The region growing will be applied only to the voxels within the mask. 
-#A mask of brain areas. By default, this is the AAL template (see notes below). The region growing is applied on the concatenated time series of all subjects. To limit the memory demand, this step is applied independently in each of the areas. This input is optional. If unspecified, the region growing is performed on the whole analysis mask at once. The mask of areas needs to be at the same resolution and in the same space as the preprocessed datasets.
+ * The pipeline requires fully preprocessed fMRI datasets. This is typically the output of ''niak_pipeline_fmri_preprocessing'', but the preprocessing can be done with any package. 
+ * An analysis mask. This is a (3D) binary mask, at the same resolution and in the same space as the preprocessed datasets. The region growing will be applied only to the voxels within the mask. 
+ * A mask of brain areas. By default, this is the AAL template (see notes below). The region growing is applied on the concatenated time series of all subjects. To limit the memory demand, this step is applied independently in each of the areas. This input is optional. If unspecified, the region growing is performed on the whole analysis mask at once. The mask of areas needs to be at the same resolution and in the same space as the preprocessed datasets.
 
-=== Preprocessed fMRI data  ===
+### Preprocessed fMRI data
 
 If the fMRI datasets have been preprocessed using NIAK, setting up the input files is very easy. Just grab the results of the preprocessing with the following command: 
 
- &nbsp;% The minimum number of volumes for an fMRI dataset to be included. 
- &nbsp;% This option is useful when scrubbing is used, and the resulting time series may be too short. 
- opt_g.min_nb_vol = 100; 
- &nbsp;% Specify to the grabber to prepare the files for the region growing pipeline 
- &nbsp;% opt_g.type_files = 'roi';
- files_in = niak_grab_fmri_preprocess('/home/pbellec/demo_niak_preproc/',opt_g);
+```matlab
+% The minimum number of volumes for an fMRI dataset to be included. 
+% This option is useful when scrubbing is used, and the resulting time series may be too short. 
+opt_g.min_nb_vol = 100; 
+% Specify to the grabber to prepare the files for the region growing pipeline 
+% opt_g.type_files = 'roi';
+files_in = niak_grab_fmri_preprocess('/home/pbellec/demo_niak_preproc/',opt_g);
+```
 
 More options for the grabber are available. See ''help niak_grab_fmri_preprocess'' or the template of the region growing pipeline for more info.&nbsp;The mask is the the group mask (i.e. voxels that fall in the brain for more than 50% of subjects) generated in the quality control, and the areas are the AAL segmentation (see the description below). 
 
 If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field ''fmri'' directly lists all of the preprocessed fMRI datasets, organized by subject, session and runs. Example: 
 
+```matlab
  files_in.data.subject1.session1.rest = '/home/pbellec/demo_niak_preproc/fmri/fmri_subject1_session1_rest.nii.gz';
  files_in.data.subject2.session1.rest = '/home/pbellec/demo_niak_preproc/fmri/fmri_subject2_session1_rest.nii.gz';
+```
 
 '''WARNING''': Octave and Matlab impose some restrictions on the labels used for subject, session and run. In order to avoid any issue, please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'. None of these restrictions apply on the naming convention of the files, just to the labels that are used to build the structure files_in in Matlab/Octave. 
 
-=== Analysis mask  ===
+### Analysis mask 
 
 The ''mask'' field is the name of a 3D binary volume serving as a mask for the analysis. It can be a mask of the brain common to all subjects, or a mask of a specific brain area, e.g. the thalami. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM/SPM or MINCRESAMPLE to resample the mask at the correct resolution. Example&nbsp;: 
 
-  files_in.mask = '/home/pbellec/demo_niak_preproc/quality_control/group_coregistration/func_mask_group_stereonl.nii.gz';
+```matlab
+ files_in.mask = '/home/pbellec/demo_niak_preproc/quality_control/group_coregistration/func_mask_group_stereonl.nii.gz';
+```
 
-=== Brain areas  ===
+### Brain areas 
 
 Finally, the ''areas'' field is the name of a volume of integer values, describing some brain areas that are used to save memory space in the region-growing algorithm. Different brain areas are treated independently at this step of the analysis. If the brain mask is small enough, this may not be necessary. Otherwise, you can use for example the AAL segmentation. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM or mincresample to resample the AAL segmentation at the correct resolution. 
 
-  files_in.areas = '/data/roi_aal.nii.gz';
+```matlab
+files_in.areas = '/data/roi_aal.nii.gz';
+```
 
-== Options  ==
+## Options 
 
 The different options are passed through fields in the structure ''opt''. 
 
-The first option is the name of the folder where the results will be stored. Note that this folder does not need to be created before hand. Example&nbsp;: 
+The first option is the name of the folder where the results will be stored. Note that this folder does not need to be created before hand. Example: 
 
-  opt.folder_out = '/data/basc/';&nbsp;% Where to store the results
+```matlab
+  opt.folder_out = '/data/basc/'; % Where to store the results
+```
 
 The second option is the size of the regions in the region growing algorithm, when they are mature (i.e. they stop growing). The parameter is set in mm3, if the size of voxels is specified in mm in the header (that is pretty much always the case). A threshold of 1000 mm3 will give about 1000 regions on the grey matter. 
 
-  opt.region_growing.thre_size = 1000;
+```matlab
+opt.region_growing.thre_size = 1000;
+```
 
 The following list will set the grid of scales (number of clusters) explored to identify stable clusters. The following grid will search from 10 to 500 clusters, with more granularity at low scales: 
 
-  opt.grid_scales = [10:10:100 120:20:200 240:40:500]';
+```matlab
+opt.grid_scales = [10:10:100 120:20:200 240:40:500]';
+```
 
 The following scales will be used to generate the maps of brain clusters and stability. In this example the same number of clusters are used at the individual (first column), group (second column) and consensus (third and last colum) levels. It is also possible to leave this parameter empty, and then manually copy the results of the MSTEPS selection before restarting the pipeline. 
 
-  opt.scales_maps = repmat(opt.grid_scales,[1 3]); 
+```matlab
+opt.scales_maps = repmat(opt.grid_scales,[1 3]); 
+```
 
 The number of bootstrap samples at the individual level (100: the CI on indidividual stability is +/-0.1): 
 
-  opt.stability_tseries.nb_samps = 100;
+```matlab
+opt.stability_tseries.nb_samps = 100;
+```
 
 The number of bootstrap samples at the group level (500: the CI on group stability is +/-0.05): 
 
-  opt.stability_group.nb_samps = 500;
+```matlab
+opt.stability_group.nb_samps = 500;
+```
 
 The following flag turns on/off the generation of maps/time series at the individual level: 
 
-  opt.flag_ind = false;
+```matlab
+opt.flag_ind = false;
+```
 
 The following flag turns on/off the generation of maps/time series at the mixed level (group-level networks mixed with individual stability matrices): 
 
-  opt.flag_mixed = false;
+```matlab
+opt.flag_mixed = false;
+```
 
 The following flag turns on/off the generation of maps/time series at the group level: 
 
-  opt.flag_group = true;
+```matlab
+opt.flag_group = true;
+```
 
-== Outputs  ==
+## Outputs 
 
-A number a subfolders are created in the ''opt.folder_out'' directory. In the following, EXT will denote the extension associated with the file type of the functional images, e.g. ''.nii'' or ''.nii.gz'' for nifti. An exhaustive description of the outputs follows. Most of them may not be of interest. The main results have been highlighted with a 8-o. The results that are generated only if some scales are listed in the second pass are indicated by a&nbsp;:!:. 
+A number a subfolders are created in the ''opt.folder_out'' directory. In the following, EXT will denote the extension associated with the file type of the functional images, e.g. ''.nii'' or ''.nii.gz'' for nifti. An exhaustive description of the outputs follows. Most of them may not be of interest. The main results have been highlighted with a 8-o. The results that are generated only if some scales are listed in the second pass are indicated by a *. 
 
-<br> The ''areas'' subfolder contains the time series and mask of the areas used to perform region growing&nbsp;: 
+The ''areas'' subfolder contains the time series and mask of the areas used to perform region growing: 
 
-*'''brain_areas.EXT'''&nbsp;: a 3D volume with integer values. The ''I''th area is filled with ''I''s. 
-*'''brain_areas_neig.mat'''&nbsp;: a .mat file which contains a bunch of variable. ''ind_I'' is a vector with the linear index of every voxels in brain area ''I''. ''neig_I'' is a cell of vector. The ''k''th entry is the list of the spatial neighbors of the voxel ''k'' in the ''I'' region. Note that all indices used here refer to entries in the list ''ind_I'', which means that the ''k''th entry correspond to the voxel ''ind_I(k)''. 
-*'''part_areas_I.mat'''&nbsp;: a mat file with one vector ''part''. ''part(k)'' is the number of the region voxel ''k'' of area ''I'' belongs to after region growing.
+ * '''brain_areas.EXT'''&nbsp;: a 3D volume with integer values. The ''I''th area is filled with ''I''s. 
+ * '''brain_areas_neig.mat'''&nbsp;: a .mat file which contains a bunch of variable. ''ind_I'' is a vector with the linear index of every voxels in brain area ''I''. ''neig_I'' is a cell of vector. The ''k''th entry is the list of the spatial neighbors of the voxel ''k'' in the ''I'' region. Note that all indices used here refer to entries in the list ''ind_I'', which means that the ''k''th entry correspond to the voxel ''ind_I(k)''. 
+ * '''part_areas_I.mat'''&nbsp;: a mat file with one vector ''part''. ''part(k)'' is the number of the region voxel ''k'' of area ''I'' belongs to after region growing.
 
 The '''logs''' folder keeps track of all the execution of the pipeline (see below the section on pipeline management). This folder needs to be left intact at all time. It contains all the logs of the pipeline execution, but no results directly relevant to BASC. 
 
