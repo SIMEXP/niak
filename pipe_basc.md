@@ -128,72 +128,72 @@ opt.flag_group = true;
 
 A number a subfolders are created in the ''opt.folder_out'' directory. In the following, EXT will denote the extension associated with the file type of the functional images, e.g. ''.nii'' or ''.nii.gz'' for nifti. An exhaustive description of the outputs follows. Most of them may not be of interest. The main results have been highlighted with a 8-o. The results that are generated only if some scales are listed in the second pass are indicated by a *. 
 
-The ''areas'' subfolder contains the time series and mask of the areas used to perform region growing: 
+The `areas` subfolder contains the time series and mask of the areas used to perform region growing: 
 
- * '''brain_areas.EXT'''&nbsp;: a 3D volume with integer values. The ''I''th area is filled with ''I''s. 
- * '''brain_areas_neig.mat'''&nbsp;: a .mat file which contains a bunch of variable. ''ind_I'' is a vector with the linear index of every voxels in brain area ''I''. ''neig_I'' is a cell of vector. The ''k''th entry is the list of the spatial neighbors of the voxel ''k'' in the ''I'' region. Note that all indices used here refer to entries in the list ''ind_I'', which means that the ''k''th entry correspond to the voxel ''ind_I(k)''. 
- * '''part_areas_I.mat'''&nbsp;: a mat file with one vector ''part''. ''part(k)'' is the number of the region voxel ''k'' of area ''I'' belongs to after region growing.
+ * **`brain_areas.EXT`**: a 3D volume with integer values. The `I`th area is filled with `I`s. 
+ * **`brain_areas_neig.mat`**: a .mat file which contains a bunch of variable. `ind_I` is a vector with the linear index of every voxels in brain area `I`. `neig_I` is a cell of vector. The `k`th entry is the list of the spatial neighbors of the voxel `k` in the `I` region. Note that all indices used here refer to entries in the list `ind_I`, which means that the `k`th entry correspond to the voxel `ind_I(k)`. 
+ * **`part_areas_I.mat`**: a mat file with one vector `part`. `part(k)` is the number of the region voxel `k` of area `I` belongs to after region growing.
 
-The '''logs''' folder keeps track of all the execution of the pipeline (see below the section on pipeline management). This folder needs to be left intact at all time. It contains all the logs of the pipeline execution, but no results directly relevant to BASC. 
+The **`logs`** folder keeps track of all the execution of the pipeline (see below the section on pipeline management). This folder needs to be left intact at all time. It contains all the logs of the pipeline execution, but no results directly relevant to BASC. 
 
-The '''rois''' subfolder contains the ROIs generated through region-growing along with the associated time series for all runs and subjects&nbsp;: 
+The **`rois`** subfolder contains the ROIs generated through region-growing along with the associated time series for all runs and subjects: 
 
-*'''brain_rois.EXT'''&nbsp;: a 3D volume with integer values. The ''I''th ROI is filled with ''I''s. 
-*'''tseries_&lt;subject&gt;_run&lt;k&gt;.mat'''&nbsp;: a .mat file with one array ''tseries''. The ''I''th column of ''tseries'' is the time series associated with region ''I'' for subject ''&lt;subject&gt;'' and run ''k''
+* **`brain_rois.EXT`**: a 3D volume with integer values. The `I`th ROI is filled with `I`s. 
+* **`tseries_<subject>_<run>.mat`**: a .mat file with one array `tseries`. The `I`th column of `tseries` is the time series associated with region `I` for subject `<subject>` and run `<run>`
 
-The '''multiscale''' folder contains information about the exploration of stable clusters for different number of clusters. 
+The **`multiscale`** folder contains information about the exploration of stable clusters for different number of clusters. 
 
-*'''silhouette.mat'''&nbsp;: a .mat file with the following variables&nbsp;: 
-*'''scale_ind'''&nbsp;: vector, ''scales_ind(k)'' is the number of individual clusters for experiment ''k''. 
-*'''scale_group'''&nbsp;: vector, ''scales_group(k)'' is the number of group clusters for experiment ''k''. 
-*'''sil'''&nbsp;: array, ''sil(m,k)'' is the stability contrast criterion for ''scale_ind(k)'' clusters at the individual level, ''scale_group(k)'' clusters at the group level and ''m'' final clusters. 
-*'''sil_max'''&nbsp;: vector, ''sil_max(m)'' is the maximal stability contrast achieved for ''m'' final clusters, and the individual/group number of clusters in a neighbourhood of ''m''. 
-*'''scales_ind_max'''&nbsp;: vector, scales_ind_max(m) is the number of individual clusters that achives ''sil_max(m)'' for ''m'' final clusters. 
-*'''scales_group_max'''&nbsp;: vector, scales_group_max(m) is the number of group clusters that achives ''sil_max(m)'' for ''m'' final clusters. 
-*'''table_multiscale.dat'''&nbsp;: a text file with a table. For all scales (meaning a set of individual, group and final number of clusters) investigated in the second pass, the table recapitulates the relative overlap of the clusters identified at different scales. 
-*'''figure_sigma_max.pdf'''&nbsp;: a pdf with the locally maximal stability contrast criterion as a function of the final number of clusters, along with the associated number of individual clusters and group clusters. 
-*'''table_sigma_max.dat'''&nbsp;: a text file recapitulating the local maxima of the stability contrast criterion, along with the corresponding number of clusters at the individual, group and final levels. These parameters can be used in the second pass analysis when re-running the pipeline.
+* **`silhouette.mat`**: a .mat file with the following variables&nbsp;: 
+* **`scale_ind`**: vector, `scales_ind(k)` is the number of individual clusters for experiment `k`. 
+* **`scale_group`**: vector, `scales_group(k)` is the number of group clusters for experiment `k`. 
+* **`sil`**: array, `sil(m,k)` is the stability contrast criterion for `scale_ind(k)` clusters at the individual level, `scale_group(k)` clusters at the group level and `m` final clusters. 
+* **`sil_max`**: vector, `sil_max(m)` is the maximal stability contrast achieved for `m` final clusters, and the individual/group number of clusters in a neighbourhood of `m`. 
+* **`scales_ind_max`**: vector, `scales_ind_max(m)` is the number of individual clusters that achives `sil_max(m)` for `m` final clusters. 
+* **`scales_group_max`**: vector, `scales_group_max(m)` is the number of group clusters that achives `sil_max(m)` for `m` final clusters. 
+* **`table_multiscale.dat`**: a text file with a table. For all scales (meaning a set of individual, group and final number of clusters) investigated in the second pass, the table recapitulates the relative overlap of the clusters identified at different scales. 
+* **`figure_sigma_max.pdf`**: a pdf with the locally maximal stability contrast criterion as a function of the final number of clusters, along with the associated number of individual clusters and group clusters. 
+* **`table_sigma_max.dat`**: a text file recapitulating the local maxima of the stability contrast criterion, along with the corresponding number of clusters at the individual, group and final levels. These parameters can be used in the second pass analysis when re-running the pipeline.
 
-The folder ''stability_ind'' contains the results of BASC at the individual level. The subfolders ''sci&lt;k&gt;'' contains the results for ''k'' individual clusters&nbsp;: 
+The folder **`stability_ind`** contains the results of BASC at the individual level. The subfolders `sci<k>` contains the results for `k` individual clusters&nbsp;: 
 
-*stability_ind_&lt;subject&gt;_sci&lt;k&gt;_pass1.mat&nbsp;: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
-*stability_ind_&lt;subject&gt;_sci&lt;k&gt;_pass1.mat&nbsp;: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form.
+* stability_ind_&lt;subject&gt;_sci&lt;k&gt;_pass1.mat&nbsp;: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
+* stability_ind_&lt;subject&gt;_sci&lt;k&gt;_pass1.mat&nbsp;: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form.
 
 The folder ''stability_group'' contains the results of BASC at the group level. The subfolders ''sci&lt;k&gt;_scg&lt;l&gt;'' contains the results for ''k'' individual clusters and ''l'' group clusters: 
 
-*&nbsp;:!: ''brain_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the ''I''th group stable cluster is filled with ''I''s. A threshold is in addition applied on the regions of the cluster such as the average stability is greater than 0.5. This can change the total number of stable clusters. 
-*&nbsp;:!: ''brain_partition_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the ''I''th group stable cluster is filled with ''I''s. 
-*&nbsp;:!: ''map_networks_group_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the value in a region is the associated average group stability regarding the group stable network this region belongs to. 
-*&nbsp;:!: ''map_networks_avg_ind_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the value in a region is the associated average individual stability regarding the group stable network this region belongs to. 
-*&nbsp;:!: ''map_networks_&lt;subejct&gt;_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the value in a region is the associated individual stability for subject ''&lt;subject&gt;'' regarding the group stable network this region belongs to. 
-*&nbsp;:!: ''partition_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.mat''&nbsp;: a .mat files with the following variables&nbsp;: 
-*''part'' (array) ''part(1,:)'' is the partition of regions into stable group clusters. ''part(1,i)'' is the number of the cluster associated with region ''i''. ''part(2,:)'' is the same, but after a threshold of 0.5 for the average group stability was applied on the regions. 
-*''order'' (vector) is an ordering of the region deduced of the HAC on the group-level stability matrix. It is used to represent all stability matrices. 
-*''hier'' (array) is a representation of the final HAC on the group-level stability matrix. See ''niak_hierarchical clustering'' for more infos. 
-*stability_group_sci&lt;k&gt;_scg&lt;l&gt;_pass1.mat&nbsp;: a .mat file with a number of variables&nbsp;: 
-*''stab_ind'' (vector) the vectorized form of the average individual stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
-*''stab_group'' (vector) the vectorized form of the group stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
-*''stab_plugin'' (vector) the vectorized form of the adjacency matrix resulting of HAC applied on the average individual stability matrix. It is the plugin estimate of the group adjacency matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
-*&nbsp;:!: stability_group_sci&lt;k&gt;_scg&lt;l&gt;_pass2.mat&nbsp;: a .mat file with a number of variables&nbsp;: 
-*''stab_ind'' (vector) the vectorized form of the average individual stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form. 
-*''stab_group'' (vector) the vectorized form of the group stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form. 
-*''stab_plugin'' (vector) the vectorized form of the adjacency matrix resulting of HAC applied on the average individual stability matrix. It is the plugin estimate of the group adjacency matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form. 
-*&nbsp;:!: ''table_clusters_group_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.dat''&nbsp;: a text file containing a table that recapitulates the local peaks of stability within each cluster. 
-*&nbsp;:!: ''table_networks_group_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.dat''&nbsp;: a text file containing a table that recapitulates the relative overlap of each cluster with Brodmann and AAL areas. 
-*&nbsp;:!: ''tseries_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;_&lt;subject&gt;_run&lt;k&gt;.mat''&nbsp;: a .mat file with the following variables&nbsp;: 
-*''tseries''&nbsp;: the Ith column is the weighted average time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters. In the computation of the average, the contribution of each ROI to the mean is weighted by its stability. 
-*''tseries_mean''&nbsp;: the Ith column is the mean time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters. 
-*''tseries_std''&nbsp;: the Ith column is the standard deviation of the mean of the time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters.
+* &nbsp;:!: ''brain_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the ''I''th group stable cluster is filled with ''I''s. A threshold is in addition applied on the regions of the cluster such as the average stability is greater than 0.5. This can change the total number of stable clusters. 
+* &nbsp;:!: ''brain_partition_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the ''I''th group stable cluster is filled with ''I''s. 
+* &nbsp;:!: ''map_networks_group_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the value in a region is the associated average group stability regarding the group stable network this region belongs to. 
+* &nbsp;:!: ''map_networks_avg_ind_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the value in a region is the associated average individual stability regarding the group stable network this region belongs to. 
+* &nbsp;:!: ''map_networks_&lt;subejct&gt;_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the value in a region is the associated individual stability for subject ''&lt;subject&gt;'' regarding the group stable network this region belongs to. 
+* &nbsp;:!: ''partition_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.mat''&nbsp;: a .mat files with the following variables&nbsp;: 
+* ''part'' (array) ''part(1,:)'' is the partition of regions into stable group clusters. ''part(1,i)'' is the number of the cluster associated with region ''i''. ''part(2,:)'' is the same, but after a threshold of 0.5 for the average group stability was applied on the regions. 
+* ''order'' (vector) is an ordering of the region deduced of the HAC on the group-level stability matrix. It is used to represent all stability matrices. 
+* ''hier'' (array) is a representation of the final HAC on the group-level stability matrix. See ''niak_hierarchical clustering'' for more infos. 
+* stability_group_sci&lt;k&gt;_scg&lt;l&gt;_pass1.mat&nbsp;: a .mat file with a number of variables&nbsp;: 
+* ''stab_ind'' (vector) the vectorized form of the average individual stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
+* ''stab_group'' (vector) the vectorized form of the group stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
+* ''stab_plugin'' (vector) the vectorized form of the adjacency matrix resulting of HAC applied on the average individual stability matrix. It is the plugin estimate of the group adjacency matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
+* &nbsp;:!: stability_group_sci&lt;k&gt;_scg&lt;l&gt;_pass2.mat&nbsp;: a .mat file with a number of variables&nbsp;: 
+* ''stab_ind'' (vector) the vectorized form of the average individual stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form. 
+* ''stab_group'' (vector) the vectorized form of the group stability matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form. 
+* ''stab_plugin'' (vector) the vectorized form of the adjacency matrix resulting of HAC applied on the average individual stability matrix. It is the plugin estimate of the group adjacency matrix for &lt;k&gt; individual clusters and ''l'' group clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form. 
+* &nbsp;:!: ''table_clusters_group_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.dat''&nbsp;: a text file containing a table that recapitulates the local peaks of stability within each cluster. 
+* &nbsp;:!: ''table_networks_group_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.dat''&nbsp;: a text file containing a table that recapitulates the relative overlap of each cluster with Brodmann and AAL areas. 
+* &nbsp;:!: ''tseries_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;_&lt;subject&gt;_run&lt;k&gt;.mat''&nbsp;: a .mat file with the following variables&nbsp;: 
+* ''tseries''&nbsp;: the Ith column is the weighted average time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters. In the computation of the average, the contribution of each ROI to the mean is weighted by its stability. 
+* ''tseries_mean''&nbsp;: the Ith column is the mean time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters. 
+* ''tseries_std''&nbsp;: the Ith column is the standard deviation of the mean of the time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters.
 
-== Pipeline management  ==
+## Pipeline management
 
-The pipeline execution is powered by a generic manager called PSOM (Bellec et al. 2012, see reference below). See the [[http://www.nitrc.org/plugins/mwiki/index.php/niak:Installation#Configuration_of_the_pipeline_manager NIAK installation notes]] for guidelines to set the configuration of PSOM. 
+The pipeline execution is powered by a generic manager called PSOM (Bellec et al. 2012, see reference below). See the [NIAK installation notes](http://niak.simexp-lab.org/niak_installation.html) for guidelines to set the configuration of PSOM. 
 
-== Publication guidelines  ==
+## Publication guidelines 
 
 Here is a short description of the BASC pipeline that can be adapted in a publication. You are encouraged to include the script that was used to run the pipeline as supplementary material of the article. 
 
- The fMRI data was first reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is essentially selected by the user through a parameter which is the size of the regions when the region growing stops. Typically, a threshold of 1000 mm3 will result into around 1000 regions for a whole-brain analysis restricted to grey matter. The regions are built to maximize the average correlation between time series within each region for all subjects. 
+The fMRI data was first reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is essentially selected by the user through a parameter which is the size of the regions when the region growing stops. Typically, a threshold of 1000 mm3 will result into around 1000 regions for a whole-brain analysis restricted to grey matter. The regions are built to maximize the average correlation between time series within each region for all subjects. 
 
  The basic principle of BASC is to repeat a clustering operation a large number of times, and compute the frequency at which each pair of regions fall in the same cluster. This stability matrix is then itself used in a clustering procedure, which derives so-called stable clusters (stable clusters are composed of regions with a high probability of falling in the same clusters, hence the name). That principle is first applied on individual fMRI time series, and replications of clustering are derived by applying a circular block bootstrap to fMRI time series. A stability matrix is derived for each subject. The average individual stability matrix is then computed and a hierarchical clustering is applied on it. This allows to define group-level clusters which maximize the average probability of being clustered at the individual level. By bootstrapping the subjects of the population, the group-level clustering itself can be subject to BASC, and a group-level stability matrix is derived. A hierarchical clustering is finally applied on the group stability matrix to define stable group clusters. For each brain region, the average stability of that region with every other regions in the cluster of the seed can be derived. This can be done with the individual, average individual or group stability matrices, hence generating stability maps at all levels of analysis for every stable group cluster. 
 
