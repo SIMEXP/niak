@@ -250,7 +250,7 @@ On the MNI ICBM152 young adult symmetric non-linear 50 iterations template
 >VS Fonov, AC Evans, K Botteron, CR Almli, RC McKinstry, DL Collins and the brain development cooperative group. Unbiased average age-appropriate atlases for pediatric studies. NeuroImage, Volume 54, 2011, pp. 313-327. http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009
 
 On the CIVET pipeline.
->Zijdenbos, A.P., Forghani, R., and Evans, A.C. (2002). "Automatic Pipeline Analysis of 3-D MRI Data for Clinical Trials: Application to Multiple Sclerosis". IEEE TRANSACTIONS ON MEDICAL IMAGING 21, pp. 1280-1291.
+>Ad-Dab’bagh, Y., Einarson, D., Lyttelton, O., Muehlboeck, J.-S., Mok, K., Ivanov, O., Vincent, R.D., Lepage, C., Lerch, J., Fombonne, E., and Evans, A.C. (2006). The CIVET Image-Processing Environment: A Fully Automated Comprehensive Pipeline for Anatomical Neuroimaging Research. In Proceedings of the 12th Annual Meeting of the Organization for Human Brain Mapping, M. Corbetta, ed. (Florence, Italy, NeuroImage). [Poster.](http://www.bic.mni.mcgill.ca/users/yaddab/Yasser-HBM2006-Poster.pdf)
 
 Regarding the method for non-uniformity correction of the structural scan.
 >Sled, J.G., Zijdenbos, A.P., and Evans, A.C. (1998). "A Nonparametric Method for Automatic Correction of Intensity Nonuniformity in MRI Data". IEEE Transactions on Medical Imaging 17, pp. 87-97.
