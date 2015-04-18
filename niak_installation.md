@@ -1,8 +1,8 @@
-# Docker installation
+# NIAK docker
 
 The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full replicability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. See installation instructions [here](https://registry.hub.docker.com/u/simexp/niak/).
 
-# Configuration of the pipeline manager
+# Pipeline manager
 
 NIAK is using a pipeline system called [PSOM](http://psom.simexp-lab.org). In all pipelines, the options of psom are set using the field `opt.psom`. The most important parameter is the maximal number of processes that PSOM can run in parallel. More details about PSOM capabilities and configuration can be found in the dedicated [tutorial](http://psom.simexp-lab.org/psom_configuration.html).
 ```matlab
