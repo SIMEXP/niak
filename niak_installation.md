@@ -1,8 +1,6 @@
-Currently, NIAK has been tested in Ubuntu as well as CentOS. The package reads and writes MINC files. Both MINC1 and MINC2 are supported. MINC1 files may in addition be compressed (extension .gz). Support for 4D NIFTI files is experimental. 
-
 # Docker installation
 
-The recommended way to install NIAK is to use a docker container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full replicability of results, regardless of potential upgrades to the production OS. See installation instructions [here](https://registry.hub.docker.com/u/simexp/niak/).
+The recommended way to install NIAK is to use a docker container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full replicability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. See installation instructions [here](https://registry.hub.docker.com/u/simexp/niak/).
 
 # Configuration of the pipeline manager
 
