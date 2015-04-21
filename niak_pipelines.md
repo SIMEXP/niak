@@ -1,4 +1,8 @@
 Each NIAK pipeline comes with:
+<a style='text-decoration: none; color: orange;'>
+ <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_doc.png" caption="documentation" width="64px" />
+<div style='width: 60px; text-align: center;'>Doc</div>
+</a>
 
  * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_doc.png" caption="documentation" width="32px" /> an on-line documentation, 
  * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_slides.png" caption="slideshow" width="32px" /> a slideshow,
