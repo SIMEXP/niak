@@ -6,7 +6,8 @@ Before any statistical or pattern recognition model is applied on fMRI data, a n
 
 # [BASC](pipe_basc.html)
 The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks.  
-> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/basc_logo_large.jpg" width="150px" />](pipe_basc.html)
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_doc.png" caption="documentation" width="64px" />](pipe_basc.html) 
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_slides.png" caption="slideshow" width="64px" />](http://files.figshare.com/2030483/basc_pipeline_niak.pdf)
 
 # [BASC-FIR](pipe_basc_fir.html)
 The bootstrap analysis of stable clusters (BASC) on finite-impulse response (FIR) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual estimated FIR, in block or slow event-related tasks. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks.  
