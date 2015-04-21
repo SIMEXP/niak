@@ -226,7 +226,7 @@ opt.smooth_vol.fwhm = 6;
 opt.smooth_vol.flag_skip = 0;
 ```
 
-# Publication guidelines
+## Publication guidelines
 
 Here is a short description of the fMRI preprocessing pipeline that can be adapted in a publication. You are encouraged to include the script that was used to preprocess the fMRI database as supplementary material of the article. 
 
