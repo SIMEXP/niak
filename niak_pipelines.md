@@ -1,3 +1,9 @@
+Each NIAK pipeline comes with:
+ * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_doc.png" caption="documentation" width="32px" /> an on-line documentation, 
+ * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_slides.png" caption="slideshow" width="32px" /> a slideshow,
+ * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_video.png" caption="video" width="32px" /> a video companion to the slideshow.
+Access by clicking on the icons next to each pipeline description.
+
 # [fMRI/T1 preprocessing](pipe_preprocessing.html) 
 Before any statistical or pattern recognition model is applied on fMRI data, a number of preprocessing steps need to be applied. These steps aim at reducing noise and align the brains of different subjects. The NIAK preprocessing pipeline for fMRI (and T1) data is versatile and includes most of the preprocessing tools currently available for connectivity analysis in fMRI.
 > [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_doc.png" caption="documentation" width="64px" />](pipe_preprocessing.html)
