@@ -2,6 +2,7 @@ Each NIAK pipeline comes with:
  * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_doc.png" caption="documentation" width="32px" /> an on-line documentation, 
  * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_slides.png" caption="slideshow" width="32px" /> a slideshow,
  * <img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/icon_video.png" caption="video" width="32px" /> a video companion to the slideshow.
+ 
 Access by clicking on the icons next to each pipeline description.
 
 # [fMRI/T1 preprocessing](pipe_preprocessing.html) 
