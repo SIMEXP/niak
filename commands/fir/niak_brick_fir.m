@@ -232,10 +232,14 @@ for num_r = 1:length(files_in.fmri)
     [fir_mean,nb_fir] = niak_build_fir(tseries,opt_fir);       
         
     %% Normalization
-    opt_norm.time_sampling = opt.time_sampling;
-    opt_norm.type = 'fir';    
-    fir_mean = niak_normalize_fir(fir_mean,baseline,opt_norm);    
-    
+    if ~isempty(baseline)
+        opt_norm.time_sampling = opt.time_sampling;
+        opt_norm.type = 'fir';    
+        fir_mean = niak_normalize_fir(fir_mean,baseline,opt_norm);    
+    else
+        nb_fir = 0;
+    end
+
     % Average the FIR estimation across runs
     fir_mean = nb_fir*fir_mean;
     nb_fir_tot = nb_fir + nb_fir_tot;  
