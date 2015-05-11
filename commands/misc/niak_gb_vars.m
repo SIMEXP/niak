@@ -34,6 +34,13 @@
 % THE SOFTWARE.
 
 
+%% Use the local configuration file if any
+if ~exist('gb_niak_gb_vars_local','var')&&exist('niak_gb_vars_local.m','file')		
+    gb_niak_gb_vars_local = true;
+    niak_gb_vars_local
+    return
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
