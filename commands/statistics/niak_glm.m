@@ -76,7 +76,7 @@ function [results,opt] = niak_glm(model,opt)
 %
 %   PCE
 %      (vector,size [1 N]) PCE(n) is the per-comparison error associated with 
-%      TTEST(n) (bilateral test). (only available if OPT.TEST is 'ttest')
+%      TTEST(n) (bilateral test). (unless OPT.TEST is 'none')
 %
 %   DEGFREE
 %      (scalar value) is the degrees of freedom left after regression.
@@ -146,8 +146,8 @@ K = size(x,2);
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
-
-beta = (x'*x)^(-1)*x'*y;         % Regression coefficients
+ 
+beta = (x'*x)\x'*y;              % Regression coefficient 
 e = y-x*beta;                    % Residuals
 
 if isfield(opt,'test')
