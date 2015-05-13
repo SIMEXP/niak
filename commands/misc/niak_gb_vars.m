@@ -10,7 +10,7 @@
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
 % Dpartement d'informatique et de recherche oprationnelle
 % Centre de recherche de l'institut de Griatrie de Montral
-% Universit de Montral, 2010-2011
+% Universit de Montral, 2010-2015
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : NIAK
@@ -45,8 +45,16 @@ end
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% where to store temporary files
-gb_niak_tmp = [tempdir filesep]; 
+% All niak var that has an equivalent in psom should be assigned in
+% this if block
+flag_psom_loaded = exist('gb_psom_gb_vars','var');
+if flag_psom_loaded 
+    % loading psom vars 
+    gb_psom_gb_vars
+    gb_niak_tmp = gb_psom_tmp
+else 
+    gb_niak_tmp = [tempdir filesep]
+endif
 
 % The command to zip files
 gb_niak_zip = 'gzip -f'; 
@@ -66,19 +74,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % The folder of the CIVET pipeline
-gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9'; 
+gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9' ;
 
 % program to display ps files
-gb_niak_viewerps = 'evince'; 
+gb_niak_viewerps = 'evince';
 
 % program to display jpg files
-gb_niak_viewerjpg = 'eog'; 
+gb_niak_viewerjpg = 'eog';
 
 % program to display svg files
-gb_niak_viewersvg = 'eog'; 
+gb_niak_viewersvg ='eog';
 
 % The command to convert ps or eps documents into the pdf file format
-gb_niak_ps2pdf = 'ps2pdf'; 
+gb_niak_ps2pdf = 'ps2pdf';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables should not be changed %%
