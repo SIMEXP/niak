@@ -40,3 +40,4 @@ script:
 
 notifications:
   email: false
+  slack: simexp:eFh4jwo2RWWvSoafeVx9xzoU
