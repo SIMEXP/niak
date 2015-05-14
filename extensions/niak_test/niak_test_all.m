@@ -63,8 +63,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 % http://code.google.com/p/psom/wiki/PsomConfiguration
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2013-2014.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2013-2014.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : test, NIAK, fMRI preprocessing, pipeline, DEMONIAK

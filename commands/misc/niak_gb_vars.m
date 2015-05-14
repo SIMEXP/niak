@@ -50,10 +50,10 @@ end
 flag_psom_loaded = exist('gb_psom_gb_vars','var');
 if flag_psom_loaded 
     % loading psom vars 
-    gb_psom_gb_vars
-    gb_niak_tmp = gb_psom_tmp
+    gb_psom_gb_vars;
+    gb_niak_tmp = gb_psom_tmp;
 else 
-    gb_niak_tmp = [tempdir filesep]
+    gb_niak_tmp = [tempdir filesep];
 endif
 
 % The command to zip files

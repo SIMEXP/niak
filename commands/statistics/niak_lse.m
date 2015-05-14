@@ -94,7 +94,7 @@ c = c(:);
 if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
-beta = (x'*x)^(-1)*x'*y; % Regression coefficients
+beta = (x'*x)\x'*y; % Regression coefficients
 if nargout > 1
     e = y-x*beta; % Residuals
 end

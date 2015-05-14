@@ -211,6 +211,8 @@ elseif strcmp(algo,'Fastica-Sym')
         varCompRatio(:,num_comp) = var_C./varData;
         contrib(num_comp) = mean(varCompRatio(:,num_comp));
     end
+else
+    error('%s is an unknown algorithm',algo)
 end
 
 contrib = contrib(:);

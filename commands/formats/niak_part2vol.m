@@ -1,4 +1,4 @@
-function vol = niak_part2vol(part,mask);
+function vol = niak_part2vol(part,mask)
 % Convert a partition of N individual regions into 3D maps of clusters.
 %
 % SYNTAX:
