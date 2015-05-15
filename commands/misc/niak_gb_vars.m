@@ -100,8 +100,7 @@ else
         gb_niak_user = getenv('USERNAME');	
     otherwise
         gb_niak_user = 'unknown';
-    end    
-
+    end
 end
 
 % The command to zip files
