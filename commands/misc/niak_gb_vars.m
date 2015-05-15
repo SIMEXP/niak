@@ -60,8 +60,8 @@ if flag_psom_loaded
     gb_niak_tmp = gb_psom_tmp;
     gb_niak_language = gb_psom_language;
     gb_niak_language_version = gb_psom_language_version;
-    gb_niak_OS = gb_psom_OS
-    gb_niak_user = gb_psom_user
+    gb_niak_OS = gb_psom_OS;
+    gb_niak_user = gb_psom_user;
 else 
     % tmpfile
     gb_niak_tmp = [tempdir filesep];
@@ -100,7 +100,7 @@ else
         gb_niak_user = getenv('USERNAME');	
     otherwise
         gb_niak_user = 'unknown';
-    endswitch    
+    end    
 
 end
 
