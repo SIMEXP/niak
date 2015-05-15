@@ -45,15 +45,63 @@ end
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% What is the operating system ?
+comp = computer;
+tag_unix = {'SOL2','GLNX','unix','linux'};
+tag_windaub = {'PCWIN','windows'};
+
+
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
 flag_psom_loaded = exist('gb_psom_gb_vars','var');
 if flag_psom_loaded 
-    % loading psom vars 
+    % loading common psom vars 
     gb_psom_gb_vars;
     gb_niak_tmp = gb_psom_tmp;
+    gb_niak_language = gb_psom_language;
+    gb_niak_language_version = gb_psom_language_version;
+    gb_niak_OS = gb_psom_OS
+    gb_niak_user = gb_psom_user
 else 
+    % tmpfile
     gb_niak_tmp = [tempdir filesep];
+
+    % Is the environment Octave or Matlab ?
+    if exist('OCTAVE_VERSION','builtin')    
+        gb_niak_language = 'octave'; %% this is octave !
+    else
+        gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab
+    endif
+
+    % Get langage version
+    if strcmp(gb_niak_language,'octave');
+        gb_niak_language_version = OCTAVE_VERSION;
+    else
+        gb_niak_language_version = version;
+    endif 
+
+
+    if max(niak_find_str_cell(comp,tag_unix))>0
+        gb_niak_OS = 'unix';
+    elseif max(niak_find_str_cell(comp,tag_windaub))>0
+        gb_niak_OS = 'windows';
+    elseif ~isempty(findstr('linux',comp))
+        gb_niak_OS = 'unix';
+    else
+        warning('System %s unknown!\n',comp);
+        gb_niak_OS = 'unkown';
+    end
+
+    %% getting user name.
+    switch (gb_niak_OS)
+    case 'unix'
+        gb_niak_user = getenv('USER');
+    case 'windows'
+        gb_niak_user = getenv('USERNAME');	
+    otherwise
+        gb_niak_user = 'unknown';
+    endswitch    
+
 endif
 
 % The command to zip files
@@ -67,7 +115,7 @@ gb_niak_zip_ext = '.gz';
 
 if exist('flag_gb_niak_fast_gb','var')&&flag_gb_niak_fast_gb
     return
-end
+endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables describe the folders and external tools NIAK is using for various tasks %%
@@ -95,30 +143,16 @@ gb_niak_ps2pdf = 'ps2pdf';
 %% NIAK version
 gb_niak_version = '0.13.0'; 
 
-%% Is the environment Octave or Matlab ?
-if exist('OCTAVE_VERSION','builtin')    
-    gb_niak_language = 'octave'; %% this is octave !
-else
-    gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab
-end
-
-%% Get langage version
-if strcmp(gb_niak_language,'octave');
-    gb_niak_language_version = OCTAVE_VERSION;
-else
-    gb_niak_language_version = version;
-end 
-
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');
 if isempty(str_read_vol)
     error('NIAK is not in the path ! (could not find NIAK_READ_VOL)')
-end
+endif
 tmp_folder = niak_string2words(str_read_vol,{filesep});
 gb_niak_path_niak = filesep;
 for num_f = 1:(length(tmp_folder)-3)
     gb_niak_path_niak = [gb_niak_path_niak tmp_folder{num_f} filesep];
-end
+endfor
 
 %% In which path are the templates ?
 gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
@@ -126,7 +160,7 @@ gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
 %% In which path is the NIAK demo ?
 if ~exist('gb_niak_path_demo','var')
     gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
-end
+endif
 
 %% In which format is the niak demo ?
 gb_niak_format_demo = 'minc2';
@@ -138,30 +172,4 @@ elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'),'file')
     gb_niak_format_demo = 'nii';
 elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.img'),'file')
     gb_niak_format_demo = 'analyze';
-end
-
-%% What is the operating system ?
-comp = computer;
-tag_unix = {'SOL2','GLNX','unix','linux'};
-tag_windaub = {'PCWIN','windows'};
-
-if max(niak_find_str_cell(comp,tag_unix))>0
-    gb_niak_OS = 'unix';
-elseif max(niak_find_str_cell(comp,tag_windaub))>0
-    gb_niak_OS = 'windows';
-elseif ~isempty(findstr('linux',comp))
-    gb_niak_OS = 'unix';
-else
-    warning('System %s unknown!\n',comp);
-    gb_niak_OS = 'unkown';
-end
-
-%% getting user name.
-switch (gb_niak_OS)
-case 'unix'
-	gb_niak_user = getenv('USER');
-case 'windows'
-	gb_niak_user = getenv('USERNAME');	
-otherwise
-	gb_niak_user = 'unknown';
-end
+endif
