@@ -71,14 +71,14 @@ else
         gb_niak_language = 'octave'; %% this is octave !
     else
         gb_niak_language = 'matlab'; %% this is not octave, so it must be matlab
-    endif
+    end
 
     % Get langage version
     if strcmp(gb_niak_language,'octave');
         gb_niak_language_version = OCTAVE_VERSION;
     else
         gb_niak_language_version = version;
-    endif 
+    end 
 
 
     if max(niak_find_str_cell(comp,tag_unix))>0
@@ -102,7 +102,7 @@ else
         gb_niak_user = 'unknown';
     endswitch    
 
-endif
+end
 
 % The command to zip files
 gb_niak_zip = 'gzip -f'; 
@@ -115,7 +115,7 @@ gb_niak_zip_ext = '.gz';
 
 if exist('flag_gb_niak_fast_gb','var')&&flag_gb_niak_fast_gb
     return
-endif
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables describe the folders and external tools NIAK is using for various tasks %%
@@ -147,12 +147,12 @@ gb_niak_version = '0.13.0';
 str_read_vol = which('niak_read_vol');
 if isempty(str_read_vol)
     error('NIAK is not in the path ! (could not find NIAK_READ_VOL)')
-endif
+end
 tmp_folder = niak_string2words(str_read_vol,{filesep});
 gb_niak_path_niak = filesep;
 for num_f = 1:(length(tmp_folder)-3)
     gb_niak_path_niak = [gb_niak_path_niak tmp_folder{num_f} filesep];
-endfor
+end
 
 %% In which path are the templates ?
 gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
@@ -160,7 +160,7 @@ gb_niak_path_template = cat(2,gb_niak_path_niak,'template',filesep);
 %% In which path is the NIAK demo ?
 if ~exist('gb_niak_path_demo','var')
     gb_niak_path_demo = cat(2,gb_niak_path_niak,'data_demo',filesep);
-endif
+end
 
 %% In which format is the niak demo ?
 gb_niak_format_demo = 'minc2';
@@ -172,4 +172,4 @@ elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'),'file')
     gb_niak_format_demo = 'nii';
 elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.img'),'file')
     gb_niak_format_demo = 'analyze';
-endif
+end
