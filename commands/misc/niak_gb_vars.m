@@ -142,6 +142,9 @@ gb_niak_ps2pdf = 'ps2pdf';
 %% NIAK version
 gb_niak_version = '0.13.0'; 
 
+%% Target for tests
+gb_niak_target_test = '2015-05-15';
+
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');
 if isempty(str_read_vol)
