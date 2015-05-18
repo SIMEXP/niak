@@ -10,6 +10,11 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %   (string) A 3D volume with a "target" partition. The Ith cluster
 %   is filled with Is.
 %
+% FILES_IN.MASK
+%   (string) A 3D volume with non-zero values in all voxels that should be
+%   included in the anlaysis. The partition in FILES_IN.PART should be a
+%   subset of these voxels.
+%
 % FILES_OUT.STABILITY_MAPS
 %   (string) a 4D volume, where the k-th volume is the stability map of the k-th cluster.
 % FILES_OUT.PARTITION_CORES
@@ -117,8 +122,8 @@ end
 
 % FILES_IN
 in = psom_struct_defaults(in, ...
-           { 'fmri' , 'part' }, ...
-           { NaN    , NaN    });
+           { 'fmri' , 'part' , 'mask' }, ...
+           { NaN    , NaN    , NaN    });
 
 % Options
 if nargin < 3
@@ -175,8 +180,22 @@ else
     error('I do not recognize the input file type\n');
 end
 
+% Get the partition
 [~,part] = niak_read_vol(in.part);
+% Round it in case the values are not integers
 part = round(part);
+% Get the mask
+[~, mask] = niak_read_vol(in.mask);
+mask = logical(mask);
+
+%% Check quickly if the partition covers the entire mask
+non_overlap = sum(part(mask)==0);
+if non_overlap > 0
+    % Something is wrong there
+    error('There are values inside the mask that do not have a partition\n    mask: %s\n    partition: %s', in.mask, in.part);
+end
+
+%% Flag Checks
 if opt.flag_target || opt.flag_focus
     % We expect the partition to be 4D
     if size(part,4) > 1
@@ -196,7 +215,6 @@ if opt.flag_target || opt.flag_focus
                      'This will lead to very big correlation matrices. ',...
                      'I will generate a region growing partition to ',...
                      'dimensionality.']);
-            mask = logical(part);
             sz = size(vol);
             [neigh, ~] = niak_build_neighbour(mask, struct);
             % Loop through time and mask the volume
@@ -223,7 +241,6 @@ if any(size(vol(:,:,:,1))~=size(part))
     error('the fMRI dataset and the partition should have the same spatial dimensions')
 end
 
-mask = part>0;
 part_v = part(mask);
 for rr = 1:length(in.fmri)
     if rr>1
