@@ -53,8 +53,8 @@ function [pipeline, opt] = niak_pipeline_stability_scores(files_in, opt)
 
 % FILES IN DEFAULTS
 files_in = psom_struct_defaults(files_in, ...
-           { 'data' , 'part' }, ...
-           { NaN    , NaN    });
+           { 'data' , 'part' , 'mask' }, ...
+           { NaN    , NaN    , NaN    });
 % DEFAULTS
 opt = psom_struct_defaults(opt,...
       { 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
@@ -118,6 +118,7 @@ for j_id = 1:j_number
     j_name = sprintf('job_of_%s', j_names{j_id});
     s_in.fmri = cell_fmri{j_id};
     s_in.part = files_in.part;
+    s_in.mask = files_in.mask;
     s_out = struct;
     % Set the paths for the requested output files
     for out_id = 1:length(o_names)
