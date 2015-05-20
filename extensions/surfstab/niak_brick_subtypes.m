@@ -1,52 +1,67 @@
 function [in,out,opt] = niak_brick_subtypes(in,out,opt)
-% BLABLABLA
+% Identify population subtypes based on individual brain maps
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SUBTYPES(FILES_IN,FILES_OUT,OPT)
 %
-% ___________________________________________________________________________________
-% INPUTS
-%
-% FILES_IN  
-%   (structure) with the following fields : 
-%
-%   MASK
-%      (string) a file name of a mask of the brain (filled with 1s, 0 is for the 
-%      background). The analysis will be done on the voxels inside the mask.
-%
-%   STAB_MAPS.(SUBJECT).(SESSION).(RUN)
-%      (string) a 3D+t fMRI dataset. The fields <SUBJECT>, <SESSION> and <RUN> can be 
-%      any arbitrary string. 
-%
-% FILES_OUT.MAPS
-%    (cell of strings) FILES_OUT.MAPS{I} is the mean volility of network I.
-%
-% FILES_OUT.MAPS_DEMEANED
-%    (cell of strings) FILES_OUT.MAPS_DEMEANED{I} is the mean volility of network I,
-%    minus the grand average of all volility maps.
-%
+% FILES_IN.(SUBJECT).(SESSION).(RUN)
+%   (string) a .mat file with the following variables:
+%   NETWORK_NN (vector) with NN=1,...,N. The (vectorized) map 
+%      for network NN. All subject need to have an identical number of networks. 
+%   MASK (3D array) the binary mask of the brain used for vectorization. 
+%   HDR (structure) the header of the mask (see NIAK_READ_VOL). 
+% 
+% FILES_OUT.SUBTYPES_AVERAGE
+%    (cell of strings) the NN entry corresponds to the NETWORK_NN input. 
+%    The name of a nii/mnc file which contains the average map for 
+%    each subtype, coded along the fourth dimension. 
+%    Warning: the extension of the file need to correspond to the HDR variable above.
+% FILES_OUT.SUBTYPES_STD
+%    (cell of strings) the NN entry corresponds to the NETWORK_NN input. 
+%    The name of a nii/mnc file which contains the std map for 
+%    each subtype, coded along the fourth dimension. 
+%    Warning: the extension of the file need to correspond to the HDR variable above.
+% FILES_OUT.SUBTYPES_DEMEANED
+%    (cell of strings) same as FILES_OUT.SUBTYPES, except that each map 
+%    is the difference between the subtype average, and the grand average.
+% FILES_OUT.GRAND_AVERAGE
+%    (string) same as SUBTYPES_AVERAGE, but the average over the full population, rather 
+%    than just a subtype. 
+% FILES_OUT.GRAND_STD
+%    (string) same as SUBTYPES_STD, but the average over the full population, rather than
+%    just a subtype. 
 % FILES_OUT.WEIGHTS
-%    (string) a .mat file with 
+%    (string) a .mat file with the following variables:
+%    WEIGHTS (array) WEIGHTS(NN,SS,II) is the similarity of network NN for subject SS 
+%       with subtype II.
+%    SIM (array) SIM(:,:,NN) is the inter-subject similarity matrix, for network NN.
+%    HIER (array) HIER(:,:,NN) is the hierarchy between subjects, for network NN.
+%    PART (array) PART(:,NN) is the partition of the subjects into subtypes, 
+%       for network NN. 
 %
 % OPT
 %   (structure) with the following fields : 
 %   NB_CLUSTER
-%      (integer, default ...)
-%
-%   FLAG_TEST
-%      (boolean, default false) If FLAG_TEST is true, the pipeline will
-%      just produce a pipeline structure, and will not actually process
-%      the data. Otherwise, PSOM_RUN_PIPELINE will be used to process the
-%      data.
-%
+%      (integer, default 5) the number of subtypes. 
+%   LABELS_NETWORK
+%      (cell of strings, default {'NETWORK1',...}) LABELS_NETWORK{NN} is the label 
+%      of network NN (these labels will be used to name the outputs).
+%   FOLDER_OUT
+%      (string, default pwd) where to save the results by default.
+%   FLAG_TEST 
+%      (boolean, default 0) if FLAG_TEST equals 1, the brick does not 
+%      do anything but update the default values in FILES_IN, 
+%      FILES_OUT and OPT.s
 %   FLAG_VERBOSE
-%      (boolean, default true) Print some advancement infos.
+%      (boolean, default true) Print some progress info.
 %
+% COMMENT:
+% 
 % _________________________________________________________________________
-% Copyright (c) Pierre Orban, Pierre Bellec
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Copyright (c) Pierre Bellec
+% Centre de recherche de l'institut de geriatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2015
+% University of Montreal, Qubec, Canada, 2015
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : cluster analysis, fMRI
@@ -78,9 +93,15 @@ if ~exist('in','var') || ~exist('out','var')
 end
 
 % FILES_IN
-in = psom_struct_defaults(in, ...
-           { 'vol_maps' , 'mask' }, ...
-           { NaN         , NaN    });
+if ~istruct(in)
+    error('FILES_IN should be a structure')
+end
+[list_maps,labels] = niak_fmri2cell(in);
+
+% FILES_OUT
+opt = psom_struct_defaults(out, ...
+      { 'subtypes_average' , 'subtypes_demeaned' , 'subtypes_std' , 'subtypes_std' , 'grand_average' , 'grand_std' , 'weights' , 'flag_verbose' , 'flag_test' } , ...
+      { 'gb_niak_omitted'  , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , false        , false         , false       , true           , false       });
 
 % Options
 if nargin < 3
