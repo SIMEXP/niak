@@ -191,8 +191,9 @@ mask = logical(mask);
 %% Check quickly if the partition covers the entire mask
 non_overlap = sum(part(mask)==0);
 if non_overlap > 0
-    % Something is wrong there
-    error('There are values inside the mask that do not have a partition\n    mask: %s\n    partition: %s', in.mask, in.part);
+    % Some parts of the mask have no partition. Constrain the mask to the partition raise a warning
+    warning('There are values inside the mask that do not have a partition\n    mask: %s\n    partition: %s\nI will constrain the mask to the partition and continue', in.mask, in.part);
+    mask = logical(logical(part) .* mask);
 end
 
 %% Flag Checks
