@@ -140,7 +140,11 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'CBB'  , struct() });
 
 % FILES_OUT
-[~,~,ext] = niak_fileparts(in.fmri{1});
+if iscell in.fmri
+    [~,~,ext] = niak_fileparts(in.fmri{1});
+else
+    [~,~,ext] = niak_fileparts(in.fmri);
+end
 fprintf('I have discovered a file ending as follows: %s', ext);
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
