@@ -76,6 +76,9 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %       reference region. The ROI will be clustered based on the similarity
 %       of its connectivity profile with the prior partition in column 1 to
 %       the connectivity profile of the reference.
+% OPT.FLAG_VOL (boolean, default false)
+%       If true, the output for the designated types will be generated as 3D or 4D volumes
+%       (e.g. minc or nifti). If false, only the .mat file will be generated
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does not do anything
 %       but update FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
@@ -130,8 +133,8 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
-      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , false        , false         , false       , true           , false       });
+      { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'ext'             , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_vol', 'flag_test' } , ...
+      { 'median'      , 1         , ''           , 0.5      , []          , 100        , struct()   , 'gb_niak_omitted' , false        , false         , false       , true           , false     , false       });
 opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'type' , 'opt'    }, ...
       { 'CBB'  , struct() });
@@ -192,7 +195,9 @@ mask = logical(mask);
 non_overlap = sum(part(mask)==0);
 if non_overlap > 0
     % Some parts of the mask have no partition. Constrain the mask to the partition raise a warning
-    warning('There are values inside the mask that do not have a partition\n    mask: %s\n    partition: %s\nI will constrain the mask to the partition and continue', in.mask, in.part);
+    warning(['There are values inside the mask that do not have a partition\n',...
+             '    mask: %s\n    partition: %s\n',...
+             'I will constrain the mask to the partition and continue', in.mask, in.part]);
     mask = logical(logical(part) .* mask);
 end
 
@@ -270,97 +275,160 @@ end
 opt_score = rmfield(opt,{'folder_out','thresh','rand_seed','flag_test', 'flag_deal'});
 res = niak_stability_cores(tseries,part_run,opt_score);
 
+% Stability maps (scores)
 if ~strcmp(out.stability_maps,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing stability maps\n')
     end
-    stab_maps = niak_part2vol(res.stab_maps',mask);
-    FDhdr.file_name = out.stability_maps;
-    niak_write_vol(FDhdr,stab_maps);
+    
+    scores_mat = sprintf('%s.mat', out.stability_maps);
+    scores = struct;
+    for n_id = 1:size(res.stab_maps', 4)
+        n_name = sprintf('network_%d', n_id)
+        scores.(n_name) = res.stab_maps'(:,:,:,n_id);
+    end
+    save(scores_mat, 'scores');
+
+    if opt.flag_vol
+        scores_vol = sprintf('%s%s', out.stability_maps, ext);
+        % Write the output as a volume
+        stab_maps = niak_part2vol(res.stab_maps',mask);
+        FDhdr.file_name = scores_vol;
+        niak_write_vol(FDhdr,stab_maps);
+    end
 end
 
+% Stability Intra
 if ~strcmp(out.stability_intra,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing intra-cluster stability\n')
     end
-    stab_intra = niak_part2vol(res.stab_intra',mask);
-    TDhdr.file_name = out.stability_intra;
-    niak_write_vol(TDhdr,stab_intra);
+
+    stabin_mat = sprintf('%s.mat', out.stability_intra);
+    stabin = struct;
+    for n_id = 1:size(res.stab_intra', 4)
+        n_name = sprintf('network_%d', n_id)
+        stabin.(n_name) = res.stab_intra'(:,:,:,n_id);
+    end
+    save(stabin_mat, 'stabin');
+
+    if opt.flag_vol
+        stabin_vol = sprintf('%s%s', out.stability_intra, ext);
+        stab_intra = niak_part2vol(res.stab_intra',mask);
+        TDhdr.file_name = stabin_vol;
+        niak_write_vol(TDhdr,stab_intra);
+    end
 end
 
+% Stability Inter
 if ~strcmp(out.stability_inter,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing inter-cluster stability\n')
     end
-    stab_inter = niak_part2vol(res.stab_inter',mask);
-    TDhdr.file_name = out.stability_inter;
-    niak_write_vol(TDhdr,stab_inter);
+
+    stabit_mat = sprintf('%s.mat', out.stability_inter);
+    stabit = struct;
+    for n_id = 1:size(res.stab_inter', 4)
+        n_name = sprintf('network_%d', n_id)
+        stabit.(n_name) = res.stab_inter'(:,:,:,n_id);
+    end
+    save(stabit_mat, 'stabit');
+
+    if opt.flag_vol
+        stabit_vol = sprintf('%s%s', out.stability_inter, ext);
+        stab_inter = niak_part2vol(res.stab_inter',mask);
+        TDhdr.file_name = stabit_vol;
+        niak_write_vol(TDhdr,stab_inter);
+    end
 end
 
 if ~strcmp(out.stability_contrast,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing stability contrast\n')
     end
-    stab_contrast = niak_part2vol(res.stab_contrast',mask);
-    TDhdr.file_name = out.stability_contrast;
-    niak_write_vol(TDhdr,stab_contrast);
+
+    if opt.flag_vol
+        stabco_vol = sprintf('%s%s', out.stability_contrast, ext);
+        stab_contrast = niak_part2vol(res.stab_contrast',mask);
+        TDhdr.file_name = stabco_vol;
+        niak_write_vol(TDhdr,stab_contrast);
+    end
 end
 
 if ~strcmp(out.partition_cores,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing partition based on cores\n')
     end
-    part_cores = niak_part2vol(res.part_cores',mask);
-    FDhdr.file_name = out.partition_cores;
-    niak_write_vol(FDhdr,part_cores);
+
+    if opt.flag_vol
+        partco_vol = sprintf('%s%s', out.partition_cores, ext);
+        part_cores = niak_part2vol(res.part_cores',mask);
+        FDhdr.file_name = partco_vol;
+        niak_write_vol(FDhdr,part_cores);
+    end
 end
 
 if ~strcmp(out.partition_thresh,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing partition based on cores, thresholded on stability\n')
     end
-    FDhdr.file_name = out.partition_thresh;
-    part_cores(stab_contrast<opt.thresh) = 0;
-    niak_write_vol(FDhdr,part_cores);
+
+    if opt.flag_vol
+        partth_vol = sprintf('%s%s', out.partition_thresh, ext);
+        FDhdr.file_name = partth_vol;
+        part_cores(stab_contrast<opt.thresh) = 0;
+        niak_write_vol(FDhdr,part_cores);
+    end
 end
 
 if ~strcmp(out.extra,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing extra info\n')
     end
+
+    extra_mat = sprintf('%s.mat', out.extra);
     nb_iter = res.nb_iter;
     changes = res.changes;
-    save(out.extra,'nb_iter','changes')
+    save(extra_mat,'nb_iter','changes');
 end
 
 if ~strcmp(out.rmap_part,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing correlation maps (seed: initial partition)\n')
     end
-    opt_t.type_center = 'mean';
-    opt_t.correction = 'mean_var';
-    tseed = niak_build_tseries(tseries,part_v,opt_t);
-    rmap = niak_part2vol(niak_fisher(corr(tseries,tseed))',mask);
-    FDhdr.file_name = out.rmap_part;   
-    niak_write_vol(FDhdr,rmap);  
+
+    if opt.flag_vol
+        rmappt_vol = sprintf('%s%s', out.rmap_part, ext);
+        opt_t.type_center = 'mean';
+        opt_t.correction = 'mean_var';
+        tseed = niak_build_tseries(tseries,part_v,opt_t);
+        rmap = niak_part2vol(niak_fisher(corr(tseries,tseed))',mask);
+        FDhdr.file_name = rmappt;   
+        niak_write_vol(FDhdr,rmap);
+    end
 end
 
 if ~strcmp(out.rmap_cores,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing correlation maps (seed: cores)\n')
     end
-    opt_t.type_center = 'mean';
-    opt_t.correction = 'mean_var';
-    tseed = niak_build_tseries(tseries,res.part_cores,opt_t);
-    rmap = niak_part2vol(niak_fisher(corr(tseries,tseed))',mask);
-    FDhdr.file_name = out.rmap_cores;   
-    niak_write_vol(FDhdr,rmap);  
+
+    if opt.flag_vol
+        rmapco_vol = sprintf('%s%s', out.rmap_cores, ext);
+        opt_t.type_center = 'mean';
+        opt_t.correction = 'mean_var';
+        tseed = niak_build_tseries(tseries,res.part_cores,opt_t);
+        rmap = niak_part2vol(niak_fisher(corr(tseries,tseed))',mask);
+        FDhdr.file_name = rmapco_vol;   
+        niak_write_vol(FDhdr,rmap);  
+    end
 end
 
 if ~strcmp(out.dual_regression,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing dual regression maps \n')
     end
+
     opt_t.type_center = 'mean';
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,part_v,opt_t);
@@ -372,7 +440,12 @@ if ~strcmp(out.dual_regression,'gb_niak_omitted')
         warning('Dual regression was ill-conditioned')
         beta = zeros(size(tseries,1),max(part_v));
     end
-    beta = niak_part2vol(beta,mask);
-    FDhdr.file_name = out.dual_regression;
-    niak_write_vol(FDhdr,beta);
+
+    if opt.flag_vol
+        dureg_vol = sprintf('%s%s', out.dual_regression, ext);
+
+        beta = niak_part2vol(beta,mask);
+        FDhdr.file_name = dureg_vol;
+        niak_write_vol(FDhdr,beta);
+    end
 end
