@@ -115,7 +115,7 @@ pipeline = struct;
 for j_id = 1:j_number
     % Get the name of the subject
     s_name = labels_subject{j_id};
-    j_name = sprintf('job_of_%s', j_names{j_id});
+    j_name = sprintf('scores_%s', j_names{j_id});
     s_in.fmri = cell_fmri{j_id};
     s_in.part = files_in.part;
     s_in.mask = files_in.mask;
