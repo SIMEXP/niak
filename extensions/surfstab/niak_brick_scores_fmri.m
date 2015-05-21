@@ -140,7 +140,7 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'CBB'  , struct() });
 
 % FILES_OUT
-if iscell in.fmri
+if iscell(in.fmri)
     [~,~,ext] = niak_fileparts(in.fmri{1});
 else
     [~,~,ext] = niak_fileparts(in.fmri);
