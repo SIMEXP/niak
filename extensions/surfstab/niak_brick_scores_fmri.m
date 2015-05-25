@@ -226,7 +226,7 @@ mask = logical(mask);
 non_overlap = sum(part(mask)==0);
 if non_overlap > 0
     % Some parts of the mask have no partition. Constrain the mask to the partition raise a warning
-    warning('There are values inside the mask that do not have a partition');
+    warning('There are values inside the mask that do not have a partition. I will use the union of mask and partition.');
     mask = logical(logical(part) .* mask);
 end
 
