@@ -26,6 +26,27 @@ function [pipeline, opt] = niak_pipeline_stability_scores(files_in, opt)
 %     either empty to save all or a structure to save only specific stuff.
 %     Each file needs to be defined here with the default being yes.
 %   - Maybe a folder that we want to store everything in
+% OPT.FILES_OUT
+%   STABILITY_MAPS
+%     (boolean)
+%   PARTITION_CORES
+%     (boolean)
+%   STABILITY_INTRA
+%     (boolean)
+%   STABILITY_INTRA
+%     (boolean)
+%   STABILITY_CONTRAST
+%     (boolean)
+%   PARTITION_THRESH
+%     (boolean)
+%   RMAP_PART
+%     (boolean)
+%   RMAP_CORES
+%     (boolean)
+%   DUAL_REGRESSION
+%     (boolean)
+%   EXTRA
+%     (boolean)
 %
 % OPT.FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
 % OPT.FLAG_TARGET (boolean, default false)
@@ -57,8 +78,8 @@ files_in = psom_struct_defaults(files_in, ...
            { NaN    , NaN    , NaN    });
 % DEFAULTS
 opt = psom_struct_defaults(opt,...
-      { 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
-      { 'gb_niak_omitted' , struct      , struct   , struct , false       });
+      { 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_vol' , 'flag_mat' , 'flag_test' },...
+      { 'gb_niak_omitted' , struct      , struct   , struct , false      , true       , false       });
   
 opt.psom = psom_struct_defaults(opt.psom,...
            { 'max_queued' , 'path_logs'             },...
@@ -69,8 +90,8 @@ opt.files_out = psom_struct_defaults(opt.files_out,...
                 { true             , true              , true              , true              , true                 , true               , true    , true       , true        , true              });
 
 opt.scores = psom_struct_defaults(opt.scores, ...
-             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_vol' , 'flag_test' } , ...
-             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , false       , true           , false      , false       });
+             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
+             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , false       , true           , false       });
 
 opt.scores.sampling = psom_struct_defaults(opt.scores.sampling, ...
                       { 'type' , 'opt'    }, ...
@@ -86,7 +107,7 @@ nb_subject = length(list_subject);
 j_names = {labels.name};
 j_number = length(j_names);
 labels_subject = {labels.subject};
-[path_f,name_f,ext_f] = niak_fileparts(cell_fmri{1});
+[path_f,name_f,ext] = niak_fileparts(cell_fmri{1});
 fmri = niak_fmri2struct(cell_fmri,labels);
 
 %% Sanity checks
@@ -123,16 +144,31 @@ for j_id = 1:j_number
     % Set the paths for the requested output files
     for out_id = 1:length(o_names)
         out_name = o_names{out_id};
-        if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
-            s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s',s_name, out_name)];
-        elseif ~opt.files_out.(out_name)
-            s_out.(out_name) = 'gb_niak_omitted';
-            continue
+        if strcmp(out_name, 'extra')
+          s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+        elseif opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
+          if opt.flag_vol
+            o_name = sprintf('%s_vol', out_name);
+            s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
+          end
+          if opt.flag_mat
+            o_name = sprintf('%s_mat', out_name);
+            s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+          end
+        elseif ~opt.files_out.(out_name) && ~strcmp(out_name, 'extra')
+          o_name = sprintf('%s_vol', out_name);
+          s_out.(o_name) = 'gb_niak_omitted';
+          o_name = sprintf('%s_mat', out_name);
+          s_out.(o_name) = 'gb_niak_omitted';
+          continue
+        elseif ~opt.files_out.(out_name) && strcmp(out_name, 'extra')
+          s_out.(out_name) = 'gb_niak_omitted';
+          continue
         elseif ischar(opt.files_out.(out_name))
-            s_out.(out_name) = [opt.files_out.(out_name) filesep sprintf('%s_%s',s_name, out_name)];
+          error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
         end
-        if ~isdir(s_out.(out_name))
-                psom_mkdir(s_out.(out_name));
+        if ~isdir([opt.folder_out filesep out_name])
+                psom_mkdir([opt.folder_out filesep out_name]);
         end
     end
     s_opt = opt.scores;
