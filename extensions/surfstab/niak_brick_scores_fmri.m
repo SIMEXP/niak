@@ -1,18 +1,17 @@
 function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
-% Build stability maps using stable cores of an a priori partition
+% Build stability maps using an a priori partition
 %
 % SYNTAX:
 % [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(FILES_IN,FILES_OUT,OPT)
 %
 % FILES_IN.FMRI
-%   (string or cell of strings) One or multiple 3D+t dataset.
+%   (string or cell of strings) One or multiple 3D+t datasets.
 % FILES_IN.PART
 %   (string) A 3D volume with a "target" partition. The Ith cluster
 %   is filled with Is.
-%
 % FILES_IN.MASK
 %   (string) A 3D volume with non-zero values in all voxels that should be
-%   included in the anlaysis. The partition in FILES_IN.PART should be a
+%   included in the analysis. The partition in FILES_IN.PART should be a
 %   subset of these voxels.
 %
 % FILES_OUT.STABILITY_MAPS
