@@ -1,4 +1,4 @@
-# NIAK docker
+# NIAK with docker
 
 The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full replicability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. See installation instructions [here](https://registry.hub.docker.com/u/simexp/niak/).
 
