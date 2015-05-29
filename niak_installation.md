@@ -4,16 +4,40 @@ The recommended way to install NIAK is to use a [docker](https://www.docker.com/
 
 To run niak with docker on your work station, you will need super user or sudo priviledge.
 
-The first step is to install docker, there is suppost for many different system on the [docker installation site](https://docs.docker.com/installation/).
+The first step is to install docker, there is support for many different system on the [docker installation site](https://docs.docker.com/installation/).
 
-We have seen that federa (20) and centos (7) are turning SELinux on there docker installation. It might lead to some problem when you will expose data to be analyse to the docker/niak image. You can run the following command to disable SELinux on docker. 
+
+
+
+
+###Disclamer:
+
+Be aware that any user that can execute a "docker run"  command on a machine have acess to the complete file system as a super user.
+
+ There is many stategy to run a more secure niak/docker setup, an experienced system administrator would be able to acheve that. We shall have instructions to set up this kind of more limited/secure system on this very page in the future. 
+
+
+
+
+## Debian
+
+## Ubuntu
+
+
+## Fedora and Centos
+
+Federa (20) and centos (7) are turning on SELinux on the docker suite. It might lead to some problem when exposing your data to the docker/niak image. You can run the following command to disable the SELinux control on docker. 
 
 ```bash
 sudo sed "s/\(\(OPTIONS=.*\)--selinux-enabled\(.*\)\)/\2\3/" -i /etc/sysconfig/docker
+sudo systemctl restart docker.service
 ```
+The second line will restart the docker daemon and make the change active.
+
+## Mac OSX 
 
 
-See instructions to run the container [here](https://registry.hub.docker.com/u/simexp/niak/).
+
 
 # Pipeline manager
 
