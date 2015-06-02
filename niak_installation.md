@@ -1,19 +1,61 @@
 # NIAK docker
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full replicability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. 
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. 
 
-To run niak with docker on your work station, you will need super user or sudo priviledge.
+To run niak with docker on your work station, you will need super user or sudo privilege.
 
-The first step is to install docker, there is suppost for many different system on the [docker installation site](https://docs.docker.com/installation/).
+The first step is to install docker, there is support for many different system on the [docker installation site](https://docs.docker.com/installation/).
 
-We have seen that federa (20) and centos (7) are turning SELinux on there docker installation. It might lead to some problem when you will expose data to be analyse to the docker/niak image. You can run the following command to disable SELinux on docker. 
+
+
+
+##Disclaimer:
+
+Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user.
+
+ There is many strategy to run a more secure niak/docker setup, an experienced system administrator will be able to achieve that on its own, however, we shall have instructions to set up this kind of more limited/secure system on this very page in the future. 
+
+# Linux
+
+## docker setup
+The first basic security measure is to create a docker group and add the user that will use docker to that list. You will then lock the Unix socket file that communicate with docker, so only users in that group can access to the docker daemon.
+
 
 ```bash
-sudo sed "s/\(\(OPTIONS=.*\)--selinux-enabled\(.*\)\)/\2\3/" -i /etc/sysconfig/docker
+# If the group already exist it will return an error, so everything is perfect
+sudo groupadd docker
+# Then add user USERNAME to the docker group 
+ sudo usermod -a -G docker USERNAME
 ```
 
+If docker is already running on your system, and that the docker group did not exit at the time the system was start, docker could be accessible only to root/sudo user until it is restarted. To avoid restarting the system, just type:
 
-See instructions to run the container [here](https://registry.hub.docker.com/u/simexp/niak/).
+``` bash
+sudo chgrp docker /run/docker.sock 
+sudo chmod 660 /run/docker.sock
+```
+And user of the docker group will have access to docker service.
+
+## Runnig niak
+
+You need to know where the data to analyse and your results will be stored before you start the docker niak container since only a part of your file system will be accessible to it. An easy workflow is to do all you analysis in you home ($HOME) folder. Here is how you would do it:
+
+```bash
+docker run -i -t --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave --force-gui --persist; /bin/bash"
+```
+
+This somewhat convoluted command line should let you analyse your data with niak using the octave GUI, and let $USER have the same privilege on the simex/niak container then it enjoys on the host computer.
+
+Boot can be a bit slow the fist time a docker command is run since the simexp/niak mirror has to be downloaded from the internet. All subsequent call to the line should be much faster.
+
+Close the GUI and type "exit" in the terminal to stop your session.
+
+
+
+## Mac OSX 
+
+
+
 
 # Pipeline manager
 
