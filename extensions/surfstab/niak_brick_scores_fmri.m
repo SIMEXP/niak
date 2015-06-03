@@ -301,7 +301,7 @@ end
 
 %% Run the stability estimation
 opt_score = rmfield(opt,{'folder_out', 'thresh', 'rand_seed', 'flag_test', 'flag_deal'});
-res = niak_stability_cores(tseries,part_run,opt_score);
+res = niak_scores(tseries,part_run,opt_score);
 
 if ~strcmp(out.stability_maps_vol,'gb_niak_omitted') || ~strcmp(out.stability_maps_mat,'gb_niak_omitted')
     if ~strcmp(out.stability_maps_vol,'gb_niak_omitted')
