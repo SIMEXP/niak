@@ -87,12 +87,12 @@ if nargin < 2
 end
 
 path_demo = niak_full_path(path_demo);
-opt = psom_struct_defaults(opt,{'files_in','folder_out','flag_test'},{'',[path_demo,filesep,'SCORES',filesep],false});
+opt = psom_struct_defaults(opt,{'files_in','folder_out','flag_test'},{'',[path_demo,filesep,'scores',filesep],false});
 
 if isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     %% Grab the results from the NIAK fMRI preprocessing pipeline
     opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-    opt_g.type_files = 'rest'; % Specify to the grabber to prepare the files for the scores pipeline
+    opt_g.type_files = 'scores'; % Specify to the grabber to prepare the files for the scores pipeline
     files_in = niak_grab_fmri_preprocess(path_demo,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 else
     files_in = opt.files_in;
