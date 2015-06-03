@@ -176,11 +176,11 @@ path_logs = [path_test.result 'demoniak_region_growing' filesep 'logs'];
 pipe.demoniak_region_growing = psom_pipeline2job(niak_test_region_growing_demoniak(path_test_rg,opt_pipe),path_logs);
 
 %% Add the test of the connectome pipeline
-path_test_rg.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
-path_test_rg.reference = [path_test.target 'demoniak_connectome'];
-path_test_rg.result    = path_test.result;
+path_test_con.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_con.reference = [path_test.target 'demoniak_connectome'];
+path_test_con.result    = path_test.result;
 path_logs = [path_test.result 'demoniak_connectome' filesep 'logs'];
-pipe.demoniak_connectome = psom_pipeline2job(niak_test_connectome_demoniak(path_test_rg,opt_pipe),path_logs);
+pipe.demoniak_connectome = psom_pipeline2job(niak_test_connectome_demoniak(path_test_con,opt_pipe),path_logs);
 
 %% Add the test of the stability_fir pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
