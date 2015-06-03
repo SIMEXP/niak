@@ -318,7 +318,7 @@ for num_s = 1:nb_subject
             elseif strcmp(opt.type_files,'rest')
                 files.data.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];            
             else
-                error('%s is an unsupported type of output format for the files structure')            
+                error('%s is an unsupported type of output format for the files structure', opt.type_files)            
             end
         else
             error('I could not find any fMRI preprocessed datasets for subject %s',list_subject{num_s});        
