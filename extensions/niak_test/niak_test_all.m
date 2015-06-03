@@ -217,9 +217,9 @@ pipe.demoniak_glm_connectome = psom_pipeline2job(niak_test_glm_connectome_demoni
 
 %% Add the test of the scores pipeline
 path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
-path_test_sc.reference = [path_test.target 'demoniak_connectome'];
+path_test_sc.reference = [path_test.target 'demoniak_scores'];
 path_test_sc.result    = path_test.result;
-path_logs = [path_test.result 'demoniak_connectome' filesep 'logs'];
+path_logs = [path_test.result 'demoniak_scores' filesep 'logs'];
 pipe.demoniak_scores = psom_pipeline2job(niak_test_scores_demoniak(path_test_sc,opt_pipe),path_logs);
 
 %% Add the unit tests for GLM-connectome
