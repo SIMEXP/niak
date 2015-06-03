@@ -107,11 +107,16 @@ path_test = psom_struct_defaults(path_test, ...
     { 'target' , 'demoniak' , 'result'}, ...
     { ''       , ''         , ''      });
 
-%% Grab the demoniak dataset    
-[status,err,data_demoniak] = niak_wget(struct('type','data_test_niak_mnc1'));
-path_test.demoniak = data_demoniak.path;
-if status
-    error('There was a problem downloading the test data')
+%% Check the demoniak data
+if isempty(path_test.demoniak)
+    % Grab the demoniak dataset    
+    [status,err,data_demoniak] = niak_wget(struct('type','data_test_niak_mnc1'));
+    path_test.demoniak = data_demoniak.path;
+    if status
+        error('There was a problem downloading the test data');
+    end
+else
+    fprintf('I am going to use the demoniak data at %s', path_test.demoniak);
 end
 
 %% Grab the demoniak dataset    
