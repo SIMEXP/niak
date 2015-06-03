@@ -1,4 +1,4 @@
-function [pipeline,opt_pipe,files_in] = niak_demo_SCORES(path_demo,opt)
+function [pipeline,opt_pipe,files_in] = niak_demo_scores(path_demo,opt)
 % This function runs NIAK_PIPELINE_SCORES on the preprocessed DEMONIAK dataset
 %
 % SYNTAX:
