@@ -95,7 +95,7 @@ end
 opt_demo.files_in = opt.files_in;
 opt_demo.folder_out = [path_test.result 'demoniak_scores' filesep];
 opt_demo.flag_test = true;
-[pipeline,opt_pipe,files_in] = niak_demo_region_growing(path_test.demoniak,opt_demo);
+[pipeline,opt_pipe,files_in] = niak_demo_scores(path_test.demoniak,opt_demo);
 list_jobs = fieldnames(pipeline);
 
 %% Add a test: comparison of the result of the region growing against the reference
@@ -108,7 +108,7 @@ if ~opt.flag_target
     opt_c.base_target = path_test.reference;
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
     opt_c.black_list_target = [path_test.reference 'logs' filesep];
-    pipeline = psom_add_job(pipeline,'test_region_growing','niak_test_cmp_files',in_c,out_c,opt_c,false);
+    pipeline = psom_add_job(pipeline,'test_scores','niak_test_cmp_files',in_c,out_c,opt_c,false);
     pipeline.test_region_growing.dep = list_jobs;
 end
 
