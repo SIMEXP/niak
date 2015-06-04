@@ -137,14 +137,14 @@ for j_id = 1:j_number
     % Get the name of the subject
     s_name = j_names{j_id};
     j_name = sprintf('scores_%s', j_names{j_id});
-    s_in.fmri = cell_fmri{j_id};
+    s_in.fmri = cell_fmri(j_id);
     s_in.part = files_in.part;
     s_in.mask = files_in.mask;
     s_out = struct;
     % Set the paths for the requested output files
     for out_id = 1:length(o_names)
         out_name = o_names{out_id};
-        elseif opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
+        if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
           if strcmp(out_name, 'extra')
             s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
           else
