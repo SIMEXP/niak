@@ -272,6 +272,7 @@ if ~strcmp(out.stability_intra,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing intra-cluster stability as a volume\n');
     end
+    % Write the output as a volume
     stab_intra = niak_part2vol(res.stab_intra',mask);
     TDhdr.file_name = out.stability_intra;
     niak_write_vol(TDhdr,stab_intra);
@@ -282,6 +283,7 @@ if ~strcmp(out.stability_inter,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing inter-cluster stability as a volume\n');
     end
+    % Write the output as a volume
     stab_inter = niak_part2vol(res.stab_inter',mask);
     TDhdr.file_name = out.stability_inter;
     niak_write_vol(TDhdr,stab_inter);
@@ -292,7 +294,7 @@ if ~strcmp(out.stability_contrast,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing stability contrast as a volume\n')
     end
-
+    % Write the output as a volume
     stab_contrast = niak_part2vol(res.stab_contrast',mask);
     TDhdr.file_name = out.stability_contrast;
     niak_write_vol(TDhdr,stab_contrast);
@@ -303,6 +305,7 @@ if ~strcmp(out.partition_cores,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing partition based on cores as a volume\n')
     end
+    % Write the output as a volume
     part_cores = niak_part2vol(res.part_cores',mask);
     FDhdr.file_name = out.partition_cores;
     niak_write_vol(FDhdr,part_cores);
@@ -317,6 +320,7 @@ if ~strcmp(out.partition_thresh,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing partition based on cores, thresholded on stability as a volume\n')
     end
+    % Write the output as a volume
     FDhdr.file_name = out.partition_thresh;
     niak_write_vol(FDhdr,part_cores);
 end
@@ -331,7 +335,7 @@ if ~strcmp(out.rmap_part,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing correlation maps (seed: initial partition) as a volume\n')
     end
-
+    % Write the output as a volume
     rmap = niak_part2vol(rmap_vec',mask);
     FDhdr.file_name = out.rmap_part;
     niak_write_vol(FDhdr,rmap);
@@ -346,7 +350,7 @@ if ~strcmp(out.rmap_cores,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing correlation maps (seed: cores) as a volume\n')
     end
-
+    % Write the output as a volume
     rmap = niak_part2vol(rmap_vec',mask);
     FDhdr.file_name = out.rmap_cores;
     niak_write_vol(FDhdr,rmap);
@@ -369,7 +373,7 @@ if ~strcmp(out.dual_regression,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing dual regression maps as a volume\n')
     end
-
+    % Write the output as a volume
     beta = niak_part2vol(beta,mask);
     FDhdr.file_name = out.dual_regression;
     niak_write_vol(FDhdr,beta);
@@ -380,7 +384,7 @@ if ~strcmp(out.extra,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing extra info as a .mat file\n')
     end
-
+    % Write the output as a mat file
     nb_iter = res.nb_iter;
     changes = res.changes;
     save(out.extra,'nb_iter','changes');
