@@ -17,25 +17,26 @@ files_in.subject1.anat                = [path_data 'data_test_niak_mnc1/anat_sub
 files_in.subject1.fmri.session1.motor = [path_data 'data_test_niak_mnc1/func_motor_subject1.mnc.gz']; 
 ```
 
-We start by some generic options, specifying where to write the results and how many threads to useé
-
+We start by specifying where to write the results.
 ```matlab
 % Where to store the results
 opt.folder_out  = [path_data 'fmri_preprocess/'];    
+```
+
+Next we specify how many threads to use. A value of N means that, if there are enough jobs that can be executed simultaneously, for example because there are many subjects, up to N jobs can be executed in parallel. 
+```
 % Use up to four threads
 opt.psom.max_queued = 4;       
 ```
 
-The options of the slice timing correction
-
+We now set the options of the slice timing correction. Note that we specify the type of the scanner (in practice, only `'Siemens'` has an impact), because the definition of the scanner impacts the definition of the slice timing. 
 ```matlab
 opt.slice_timing.type_acquisition = 'interleaved ascending'; 
 opt.slice_timing.type_scanner     = 'Bruker';                
 opt.slice_timing.delay_in_tr      = 0;                       
 ```
 
-The voxel size for resampling in stereotaxic space, as well as the options for non6uniformity correction and temporal filtering
-
+The voxel size for resampling in stereotaxic space, as well as the options for non-uniformity correction and temporal filtering.
 ```matlab
 % The voxel size to use in the stereotaxic space
 opt.resample_vol.voxel_size    = 10;
@@ -48,7 +49,6 @@ opt.time_filter.lp = Inf;
 ```
 
 The option for global signal correction, scrubbing and spatial smoothing.
-
 ```matlab
 % Apply global signal regression          
 opt.regress_confounds.flag_gsc = true; 
@@ -60,7 +60,6 @@ opt.smooth_vol.fwhm      = 6;
 ```
 
 Finally, we run the pipeline.
-
 ```matlab
 niak_pipeline_fmri_preprocess(files_in,opt);
 ```

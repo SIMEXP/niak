@@ -1,12 +1,10 @@
-# NIAK docker
+# NIAK with docker (recommended)
 
 The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX.
 
 To run niak with docker on your work station, you will need super user or sudo privilege.
 
 The first step is to install docker, there is support for many different system on the [docker installation site](https://docs.docker.com/installation/).
-
-
 
 
 ##Disclaimer:
@@ -66,15 +64,8 @@ in that terminal.
 Note that we do not have a procedure to run the octave gui on OSX yet (comming soon!). Also, on OSX, you data input and output has to be under `/Users`, which is the case for `$HOME = /User/your_name`. (Have a look [here](http://stackoverflow.com/questions/26348353/mount-volume-to-docker-image-on-osx), if you really need to access data from other places)
 
 
-# Pipeline manager
 
-NIAK is using a pipeline system called [PSOM](http://psom.simexp-lab.org), a free open-source software (MIT license). With PSOM, it is possible to run computations in parallel on a laptop or a supercomputer, restart efficiently analysis or access detailed logs. In all pipelines, the options of psom are set using the field `opt.psom`. The most important parameter is the maximal number of processes that PSOM can run in parallel. More details about PSOM capabilities and configuration can be found in the dedicated [tutorial](http://psom.simexp-lab.org/psom_configuration.html).
-```matlab
-% Use up to four processes
-opt.psom.max_queued = 4;
-```
-
-# Manual installation
+# Niak without Docker (not recommended)
 
 The following instructions describe how to install NIAK without using docker.
 
@@ -104,3 +95,11 @@ graphics_toolkit gnuplot
 **MINC tools.** To read MINC files or run the fMRI preprocessing pipeline, it is necessary to install the [minc toolkit](http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) version 1.9.2 (free open-source software, with a custom MIT-like license).
 
 **Test the installation** Follow the [test tutorial](http://niak.simexp-lab.org/niak_tutorial_test.html) to make sure that your installation is working properly.
+
+# Pipeline manager
+
+NIAK is using a pipeline system called [PSOM](http://psom.simexp-lab.org), a free open-source software (MIT license). With PSOM, it is possible to run computations in parallel on a laptop or a supercomputer, restart efficiently analysis or access detailed logs. In all pipelines, the options of psom are set using the field `opt.psom`. The most important parameter is the maximal number of processes that PSOM can run in parallel. More details about PSOM capabilities and configuration can be found in the dedicated [tutorial](http://psom.simexp-lab.org/psom_configuration.html).
+```matlab
+% Use up to four processes
+opt.psom.max_queued = 4;
+```
