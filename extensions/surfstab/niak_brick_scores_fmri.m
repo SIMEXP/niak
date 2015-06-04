@@ -145,6 +145,21 @@ end
 [~,~,ext] = niak_fileparts(in.fmri{1});
 [FDhdr,~] = niak_read_vol(in.fmri{1});
 
+% Make header for 3D files
+TDhdr = FDhdr;
+tmp = size(vol);
+td_size = tmp(1:3);
+% See if we have a nifti or a minc
+if ~isempty(findstr(ext, 'mnc'))
+    warning('This is a minc file, I won''t do anything\n');
+elseif ~isempty(findstr(ext, 'nii'))
+    dim = ones(1,8);
+    dim(2:4) = td_size;
+    TDhdr.details.dim = dim;
+else
+    error('I do not recognize the input file type\n');
+end
+
 fprintf('I have discovered a file ending as follows: %s\n', ext);
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
