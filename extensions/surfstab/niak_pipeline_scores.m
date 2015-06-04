@@ -144,25 +144,15 @@ for j_id = 1:j_number
     % Set the paths for the requested output files
     for out_id = 1:length(o_names)
         out_name = o_names{out_id};
-        if strcmp(out_name, 'extra')
-          s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
         elseif opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
-          if opt.flag_vol
-            o_name = sprintf('%s_vol', out_name);
+          if strcmp(out_name, 'extra')
+            s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+          else
             s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
           end
-          if opt.flag_mat
-            o_name = sprintf('%s_mat', out_name);
-            s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
-          end
-        elseif ~opt.files_out.(out_name) && ~strcmp(out_name, 'extra')
-          o_name = sprintf('%s_vol', out_name);
+        elseif ~opt.files_out.(out_name)
+          o_name = sprintf('%s', out_name);
           s_out.(o_name) = 'gb_niak_omitted';
-          o_name = sprintf('%s_mat', out_name);
-          s_out.(o_name) = 'gb_niak_omitted';
-          continue
-        elseif ~opt.files_out.(out_name) && strcmp(out_name, 'extra')
-          s_out.(out_name) = 'gb_niak_omitted';
           continue
         elseif ischar(opt.files_out.(out_name))
           error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
