@@ -139,11 +139,11 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'CBB'  , struct() });
 
 % FILES_OUT
-if iscell(in.fmri)
-    [~,~,ext] = niak_fileparts(in.fmri{1});
-else
-    [~,~,ext] = niak_fileparts(in.fmri);
+if not iscell(in.fmri)
+    error('IN.FMRI must be a cell of strings and not %s', class(in.fmri))
 end
+[~,~,ext] = niak_fileparts(in.fmri{1});
+
 fprintf('I have discovered a file ending as follows: %s\n', ext);
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
@@ -166,9 +166,6 @@ if ~isempty(opt.rand_seed)
 end
 
 %% Read the data
-if ischar(in.fmri)
-    in.fmri = {in.fmri};
-end
 [FDhdr,vol] = niak_read_vol(in.fmri{1});
 [~,~,ext] = niak_fileparts(in.fmri{1}); 
 % Make header for 3D files
