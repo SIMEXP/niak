@@ -161,7 +161,7 @@ if opt.flag_test == 1
 end
 
 % Make header for 3D files
-[FDhdr,~] = niak_read_vol(in.fmri{1});
+[FDhdr,vol] = niak_read_vol(in.fmri{1});
 TDhdr = FDhdr;
 tmp = size(vol);
 td_size = tmp(1:3);
