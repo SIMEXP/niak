@@ -216,11 +216,25 @@ path_logs = [path_test.result 'demoniak_glm_connectome' filesep 'logs'];
 pipe.demoniak_glm_connectome = psom_pipeline2job(niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),path_logs);
 
 %% Add the test of the scores pipeline
+if opt.flag_target
+    % In target mode, grab the results of the preprocessing and use them for scores
+    files_all = niak_grab_all_preprocess([path_test_fp.result 'demoniak_preproc'],files_fp);
+else
+    % In test mode, use the provided target to feed into the scores pipeline
+    files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
+end
+opt_scores = struct;
+opt_scores.flag_test = true;
+opt_scores.flag_target = opt.flag_target;
+files_sc.data  = files_all.fmri.vol;
+files_sc.mask  = files_all.quality_control.group_coregistration.func.mask_group;
+files_sc.part = files_all.template_aal;
+opt_scores.files_in = files_sc;
 path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_sc.reference = [path_test.target 'demoniak_scores'];
 path_test_sc.result    = path_test.result;
 path_logs = [path_test.result 'demoniak_scores' filesep 'logs'];
-pipe.demoniak_scores = psom_pipeline2job(niak_test_scores_demoniak(path_test_sc,opt_pipe),path_logs);
+pipe.demoniak_scores = psom_pipeline2job(niak_test_scores_demoniak(path_test_sc,opt_scores),path_logs);
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
