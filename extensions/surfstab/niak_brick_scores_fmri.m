@@ -139,64 +139,12 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'CBB'  , struct() });
 
 % FILES_OUT
-if iscell(in.fmri)
-    [~,~,ext] = niak_fileparts(in.fmri{1});
-else
-    [~,~,ext] = niak_fileparts(in.fmri);
+if not iscell(in.fmri)
+    error('IN.FMRI must be a cell of strings and not %s', class(in.fmri))
 end
-fprintf('I have discovered a file ending as follows: %s\n', ext);
-if ~isempty(opt.folder_out)
-    path_out = niak_full_path(opt.folder_out);
-    tmp_oname_vol = { 'stability_maps_vol'            , 'stability_intra_vol'            , 'stability_inter_vol'            , 'stability_contrast_vol'            , 'partition_cores_vol'            , 'partition_thresh_vol'            , 'rmap_part_vol'            , 'rmap_cores_vol'            , 'dual_regression_vol'            };
-    tmp_oval_vol =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] };
-    tmp_oname_mat = { 'stability_maps_mat'            , 'stability_intra_mat'            , 'stability_inter_mat'            , 'stability_contrast_mat'            ,'partition_cores_mat'             , 'partition_thresh_mat'            , 'rmap_part_mat'            , 'rmap_cores_mat'            , 'dual_regression_mat'            };
-    tmp_oval_mat =  { [path_out 'stability_maps.mat'] , [path_out 'stability_intra.mat'] , [path_out 'stability_inter.mat'] , [path_out 'stability_contrast.mat'] , [path_out 'partition_cores.mat'] , [path_out 'partition_thresh.mat'] , [path_out 'rmap_part.mat'] , [path_out 'rmap_cores.mat'] , [path_out 'dual_regression.mat'] };
-    tmp_oname3 = { 'extra'                };
-    tmp_oname3 = { [path_out 'extra.mat'] };
-    tmp_oname = [tmp_oname_vol, tmp_oname_mat, tmp_oname3];
-    tmp_oval =  [tmp_oval_vol, tmp_oval_mat, tmp_oval3];
-    out = psom_struct_defaults(out, tmp_oname, tmp_oval);
-else
-    tmp_oname_vol = { 'stability_maps_vol' , 'stability_intra_vol' , 'stability_inter_vol' , 'stability_contrast_vol' , 'partition_cores_vol' , 'partition_thresh_vol' , 'rmap_part_vol'   , 'rmap_cores_vol'  , 'dual_regression_vol' };
-    tmp_oval_vol =  { 'gb_niak_omitted'    , 'gb_niak_omitted'     , 'gb_niak_omitted'     , 'gb_niak_omitted'        , 'gb_niak_omitted'     , 'gb_niak_omitted'      , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'     };
-    tmp_oname_mat = { 'stability_maps_mat' , 'stability_intra_mat' , 'stability_inter_mat' , 'stability_contrast_mat' , 'partition_cores_mat' , 'partition_thresh_mat' , 'rmap_part_mat'   , 'rmap_cores_mat'  , 'dual_regression_mat' };
-    tmp_oval_mat =  { 'gb_niak_omitted'    , 'gb_niak_omitted'     , 'gb_niak_omitted'     , 'gb_niak_omitted'        , 'gb_niak_omitted'     , 'gb_niak_omitted'      , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'     };
-    tmp_oname3 = { 'extra'           };
-    tmp_oval3 = { 'gb_niak_omitted' };
-    tmp_oname = [tmp_oname_vol, tmp_oname_mat, tmp_oname3];
-    tmp_oval =  [tmp_oval_vol, tmp_oval_mat, tmp_oval3];
-    out = psom_struct_defaults(out, tmp_oname, tmp_oval);
-end
+[~,~,ext] = niak_fileparts(in.fmri{1});
+[FDhdr,~] = niak_read_vol(in.fmri{1});
 
-% Check if there will be outputs
-if strcmp(out.stability_maps_vol,'gb_niak_omitted') && strcmp(out.partition_cores_vol,'gb_niak_omitted') && strcmp(out.stability_intra_vol,'gb_niak_omitted') ...
-    && strcmp(out.stability_inter_vol,'gb_niak_omitted') && strcmp(out.stability_contrast_vol,'gb_niak_omitted') && strcmp(out.partition_thresh_vol,'gb_niak_omitted') ...
-    && strcmp(out.rmap_part_vol,'gb_niak_omitted') && strcmp(out.rmap_cores_vol,'gb_niak_omitted') && strcmp(out.dual_regression_vol,'gb_niak_omitted')
-    warning('No volume outputs will be generated. Adjust OUT if you want them.');
-end
-
-if strcmp(out.stability_maps_mat,'gb_niak_omitted') && strcmp(out.partition_cores_mat,'gb_niak_omitted') && strcmp(out.stability_intra_mat,'gb_niak_omitted') ...
-    && strcmp(out.stability_inter_mat,'gb_niak_omitted') && strcmp(out.stability_contrast_mat,'gb_niak_omitted') && strcmp(out.partition_thresh_mat,'gb_niak_omitted') ...
-    && strcmp(out.rmap_part_mat,'gb_niak_omitted') && strcmp(out.rmap_cores_mat,'gb_niak_omitted') && strcmp(out.dual_regression_mat,'gb_niak_omitted')
-    warning('No .mat outputs will be generated. Adjust OUT if you want them.');
-end
-
-% If the test flag is true, stop here !
-if opt.flag_test == 1
-    return
-end
-
-%% Seed the random generator
-if ~isempty(opt.rand_seed)
-    psom_set_rand_seed(opt.rand_seed);
-end
-
-%% Read the data
-if ischar(in.fmri)
-    in.fmri = {in.fmri};
-end
-[FDhdr,vol] = niak_read_vol(in.fmri{1});
-[~,~,ext] = niak_fileparts(in.fmri{1}); 
 % Make header for 3D files
 TDhdr = FDhdr;
 tmp = size(vol);
@@ -210,6 +158,27 @@ elseif ~isempty(findstr(ext, 'nii'))
     TDhdr.details.dim = dim;
 else
     error('I do not recognize the input file type\n');
+end
+
+fprintf('I have discovered a file ending as follows: %s\n', ext);
+if ~isempty(opt.folder_out)
+    path_out = niak_full_path(opt.folder_out);
+    oname = { 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_cores'                , 'partition_thresh'                 , 'rmap_part'                , 'rmap_cores'                , 'dual_regression'                , 'extra'                };
+    oval =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] , [path_out 'extra.mat'] };
+else
+    oname = { 'stability_maps'  , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_cores' , 'partition_thresh' , 'rmap_part'       , 'rmap_cores'      , 'dual_regression' , 'extra'           };
+    oval =  { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+    out = psom_struct_defaults(out, oname, oval);
+end
+
+% If the test flag is true, stop here !
+if opt.flag_test == 1
+    return
+end
+
+%% Seed the random generator
+if ~isempty(opt.rand_seed)
+    psom_set_rand_seed(opt.rand_seed);
 end
 
 % Get the partition
@@ -303,188 +272,107 @@ end
 opt_score = rmfield(opt,{'folder_out', 'thresh', 'rand_seed', 'flag_test', 'flag_deal'});
 res = niak_stability_cores(tseries,part_run,opt_score);
 
-if ~strcmp(out.stability_maps_vol,'gb_niak_omitted') || ~strcmp(out.stability_maps_mat,'gb_niak_omitted')
-    if ~strcmp(out.stability_maps_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing stability maps as a volume\n')
-        end
-        % Write the output as a volume
-        stab_maps = niak_part2vol(res.stab_maps',mask);
-        FDhdr.file_name = out.stability_maps_vol;
-        niak_write_vol(FDhdr,stab_maps);
+if ~strcmp(out.stability_maps,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Writing stability maps as a volume\n')
     end
-
-    if ~strcmp(out.stability_maps_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing stability maps as a .mat file\n')
-        end
-        scores = struct;
-        for n_id = 1:size(res.stab_maps', 4)
-            n_name = sprintf('network_%d', n_id);
-            scores.(n_name) = res.stab_maps'(:,:,:,n_id);
-        end
-        save(out.stability_maps_mat, 'scores');
-    end
+    % Write the output as a volume
+    stab_maps = niak_part2vol(res.stab_maps',mask);
+    FDhdr.file_name = out.stability_maps;
+    niak_write_vol(FDhdr,stab_maps);
 end
 
 % Stability Intra
-if ~strcmp(out.stability_intra_vol,'gb_niak_omitted') || ~strcmp(out.stability_intra_mat,'gb_niak_omitted')
-    if ~strcmp(out.stability_intra_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing intra-cluster stability as a volume\n');
-        end
-        stab_intra = niak_part2vol(res.stab_intra',mask);
-        TDhdr.file_name = out.stability_intra_vol;
-        niak_write_vol(TDhdr,stab_intra);
+if ~strcmp(out.stability_intra,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Writing intra-cluster stability as a volume\n');
     end
-
-    if ~strcmp(out.stability_intra_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing intra-cluster stability as a .mat file\n');
-        end
-
-        stabin = struct;
-        for n_id = 1:size(res.stab_intra', 4)
-            n_name = sprintf('network_%d', n_id);
-            stabin.(n_name) = res.stab_intra'(:,:,:,n_id);
-        end
-        save(out.stability_intra_mat, 'stabin');
-    end
+    % Write the output as a volume
+    stab_intra = niak_part2vol(res.stab_intra',mask);
+    TDhdr.file_name = out.stability_intra;
+    niak_write_vol(TDhdr,stab_intra);
 end
 
 % Stability Inter
-if ~strcmp(out.stability_inter_vol,'gb_niak_omitted') || ~strcmp(out.stability_inter_mat,'gb_niak_omitted')
-    if ~strcmp(out.stability_inter_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing inter-cluster stability as a volume\n');
-        end
-        stab_inter = niak_part2vol(res.stab_inter',mask);
-        TDhdr.file_name = out.stability_inter_vol;
-        niak_write_vol(TDhdr,stab_inter);
+if ~strcmp(out.stability_inter,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Writing inter-cluster stability as a volume\n');
     end
-
-    if ~strcmp(out.stability_inter_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing inter-cluster stability as a .mat file\n');
-        end
-        stabit = struct;
-        for n_id = 1:size(res.stab_inter', 4)
-            n_name = sprintf('network_%d', n_id);
-            stabit.(n_name) = res.stab_inter'(:,:,:,n_id);
-        end
-        save(out.stability_inter_mat, 'stabit');
-    end
+    % Write the output as a volume
+    stab_inter = niak_part2vol(res.stab_inter',mask);
+    TDhdr.file_name = out.stability_inter;
+    niak_write_vol(TDhdr,stab_inter);
 end
 
-if ~strcmp(out.stability_contrast_vol,'gb_niak_omitted') || ~strcmp(out.stability_contrast_mat,'gb_niak_omitted')
-    if ~strcmp(out.stability_contrast_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing stability contrast as a volume\n')
-        end
-
-        stab_contrast = niak_part2vol(res.stab_contrast',mask);
-        TDhdr.file_name = out.stability_contrast_vol;
-        niak_write_vol(TDhdr,stab_contrast);
+% Silhouette
+if ~strcmp(out.stability_contrast,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Writing stability contrast as a volume\n')
     end
-
-    if ~strcmp(out.stability_contrast_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing stability contrast as a .mat file\n');
-        end
-
-        stab_contrast = res.stab_contrast;
-        save(out.stability_contrast_mat, 'stab_contrast');
-    end
+    % Write the output as a volume
+    stab_contrast = niak_part2vol(res.stab_contrast',mask);
+    TDhdr.file_name = out.stability_contrast;
+    niak_write_vol(TDhdr,stab_contrast);
 end
 
-if ~strcmp(out.partition_cores_vol,'gb_niak_omitted') || ~strcmp(out.partition_cores_mat,'gb_niak_omitted')
-    if ~strcmp(out.partition_cores_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing partition based on cores as a volume\n')
-        end
-        part_cores = niak_part2vol(res.part_cores',mask);
-        FDhdr.file_name = out.partition_cores_vol;
-        niak_write_vol(FDhdr,part_cores);
+% Partition Cores
+if ~strcmp(out.partition_cores,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Writing partition based on cores as a volume\n')
     end
-
-    if ~strcmp(out.partition_cores_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing partition based on cores as a .mat file\n')
-        end
-        part_cores = res.part_cores;
-        save(out.partition_cores_mat, 'part_cores');
-    end
+    % Write the output as a volume
+    part_cores = niak_part2vol(res.part_cores',mask);
+    FDhdr.file_name = out.partition_cores;
+    niak_write_vol(FDhdr,part_cores);
 end
 
-if ~strcmp(out.partition_thresh_vol,'gb_niak_omitted') || ~strcmp(out.partition_thresh_mat,'gb_niak_omitted')
+% Partition Thresholded
+if ~strcmp(out.partition_thresh,'gb_niak_omitted')
     stab_contrast = niak_part2vol(res.stab_contrast',mask);
     part_cores = niak_part2vol(res.part_cores',mask);
     part_cores(stab_contrast<opt.thresh) = 0;
 
-    if ~strcmp(out.partition_thresh_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing partition based on cores, thresholded on stability as a volume\n')
-        end
-        FDhdr.file_name = out.partition_thresh_vol;
-        niak_write_vol(FDhdr,part_cores);
+    if opt.flag_verbose
+        fprintf('Writing partition based on cores, thresholded on stability as a volume\n')
     end
-
-    if ~strcmp(out.partition_thresh_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing partition based on cores, thresholded on stability as a .mat file\n')
-        end  
-        save(out.partition_thresh_mat, 'part_cores');
-    end
+    % Write the output as a volume
+    FDhdr.file_name = out.partition_thresh;
+    niak_write_vol(FDhdr,part_cores);
 end
-
-if ~strcmp(out.rmap_part_vol,'gb_niak_omitted') || ~strcmp(out.rmap_part_mat,'gb_niak_omitted')
+ 
+% Seed based on the partition
+if ~strcmp(out.rmap_part,'gb_niak_omitted')
     opt_t.type_center = 'mean';
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,part_v,opt_t);
-    rmap_vec = niak_fisher(corr(tseries,tseed));
+    rmap_vec = niak_fisher(niak_build_correlation(tseries,tseed));
 
-    if ~strcmp(out.rmap_part_vol,'gb_niak_omitted') 
-        if opt.flag_verbose
-            fprintf('Writing correlation maps (seed: initial partition) as a volume\n')
-        end
-
-        rmap = niak_part2vol(rmap_vec',mask);
-        FDhdr.file_name = out.rmap_part_vol;
-        niak_write_vol(FDhdr,rmap);
+    if opt.flag_verbose
+        fprintf('Writing correlation maps (seed: initial partition) as a volume\n')
     end
-
-    if ~strcmp(out.rmap_part_mat,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing correlation maps (seed: initial partition) as a .mat file\n')
-        end
-        rmap_part = rmap_vec;
-        save(out.rmap_part_mat, 'rmap_vec');
-    end
+    % Write the output as a volume
+    rmap = niak_part2vol(rmap_vec',mask);
+    FDhdr.file_name = out.rmap_part;
+    niak_write_vol(FDhdr,rmap);
 end
 
-if ~strcmp(out.rmap_cores_vol,'gb_niak_omitted') || ~strcmp(out.rmap_cores_mat,'gb_niak_omitted')
+% Seed based on the cores of the partition
+if ~strcmp(out.rmap_cores,'gb_niak_omitted')
     opt_t.type_center = 'mean';
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,res.part_cores,opt_t);
-    rmap_vec = niak_fisher(corr(tseries,tseed));
-
-    if ~strcmp(out.rmap_cores_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing correlation maps (seed: cores) as a volume\n')
-        end
-
-        rmap = niak_part2vol(rmap_vec',mask);
-        FDhdr.file_name = out.rmap_cores_vol;
-        niak_write_vol(FDhdr,rmap);
+    rmap_vec = niak_fisher(niak_build_correlation(tseries,tseed));
+    if opt.flag_verbose
+        fprintf('Writing correlation maps (seed: cores) as a volume\n')
     end
-
-    if ~strcmp(out.rmap_cores_mat,'gb_niak_omitted')
-        rmap_cores = rmap_vec;
-        save(out.rmap_cores_mat, 'rmap_cores');
-    end
+    % Write the output as a volume
+    rmap = niak_part2vol(rmap_vec',mask);
+    FDhdr.file_name = out.rmap_cores;
+    niak_write_vol(FDhdr,rmap);
 end
 
-if ~strcmp(out.dual_regression_vol,'gb_niak_omitted') || ~strcmp(out.dual_regression_mat,'gb_niak_omitted')
+% Dual Regression
+if ~strcmp(out.dual_regression,'gb_niak_omitted')
     opt_t.type_center = 'mean';
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,part_v,opt_t);
@@ -497,31 +385,21 @@ if ~strcmp(out.dual_regression_vol,'gb_niak_omitted') || ~strcmp(out.dual_regres
         beta = zeros(size(tseries,1),max(part_v));
     end
 
-    if ~strcmp(out.dual_regression_vol,'gb_niak_omitted')
-        if opt.flag_verbose
-            fprintf('Writing dual regression maps as a volume\n')
-        end
-
-        beta = niak_part2vol(beta,mask);
-        FDhdr.file_name = out.dual_regression_vol;
-        niak_write_vol(FDhdr,beta);
-
+    if opt.flag_verbose
+        fprintf('Writing dual regression maps as a volume\n')
     end
-    
-    if ~strcmp(out.dual_regression_mat,'gb_niak_omitted')
-         if opt.flag_verbose
-            fprintf('Writing dual regression maps as a .mat file\n')
-        end
-        dual_regression = beta;
-        save(out.dual_regression_mat, 'dual_regression');
-    end
+    % Write the output as a volume
+    beta = niak_part2vol(beta,mask);
+    FDhdr.file_name = out.dual_regression;
+    niak_write_vol(FDhdr,beta);
 end
 
+% Extra
 if ~strcmp(out.extra,'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Writing extra info as a .mat file\n')
     end
-
+    % Write the output as a mat file
     nb_iter = res.nb_iter;
     changes = res.changes;
     save(out.extra,'nb_iter','changes');
