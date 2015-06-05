@@ -152,14 +152,9 @@ fprintf('I have discovered the following file ending: %s\n', ext);
 
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
-<<<<<<< Updated upstream
-    oname = { 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_cores'                , 'partition_thresh'                 , 'rmap_part'                , 'rmap_cores'                , 'dual_regression'                , 'extra'                , 'part_order'                };
-    oval =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] , [path_out 'extra.mat'] , [path_out 'path_order.csv'] };
-=======
-    oname = { 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_cores'                , 'partition_thresh'                 , 'rmap_part'                , 'rmap_cores'                , 'dual_regression'                , 'extra'                };
-    oval =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] , [path_out 'extra.mat'] };
+    oname = { 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_cores'                , 'partition_thresh'                 , 'rmap_part'                , 'rmap_cores'                , 'dual_regression'                , 'extra'                , 'path_order'           };
+    oval =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] , [path_out 'extra.mat'] , [path_out 'extra.mat'] };
     out = psom_struct_defaults(out, oname, oval);
->>>>>>> Stashed changes
 else
     oname = { 'stability_maps'  , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_cores' , 'partition_thresh' , 'rmap_part'       , 'rmap_cores'      , 'dual_regression' , 'extra'           , 'path_order'      };
     oval =  { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
