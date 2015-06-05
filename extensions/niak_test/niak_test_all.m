@@ -9,7 +9,7 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %
 % PATH_TEST.DEMONIAK (string, default download minc1 test data in 'test_niak_mnc1') 
 %   the path to the (raw, small) NIAK demo dataset.
-% PATH_TEST.TEMPLATE (string, default download the mnc cambridge template)
+% PATH_TEST.TEMPLATE (string, default download the mnc cambridge template from figshare)
 % PATH_TEST.TARGET (string, default download minc1 target data in 'target') 
 % PATH_TEST.RESULT (string, default 'result') where to store the results of 
 %   the tests.
