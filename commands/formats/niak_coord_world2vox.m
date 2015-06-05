@@ -1,47 +1,20 @@
-function coord_v = niak_coord_world2vox(coord_w,mat,opt);
-% Convert coordinates in the world space into coordinates in the voxel
-% space. 
+function coord_v = niak_coord_world2vox(coord_w,mat);
+% Convert coordinates from world to voxel space. 
 %
-% SYNTAX:
-% COORD_V = NIAK_COORD_WORLD2VOX(COORD_W,MAT,OPT)
+% coord_v = niak_coord_world2vox(coord_w,mat)
 %
-% _________________________________________________________________________
+% coord_w (matrix N*3) each row is a vector of 3D coordinates 
+%   in world space.
+% mat (matrix 4*4) an affine transformation from voxel to world coordinates. 
+%   See the help of NIAK_READ_VOL for more infos. It is generally the 
+%   hdr.info.mat field of the header of a volume file.
+% coord_v (matrix N*3) each row is a vector of 3D coordinates in voxel space.
 %
-% INPUTS:
-%
-% COORD_W
-%       (matrix N*3) each row is a vector of 3D coordinates in world space.
-%
-% MAT
-%       (matrix 4*4) an affine transformation from voxel to world
-%       coordinates. See the help of NIAK_READ_VOL for more infos. It is 
-%       generally the HDR.INFO.MAT field of the header of a volume file.
-%
-% OPT
-%       (structure, optional) with the following fields :
-%
-%       FLAG_ZERO
-%           (boolean, default false) if FLAG_ZERO is true, voxel 
-%           coordinates start from 1 (default behaviour in matlab), 
-%           otherwise they start from 0 (default behaviour in C/C++ or 
-%           MINC).
-%
-%       FLAG_ROUND
-%           (boolean, default true) if FLAG_ROUND is true, the voxel
-%           coordinates will be rounded to integer values.
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% COORD_V
-%       (matrix N*3) each row is a vector of 3D coordinates in voxel space.
-%
-% _________________________________________________________________________
 % SEE ALSO:
-% NIAK_COORD_VOX2WORLD, NIAK_READ_VOL
+%   niak_coord_vox2world, niak_read_vol
 %
-% _________________________________________________________________________
 % COMMENTS:
+%   Voxel coordinates start from 1, and are not rounded.
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, Montreal 
 %               Neurological Institute, McGill University, 2007.
@@ -66,30 +39,6 @@ function coord_v = niak_coord_world2vox(coord_w,mat,opt);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-if nargin < 3
-    flag_zero = false;
-    flag_round = true;
-else
-    if isfield(opt,'flag_zero')
-        flag_zero = opt.flag_zero;
-    else
-        flag_zero = false;
-    end
-    if isfield(opt,'flag_round')
-        flag_round = opt.flag_round;
-    else
-        flag_round = true;
-    end
-end
 
-if flag_round
-    coord_v = round([coord_w ones([size(coord_w,1) 1])]*((mat')^(-1)));
-else
-    coord_v = [coord_w ones([size(coord_w,1) 1])]*((mat')^(-1));
-end
-
-if flag_zero
-    coord_v = coord_v(:,1:3);
-else
-    coord_v = coord_v(:,1:3)+1;
-end
+coord_v = [coord_w ones([size(coord_w,1) 1])]*((mat')^(-1));
+coord_v = coord_v(:,1:3)+1;

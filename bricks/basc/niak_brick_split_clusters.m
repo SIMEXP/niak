@@ -13,7 +13,8 @@ function [in, out, opt] = niak_brick_split_clusters(in, out, opt)
 % _________________________________________________________________________
 % COMMENTS:
 % The clusters are assumed to be in symmetric stereotaxic space, i.e. the left/right hemispheres
-% are separated by the plane x==0.
+% are separated by the plane x==0. The values in that plane will be set to zero, as they have ambiguous 
+% assignement to brain hemispheres.
 %
 % Copyright (c) Pierre Bellec, Sebastian Urchs
 %   Centre de recherche de l'institut de Geriatrie de Montreal
@@ -76,24 +77,22 @@ mask = false(size(vol));
 mask(:,1,1) = true;
 ind = find(mask);
 [x,y,z] = ind2sub(size(vol),ind);
-coord_w = niak_coord_vox2world([x y z]-1,hdr.info.mat);
-cutx = max(x(coord_w(:,1)<0));
-
-%% Build a new volume with enforced split between the left and right hemispheres
-vol2 = zeros(size(vol,1)+1,size(vol,2),size(vol,3));
-vol2(1:cutx,:,:) = vol(1:cutx,:,:);
-vol2((cutx+2):end,:,:) = vol((cutx+1):end,:,:);
+coord_w = niak_coord_vox2world([x y z],hdr.info.mat);
+cutx = find(coord_w(:,1)==0);
+if isempty(cutx)
+    error('I could not find the x==0 plane')
+end
+vol(cutx,:,:) = 0;
 
 %% Extract connected components, and save the result
-vol_c = zeros(size(vol2));
-list_roi = unique(vol2(:));
+vol_c = zeros(size(vol));
+list_roi = unique(vol(:));
 list_roi = list_roi(list_roi~=0);
 nb_roi = 0;
 for rr = 1:length(list_roi)
-    mask_roi = niak_find_connex_roi(vol2 == list_roi(rr),struct('type_neig',opt.type_neig));
+    mask_roi = niak_find_connex_roi(vol == list_roi(rr),struct('type_neig',opt.type_neig));
     vol_c(mask_roi>0) = mask_roi(mask_roi>0)+nb_roi;
     nb_roi = nb_roi+max(mask_roi(:));
 end
-vol_c = vol_c([1:cutx (cutx+2):end],:,:);
 hdr.file_name = out;
 niak_write_vol(hdr,vol_c);
