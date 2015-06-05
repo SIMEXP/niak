@@ -1,6 +1,6 @@
 # NIAK with docker
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. It is possible to run a more secure niak/docker setup, we shall have instructions added in the near future.
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. It is possible to run a more secure niak/docker setup, we shall have instructions added in the near future.
  > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
 
 ###Linux
@@ -26,7 +26,7 @@ xhost +local:niak_machine
 docker run -i -t --privileged --rm -h niak_machine --name niak -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave --force-gui; /bin/bash"
 ```
 
-Note that the first execution will be longer, since the simexp/niak mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak` in the command below by `niak:0.13.0` to use a specific version number (here 0.13.0). By default you will be using the latest stable release, and the software will update automatically at start-up. Note that the first execution will be longer, since the simexp/niak mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
@@ -41,7 +41,8 @@ An extra step is needed to start a docker container on OSX. You first need to st
 This will start a bash terminal (as opposed to the standard OSX tcsh) where you will be able to start the simex/niak docker container. Just type
 
 ```bash
-docker run -i -t --privileged --rm -v $HOME:$HOME  simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave; /bin/bash"```
+docker run -i -t --privileged --rm -v $HOME:$HOME  simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave; /bin/bash"
+```
 
 in that terminal.
 
