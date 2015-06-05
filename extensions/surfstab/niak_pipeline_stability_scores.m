@@ -148,6 +148,8 @@ for j_id = 1:j_number
         out_name = o_names{out_id};
         if strcmp(out_name, 'extra')
           s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+        if strcmp(out_name, 'part_order')
+          s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.csv',s_name, out_name)];
         elseif opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
           if opt.flag_vol
             o_name = sprintf('%s_vol', out_name);
@@ -157,13 +159,13 @@ for j_id = 1:j_number
             o_name = sprintf('%s_mat', out_name);
             s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
           end
-        elseif ~opt.files_out.(out_name) && ~strcmp(out_name, 'extra')
+        elseif ~opt.files_out.(out_name) && ~strcmp(out_name, 'extra') && ~strcmp(out_name, 'part_order')
           o_name = sprintf('%s_vol', out_name);
           s_out.(o_name) = 'gb_niak_omitted';
           o_name = sprintf('%s_mat', out_name);
           s_out.(o_name) = 'gb_niak_omitted';
           continue
-        elseif ~opt.files_out.(out_name) && strcmp(out_name, 'extra')
+        elseif ~opt.files_out.(out_name) && strcmp(out_name, 'extra') && strcmp(out_name, 'part_order')
           s_out.(out_name) = 'gb_niak_omitted';
           continue
         elseif ischar(opt.files_out.(out_name))

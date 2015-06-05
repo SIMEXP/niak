@@ -212,8 +212,9 @@ if non_overlap > 0
     % Some parts of the mask have no partition. Constrain the mask to the partition raise a warning
     warning('There are values inside the mask that do not have a partition. I will use the union of mask and partition.');
     mask = logical(logical(part) .* mask);
-    % Force the csv file output if it isn't already
-    out.part_order = [path_out 'path_order.csv'];
+    if strcmp(out.part_order,'gb_niak_omitted')
+        warning('OUT.PART_ORDER is not defined. There will be no .csv file with the partition order!');
+    end
 end
 
 %% Flag Checks
