@@ -86,8 +86,8 @@ opt.psom = psom_struct_defaults(opt.psom,...
            { 2            , [opt.folder_out filesep 'logs'] });
 
 opt.files_out = psom_struct_defaults(opt.files_out,...
-                { 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' , 'extra' , 'rmap_part', 'rmap_cores', 'dual_regression' },...
-                { true             , true              , true              , true              , true                 , true               , true    , true       , true        , true              });
+                { 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' , 'rmap_part', 'rmap_cores', 'dual_regression' , 'extra'  },...
+                { true             , true              , true              , true              , true                 , true               , true       , true        , true              , true     });
 
 opt.scores = psom_struct_defaults(opt.scores, ...
              { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
@@ -145,17 +145,16 @@ for j_id = 1:j_number
     for out_id = 1:length(o_names)
         out_name = o_names{out_id};
         if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
-          if strcmp(out_name, 'extra')
-            s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
-          else
-            s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
-          end
+            if strcmp(out_name, 'extra')
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+            else
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
+            end
         elseif ~opt.files_out.(out_name)
-          o_name = sprintf('%s', out_name);
-          s_out.(o_name) = 'gb_niak_omitted';
-          continue
+            s_out.(out_name) = 'gb_niak_omitted';
+            continue
         elseif ischar(opt.files_out.(out_name))
-          error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
+            error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
         end
         if ~isdir([opt.folder_out filesep out_name])
                 psom_mkdir([opt.folder_out filesep out_name]);
