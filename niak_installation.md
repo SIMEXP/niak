@@ -39,7 +39,7 @@ And user of the docker group will have access to docker service.
 You need to know where the data to analyse and your results will be stored before you start the docker niak container, since only a part of your file system will be accessible to it. An straight forward workflow is to do all you analysis in you home ($HOME) folder. Here is how you would do it:
 
 ```bash
-docker run -i -t --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave --force-gui --persist; /bin/bash"
+docker run -i -t --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave --force-gui; /bin/bash"
 ```
 
 This somewhat convoluted command line should let you analyse your data with niak using the octave GUI, and let $USER have the same privilege on the simex/niak container then it enjoys on the host computer.
