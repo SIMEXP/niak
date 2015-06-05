@@ -1,4 +1,4 @@
-# NIAK with docker (recommended)
+# NIAK with docker
 
 The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/).
 
@@ -47,7 +47,7 @@ Note that we do not have a procedure to run the octave gui on OSX yet (comming s
 
 
 
-# Niak without Docker (not recommended)
+# Manual installation
 
 The following instructions describe how to install NIAK without using docker.
 
