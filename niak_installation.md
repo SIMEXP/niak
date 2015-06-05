@@ -46,7 +46,7 @@ docker run -i -t --privileged --rm -v $HOME:$HOME  simexp/niak /bin/bash -c "cd 
 
 in that terminal.
 
-Note that we do not have a procedure to run the octave gui on OSX yet (comming soon!). Also, on OSX, you data input and output has to be under `/Users`, which is the case for `$HOME = /User/your_name`. (Have a look [here](http://stackoverflow.com/questions/26348353/mount-volume-to-docker-image-on-osx), if you really need to access data from other places)
+Note that we do not have a procedure to run the octave gui on OSX yet (comming soon!). Also, on OSX, your data input and output has to be under `/Users`, which is the case for `$HOME = /User/your_name`. (Have a look [here](http://stackoverflow.com/questions/26348353/mount-volume-to-docker-image-on-osx), if you really need to access data from other places)
 
 
 
