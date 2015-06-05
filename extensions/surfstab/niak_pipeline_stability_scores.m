@@ -134,7 +134,7 @@ end
 %% Begin the pipeline
 pipeline = struct;
 
-% Run the jobs
+% Run the job
 for j_id = 1:j_number
     % Get the name of the subject
     s_name = j_names{j_id};
