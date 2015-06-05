@@ -62,6 +62,7 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 %       first column. This may be useful if you want to use the same mask
 %       for the OPT.FLAG_TARGET flag as you use in the cluster partition.
 %       Use with care.
+%
 % OPT.FLAG_FOCUS (boolean, default false)
 %       If FILES_IN.PART has a two additional columns (three in total) then the
 %       second column is treated as a binary mask of an ROI that should be
@@ -78,16 +79,16 @@ files_in = psom_struct_defaults(files_in, ...
            { NaN    , NaN    , NaN    });
 % DEFAULTS
 opt = psom_struct_defaults(opt,...
-      { 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_vol' , 'flag_mat' , 'flag_test' },...
-      { 'gb_niak_omitted' , struct      , struct   , struct , false      , true       , false       });
+      { 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
+      { 'gb_niak_omitted' , struct      , struct   , struct , false       });
   
 opt.psom = psom_struct_defaults(opt.psom,...
            { 'max_queued' , 'path_logs'             },...
            { 2            , [opt.folder_out filesep 'logs'] });
 
 opt.files_out = psom_struct_defaults(opt.files_out,...
-                { 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' , 'extra' , 'rmap_part', 'rmap_cores', 'dual_regression' },...
-                { true             , true              , true              , true              , true                 , true               , true    , true       , true        , true              });
+                { 'stability_maps' , 'partition_cores' , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_thresh' , 'rmap_part', 'rmap_cores', 'dual_regression' , 'extra' , 'part_order' },...
+                { true             , true              , true              , true              , true                 , true               , true       , true        , true              , true    , true         });
 
 opt.scores = psom_struct_defaults(opt.scores, ...
              { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
@@ -132,40 +133,50 @@ end
 %% Begin the pipeline
 pipeline = struct;
 
+% Resample the mask and the template partition
+% We need to resample the partition
+clear job_in job_out job_opt
+job_in.source      = files_in.part;
+[path_f,name_f,ext_f] = niak_fileparts(files_in.part);
+job_in.target      = cell_fmri{1};
+job_out            = [opt.folder_out 'template_partition' ext_f];
+job_opt.interpolation    = 'nearest_neighbour';
+pipeline = psom_add_job(pipeline,'scores_resample_part','niak_brick_resample_vol',job_in,job_out,job_opt);
+
+clear job_in job_out job_opt
+job_in.source      = files_in.mask;
+[path_f,name_f,ext_f] = niak_fileparts(files_in.mask);
+job_in.target      = cell_fmri{1};
+job_out            = [opt.folder_out 'mask' ext_f];
+job_opt.interpolation    = 'nearest_neighbour';
+pipeline = psom_add_job(pipeline,'scores_resample_mask','niak_brick_resample_vol',job_in,job_out,job_opt);
+
 % Run the jobs
 for j_id = 1:j_number
     % Get the name of the subject
     s_name = j_names{j_id};
     j_name = sprintf('scores_%s', j_names{j_id});
-    s_in.fmri = cell_fmri{j_id};
-    s_in.part = files_in.part;
-    s_in.mask = files_in.mask;
+    s_in.fmri = cell_fmri(j_id);
+    s_in.part = pipeline.scores_resample_part.files_out;
+    s_in.mask = pipeline.scores_resample_mask.files_out;
     s_out = struct;
     % Set the paths for the requested output files
     for out_id = 1:length(o_names)
         out_name = o_names{out_id};
-        if strcmp(out_name, 'extra')
-          s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
-        elseif opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
-          if opt.flag_vol
-            o_name = sprintf('%s_vol', out_name);
-            s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
-          end
-          if opt.flag_mat
-            o_name = sprintf('%s_mat', out_name);
-            s_out.(o_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
-          end
-        elseif ~opt.files_out.(out_name) && ~strcmp(out_name, 'extra')
-          o_name = sprintf('%s_vol', out_name);
-          s_out.(o_name) = 'gb_niak_omitted';
-          o_name = sprintf('%s_mat', out_name);
-          s_out.(o_name) = 'gb_niak_omitted';
-          continue
-        elseif ~opt.files_out.(out_name) && strcmp(out_name, 'extra')
-          s_out.(out_name) = 'gb_niak_omitted';
-          continue
+        if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
+            if strcmp(out_name, 'extra')
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+            elseif strcmp(out_name, 'part_order')
+                fprintf('I am here, what now?\n');
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.csv',s_name, out_name)];
+            else
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
+            end 
+        elseif ~opt.files_out.(out_name)
+            s_out.(out_name) = 'gb_niak_omitted';
+            continue
         elseif ischar(opt.files_out.(out_name))
-          error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
+            error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
         end
         if ~isdir([opt.folder_out filesep out_name])
                 psom_mkdir([opt.folder_out filesep out_name]);

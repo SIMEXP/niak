@@ -103,7 +103,7 @@ if ~opt.flag_target
     clear in_c out_c opt_c
     in_c.source = {};
     in_c.target = {};
-    out_c = [path_test.result 'report_test_regression_region_growing_demoniak.csv'];
+    out_c = [path_test.result 'report_test_regression_scores_demoniak.csv'];
     opt_c.base_source = opt_demo.folder_out;
     opt_c.base_target = path_test.reference;
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];

@@ -69,6 +69,9 @@ switch data.type;
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
         data.url = 'http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii.zip';
+    case 'cambridge_template_mnc'
+        data.name = 'template_cambridge_basc_multiscale_mnc_sym.zip';
+        data.url = 'http://files.figshare.com/1861821/template_cambridge_basc_multiscale_mnc_sym.zip';
     case ''
         if isempty(data.name)||isempty(data.url)
             error('Please specify DATA.TYPE or DATA.NAME/DATA.URL')
