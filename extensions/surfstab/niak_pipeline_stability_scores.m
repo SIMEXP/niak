@@ -149,6 +149,7 @@ for j_id = 1:j_number
         if strcmp(out_name, 'extra')
           s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
         elseif strcmp(out_name, 'part_order')
+          fprintf('I am here, what now?\n');
           s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.csv',s_name, out_name)];
         elseif opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
           if opt.flag_vol
