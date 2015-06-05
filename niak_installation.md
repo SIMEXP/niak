@@ -1,10 +1,11 @@
 # NIAK with docker (recommended)
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, there is support for many different system on the [docker installation site](https://docs.docker.com/installation/).
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/).
 
 **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. It is possible to run a more secure niak/docker setup, we shall have instructions added in the near future.
 
-**Linux**: The first step is to create a docker group and add the user that will use docker to that list. You will then lock the Unix socket file that communicate with docker, so only users in that group can access to the docker daemon.
+###Linux
+The first step is to create a docker group and add the user that will use docker to that list. 
 
 ```bash
 # If the group already exist it will return an error, just ignore it
@@ -31,7 +32,7 @@ docker stop niak
 docker rm niak
 ```
 
-## Mac OSX
+### Mac OSX
 
 An extra step is needed to start a docker container on OSX. You first need to start a docker daemon using the boot2docker application. You launch it with a mouse click, or type ```open /Application/boot2docker.app ``` in a terminal to the same effect. Full description is available on the [mac install docker page](https://docs.docker.com/installation/mac/).
 
