@@ -8,7 +8,7 @@ The recommended way to install NIAK is to use a [docker](https://www.docker.com/
 The first step is to create a docker group and add the user that will use docker to that list. 
 
 ```bash
-# If the group already exist it will return an error, just ignore it
+# If the group already exists, the command will return an error, just ignore it
 sudo groupadd docker
 # Then add user USERNAME to the docker group
 sudo usermod -a -G docker USERNAME
