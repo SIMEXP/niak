@@ -194,7 +194,7 @@ part = round(part);
 % Check if the partition has continuous values and starts with 1
 un_part = unique(part);
 reference = 1:numel(un_part);
-part_order = [reference(:), un_part(:)]
+part_order = [reference(:), un_part(:)];
 if ~isequal(un_part(:), reference(:))
     % The values are non continuous or don't start at 1
     warning('The values in %s are non continuous or don''t start at 1! I will remap them.', in.part);
