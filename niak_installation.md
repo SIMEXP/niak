@@ -24,7 +24,7 @@ All the members of the docker group will have access to the docker service.
 The following command will start NIAK with your home directory accessible (the rest of the file system is not accessible):
 ```bash
 xhost +local:niak_machine
-docker run -i -t --privileged --rm -h niak_machine -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave --force-gui; /bin/bash"
+docker run -i -t --privileged --rm -h niak_machine --name niak -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak /bin/bash -c "cd $HOME; source /opt/minc-itk4/minc-toolkit-config.sh; octave --force-gui; /bin/bash"
 ```
 
 Note that the first execution will be longer, since the simexp/niak mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
