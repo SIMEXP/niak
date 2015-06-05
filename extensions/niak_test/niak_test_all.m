@@ -104,8 +104,8 @@ if nargin < 1
     path_test = struct();
 end
 path_test = psom_struct_defaults(path_test, ...
-    { 'target' , 'demoniak' , 'result'}, ...
-    { ''       , ''         , ''      });
+    { 'target' , 'template' , 'demoniak' , 'result'}, ...
+    { ''       , ''         , ''          , ''     });
 
 %% Check the demoniak data
 if isempty(path_test.demoniak)
@@ -126,6 +126,18 @@ if ~opt.flag_target
     if status
         error('There was a problem downloading the target data')
     end
+end
+
+%% Check the template data
+if isempty(path_test.template)
+    % Grab the cambridge template
+    [status,err,data_demoniak] = niak_wget(struct('type','cambridge_template_mnc'));
+    path_test.template = data_demoniak.path;
+    if status
+        error('There was a problem downloading the template data');
+    end
+else
+    fprintf('I am going to use the template data at %s', path_test.demoniak);
 end
 
 if isempty(path_test.result)
@@ -228,7 +240,7 @@ opt_scores.flag_test = true;
 opt_scores.flag_target = opt.flag_target;
 files_sc.data  = files_all.fmri.vol;
 files_sc.mask  = files_all.quality_control.group_coregistration.func.mask_group;
-files_sc.part = files_all.template_aal;
+files_sc.part = [path_test.template filesep 'template_cambridge_basc_multiscale_sym_scale007.mnc.gz'];
 opt_scores.files_in = files_sc;
 path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_sc.reference = [path_test.target 'demoniak_scores'];
