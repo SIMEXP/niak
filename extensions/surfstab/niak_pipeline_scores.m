@@ -62,6 +62,7 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 %       first column. This may be useful if you want to use the same mask
 %       for the OPT.FLAG_TARGET flag as you use in the cluster partition.
 %       Use with care.
+%
 % OPT.FLAG_FOCUS (boolean, default false)
 %       If FILES_IN.PART has a two additional columns (three in total) then the
 %       second column is treated as a binary mask of an ROI that should be
@@ -90,8 +91,8 @@ opt.files_out = psom_struct_defaults(opt.files_out,...
                 { true             , true              , true              , true              , true                 , true               , true       , true        , true              , true    , true         });
 
 opt.scores = psom_struct_defaults(opt.scores, ...
-             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_verbose' , 'flag_test' } , ...
-             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , false       , true           , false       });
+             { 'type_center' , 'nb_iter' , 'folder_out' , 'thresh' , 'rand_seed' , 'nb_samps' , 'sampling' , 'flag_focus' , 'flag_target' , 'flag_deal' , 'flag_resample' , 'flag_verbose' , 'flag_test' } , ...
+             { 'median'      , 1         , ''           ,  0.5      , []          , 100        , struct()  , false        , false         , false       , false           , true           , false       });
 
 opt.scores.sampling = psom_struct_defaults(opt.scores.sampling, ...
                       { 'type' , 'opt'    }, ...
@@ -129,8 +130,60 @@ if strcmp('gb_niak_omitted' , opt.folder_out) && files_out_set
            '''false'' or specify their output path individually']);
 end
 
+% Check if the fmri and partition data have the same dimensions
+[ah, av] = niak_read_vol(files_in.part);
+[fh, fv] = niak_read_vol(cell_fmri{1});
+if ~isequal(ah.info.dimensions, fh.info.dimesions) || ~isequal(ah.info.voxel_size, fh.info.voxel_size)
+    % Either the dimensions of the files or the voxels dimensions or both do not match
+    % We need to resample the template to match the functional data
+    warning(['Either the dimensions, the voxel size or both are different ',...
+            'for the template and the functional data. I will resample the template!\n',...
+            '    template dimensions: %s\n',...
+            '    template voxel size: %s\n',...
+            '    functional dimensions: %s\n',...
+            '    functional voxel size: %s\n'],num2str(ah.info.dimensions), num2str(ah.info.voxel_size),num2str(fh.info.dimesions), num2str(fh.info.voxel_size));
+    opt.template_resample = true;
+end
+
+% Check the same thing for the mask
+[mh, mv] = niak_read_vol(files_in.mask);
+if ~isequal(mh.info.dimensions, fh.info.dimesions) || ~isequal(mh.info.voxel_size, fh.info.voxel_size)
+    % Either the dimensions of the files or the voxels dimensions or both do not match
+    % We need to resample the mask to match the functional data
+    warning(['Either the dimensions, the voxel size or both are different ',...
+            'for the mask and the functional data. I will resample the mask!\n',...
+            '    mask dimensions: %s\n',...
+            '    mask voxel size: %s\n',...
+            '    functional dimensions: %s\n',...
+            '    functional voxel size: %s\n'],num2str(mh.info.dimensions), num2str(mh.info.voxel_size),num2str(fh.info.dimesions), num2str(fh.info.voxel_size));
+    opt.mask_resample = true;
+end
+
 %% Begin the pipeline
 pipeline = struct;
+
+% See if we need to add the jobs to resample the template and the mask
+if ~same_res(cell_fmri{1}, files_in.part, 'partition')
+    % We need to resample the partition
+    clear job_in job_out job_opt
+    job_in.source      = files_in.part;
+    [path_f,name_f,ext_f] = niak_fileparts(files_in.part);
+    job_in.target      = cell_fmri{1};
+    job_out            = [opt.folder_out 'template_partition' ext_f];
+    job_opt.interpolation    = 'nearest_neighbour';
+    pipeline = psom_add_job(pipeline,'scores_resample_part','niak_brick_resample_vol',job_in,job_out,job_opt);
+end
+
+if ~same_res(cell_fmri{1}, files_in.mask, 'mask')
+    % We need to resample the partition
+    clear job_in job_out job_opt
+    job_in.source      = files_in.mask;
+    [path_f,name_f,ext_f] = niak_fileparts(files_in.mask);
+    job_in.target      = cell_fmri{1};
+    job_out            = [opt.folder_out 'mask' ext_f];
+    job_opt.interpolation    = 'nearest_neighbour';
+    pipeline = psom_add_job(pipeline,'scores_resample_mask','niak_brick_resample_vol',job_in,job_out,job_opt);
+end
 
 % Run the jobs
 for j_id = 1:j_number
@@ -138,7 +191,12 @@ for j_id = 1:j_number
     s_name = j_names{j_id};
     j_name = sprintf('scores_%s', j_names{j_id});
     s_in.fmri = cell_fmri(j_id);
-    s_in.part = files_in.part;
+    if ~same_res(cell_fmri{1}, files_in.part, 'partition')
+        s_in.part = pipeline.scores_resample_part.files_out;
+    else
+        s_in.part = files_in.part;
+    end
+
     s_in.mask = files_in.mask;
     s_out = struct;
     % Set the paths for the requested output files
@@ -152,7 +210,7 @@ for j_id = 1:j_number
                 s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.csv',s_name, out_name)];
             else
                 s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
-            end
+            end 
         elseif ~opt.files_out.(out_name)
             s_out.(out_name) = 'gb_niak_omitted';
             continue
@@ -172,3 +230,25 @@ end
 if ~opt.flag_test
     psom_run_pipeline(pipeline, opt.psom);
 end
+
+function test = same_res(ref_file, test_file, test_name)
+    % Test if both files have the same voxel dimensions and 
+    % dimensions
+    [rh, ~] = niak_read_vol(ref_file);
+    [th, ~] = niak_read_vol(test_file);
+    rdim = rh.info.dimensions(1:3);
+    tdim = th.info.dimensions(1:3);
+    rvox = rh.info.voxel_size;
+    tvox = rh.info.voxel_size;
+    if ~isequal(rdim, tdim) || ~isequal(rvox, tvox)
+        % Either the dimensions of the files or the voxels dimensions or both do not match
+        warning(['Either the dimensions, the voxel size or both are different ',...
+                'for the %s and the functional data. I will resample the %s!\n',...
+                '    %s dimensions: %s\n',...
+                '    %s voxel size: %s\n',...
+                '    functional dimensions: %s\n',...
+                '    functional voxel size: %s\n'],test_name, test_name, test_name, num2str(tdim), test_name, num2str(tvox),num2str(rdim), num2str(rvox));
+        test = false;
+    else
+        test = true;
+    end
