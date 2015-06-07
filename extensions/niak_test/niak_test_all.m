@@ -121,7 +121,7 @@ else
 end
 
 %% Grab the demoniak dataset    
-if ~opt.flag_target
+if ~opt.flag_target&&isempty(path_test.target)
     [status,err,data_target] = niak_wget(struct('type','target_test_niak_mnc1'));
     path_test.target = data_target.path;
     if status
