@@ -50,8 +50,8 @@ function [pipeline,opt_pipe,files_in] = niak_test_scores_demoniak(path_test,opt)
 % http://code.google.com/p/psom/wiki/PsomConfiguration
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2013.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : test, NIAK, fMRI preprocessing, pipeline, DEMONIAK
@@ -109,7 +109,7 @@ if ~opt.flag_target
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
     opt_c.black_list_target = [path_test.reference 'logs' filesep];
     pipeline = psom_add_job(pipeline,'test_scores','niak_test_cmp_files',in_c,out_c,opt_c,false);
-    pipeline.test_region_growing.dep = list_jobs;
+    pipeline.test_scores.dep = list_jobs;
 end
 
 %% Run the pipeline
