@@ -34,11 +34,11 @@ files_in = niak_grab_fmri_preprocess('/home/pbellec/demo_niak_preproc/',opt_g);
 More options for the grabber are available. See ''help niak_grab_fmri_preprocess''. If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field ''fmri'' directly lists all of the preprocessed fMRI datasets, organized by subject, session and runs. Example: 
 
 ```matlab
- files_in.data.subject1.session1.rest = '/home/pbellec/demo_niak_preproc/fmri/fmri_subject1_session1_rest.nii.gz';
- files_in.data.subject2.session1.rest = '/home/pbellec/demo_niak_preproc/fmri/fmri_subject2_session1_rest.nii.gz';
+ files_in.data.subj1.sess1.rest = '/data/fmri_subject1_session1_rest.nii.gz';
+ files_in.data.subj2.sess1.rest = '/data/fmri_subject2_session1_rest.nii.gz';
 ```
 
-'''WARNING''': Octave and Matlab impose some restrictions on the labels used for subject, session and run. In order to avoid any issue, please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'. None of these restrictions apply on the naming convention of the files, just to the labels that are used to build the structure files_in in Matlab/Octave. 
+**WARNING**: Octave and Matlab impose some restrictions on the labels used for subject, session and run. In order to avoid any issue, please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'. None of these restrictions apply on the naming convention of the files, just to the labels that are used to build the structure files_in in Matlab/Octave. 
 
 ### Analysis mask 
 
@@ -142,10 +142,10 @@ The **`multiscale`** folder contains information about the exploration of stable
 * **`figure_sigma_max.pdf`**: a pdf with the locally maximal stability contrast criterion as a function of the final number of clusters, along with the associated number of individual clusters and group clusters. 
 * **`table_sigma_max.dat`**: a text file recapitulating the local maxima of the stability contrast criterion, along with the corresponding number of clusters at the individual, group and final levels. These parameters can be used in the second pass analysis when re-running the pipeline.
 
-The folder **`stability_ind`** contains the results of BASC at the individual level. The subfolders `sci<k>` contains the results for `k` individual clusters&nbsp;: 
+The folder **`stability_ind`** contains the results of BASC at the individual level. The subfolders `sci<k>` contains the results for `k` individual clusters: 
 
-* stability_ind_&lt;subject&gt;_sci&lt;k&gt;_pass1.mat&nbsp;: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the first pass. Use ''niak_vec2mat'' to get the matrix form. 
-* stability_ind_&lt;subject&gt;_sci&lt;k&gt;_pass1.mat&nbsp;: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form.
+* **stability_ind_<subject>_sci<k>_pass1.mat**: a .mat file with a unique variable (vector) `stab`, which is the vectorized form of the individual stability matrix for subject <subject> and <k> individual clusters, for the first pass. Use `niak_vec2mat` to get the matrix form. 
+* **stability_ind_<subject>_sci<k>_pass1.mat**: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form.
 
 The folder ''stability_group'' contains the results of BASC at the group level. The subfolders ''sci&lt;k&gt;_scg&lt;l&gt;'' contains the results for ''k'' individual clusters and ''l'' group clusters: 
 
@@ -173,17 +173,13 @@ The folder ''stability_group'' contains the results of BASC at the group level. 
 * ''tseries_mean''&nbsp;: the Ith column is the mean time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters. 
 * ''tseries_std''&nbsp;: the Ith column is the standard deviation of the mean of the time series associated with cluster I, for &lt;k&gt; individual clusters, &lt;l&gt; group clusters, &lt;m&gt; final clusters.
 
-## Pipeline management
-
-The pipeline execution is powered by a generic manager called PSOM (Bellec et al. 2012, see reference below). See the [NIAK installation notes](http://niak.simexp-lab.org/niak_installation.html) for guidelines to set the configuration of PSOM. 
-
 ## Publication guidelines 
 
 Here is a short description of the BASC pipeline that can be adapted in a publication. You are encouraged to include the script that was used to run the pipeline as supplementary material of the article. 
 
 The fMRI data was first reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is essentially selected by the user through a parameter which is the size of the regions when the region growing stops. Typically, a threshold of 1000 mm3 will result into around 1000 regions for a whole-brain analysis restricted to grey matter. The regions are built to maximize the average correlation between time series within each region for all subjects. 
 
- The basic principle of BASC is to repeat a clustering operation a large number of times, and compute the frequency at which each pair of regions fall in the same cluster. This stability matrix is then itself used in a clustering procedure, which derives so-called stable clusters (stable clusters are composed of regions with a high probability of falling in the same clusters, hence the name). That principle is first applied on individual fMRI time series, and replications of clustering are derived by applying a circular block bootstrap to fMRI time series. A stability matrix is derived for each subject. The average individual stability matrix is then computed and a hierarchical clustering is applied on it. This allows to define group-level clusters which maximize the average probability of being clustered at the individual level. By bootstrapping the subjects of the population, the group-level clustering itself can be subject to BASC, and a group-level stability matrix is derived. A hierarchical clustering is finally applied on the group stability matrix to define stable group clusters. For each brain region, the average stability of that region with every other regions in the cluster of the seed can be derived. This can be done with the individual, average individual or group stability matrices, hence generating stability maps at all levels of analysis for every stable group cluster. 
+The basic principle of BASC is to repeat a clustering operation a large number of times, and compute the frequency at which each pair of regions fall in the same cluster. This stability matrix is then itself used in a clustering procedure, which derives so-called stable clusters (stable clusters are composed of regions with a high probability of falling in the same clusters, hence the name). That principle is first applied on individual fMRI time series, and replications of clustering are derived by applying a circular block bootstrap to fMRI time series. A stability matrix is derived for each subject. The average individual stability matrix is then computed and a hierarchical clustering is applied on it. This allows to define group-level clusters which maximize the average probability of being clustered at the individual level. By bootstrapping the subjects of the population, the group-level clustering itself can be subject to BASC, and a group-level stability matrix is derived. A hierarchical clustering is finally applied on the group stability matrix to define stable group clusters. For each brain region, the average stability of that region with every other regions in the cluster of the seed can be derived. This can be done with the individual, average individual or group stability matrices, hence generating stability maps at all levels of analysis for every stable group cluster. 
 
  There are three main clustering parameters&nbsp;: the number of clusters at the individual, group and final levels (K, L and M respectively). The contrast of the group stability within and between stable group clusters is derived as a measure of the overall clustering quality. In a first pass, the space of all possible (K,L,M) is explored with a small number of bootstrap samples to save time. For each M, the maximal contrast for K and L in a neighbourhood of M is derived. It is then possible in a second pass to generate stability matrices with a high number of bootstrap samples for the number of clusters which are local maxima of the contrast. 
 
