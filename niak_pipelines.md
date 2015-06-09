@@ -12,4 +12,4 @@ This is a variant of the BASC pipeline that builds brain parcellations (clusters
 
 # [GLM-connectome](pipe_glm_connectome.html)
 The general liner model for connectome (GLM-connectome) pipeline tests for association between group-level variable and brain connectivity systematically at each brain connection. It is possible to extract various connectivity metrics at the intra-run and inter-run/intra-subject levels, before entering a random effect group analysis. The GLM estimation can be replicated at multiple resolutions, i.e. number of brain parcels, and an omnibus test of the overall presence of true association across resolutions is available. 
-> [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/fig_basc_fir.png" width="250px" />](pipe_glm_connectome.html)
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/logo_glm_connectome.png" width="250px" />](pipe_glm_connectome.html)
