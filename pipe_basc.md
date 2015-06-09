@@ -4,8 +4,6 @@
 
 This tutorial describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of fMRI datasets acquired on multiple subjects. The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes an automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks. There is a set of [slides](http://files.figshare.com/2030483/basc_pipeline_niak.pdf) describing the pipeline.  
 
-## Syntax
-
 The command to run the pipeline in a Matlab/Octave session is: 
 ```matlab
 niak_pipeline_stability_rest(files_in,opt) 
@@ -16,9 +14,9 @@ where ''files_in'' is a structure describing how the dataset is organized, and '
 
 The inputs of the pipelines are: 
 
- * The pipeline requires fully preprocessed fMRI datasets. This is typically the output of ''niak_pipeline_fmri_preprocessing'', but the preprocessing can be done with any package. 
- * An analysis mask. This is a (3D) binary mask, at the same resolution and in the same space as the preprocessed datasets. The region growing will be applied only to the voxels within the mask. 
- * A mask of brain areas. By default, this is the AAL template (see notes below). The region growing is applied on the concatenated time series of all subjects. To limit the memory demand, this step is applied independently in each of the areas. This input is optional. If unspecified, the region growing is performed on the whole analysis mask at once. The mask of areas needs to be at the same resolution and in the same space as the preprocessed datasets.
+ * Preprocessed fMRI datasets.  
+ * A (3D) binary brain mask,The BASC will be applied only to the voxels within the mask. 
+ * A mask of brain areas. The region growing is applied on the concatenated time series of all subjects in each area oo limit the memory demand. 
 
 ### Preprocessed fMRI data
 
