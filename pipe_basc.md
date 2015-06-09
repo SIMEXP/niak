@@ -31,9 +31,7 @@ opt_g.min_nb_vol = 100;
 files_in = niak_grab_fmri_preprocess('/home/pbellec/demo_niak_preproc/',opt_g);
 ```
 
-More options for the grabber are available. See ''help niak_grab_fmri_preprocess'' or the template of the region growing pipeline for more info.&nbsp;The mask is the the group mask (i.e. voxels that fall in the brain for more than 50% of subjects) generated in the quality control, and the areas are the AAL segmentation (see the description below). 
-
-If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field ''fmri'' directly lists all of the preprocessed fMRI datasets, organized by subject, session and runs. Example: 
+More options for the grabber are available. See ''help niak_grab_fmri_preprocess''. If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field ''fmri'' directly lists all of the preprocessed fMRI datasets, organized by subject, session and runs. Example: 
 
 ```matlab
  files_in.data.subject1.session1.rest = '/home/pbellec/demo_niak_preproc/fmri/fmri_subject1_session1_rest.nii.gz';
@@ -44,16 +42,14 @@ If NIAK was not used to prepocess the data, all inputs have to be manually speci
 
 ### Analysis mask 
 
-The ''mask'' field is the name of a 3D binary volume serving as a mask for the analysis. It can be a mask of the brain common to all subjects, or a mask of a specific brain area, e.g. the thalami. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM/SPM or MINCRESAMPLE to resample the mask at the correct resolution. Example&nbsp;: 
-
+The ''mask'' field is the name of a 3D binary volume serving as a mask for the analysis. If the results of the fMRI preprocessing pipeline have been grabbed, the mask is automatically set to the the group mask generated in the quality control (i.e. voxels that fall in the brain for more than 50% of subjects). It can be a mask of the brain common to all subjects, or a mask of a specific brain area, e.g. the thalami. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM/SPM or MINCRESAMPLE to resample the mask at the correct resolution. 
 ```matlab
  files_in.mask = '/home/pbellec/demo_niak_preproc/quality_control/group_coregistration/func_mask_group_stereonl.nii.gz';
 ```
 
 ### Brain areas 
 
-Finally, the ''areas'' field is the name of a volume of integer values, describing some brain areas that are used to save memory space in the region-growing algorithm. Different brain areas are treated independently at this step of the analysis. If the brain mask is small enough, this may not be necessary. Otherwise, you can use for example the AAL segmentation. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM or mincresample to resample the AAL segmentation at the correct resolution. 
-
+Finally, the ''areas'' field is the name of a volume of integer values, describing some brain areas that are used to save memory space in the region-growing algorithm. By default, NIAK will use a modified AAL template that covers the full cerebellum, and is adapted to the MNI152 non-lilnear symmetric template. Different brain areas are treated independently at this step of the analysis. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM or mincresample to resample the AAL segmentation at the correct resolution. 
 ```matlab
 files_in.areas = '/data/roi_aal.nii.gz';
 ```
