@@ -2,7 +2,7 @@
 
 ## Overview
 
-This tutorial describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of fMRI datasets acquired on multiple subjects. The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks. There is a set of [slides](http://files.figshare.com/2030483/basc_pipeline_niak.pdf) describing the pipeline.  
+This tutorial describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of fMRI datasets acquired on multiple subjects. The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes an automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks. There is a set of [slides](http://files.figshare.com/2030483/basc_pipeline_niak.pdf) describing the pipeline.  
 
 ## Syntax
 
