@@ -1,22 +1,16 @@
 # BASC pipeline
 
-This tutorial describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of fMRI datasets acquired on multiple subjects. The BASC pipeline supports both NIFTI (4D) and MINC image formats. The command to run the pipeline in a Matlab/Octave session is: 
+## Overview
+
+This tutorial describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of fMRI datasets acquired on multiple subjects. The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks. There is a set of [slides](http://files.figshare.com/2030483/basc_pipeline_niak.pdf) describing the pipeline.  
+
+## Syntax
+
+The command to run the pipeline in a Matlab/Octave session is: 
 ```matlab
 niak_pipeline_stability_rest(files_in,opt) 
 ```
-where ''files_in'' is a structure describing how the dataset is organized, and ''opt'' is a structure describing the options of the pipeline. You can test the fMRI preprocessing on a demo data (see [[niak:Installation|instructions for download]]). After uncompressing and unarchiving the preprocessed demo data in a folder, e.g. ''/home/bic/my_login/data/fmri_preproc_demoniak/'', the demo can be started using&nbsp;: 
-
-```matlab
-niak_demo_stability_rest('/home/bic/my_login/data/fmri_preproc_demoniak/')
-```
-
-The following sections of this tutorial will also guide you through setting up ''files_in'' and ''opt''. A summary of those two arguments can be found using the standard matlab help&nbsp;: 
-
-```matlab
-help niak_pipeline_stability_rest
-```
-
-The code of [https://raw.githubusercontent.com/SIMEXP/niak/master/template/niak_template_stability_rest.m](niak_template_stability_rest) would be a good starting point to write your own script. 
+where ''files_in'' is a structure describing how the dataset is organized, and ''opt'' is a structure describing the options of the pipeline. The code of [niak_template_stability_rest](https://raw.githubusercontent.com/SIMEXP/niak/master/template/niak_template_stability_rest.m) would be a good starting point to write your own script. 
 
 ## Input files 
 
