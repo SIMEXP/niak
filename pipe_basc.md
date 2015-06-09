@@ -144,10 +144,10 @@ The **`multiscale`** folder contains information about the exploration of stable
 
 The folder **`stability_ind`** contains the results of BASC at the individual level. The subfolders `sci<k>` contains the results for `k` individual clusters: 
 
-* **stability_ind_<subject>_sci<k>_pass1.mat**: a .mat file with a unique variable (vector) `stab`, which is the vectorized form of the individual stability matrix for subject <subject> and <k> individual clusters, for the first pass. Use `niak_vec2mat` to get the matrix form. 
-* **stability_ind_<subject>_sci<k>_pass1.mat**: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form.
+* **`stability_ind_<subject>_sci<k>_pass1.mat`**: a .mat file with a unique variable (vector) `stab`, which is the vectorized form of the individual stability matrix for subject <subject> and <k> individual clusters, for the first pass. Use `niak_vec2mat` to get the matrix form. 
+* **`stability_ind_<subject>_sci<k>_pass1.mat`**: a .mat file with a unique variable (vector) ''stab'', which is the vectorized form of the individual stability matrix for subject &lt;subject&gt; and &lt;k&gt; individual clusters, for the second pass. Use ''niak_vec2mat'' to get the matrix form.
 
-The folder ''stability_group'' contains the results of BASC at the group level. The subfolders ''sci&lt;k&gt;_scg&lt;l&gt;'' contains the results for ''k'' individual clusters and ''l'' group clusters: 
+The folder **`stability_group`** contains the results of BASC at the group level. The subfolders `sci<k>_scg<l>` contains the results for `<k>` individual clusters and `<l>` group clusters: 
 
 * &nbsp;:!: ''brain_networks_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the ''I''th group stable cluster is filled with ''I''s. A threshold is in addition applied on the regions of the cluster such as the average stability is greater than 0.5. This can change the total number of stable clusters. 
 * &nbsp;:!: ''brain_partition_sci&lt;k&gt;_scg&lt;l&gt;_scf&lt;m&gt;.EXT''&nbsp;: a 3D map where the ''I''th group stable cluster is filled with ''I''s. 
