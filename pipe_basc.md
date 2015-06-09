@@ -15,8 +15,8 @@ where ''files_in'' is a structure describing how the dataset is organized, and '
 The inputs of the pipelines are: 
 
  * Preprocessed fMRI datasets.  
- * A (3D) binary brain mask,The BASC will be applied only to the voxels within the mask. 
- * A mask of brain areas. The region growing is applied on the concatenated time series of all subjects in each area oo limit the memory demand. 
+ * A (3D) binary brain mask. The BASC will be applied only to the voxels within the mask. 
+ * A mask of brain areas. The region growing is applied on the concatenated time series of all subjects in each area to limit the memory demand. 
 
 ### Preprocessed fMRI data
 
