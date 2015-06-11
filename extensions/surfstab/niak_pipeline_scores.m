@@ -227,7 +227,7 @@ pipeline = psom_add_job(pipeline,'scores_resample_mask','niak_brick_resample_vol
 for j_id = 1:j_number
     % Get the name of the subject
     s_name = j_names{j_id};
-    j_name = sprintf('scores_s', j_names{j_id});
+    j_name = sprintf('scores_%s', j_names{j_id});
     s_in.fmri = cell_fmri(j_id);
     s_in.part = pipeline.scores_resample_part.files_out;
     s_in.mask = pipeline.scores_resample_mask.files_out;
@@ -237,11 +237,11 @@ for j_id = 1:j_number
         out_name = o_names{out_id};
         if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
             if strcmp(out_name, 'extra')
-                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_s.mat',s_name, out_name)];
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
             elseif strcmp(out_name, 'part_order')
-                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_s.csv',s_name, out_name)];
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.csv',s_name, out_name)];
             else
-                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_ss',s_name, out_name, ext)];
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
             end 
         elseif ~opt.files_out.(out_name)
             s_out.(out_name) = 'gb_niak_omitted';
