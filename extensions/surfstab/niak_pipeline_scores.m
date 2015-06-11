@@ -1,4 +1,4 @@
-lsfunction [pipeline, opt] = niak_pipeline_scores(files_in, opt)
+function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 % Pseudocode of the pipeline:
 % INPUTS
 %
