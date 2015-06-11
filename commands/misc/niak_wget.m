@@ -65,7 +65,7 @@ switch data.type;
         data.url  = ['http://www.nitrc.org/frs/download.php/7241/' data.name];
     case 'target_test_niak_mnc1'  
         data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip'];
-        data.url  = ['https://www.nitrc.org/frs/download.php/7650/' data.name];
+        data.url  = ['https://www.nitrc.org/frs/download.php/7736/' data.name];
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
         data.url = 'http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii.zip';
