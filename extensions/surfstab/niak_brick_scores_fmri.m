@@ -2,16 +2,16 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 % Build stability maps using an a priori partition
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(FILES_IN,FILES_OUT,OPT)
+% [IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(IN,FILES_OUT,OPT)
 %
-% FILES_IN.FMRI
+% IN.FMRI
 %   (string or cell of strings) One or multiple 3D+t datasets.
-% FILES_IN.PART
+% IN.PART
 %   (string) A 3D volume with a "target" partition. The Ith cluster
 %   is filled with Is.
-% FILES_IN.MASK
+% IN.MASK
 %   (string) A 3D volume with non-zero values in all voxels that should be
-%   included in the analysis. The partition in FILES_IN.PART should be a
+%   included in the analysis. The partition in IN.PART should be a
 %   subset of these voxels.
 %
 % FILES_OUT.STABILITY_MAPS
@@ -29,13 +29,18 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %   (string) same as PARTITION_CORES, but only voxels with stability contrast > OPT.THRESH appear
 %   in a cluster.
 % FILES_OUT.RMAP_PART
-%   (string) correlation maps using the partition FILES_IN.PART as seeds.
+%   (string) correlation maps using the partition IN.PART as seeds.
 % FILES_OUT.RMAP_CORES
 %   (string) correlation maps using the partition FILES_OUT.PARTITION_CORES as seeds.
 % FILES_OUT.DUAL_REGRESSION
-%   (string) the "dual regression" maps using FILES_IN.PART as seeds.
+%   (string) the "dual regression" maps using IN.PART as seeds.
 % FILES_OUT.EXTRA
 %   (string) extra info in a .mat file.
+% FILES_OUT.PART_ORDER
+%   (string) a csv file containing the list of numerical partition labels on the left and the 
+%   order of the corresponding output volume on the right. Unless the template partition supplied
+%   in IN.PART has non-continuous partition values or doesn't start with 1, the left and the 
+%   right column will be identical.
 %
 % OPT.FOLDER_OUT (string, default empty) if non-empty, use that to generate default results.
 % OPT.NB_SAMPS (integer, default 100) the number of replications to 
@@ -56,10 +61,10 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %   number generator with PSOM_SET_RAND_SEED. If left empty, no action is taken.
 % OPT.FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
 % OPT.FLAG_TARGET (boolean, default false)
-%       If FILES_IN.PART has a second column, then this column is used as a binary mask to define 
+%       If IN.PART has a second column, then this column is used as a binary mask to define 
 %       a "target": clusters are defined based on the similarity of the connectivity profile 
 %       in the target regions, rather than the similarity of time series.
-%       If FILES_IN.PART has a third column, this is used as a parcellation to reduce the space 
+%       If IN.PART has a third column, this is used as a parcellation to reduce the space 
 %       before computing connectivity maps, which are then used to generate seed-based 
 %       correlation maps (at full available resolution).
 % OPT.FLAG_DEAL
@@ -69,7 +74,7 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %       for the OPT.FLAG_TARGET flag as you use in the cluster partition.
 %       Use with care.
 % OPT.FLAG_FOCUS (boolean, default false)
-%       If FILES_IN.PART has a two additional columns (three in total) then the
+%       If IN.PART has a two additional columns (three in total) then the
 %       second column is treated as a binary mask of an ROI that should be
 %       clustered and the third column is treated as a binary mask of a
 %       reference region. The ROI will be clustered based on the similarity
@@ -79,7 +84,7 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 %       If true, the output for the designated types will be generated as 3D or 4D volumes
 %       (e.g. minc or nifti). If false, only the .mat file will be generated
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does not do anything
-%       but update FILES_IN, FILES_OUT and OPT.
+%       but update IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % COMMENTS:
 % For "window" sampling, the OPT.NB_SAMPS argument is ignored, 
@@ -119,10 +124,10 @@ function [in, out, opt] = niak_brick_scores_fmri(in, out, opt)
 
 % Syntax
 if ~exist('in','var')||~exist('out','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_scores_fmri'' for more info.')
+    error('niak:brick','syntax: [IN,FILES_OUT,OPT] = NIAK_BRICK_SCORES_FMRI(IN,FILES_OUT,OPT).\n Type ''help niak_brick_scores_fmri'' for more info.')
 end
 
-% FILES_IN
+% IN
 in = psom_struct_defaults(in, ...
            { 'fmri' , 'part' , 'mask' }, ...
            { NaN    , NaN    , NaN    });
@@ -139,41 +144,42 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
       { 'CBB'  , struct() });
 
 % FILES_OUT
-if not iscell(in.fmri)
+if ~iscell(in.fmri)
     error('IN.FMRI must be a cell of strings and not %s', class(in.fmri))
 end
 [~,~,ext] = niak_fileparts(in.fmri{1});
-[FDhdr,~] = niak_read_vol(in.fmri{1});
+fprintf('I have discovered the following file ending: %s\n', ext);
 
-% Make header for 3D files
-TDhdr = FDhdr;
-tmp = size(vol);
-td_size = tmp(1:3);
-% See if we have a nifti or a minc
-if ~isempty(findstr(ext, 'mnc'))
-    warning('This is a minc file, I won''t do anything\n');
-elseif ~isempty(findstr(ext, 'nii'))
-    dim = ones(1,8);
-    dim(2:4) = td_size;
-    TDhdr.details.dim = dim;
-else
-    error('I do not recognize the input file type\n');
-end
-
-fprintf('I have discovered a file ending as follows: %s\n', ext);
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
-    oname = { 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_cores'                , 'partition_thresh'                 , 'rmap_part'                , 'rmap_cores'                , 'dual_regression'                , 'extra'                };
-    oval =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] , [path_out 'extra.mat'] };
+    oname = { 'stability_maps'                , 'stability_intra'                , 'stability_inter'                , 'stability_contrast'                , 'partition_cores'                , 'partition_thresh'                 , 'rmap_part'                , 'rmap_cores'                , 'dual_regression'                , 'extra'                , 'part_order'                };
+    oval =  { [path_out 'stability_maps' ext] , [path_out 'stability_intra' ext] , [path_out 'stability_inter' ext] , [path_out 'stability_contrast' ext] , [path_out 'partition_cores' ext] ,  [path_out 'partition_thresh' ext] , [path_out 'rmap_part' ext] , [path_out 'rmap_cores' ext] , [path_out 'dual_regression' ext] , [path_out 'extra.mat'] , [path_out 'part_order.csv'] };
+    out = psom_struct_defaults(out, oname, oval);
 else
-    oname = { 'stability_maps'  , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_cores' , 'partition_thresh' , 'rmap_part'       , 'rmap_cores'      , 'dual_regression' , 'extra'           };
-    oval =  { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+    oname = { 'stability_maps'  , 'stability_intra' , 'stability_inter' , 'stability_contrast' , 'partition_cores' , 'partition_thresh' , 'rmap_part'       , 'rmap_cores'      , 'dual_regression' , 'extra'           , 'part_order'      };
+    oval =  { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted'    , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
     out = psom_struct_defaults(out, oname, oval);
 end
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
     return
+end
+
+% Make header for 3D files
+[FDhdr,vol] = niak_read_vol(in.fmri{1});
+TDhdr = FDhdr;
+tmp = size(vol);
+td_size = tmp(1:3);
+% See if we have a nifti or a minc
+if ~isempty(findstr(ext, 'mnc'))
+    warning('This is a minc file, I won''t do anything');
+elseif ~isempty(findstr(ext, 'nii'))
+    dim = ones(1,8);
+    dim(2:4) = td_size;
+    TDhdr.details.dim = dim;
+else
+    error('I do not recognize the input file type');
 end
 
 %% Seed the random generator
@@ -185,6 +191,16 @@ end
 [~,part] = niak_read_vol(in.part);
 % Round it in case the values are not integers
 part = round(part);
+% Check if the partition has continuous values and starts with 1
+un_part = unique(part(part~=0));
+reference = 1:numel(un_part);
+part_order = [reference(:), un_part(:)];
+if ~isequal(un_part(:), reference(:))
+    % The values are non continuous or don't start at 1
+    warning('The values in %s are non continuous or don''t start at 1! I will remap them.', in.part);
+    % Reset the partition values to continuous values starting with 1
+    part = remap_partition(part, part_order);
+end
 % Get the mask
 [~, mask] = niak_read_vol(in.mask);
 fprintf('I am loading the mask at %s now.\n', in.mask);
@@ -196,6 +212,9 @@ if non_overlap > 0
     % Some parts of the mask have no partition. Constrain the mask to the partition raise a warning
     warning('There are values inside the mask that do not have a partition. I will use the union of mask and partition.');
     mask = logical(logical(part) .* mask);
+    if strcmp(out.part_order,'gb_niak_omitted')
+        warning('OUT.PART_ORDER is not defined. There will be no .csv file with the partition order!');
+    end
 end
 
 %% Flag Checks
@@ -270,7 +289,7 @@ end
 
 %% Run the stability estimation
 opt_score = rmfield(opt,{'folder_out', 'thresh', 'rand_seed', 'flag_test', 'flag_deal'});
-res = niak_stability_cores(tseries,part_run,opt_score);
+res = niak_scores(tseries,part_run,opt_score);
 
 if ~strcmp(out.stability_maps,'gb_niak_omitted')
     if opt.flag_verbose
@@ -404,3 +423,31 @@ if ~strcmp(out.extra,'gb_niak_omitted')
     changes = res.changes;
     save(out.extra,'nb_iter','changes');
 end
+
+% Part Order
+if ~strcmp(out.part_order,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Writing part order info as a .csv file\n')
+    end
+    % Write the output as a mat file
+    nb_iter = res.nb_iter;
+    changes = res.changes;
+    csvwrite(out.part_order, part_order);
+end
+
+function new_part = remap_partition(in_part,part_order)
+    % This function replaces the values in in_part according
+    % to the correspondence established in part_order
+    % The values in in_part are in the right column and the 
+    % values they are replaced by are in the left column.
+    
+    % Get the number of values that need to be remapped
+    n_val = size(part_order,1);
+    new_part = zeros(size(in_part));
+    for val_id = 1:n_val
+        new_val = part_order(val_id,1);
+        old_val = part_order(val_id,2);
+        new_part(in_part==old_val) = new_val;
+    end
+
+
