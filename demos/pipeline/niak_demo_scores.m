@@ -87,8 +87,8 @@ if nargin < 2
 end
 
 path_demo = niak_full_path(path_demo);
-opt = psom_struct_defaults(opt,{'files_in','folder_out'                        ,'flag_test'},...
-						       {''        ,[path_demo,filesep,'scores',filesep],false      });
+opt = psom_struct_defaults(opt,{'files_in','folder_out'                        ,'flag_test' },...
+						       {''        ,[path_demo,filesep,'scores',filesep],false       });
 
 if isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     %% Grab the results from the NIAK fMRI preprocessing pipeline
