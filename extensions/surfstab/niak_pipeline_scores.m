@@ -1,8 +1,11 @@
 function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
-% Pseudocode of the pipeline:
-% INPUTS
+% Estimation of stable cores
 %
-% FILES_IN  
+% SYNTAX:
+% [PIPELINE,OPT] = NIAK_PIPELINE_SCORES(FILES_IN,OPT)
+% ______________________________________________________________________________
+%
+% FILES_IN
 %   (structure) with the following fields : 
 %
 %   DATA
@@ -15,68 +18,134 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 %         FILES_IN.ATOMS needs to be specified in that instance. 
 %         The <SESSION> level can be skipped.
 %   MASK
-%       (string) path to the mask
+%       (string) path to a 3D volume that contains non-zero values at all voxels
+%       that are to be included in the scores analysis. 
+%       IMPORTANT: if FILES_IN.MASK covers different voxels than FILES_IN.PART
+%                  then the pipeline is going to use the union of the two
 %
 %   PART
-%       (string) path to the partition
+%       (string) path to a 3D volume that contains non-zero integer values between
+%       1 and M where M is the maximum value of the volume. The values are 
+%       interpreted as partition labels such that the nonzero value P(i) indicates
+%       that voxel i is a member of partition P. 
+%       The pipeline expects the values to be continuous between 1 and N where N is
+%       the number of partitions (unique values) in the volume. If the values are 
+%       not continuous or don't start at 1, they will be remapped to 1 to N and 
+%       the correspondence of values in FILES_IN.PART to the partitions in the 
+%       output is specified in part_order/part_order.csv
 %
-% Check the options
-%   - OPT is prety much a forward, no changes there
-%   - Decide which files should be saved? Needs a separate thingy that is
-%     either empty to save all or a structure to save only specific stuff.
-%     Each file needs to be defined here with the default being yes.
-%   - Maybe a folder that we want to store everything in
-% OPT.FILES_OUT
-%   STABILITY_MAPS
-%     (boolean)
-%   PARTITION_CORES
-%     (boolean)
-%   STABILITY_INTRA
-%     (boolean)
-%   STABILITY_INTRA
-%     (boolean)
-%   STABILITY_CONTRAST
-%     (boolean)
-%   PARTITION_THRESH
-%     (boolean)
-%   RMAP_PART
-%     (boolean)
-%   RMAP_CORES
-%     (boolean)
-%   DUAL_REGRESSION
-%     (boolean)
-%   EXTRA
-%     (boolean)
+% OPT
+%   (structure, optional) with the following fields:
 %
-% OPT.FLAG_RAND (boolean, default false) if the flag is false, the pipeline is 
-%   deterministic. Otherwise, the random number generator is initialized
-%   based on the clock for each job.
-% OPT.FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
-% OPT.FLAG_TARGET (boolean, default false)
-%       If FILES_IN.PART has a second column, then this column is used as a binary mask to define 
-%       a "target": clusters are defined based on the similarity of the connectivity profile 
+%   FILES_OUT
+%       STABILITY_MAPS
+%           (boolean, default true) creates a 4D volume, where 
+%           the k-th volume is the stability map of the k-th cluster.
+%       PARTITION_CORES
+%           (boolean, default true) creates a 3D volume where the 
+%           k-th cluster based on stable cores is filled with k's.
+%       STABILITY_INTRA
+%           (boolean, default true) creates a 3D volume where each 
+%           voxel is filled with the stability in its own cluster.
+%       STABILITY_INTRA
+%           (boolean, default true) creates a 3D volume where each 
+%           voxel is filled with the stability with the closest cluster
+%           outside of its own.
+%       STABILITY_CONTRAST
+%           (boolean, default true) creates a 4D volume containing
+%           the difference between the intra- and inter- cluster stability.
+%       PARTITION_THRESH
+%           (boolean, default true) creates a 3D volume containing the
+%           FILES_OUT.PARTITION_CORES but thresholded by stability
+%       RMAP_PART
+%           (boolean, default true) creates a 4D volume containing the
+%           correlation maps using the partition FILES_IN.PART as seeds.
+%       RMAP_CORES
+%           (boolean, default true) creates a 4D volume containing the 
+%           correlation maps using the partition FILES_OUT.PARTITION_CORES 
+%           as seeds.
+%       DUAL_REGRESSION
+%           (boolean, default true) creates a 4D volume containing the
+%           "dual regression" maps using FILES_IN.PART as seeds.
+%       EXTRA
+%           (boolean, default true)
+%
+%   FLAG_RAND 
+%       (boolean, default false) if the flag is false, the pipeline is 
+%       deterministic. Otherwise, the random number generator is initialized
+%       based on the clock for each job.
+%
+%   FLAG_VERBOSE 
+%       (boolean, default true) turn on/off the verbose.
+%
+%   FLAG_TARGET 
+%       (boolean, default false) If FILES_IN.PART has a second column, 
+%       then this column is used as a binary mask to define a "target": 
+%       clusters are defined based on the similarity of the connectivity profile 
 %       in the target regions, rather than the similarity of time series.
 %       If FILES_IN.PART has a third column, this is used as a parcellation to reduce the space 
 %       before computing connectivity maps, which are then used to generate seed-based 
 %       correlation maps (at full available resolution).
-% OPT.FLAG_DEAL
+%
+%   FLAG_DEAL
+%       (boolean, default false)
 %       If the partition supplied by the user does not have the appropriate
 %       number of columns, this flag can force the brick to duplicate the
 %       first column. This may be useful if you want to use the same mask
 %       for the OPT.FLAG_TARGET flag as you use in the cluster partition.
 %       Use with care.
 %
-% OPT.FLAG_FOCUS (boolean, default false)
-%       If FILES_IN.PART has a two additional columns (three in total) then the
-%       second column is treated as a binary mask of an ROI that should be
-%       clustered and the third column is treated as a binary mask of a
-%       reference region. The ROI will be clustered based on the similarity
-%       of its connectivity profile with the prior partition in column 1 to
-%       the connectivity profile of the reference.
-% OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does not do anything
-%      but update FILES_IN, FILES_OUT and OPT.
+%   FLAG_FOCUS 
+%       (boolean, default false) If FILES_IN.PART has a two additional 
+%       columns (three in total) then the second column is treated as a 
+%       binary mask of an ROI that should be clustered and the third column 
+%       is treated as a binary mask of a reference region. The ROI will be 
+%       clustered based on the similarity of its connectivity profile with the 
+%       prior partition in column 1 to the connectivity profile of the reference.
+%
+%   FLAG_TEST 
+%       (boolean, default false) if the flag is true, the brick does not do anything
+%       but update FILES_IN, FILES_OUT and OPT.
 
 % FILES IN DEFAULTS
+% ______________________________________________________________________________
+% COMMENTS:
+%
+% Copyright (c) Pierre Bellec, Sebastian Urchs
+%   Centre de recherche de l'institut de Gériatrie de Montréal
+%   Département d'informatique et de recherche opérationnelle
+%   Université de Montréal, 2010-2015
+%   Montreal Neurological Institute, 2015
+% Maintainer : sebastian.urchs@mail.mcgill.ca
+%
+% See licensing information in the code.
+% Keywords : clustering, stability analysis, 
+%            bootstrap, jacknife, scores.
+
+% Permission is hereby granted, free of charge, to any person obtaining a copy
+% of this software and associated documentation files (the "Software"), to deal
+% in the Software without restriction, including without limitation the rights
+% to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+% copies of the Software, and to permit persons to whom the Software is
+% furnished to do so, subject to the following conditions:
+%
+% The above copyright notice and this permission notice shall be included in
+% all copies or substantial portions of the Software.
+%
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+% AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+% THE SOFTWARE.
+% ______________________________________________________________________________
+
+%% Seting up default arguments
+if ~exist('files_in','var')||~exist('opt','var')
+    error('niak:pipeline','syntax: [IN,OPT] = NIAK_PIPELINE_SCORES(IN,OPT).\n Type ''help niak_pipeline_scores'' for more info.');
+end
+
 files_in = psom_struct_defaults(files_in, ...
            { 'data' , 'part' , 'mask' }, ...
            { NaN    , NaN    , NaN    });
@@ -158,7 +227,7 @@ pipeline = psom_add_job(pipeline,'scores_resample_mask','niak_brick_resample_vol
 for j_id = 1:j_number
     % Get the name of the subject
     s_name = j_names{j_id};
-    j_name = sprintf('scores_%s', j_names{j_id});
+    j_name = sprintf('scores_s', j_names{j_id});
     s_in.fmri = cell_fmri(j_id);
     s_in.part = pipeline.scores_resample_part.files_out;
     s_in.mask = pipeline.scores_resample_mask.files_out;
@@ -168,11 +237,11 @@ for j_id = 1:j_number
         out_name = o_names{out_id};
         if opt.files_out.(out_name) && ~ischar(opt.files_out.(out_name))
             if strcmp(out_name, 'extra')
-                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.mat',s_name, out_name)];
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_s.mat',s_name, out_name)];
             elseif strcmp(out_name, 'part_order')
-                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s.csv',s_name, out_name)];
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_s.csv',s_name, out_name)];
             else
-                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_%s%s',s_name, out_name, ext)];
+                s_out.(out_name) = [opt.folder_out filesep out_name filesep sprintf('%s_ss',s_name, out_name, ext)];
             end 
         elseif ~opt.files_out.(out_name)
             s_out.(out_name) = 'gb_niak_omitted';
