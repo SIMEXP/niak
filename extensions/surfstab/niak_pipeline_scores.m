@@ -1,4 +1,4 @@
-function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
+lsfunction [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 % Pseudocode of the pipeline:
 % INPUTS
 %
@@ -48,6 +48,9 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 %   EXTRA
 %     (boolean)
 %
+% OPT.FLAG_RAND (boolean, default false) if the flag is false, the pipeline is 
+%   deterministic. Otherwise, the random number generator is initialized
+%   based on the clock for each job.
 % OPT.FLAG_VERBOSE (boolean, default true) turn on/off the verbose.
 % OPT.FLAG_TARGET (boolean, default false)
 %       If FILES_IN.PART has a second column, then this column is used as a binary mask to define 
@@ -79,8 +82,8 @@ files_in = psom_struct_defaults(files_in, ...
            { NaN    , NaN    , NaN    });
 % DEFAULTS
 opt = psom_struct_defaults(opt,...
-      { 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
-      { 'gb_niak_omitted' , struct      , struct   , struct , false       });
+      { 'flag_rand' , 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
+      { false       , 'gb_niak_omitted' , struct      , struct   , struct , false       });
   
 opt.psom = psom_struct_defaults(opt.psom,...
            { 'max_queued' , 'path_logs'             },...
@@ -182,6 +185,9 @@ for j_id = 1:j_number
         end
     end
     s_opt = opt.scores;
+    if ~opt.flag_rand
+        s_opt.rand_seed = j_names{j_id};
+    end
     pipeline = psom_add_job(pipeline, j_name, 'niak_brick_scores_fmri',...
                             s_in, s_out, s_opt);
 end
