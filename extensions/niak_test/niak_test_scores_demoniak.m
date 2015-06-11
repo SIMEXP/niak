@@ -30,10 +30,10 @@ function [pipeline,opt_pipe,files_in] = niak_test_scores_demoniak(path_test,opt)
 % PIPELINE (structure) a formal description of the test pipeline. 
 %   See PSOM_RUN_PIPELINE.
 % OPT_PIPE
-%   (structure) the option to call NIAK_PIPELINE_REGION_GROWING
+%   (structure) the option to call NIAK_TEST_SCORES_DEMONIAK
 % FILES_IN
 %   (structure) the description of input files used to call 
-%   NIAK_PIPELINE_REGION_GROWING
+%   NIAK_TEST_SCORES_DEMONIAK
 %
 % _________________________________________________________________________
 % COMMENTS:
