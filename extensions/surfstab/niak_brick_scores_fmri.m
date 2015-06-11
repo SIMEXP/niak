@@ -192,7 +192,7 @@ end
 % Round it in case the values are not integers
 part = round(part);
 % Check if the partition has continuous values and starts with 1
-un_part = unique(part);
+un_part = unique(part(part~=0));
 reference = 1:numel(un_part);
 part_order = [reference(:), un_part(:)];
 if ~isequal(un_part(:), reference(:))
