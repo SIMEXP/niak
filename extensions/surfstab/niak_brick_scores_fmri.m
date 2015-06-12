@@ -147,8 +147,7 @@ opt.sampling = psom_struct_defaults(opt.sampling, ...
 if ~iscell(in.fmri)
     error('IN.FMRI must be a cell of strings and not %s', class(in.fmri))
 end
-[~,~,ext] = niak_fileparts(in.fmri{1});
-fprintf('I have discovered the following file ending: %s\n', ext);
+[~,~,ext] = niak_fileparts(in.fmri{1});
 
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
