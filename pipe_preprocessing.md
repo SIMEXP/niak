@@ -226,6 +226,18 @@ opt.smooth_vol.fwhm = 6;
 opt.smooth_vol.flag_skip = 0;
 ```
 
+## Tuning individual parameters
+
+It is not generally possible to process successfully all subjects in a dataset with the same parameters. Please refer to the [quality control manual](https://github.com/SIMEXP/niak_manual/raw/master/qc_manual_v1.0/qc_manual_niak.pdf) for a list of what outputs to check and how to fix problems. The following mechanism can be used to change the parameters of individual subjects:
+```matlab
+opt.tune(1).subject = 'subject1';
+opt.tune(1).param.slice_timing.flag_center = true; 
+
+opt.tune(2).subject = 'subject2';
+opt.tune(2).param.slice_timing.flag_center = false; 
+```
+Here the parameters of the slice timing will be tuned specifically for `subject1` and `subject2`. Anything that usually goes in `opt` can go in `param`. The parameters specified in `opt` apply by default, but will be overridden by `tune.param`. Specifically, in that example, all the parameters specified for `opt.slice_timing` will still apply for `subject1` and `subjec2`, except for `flag_center` that will be set to `true` for `subject1`, and `false` for `subject2`. 
+
 ## Publication guidelines
 
 Here is a short description of the fMRI preprocessing pipeline that can be adapted in a publication. You are encouraged to include the script that was used to preprocess the fMRI database as supplementary material of the article. 
