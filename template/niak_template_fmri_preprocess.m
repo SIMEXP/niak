@@ -34,6 +34,9 @@
 %% Setting input/output files %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Clear the workspace 
+clear all
+
 %% WARNING: Do not use underscores '_' in the IDs of subject, sessions or runs. This may cause bugs in subsequent pipelines.
 
 %% Subject 1
@@ -116,4 +119,4 @@ opt.tune(2).param.slice_timing.flag_center = false; % Anything that usually goes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt);
+pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
