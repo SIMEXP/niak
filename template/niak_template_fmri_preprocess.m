@@ -116,4 +116,4 @@ opt.tune(2).param.slice_timing.flag_center = false; % Anything that usually goes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run the fmri_preprocess pipeline  %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt);
+pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
