@@ -34,6 +34,9 @@
 %% Setting input/output files %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Clear the workspace 
+clear all
+
 %% WARNING: Do not use underscores '_' in the IDs of subject, sessions or runs. This may cause bugs in subsequent pipelines.
 
 %% Subject 1
