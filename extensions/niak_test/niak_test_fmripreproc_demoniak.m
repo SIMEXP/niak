@@ -52,8 +52,8 @@ function [pipeline,opt_pipe,files_in] = niak_test_fmripreproc_demoniak(path_test
 % is deleted if the test is successful.
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2012-2013.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2012-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : test, NIAK, fMRI preprocessing, pipeline, DEMONIAK
@@ -95,15 +95,15 @@ if isfield(opt,'flag_cleanup')
     flag_cleanup = opt.flag_cleanup;
     opt_demo = rmfield(opt,'flag_cleanup');
 else
-    flag_cleanup = true;    
+    flag_cleanup = true;   
+    opt_demo = opt; 
 end
 
-if isfield(opt,'flag_target')
-    flag_target = opt.flag_target;
-    opt_demo = rmfield(opt,'flag_target');
+if isfield(opt_demo,'flag_target')
+    flag_target = opt_demo.flag_target;
+    opt_demo = rmfield(opt_demo,'flag_target');
 else
     flag_target = false;
-    opt_demo = opt;
 end
 if strcmp(path_test.reference,'gb_niak_omitted')&&flag_target
     error('Please specify PATH_TEST.REFERENCE')
