@@ -1,5 +1,5 @@
 function [res,opt] = niak_scores(data,part,opt)
-% Build stable cores and stability maps based on an a priori partition
+% Build stable cores and stability maps based on an a priori partition.
 %
 % SYNTAX: RES = NIAK_SCORES(DATA,PART,OPT)
 %
