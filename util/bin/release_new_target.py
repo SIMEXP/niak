@@ -10,7 +10,14 @@ import argparse
 import os
 import sys
 
-from ..pyniak import target
+sys.path.append("../")
+
+try:
+    from ..pyniak import config
+    from ..pyniak import process
+except SystemError:
+    from pyniak import config
+    from pyniak import process
 
 
 # @TODO Write doc!
@@ -26,6 +33,12 @@ def main(args=None):
 
     parser.add_argument('--path', '-p', help='the path to the Niak repo')
 
+    parser.add_argument('--hash', '-h', help='the hash number of the niak version')
+
+    parser.add_argument('--branch', '-b', help='the niak branch where to put the version')
+
+    parser.add_argument('--tag', '-t', help='tag name for the version')
+
 
     parser.add_argument('--release', '-r', action='store_true', help='if True, will push the target to the'
                                                                      'repo and update Niak so niak_test_all point '
@@ -37,11 +50,10 @@ def main(args=None):
         path = os.path.abspath(os.path.expanduser(parsed.path))
     else:
         # this file in one down the git directory!
-        path = os.join(os.path.dirname(os.path.abspath(__file__)), '..')
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 
 
-    new_target = target.Release(niak_path=path, release=parsed.release)
-
+    new_target = process.TargetRelease(niak_path=path, release=parsed.release)
 
 
 
