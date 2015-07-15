@@ -2,8 +2,9 @@
 This module is ...
 """
 # @TODO Write doc!
-# @TODO Let config file path be set by env vars
+# @TODO Let config file path be set by from a init file so it can be share with niak octave more easily
 __author__ = 'Pierre-Olivier Quirion <pioliqui@gmail.com>'
+
 
 
 import logging
@@ -13,13 +14,15 @@ class TARGET:
     """ Path to the repo where the target lives
     """
     URL = "https://github.com/poquirion/target_tests.git"
-    WORK_DIR = "/tmp"
+    WORK_DIR = "/niak/targets"
     PATH = "/home/pquirion/travail/simexp/software/target_tests"
+    RESULT_DIR = os.path.join(WORK_DIR, "result")# Niak default output
+    AUTO_VERSION = True
 
 class NIAK:
     # PATH = "/home/pquirion/travail/simexp/software/niak"
-    PATH = "/home/pquirion/travail/simexp/software/niak"
-    URL = "https://github.com/poquirion/niak_test.git"
+    PATH = "/home/pquirion/travail/simexp/software/niak_test_auto"
+    URL = "https://github.com/poquirion/docker_build.git"
     # RELEASE_BRANCH = "niak-bos"
     RELEASE_BRANCH = ""
 

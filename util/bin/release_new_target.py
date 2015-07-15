@@ -7,6 +7,7 @@ This module is an executable that should be able
 
 
 import argparse
+import logging
 import os
 import sys
 
@@ -31,11 +32,11 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description='Create and release new Niak target')
 
-    parser.add_argument('--path', '-p', help='the path to the Niak repo')
+    # parser.add_argument('--path', '-p', help='the path to the Niak repo')
 
-    parser.add_argument('--hash', '-h', help='the hash number of the niak version')
+    # parser.add_argument('--hash', '-h', help='the hash number of the niak version')
 
-    parser.add_argument('--branch', '-b', help='the niak branch where to put the version')
+    # parser.add_argument('--branch', '-b', help='the niak branch where to put the version')
 
     parser.add_argument('--tag', '-t', help='tag name for the version')
 
@@ -44,19 +45,23 @@ def main(args=None):
                                                                      'repo and update Niak so niak_test_all point '
                                                                      'to the target')
 
+    parser.add_argument('--redo_target', '-R', help='will recompute target event if already present')
+
+
     parsed = parser.parse_args(args)
 
-    if parsed.path:
-        path = os.path.abspath(os.path.expanduser(parsed.path))
-    else:
+    # if parsed.path:
+    #     path = os.path.abspath(os.path.expanduser(parsed.path))
+    # else:
         # this file in one down the git directory!
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+        # path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 
 
-    new_target = process.TargetRelease(niak_path=path, release=parsed.release)
+    new_target = process.TargetRelease(dry_run=False, release_branch=True, recompute_target=False)
 
-
+    new_target.start()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     main()
 

@@ -7,7 +7,6 @@ __author__ = 'Pierre-Olivier Quirion <pioliqui@gmail.com>'
 from distutils.version import StrictVersion, LooseVersion
 import logging
 import os
-import psutil
 import queue
 import re
 import shutil
@@ -18,11 +17,20 @@ import tempfile
 import threading
 import time
 
+import git
+import psutil
+
 try:
     from . import config
 except SystemError:
     import config
 
+
+class Error(Exception):
+    """
+    Base exception for this module
+    """
+    pass
 
 
 class Runner(object):
@@ -31,18 +39,18 @@ class Runner(object):
     TODO write a parent class that will be used to build runner for other software (niak)
     """
 
-    def __init__(self):
+    def __init__(self, error_form_log=False):
         """
         "super" the __ini__ in your class and fill the
         self.subprocess_cmd as a minimum
         """
         self.subprocess_cmd = []
 
+        self.error_from_log = error_form_log
         self.cancel = False
-        self._activity = {}
+        self._activity = {'last': None, 'error': None}
         self._timeout_once_done = 5 # in seconds
         self.sleep_loop = 0.05
-        self._activity = {}
 
     def run(self):
         """
@@ -156,14 +164,29 @@ class Runner(object):
         else:
             logging.info("The process was completed and returned 0 (success)")
 
+        if self.error_from_log and self._activity['error']:
+
+            logging.error( "The subprocess return code is {}, it has also logged line with"
+                           " \"error\" in them\nreturning ".format(return_code))
+            # retval = input("Do you want to continue process? Y/[N]")
+            retval = "Y" ## DEBUG !!!
+            if retval == "Y":
+                return_code = 0
+            else:
+                return_code = 1
+
         return return_code
 
 
     @staticmethod
     def read_from_stream(stream, activity, std_queue=None, echo=False):
+        error = re.compile("error", re.IGNORECASE)
         for line in iter(stream.readline, b''):
             if std_queue:
                 std_queue.put(line)
+                std_queue.put("error line!!!")
+            if error.search(line.decode('utf-8')):
+                activity["error"] = True
             activity['last'] = time.time()
             if echo:
                 sys.stderr.write(line.decode('utf-8'))
@@ -191,9 +214,7 @@ class TargetRelease(object):
 
     """
 
-    GIT_CMD = "/usr/bin/env git "
-
-    RESULT_DIR = "results/"
+    GIT_CMD = ["/usr/bin/env", "git"]
 
     TAG_PREFIX = "target_test_niak_mnc1-"
 
@@ -201,78 +222,69 @@ class TargetRelease(object):
 
     NIAK_GB_VARS = "commands/misc/niak_gb_vars.m"
 
-    IS_UP_TO_DATE = "Your branch is up-to-date with 'origin/master'."
+    UNCOMMITTED_CHANGE = "Changes to be committed:"
 
+    NOTING_TO_COMMIT = "nothing to commit, working directory clean"
 
-    def __init__(self, tag=None, target_path=None, niak_path=None, release_branch=False):
+    AT_ORIGIN = "Your branch is up-to-date with 'origin"
+
+    def __init__(self, tag=None, target_path=None, niak_path=None, release_branch=False, dry_run=False,
+                 recompute_target=True, result_dir=None):
 
         self.tag_number = tag
-        self.target_path = target_path if target_path else tempfile.mkdtemp()
+        self.target_path = target_path if target_path else config.TARGET.PATH
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
+        self.result_dir = result_dir if result_dir else config.TARGET.RESULT_DIR
+
+        self.recompute_target = recompute_target
 
         self.release_branch = release_branch
 
+        self.dry_run = dry_run
 
     @property
     def tag_w_prefix(self):
         return self.TAG_PREFIX + self.tag
 
-    def auto_tag(self, repo):
+    def auto_tag(self, repo_path):
 
-        tag_cmd = [self.GIT_CMD, "tag"]
+        repo = git.Repo(repo_path)
 
-        all_tag = subprocess.check_output(tag_cmd, universal_newlines=True, cwd=repo).splitlines()
+        tag = [t.name.replace(self.TAG_PREFIX, "") for t in repo.tags if self.TAG_PREFIX in t.name]
 
+        tag = sorted(tag, key=LooseVersion, reverse=True)
 
-        tag = [t.replace(self.TAG_PREFIX, "") for t in all_tag]
+        if config.TARGET.AUTO_VERSION:
+            new_tag = tag[0].split('.')
+            new_tag[-1] = str(int(new_tag[-1]) + 1)
+            new_tag = ".".join(new_tag)
+        else:
+            while not new_tag:
+                in_tag = input("Here are the used tags {}\n"
+                               "What TAG should this release have?\nuse X.X format:".format(tag))
+                #TODO check if format is right
+                if in_tag in repo.tags:
+                    print("Tag needs to be new, try again")
+                else:
+                    new_tag = in_tag
 
-
-        new_tag = ""
-
-        while new_tag not in all_tag.split():
-            new_tag = input("Here are the used tags {}\n What TAG should this release have?\nuse X.X format\n:".format(all_tag))
-            #TODO check if format is right
-            if new_tag in all_tag:
-                print("Tag needs to be new, try again")
-
-        self._execute([self.GIT_CMD, "tag", "{0}{1}".format(self.TAG_PREFIX, new_tag)], cwd=repo)
+        repo.create_tag("{0}{1}".format(self.TAG_PREFIX, new_tag))
 
         return new_tag
 
-    def commit_to_branch(self, source_version, branch_name, repo, tag_name=None):
-        """
-            Merge the version to be release in the designated branch
-        """
-
-        if tag_name is None:
-            tag_name = self.tag = self.auto_tag(repo)
-
-        git = self.GIT_CMD
-
-        git_cmds = []
-
-        co = [git, "checkout  {0}".format(branch_name)]
-        merge  = [git, "merge {} -X theirs".format(source_version)]
-        tag  = [git, "tag {}".format(tag_name)]
-
-        git_cmds = [co, merge, tag]
-
-        for cmd in git_cmds:
-            self._execute(cmd, repo)
-
-    def _execute(self, cmd, cwd):
-
-        return subprocess.check_output(cmd, cwd=cwd, universal_newlines=True)
-
+    def _execute(self, cmd, cwd=None):
+        logging.info("Executing \nin {0}: {1}".format(cwd, " ".join(cmd)))
+        ret = subprocess.check_output(cmd, cwd=cwd, universal_newlines=True)
+        logging.info("returning \n{}".format(ret))
+        return ret
 
     def start(self):
 
-        self._build()
+        if self.recompute_target:
+            self._build()
 
         if self.release_branch:
             self._release()
-
-
 
     def _build(self):
         """
@@ -283,61 +295,85 @@ class TargetRelease(object):
         bool
             True if successful, False otherwise.
         """
-        target = TargetBuilder(work_dir=self.target_path)
+        target = TargetBuilder(error_form_log= True)
         ret_val = target.run()
 
+        if ret_val != 0:
+            raise Error("The target was not computed properly")
 
-    def _pull_target(self):
+    def _pull_target(self, target_path=None):
         """
         If target exit pull latest version, if not creates repo
 
         """
+        target_path = target_path if target_path else self.target_path
 
-        if not os.path.isdir(config.TARGET.PATH):
-            self._execute([self.GIT_CMD, "clone", config.TARGET.URL, config.TARGET.PATH])
+        if not os.path.isdir(target_path):
+            git.Repo.clone_from(config.TARGET.URL, target_path)
+        target = git.Repo(target_path)
+        remote = target.remote()
+        remote.pull()
 
 
-        self._execute([self.GIT_CMD + 'pull'], cwd=config.TARGET.PATH)
 
-
-
-    def _update_target(self, test_run=False):
+    def _update_target(self):
         """
-        replace old target with newly computed one
+        copy the .git directory in the Niak result dir so the repo can be updated
         """
         # do not remove the git info!
 
-        to_be_removed = [os.path.join(a, config.TARGET.PATH)
-                         for a in os.listdir(config.TARGET.PATH) if a != '.git']
+        self._pull_target()
 
-        for d in to_be_removed:
-            shutil.rmtree(d)
+        res_git = os.path.join(self.result_dir, ".git")
+        if os.path.isdir(res_git):
+            shutil.rmtree(res_git)
+        shutil.copytree(os.path.join(self.target_path, ".git"), res_git)
 
-        result_path = os.path.join(config.TARGET.WORK_DIR, self.RESULT_DIR)
-        to_be_moved = [os.path.join(a, config.TARGET.PATH) for a in os.listdir(result_path)]
+        if self._commit(self.result_dir, "Automatically built target") is None:
+            logging.error("New target is similar to old one, "
+                          "nothing needs to be updated")
 
-        for d in to_be_moved:
-            shutil.move(d, config.TARGET.PATH)
+            return None
 
-        self._commit(config.TARGET.PATH, "Automatically built target")
-        self.tag = self.auto_tag(config.TARGET.PATH)
-        self._push(config.TARGET.PATH, push_tags=True)
+        self.tag = self.auto_tag(self.result_dir)
+        if not self.dry_run:
+            self._push(self.result_dir, push_tag=True)
 
 
     def _push(self, path, push_tag=False):
 
-        if push_tag:
-            follow_tag = "--follow-tags"
+        repo = git.Repo(path)
+        remote = repo.remote()
+        remote.push(tags=push_tag)
 
-        self._execute([self.GIT_CMD, 'push', follow_tag], cwd=path)
-
-    def _commit(self, path, comment):
+    def _commit(self, path, comment, file=None):
         """
-        Add all change and commit
+        Add all change, add and remove files and then commit
+
+        file : will only add and commit these
         """
 
-        self._execute([self.GIT_CMD, 'add', '-A'], cwd=path)
-        self._execute([self.GIT_CMD, 'commit', '-m', "'{}'".format(comment)], cwd=path)
+        repo = git.Repo(path)
+
+        new_files = repo.untracked_files
+        if file is not None:
+            new_files = [f for f in new_files if new_files in file]
+            modif_files = [diff.a_path for diff in repo.index.diff(None)
+                           if not diff.deleted_file and diff.a_path in file]
+            del_files = [diff.a_path for diff in repo.index.diff(None)
+                         if diff.deleted_file and diff.a_path in file]
+        else:
+            modif_files = [diff.a_path for diff in repo.index.diff(None) if not diff.deleted_file]
+            del_files = [diff.a_path for diff in repo.index.diff(None) if diff.deleted_file]
+
+        if not new_files and not modif_files and not del_files:
+            logging.info("Noting to be added or commited in {}".format(repo))
+            return None
+        repo.index.remove(del_files)
+        repo.index.add(new_files+modif_files)
+        repo.index.commit(comment)
+        return True
+
 
 
     def _update_niak(self, test_run=False):
@@ -345,21 +381,27 @@ class TargetRelease(object):
         point to the right zip file
         """
         # must be up to date
-        git_output = self._execute([self.GIT_CMD, "status"], cwd=config.NIAK.PATH)
-        niak_gb_vars = os.path.join(config.NIAK.PATH, self.NIAK_GB_VARS)
+        repo = git.Repo(self.niak_path)
+        diff = [d.a_path for d in repo.index.diff(None)]
 
-        if self.IS_UP_TO_DATE in git_output:
-            with open(niak_gb_vars, "rt").read() as fin:
+        niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
 
-                fout = re.sub("gb_niak_target_test =.*", "gb_niak_target_test = {}".format(self.tag), fin)
-
-            with open(niak_gb_vars, "wt") as fp:
+        if self.NIAK_GB_VARS not in diff:
+            with open(niak_gb_vars, "r") as fp:
+                fout = re.sub("gb_niak_target_test =.*", "gb_niak_target_test = {}".format(self.tag), fp.read())
+            with open(niak_gb_vars, "w") as fp:
                 fp.write(fout)
-        self._commit(config.NIAK.PATH, "Updated target name")
+        else:
 
-        self._push(config.NIAK.PATH)
+            logging.error("Uncommitted change in {}".format(niak_gb_vars))
+            raise Error("git file needs to be clean {}".format(niak_gb_vars))
 
-    def _release(self, test_run=False):
+        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS)
+
+        if not self.dry_run:
+            self._push(config.NIAK.PATH)
+
+    def _release(self):
         """
         Pushes the target to the repo and update niak_test_all and niak_gb_vars
 
@@ -370,8 +412,8 @@ class TargetRelease(object):
 
         """
         # update target repo and push
-        self._update_target(test_run=test_run)
-        self._update_niak(test_run=test_run)
+        self._update_target()
+        self._update_niak()
 
 
 class TargetBuilder(Runner):
@@ -386,6 +428,7 @@ class TargetBuilder(Runner):
     RM = ["--rm"]
     MT_SHADOW = [MT, "/etc/shadow:/etc/shadow"]
     MT_GROUP = [MT, "/etc/group:/etc/group"]
+    MT_TMP = [MT, "{0}:{0}".format(tempfile.gettempdir())]
     MT_PASSWD = [MT, "/etc/passwd:/etc/passwd"]
     MT_X11 = [MT, "/tmp/.X11-unix:/tmp/.X11-unix"]
     MT_HOME = [MT, "{0}:{0}".format(os.getenv("HOME"))]
@@ -393,9 +436,9 @@ class TargetBuilder(Runner):
     USER = ["--user", str(os.getuid())]
     IMAGE = ["simexp/octave"]
 
-    def __init__(self, work_dir=None, niak_path=None, psom_path=None):
+    def __init__(self, work_dir=None, niak_path=None, psom_path=None, error_form_log=False):
 
-        super().__init__()
+        super().__init__(error_form_log=error_form_log)
 
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
         self.psom_path = psom_path if psom_path else config.PSOM.PATH
@@ -405,6 +448,8 @@ class TargetBuilder(Runner):
             os.mkdir(self.work_dir)
 
 
+        mt_work_dir = [self.MT, "{0}:{0}".format(self.work_dir)]
+
         self.load_niak_psom = \
             "addpath(genpath('{0}'));addpath(genpath('{1}'))".format(self.psom_path, self.niak_path)
 
@@ -412,12 +457,13 @@ class TargetBuilder(Runner):
         # Only builds the target
         cmd_line = ['/bin/bash', '-c',
                     "cd {0} ;source /opt/minc-itk4/minc-toolkit-config.sh; octave "
-                    "--eval \"{1};{{0}};opt = struct; opt.FLAG_TARGET=true ; niak_test_all(opt)\""
+                    "--eval \"{1};opt = struct; opt.FLAG_TARGET=true ; niak_test_all(opt)\""
                     .format(self.work_dir, self.load_niak_psom)]
 
         # convoluted docker command
         self.docker = self.DOCKER_RUN + self.FULL_PRIVILEDGE + self.RM + self.MT_HOME + self.MT_SHADOW + self.MT_GROUP \
-                        + self.MT_PASSWD + self.MT_X11 + self.ENV_DISPLAY + self.USER + self.IMAGE + cmd_line
+                      + self.MT_PASSWD + self.MT_X11 + self.MT_TMP + mt_work_dir + self.ENV_DISPLAY + self.USER \
+                      + self.IMAGE + cmd_line
 
         self.subprocess_cmd = self.docker
 
