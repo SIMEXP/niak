@@ -313,9 +313,9 @@ for num_s = 1:nb_subject
                 continue
             end
             nb_f = nb_f+1;
-            if ismember(opt.type_files,{'roi','glm_connectome','fir'})
+            if ismember(opt.type_files,{'glm_connectome','fir'})
                 files.fmri.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];
-            elseif ismember(opt.type_files,{'rest', 'scores'})
+            elseif ismember(opt.type_files,{'roi','rest', 'scores'})
                 files.data.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];            
             else
                 error('%s is an unsupported type of output format for the files structure', opt.type_files)            
