@@ -28,7 +28,7 @@ Specify where to write the results.
 opt.folder_out = [path_data 'region_growing/']; 
 ```
 
-Now, set up some parameters for the region-growing algorithm
+Now, set up some parameters for the region-growing algorithm.
 ```matlab
 % Only generate the ROI parcelation
 opt.flag_roi = true; 
@@ -36,7 +36,7 @@ opt.flag_roi = true;
 opt.region_growing.thre_size = 1000; 
 ```
 
-Run the pipeline
+Finally, run the pipeline.
 ```matlab
 opt.flag_test = false;
 [pipeline_rg,opt] = niak_pipeline_stability_rest(files_in,opt);
