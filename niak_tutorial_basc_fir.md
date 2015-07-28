@@ -49,8 +49,9 @@ opt.fir.nb_min_baseline = 1; % There is not much data in the demo_niak, so don't
 opt.fir.type_norm     = 'fir_shape'; % The type of normalization of the FIR. Only "fir_shape" is available (starts at zero, unit sum-of-squares)
 opt.fir.time_window   = 20;          % The size (in sec) of the time window to evaluate the response
 opt.fir.time_sampling = 1;           % The time between two samples for the estimated response. Do not go below 1/2 TR unless there is a very large number of trials.
-opt.fir.max_interpolation = 15;      % Allow interpolations of up to 15 seconds to cover for scrubbing. That's because the small demo dataset has hardly any usable time window ...
+opt.fir.max_interpolation = 15;      % Allow interpolations of up to 15 seconds to cover for scrubbing. That's because the small demo dataset has hardly any usable time window
 ```
+
 The number of samples to estimate the false-discovery rate
 ```matlab
 opt.nb_samps_fdr = 100;
