@@ -4,7 +4,7 @@ Before any statistical or pattern recognition model is applied on fMRI data, a n
 
 # [Region growing](pipe_region_growing.html)		
 The region growing algorithm is extracting functionally homogeneous brain regions that are connected in space and have a controlled size. The pipeline can be applied to individual fMRI datasets, or multiple datasets (or subjects) can be combined by concatenation. 		
-> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_region_growing.jpg" width="250px" />](pipe_region_growing.html)
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_region_growing.png" width="250px" />](pipe_region_growing.html)
 
 # [BASC](pipe_basc.html)
 The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain parcellations (clusters) based on the similarity of individual fMRI time series. The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes some automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks.  
