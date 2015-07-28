@@ -3,6 +3,9 @@ Before running the following tutorials, NIAK needs to be properly installed. All
 # fMRI preprocessing
  * [Preprocessing with NIAK](niak_tutorial_fmri_preproc.html) 
 
+# Region growing
+ * [Region growing with NIAK](niak_tutorial_region_growing.html)
+
 # Miscellaneous
  * [How to test NIAK](niak_tutorial_test.html)
  * [Read and write volumes in NIAK](niak_tutorial_read_write.html) 
