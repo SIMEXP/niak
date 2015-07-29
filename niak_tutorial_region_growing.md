@@ -7,7 +7,7 @@ clear
 niak_wget('target_test_niak_mnc1');
 ```
 
-Now, set up some parameters to filter out the data to be grabbed and the specify the location of the files to grab.
+Now, set up some parameters to filter out the data to be grabbed and specify the location of the files to grab.
 
 ```matlab
 % The minimum number of volumes for an fMRI dataset to be included.
