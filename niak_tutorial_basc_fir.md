@@ -13,7 +13,7 @@ Now, set up some parameters to filter out the data to be grabbed and the specify
 opt_g.min_nb_vol = 20; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run
 opt_g.type_files = 'fir'; % Specify to the grabber to prepare the files for the stability FIR pipeline
 opt_g.filter.run = {'motor'}; % Just grab the "motor" runs
-path_demo = [path_data 'target_test_niak_mnc1-' gb_niak_target_test '/demoniak_preproc/']
+path_demo = [path_data 'target_test_niak_mnc1-' gb_niak_target_test '/demoniak_preproc/'];
 files_in = niak_grab_fmri_preprocess(path_demo,opt_g);
 ```
 
