@@ -228,10 +228,12 @@ class TargetRelease(object):
 
     AT_ORIGIN = "Your branch is up-to-date with 'origin"
 
-    def __init__(self, tag=None, target_path=None, niak_path=None, release_branch=False, dry_run=False,
-                 recompute_target=True, result_dir=None):
+    TMP_BRANCH = 'TMP_BRANCH'
 
-        self.tag_number = tag
+    def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None,
+                 release_branch=False, dry_run=False, recompute_target=False, result_dir=None):
+
+        self.target_name = target_name
         self.target_path = target_path if target_path else config.TARGET.PATH
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
         self.result_dir = result_dir if result_dir else config.TARGET.RESULT_DIR
@@ -240,33 +242,50 @@ class TargetRelease(object):
 
         self.release_branch = release_branch
 
+        self.work_dir = work_dir
+
         self.dry_run = dry_run
+
+        # the name of the release
+        self.tag = None
 
     @property
     def tag_w_prefix(self):
         return self.TAG_PREFIX + self.tag
 
-    def auto_tag(self, repo_path):
+    def auto_tag(self, repo_path, tag_name=None):
 
         repo = git.Repo(repo_path)
 
-        tag = [t.name.replace(self.TAG_PREFIX, "") for t in repo.tags if self.TAG_PREFIX in t.name]
+        old_tags = [t.name.replace(self.TAG_PREFIX, "") for t in repo.tags if self.TAG_PREFIX in t.name]
 
-        tag = sorted(tag, key=LooseVersion, reverse=True)
 
-        if config.TARGET.AUTO_VERSION:
-            new_tag = tag[0].split('.')
+        old_tags = sorted(old_tags, key=LooseVersion, reverse=True)
+
+        if config.TARGET.AUTO_VERSION and not tag_name:
+            new_tag = old_tags[0].split('.')
             new_tag[-1] = str(int(new_tag[-1]) + 1)
             new_tag = ".".join(new_tag)
+            print("Here are the used tags {0}{1}\n"
+                  "The tag will be {0}{2} :".format(self.TAG_PREFIX, old_tags, new_tag))
+
         else:
             while not new_tag:
-                in_tag = input("Here are the used tags {}\n"
-                               "What TAG should this release have?\nuse X.X format:".format(tag))
+                new_tag = tag_name
+                print("Here are the used tags {0}{1}\n"
+                      "The tag will be {0}{2} :".format(self.TAG_PREFIX, old_tags, new_tag))
+
                 #TODO check if format is right
-                if in_tag in repo.tags:
-                    print("Tag needs to be new, try again")
-                else:
-                    new_tag = in_tag
+                answers = input("are you happy with that? [Y]/N")
+
+                if answers != "Y":
+                    answers = input("What name should it be? type [Quit] to exit\n"
+                                    "Do not input the target prefix {}".format(self.TAG_PREFIX))
+                    if answers != "Quit":
+                        new_tag = answers
+                    else:
+                        raise IOError("not happy with the release tag name!")
+
 
         repo.create_tag("{0}{1}".format(self.TAG_PREFIX, new_tag))
 
@@ -295,16 +314,19 @@ class TargetRelease(object):
         bool
             True if successful, False otherwise.
         """
-        target = TargetBuilder(error_form_log= True)
+        target = TargetBuilder(error_form_log=True, niak_path=self.niak_path, work_dir=self.work_dir)
         ret_val = target.run()
+        happiness = input("Are you happy with the target?Y/[N]")
+        logging.info("look at {}/logs for more info".format(self.work_dir))
 
-        if ret_val != 0:
+        if ret_val != 0 or happiness != 'Y':
             raise Error("The target was not computed properly")
 
-    def _pull_target(self, target_path=None):
+    def _pull_target(self, target_path=None, branch=None):
         """
         If target exit pull latest version, if not creates repo
 
+        Will checkout the branch "branch"
         """
         target_path = target_path if target_path else self.target_path
 
@@ -313,8 +335,9 @@ class TargetRelease(object):
         target = git.Repo(target_path)
         remote = target.remote()
         remote.pull()
-
-
+        if branch:
+            br = target.refs[branch]
+            br.checkout()
 
     def _update_target(self):
         """
@@ -322,20 +345,22 @@ class TargetRelease(object):
         """
         # do not remove the git info!
 
-        self._pull_target()
+        self._pull_target(self.target_path, branch="master")
 
         res_git = os.path.join(self.result_dir, ".git")
+        # remove repo in the result dir if already present
         if os.path.isdir(res_git):
             shutil.rmtree(res_git)
+
         shutil.copytree(os.path.join(self.target_path, ".git"), res_git)
 
-        if self._commit(self.result_dir, "Automatically built target") is None:
+        if self._commit(self.result_dir, "Automatically built target", branch=self.TMP_BRANCH) is None:
             logging.error("New target is similar to old one, "
                           "nothing needs to be updated")
 
             return None
 
-        self.tag = self.auto_tag(self.result_dir)
+        self.tag = self.auto_tag(self.result_dir, self.target_name)
         if not self.dry_run:
             self._push(self.result_dir, push_tag=True)
 
@@ -346,9 +371,11 @@ class TargetRelease(object):
         remote = repo.remote()
         remote.push(tags=push_tag)
 
-    def _commit(self, path, comment, file=None):
+    def _commit(self, path, comment, branch = None,  file=None):
         """
         Add all change, add and remove files and then commit
+
+        branch: if None, will be comited to current branch
 
         file : will only add and commit these
         """
@@ -371,10 +398,14 @@ class TargetRelease(object):
             return None
         repo.index.remove(del_files)
         repo.index.add(new_files+modif_files)
+
+        if branch:
+            logging.info("committing to branch {}", format(branch))
+            tmp_branch = repo.create_head(branch)
+            tmp_branch.checkout()
+
         repo.index.commit(comment)
         return True
-
-
 
     def _update_niak(self, test_run=False):
         """
@@ -396,7 +427,7 @@ class TargetRelease(object):
             logging.error("Uncommitted change in {}".format(niak_gb_vars))
             raise Error("git file needs to be clean {}".format(niak_gb_vars))
 
-        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS)
+        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
 
         if not self.dry_run:
             self._push(config.NIAK.PATH)
@@ -434,12 +465,13 @@ class TargetBuilder(Runner):
     MT_HOME = [MT, "{0}:{0}".format(os.getenv("HOME"))]
     ENV_DISPLAY = ["-e", "DISPLAY=unix$DISPLAY"]
     USER = ["--user", str(os.getuid())]
-    IMAGE = ["simexp/octave"]
+    IMAGE = [config.DOCKER.OCTAVE]
 
     def __init__(self, work_dir=None, niak_path=None, psom_path=None, error_form_log=False):
 
         super().__init__(error_form_log=error_form_log)
 
+        #TODO make them arg not kwargs
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
         self.psom_path = psom_path if psom_path else config.PSOM.PATH
         self.work_dir = work_dir if work_dir else config.TARGET.WORK_DIR
@@ -457,7 +489,8 @@ class TargetBuilder(Runner):
         # Only builds the target
         cmd_line = ['/bin/bash', '-c',
                     "cd {0} ;source /opt/minc-itk4/minc-toolkit-config.sh; octave "
-                    "--eval \"{1};opt = struct; opt.FLAG_TARGET=true ; niak_test_all(opt)\""
+                    "--eval \"{1};opt = struct(); path_test = struct() ; "
+                    "opt.FLAG_TARGET=true; OPT.FLAG_TEST=true ; niak_test_all(path_test,opt)\""
                     .format(self.work_dir, self.load_niak_psom)]
 
         # convoluted docker command

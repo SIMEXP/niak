@@ -32,16 +32,31 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description='Create and release new Niak target')
 
-    # parser.add_argument('--path', '-p', help='the path to the Niak repo')
+    parser.add_argument('--niak_path', '-N', help='the path to the Niak git repo',
+                        default=config.NIAK.PATH)
+
+    parser.add_argument('--niak_url', '-O', help='the path to the Niak git repo',
+                        default=config.NIAK.URL)
+
+    parser.add_argument('--target_path', '-T', help='the path to the Niak git repo',
+                        default=config.TARGET.PATH)
+
+    parser.add_argument('--target_url', '-U', help='the path to the Niak git repo',
+                        default=config.TARGET.URL)
+
+    parser.add_argument('--target_work_dir', '-w', help='the path to the Target work dir',
+                        default=config.TARGET.WORK_DIR)
+
+    parser.add_argument('--name', '-n', help='the path to the Niak git repo',
+                        default=config.TARGET.URL)
 
     # parser.add_argument('--hash', '-h', help='the hash number of the niak version')
 
-    # parser.add_argument('--branch', '-b', help='the niak branch where to put the version')
-
-    parser.add_argument('--tag', '-t', help='tag name for the version')
+    parser.add_argument('--branch', '-b', help='the niak branch where to put the version')
 
 
-    parser.add_argument('--release', '-r', action='store_true', help='if True, will push the target to the'
+
+    parser.add_argument('--release', '-r', action='store_true', help='If True, will push the target to the'
                                                                      'repo and update Niak so niak_test_all point '
                                                                      'to the target')
 
@@ -50,14 +65,12 @@ def main(args=None):
 
     parsed = parser.parse_args(args)
 
-    # if parsed.path:
-    #     path = os.path.abspath(os.path.expanduser(parsed.path))
-    # else:
-        # this file in one down the git directory!
-        # path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-
-
-    new_target = process.TargetRelease(dry_run=False, release_branch=True, recompute_target=False)
+    new_target = process.TargetRelease(dry_run=True,
+                                       release_branch=True,
+                                       niak_path=parsed.niak_path,
+                                       target_path=parsed.target_path,
+                                       target_name=parsed.name,
+                                       work_dir=parsed.target_work_dir)
 
     new_target.start()
 
