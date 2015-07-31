@@ -18,11 +18,12 @@ sys.path.append("../")
 OPTION_PREFIX = "--opt"
 ESCAPE_STRING = "666_____666_____666"
 
+SUPPORTED_PIPES = ["niak_pipeline_fmri_preprocess"]
+
 # class prefixArgParser(argparse.ArgumentParser)
 #
 #     def __init__(self, option):
 #         super().__init__()
-
 
 
 def build_opt(option):
@@ -43,6 +44,11 @@ def build_opt(option):
         command += ["{}=\'{}\'".format(k.replace(ESCAPE_STRING, "."), " ".join(v))]
 
     return command
+
+
+class ParseInputDir( object ):
+    def __init__(self, pipe_name):
+        pass
 
 
 def main(args=None):
