@@ -66,9 +66,14 @@ switch data.type;
     case 'target_test_niak_mnc1'  
         data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip']
         data.url  = ['https://github.com/poquirion/target_tests/archive/' data.name];
+%        data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip'];
+%        data.url  = ['https://www.nitrc.org/frs/download.php/7736/' data.name];
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
         data.url = 'http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii.zip';
+    case 'cambridge_template_mnc'
+        data.name = 'template_cambridge_basc_multiscale_mnc_sym.zip';
+        data.url = 'http://files.figshare.com/1861821/template_cambridge_basc_multiscale_mnc_sym.zip';
     case ''
         if isempty(data.name)||isempty(data.url)
             error('Please specify DATA.TYPE or DATA.NAME/DATA.URL')

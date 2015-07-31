@@ -1,25 +1,23 @@
-function [pipeline,opt_pipe,files_in] = niak_test_fmripreproc_demoniak(path_test,opt)
-% Test the fMRI preprocessing pipeline on the DEMONIAK dataset
+function [pipeline,opt_pipe,files_in] = niak_test_scores_demoniak(path_test,opt)
+% Test the scores pipeline on the preprocessed DEMONIAK dataset
 %
 % SYNTAX:
-% [PIPELINE,OPT_PIPE,FILES_IN] = NIAK_TEST_FMRIPREPROCESS_DEMONIAK(PATH_TEST,OPT)
+% [PIPELINE,OPT,FILES_IN] = NIAK_TEST_SCORES_DEMONIAK(PATH_TEST,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_TEST.DEMONIAK (string) the path to the NIAK demo dataset.
+% PATH_TEST.DEMONIAK (string) the path to the (preprocessed) NIAK demo dataset.
 % PATH_TEST.REFERENCE (string) the full path to a reference version of the 
-%   results of the fMRI preprocessing pipeline. 
+%   results of the region growing pipeline. 
 % PATH_TEST.RESULT (string) where to store the results of the test.
-%
-% Any field normally passed in OPT to NIAK_PIPELINE_FMRI_PREPROCESS can be used 
-% here. In addition the following options are available:
 %
 % OPT.FLAG_TARGET (boolean, default false) if FLAG_TARGET == true, no comparison
 %   with reference version of the results will be performed, but all test 
 %   pipelines will still run. If this flag is used, PATH_TEST.REFERENCE
 %   does not need to be specified.
-% OPT.FLAG_CLEAN_UP (boolean, default true) remove all intermediate outputs.
+% OPT.FILES_IN (structure, default grab the preprocessed demoniak) the input 
+%   files for the region growing.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
@@ -31,29 +29,29 @@ function [pipeline,opt_pipe,files_in] = niak_test_fmripreproc_demoniak(path_test
 %
 % PIPELINE (structure) a formal description of the test pipeline. 
 %   See PSOM_RUN_PIPELINE.
-% OPT_PIPE (structure) the options used to call the pipeline.
-% FILES_IN (structure) the input files of the pipeline.
+% OPT_PIPE
+%   (structure) the option to call NIAK_TEST_SCORES_DEMONIAK
+% FILES_IN
+%   (structure) the description of input files used to call 
+%   NIAK_TEST_SCORES_DEMONIAK
 %
 % _________________________________________________________________________
 % COMMENTS:
 %
-% The DEMONIAK dataset can be found in multiple file formats at the following 
-% address: http://www.nitrc.org/frs/?group_id=411
+% The preprocessed DEMONIAK dataset can be found in multiple file formats at 
+% the following address: http://www.nitrc.org/frs/?group_id=411
 %
-% This test will apply the full fMRI preprocessing pipeline on the DEMONIAK
+% This test will apply the region growing pipeline on the preprocessed DEMONIAK
 % dataset, and will compare the outputs to a reference version of the
-% preprocessing. 
+% results.
 %
 % It is possible to configure the pipeline manager to use parallel 
 % computing using OPT.PSOM, see : 
 % http://code.google.com/p/psom/wiki/PsomConfiguration
 %
-% OPT.SIZE_OUTPUT is forced to 'all', but the entire content of the preprocessing
-% is deleted if the test is successful.
-%
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
 % Griatrie de Montral, Dpartement d'informatique et de recherche 
-% oprationnelle, Universit de Montral, 2012-2013.
+% oprationnelle, Universit de Montral, 2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : test, NIAK, fMRI preprocessing, pipeline, DEMONIAK
@@ -86,65 +84,36 @@ path_test.reference = niak_full_path(path_test.reference);
 path_test.result    = niak_full_path(path_test.result);
 path_logs = [path_test.result 'logs'];
 
-%% Generate the fMRI preprocessing pipeline
+%% Generate the scores pipeline
 if nargin < 2
     opt = struct();
 end
-
-if isfield(opt,'flag_cleanup')
-    flag_cleanup = opt.flag_cleanup;
-    opt_demo = rmfield(opt,'flag_cleanup');
-else
-    flag_cleanup = true;   
-    opt_demo = opt; 
-end
-
-if isfield(opt_demo,'flag_target')
-    flag_target = opt_demo.flag_target;
-    opt_demo = rmfield(opt_demo,'flag_target');
-else
-    flag_target = false;
-end
-if strcmp(path_test.reference,'gb_niak_omitted')&&flag_target
+opt = psom_struct_defaults(opt,{'flag_target','files_in','flag_test','psom'},{false,'',false,struct});
+if strcmp(path_test.reference,'gb_niak_omitted')&&opt.flag_target
     error('Please specify PATH_TEST.REFERENCE')
 end
-
-opt_demo.folder_out = [path_test.result 'demoniak_preproc' filesep];
-opt_demo.size_output = 'all';
+opt_demo.files_in = opt.files_in;
+opt_demo.folder_out = [path_test.result 'demoniak_scores' filesep];
 opt_demo.flag_test = true;
-[pipeline,opt_pipe,files_in] = niak_demo_fmri_preprocess(path_test.demoniak,opt_demo);
+[pipeline,opt_pipe,files_in] = niak_demo_scores(path_test.demoniak,opt_demo);
 list_jobs = fieldnames(pipeline);
 
-if ~flag_target
-    %% Add a test: check the presence of expected files in the results of the fMRI preprocessing pipeline
-    clear in_c out_c opt_c
-    in_c = '';
-    out_c = [path_test.result 'report_test_sanity_fmripreproc_demoniak.mat'];
-    opt_c.files_in = files_in;
-    opt_c.path_results = opt_demo.folder_out;
-    pipeline = psom_add_job(pipeline,'test_sanity','niak_test_files_preprocess',in_c,out_c,opt_c,false);
-    pipeline.test_sanity.dep = list_jobs;
-
-    %% Add a test: comparison of the result of the preprocessing against the reference
+%% Add a test: comparison of the result of the region growing against the reference
+if ~opt.flag_target
     clear in_c out_c opt_c
     in_c.source = {};
     in_c.target = {};
-    out_c = [path_test.result 'report_test_regression_fmripreproc_demoniak.csv'];
+    out_c = [path_test.result 'report_test_regression_scores_demoniak.csv'];
     opt_c.base_source = opt_demo.folder_out;
     opt_c.base_target = path_test.reference;
     opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
     opt_c.black_list_target = [path_test.reference 'logs' filesep];
-    pipeline = psom_add_job(pipeline,'test_regression','niak_test_cmp_files',in_c,out_c,opt_c,false);
-    pipeline.test_regression.dep = list_jobs;
-
-    %% Clean-up intermediate outputs
-    if flag_cleanup 
-        pipeline = psom_add_clean(pipeline,'clean_preproc',opt_demo.folder_out);
-        pipeline.clean_preproc.dep = { 'test_regression' , 'test_sanity'};
-    end
+    pipeline = psom_add_job(pipeline,'test_scores','niak_test_cmp_files',in_c,out_c,opt_c,false);
+    pipeline.test_scores.dep = list_jobs;
 end
 
 %% Run the pipeline
+opt_pipe.psom = opt.psom;
 opt_pipe.psom.path_logs = path_logs;
 if ~isfield(opt,'flag_test')||~opt.flag_test
     psom_run_pipeline(pipeline,opt_pipe.psom);

@@ -1,7 +1,7 @@
-function [res,opt] = niak_stability_cores(data,part,opt)
-% Build stable cores and stability maps based on an a priori partition
+function [res,opt] = niak_scores(data,part,opt)
+% Build stable cores and stability maps based on an a priori partition.
 %
-% SYNTAX: RES = NIAK_STABILITY_CORES(DATA,PART,OPT)
+% SYNTAX: RES = NIAK_SCORES(DATA,PART,OPT)
 %
 % DATA (array NxV) with N the number of features and V the number of units.
 % PART (array Vx1) where V is the number of units and K is the number of clusters.
@@ -91,7 +91,7 @@ function [res,opt] = niak_stability_cores(data,part,opt)
 
 % Syntax
 if ~exist('data','var')||~exist('part','var')
-    error('niak','syntax: res = niak_stability_cores(data,part,opt).\n Type ''help niak_stability_cores'' for more info.')
+    error('niak','syntax: res = niak_scores(data,part,opt).\n Type ''help niak_scores'' for more info.')
 end
 
 if nargin < 3

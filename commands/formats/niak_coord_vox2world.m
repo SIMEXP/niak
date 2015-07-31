@@ -1,43 +1,21 @@
-function coord_w = niak_coord_vox2world(coord_v,mat,opt);
-% Convert coordinates in the voxel space into coordinates in the world
-% space. 
+function coord_w = niak_coord_vox2world(coord_v,mat);
+% Convert coordinates from voxel to world space 
 %
-% SYNTAX:
-% COORD_W = NIAK_COORD_WORLD2VOXEL(COORD_V,MAT,OPT)
+% coord_w = niak_coord_vox2world(coord_v,mat)
 %
-% _________________________________________________________________________
+% coord_v (matrix N*3) each row is a vector of 3D coordinates 
+%   in voxel space.
+% mat (matrix 4*4) an affine transformation from voxel to world
+%   coordinates. See the help of niak_read_vol for more infos. It is 
+%   generally the hdr.info.mat field of the header of a volume file.
+% coord_w (matrix N*3) each row is a vector of 3D coordinates in 
+%   world space.
 %
-% INPUTS:
-%
-% COORD_V
-%       (matrix N*3) each row is a vector of 3D coordinates in voxel space.
-%
-% MAT
-%       (matrix 4*4) an affine transformation from voxel to world
-%       coordinates. See the help of NIAK_READ_VOL for more infos. It is 
-%       generally the HDR.INFO.MAT field of the header of a volume file.
-%
-% OPT
-%       (structure, optional) with the following fields :
-%
-%       FLAG_ZERO
-%           (boolean, default false) if FLAG_ZERO is true, voxel 
-%           coordinates start from 1 (default behaviour in matlab), 
-%           otherwise they start from 0 (default behaviour in C/C++ or 
-%           MINC).
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% COORD_W
-%       (matrix N*3) each row is a vector of 3D coordinates in world space.
-%
-% _________________________________________________________________________
 % SEE ALSO:
-% NIAK_COORD_WORLD2VOX, NIAK_READ_VOL
+%   niak_coord_world2vol, niak_read_vol
 %
-% _________________________________________________________________________
 % COMMENTS:
+%   Voxel coordinates are expected to start from 1. 
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center, Montreal 
 %               Neurological Institute, McGill University, 2007.
@@ -62,18 +40,5 @@ function coord_w = niak_coord_vox2world(coord_v,mat,opt);
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-if nargin < 3
-    flag_zero = false;
-else
-    if isfield(opt,'flag_zero')
-        flag_zero = opt.flag_zero;
-    else
-        flag_zero = false;
-    end
-end
-if flag_zero
-    coord_w = [coord_v ones([size(coord_v,1) 1])]*(mat');
-else
-    coord_w = [coord_v-1 ones([size(coord_v,1) 1])]*(mat');
-end
+coord_w = [coord_v-1 ones([size(coord_v,1) 1])]*(mat');
 coord_w = coord_w(:,1:3);
