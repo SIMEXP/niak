@@ -65,7 +65,7 @@ def main(args=None):
 
     parsed = parser.parse_args(args)
 
-    new_target = process.TargetRelease(dry_run=True,
+    new_target = process.TargetRelease(dry_run=False,
                                        release_branch=True,
                                        niak_path=parsed.niak_path,
                                        target_path=parsed.target_path,

@@ -230,7 +230,7 @@ class TargetRelease(object):
 
     TMP_BRANCH = '_UGLY_TMP_BRANCH_'
 
-    def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None,
+    def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None, niak_tag = None,
                  release_branch=False, dry_run=False, recompute_target=False, result_dir=None):
 
         self.target_name = target_name
@@ -238,22 +238,22 @@ class TargetRelease(object):
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
         self.result_dir = result_dir if result_dir else config.TARGET.RESULT_DIR
 
-        self.recompute_target = recompute_target
+        self.niak_release_branch = release_branch if release_branch else config.NIAK.RELEASE_BRANCH
 
-        self.release_branch = release_branch
+        self.recompute_target = recompute_target
 
         self.work_dir = work_dir
 
         self.dry_run = dry_run
 
         # the name of the release
-        self.tag = None
+        self.niak_tag = niak_tag if niak_tag else config.NIAK.TAG_NAME
 
-        repo = git.Repo(self.niak_path)
+        self.niak_repo = git.Repo(self.niak_path)
 
-        self.niak_repo_head_start = repo.active_branch
+        self.niak_repo_head_start = self.niak_repo.active_branch
 
-        self._del_branch(repo, self.TMP_BRANCH)
+        self._del_branch(self.niak_repo, self.TMP_BRANCH)
 
 
     @property
@@ -312,7 +312,7 @@ class TargetRelease(object):
             pass
         # self._build() ## DEBUG
 
-        if self.release_branch:
+        if self.niak_release_branch:
             self._release()
 
         self. _finaly()
@@ -430,7 +430,7 @@ class TargetRelease(object):
         point to the right zip file
         """
         # must be up to date
-        repo = git.Repo(self.niak_path)
+        repo = self.niak_repo
         diff = [d.a_path for d in repo.index.diff(None)]
 
         niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
@@ -468,9 +468,44 @@ class TargetRelease(object):
             self._cleanup()
             raise e
 
+        if not self.dry_run:
+            self._merge(self.niak_repo, self.niak_release_branch, self.TMP_BRANCH, self.niak_tag)
+            self._push(self.target_path,push_tag=True)
+            self._push(self.niak_path, push_tag=True)
+        else:
+            self._cleanup()
+
+
+    def _merge(self, repo, branch1, branch2, tag):
+        """
+        Merge branch1 to branch2
+        @TODO force branch 1 to win every time
+        :return:
+        """
+        try:
+            branch1 = repo.refs[branch1]
+        except git.exc.GitCommandError:
+            ret = input("{} Does not exist, you want to create it?"
+                        "Y/[N]".format(branch1))
+            if ret != "Y":
+                raise IOError
+            else:
+                repo.create_head(branch1)
+                branch1 = repo.refs[branch1]
+
+            branch1.checkout()
+            branch2 = repo.refs[branch2]
+
+            base = repo.merge_base(branch1, branch2)
+            repo.index.merge_tree(branch2, base=base)
+            repo.index.commit("New Niak Release {}{}".format(self.niak_release_branch,
+                                                             tag),
+                              parent_commits=(branch1.commit, branch2.commit))
+            repo.create_tag(tag)
+
+
     def _finaly(self):
             self.niak_repo_head_start.checkout()
-
 
     def _cleanup(self):
         """
@@ -479,7 +514,7 @@ class TargetRelease(object):
         Delete the TMP BRANCH
         :return:
         """
-        repo = git.Repo(self.niak_path)
+        repo = self.niak_repo
         niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
         repo.index.checkout(niak_gb_vars, force=True)
 
