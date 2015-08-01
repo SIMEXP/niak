@@ -228,7 +228,7 @@ class TargetRelease(object):
 
     AT_ORIGIN = "Your branch is up-to-date with 'origin"
 
-    TMP_BRANCH = 'TMP_BRANCH'
+    TMP_BRANCH = '_UGLY_TMP_BRANCH_'
 
     def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None,
                  release_branch=False, dry_run=False, recompute_target=False, result_dir=None):
@@ -249,6 +249,13 @@ class TargetRelease(object):
         # the name of the release
         self.tag = None
 
+        repo = git.Repo(self.niak_path)
+
+        self.niak_repo_head_start = repo.active_branch
+
+        self._del_branch(repo, self.TMP_BRANCH)
+
+
     @property
     def tag_w_prefix(self):
         return self.TAG_PREFIX + self.tag
@@ -261,6 +268,7 @@ class TargetRelease(object):
 
 
         old_tags = sorted(old_tags, key=LooseVersion, reverse=True)
+        new_tag = None
 
         if config.TARGET.AUTO_VERSION and not tag_name:
             new_tag = old_tags[0].split('.')
@@ -300,10 +308,14 @@ class TargetRelease(object):
     def start(self):
 
         if self.recompute_target:
-            self._build()
+            # Should deletete the resuls dir here
+            pass
+        # self._build() ## DEBUG
 
         if self.release_branch:
             self._release()
+
+        self. _finaly()
 
     def _build(self):
         """
@@ -354,15 +366,15 @@ class TargetRelease(object):
 
         shutil.copytree(os.path.join(self.target_path, ".git"), res_git)
 
-        if self._commit(self.result_dir, "Automatically built target", branch=self.TMP_BRANCH) is None:
+        if self._commit(self.result_dir, "Automatically built target") is None:
             logging.error("New target is similar to old one, "
                           "nothing needs to be updated")
 
             return None
 
         self.tag = self.auto_tag(self.result_dir, self.target_name)
-        if not self.dry_run:
-            self._push(self.result_dir, push_tag=True)
+        # if not self.dry_run:
+        #     self._push(self.result_dir, push_tag=True)
 
 
     def _push(self, path, push_tag=False):
@@ -371,7 +383,7 @@ class TargetRelease(object):
         remote = repo.remote()
         remote.push(tags=push_tag)
 
-    def _commit(self, path, comment, branch = None,  file=None):
+    def _commit(self, path, comment, branch=None, file=None, tag=None):
         """
         Add all change, add and remove files and then commit
 
@@ -393,18 +405,24 @@ class TargetRelease(object):
             modif_files = [diff.a_path for diff in repo.index.diff(None) if not diff.deleted_file]
             del_files = [diff.a_path for diff in repo.index.diff(None) if diff.deleted_file]
 
+        if del_files:
+            repo.index.remove(del_files)
+        if new_files or modif_files:
+            repo.index.add(new_files+modif_files)
+
         if not new_files and not modif_files and not del_files:
-            logging.info("Noting to be added or commited in {}".format(repo))
-            return None
-        repo.index.remove(del_files)
-        repo.index.add(new_files+modif_files)
+            logging.warning("Noting to be added or commited in {}".format(repo))
 
         if branch:
-            logging.info("committing to branch {}", format(branch))
+            logging.info("committing to branch {}".format(branch))
             tmp_branch = repo.create_head(branch)
             tmp_branch.checkout()
 
         repo.index.commit(comment)
+        if tag:
+            logging.warning("Adding tag {} to {} repo".format(tag, path))
+            repo.create_tag(tag)
+
         return True
 
     def _update_niak(self, test_run=False):
@@ -419,7 +437,7 @@ class TargetRelease(object):
 
         if self.NIAK_GB_VARS not in diff:
             with open(niak_gb_vars, "r") as fp:
-                fout = re.sub("gb_niak_target_test =.*", "gb_niak_target_test = {}".format(self.tag), fp.read())
+                fout = re.sub("gb_niak_target_test =.*", "gb_niak_target_test = \'{}\'".format(self.tag), fp.read())
             with open(niak_gb_vars, "w") as fp:
                 fp.write(fout)
         else:
@@ -429,8 +447,8 @@ class TargetRelease(object):
 
         self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
 
-        if not self.dry_run:
-            self._push(config.NIAK.PATH)
+        # if not self.dry_run:
+        #     self._push(config.NIAK.PATH)
 
     def _release(self):
         """
@@ -444,7 +462,38 @@ class TargetRelease(object):
         """
         # update target repo and push
         self._update_target()
-        self._update_niak()
+        try:
+            self._update_niak()
+        except BaseException as e:
+            self._cleanup()
+            raise e
+
+    def _finaly(self):
+            self.niak_repo_head_start.checkout()
+
+
+    def _cleanup(self):
+        """
+        Checkout niak modified file
+        Make sure that we are bacj in the initail repo
+        Delete the TMP BRANCH
+        :return:
+        """
+        repo = git.Repo(self.niak_path)
+        niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
+        repo.index.checkout(niak_gb_vars, force=True)
+
+        self.niak_repo_head_start.checkout()
+        self._del_branch(repo, self.TMP_BRANCH)
+
+    def _del_branch(self, repo, branch):
+        try:
+            repo.delete_head(branch, force=True)
+            logging.info("{} branch deleted".format(branch))
+        except git.exc.GitCommandError:
+            # Branch was not created yet
+            pass
+
 
 
 class TargetBuilder(Runner):
@@ -490,7 +539,7 @@ class TargetBuilder(Runner):
         cmd_line = ['/bin/bash', '-c',
                     "cd {0} ;source /opt/minc-itk4/minc-toolkit-config.sh; octave "
                     "--eval \"{1};opt = struct(); path_test = struct() ; "
-                    "opt.FLAG_TARGET=true; OPT.FLAG_TEST=true ; niak_test_all(path_test,opt)\""
+                    "opt.flag_target=true; OPT.flag_test=true ; niak_test_all(path_test,opt)\""
                     .format(self.work_dir, self.load_niak_psom)]
 
         # convoluted docker command
@@ -562,8 +611,6 @@ class OctavePortal(Runner):
         self.docker[-1] = self.docker[-1].format(cmds)
 
         logging.info("executing {0}".format(self.docker))
-        print("executing {0}".format(' '.join(self.docker)))
-        print("executing \n\t{0}".format(' '.join(self.docker)))
         oct_process = subprocess.Popen(self.docker)
 
         stdout, stderr = oct_process.communicate()
@@ -571,13 +618,10 @@ class OctavePortal(Runner):
         logging.info(stdout)
         logging.error(stderr)
 
-    def test_all(self, flag_target=True):
+    def test_all(self):
         # niak test all
 
         options = []
-
-        if flag_target:
-            options.append('OPT.FLAG_TARGET=true')
 
         opt = ','.join(options)
 

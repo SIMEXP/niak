@@ -48,7 +48,7 @@ def main(args=None):
                         default=config.TARGET.WORK_DIR)
 
     parser.add_argument('--name', '-n', help='the path to the Niak git repo',
-                        default=config.TARGET.URL)
+                        default=config.TARGET.TAG_NAME)
 
     # parser.add_argument('--hash', '-h', help='the hash number of the niak version')
 

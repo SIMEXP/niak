@@ -20,7 +20,7 @@ class DOCKER:
     Needed docker stuff
     """
     # Version of octave docker image used
-    OCTAVE = "simexp/octave"
+    OCTAVE = "simexp/niak_dependency"
 
 
 class TARGET:
@@ -40,7 +40,7 @@ class NIAK:
     URL = "https://github.com/poquirion/docker_build.git"
     RELEASE_BRANCH = "niak-bos"
     # RELEASE_BRANCH = ""
-    niak_version = "0.13.1"
+    TAG_NAME = "v0.13.1"
 
 
 #[psom]
