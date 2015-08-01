@@ -231,14 +231,14 @@ class TargetRelease(object):
     TMP_BRANCH = '_UGLY_TMP_BRANCH_'
 
     def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None, niak_tag = None,
-                 release_branch=False, dry_run=False, recompute_target=False, result_dir=None):
+                 niak_release_branch=False, dry_run=False, recompute_target=False, result_dir=None):
 
         self.target_name = target_name
         self.target_path = target_path if target_path else config.TARGET.PATH
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
         self.result_dir = result_dir if result_dir else config.TARGET.RESULT_DIR
 
-        self.niak_release_branch = release_branch if release_branch else config.NIAK.RELEASE_BRANCH
+        self.niak_release_branch = niak_release_branch if niak_release_branch else config.NIAK.RELEASE_BRANCH
 
         self.recompute_target = recompute_target
 
@@ -381,6 +381,10 @@ class TargetRelease(object):
 
         repo = git.Repo(path)
         remote = repo.remote()
+        logging.info("pushing {} to ".format(path, repo.remotes.origin.url))
+        # repo.git.push(tags=push_tag)
+        # repo.remotes.origin.push(repo.head)
+        remote.push()
         remote.push(tags=push_tag)
 
     def _commit(self, path, comment, branch=None, file=None, tag=None):
@@ -470,8 +474,8 @@ class TargetRelease(object):
 
         if not self.dry_run:
             self._merge(self.niak_repo, self.niak_release_branch, self.TMP_BRANCH, self.niak_tag)
-            self._push(self.target_path,push_tag=True)
-            self._push(self.niak_path, push_tag=True)
+            # self._push(self.result_dir,push_tag=True)
+            # self._push(self.niak_path, push_tag=True)
         else:
             self._cleanup()
 
@@ -484,7 +488,7 @@ class TargetRelease(object):
         """
         try:
             branch1 = repo.refs[branch1]
-        except git.exc.GitCommandError:
+        except IndexError:
             ret = input("{} Does not exist, you want to create it?"
                         "Y/[N]".format(branch1))
             if ret != "Y":
@@ -493,15 +497,15 @@ class TargetRelease(object):
                 repo.create_head(branch1)
                 branch1 = repo.refs[branch1]
 
-            branch1.checkout()
-            branch2 = repo.refs[branch2]
+        branch1.checkout()
+        branch2 = repo.refs[branch2]
 
-            base = repo.merge_base(branch1, branch2)
-            repo.index.merge_tree(branch2, base=base)
-            repo.index.commit("New Niak Release {}{}".format(self.niak_release_branch,
-                                                             tag),
-                              parent_commits=(branch1.commit, branch2.commit))
-            repo.create_tag(tag)
+        base = repo.merge_base(branch1, branch2)
+        repo.index.merge_tree(branch2, base=base)
+        repo.index.commit("New Niak Release {}{}".format(self.niak_release_branch,
+                                                         tag),
+                          parent_commits=(branch1.commit, branch2.commit))
+        repo.create_tag(tag)
 
 
     def _finaly(self):
