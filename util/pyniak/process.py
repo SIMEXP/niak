@@ -17,6 +17,7 @@ import tempfile
 import threading
 import time
 
+# TODO Add these in setup.py
 import git
 import psutil
 
@@ -168,8 +169,8 @@ class Runner(object):
 
             logging.error( "The subprocess return code is {}, it has also logged line with"
                            " \"error\" in them\nreturning ".format(return_code))
-            # retval = input("Do you want to continue process? Y/[N]")
-            retval = "Y" ## DEBUG !!!
+            retval = input("Do you want to continue process? Y/[N]")
+            # retval = "Y" ## DEBUG !!!
             if retval == "Y":
                 return_code = 0
             else:
@@ -284,7 +285,7 @@ class TargetRelease(object):
                       "The tag will be {0}{2} :".format(self.TAG_PREFIX, old_tags, new_tag))
 
                 #TODO check if format is right
-                answers = input("are you happy with that? [Y]/N")
+                answers = input("are you happy with that? Y/[N]")
 
                 if answers != "Y":
                     answers = input("What name should it be? type [Quit] to exit\n"
@@ -295,7 +296,7 @@ class TargetRelease(object):
                         raise IOError("not happy with the release tag name!")
 
 
-        repo.create_tag("{0}{1}".format(self.TAG_PREFIX, new_tag))
+        repo.create_tag("{0}{1}".format(self.TAG_PREFIX, new_tag), force=True)
 
         return new_tag
 
@@ -308,9 +309,9 @@ class TargetRelease(object):
     def start(self):
 
         if self.recompute_target:
-            # Should deletete the resuls dir here
+            # TODO Should delete the result dir here
             pass
-        # self._build() ## DEBUG
+        self._build()
 
         if self.niak_release_branch:
             self._release()
@@ -329,6 +330,7 @@ class TargetRelease(object):
         target = TargetBuilder(error_form_log=True, niak_path=self.niak_path, work_dir=self.work_dir)
         ret_val = target.run()
         happiness = input("Are you happy with the target?Y/[N]")
+        # happiness = "Y" ##DEBUG
         logging.info("look at {}/logs for more info".format(self.work_dir))
 
         if ret_val != 0 or happiness != 'Y':
@@ -382,8 +384,6 @@ class TargetRelease(object):
         repo = git.Repo(path)
         remote = repo.remote()
         logging.info("pushing {} to ".format(path, repo.remotes.origin.url))
-        # repo.git.push(tags=push_tag)
-        # repo.remotes.origin.push(repo.head)
         remote.push()
         remote.push(tags=push_tag)
 
@@ -391,7 +391,7 @@ class TargetRelease(object):
         """
         Add all change, add and remove files and then commit
 
-        branch: if None, will be comited to current branch
+        branch: if None, will be commited to current branch
 
         file : will only add and commit these
         """
@@ -418,14 +418,19 @@ class TargetRelease(object):
             logging.warning("Noting to be added or commited in {}".format(repo))
 
         if branch:
-            logging.info("committing to branch {}".format(branch))
-            tmp_branch = repo.create_head(branch)
+            logging.info("checing out branch {} in ".format(branch, path))
+            if branch not in repo.heads:
+                tmp_branch = repo.create_head(branch)
+            else:
+                tmp_branch = repo.refs[branch]
             tmp_branch.checkout()
 
+        logging.info("committing to active branch {}".format(path))
         repo.index.commit(comment)
+
         if tag:
             logging.warning("Adding tag {} to {} repo".format(tag, path))
-            repo.create_tag(tag)
+            repo.create_tag(tag, force=True)
 
         return True
 
@@ -438,21 +443,27 @@ class TargetRelease(object):
         diff = [d.a_path for d in repo.index.diff(None)]
 
         niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
+        docker_file = os.path.join(self.niak_path, config.DOCKER.FILE)
 
         if self.NIAK_GB_VARS not in diff:
             with open(niak_gb_vars, "r") as fp:
                 fout = re.sub("gb_niak_target_test =.*", "gb_niak_target_test = \'{}\'".format(self.tag), fp.read())
             with open(niak_gb_vars, "w") as fp:
                 fp.write(fout)
+            with open(docker_file, "r") as fp:
+                fout = re.sub("ENV VERSION.*", "ENV VERSION {}".format(self.niak_tag), fp.read())
+            with open(docker_file, "w") as fp:
+                fp.write(fout)
+
         else:
 
             logging.error("Uncommitted change in {}".format(niak_gb_vars))
             raise Error("git file needs to be clean {}".format(niak_gb_vars))
 
         self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
-
-        # if not self.dry_run:
-        #     self._push(config.NIAK.PATH)
+        self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=self.TMP_BRANCH)
+        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=config.NIAK.DEV_BRANCH)
+        self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=config.NIAK.DEV_BRANCH)
 
     def _release(self):
         """
@@ -474,8 +485,8 @@ class TargetRelease(object):
 
         if not self.dry_run:
             self._merge(self.niak_repo, self.niak_release_branch, self.TMP_BRANCH, self.niak_tag)
-            # self._push(self.result_dir,push_tag=True)
-            # self._push(self.niak_path, push_tag=True)
+            self._push(self.result_dir, push_tag=True)
+            self._push(self.niak_path, push_tag=True)
         else:
             self._cleanup()
 
@@ -505,7 +516,7 @@ class TargetRelease(object):
         repo.index.commit("New Niak Release {}{}".format(self.niak_release_branch,
                                                          tag),
                           parent_commits=(branch1.commit, branch2.commit))
-        repo.create_tag(tag)
+        repo.create_tag(tag, force=True)
 
 
     def _finaly(self):
@@ -551,6 +562,7 @@ class TargetBuilder(Runner):
     MT_PASSWD = [MT, "/etc/passwd:/etc/passwd"]
     MT_X11 = [MT, "/tmp/.X11-unix:/tmp/.X11-unix"]
     MT_HOME = [MT, "{0}:{0}".format(os.getenv("HOME"))]
+    MT_ROOT = [MT, "{0}:{0}".format(config.ROOT)]
     ENV_DISPLAY = ["-e", "DISPLAY=unix$DISPLAY"]
     USER = ["--user", str(os.getuid())]
     IMAGE = [config.DOCKER.OCTAVE]
@@ -561,29 +573,27 @@ class TargetBuilder(Runner):
 
         #TODO make them arg not kwargs
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
-        self.psom_path = psom_path if psom_path else config.PSOM.PATH
         self.work_dir = work_dir if work_dir else config.TARGET.WORK_DIR
 
         if not os.path.isdir(self.work_dir):
-            os.mkdir(self.work_dir)
-
+            os.makedirs(self.work_dir)
 
         mt_work_dir = [self.MT, "{0}:{0}".format(self.work_dir)]
 
-        self.load_niak_psom = \
-            "addpath(genpath('{0}'));addpath(genpath('{1}'))".format(self.psom_path, self.niak_path)
+        self.load_niak = \
+            "addpath(genpath('{}'))".format(self.niak_path)
 
 
         # Only builds the target
-        cmd_line = ['/bin/bash', '-c',
-                    "cd {0} ;source /opt/minc-itk4/minc-toolkit-config.sh; octave "
+        cmd_line = ['/bin/bash', '--login',  '-c',
+                    "cd {0}; octave "
                     "--eval \"{1};opt = struct(); path_test = struct() ; "
                     "opt.flag_target=true; OPT.flag_test=true ; niak_test_all(path_test,opt)\""
-                    .format(self.work_dir, self.load_niak_psom)]
+                    .format(self.work_dir, self.load_niak)]
 
         # convoluted docker command
         self.docker = self.DOCKER_RUN + self.FULL_PRIVILEDGE + self.RM + self.MT_HOME + self.MT_SHADOW + self.MT_GROUP \
-                      + self.MT_PASSWD + self.MT_X11 + self.MT_TMP + mt_work_dir + self.ENV_DISPLAY + self.USER \
+                      + self.MT_PASSWD + self.MT_X11 + self.MT_ROOT + self.MT_TMP + mt_work_dir + self.ENV_DISPLAY + self.USER \
                       + self.IMAGE + cmd_line
 
         self.subprocess_cmd = self.docker
