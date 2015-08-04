@@ -4,6 +4,8 @@ First download a small pre-processed fMRI dataset, with a structural scan.
 
 ```matlab
 clear
+niak_gb_vars
+path_data = [pwd filesep];
 niak_wget('target_test_niak_mnc1');
 ```
 
