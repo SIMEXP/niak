@@ -231,15 +231,23 @@ class TargetRelease(object):
 
     TMP_BRANCH = '_UGLY_TMP_BRANCH_'
 
-    def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None, niak_tag = None,
-                 niak_release_branch=False, dry_run=False, recompute_target=False, result_dir=None):
+    def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None, niak_tag=None,
+                 niak_release_branch=False, dry_run=False, recompute_target=False,
+                 result_dir=None, no_new_target=False):
 
+        # target tag name
         self.target_name = target_name
+
         self.target_path = target_path if target_path else config.TARGET.PATH
+
         self.niak_path = niak_path if niak_path else config.NIAK.PATH
+
+        # Where the new target is computed
         self.result_dir = result_dir if result_dir else config.TARGET.RESULT_DIR
 
         self.niak_release_branch = niak_release_branch if niak_release_branch else config.NIAK.RELEASE_BRANCH
+
+        self.no_new_target = no_new_target
 
         self.recompute_target = recompute_target
 
@@ -311,12 +319,13 @@ class TargetRelease(object):
         if self.recompute_target:
             # TODO Should delete the result dir here
             pass
-        self._build()
+        if not self.no_new_target:
+            self._build()
 
         if self.niak_release_branch:
             self._release()
 
-        self. _finaly()
+        self._finaly()
 
     def _build(self):
         """
@@ -446,10 +455,13 @@ class TargetRelease(object):
         docker_file = os.path.join(self.niak_path, config.DOCKER.FILE)
 
         if self.NIAK_GB_VARS not in diff:
-            with open(niak_gb_vars, "r") as fp:
-                fout = re.sub("gb_niak_target_test =.*", "gb_niak_target_test = \'{}\'".format(self.tag), fp.read())
-            with open(niak_gb_vars, "w") as fp:
-                fp.write(fout)
+            if not self.no_new_target:
+                with open(niak_gb_vars, "r") as fp:
+                    fout = re.sub("gb_niak_target_test =.*",
+                                  "gb_niak_target_test = \'{}\'".format(self.tag), fp.read())
+                with open(niak_gb_vars, "w") as fp:
+                    fp.write(fout)
+
             with open(docker_file, "r") as fp:
                 fout = re.sub("ENV VERSION.*", "ENV VERSION {}".format(self.niak_tag), fp.read())
             with open(docker_file, "w") as fp:
@@ -460,9 +472,11 @@ class TargetRelease(object):
             logging.error("Uncommitted change in {}".format(niak_gb_vars))
             raise Error("git file needs to be clean {}".format(niak_gb_vars))
 
-        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
+        if not self.no_new_target:
+            self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
+            self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=config.NIAK.DEV_BRANCH)
+
         self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=self.TMP_BRANCH)
-        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=config.NIAK.DEV_BRANCH)
         self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=config.NIAK.DEV_BRANCH)
 
     def _release(self):
@@ -476,7 +490,9 @@ class TargetRelease(object):
 
         """
         # update target repo and push
-        self._update_target()
+        if not self.no_new_target:
+            self._update_target()
+
         try:
             self._update_niak()
         except BaseException as e:
@@ -684,6 +700,6 @@ if __name__ == "__main__":
     # release = TargetBuilder()
     # release.run()
 
-    t = TargetRelease()
+    tr = TargetRelease()
 
-    t.auto_tag(config.NIAK.PATH)
+    tr.auto_tag(config.NIAK.PATH)

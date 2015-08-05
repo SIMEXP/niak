@@ -2,7 +2,6 @@
 This module is ...
 """
 # @TODO Write doc!
-# @TODO Let config file path be set by from a init file so it can be share with niak octave more easily
 __author__ = 'Pierre-Olivier Quirion <pioliqui@gmail.com>'
 
 
@@ -44,17 +43,15 @@ class NIAK:
     HASH = ""
     # PATH = "/home/pquirion/simexp/software/niak"
     # PATH = "{}/niak".format(ROOT)
-    PATH = "{}/pniak".format(ROOT)
-    URL = "https://github.com/poquirion/pniak.git"
+    PATH = "{}/niak".format(ROOT)
+    URL = "https://github.com/simexp/niak.git"
     RELEASE_BRANCH = "niak-bos"
     DEV_BRANCH = "master"
     # RELEASE_BRANCH = ""
     TAG_NAME = "v0.13.1"
 
-
-#[psom]
-# class PSOM:
-#     PATH = "/home/poquirion/simexp/psom"
-#     url = "https://github.com/poquirion/psom.git"
-
+class PSOM:
+    PATH = "{}/psom".format(ROOT)
+    url = "https://github.com/simexp/psom.git"
+    tag = "v1.2.0"
 

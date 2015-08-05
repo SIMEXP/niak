@@ -3,6 +3,8 @@ This module is an executable that should be able
 - to create a niak target and, give it a name (default is YYYY-MM-DD).
 - to update the target link in the niak distro.
 - push the target to a git repo (or lfs) with the name as a tag.
+
+@ TODO: Have the release made from specific commit using hash numbers.
 """
 
 
@@ -65,11 +67,12 @@ def main(args=None):
 
     parsed = parser.parse_args(args)
 
-    new_target = process.TargetRelease(dry_run=False,
+    new_target = process.TargetRelease(dry_run=True,
                                        niak_path=parsed.niak_path,
                                        target_path=parsed.target_path,
                                        target_name=parsed.name,
-                                       work_dir=parsed.target_work_dir)
+                                       work_dir=parsed.target_work_dir,
+                                       niak_release_branch=False)
 
     new_target.start()
 
