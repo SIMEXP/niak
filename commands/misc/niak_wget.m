@@ -90,7 +90,7 @@ if ~psom_exist(data.path)
     if status
         warning('There was a problem downloading the test data: %s',msg)
     end    
-    if data.type == 'target_test_niak_mnc1'
+    if strcmp(data.type, 'target_test_niak_mnc1')
         [status,msg] = system(['unzip ' data.path filesep data.name ' -d '  data.path]);
         system(['mv ' data.path filesep '*/* '  data.path ])
         system(['rm' data.path filesep '*target*' ])
