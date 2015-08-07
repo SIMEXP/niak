@@ -67,12 +67,12 @@ def main(args=None):
 
     parsed = parser.parse_args(args)
 
-    new_target = process.TargetRelease(dry_run=True,
+    new_target = process.TargetRelease(dry_run=False,
                                        niak_path=parsed.niak_path,
                                        target_path=parsed.target_path,
                                        target_name=parsed.name,
                                        work_dir=parsed.target_work_dir,
-                                       niak_release_branch=False)
+                                       no_new_target=True)
 
     new_target.start()
 

@@ -40,18 +40,35 @@ class NIAK:
     Repo that will be used for the release
     """
     # Hash that will be used for the release
+    REPO = "niak"
     HASH = ""
     # PATH = "/home/pquirion/simexp/software/niak"
     # PATH = "{}/niak".format(ROOT)
     PATH = "{}/niak".format(ROOT)
     URL = "https://github.com/simexp/niak.git"
-    RELEASE_BRANCH = "niak-bos"
+    RELEASE_BRANCH = "niak-boss"
     DEV_BRANCH = "master"
     # RELEASE_BRANCH = ""
     TAG_NAME = "v0.13.1"
+    # release Name
+    DEPENDENCY_RELEASE = "niak-with-dependencies.zip"
+    WORK_DIR = "{}/work/niak-{}".format(ROOT, TAG_NAME)
+
+    VERSION_ENV_VAR = "NIAK_VERSION"
+
 
 class PSOM:
     PATH = "{}/psom".format(ROOT)
-    url = "https://github.com/simexp/psom.git"
-    tag = "v1.2.0"
+    URL = "https://github.com/simexp/psom.git"
+    RELEASE_TAG = "v1.2.0"
 
+class BCT:
+    url = "https://sites.google.com/site/bctnet/Home/functions/BCT.zip"
+
+
+class GIT:
+    API = "https://api.github.com"
+    UPLOAD_API = "https://uploads.github.com"
+    # TOKEN = os.getenv("GIT_TOKEN")
+    TOKEN = "bc826999cae18336526eb251e78a452d41056454"
+    OWNER = "simexp"
