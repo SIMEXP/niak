@@ -69,6 +69,5 @@ class BCT:
 class GIT:
     API = "https://api.github.com"
     UPLOAD_API = "https://uploads.github.com"
-    # TOKEN = os.getenv("GIT_TOKEN")
-    TOKEN = "bc826999cae18336526eb251e78a452d41056454"
+    TOKEN = os.getenv("GIT_TOKEN")
     OWNER = "simexp"
