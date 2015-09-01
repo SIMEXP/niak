@@ -4,6 +4,7 @@ before_install:
   - sudo apt-get install software-properties-common
   - sudo apt-add-repository ppa:octave/stable -y
   - sudo apt-get update
+  - sudo apt-get install --fix-missing
   - sudo apt-get install octave=3.8.1-1ubuntu1~octave1~precise1
 
 install:
