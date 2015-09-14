@@ -5,10 +5,9 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install --fix-missing
   # build a local octave repo
-  - dpkg-scanpackages 1 2 3
   - sudo wget --directory-prefix=/local_repo/octave  https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/liboctave2_3.8.1-1ubuntu1~octave1~precise1_amd64.deb   https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/octave_3.8.1-1ubuntu1~octave1~precise1_amd64.deb    https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/liboctave-dev_3.8.1-1ubuntu1~octave1~precise1_amd64.deb    https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/octave-dbg_3.8.1-1ubuntu1~octave1~precise1_amd64.deb   https://launchpad.net/~octave/+archive/ubuntu/stable/+files/octave-common_3.8.1-1ubuntu1~octave1~precise1_all.deb  https://launchpad.net/~octave/+archive/ubuntu/stable/+files/octave-info_3.8.1-1ubuntu1~octave1~precise1_all.deb
   - cd /local_repo/octave 
-  - sudo dpkg-scanpackages . /dev/null > Packages
+  - sudo dpkg-scanpackages /local_repo/octave /dev/null > /local_repo/octave/Packages
   - sudo echo "deb [arch=amd64] file:/local_repo/octave ./" >> /etc/apt/sources.list
   - sudo apt-get update
 
