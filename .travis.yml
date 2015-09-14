@@ -8,6 +8,7 @@ before_install:
   - echo "deb [arch=amd64] file:/local_repo/octave ./" | sudo tee --append /etc/apt/sources.list
   - sudo apt-get update
   - sudo apt-get install --fix-missing
+  - ls -als /local_repo/octave
 
 install:
   # Install dependencies
