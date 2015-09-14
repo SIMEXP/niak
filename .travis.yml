@@ -13,7 +13,7 @@ install:
   # Install dependencies
   - sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev libxmu-headers imagemagick libjpeg62 -y
   # Install octave dependecies
-  - sudo apt-get install liboctave-dev -y
+  - sudo apt-get install -y --force-yes liboctave-dev 
   - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/control-2.8.0.tar.gz -P /home/octave
   - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/general-1.3.4.tar.gz -P /home/octave
   - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/signal-1.3.0.tar.gz -P /home/octave
