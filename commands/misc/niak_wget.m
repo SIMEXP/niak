@@ -3,8 +3,7 @@ function [status,msg,data] = niak_wget(data)
 %
 % SYNTAX: [STATUS,MSG,DATA] = NIAK_WGET(DATA)
 %
-% DATA.TYPE (string, default '') If provided, this sets the default 
-%    name/url for a number of datasets. 
+% DATA.TYPE (string, default '') If provided, this sets the default for datasets
 %    'data_test_niak_mnc1': The small version of the demoniak dataset.
 %    'target_test_niak_mnc1': The results of all NIAK pipelines on the demoniak minc1 data.
 %    'single_subject_cambridge_preprocessed_nii': preprocessed data for a single subject.
@@ -64,8 +63,8 @@ switch data.type;
         data.name = 'data_test_niak_mnc1.zip';
         data.url  = ['http://www.nitrc.org/frs/download.php/7241/' data.name];
     case 'target_test_niak_mnc1'  
-        data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip'];
-        data.url  = ['https://www.nitrc.org/frs/download.php/7736/' data.name];
+        data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip']
+        data.url  = ['https://github.com/simexp/niak_target/archive/' data.name];
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
         data.url = 'http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii.zip';
@@ -91,7 +90,13 @@ if ~psom_exist(data.path)
     if status
         warning('There was a problem downloading the test data: %s',msg)
     end    
-    [status,msg] = system(['unzip ' data.path filesep data.name]);
+    if strcmp(data.type, 'target_test_niak_mnc1')
+        [status,msg] = system(['unzip ' data.path filesep data.name ' -d '  data.path]);
+        system(['mv ' data.path filesep '*/* '  data.path ])
+        system(['rm' data.path filesep '*target*' ])
+    else
+        [status,msg] = system(['unzip ' data.path filesep data.name]);
+    end
     if status
         warning('There was a problem unzipping the dataset: %s',msg)
     end    

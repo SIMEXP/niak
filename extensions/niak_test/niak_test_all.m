@@ -21,7 +21,7 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
 %   the folder where the results of reference for the tests have previously 
-%   been generated (see OPT.FLAG_TARGET below).
+%   been generated (see OPT.FLAG_TARGET above).
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
 %   argument of PSOM_RUN_PIPELINE. Note that the field PSOM.PATH_LOGS will be 
 %   set up by the pipeline. By default OPT.PSOM.FLAG_PAUSE is false (do 
