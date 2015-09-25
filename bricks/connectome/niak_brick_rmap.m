@@ -80,7 +80,7 @@ function [files_in,files_out,opt] = niak_brick_rmap(files_in,files_out,opt)
 % no special characters (+ - / * space) and relatively short. 
 %
 % Copyright (c) Pierre Bellec,  
-% Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2013.
+% Centre de recherche de l'Institut universitaire de griatrie de Montral, 2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI, functional connectivity
@@ -214,7 +214,11 @@ if ~ischar(files_out.maps)
             if opt.flag_verbose
                 fprintf('%s , ',seed)
             end
-            maps(:,:,:,num_s) = maps(:,:,:,num_s) + niak_build_rmap(vol,all_seed(:,:,:,num_s));  
+            if opt.flag_fisher
+                maps(:,:,:,num_s) = maps(:,:,:,num_s) + niak_fisher(niak_build_rmap(vol,all_seed(:,:,:,num_s)));
+            else
+                maps(:,:,:,num_s) = maps(:,:,:,num_s) + niak_build_rmap(vol,all_seed(:,:,:,num_s));
+            end
         end
         if opt.flag_verbose
             fprintf('\n')    
