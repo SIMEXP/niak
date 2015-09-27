@@ -36,9 +36,9 @@ function [] = niak_write_nifti(hdr,vol)
 %   8797&objectType=file
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2010-2014
+% University of Montreal, Qubec, Canada, 2010-2014
 %
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -173,7 +173,14 @@ switch hdr.type
         hdr.details.magic = 'ni1';
 end
 
-hdr.details.pixdim = [0 hdr.info.voxel_size hdr.info.tr 1 0 0 0 0];
+if isfield(hdr.details,'pixdim')
+    pixdim0 = hdr.details.pixdim(1);
+    pixdimextra = hdr.details.pixdim(6:8);
+else
+    pixdim0 = 1;
+    pixdimextra = [1 0 0];
+end
+hdr.details.pixdim = [pixdim0 hdr.info.voxel_size hdr.info.tr pixdimextra];
 hdr.details = psom_struct_defaults(hdr.details, ...
               { 'intent_name' , 'quatern_b' , 'quatern_c' , 'quatern_d' , 'qform_code' , 'qoffset_x' , 'qoffset_y' , 'qoffset_z' , 'sform_code' , 'sizeof_hdr' , 'db_name' , 'extents' , 'session_error' , 'regular' , 'dim_info' , 'intent_p1' , 'intent_p2' , 'intent_p3' , 'intent_code' , 'slice_start' , 'slice_end' , 'slice_duration' , 'slice_code' , 'data_type' , 'pixdim'   , 'scl_slope' , 'scl_inter' , 'xyzt_units' , 'cal_min' , 'cal_max' , 'toffset' , 'glmax'     , 'glmin'     , 'descrip'        , 'aux_file' }, ...
               { ''            , 0           , 0           , 0           , 0            , 0           , 0           , 0           , 0            , 348          , ''        , 0         , 0               , 'r'       , 0          , 0           , 0           , 0           , 0             , 0             , 0           , 0                , 0            , ''          , NaN        , 1           , 0           , 10           , 0         , 0         , 0         , max(vol(:)) , min(vol(:)) , hdr.info.history , ''         },false);
