@@ -30,8 +30,8 @@ function [] = niak_write_nifti(hdr,vol)
 %   MRI_TOOLBOX developed by CNSP in Flinders University, Australia
 %
 %   Important parts of this code are copied and modified from a matlab
-%   toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
-%   toolbox did not include a copyright notice.
+%   toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca), and reshared here 
+%   with agreement under a MIT license.  
 %   http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
 %   8797&objectType=file
 %
