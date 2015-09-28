@@ -478,6 +478,7 @@ for num_i = 1:length(list_fwhm)
     % Crop the anatomical volume
     [hdr_anat,vol_anat]    = niak_read_vol(file_tmp2);
     vol_anat(~mask_anat_c) = 0;  
+    vol_anat(mask_anat_c)  = vol_anat(mask_anat_c)-median(vol_anat(mask_anat_c));  
     hdr_anat.file_name     = file_anat_crop;
     niak_write_vol(hdr_anat,vol_anat);
     
@@ -496,6 +497,7 @@ for num_i = 1:length(list_fwhm)
     % Crop the functional volume
     [hdr_func,vol_func]    = niak_read_vol(file_tmp);
     vol_func(~mask_func_c) = 0;    
+    vol_func(mask_func_c)  = vol_func(mask_func_c) - median(vol_func(mask_func_c));
     hdr_func.file_name     = file_func_crop;
     niak_write_vol(hdr_func,vol_func);        
 
