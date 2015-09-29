@@ -25,7 +25,9 @@ The following command will start NIAK with your home directory accessible (the r
 xhost +local:
 docker run -i -t --privileged --rm \
        --name niak \
-       -v $HOME:$HOME -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix \
+       -v $HOME:$HOME -v /etc/group:/etc/group \
+       -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  \
+       -v /tmp/.X11-unix:/tmp/.X11-unix \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
        simexp/niak-boss:0.13.1 \
