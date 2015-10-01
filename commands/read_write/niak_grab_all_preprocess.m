@@ -49,9 +49,9 @@ function files = niak_grab_all_preprocess(path_data,files_in)
 % The "logs" folder is not excluded in the list.
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal,
-%               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2011-2012.
+%               Centre de recherche de l'institut de Griatrie de Montral,
+%               Dpartement d'informatique et de recherche oprationnelle,
+%               Universit de Montral, 2011-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : grabber
@@ -213,6 +213,9 @@ end
 
 %% Grab the AAL template 
 files.template_aal = [path_anat 'template_aal.mnc.gz'];
+
+%% Grab the template tag file for QC 
+files.qc_tag = [path_anat 'template_qc_tag.tag'];
 
 %% Grab the results of quality control -- Group confounds
 list_conf = { 'gse' , 'high' , 'motion' , 'slow_drift' , 'vent' , 'wm' };
