@@ -59,9 +59,6 @@ data = psom_struct_defaults( data , ...
     
 % Set actual defaults, based on data.type
 switch data.type;
-    case 'data_test_niak_mnc1'
-        data.name = 'data_test_niak_mnc1.zip';
-        data.url  = ['http://www.nitrc.org/frs/download.php/7241/' data.name];
     case 'target_test_niak_mnc1'  
         data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip']
         data.url  = ['https://github.com/simexp/niak_target/archive/' data.name];
