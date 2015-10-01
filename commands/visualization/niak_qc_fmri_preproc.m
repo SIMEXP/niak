@@ -33,6 +33,9 @@ function [] = niak_qc_fmri_preproc(opt)
 %   TEMPLATE_ASYM
 %      (boolean, default false) select betewen symetric(false) or asymetric(true)
 %      anatomical template (mni_icbm152_t1_tal_nlin)
+%   TAG_FILE
+%      (string, Default 'template_qc_tag.tag') sepcifie the MNI tags point file 
+%       that list a word coordinate of tag brain regions  
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -60,9 +63,9 @@ function [] = niak_qc_fmri_preproc(opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Yassine Benhajali, Pierre Bellec
-% Centre de recherche de l'institut de gériatrie de MontrÃ©al, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Qébec, Canada, 2013-2014
+% University of Montreal, Qbec, Canada, 2013-2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI preprocessing, quality control
@@ -86,8 +89,8 @@ function [] = niak_qc_fmri_preproc(opt)
 % THE SOFTWARE.
 
 %% Set default options
-list_fields   = { 'type_order' , 'path_qc' , 'list_subject' , 'flag_restart' , 'template_asym'  };
-list_defaults = { 'xcorr_func' , pwd       , {}             , false          , false            };
+list_fields   = { 'type_order' , 'path_qc' , 'list_subject' , 'flag_restart' , 'template_asym'  , 'tag_file'};
+list_defaults = { 'xcorr_func' , pwd       , {}                , false             , false                     , ''  };
 if nargin == 0
     opt = struct();
 end
@@ -98,7 +101,15 @@ path_qc = niak_full_path(opt.path_qc);
 
 %% Grab the results of the fMRI preprocessing pipeline
 files = niak_grab_all_preprocess(path_qc);
-      
+
+if isempty(tag_file) && exist(files.qc_tag)
+    tag_file = files.qc_tag;
+elseif ~exist( tag_file)
+    error('The tag files %s does not exist' , tag_file)
+else
+    error('No tag file found')    
+end
+
 %% Set default for the list of subjects
 list_subject = opt.list_subject;
 
@@ -193,7 +204,7 @@ for num_s = order
         error('I could not find the anatomical scan %s in stereotaxic (non-linear) space for subject %s',file_anat,subject)
     end    
     fprintf('    Individual T1 scan in stereotaxic (non-linear) space, against the MNI template\n')
-    call_reg = ['register "' file_template '" "' file_anat '"'];
+    call_reg = ['register "' file_template '" "' file_anat '" "' tag_file '"'];
     [status,msg] = system(call_reg);   
     if status ~=0
         error('There was an error calling register. The call was: %s ; The error message was: %s',call_ref,msg)
@@ -240,7 +251,7 @@ for num_s = order
         error('I could not find the mean functional scan %s in stereotaxic (non-linear) space for subject %s',file_func,subject)
     end
     
-    call_ref = ['register "' file_func '" "' file_anat '"'];
+    call_ref = ['register "' file_func '" "' file_anat '" "' tag_file '"'];
     [status,msg] = system(call_ref);
     if status ~=0
         error('There was an error calling register. The call was: %s ; The error message was: %s',call_ref,msg)
