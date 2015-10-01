@@ -2,8 +2,8 @@ FROM simexp/octave:01_09_2015
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
-ENV NIAK_VERSION v0.13.1
-ENV NIAK_RELEASE_NAME niak-boss
+ENV NIAK_VERSION v0.13.2
+ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
 RUN mkdir /home/niak \ 

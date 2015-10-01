@@ -40,7 +40,7 @@ function mat = niak_quat2mat(quat)
 % Pierre Bellec, 
 % Research Centre of the Montreal Geriatric Institute
 % & Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2012
+% University of Montreal, Qubec, Canada, 2012
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : quaternion, nifti
@@ -81,5 +81,5 @@ mat(4,4) = 1;
 mat(1:3,1:3) = [ a*a+b*b-c*c-d*d , 2*b*c-2*a*d     ,  2*b*d+2*a*c     ; ...
                  2*b*c+2*a*d     , a*a+c*c-b*b-d*d ,  2*c*d-2*a*b     ; ...
                  2*b*d-2*a*c     , 2*c*d+2*a*b     ,  a*a+d*d-c*c-b*b ];
-mat(1:3,1:3) = mat(3:3,3:3)*diag(sc);
+mat(1:3,1:3) = mat(1:3,1:3)*diag(sc);
 mat(1:3,4) = [ox ; oy ; oz];
