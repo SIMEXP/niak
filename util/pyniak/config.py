@@ -30,9 +30,9 @@ class TARGET:
     URL = "https://github.com/simexp/niak_target.git"
     WORK_DIR = "{}/work/targets".format(ROOT)
     PATH = "{}/niak_target".format(ROOT)
-    RESULT_DIR = os.path.join(WORK_DIR, "result")# Niak default output
+    RESULT_DIR = os.path.join(WORK_DIR, "result")  # Niak default output
     AUTO_VERSION = False
-    TAG_NAME = "0.13.1"
+    TAG_NAME = "0.13.2"
 
 
 class NIAK:
@@ -49,7 +49,7 @@ class NIAK:
     RELEASE_BRANCH = "niak-boss"
     DEV_BRANCH = "master"
     # RELEASE_BRANCH = ""
-    TAG_NAME = "v0.13.1"
+    TAG_NAME = "v0.13.2"
     # release Name
     DEPENDENCY_RELEASE = "niak-with-dependencies.zip"
     WORK_DIR = "{}/work/niak-{}".format(ROOT, TAG_NAME)

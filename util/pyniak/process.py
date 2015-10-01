@@ -256,7 +256,12 @@ def upload_release_to_git(repo_owner, repo_name, tag, file_path):
     else:
         raise FileNotFoundError(file_path)
     with open(file_path, "rb") as fp :
-        upload_url = upload_url.replace("{?name}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE))
+
+        # upload_url = upload_url.replace(",label", "")
+        # upload_url = upload_url.replace("{?name}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE))
+        # that should be more robust!
+        re.sub("\{.*\}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE), upload_url)
+
         length = os.path.getsize(file_path)
         headers.update({"Content-Type": "application/zip",
                         "Content-Length": length})
@@ -291,7 +296,7 @@ class TargetRelease(object):
     TMP_BRANCH = '_UGLY_TMP_BRANCH_'
 
     def __init__(self, target_path=None, niak_path=None, target_name=None, work_dir=None, niak_tag=None, dry_run=False,
-                 recompute_target=False, result_dir=None, no_new_target=False):
+                 recompute_target=False, result_dir=None, new_target=True):
         niak_release_branch= config.NIAK.RELEASE_BRANCH
         # target tag name
         self.target_name = target_name
@@ -305,7 +310,7 @@ class TargetRelease(object):
 
         self.niak_release_branch = niak_release_branch if niak_release_branch else config.NIAK.RELEASE_BRANCH
 
-        self.no_new_target = no_new_target
+        self.new_target = new_target
 
         self.recompute_target = recompute_target
 
@@ -377,7 +382,7 @@ class TargetRelease(object):
         if self.recompute_target:
             # TODO Should delete the result dir here
             pass
-        if not self.no_new_target:
+        if self.new_target:
             self._build()
             pass
         # if self.niak_release_branch:
@@ -441,15 +446,12 @@ class TargetRelease(object):
             return None
 
         self.tag = self.auto_tag(self.result_dir, self.target_name)
-        # if not self.dry_run:
-        #     self._push(self.result_dir, push_tag=True)
-
 
     def _push(self, path, push_tag=False):
 
         repo = git.Repo(path)
         remote = repo.remote()
-        logging.info("pushing {} to ".format(path, repo.remotes.origin.url))
+        logging.info("pushing {} to {}".format(path, repo.remotes.origin.url))
         remote.push()
         remote.push(tags=push_tag)
 
@@ -511,12 +513,17 @@ class TargetRelease(object):
         niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
         docker_file = os.path.join(self.niak_path, config.DOCKER.FILE)
 
-        if not self.no_new_target:
-            with open(niak_gb_vars, "r") as fp:
-                fout = re.sub("gb_niak_target_test =.*",
-                              "gb_niak_target_test = \'{}\'".format(self.tag), fp.read())
-            with open(niak_gb_vars, "w") as fp:
-                fp.write(fout)
+        # Update version
+        with open(niak_gb_vars, "r") as fp:
+            rfp = fp.read()
+            fout = re.sub("gb_niak_version = .*",
+                          "gb_niak_version = \'{}\';".format(self.niak_tag.replace('v', '')), rfp)
+            if self.new_target:
+                    fout = re.sub("gb_niak_target_test = .*",
+                                  "gb_niak_target_test = \'{}\';".format(self.tag), rfp)
+
+        with open(niak_gb_vars, "w") as fp:
+            fp.write(fout)
 
         with open(docker_file, "r") as fp:
             fout = re.sub("ENV {}.*".format(config.NIAK.VERSION_ENV_VAR),
@@ -524,7 +531,7 @@ class TargetRelease(object):
         with open(docker_file, "w") as fp:
             fp.write(fout)
 
-        if not self.no_new_target:
+        if self.new_target:
             self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
             self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=config.NIAK.DEV_BRANCH)
 
@@ -542,7 +549,7 @@ class TargetRelease(object):
 
         """
         # update target repo and push
-        if not self.no_new_target:
+        if self.new_target:
             self._update_target()
 
         try:
@@ -553,8 +560,9 @@ class TargetRelease(object):
 
         if not self.dry_run:
             self._merge(self.niak_repo, self.niak_release_branch, self.TMP_BRANCH, self.niak_tag)
-            self._push(self.result_dir, push_tag=True)
             self._push(self.niak_path, push_tag=True)
+            if self.new_target:
+                self._push(self.result_dir, push_tag=True)
 
             zip_file_path = self._build_niak_with_dependecy()
 
@@ -604,11 +612,12 @@ class TargetRelease(object):
     def _merge(self, repo, branch1, branch2, tag):
         """
         Merge branch1 to branch2
-        @TODO force branch 1 to win every time
+        @TODO Force branch 1 to win every time
+        this will prevent merging problems
         :return:
         """
         try:
-            branch1 = repo.refs[branch1]
+            branch1_ = repo.refs[branch1]
         except IndexError:
             ret = input("{} Does not exist, you want to create it?"
                         "Y/[N]".format(branch1))
@@ -616,16 +625,18 @@ class TargetRelease(object):
                 raise IOError
             else:
                 repo.create_head(branch1)
-                branch1 = repo.refs[branch1]
+                branch1_ = repo.refs[branch1]
 
-        branch1.checkout()
-        branch2 = repo.refs[branch2]
+        # branch1_.checkout()
+        branch2_ = repo.refs[branch2]
+        branch2_.checkout()
+        # repo.merge('-s', 'recursive', '-X', 'theirs', '{0}'.format(branch1))
+        base = repo.merge_base(branch1_, branch2_)
+        repo.index.merge_tree(branch2_, base=base)
 
-        base = repo.merge_base(branch1, branch2)
-        repo.index.merge_tree(branch2, base=base)
         repo.index.commit("New Niak Release {}{}".format(self.niak_release_branch,
                                                          tag),
-                          parent_commits=(branch1.commit, branch2.commit))
+                          parent_commits=(branch1_.commit, branch2_.commit))
         repo.create_tag(tag, force=True)
 
 

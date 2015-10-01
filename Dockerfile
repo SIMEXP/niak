@@ -3,9 +3,9 @@ MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
 ENV NIAK_VERSION v0.13.1
-ENV NIAK_RELEASE_NAME niak-with-dependencies
+ENV NIAK_RELEASE_NAME niak-boss
 
-# Install NIAK from the time of master
+# Install NIAK from the tip of master
 RUN mkdir /home/niak \ 
    && cd /home/niak \
    && wget https://github.com/SIMEXP/niak/releases/download/${NIAK_VERSION}/${NIAK_RELEASE_NAME}.zip \
