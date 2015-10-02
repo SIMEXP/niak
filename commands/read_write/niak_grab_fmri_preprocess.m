@@ -137,9 +137,9 @@
 % NIAK_PIPELINE_FMRI_PREPROCESS
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal,
-%               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2011-2012.
+%               Centre de recherche de l'institut de Griatrie de Montral,
+%               Dpartement d'informatique et de recherche oprationnelle,
+%               Universit de Montral, 2011-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, stability, bootstrap, time series
@@ -342,7 +342,7 @@ if ~strcmp(opt.type_files,'glm_connectome')
 end
 
 if strcmp(opt.type_files, 'scores')
-    files.part = dir([path_data 'anat' filesep sprintf('template_%s.*', opt.template)]);
+    files.part = dir([path_data 'anat' filesep sprintf('template_%s*.*', opt.template)]);
     if isempty(files.part)
         error('Could not find the %s template', opt.template)
     end
