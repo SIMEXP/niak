@@ -122,9 +122,9 @@ function [hdr,vol] = niak_read_vol(file_name)
 % consistent way for all data formats. 
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Centre de recherche de l'institut de Gériatrie de Montréal,
-% Département d'informatique et de recherche opérationnelle,
-% Université de Montréal, 2010-2011.
+% Centre de recherche de l'institut de Griatrie de Montral,
+% Dpartement d'informatique et de recherche oprationnelle,
+% Universit de Montral, 2010-2011.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, I/O, reader, minc
