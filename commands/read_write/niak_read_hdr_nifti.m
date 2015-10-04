@@ -341,7 +341,11 @@ else
 end
 
 %% hdr.info.dimension_order
-hdr.info.dimension_order = '';
+if hdr.info.dimensions(end)>1
+    hdr.info.dimension_order = 'xyzt';
+else
+    hdr.info.dimension_order = 'xyz';
+end
 
 %% hdr.info.history
 hdr.info.history = hdr.details.descrip;
