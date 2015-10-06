@@ -102,8 +102,10 @@ path_qc = niak_full_path(opt.path_qc);
 %% Grab the results of the fMRI preprocessing pipeline
 files = niak_grab_all_preprocess(path_qc);
 
-if isempty(tag_file) && exist(files.qc_tag)
-    tag_file = files.qc_tag;
+% set the tag file
+niak_gb_vars
+if isempty(tag_file) && exist([ gb_niak_path_template 'qc_tag_template.tag' ] )
+    tag_file =  ( [ gb_niak_path_template 'qc_tag_template.tag' ] );
 elseif ~exist( tag_file)
     error('The tag files %s does not exist' , tag_file)
 else

@@ -214,9 +214,6 @@ end
 %% Grab the AAL template 
 files.template_aal = [path_anat 'template_aal.mnc.gz'];
 
-%% Grab the template tag file for QC 
-files.qc_tag = [path_anat 'template_qc_tag.tag'];
-
 %% Grab the results of quality control -- Group confounds
 list_conf = { 'gse' , 'high' , 'motion' , 'slow_drift' , 'vent' , 'wm' };
 for num_f = 1:length(list_conf)
