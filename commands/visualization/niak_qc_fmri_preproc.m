@@ -104,10 +104,10 @@ files = niak_grab_all_preprocess(path_qc);
 
 % set the tag file
 niak_gb_vars
-if isempty(tag_file) && exist([ gb_niak_path_template 'qc_tag_template.tag' ] )
-    tag_file =  ( [ gb_niak_path_template 'qc_tag_template.tag' ] );
-elseif ~exist( tag_file)
-    error('The tag files %s does not exist' , tag_file)
+if isempty(opt.tag_file) && exist([ gb_niak_path_template 'qc_tag_template.tag' ] )
+    opt.tag_file =  ( [ gb_niak_path_template 'qc_tag_template.tag' ] );
+elseif ~exist( opt.tag_file)
+    error('The tag files %s does not exist' , opt.tag_file)
 else
     error('No tag file found')    
 end
@@ -206,8 +206,8 @@ for num_s = order
         error('I could not find the anatomical scan %s in stereotaxic (non-linear) space for subject %s',file_anat,subject)
     end    
     fprintf('    Individual T1 scan in stereotaxic (non-linear) space, against the MNI template\n')
-    call_reg = ['register "' file_template '" "' file_anat '" "' tag_file '"'];
-    [status,msg] = system(call_reg);   
+    [status,msg] = niak_register(file_template , file_anat , [opt.tag_file  ' -global Initial_volumes_synced True']);   
+    
     if status ~=0
         error('There was an error calling register. The call was: %s ; The error message was: %s',call_ref,msg)
     end
@@ -253,8 +253,7 @@ for num_s = order
         error('I could not find the mean functional scan %s in stereotaxic (non-linear) space for subject %s',file_func,subject)
     end
     
-    call_ref = ['register "' file_func '" "' file_anat '" "' tag_file '"'];
-    [status,msg] = system(call_ref);
+    [status,msg] = niak_register(file_func , file_anat , [opt.tag_file  ' -global Initial_volumes_synced True']); 
     if status ~=0
         error('There was an error calling register. The call was: %s ; The error message was: %s',call_ref,msg)
     end
