@@ -124,8 +124,8 @@ if ~isfield(hdr,'like')||(isempty(hdr.like))
     %% Setting up default values for the 'info' part of the header
     hdr.info.dimensions = size(vol);
     gb_name_structure = 'hdr.info';
-    gb_list_fields = {'precision','voxel_size','mat','dimension_order','tr','history','file_parent','dimensions'};
-    gb_list_defaults = {'float',[1 1 1],[],'xyzt',1,'','',[]};
+    gb_list_fields    = {'machine' , 'precision' , 'voxel_size' , 'mat' , 'dimension_order' , 'tr' , 'history', 'file_parent' , 'dimensions' };
+    gb_list_defaults  = {''        , 'float'     , [1 1 1]      , []    , 'xyzt'            , 1    , ''       , ''            , []           };
     niak_set_defaults
 
     if isempty(hdr.info.mat)

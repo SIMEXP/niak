@@ -45,8 +45,13 @@ function [hdr,vol] = niak_read_nifti(file_name)
 % toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca) who agreed for 
 % redistribution under the MIT license. 
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Note that the precision of the data is forced to single (32 bits). 
+% 
+% Copyright (c) Pierre Bellec, 
+% Montreal Neurological Institute, 2008-2010
+% Departement d'informatique et de recherche operationnelle
+% Centre de recherche de l'institut de Geriatrie de Montreal
+% Universite de Montreal, 2011-2015
 % See licensing information in the code.
 % Keywords : medical imaging, I/O, reader, nifti
 
@@ -165,4 +170,5 @@ if nargout > 1
         hdr.details.scl_inter = 0;
     end  
     vol = single(vol);
+    hdr.info.precision = 'float';
 end
