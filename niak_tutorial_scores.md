@@ -20,7 +20,6 @@ niak_wget(template);
 Select a specific scale and template, in this case it is the scale 7
 ```matlab
 scale = 7 ; % select a scale
-template_data = [path_data 'template_cambridge_basc_multiscale_mnc_asym'];
 template_name = sprintf('template_cambridge_basc_multiscale_sym_scale%03d.mnc.gz',scale);
 system([' cp -r ' template.path filesep template_name ' ' path_demo '/demoniak_preproc/anat/']);
 ```
