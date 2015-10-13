@@ -71,6 +71,9 @@ switch data.type;
     case 'cambridge_template_mnc'
         data.name = 'template_cambridge_basc_multiscale_mnc_sym.zip';
         data.url = 'http://files.figshare.com/1861821/template_cambridge_basc_multiscale_mnc_sym.zip';
+    case 'cambridge_template_nii'
+        data.name = 'template_cambridge_basc_multiscale_nii_sym.zip';
+        data.url = 'http://files.figshare.com/1861819/template_cambridge_basc_multiscale_nii_sym.zip';
     case ''
         if isempty(data.name)||isempty(data.url)
             error('Please specify DATA.TYPE or DATA.NAME/DATA.URL')
