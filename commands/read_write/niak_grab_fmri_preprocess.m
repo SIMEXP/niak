@@ -342,7 +342,7 @@ if ~strcmp(opt.type_files,'glm_connectome')
 end
 
 if strcmp(opt.type_files, 'scores')
-    files.part = dir([path_data 'anat' filesep sprintf('template_%s.*', opt.template)]);
+    files.part = dir([path_data 'anat' filesep sprintf('template_%s*.*', opt.template)]);
     if isempty(files.part)
         error('Could not find the %s template', opt.template)
     end
