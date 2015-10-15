@@ -1,9 +1,9 @@
 function [status,msg,data] = niak_wget(data)
-% Fetch the test demoniak dataset
-%% SYNTAX: [STATUS,MSG,DATA] = NIAK_WGET(DATA)
+% Fetch a dataset using wget
 %
-% DATA.TYPE (string, default '') If provided, this sets the default 
-%    name/url for a number of datasets. 
+% SYNTAX: [STATUS,MSG,DATA] = NIAK_WGET(DATA)
+%
+% DATA.TYPE (string, default '') If provided, this sets the default for datasets
 %    'data_test_niak_mnc1': The small version of the demoniak dataset.
 %    'target_test_niak_mnc1': The results of all NIAK pipelines on the demoniak minc1 data.
 %    'single_subject_cambridge_preprocessed_nii': preprocessed data for a single subject.
@@ -63,11 +63,14 @@ switch data.type;
         data.name = 'data_test_niak_mnc1.zip';
         data.url  = ['http://www.nitrc.org/frs/download.php/7241/' data.name];
     case 'target_test_niak_mnc1'  
-        data.name = ['target_test_niak_mnc1-' gb_niak_version '.zip'];
-        data.url  = ['https://www.nitrc.org/frs/download.php/7469/' data.name];
+        data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip']
+        data.url  = ['https://github.com/simexp/niak_target/archive/' data.name];
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
         data.url = 'http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii.zip';
+    case 'cambridge_template_mnc'
+        data.name = 'template_cambridge_basc_multiscale_mnc_sym.zip';
+        data.url = 'http://files.figshare.com/1861821/template_cambridge_basc_multiscale_mnc_sym.zip';
     case ''
         if isempty(data.name)||isempty(data.url)
             error('Please specify DATA.TYPE or DATA.NAME/DATA.URL')
@@ -87,7 +90,13 @@ if ~psom_exist(data.path)
     if status
         warning('There was a problem downloading the test data: %s',msg)
     end    
-    [status,msg] = system(['unzip ' data.path filesep data.name]);
+    if strcmp(data.type, 'target_test_niak_mnc1')
+        [status,msg] = system(['unzip ' data.path filesep data.name ' -d '  data.path]);
+        system(['mv ' data.path filesep '*/* '  data.path ])
+        system(['rm ' data.path filesep '*target*' ])
+    else
+        [status,msg] = system(['unzip ' data.path filesep data.name  ' -d '  data.path '/..']);
+    end
     if status
         warning('There was a problem unzipping the dataset: %s',msg)
     end    

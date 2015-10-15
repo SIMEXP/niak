@@ -34,20 +34,24 @@ function [hdr,vol] = niak_read_nifti(file_name)
 % In case of multiple files data (e.g. .IMG + .HDR, or .IMG + .HDR + .MAT),
 % specify the name using the .IMG extension only.
 %
-% One may assume that the affine transformation brings the data into
-% (Left-Right, Posterior-Anterior, Inferior-Superior) order (this is a 
-% NIFTI requirement).
-%
+% The affine transformation in hdr.info corresponds to the sform, if specified, or 
+% the qform (if sform unspecified and qform is), or simply the pixel dimension 
+% and offset, if neither qform or sform are specified. 
+% 
 % Part of this file is copied and modified under GNU license from
 % MRI_TOOLBOX developed by CNSP in Flinders University, Australia
 %
 % Important parts of this code are copied and modified from a matlab
-% toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
-% toolbox did not include a copyright notice.
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8797&objectType=file
+% toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca) who agreed for 
+% redistribution under the MIT license. 
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Note that the precision of the data is forced to single (32 bits). 
+% 
+% Copyright (c) Pierre Bellec, 
+% Montreal Neurological Institute, 2008-2010
+% Departement d'informatique et de recherche operationnelle
+% Centre de recherche de l'institut de Geriatrie de Montreal
+% Universite de Montreal, 2011-2015
 % See licensing information in the code.
 % Keywords : medical imaging, I/O, reader, nifti
 
@@ -166,4 +170,5 @@ if nargout > 1
         hdr.details.scl_inter = 0;
     end  
     vol = single(vol);
+    hdr.info.precision = 'float';
 end

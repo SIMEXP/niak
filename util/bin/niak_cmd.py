@@ -25,7 +25,6 @@ SUPPORTED_PIPES = ["niak_pipeline_fmri_preprocess"]
 #     def __init__(self, option):
 #         super().__init__()
 
-
 def build_opt(option):
 
     parser = argparse.ArgumentParser(description="All options")
