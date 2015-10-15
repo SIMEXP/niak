@@ -140,7 +140,7 @@ switch hdr.info.precision
         hdr.details.datatype = 8;
         hdr.details.bitpix = int16(32);
         vol = int32(vol);
-    case 'float32'
+    case {'float32','float'}
         hdr.details.datatype = 16;
         hdr.details.bitpix = int16(32);        
     	vol = single(vol);

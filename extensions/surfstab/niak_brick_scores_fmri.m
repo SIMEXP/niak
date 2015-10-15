@@ -363,7 +363,7 @@ if ~strcmp(out.rmap_part,'gb_niak_omitted')
     opt_t.type_center = 'mean';
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,part_v,opt_t);
-    rmap_vec = niak_fisher(niak_build_correlation(tseries,tseed));
+    rmap_vec = niak_fisher(niak_corr(tseries,tseed));
 
     if opt.flag_verbose
         fprintf('Writing correlation maps (seed: initial partition) as a volume\n')
@@ -379,7 +379,7 @@ if ~strcmp(out.rmap_cores,'gb_niak_omitted')
     opt_t.type_center = 'mean';
     opt_t.correction = 'mean_var';
     tseed = niak_build_tseries(tseries,res.part_cores,opt_t);
-    rmap_vec = niak_fisher(niak_build_correlation(tseries,tseed));
+    rmap_vec = niak_fisher(niak_corr(tseries,tseed));
     if opt.flag_verbose
         fprintf('Writing correlation maps (seed: cores) as a volume\n')
     end

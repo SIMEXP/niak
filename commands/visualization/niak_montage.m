@@ -1,12 +1,7 @@
 function [] = niak_montage(vol,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_MONTAGE
-%
 % Visualization of a 3D volume in a montage style (all slices in one image)
 %
-% SYNTAX:
-% [] = NIAK_MONTAGE(VOL,OPT)
+% SYNTAX: [] = NIAK_MONTAGE(VOL,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -80,9 +75,13 @@ function [] = niak_montage(vol,opt)
 % If both the number of rows ans the number of columns are specified, the
 % number of slices are adapted to match the montage.
 %
-% Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
-% Montreal Neurological Institute, McGill University, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+% Montreal Neurological Institute, 2008-2010
+% Departement d'informatique et de recherche operationnelle
+% Centre de recherche de l'institut de Geriatrie de Montreal
+% Universit de Montral, 2011-2015
+% Maintainer : pierre.bellec@criugm.qc.ca
+
 % See licensing information in the code.
 % Keywords : medical imaging, montage, visualization
 

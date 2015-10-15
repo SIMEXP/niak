@@ -43,7 +43,7 @@ function [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(file_name);
 % behaves differently for .gz files (see OUTPUTS).
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
-% geriatrie de Montreal, 2010
+% geriatrie de Montreal, 2010-2015
 % Maintainer : pbellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : 
