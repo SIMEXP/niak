@@ -260,7 +260,7 @@ def upload_release_to_git(repo_owner, repo_name, tag, file_path):
         # upload_url = upload_url.replace(",label", "")
         # upload_url = upload_url.replace("{?name}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE))
         # that should be more robust!
-        re.sub("\{.*\}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE), upload_url)
+        upload_url = re.sub("\{.*\}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE), upload_url)
 
         length = os.path.getsize(file_path)
         headers.update({"Content-Type": "application/zip",
@@ -531,9 +531,8 @@ class TargetRelease(object):
         with open(docker_file, "w") as fp:
             fp.write(fout)
 
-        if self.new_target:
-            self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
-            self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=config.NIAK.DEV_BRANCH)
+        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
+        self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=config.NIAK.DEV_BRANCH)
 
         self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=self.TMP_BRANCH)
         self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=config.NIAK.DEV_BRANCH)
@@ -548,6 +547,9 @@ class TargetRelease(object):
             True if successful, False otherwise.
 
         """
+        zip_file_path = self._build_niak_with_dependecy()
+        upload_release_to_git(config.GIT.OWNER, config.NIAK.REPO, self.niak_tag, zip_file_path)
+        return
         # update target repo and push
         if self.new_target:
             self._update_target()
@@ -612,7 +614,7 @@ class TargetRelease(object):
     def _merge(self, repo, branch1, branch2, tag):
         """
         Merge branch1 to branch2
-        @TODO Force branch 1 to win every time
+        @TODO Force branch 2 to win every time
         this will prevent merging problems
         :return:
         """
@@ -627,10 +629,8 @@ class TargetRelease(object):
                 repo.create_head(branch1)
                 branch1_ = repo.refs[branch1]
 
-        # branch1_.checkout()
+        branch1_.checkout()
         branch2_ = repo.refs[branch2]
-        branch2_.checkout()
-        # repo.merge('-s', 'recursive', '-X', 'theirs', '{0}'.format(branch1))
         base = repo.merge_base(branch1_, branch2_)
         repo.index.merge_tree(branch2_, base=base)
 

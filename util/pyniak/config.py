@@ -32,7 +32,7 @@ class TARGET:
     PATH = "{}/niak_target".format(ROOT)
     RESULT_DIR = os.path.join(WORK_DIR, "result")  # Niak default output
     AUTO_VERSION = False
-    TAG_NAME = "0.13.2"
+    TAG_NAME = "0.13.3"
 
 
 class NIAK:
@@ -49,7 +49,7 @@ class NIAK:
     RELEASE_BRANCH = "niak-boss"
     DEV_BRANCH = "master"
     # RELEASE_BRANCH = ""
-    TAG_NAME = "v0.13.2"
+    TAG_NAME = "v0.13.3"
     # release Name
     DEPENDENCY_RELEASE = "niak-with-dependencies.zip"
     WORK_DIR = "{}/work/niak-{}".format(ROOT, TAG_NAME)
@@ -60,7 +60,7 @@ class NIAK:
 class PSOM:
     PATH = "{}/psom".format(ROOT)
     URL = "https://github.com/simexp/psom.git"
-    RELEASE_TAG = "v1.2.0"
+    RELEASE_TAG = "v1.2.1"
 
 class BCT:
     url = "https://sites.google.com/site/bctnet/Home/functions/BCT.zip"
