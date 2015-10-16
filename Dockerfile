@@ -6,12 +6,19 @@ ENV NIAK_VERSION v0.13.3
 ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
-RUN mkdir /home/niak \ 
-   && cd /home/niak \
-   && wget https://github.com/SIMEXP/niak/releases/download/${NIAK_VERSION}/${NIAK_RELEASE_NAME}.zip \
-   && unzip ${NIAK_RELEASE_NAME}.zip \
-   && rm ${NIAK_RELEASE_NAME}.zip 
+RUN apt-get install git -y --fix-missing
+RUN cd /home \
+   && git clone https://github.com/SIMEXP/niak.git \
+   && cd niak \
+   && git checkout cbrain_integration 
 
+RUN cd /home/niak/extensions/ \
+   && wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
+   && unzip BCT.zip \
+   && rm BCT.zip
+
+RUN cd /home/niak/extensions/ \
+    && git clone https://github.com/SIMEXP/psom.git
 
 # Build octave configure file
 RUN echo addpath\(genpath\(\"/home/niak/\"\)\)\; >> /etc/octave.conf

@@ -55,7 +55,7 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description='Create and release new Niak target')
+    parser = argparse.ArgumentParser(description='Run a niak script')
 
     parser.add_argument("--file_in")
 
