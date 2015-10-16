@@ -31,10 +31,10 @@ docker run -i -t --privileged --rm \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
        simexp/niak-boss:0.13.1 \
-       /bin/bash -c "cd $HOME; octave --force-gui; /bin/bash"
+       /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
 
-Replace `simexp/niak-boss:0.13.0` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.13.0)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak-boss:0.13.3` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.13.3)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
@@ -52,7 +52,7 @@ This will start a bash terminal (as opposed to the standard OSX tcsh) where you 
 docker run -i -t --privileged --rm \
        -v $HOME:$HOME \
        simexp/niak-boss:0.13.1 \
-       /bin/bash -c "cd $HOME; octave; /bin/bash"
+       /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
 in that terminal.
