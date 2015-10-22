@@ -96,9 +96,9 @@ if ~psom_exist(data.path)
     if strcmp(data.type, 'target_test_niak_mnc1')
         [status,msg] = system(['unzip ' data.path filesep data.name ' -d '  data.path]);
         system(['mv ' data.path filesep '*/* '  data.path ])
-        system(['rm' data.path filesep '*target*' ])
+        system(['rm ' data.path filesep '*target*' ])
     else
-        [status,msg] = system(['unzip ' data.path filesep data.name]);
+        [status,msg] = system(['unzip ' data.path filesep data.name  ' -d '  data.path '/..']);
     end
     if status
         warning('There was a problem unzipping the dataset: %s',msg)
