@@ -334,10 +334,9 @@ if ~ischar(files_in.template)
 end
 file_template             = files_in.template.t1;           % The T1 non-linear average
 file_template_mask        = files_in.template.mask;         % The brain mask
-file_template_mask_erode  = files_in.template.mask_dilated; % The brain mask eroded of 5 mm
-file_template_mask_dilate = files_in.template.mask_eroded;  % The brain mask dilated of 5 mm        
+file_template_mask_erode  = files_in.template.mask_eroded;  % The brain mask eroded of 5 mm
+file_template_mask_dilate = files_in.template.mask_dilated; % The brain mask dilated of 5 mm        
     
-
 %% FILES_OUT
 gb_name_structure = 'files_out';
 gb_list_fields    = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin' , 'anat_nuc_stereonl' , 'mask_stereolin'  , 'mask_stereonl'   , 'classify'        };
@@ -492,11 +491,12 @@ opt_tmp.flag_test            = false;
 opt_tmp.flag_verbose         = flag_verbose;
 niak_brick_anat2stereolin(files_in_tmp,files_out_tmp,opt_tmp);
 
-%% Apply non-uniformity correction in stereotaxic space
+%% Apply non-uniformity correction again in stereotaxic space
 clear files_in_tmp files_out_tmp opt_tmp
 files_in_tmp.vol     = anat_stereolin_raw;
 files_in_tmp.mask    = file_template_mask_erode;
 files_out_tmp.vol_nu = anat_stereolin_nu;
+opt_tmp              = opt.nu_correct;
 opt_tmp.flag_test    = false;
 opt_tmp.flag_verbose = flag_verbose;
 niak_brick_nu_correct(files_in_tmp,files_out_tmp,opt_tmp);
