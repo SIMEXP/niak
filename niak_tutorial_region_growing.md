@@ -41,5 +41,5 @@ opt.region_growing.thre_size = 1000;
 Finally, run the pipeline.
 ```matlab
 opt.flag_test = false;
-[pipeline_rg,opt] = niak_pipeline_stability_rest(files_in,opt);
+[pipeline_rg,opt] = niak_pipeline_region_growing(files_in,opt);
 ```
