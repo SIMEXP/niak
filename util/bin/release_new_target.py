@@ -38,27 +38,41 @@ def main(args=None):
 
     parser.add_argument('--dry_run', '-d', action='store_true', help='no commit no push!')
 
-    parser.add_argument('--name', '-n', help='the path to the Niak git repo',
-                        default=config.TARGET.TAG_NAME)
-
-    parser.add_argument('--niak_path', '-N', help='the path to the Niak git repo',
+    parser.add_argument('--niak_path', '-N', help='the path to the Niak repo',
                         default=config.NIAK.PATH)
 
-    parser.add_argument('--niak_url', '-O', help='the path to the Niak git repo',
+    parser.add_argument('--niak_url', '-O', help='the url to the Niak git repo',
                         default=config.NIAK.URL)
 
-    parser.add_argument('--release', '-r', action='store_true', help='If True, will push the target to the'
+    parser.add_argument('--psom_path', '-P', help='the path to the Niak repo',
+                        default=config.PSOM.PATH)
+
+    parser.add_argument('--psom_url', '-M', help='the url to the Niak git repo',
+                        default=config.PSOM.URL)
+
+
+
+
+    parser.add_argument('--release_target', '-r', action='store_true', help='If True, will push the target to the'
                                                                      'repo and update Niak so niak_test_all point '
                                                                      'to the target')
+
+    parser.add_argument('--no_niak_release', '-n', action='store_false', help='Will not push niak to '
+                                                                              'url repo if this option is given')
 
     parser.add_argument('--redo_target', '-R', help='will recompute target event if already present')
 
 
-    parser.add_argument('--target_path', '-T', help='the path to the Niak git repo',
+    parser.add_argument('--target_path', '-T', help='the path to the target ',
                         default=config.TARGET.PATH)
 
-    parser.add_argument('--target_url', '-U', help='the path to the Niak git repo',
+    parser.add_argument('--target_url', '-U', help='the url to the target',
                         default=config.TARGET.URL)
+
+    parser.add_argument('--target_name', '-G', help='the name of the target ',
+                        default=config.TARGET.TAG_NAME)
+
+
 
     parser.add_argument('--target_work_dir', '-w', help='the path to the Target work dir',
                         default=config.TARGET.WORK_DIR)
@@ -71,10 +85,15 @@ def main(args=None):
 
     new_target = process.TargetRelease(dry_run=parsed.dry_run,
                                        niak_path=parsed.niak_path,
+                                       niak_url=parsed.niak_url,
                                        target_path=parsed.target_path,
-                                       target_name=parsed.name,
+                                       target_name=parsed.target_name,
                                        work_dir=parsed.target_work_dir,
-                                       new_target=False)
+                                       new_target=parsed.release_target,
+                                       psom_path=parsed.psom_path,
+                                       psom_url=parsed.psom_url)  # ,
+                                       # no_niak_release=parser.no_niak_release)
+
 
     new_target.start()
 
