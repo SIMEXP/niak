@@ -160,8 +160,8 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% gériatrie de Montréal, département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2008-10.
+% griatrie de Montral, dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2008-10.
 % Maintainer : pbellec@bic.mni.mcgill.ca
 % See licensing information in the code.
 % Keywords : medical imaging, coregistration, rigid-body motion, fMRI, T1
@@ -479,6 +479,7 @@ for num_i = 1:length(list_fwhm)
     [hdr_anat,vol_anat]    = niak_read_vol(file_tmp2);
     vol_anat(~mask_anat_c) = 0;  
     vol_anat(mask_anat_c)  = vol_anat(mask_anat_c)-median(vol_anat(mask_anat_c));  
+    thresh_anat = min(vol_anat(:));
     hdr_anat.file_name     = file_anat_crop;
     niak_write_vol(hdr_anat,vol_anat);
     
@@ -499,21 +500,21 @@ for num_i = 1:length(list_fwhm)
     vol_func(~mask_func_c) = 0;    
     vol_func(mask_func_c)  = vol_func(mask_func_c) - median(vol_func(mask_func_c));
     hdr_func.file_name     = file_func_crop;
+    thresh_func = min(vol_func(:));
     niak_write_vol(hdr_func,vol_func);        
 
     %% applying MINCTRACC    
-    instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -',mes_val,' -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
+    instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -',mes_val,' -threshold ',num2str(floor(min(thresh_anat,thresh_func))),' 0 ',' -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
 
     if flag_verbose
         fprintf('Spatial coregistration using %s :\n     %s\n',mes_val,instr_minctracc);
     end
-    if flag_verbose        
-        system(instr_minctracc)
-    else
-        [s,str_log] = system(instr_minctracc);
-        if s~=0
-            error('There was a problem with MINCTRACC : %s',str_log);
-        end
+    [s,str_log] = system(instr_minctracc);
+    if s~=0
+        error('There was a problem with MINCTRACC : %s',str_log);
+    end
+    if flag_verbose
+        fprintf(str_log);
     end
     
     %% Updating the guess    
@@ -536,14 +537,14 @@ if flag_verbose
     fprintf('\nWritting the outputs\n');
 end
 
-[succ,msg] = system(cat(2,'xfmconcat ',file_transf_init,' ',file_transf_guess,' ',file_transf_est));
+[succ,msg] = system(cat(2,'xfmconcat -clobber ',file_transf_init,' ',file_transf_guess,' ',file_transf_est));
 if succ~=0
     error(msg)
 end
 
 if ~strcmp(files_out.transformation,'gb_niak_omitted')
     if flag_invert_transf_output
-        [succ,msg] = system(cat(2,'xfminvert ',file_transf_est,' ',files_out.transformation));
+        [succ,msg] = system(cat(2,'xfminvert -clobber ',file_transf_est,' ',files_out.transformation));
         if succ~=0
             error(msg)
         end
