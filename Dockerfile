@@ -18,7 +18,9 @@ RUN cd /home/niak/extensions/ \
    && rm BCT.zip
 
 RUN cd /home/niak/extensions/ \
-    && git clone https://github.com/SIMEXP/psom.git
+   && git clone https://github.com/SIMEXP/psom.git\
+   && cd psom \
+   && git checkout cbrain_integration 
 
 # Build octave configure file
 RUN echo addpath\(genpath\(\"/home/niak/\"\)\)\; >> /etc/octave.conf
