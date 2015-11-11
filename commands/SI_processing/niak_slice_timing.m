@@ -1,8 +1,4 @@
 function [vol_a,opt] = niak_slice_timing(vol,opt)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_SLICE_TIMING
-%
 % Correct for differences in slice timing in a 4D fMRI acquisition via
 % temporal interpolation
 %
@@ -19,7 +15,7 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 %       (structure) with the following fields :
 %
 %       INTERPOLATION
-%           (string, default 'spline') the method for temporal interpolation,
+%           (string, default 'linear') the method for temporal interpolation,
 %           Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
 %
 %       SLICE_ORDER
@@ -75,8 +71,12 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 % Adapted to NIAK format and patched to avoid loops by P Bellec, MNI 2008.
 %
 % Copyright (C) Wellcome Department of Imaging Neuroscience 2005
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, 
+% Montreal Neurological Institute, 2008-2010.
+% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Québec, Canada, 2010-2015
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, slice timing, fMRI
 
@@ -100,8 +100,8 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields = {'interpolation','slice_order','ref_slice','timing','flag_verbose'};
-gb_list_defaults = {'sinc',NaN,[],NaN,1};
+gb_list_fields   = {'interpolation' , 'slice_order' , 'ref_slice' , 'timing' , 'flag_verbose' };
+gb_list_defaults = {'linear'        , NaN           , []          , NaN      , 1              };
 niak_set_defaults
 
 nb_slices = length(slice_order);
@@ -143,8 +143,7 @@ switch interpolation
 
             slices_z = squeeze(vol(:,:,num_z,:));
             slices_z = reshape(slices_z,[nx*ny,nt])';
-            slices_z_a = interp1(double(times_z(:)),double([slices_z(1,:) ; slices_z ; slices_z(nt,:)]),double(times_ref(:)),'linear');
-            %slices_z_a = interp1(times_z(:),[slices_z(1,:) ; slices_z ; slices_z(nt,:)],times_ref(:),interpolation);
+            slices_z_a = interp1(double(times_z(:)),double([slices_z(1,:) ; slices_z ; slices_z(nt,:)]),double(times_ref(:)),interpolation);
             vol_a(:,:,num_z,:) = reshape(slices_z_a',[nx ny nt]);
         end
 
