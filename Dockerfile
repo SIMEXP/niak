@@ -7,15 +7,17 @@ ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
 RUN apt-get install git -y --fix-missing
-RUN cd /home \
-   && git clone https://github.com/SIMEXP/niak.git \
-   && cd niak \
-   && git checkout cbrain_integration 
 
 RUN cd /home/niak/extensions/ \
    && wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
    && unzip BCT.zip \
    && rm BCT.zip
+
+RUN cd /home \
+   && git clone https://github.com/SIMEXP/niak.git \
+   && cd niak \
+   && git checkout cbrain_integration 
+
 
 RUN cd /home/niak/extensions/ \
    && git clone https://github.com/SIMEXP/psom.git\
