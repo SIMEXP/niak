@@ -23,7 +23,7 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %        at the begining of the time series. 
 %
 %    INTERPOLATION
-%        (string, default 'spline') the method for temporal interpolation,
+%        (string, default 'linear') the method for temporal interpolation,
 %        Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
 %
 %    TYPE_ACQUISITION
@@ -255,7 +255,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields      = { 'iter_nu_correct' , 'arg_nu_correct' , 'flag_nu_correct' , 'flag_center' , 'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
-gb_list_defaults    = { 3                 , '-distance 200'  , false             , false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,'spline'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
+gb_list_defaults    = { 3                 , '-distance 200'  , false             , false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,'linear'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.

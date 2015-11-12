@@ -191,7 +191,11 @@ for num_s = 1:length(list_subject)
                    
     list_func = { 'mask_stereonl'  , ...
                   'mean_stereonl'  , ...
-                  'std_stereonl'};
+                  'std_stereonl'   , ...
+                  'mask_stereolin'  , ...
+                  'mean_stereolin'  , ...
+                  'std_stereolin'};
+
     list_transf = { 'nativefunc_to_stereolin' , ...
                     'nativefunc_to_stereonl'  , ...
                     'nativet1_to_stereolin'   , ...
@@ -212,7 +216,7 @@ for num_s = 1:length(list_subject)
 end
 
 %% Grab the AAL template 
-files.template_aal = [path_anat 'template_aal.mnc.gz'];
+files.template_aal = [path_anat 'template_aal' ext];
 
 %% Grab the results of quality control -- Group confounds
 list_conf = { 'gse' , 'high' , 'motion' , 'slow_drift' , 'vent' , 'wm' };
@@ -245,6 +249,13 @@ files.quality_control.group_coregistration.func.mask_average = [path_qc 'group_c
 files.quality_control.group_coregistration.func.mask_group   = [path_qc 'group_coregistration' filesep 'func_mask_group_stereonl' ext];
 files.quality_control.group_coregistration.func.mean_average = [path_qc 'group_coregistration' filesep 'func_mean_average_stereonl' ext];
 files.quality_control.group_coregistration.func.mean_std     = [path_qc 'group_coregistration' filesep 'func_mean_std_stereonl' ext];
+
+files.quality_control.group_coregistration.func.stereolin.pdf          = [path_qc 'group_coregistration' filesep 'func_fig_qc_coregister_stereolin.pdf'];
+files.quality_control.group_coregistration.func.stereolin.csv          = [path_qc 'group_coregistration' filesep 'func_tab_qc_coregister_stereolin.csv'];
+files.quality_control.group_coregistration.func.stereolin.mask_average = [path_qc 'group_coregistration' filesep 'func_mask_average_stereolin' ext];                        
+files.quality_control.group_coregistration.func.stereolin.mask_group   = [path_qc 'group_coregistration' filesep 'func_mask_group_stereolin' ext];
+files.quality_control.group_coregistration.func.stereolin.mean_average = [path_qc 'group_coregistration' filesep 'func_mean_average_stereolin' ext];
+files.quality_control.group_coregistration.func.stereolin.mean_std     = [path_qc 'group_coregistration' filesep 'func_mean_std_stereolin' ext];
 
 %% Grab the results of quality control -- CORSICA
 % files.quality_control.group_corsica.pdf  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.pdf'];  % Commented out because this is an optional output
