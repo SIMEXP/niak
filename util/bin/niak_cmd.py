@@ -12,42 +12,34 @@ import re
 import sys
 import subprocess
 
-sys.path.append("../")
-
+sys.path.append("{}/..".format(os.path.dirname(os.path.realpath(__file__))))
+import pyniak.load_pipeline
 
 OPTION_PREFIX = "--opt"
 ESCAPE_STRING = "666_____666_____666"
 
-SUPPORTED_PIPES = ["niak_pipeline_fmri_preprocess"]
-
-# class prefixArgParser(argparse.ArgumentParser)
-#
-#     def __init__(self, option):
-#         super().__init__()
-
 def build_opt(option):
+    """
+    Translate all option with prefix --opt to into pom options
 
+    :param option: option of the form  --opt-some-value-meaningful-for-psom VAL
+    :return: a string of the form opt.some.value.meaningful.for.psom=VAL
+    """
     parser = argparse.ArgumentParser(description="All options")
 
     command = []
     for i, o in enumerate(option):
         if OPTION_PREFIX in o:
-            # option[i] = o.replace("-", ESCAPE_STRING)
-            option[i] = re.sub("(\w)-(\w)","\g<1>{}\g<2>".format(ESCAPE_STRING), o)
+            option[i] = re.sub("(\w)-(\w)", "\g<1>{0}\g<2>".format(ESCAPE_STRING), o)
             parser.add_argument(option[i], nargs='+')
 
     parsed = parser.parse_known_args(option)
     print(parser)
 
     for k, v in parsed[0].__dict__.items():
-        command += ["{}=\'{}\'".format(k.replace(ESCAPE_STRING, "."), " ".join(v))]
+        command += ["{0}=\'{1}\'".format(k.replace(ESCAPE_STRING, "."), " ".join(v))]
 
     return command
-
-
-class ParseInputDir( object ):
-    def __init__(self, pipe_name):
-        pass
 
 
 def main(args=None):
@@ -57,40 +49,26 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description='Run a niak script')
 
-    parser.add_argument("--file_in")
+    parser.add_argument("--file_in", default=None)
 
-    parser.add_argument("--folder_out")
+    parser.add_argument("--folder_out", default=None)
 
-    parsed, options = parser.parse_known_args(args)
+    parser.add_argument("--pipeline", "-p", default=None)
 
-    opt_list = ["opt=struct"]
+    parsed, unformated_options = parser.parse_known_args(args)
 
-    opt_list += ["file_in=struct"]
+    options = build_opt(unformated_options)
 
-    opt_list += build_opt(options)
+    pipeline_name = parsed.pipeline
 
-    opt_list += ["opt.folder_out=\'{}\'".format(parsed.folder_out)]
+    if pipeline_name is None:
+        pipeline_name = "niak_pipeline_fmri_preprocess"
 
-    # Todo find a good strategyy to load subject
-    # % Structural scan
-    opt_list += ["files_in.subject1.anat=\'{}/anat_subject1.mnc.gz\'".format(parsed.file_in)]
-    # % fMRI run 1
-    opt_list += ["files_in.subject1.fmri.session1.motor=\'{}/func_motor_subject1.mnc.gz\'".format(parsed.file_in)]
+    pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.file_in, parsed.folder_out, options=options)
 
-    opt_list += ["files_in.subject2.anat=\'{}/anat_subject2.mnc.gz\'".format(parsed.file_in)]
-    # % fMRI run 1
-    opt_list += ["files_in.subject2.fmri.session1.motor=\'{}/func_motor_subject2.mnc.gz\'".format(parsed.file_in)]
-
-
-    # octave_cmd = ["/usr/bin/env", "octave", "--eval \"{0};niak_pipeline_fmri_preprocess(files_in,opt)\""\
-    octave_cmd = ["/usr/bin/env", "octave", "--eval", "{0};niak_pipeline_fmri_preprocess(files_in, opt)"\
-        .format(";".join(opt_list), parsed.file_in)]
-
-    print(octave_cmd)
-    print("")
-    print(" ".join(octave_cmd))
-    subprocess.call(octave_cmd)
+    pipeline.run()
 
 
 if __name__ == '__main__':
     main()
+   # main(['--file_in', 'data_test_niak_mnc1', '--folder_out', 'results-directory', '--opt-psom-max-queued', '4', '--opt-slice_timing-type_scanner', 'Bruker', '--opt-slice_timing-type_acquisition', '"interleaved ascending"', '--opt-slice_timing-delay_in_tr', '0' '--opt-resample_vol-voxel_size', '10' '--opt-t1_preprocess-nu_correct-arg', "'-distance 75'", '--opt-time_filter_hp', '0.01', '--opt-time_filter_lp', 'Inf', '--opt-regress_confounds-flag_gsc', 'true' '--opt-regress_confounds-flag_scrubbing','true', '--opt-regress_confounds-thre_fd', '0.5' '--opt-smooth_vol-fwhm', '6'])

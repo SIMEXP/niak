@@ -1,3 +1,4 @@
 *.m~
 BCT/
 *.swp
+*.pyc
