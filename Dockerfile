@@ -24,6 +24,9 @@ RUN cd /home/niak/extensions/ \
    && cd psom \
    && git checkout cbrain_integration 
 
+RUN chmod 777 /home/niak/extensions/psom/psom_worker.py && ln -s /home/niak/extensions/psom/psom_worker.py /usr/bin/psom_worker.py
+
+
 # Build octave configure file
 RUN echo addpath\(genpath\(\"/home/niak/\"\)\)\; >> /etc/octave.conf
 
