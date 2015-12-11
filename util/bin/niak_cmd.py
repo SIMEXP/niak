@@ -27,7 +27,7 @@ def build_opt(option):
     """
     parser = argparse.ArgumentParser(description="All options")
 
-    command = []
+    opt_dico = {}
     for i, o in enumerate(option):
         if OPTION_PREFIX in o:
             option[i] = re.sub("(\w)-(\w)", "\g<1>{0}\g<2>".format(ESCAPE_STRING), o)
@@ -37,9 +37,9 @@ def build_opt(option):
     print(parser)
 
     for k, v in parsed[0].__dict__.items():
-        command += ["{0}=\'{1}\'".format(k.replace(ESCAPE_STRING, "."), " ".join(v))]
+        opt_dico["{0}".format(k.replace(ESCAPE_STRING, "."))] = "{0}".format(v[0])
 
-    return command
+    return opt_dico
 
 
 def main(args=None):
@@ -49,11 +49,12 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description='Run a niak script')
 
+    parser.add_argument("--pipeline", "-p", default=None)
+
     parser.add_argument("--file_in", default=None)
 
     parser.add_argument("--folder_out", default=None)
 
-    parser.add_argument("--pipeline", "-p", default=None)
 
     parsed, unformated_options = parser.parse_known_args(args)
 
@@ -62,7 +63,7 @@ def main(args=None):
     pipeline_name = parsed.pipeline
 
     if pipeline_name is None:
-        pipeline_name = "niak_pipeline_fmri_preprocess"
+        pipeline_name = "Niak_fmri_preprocess"
 
     pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.file_in, parsed.folder_out, options=options)
 
@@ -71,4 +72,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-   # main(['--file_in', 'data_test_niak_mnc1', '--folder_out', 'results-directory', '--opt-psom-max-queued', '4', '--opt-slice_timing-type_scanner', 'Bruker', '--opt-slice_timing-type_acquisition', '"interleaved ascending"', '--opt-slice_timing-delay_in_tr', '0' '--opt-resample_vol-voxel_size', '10' '--opt-t1_preprocess-nu_correct-arg', "'-distance 75'", '--opt-time_filter_hp', '0.01', '--opt-time_filter_lp', 'Inf', '--opt-regress_confounds-flag_gsc', 'true' '--opt-regress_confounds-flag_scrubbing','true', '--opt-regress_confounds-thre_fd', '0.5' '--opt-smooth_vol-fwhm', '6'])
+    # main([ "-p","Niak_fmri_preprocess",  '--file_in', 'data_test_niak_mnc1', '--folder_out', 'results-directory', '--opt-psom-max_queued', '4', '--opt-slice_timing-type_scanner', 'Bruker', '--opt-slice_timing-type_acquisition', '"interleaved ascending"', '--opt-slice_timing-delay_in_tr', '0', '--opt-resample_vol-voxel_size', '10', '--opt-t1_preprocess-nu_correct-arg', "'-distance 75'", '--opt-time_filter-hp', '0.01', '--opt-time_filter-lp', 'Inf', '--opt-regress_confounds-flag_gsc', 'true', '--opt-regress_confounds-flag_scrubbing','true', '--opt-regress_confounds-thre_fd', '0.5', '--opt-smooth_vol-fwhm', '6'])
