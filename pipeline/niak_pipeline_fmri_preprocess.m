@@ -475,7 +475,6 @@ end
 
 %% FILES_IN
 files_in = sub_check_format(files_in); % check the format of FILES_IN
-files_in = prune_files_in(files_in); % prune empty sessions/runs or remove subject if missing all func files or anat file 
 [fmri_c,label] = niak_fmri2cell(files_in); % Convert FILES_IN into a cell of string form
 [path_f,name_f,ext_f] = niak_fileparts(fmri_c{1}); % Get the extension of outputs
 
@@ -858,7 +857,7 @@ function files_in = sub_check_format(files_in)
 
 if ~isstruct(files_in)
 
-    error('FILES_IN should be a structure!')   
+    error('FILES_IN should be a structure')   
 
 else   
 
@@ -868,15 +867,15 @@ else
         subject = list_subject{num_s};        
         
         if ~isstruct(files_in.(subject))
-            error('FILES_IN.%s should be a structure!',upper(subject));
+            error('FILES_IN.%s should be a structure',upper(subject));
         end
         
         if strfind(subject,'_')
-           error('FILES_IN.%s souldnt have underscore on the subject ID !',upper(subject));
+           error('FILES_IN.%s should not have an underscore in the subject ID',upper(subject));
         end
         
         if ~isfield(files_in.(subject),'fmri')
-            error('I could not find the field FILES_IN.%s.FMRI!',upper(subject));
+            error('I could not find the field FILES_IN.%s.FMRI',upper(subject));
         end
                 
         list_session = fieldnames(files_in.(subject).fmri);
@@ -884,7 +883,7 @@ else
         for num_c = 1:length(list_session)
             session = list_session{num_c};
             if ~iscellstr(files_in.(subject).fmri.(session))&&~isstruct(files_in.(subject).fmri.(session))||strfind(session,'_')
-                error('FILES_IN.%s.fmri.%s should be a structure or a cell of strings and not having underscore on the session ID!',upper(subject),upper(session));
+                error('FILES_IN.%s.fmri.%s should be a structure or a cell of strings and should not have an underscore in the session ID',upper(subject),upper(session));
             end
             
             list_run = fieldnames(files_in.(subject).fmri.(session));
@@ -892,18 +891,18 @@ else
             for num_r = 1:length(list_run)
                 run = list_run{num_r};
                 if strfind(run,'_')
-                   error('FILES_IN.%s.fmri.%s.%s soudnt have underscore on the run ID',upper(subject),upper(session),upper(run));
+                   error('FILES_IN.%s.fmri.%s.%s should not have an underscore in the run ID',upper(subject),upper(session),upper(run));
                 end
             end   
              
         end
                    
         if ~isfield(files_in.(subject),'anat')
-            error('I could not find the field FILES_IN.%s.ANAT!',upper(subject));
+            error('I could not find the field FILES_IN.%s.ANAT',upper(subject));
         end
                 
         if ~ischar(files_in.(subject).anat)
-             error('FILES_IN.%s.ANAT is not a string!',upper(subject));
+             error('FILES_IN.%s.ANAT is not a string',upper(subject));
         end
         
         if ~isfield(files_in.(subject),'component_to_keep')
@@ -911,58 +910,6 @@ else
         end        
     end    
 
-end
-
-function files_in = prune_files_in(files_in)
-% Remove non existing files and subject from the files_in structure:
-% *If subject is missing ant files he will be dicarded 
-% *If subject is missing all functional files he will be discarded
-% *Any run or ssession misssing will be removed from the sctructues  
-
-list_id= fieldnames(files_in);
-for num_id=1:length(list_id)
-    id = list_id{num_id};
-    list_session = fieldnames(files_in.(id).fmri);
-    flag_ok_stack = [];
-    for num_sess = 1:length(list_session) % Sessions
-        session = list_session{num_sess};
-        list_run = fieldnames(files_in.(id).fmri.(session));
-        eval( [ 'flag_ok_' session ' = true(length( list_run ),1);']);
-        for num_f = 1:length(list_run) % Runs
-            run = list_run{num_f};
-            if ~psom_exist(files_in.(id).fmri.(session).(run))
-               eval( [ 'flag_ok_' session '(num_f ) = false;' ]);
-            end        
-        end
-        flag_ok_stack = [flag_ok_stack ; eval( [ 'flag_ok_' session ])];
-    end
-    flag_ok = flag_ok_stack;
-    if ~any(flag_ok)||~psom_exist(files_in.(id).anat)
-       if ~any(flag_ok)
-          warning('No functional data for subject %s, I suppressed it',id);
-       else
-          warning ('The anat file %s does not exist, I suppressed that subject %s',files_in.(id).anat,id);
-       end
-       files_in = rmfield(files_in,id);
-    elseif any(~flag_ok)
-       for num_sess = 1:length(list_session) 
-           session = list_session{num_sess};
-           flag_ok_tmp = eval( [ 'flag_ok_' session ';']);
-           list_run = fieldnames(files_in.(id).fmri.(session));
-           if ~any(~flag_ok_tmp)
-              continue
-           else    
-              list_run = fieldnames(files_in.(id).fmri.(session));
-              files_in.(id).fmri.(session) = rmfield(files_in.(id).fmri.(session),list_run(~flag_ok_tmp));
-              warning ('I suppressed the following runs for subject %s because the files were missing:',id);
-              list_not_ok = find(~flag_ok_tmp);
-              for ind_not_ok = list_not_ok(:)'
-                  fprintf(' %s',list_run{ind_not_ok});
-              end
-              fprintf('\n')
-           end    
-       end
-    end
 end
 
 
