@@ -15,9 +15,13 @@ def num(s):
         return float(s)
 
 def string(s):
+    """
+    :param s: A PSOM option
+    :return: The right cast for octave
+    """
     s.replace("\\", '')
     s = re.match("[\'\"]?([\w+\ -]*)[\'\"]?", s).groups()[0]
-    if s in ['true', 'false']:
+    if s in ['true', 'false', 'Inf']:
         return "{0}".format(s)
     return "'{0}'".format(s)
 
