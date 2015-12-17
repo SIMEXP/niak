@@ -2,18 +2,27 @@ function [files_in,files_out,opt] = niak_brick_mask_anat2func(files_in,files_out
 % Adapt a T1 brain mask to fit a typical BOLD brain mask. 
 %
 % SYNTAX:
-% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_anat2func(FILES_IN,FILES_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_MASK_ANAT2FUNC(FILES_IN,FILES_OUT,OPT)
 %
 % _________________________________________________________________________
 % INPUTS
 %
-% FILES_IN.T1_VOL (string) a T1 volume (in linear stereotaxic space). 
-% FILES_IN.T1_MASK (string) a brain mask defined on a T1 image (in linear stereotaxic space). 
-% FILES_IN.AVG_MASK (string) an average of many individual BOLD masks (in non-linear 
-%    stereotaxic space). This will be thresholded to generate the BOLD mask. 
-% FILES_IN.DIL_MASK (string) a dilated mask that comprises all intra-cranial CSF as 
+% FILES_IN.ANAT 
+%   (string) a T1 volume (in linear stereotaxic space). 
+%
+% FILES_IN.MASK_ANAT 
+%   (string) a brain mask defined on a T1 image (in linear stereotaxic space). 
+%
+% FILES_IN.MASK_AVG 
+%   (string) an average of many individual BOLD masks (in non-linear 
+%   stereotaxic space). This will be thresholded to generate the BOLD mask. 
+%
+% FILES_IN.MASK_BOLD 
+%    (string) a dilated mask that comprises all intra-cranial CSF as 
 %    well as meninges (in non-linear stereotaxic space). 
-% FILES_IN.TRANSF_STEREOLIN2NL (string) a .xfm non-linear transformation from 
+%
+% FILES_IN.TRANSF_STEREOLIN2NL 
+%    (string) a .xfm non-linear transformation from 
 %    linear stereotaxic space to non-linear stereotaxic space. 
 %
 % FILES_OUT   
@@ -25,7 +34,7 @@ function [files_in,files_out,opt] = niak_brick_mask_anat2func(files_in,files_out
 %   THRESH_AVG (scalar, default 0.65) the threshold used to binarize the average
 %      BOLD masks to combine with the T1 mask. 
 %
-%   Z_CUT (scalar, default 15) only apply the restrictions from AVG_MASK on voxels
+%   Z_CUT (scalar, default 15) only apply the restrictions from MASK_AVG on voxels
 %       with z coordinates (in MNI space) below 15 mm. This includes ventromedial 
 %       and temporal cortices.
 %
@@ -86,8 +95,8 @@ end
 
 %% FILES_IN
 files_in = psom_struct_defaults( files_in , ...
-           { 't1_vol' , 't1_mask' , 'avg_mask' , 'dil_mask' , 'transf_stereolin2nl' } , ...
-           { NaN      , NaN       , NaN        , NaN        , NaN                   });
+           { 'anat' , 'mask_anat' , 'mask_avg' , 'mask_dil' , 'transf_stereolin2nl' } , ...
+           { NaN    , NaN         , NaN        , NaN        , NaN                   });
 
 %% FILES_OUT
 if ~ischar(files_out)
@@ -112,12 +121,12 @@ end
 %%%%%%%%%%%%%%%%
 
 % Read the anat volume
-[hdr,volt1] = niak_read_vol(files_in.t1_vol);
+[hdr,volt1] = niak_read_vol(files_in.anat);
 
 %% Resample the dilated mask in stereolin space
 file_mask_dil_r = niak_file_tmp('_mask_dil_r.mnc');
-in.source = files_in.dil_mask;
-in.target = files_in.t1_vol;
+in.source = files_in.mask_dil;
+in.target = files_in.anat;
 in.transformation = files_in.transf_stereolin2nl;
 opt.flag_invert_transf = true;
 opt.interpolation = 'nearest_neighbour';
@@ -125,7 +134,7 @@ niak_brick_resample_vol(in,file_mask_dil_r,opt);
 
 %% Read brain masks
 [hdr,mask_dil]   = niak_read_vol(file_mask_dil_r);
-[hdr,mask_brain] = niak_read_vol(files_in.t1_mask);
+[hdr,mask_brain] = niak_read_vol(files_in.mask_anat);
 mask_dil = mask_dil>0;
 mask_brain = mask_brain>0;
 
@@ -146,14 +155,14 @@ mask_csf = false(size(volt1));
 mask_csf(mask_dil & ~mask_brain) = mask_outside == ind;
 
 %% Extract a group mask of functional data 
-file_avg_mask_r = niak_file_tmp('_avg_mask_r.mnc');
-in.source = files_in.avg_mask;
-in.target = files_in.t1_vol;
+file_mask_avg_r = niak_file_tmp('_mask_avg_r.mnc');
+in.source = files_in.mask_avg;
+in.target = files_in.anat;
 in.transformation = files_in.transf_stereolin2nl;
 opt.flag_invert_transf = true;
 opt.interpolation = 'tricubic';
-niak_brick_resample_vol(in,file_avg_mask_r,opt);
-[hdr,mask_avg] = niak_read_vol(file_avg_mask_r);
+niak_brick_resample_vol(in,file_mask_avg_r,opt);
+[hdr,mask_avg] = niak_read_vol(file_mask_avg_r);
 coord_v = niak_coord_world2vox([0 0 opt.zcut],hdr.info.mat);
 mask_func = mask_avg>opt.thresh_avg;
 
@@ -166,4 +175,4 @@ hdr.file_name = files_out;
 niak_write_vol(hdr,mask_brain2);
 
 %% Clean up
-psom_clean({file_avg_mask_r,file_mask_dil_r});
+psom_clean({file_mask_avg_r,file_mask_dil_r});
