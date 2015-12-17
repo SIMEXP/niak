@@ -31,6 +31,11 @@ function [files_in,files_out,opt] = niak_brick_mask_anat2func(files_in,files_out
 % OPT           
 %   (structure) with the following fields :
 %
+%   RAND_SEED
+%      (scalar, default []) The specified value is used to seed the random
+%      number generator with PSOM_SET_RAND_SEED. If left empty, no action
+%      is taken.
+%
 %   THRESH_AVG (scalar, default 0.65) the threshold used to binarize the average
 %      BOLD masks to combine with the T1 mask. 
 %
@@ -109,8 +114,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults ( opt , ...
-      { 'zcut' , 'thresh_avg' , 'flag_verbose' , 'flag_test' }, ...
-      { 15     , 0.65         , true           , false       });
+      { 'rand_seed' , 'zcut' , 'thresh_avg' , 'flag_verbose' , 'flag_test' }, ...
+      { []          , 15     , 0.65         , true           , false       });
 
 if opt.flag_test == 1
     return
@@ -119,6 +124,11 @@ end
 %%%%%%%%%%%%%%%%
 %% The brick starts here %%
 %%%%%%%%%%%%%%%%
+
+%% Seed the random generator
+if ~isempty(opt.rand_seed)
+    psom_set_rand_seed(opt.rand_seed);
+end
 
 % Read the anat volume
 [hdr,volt1] = niak_read_vol(files_in.anat);
