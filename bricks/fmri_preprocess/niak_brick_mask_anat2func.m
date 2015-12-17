@@ -95,8 +95,8 @@ end
 
 %% FILES_IN
 files_in = psom_struct_defaults( files_in , ...
-           { 'anat' , 'mask_anat' , 'mask_avg' , 'mask_dil' , 'transf_stereolin2nl' } , ...
-           { NaN    , NaN         , NaN        , NaN        , NaN                   });
+           { 'anat' , 'mask_anat' , 'mask_avg' , 'mask_bold' , 'transf_stereolin2nl' } , ...
+           { NaN    , NaN         , NaN        , NaN         , NaN                   });
 
 %% FILES_OUT
 if ~ischar(files_out)
@@ -124,24 +124,24 @@ end
 [hdr,volt1] = niak_read_vol(files_in.anat);
 
 %% Resample the dilated mask in stereolin space
-file_mask_dil_r = niak_file_tmp('_mask_dil_r.mnc');
-in.source = files_in.mask_dil;
+file_mask_bold_r = niak_file_tmp('_mask_bold_r.mnc');
+in.source = files_in.mask_bold;
 in.target = files_in.anat;
 in.transformation = files_in.transf_stereolin2nl;
 opt.flag_invert_transf = true;
 opt.interpolation = 'nearest_neighbour';
-niak_brick_resample_vol(in,file_mask_dil_r,opt);
+niak_brick_resample_vol(in,file_mask_bold_r,opt);
 
 %% Read brain masks
-[hdr,mask_dil]   = niak_read_vol(file_mask_dil_r);
+[hdr,mask_bold]   = niak_read_vol(file_mask_bold_r);
 [hdr,mask_brain] = niak_read_vol(files_in.mask_anat);
-mask_dil = mask_dil>0;
+mask_bold = mask_bold>0;
 mask_brain = mask_brain>0;
 
 %% Extract a csf mask
 
 % First get the values that lie between the brain and skull
-val_outside = volt1(mask_dil & ~mask_brain);
+val_outside = volt1(mask_bold & ~mask_brain);
 % Now run a k-means with 3 classes
 nb_classes = 3;
 mask_outside = niak_kmeans_clustering(val_outside(:)',struct('nb_classes',3,'flag_verbose',true));
@@ -152,7 +152,7 @@ end
 [val,ind] = min(valm);
 % Just extract the class with smallest average values on the T1 image
 mask_csf = false(size(volt1));
-mask_csf(mask_dil & ~mask_brain) = mask_outside == ind;
+mask_csf(mask_bold & ~mask_brain) = mask_outside == ind;
 
 %% Extract a group mask of functional data 
 file_mask_avg_r = niak_file_tmp('_mask_avg_r.mnc');
@@ -175,4 +175,4 @@ hdr.file_name = files_out;
 niak_write_vol(hdr,mask_brain2);
 
 %% Clean up
-psom_clean({file_mask_avg_r,file_mask_dil_r});
+psom_clean({file_mask_avg_r,file_mask_bold_r});
