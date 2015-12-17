@@ -27,12 +27,12 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 %   SIZE_OUTPUT 
 %       (string, default 'quality_control') possible values : 
-%       'quality_control’, ‘all’.
+%       'quality_control, all.
 %       The quantity of intermediate results that are generated. 
-%           * With the option ‘quality_control’, only the preprocessed 
+%           * With the option quality_control, only the preprocessed 
 %             data and quality controls at the final stage are generated. 
 %             All intermediate outputs are cleaned as soon as possible. 
-%           * With the option ‘all’, all possible outputs are generated at 
+%           * With the option all, all possible outputs are generated at 
 %             each stage of the pipeline, and the intermediate results are
 %             kept
 %
@@ -52,6 +52,8 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           MASK (string) a brain mask
 %           MASK_DILATED (string) a dilated brain mask
 %           MASK_ERODED (string) an eroded brain mask
+%           MASK_BOLD (string) a brain mask merged dilated to include all tissues up to the skull.
+%           MASK_AVG (string) the average of many brain mask for BOLD images. 
 %           MASK_WM (string) a (conservative) white matter brain mask
 %           MASK_VENT (string) a (conservative) mask of the lateral ventricles
 %           MASK_WILLIS (string) a loose mask of the basal artery and the circle of Willis
@@ -108,6 +110,17 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %       FLAG_SKIP
 %           (boolean, default true) if the flag is true, do not extract 
 %           PVE maps.
+%
+%   MASK_ANAT2FUNC
+%       (structure) options of NIAK_BRICK_MASK_ANAT2FUNC (generation
+%       of a T1 brain mask for registration with BOLD images. 
+%   
+%       THRESH_AVG (scalar, default 0.65) the threshold used to binarize the average
+%          BOLD masks to combine with the T1 mask. 
+%
+%       Z_CUT (scalar, default 15) only apply the restrictions from AVG_MASK on voxels
+%          with z coordinates (in MNI space) below 15 mm. This includes ventromedial 
+%          and temporal cortices.
 %
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
@@ -481,8 +494,8 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 
-list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
+list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()          , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
@@ -508,26 +521,30 @@ end
 if ischar(opt.template)
     switch opt.template
     case 'mni_icbm152_nlin_sym_09a'
-        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average
-        template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the functional stereotaxic space (is only using the FOV and resolution)
-        template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the AAL parcellation
-        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];             % The brain mask
-        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
-        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
-        template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_2mm.mnc.gz']; % The white matter mask
-        template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                             % The venticle mask 
-        template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                  % The mask of the stem + basal artery + circle of Willis
+        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                    % The T1 non-linear average
+        template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                 % the functional stereotaxic space (is only using the FOV and resolution)
+        template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                 % the AAL parcellation
+        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];               % The brain mask
+        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];     % The brain mask eroded of 5 mm
+        template.mask_bold    = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_register_bold.mnc.gz']; % The brain mask expanded to go to the skull
+        template.mask_avg     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_avg.mnc.gz'];           % Average of many brain masks
+        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz'];    % The brain mask dilated of 5 mm
+        template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_2mm.mnc.gz'];   % The white matter mask
+        template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                               % The venticle mask 
+        template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                    % The mask of the stem + basal artery + circle of Willis
         opt.template = template;
     case 'mni_icbm152_nlin_asym_09a'
-        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                  % The T1 non-linear average
-        template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the functional stereotaxic space (is only using the FOV and resolution)
-        template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                               % the AAL parcellation
-        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz'];             % The brain mask
-        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
-        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
-        template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_2mm.mnc.gz']; % The white matter mask
-        template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                             % The venticle mask 
-        template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                  % The mask of the stem + basal artery + circle of Willis
+        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                    % The T1 non-linear average
+        template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                  % the functional stereotaxic space (is only using the FOV and resolution)
+        template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                  % the AAL parcellation
+        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz'];               % The brain mask
+        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz'];     % The brain mask eroded of 5 mm
+        template.mask_bold    = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_register_bold.mnc.gz']; % The brain mask expanded to go to the skull
+        template.mask_avg     = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_avg.mnc.gz'];           % Average of many brain masks
+        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz'];    % The brain mask dilated of 5 mm
+        template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_2mm.mnc.gz'];   % The white matter mask
+        template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                                % The venticle mask 
+        template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                     % The mask of the stem + basal artery + circle of Willis
         opt.template = template;
     otherwise
         error('%s is an unkown template space',opt.template)
@@ -535,8 +552,8 @@ if ischar(opt.template)
 end
 if ~ischar(opt.template)
     opt.template = psom_struct_defaults(opt.template, ...
-                   { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
-                   { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN       , NaN         , NaN           });
+                   { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_bold' , 'mask_avg' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
+                   { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN         , NaN        , NaN       , NaN         , NaN           });
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

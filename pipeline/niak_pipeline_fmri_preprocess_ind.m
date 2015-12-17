@@ -43,27 +43,29 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %
 %   SIZE_OUTPUT 
 %       (string, default 'quality_control') possible values : 
-%       'quality_control’, ‘all’.
+%       'quality_control, all.
 %       The quantity of intermediate results that are generated. 
-%           * With the option ‘quality_control’, only the preprocessed 
+%           * With the option quality_control, only the preprocessed 
 %             data and quality controls at the final stage are generated. 
 %             All intermediate outputs are cleaned as soon as possible. 
-%           * With the option ‘all’, all possible outputs are generated at 
+%           * With the option all, all possible outputs are generated at 
 %             each stage of the pipeline, and the intermediate results are
 %             kept
 %       
 %   TEMPLATE
-%       (structure) 
-%       T1 (string) the T1 template
-%       FMRI (string) the fMRI template 
-%          -- used for resolution and field of view for resampling in stereotaxic space
-%       AAL (string) the AAL parcellation
-%       MASK (string) a brain mask
-%       MASK_DILATED (string) a dilated brain mask
-%       MASK_ERODED (string) an eroded brain mask
-%       MASK_WM (string) a (conservative) white matter brain mask
-%       MASK_VENT (string) a (conservative) mask of the lateral ventricles
-%       MASK_WILLIS (string) a loose mask of the basal artery and the circle of Willis
+%       (structure) the template files defined with the following fields:
+%           T1 (string) the T1 template
+%           FMRI (string) the fMRI template 
+%              -- used for resolution and field of view for resampling in stereotaxic space
+%           AAL (string) the AAL parcellation
+%           MASK (string) a brain mask
+%           MASK_DILATED (string) a dilated brain mask
+%           MASK_ERODED (string) an eroded brain mask
+%           MASK_BOLD (string) a brain mask merged dilated to include all tissues up to the skull.
+%           MASK_AVG (string) the average of many brain mask for BOLD images. 
+%           MASK_WM (string) a (conservative) white matter brain mask
+%           MASK_VENT (string) a (conservative) mask of the lateral ventricles
+%           MASK_WILLIS (string) a loose mask of the basal artery and the circle of Willis
 %
 %   TARGET_SPACE
 %       (string, default 'stereonl') which space will be used to resample
@@ -95,14 +97,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       preprocessed anatomical volumes as well as the results related to 
 %       T1-T2 coregistration.
 %
-%   FOLDER_QCthe template that 
-%       will be used as a target for brain coregistration. 
-%       Available choices: 
-%           'mni_icbm152_nlin_asym_09a' : an adult symmetric template 
-%              (18.5 - 43 y.o., 40 iterations of non-linear fit). 
-%           'mni_icbm152_nlin_sym_09a' : an adult asymmetric template 
-%             (18.5 - 43 y.o., 20 iterations of non-linear fit). 
-%       It is also possible to manually specify the template files with the following fields:
+%   FOLDER_QC
 %       (string, default FOLDER_OUT/quality_control/) where to write the 
 %       results of the quality control.
 %
@@ -144,6 +139,17 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       FLAG_SKIP
 %           (boolean, default true) if the flag is true, do not extract 
 %           PVE maps.
+%
+%   MASK_ANAT2FUNC
+%       (structure) options of NIAK_BRICK_MASK_ANAT2FUNC (generation
+%       of a T1 brain mask for registration with BOLD images. 
+%   
+%       THRESH_AVG (scalar, default 0.65) the threshold used to binarize the average
+%          BOLD masks to combine with the T1 mask. 
+%
+%       Z_CUT (scalar, default 15) only apply the restrictions from AVG_MASK on voxels
+%          with z coordinates (in MNI space) below 15 mm. This includes ventromedial 
+%          and temporal cortices.
 %
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 
@@ -435,16 +441,16 @@ end
 files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correct format
 
 %% OPT
-list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
 opt.corsica = psom_struct_defaults(opt.corsica,{'flag_skip'},{true},false); % Skip CORSICA by default
 
 opt.template = psom_struct_defaults(opt.template, ...
-               { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
-               { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN       , NaN         , NaN           });
+               { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_bold' , 'mask_avg' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
+               { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN         , NaN        , NaN       , NaN         , NaN           });
 
 if ~ischar(opt.civet)
     list_fields   = { 'folder' , 'id' , 'prefix' };
@@ -550,8 +556,8 @@ else
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
     job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
     job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
-    job_out.anat_nuc_stereolin     = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
-    job_out.anat_nuc_stereonl      = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f]; 
+    job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
+    job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f]; 
     job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
     job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
@@ -612,15 +618,29 @@ list_run_tmp = fieldnames(fmri_s.(subject).(session_ref));
 run_ref = list_run_tmp{job_opt.run_ref};
 pipeline = psom_merge_pipeline(pipeline,pipeline_mc);
 
-%% T1-T2 coregistration
+%% anat-to-func coregistration
 if opt.flag_verbose
     t1 = clock;
     fprintf('T1-T2 coregistration (');
 end
+
+% Start by building a T1 mask for the registration
+clear job_in job_out job_opt
+job_in.anat                = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
+job_in.mask_anat           = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
+job_in.mask_avg            = opt.template.mask_avg;
+job_in.mask_bold           = opt.template.mask_bold;
+job_in.transf_stereolin2nl = pipeline.(['t1_preprocess_' subject]).files_out.transformation_nl;
+job_out                    = [opt.folder_anat 'anat_' subject '_mask_register_bold_stereolin' ext_f];
+job_opt                    = opt.mask_anat2func;
+job_opt.rand_seed          = opt.rand_seed;
+pipeline = psom_add_job(pipeline,['mask_anat2func_',subject],'niak_brick_mask_anat2func',job_in,job_out,job_opt);
+
+% Now add the registration itself
 clear job_in job_out job_opt
 job_in.func                   = pipeline.(['motion_target_' subject '_' session_ref '_' run_ref]).files_out;
 job_in.anat                   = pipeline.(['t1_preprocess_' subject]).files_out.anat_nuc_stereolin;
-job_in.mask_anat              = pipeline.(['t1_preprocess_' subject]).files_out.mask_stereolin;
+job_in.mask_anat              = pipeline.(['mask_anat2func_' subject]).files_out;
 job_in.transformation_init    = pipeline.(['t1_preprocess_' subject]).files_out.transformation_lin;
 job_out.transformation        = [opt.folder_anat 'transf_' subject '_nativefunc_to_stereolin.xfm'];
 job_out.anat_hires            = [opt.folder_anat 'anat_' subject '_nativefunc_hires' ext_f];
