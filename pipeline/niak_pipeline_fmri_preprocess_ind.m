@@ -143,13 +143,21 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %   MASK_ANAT2FUNC
 %       (structure) options of NIAK_BRICK_MASK_ANAT2FUNC (generation
 %       of a T1 brain mask for registration with BOLD images. 
-%   
+%
+%       FLAG_CSF
+%          (boolean, default true) turns on (true) / off (false) the inclusion of CSF in the space
+%          between the brain and the skull. 
+%
+%       FLAG_AVG
+%          (boolean, default true) turns on (true) / off (false) the exclusion of brain voxels that 
+%          typically exhibit signal dropout in BOLD images. 
+%    
 %       THRESH_AVG (scalar, default 0.65) the threshold used to binarize the average
-%          BOLD masks to combine with the T1 mask. 
+%           BOLD masks to combine with the T1 mask. 
 %
 %       Z_CUT (scalar, default 15) only apply the restrictions from AVG_MASK on voxels
-%          with z coordinates (in MNI space) below 15 mm. This includes ventromedial 
-%          and temporal cortices.
+%           with z coordinates (in MNI space) below 15 mm. This includes ventromedial 
+%           and temporal cortices.
 %
 %   ANAT2FUNC 
 %       (structure) options of NIAK_BRICK_ANAT2FUNC (coregistration 

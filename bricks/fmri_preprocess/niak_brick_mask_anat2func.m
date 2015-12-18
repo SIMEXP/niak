@@ -36,6 +36,14 @@ function [files_in,files_out,opt] = niak_brick_mask_anat2func(files_in,files_out
 %      number generator with PSOM_SET_RAND_SEED. If left empty, no action
 %      is taken.
 %
+%   FLAG_CSF
+%      (boolean, default true) turns on (true) / off (false) the inclusion of CSF in the space
+%      between the brain and the skull. 
+%
+%   FLAG_AVG
+%      (boolean, default true) turns on (true) / off (false) the exclusion of brain voxels that 
+%      typically exhibit signal dropout in BOLD images. 
+% 
 %   THRESH_AVG (scalar, default 0.65) the threshold used to binarize the average
 %      BOLD masks to combine with the T1 mask. 
 %
@@ -114,8 +122,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults ( opt , ...
-      { 'rand_seed' , 'zcut' , 'thresh_avg' , 'flag_verbose' , 'flag_test' }, ...
-      { []          , 15     , 0.65         , true           , false       });
+      { 'rand_seed' , 'flag_csf' , 'flag_avg' , 'zcut' , 'thresh_avg' , 'flag_verbose' , 'flag_test' }, ...
+      { []          , true       , true       , 15     , 0.65         , true           , false       });
 
 if opt.flag_test == 1
     return
@@ -149,37 +157,47 @@ mask_bold = mask_bold>0;
 mask_brain = mask_brain>0;
 
 %% Extract a csf mask
-
-% First get the values that lie between the brain and skull
-val_outside = volt1(mask_bold & ~mask_brain);
-% Now run a k-means with 3 classes
-nb_classes = 3;
-mask_outside = niak_kmeans_clustering(val_outside(:)',struct('nb_classes',3,'flag_verbose',true));
-valm = zeros(1,3);
-for cc = 1:3
-    valm(cc) = mean(val_outside(mask_outside==cc));
+if opt.flag_csf
+    % First get the values that lie between the brain and skull
+    val_outside = volt1(mask_bold & ~mask_brain);
+    % Now run a k-means with 3 classes
+    nb_classes = 3;
+    mask_outside = niak_kmeans_clustering(val_outside(:)',struct('nb_classes',3,'flag_verbose',true));
+    valm = zeros(1,3);
+    for cc = 1:3
+        valm(cc) = mean(val_outside(mask_outside==cc));
+    end
+    [val,ind] = min(valm);
+    % Just extract the class with smallest average values on the T1 image
+    mask_csf = false(size(volt1));
+    mask_csf(mask_bold & ~mask_brain) = mask_outside == ind;
 end
-[val,ind] = min(valm);
-% Just extract the class with smallest average values on the T1 image
-mask_csf = false(size(volt1));
-mask_csf(mask_bold & ~mask_brain) = mask_outside == ind;
 
 %% Extract a group mask of functional data 
-file_mask_avg_r = niak_file_tmp('_mask_avg_r.mnc');
-in.source = files_in.mask_avg;
-in.target = files_in.anat;
-in.transformation = files_in.transf_stereolin2nl;
-opt.flag_invert_transf = true;
-opt.interpolation = 'tricubic';
-niak_brick_resample_vol(in,file_mask_avg_r,opt);
-[hdr,mask_avg] = niak_read_vol(file_mask_avg_r);
-coord_v = niak_coord_world2vox([0 0 opt.zcut],hdr.info.mat);
-mask_func = mask_avg>opt.thresh_avg;
+if opt.flag_avg
+    file_mask_avg_r = niak_file_tmp('_mask_avg_r.mnc');
+    in.source = files_in.mask_avg;
+    in.target = files_in.anat;
+    in.transformation = files_in.transf_stereolin2nl;
+    opt.flag_invert_transf = true;
+    opt.interpolation = 'tricubic';
+    niak_brick_resample_vol(in,file_mask_avg_r,opt);
+    [hdr,mask_avg] = niak_read_vol(file_mask_avg_r);
+    coord_v = niak_coord_world2vox([0 0 opt.zcut],hdr.info.mat);
+    mask_func = mask_avg>opt.thresh_avg;
+end
 
 %% Combine the bold, csf and brain masks
-mask_brain2 = (mask_brain | mask_csf );
-mask_brain2(:,:,1:ceil(coord_v(3))) = mask_brain2(:,:,1:ceil(coord_v(3)))&mask_func(:,:,1:ceil(coord_v(3)));
+if  opt.flag_csf
+    mask_brain2 = (mask_brain | mask_csf );
+else
+    mask_brain2 = mask_brain;
+end
 
+if opt.flag_avg 
+    mask_brain2(:,:,1:ceil(coord_v(3))) = mask_brain2(:,:,1:ceil(coord_v(3)))&mask_func(:,:,1:ceil(coord_v(3)));
+end
+    
 %% Write out the result
 hdr.file_name = files_out;
 niak_write_vol(hdr,mask_brain2);
