@@ -286,6 +286,9 @@ else
     list_subject = list_subject(mask_keep);    
 end
 nb_subject = length(list_subject);
+if nb_subject == 0
+   error('NO subject remaining after grabbing, review your filters')
+end
 
 %% generate file names
 path_fmri = [path_data 'fmri' filesep];

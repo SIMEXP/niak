@@ -27,12 +27,12 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 %   SIZE_OUTPUT 
 %       (string, default 'quality_control') possible values : 
-%       'quality_control’, ‘all’.
+%       'quality_control, all.
 %       The quantity of intermediate results that are generated. 
-%           * With the option ‘quality_control’, only the preprocessed 
+%           * With the option quality_control, only the preprocessed 
 %             data and quality controls at the final stage are generated. 
 %             All intermediate outputs are cleaned as soon as possible. 
-%           * With the option ‘all’, all possible outputs are generated at 
+%           * With the option all, all possible outputs are generated at 
 %             each stage of the pipeline, and the intermediate results are
 %             kept
 %
@@ -857,7 +857,7 @@ function files_in = sub_check_format(files_in)
 
 if ~isstruct(files_in)
 
-    error('FILES_IN should be a structure!')   
+    error('FILES_IN should be a structure')   
 
 else   
 
@@ -867,28 +867,42 @@ else
         subject = list_subject{num_s};        
         
         if ~isstruct(files_in.(subject))
-            error('FILES_IN.%s should be a structure!',upper(subject));
+            error('FILES_IN.%s should be a structure',upper(subject));
+        end
+        
+        if strfind(subject,'_')
+           error('FILES_IN.%s should not have an underscore in the subject ID',upper(subject));
         end
         
         if ~isfield(files_in.(subject),'fmri')
-            error('I could not find the field FILES_IN.%s.FMRI!',upper(subject));
+            error('I could not find the field FILES_IN.%s.FMRI',upper(subject));
         end
                 
         list_session = fieldnames(files_in.(subject).fmri);
         
         for num_c = 1:length(list_session)
             session = list_session{num_c};
-            if ~iscellstr(files_in.(subject).fmri.(session))&&~isstruct(files_in.(subject).fmri.(session))
-                error('FILES_IN.%s.fmri.%s should be a structure or a cell of strings!',upper(subject),upper(session));
+            if ~iscellstr(files_in.(subject).fmri.(session))&&~isstruct(files_in.(subject).fmri.(session))||strfind(session,'_')
+                error('FILES_IN.%s.fmri.%s should be a structure or a cell of strings and should not have an underscore in the session ID',upper(subject),upper(session));
             end
+            
+            list_run = fieldnames(files_in.(subject).fmri.(session));
+            
+            for num_r = 1:length(list_run)
+                run = list_run{num_r};
+                if strfind(run,'_')
+                   error('FILES_IN.%s.fmri.%s.%s should not have an underscore in the run ID',upper(subject),upper(session),upper(run));
+                end
+            end   
+             
         end
                    
         if ~isfield(files_in.(subject),'anat')
-            error('I could not find the field FILES_IN.%s.ANAT!',upper(subject));
+            error('I could not find the field FILES_IN.%s.ANAT',upper(subject));
         end
                 
         if ~ischar(files_in.(subject).anat)
-             error('FILES_IN.%s.ANAT is not a string!',upper(subject));
+             error('FILES_IN.%s.ANAT is not a string',upper(subject));
         end
         
         if ~isfield(files_in.(subject),'component_to_keep')
@@ -897,6 +911,7 @@ else
     end    
 
 end
+
 
 function opt = sub_backwards(opt)
 %% Fiddling with OPT for backwards compatibility
