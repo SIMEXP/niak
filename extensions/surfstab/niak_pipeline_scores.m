@@ -112,9 +112,9 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Sebastian Urchs
-%   Centre de recherche de l'institut de Gériatrie de Montréal
-%   Département d'informatique et de recherche opérationnelle
-%   Université de Montréal, 2010-2015
+%   Centre de recherche de l'institut de Griatrie de Montral
+%   Dpartement d'informatique et de recherche oprationnelle
+%   Universit de Montral, 2010-2015
 %   Montreal Neurological Institute, 2015
 % Maintainer : sebastian.urchs@mail.mcgill.ca
 %
@@ -211,7 +211,7 @@ clear job_in job_out job_opt
 job_in.source      = files_in.part;
 [path_f,name_f,ext_f] = niak_fileparts(files_in.part);
 job_in.target      = cell_fmri{1};
-job_out            = [opt.folder_out 'template_partition' ext_f];
+job_out            = [opt.folder_out filesep 'template_partition' ext_f];
 job_opt.interpolation    = 'nearest_neighbour';
 pipeline = psom_add_job(pipeline,'scores_resample_part','niak_brick_resample_vol',job_in,job_out,job_opt);
 
@@ -219,7 +219,7 @@ clear job_in job_out job_opt
 job_in.source      = files_in.mask;
 [path_f,name_f,ext_f] = niak_fileparts(files_in.mask);
 job_in.target      = cell_fmri{1};
-job_out            = [opt.folder_out 'mask' ext_f];
+job_out            = [opt.folder_out filesep 'mask' ext_f];
 job_opt.interpolation    = 'nearest_neighbour';
 pipeline = psom_add_job(pipeline,'scores_resample_mask','niak_brick_resample_vol',job_in,job_out,job_opt);
 
