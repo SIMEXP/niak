@@ -140,7 +140,6 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 % ______________________________________________________________________________
-
 %% Seting up default arguments
 if ~exist('files_in','var')||~exist('opt','var')
     error('niak:pipeline','syntax: [IN,OPT] = NIAK_PIPELINE_SCORES(IN,OPT).\n Type ''help niak_pipeline_scores'' for more info.');
@@ -150,9 +149,11 @@ files_in = psom_struct_defaults(files_in, ...
            { 'data' , 'part' , 'mask' }, ...
            { NaN    , NaN    , NaN    });
 % DEFAULTS
+
 opt = psom_struct_defaults(opt,...
       { 'flag_rand' , 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
       { false       , 'gb_niak_omitted' , struct      , struct   , struct , false       });
+opt.folder_out = niak_full_path(opt.folder_out);
   
 opt.psom = psom_struct_defaults(opt.psom,...
            { 'max_queued' , 'path_logs'             },...
@@ -211,7 +212,7 @@ clear job_in job_out job_opt
 job_in.source      = files_in.part;
 [path_f,name_f,ext_f] = niak_fileparts(files_in.part);
 job_in.target      = cell_fmri{1};
-job_out            = [opt.folder_out filesep 'template_partition' ext_f];
+job_out            = [opt.folder_out 'template_partition' ext_f];
 job_opt.interpolation    = 'nearest_neighbour';
 pipeline = psom_add_job(pipeline,'scores_resample_part','niak_brick_resample_vol',job_in,job_out,job_opt);
 
@@ -219,7 +220,7 @@ clear job_in job_out job_opt
 job_in.source      = files_in.mask;
 [path_f,name_f,ext_f] = niak_fileparts(files_in.mask);
 job_in.target      = cell_fmri{1};
-job_out            = [opt.folder_out filesep 'mask' ext_f];
+job_out            = [opt.folder_out 'mask' ext_f];
 job_opt.interpolation    = 'nearest_neighbour';
 pipeline = psom_add_job(pipeline,'scores_resample_mask','niak_brick_resample_vol',job_in,job_out,job_opt);
 
