@@ -64,8 +64,8 @@ Those are spreadsheets formatted as comma-separated values. Each row is about on
 
 Two files are identical if they exist in both source and target and 
 
-* for .nii/.mnc: the headers are identical and the max absolute difference is less than a tolerance value (10^-4). 
-* for .csv files: the labels of rows and columns are identical and the max absolute difference is less than a tolerance value (10^-4, see `opt.eps` in `niak_brick_cmp_files`). 
-* for .mat files: the content is identical up to a tolerance value (10^-4, see `opt.eps` in `niak_brick_cmp_files`).
+* **.nii/.mnc** files: the headers are identical and the max absolute difference is less than a tolerance value (10^-4). 
+* **.csv** files: the labels of rows and columns are identical and the max absolute difference is less than a tolerance value (10^-4, see `opt.eps` in `niak_brick_cmp_files`). 
+* **.mat** files: the content is identical up to a tolerance value (10^-4, see `opt.eps` in `niak_brick_cmp_files`).
 
 The tests fail if any two pairs of file are not identical in the reference results and the generated results. Note that tests can fail if slightly different versions of Matlab/Octave/minc tools are used when generating results as compared to the reference results. When NIAK is executed through docker, perfect replications are expected.
