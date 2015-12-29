@@ -14,12 +14,28 @@ This command will download the test dataset, as well as a series of results gene
 
 Those are spreadsheets formatted as comma-separated values. Each row is about one file of the associated pipeline, and includes the following information: 
 
- * 'source' (boolean) indicates if the file exist in the source (generated results). 
- * 'target' (boolean) the file exist in the target (reference results). 
- * 'identical' (boolean or NaN) the files are identical (see the note below). NaN for unsupported file types, or files that exist only on source or target 
- * 'same_labels' (boolean or NaN) the .csv files have the same labels. NaN indicates any other file type. 
- * 'same_variables' (boolean or NaN) the .mat files have the same variables. NaN for any other file type. 
- * 'same_header_info' (boolean or NaN) the .nii/.mnc files have the same info&nbsp;% in the header. NaN for any other file type. 
+ * **`source`** (boolean) 
+   * **1**: the file exists in the source (generated results).
+   * **0**: the file is absent in the source (generated results).
+ * **`target`** (boolean) 
+   * **1**: the file exists in the target (reference results).
+   * **0**: the file is absent in the target (reference results). 
+ * **`identical`** (boolean or NaN) 
+   * **1**: the files are identical (the actual test depends on file type, see the note below).
+   * **0**: the files are different (the actual test depends on file type, see the note below).
+   * **NaN**: unsupported file type, or the file exists only on source or target. 
+ * **`same_labels`** (boolean or NaN)
+   * **1**: the .csv files have the same labels for rows and columns. 
+   * **0**: the .csv files have different labels for rows or columns. 
+   * **NaN**: not .csv files (the test does not apply, ignore value). 
+ * **`same_variables`** (boolean or NaN) 
+   * **1**: the .mat files contain the same variables. 
+   * **0**: the .mat files contain different variables.
+   * **NaN**: not .mat files (the test does not apply, ignore value).
+ * **`same_header_info`** (boolean or NaN) 
+   * **1**: the .nii/.mnc files have the same headers. 
+   * **0**: the .nii/.mnc files have different headers. 
+   * **NaN**: not .mnc/.nii files (the test does not apply, ignore value). 
  * 'same_dim' (boolean or NaN) the volumes have the same dimensions (.nii/.mnc) or the spreadsheets have the same dimension (.csv). NaN for any other file type. 
  * 'dice_mask_brain' (scalar in [0,1] or NaN) the dice coefficient between the brain mask of the two volumes (.nii/.mnc). NaN for any other file type. 
  * 'max_diff' (positive scalar or NaN) the max absolute difference between the two volumes (.nii/.mnc) or spreadsheets (.csv). NaN for any other file type. 
