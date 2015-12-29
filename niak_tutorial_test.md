@@ -61,6 +61,7 @@ Those are spreadsheets formatted as comma-separated values. Each row is about on
  * **`mean_corr`** (scalar in [0,1] or NaN) 
    * **scalar**: the mean correlation between the time series of voxels inside the brain masks, for two 4D volumes (.nii/.mnc). 
    * **NaN**: not 4D .mnc/.nii files (the test does not apply, ignore value).
+
 Two files are identical if they exist in both source and target and 
 
 * for .nii/.mnc: the headers are identical and the max absolute difference is less than a tolerance value (10^-4). 
