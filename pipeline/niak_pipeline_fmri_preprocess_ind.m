@@ -511,7 +511,7 @@ if ischar(opt.civet)
     end
     clear job_in job_out job_opt
     job_in.anat                     = files_in.anat;
-    job_in.template                 = rmfield(opt.template,{'fmri','aal','mask_wm','mask_vent','mask_willis'});    
+    job_in.template                 = rmfield(opt.template,{'fmri','aal','mask_wm','mask_vent','mask_willis','mask_bold','mask_avg'});    
     job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
     job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
