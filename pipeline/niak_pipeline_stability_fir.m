@@ -200,9 +200,9 @@ function [pipeline,opt] = niak_pipeline_stability_fir(files_in,opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, 
-%               Centre de recherche de l'institut de Gériatrie de Montréal
-%               Département d'informatique et de recherche opérationnelle
-%               Université de Montréal, 2010-2013
+%               Centre de recherche de l'institut de Griatrie de Montral
+%               Dpartement d'informatique et de recherche oprationnelle
+%               Universit de Montral, 2010-2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, FIR, fMRI, clustering, stability

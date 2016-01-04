@@ -35,7 +35,7 @@
 
 
 %% Use the local configuration file if any
-if ~exist('gb_niak_gb_vars_local','var')&&exist('niak_gb_vars_local.m','file')		
+if ~exist('gb_niak_gb_vars_local','var')&&exist('niak_gb_vars_local.m','file')
     gb_niak_gb_vars_local = true;
     niak_gb_vars_local
     return
@@ -53,8 +53,12 @@ tag_windaub = {'PCWIN','windows'};
 
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
-flag_psom_loaded = exist('gb_psom_gb_vars','var');
-if flag_psom_loaded 
+if ~exist('gb_psom_gb_vars','var')&&exist('psom_gb_vars.m','file')
+    gb_psom_gb_var = true;
+    psom_gb_vars
+end
+
+if exist('gb_psom_gb_vars','var') 
     % loading common psom vars 
     gb_psom_gb_vars;
     gb_niak_tmp = gb_psom_tmp;
@@ -143,7 +147,7 @@ gb_niak_ps2pdf = 'ps2pdf';
 gb_niak_version = '0.13.4'; 
 
 %% Target for tests
-gb_niak_target_test = 'target_test_niak_mnc1-0.13.5';
+gb_niak_target_test = '0.13.6';
 
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');
