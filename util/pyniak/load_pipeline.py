@@ -76,7 +76,7 @@ class FmriPreprocess(BasePipeline):
 
         opt_list = ["opt.folder_out=\'{0}\'".format(self.folder_out)]
 
-        list_out_dir = os.listdir(self.folder_out)
+        list_out_dir = os.listdir(self.folder_in)
 
         # TODO Control that with an option
         subject_input_list = None
