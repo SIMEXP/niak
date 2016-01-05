@@ -76,14 +76,32 @@ class FmriPreprocess(BasePipeline):
 
         opt_list = ["opt.folder_out=\'{0}\'".format(self.folder_out)]
 
-        # Todo find a good strategy to load subject, that is make it general!
-        # % Structural scan
-        opt_list += ["files_in.subject1.anat=\'{0}/anat_subject1.mnc.gz\'".format(self.folder_in)]
-        # % fMRI run 1
-        opt_list += ["files_in.subject1.fmri.session1.motor=\'{0}/func_motor_subject1.mnc.gz\'".format(self.folder_in)]
-        opt_list += ["files_in.subject2.anat=\'{0}/anat_subject2.mnc.gz\'".format(self.folder_in)]
-        # % fMRI run 1
-        opt_list += ["files_in.subject2.fmri.session1.motor=\'{0}/func_motor_subject2.mnc.gz\'".format(self.folder_in)]
+        list_out_dir = os.listdir(self.folder_out)
+
+        # TODO Control that with an option
+        subject_input_list = None
+        for f in list_out_dir:
+            if f.endswith("_demographics.txt"):
+                subject_input_list = f
+
+        if subject_input_list:
+            """
+            list_subject = fcon_read_demog([path_mnc 'Cambridge_demographics.txt']);
+            opt_g.path_database = path_mnc;
+            files_in = fcon_get_files(list_subject,opt_g);
+            """
+            opt_list += "list_subject = fcon_read_demog([{0} '{1}']);".format(self.folder_in, subject_input_list)
+            opt_list += "opt_g.path_database = {0};".format(self.folder_in)
+            opt_list += "files_in = fcon_get_files(list_subject,opt_g);"
+        else:
+            # Todo find a good strategy to load subject, that is make it general!
+            # % Structural scan
+            opt_list += ["files_in.subject1.anat=\'{0}/anat_subject1.mnc.gz\'".format(self.folder_in)]
+            # % fMRI run 1
+            opt_list += ["files_in.subject1.fmri.session1.motor=\'{0}/func_motor_subject1.mnc.gz\'".format(self.folder_in)]
+            opt_list += ["files_in.subject2.anat=\'{0}/anat_subject2.mnc.gz\'".format(self.folder_in)]
+            # % fMRI run 1
+            opt_list += ["files_in.subject2.fmri.session1.motor=\'{0}/func_motor_subject2.mnc.gz\'".format(self.folder_in)]
         if self.options:
             # Type casting option with the help of the json descriptor
             self.type_cast_options(self.options)
