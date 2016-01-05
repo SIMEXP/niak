@@ -76,14 +76,12 @@ class FmriPreprocess(BasePipeline):
 
         opt_list = ["opt.folder_out=\'{0}\'".format(self.folder_out)]
 
-        ## DEBUG !!!
-        print("IIIIIIIIICCCCCCCCCCIIIIIIIIII {0}".format(os.getcwd()))
-        print("LLLLLLLLLLLLLLLLLLLAAAAAAAAAAAAA {0}".format(__file__))
-        list_out_dir = os.listdir(self.folder_in)
+        in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
+        list_in_dir = os.listdir(in_full_path)
 
         # TODO Control that with an option
         subject_input_list = None
-        for f in list_out_dir:
+        for f in list_in_dir:
             if f.endswith("_demographics.txt"):
                 subject_input_list = f
 
@@ -93,8 +91,8 @@ class FmriPreprocess(BasePipeline):
             opt_g.path_database = path_mnc;
             files_in = fcon_get_files(list_subject,opt_g);
             """
-            opt_list += "list_subject = fcon_read_demog([{0} '{1}']);".format(self.folder_in, subject_input_list)
-            opt_list += "opt_g.path_database = {0};".format(self.folder_in)
+            opt_list += "list_subject = fcon_read_demog([{0} '{1}']);".format(in_full_path, subject_input_list)
+            opt_list += "opt_g.path_database = {0};".format(in_full_path)
             opt_list += "files_in = fcon_get_files(list_subject,opt_g);"
         else:
             # Todo find a good strategy to load subject, that is make it general!
