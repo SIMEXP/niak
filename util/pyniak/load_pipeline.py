@@ -2,10 +2,10 @@ __author__ = 'poquirion'
 
 import os
 import re
+import json
 import subprocess
 
-import json
-
+import psutil
 
 
 def num(s):
@@ -37,13 +37,31 @@ class BasePipeline(object):
     def __init__(self, folder_in=None, folder_out=None, options=None):
 
         self.octave_cmd = None
-        self.folder_in = folder_in
+        if os.path.islink(folder_in):
+            self.folder_in = os.readlink(folder_in)
+        else:
+            self.folder_in = folder_in
         self.folder_out = folder_out
         self.options = options
 
     def run(self):
         print(" ".join(self.octave_cmd))
-        subprocess.call(self.octave_cmd)
+        p = None
+        try:
+            p = subprocess.Popen(self.octave_cmd)
+            p.wait()
+        except BaseException as e:
+            if p:
+                parent = psutil.Process(p.pid)
+                try:
+                    children = parent.children(recursive=True)
+                except AttributeError:
+                    children = parent.get_children(recursive=True)
+                for child in children:
+                    child.kill()
+                parent.kill()
+            raise e
+
 
     def type_cast_options(self, options):
 
