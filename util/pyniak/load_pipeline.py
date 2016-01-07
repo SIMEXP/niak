@@ -87,7 +87,7 @@ class FmriPreprocess(BasePipeline):
 
         if subject_input_list:
             opt_list += ["list_subject = fcon_read_demog([{0} '{1}']);".format(in_full_path, subject_input_list)]
-            opt_list += ["opt_g.path_database = {0};".format(in_full_path)]
+            opt_list += ["opt_g.path_database = {0};".format(in_full_path+"/")]
             opt_list += ["files_in = fcon_get_files(list_subject,opt_g);"]
         else:
             # Todo find a good strategy to load subject, that is make it general!
