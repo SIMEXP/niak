@@ -8,6 +8,8 @@ import subprocess
 import psutil
 
 
+
+
 def num(s):
     try:
         return int(s)
@@ -27,22 +29,32 @@ def string(s):
 
 
 class BasePipeline(object):
+    """
+    This is the base class to run PSOM/NIAK pipeline under CBRAIN and the
+    BOUTIQUE interface.
+    """
 
-    BOUTIQUE_PATH = "{0}/boutique_descriptor".format(os.path.dirname(os.path.realpath(__file__)))
+    BOUTIQUE_PATH = "{0}/boutique_descriptor"\
+        .format(os.path.dirname(os.path.realpath(__file__)))
     BOUTIQUE_INPUTS = "inputs"
     BOUTIQUE_CMD_LINE = "command-line-flag"
     BOUTIQUE_TYPE_CAST = {"Number": num, "String": string, "File": string}
     BOUTIQUE_TYPE = "type"
 
-    def __init__(self, folder_in=None, folder_out=None, options=None):
+    def __init__(self, folder_in, folder_out, options=None):
 
-        self.octave_cmd = None
+        # The name must be Provided in the derived class
+        self.pipeline_name =  None
+
+        self.octave_options = None
         if os.path.islink(folder_in):
             self.folder_in = os.readlink(folder_in)
         else:
             self.folder_in = folder_in
         self.folder_out = folder_out
-        self.options = options
+        self.octave_options = options
+
+        self._options = []
 
     def run(self):
         print(" ".join(self.octave_cmd))
@@ -62,6 +74,28 @@ class BasePipeline(object):
                 parent.kill()
             raise e
 
+    @property
+    def octave_cmd(self):
+        return ["/usr/bin/env", "octave", "--eval", "{0};{1}(files_in, opt)"
+                           .format(";".join(self.octave_options), self.pipeline_name )]
+
+    @property
+    def octave_options(self):
+
+        opt_list = ["opt.folder_out=\'{0}\'".format(self.folder_out)]
+
+        opt_list += self.get_file_in()
+
+        if self._options:
+            opt_list += self._options
+
+        return opt_list
+
+    @octave_options.setter
+    def octave_options(self, value):
+            self.type_cast_options(value)
+            self._options += [ "{0}={1}".format(a[0], a[1]) for a in value.items()]
+
 
     def type_cast_options(self, options):
 
@@ -75,25 +109,30 @@ class BasePipeline(object):
                 options[opt] = self.BOUTIQUE_TYPE_CAST[opt_description[self.BOUTIQUE_TYPE]](options[opt])
 
 
-class FmriPreprocess(BasePipeline):
+    def get_file_in(self):
+        """
+        This function need to be overload to fill the file_in requirement of NIAK
+        :return: A list that contains octave string that fill init the file_in variable
+        """
+        # TODO write that methide for bids
 
-    # regex to catch anatomical and functional scans
-    INPUT = "(([^\W_]+)_(([^\W_]+)_)*(subject[0-9]+).mnc(.gz)?)"
-    # FUNCTIONAL = r"(func_((\w+)_)*(subject[0-9]+).mnc(.gz)?)"
+
+
+
+class FmriPreprocess(BasePipeline):
 
     def __init__(self, *args, **kwargs):
         super(FmriPreprocess, self).__init__(*args, **kwargs)
 
-        self.octave_options = None
-
-        self.load_options()
-        self.build_cmd()
+        self.pipeline_name = "niak_pipeline_fmri_preprocess"
 
 
-    def load_options(self):
+    def get_file_in(self):
+        """
 
-        opt_list = ["opt.folder_out=\'{0}\'".format(self.folder_out)]
-
+        :return: A list that contains octave string that fill init the file_in variable
+        """
+        opt_list = []
         in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
         list_in_dir = os.listdir(in_full_path)
 
@@ -108,7 +147,7 @@ class FmriPreprocess(BasePipeline):
             opt_list += ["opt_g.path_database='{0}/'".format(in_full_path)]
             opt_list += ["files_in=fcon_get_files(list_subject,opt_g)"]
         else:
-            # Todo find a good strategy to load subject, that is make it general!
+            # Todo find a good strategy to load subject, to is make it general! --> BIDS
             # % Structural scan
             opt_list += ["files_in.subject1.anat=\'{0}/anat_subject1.mnc.gz\'".format(self.folder_in)]
             # % fMRI run 1
@@ -116,45 +155,37 @@ class FmriPreprocess(BasePipeline):
             opt_list += ["files_in.subject2.anat=\'{0}/anat_subject2.mnc.gz\'".format(self.folder_in)]
             # % fMRI run 1
             opt_list += ["files_in.subject2.fmri.session1.motor=\'{0}/func_motor_subject2.mnc.gz\'".format(self.folder_in)]
-        if self.options:
-            # Type casting option with the help of the json descriptor
-            self.type_cast_options(self.options)
-            opt_list += [ "{0}={1}".format(a[0], a[1]) for a in self.options.items()]
 
-        self.octave_options = opt_list
+        return opt_list
 
-    def load_subject(self, number=None):
-        " write that properly with bids"
 
-        # all_scans = "\n".join(os.listdir(self.folder_in))
-        # inputs = re.compile(self.INPUT)
-        # all_inputs = inputs.findall(all_scans)
-        # all_inputs.sort(key=lambda x: x[-2])
-        #
-        #
-        # for match in all_inputs:
-        #     "file_in.{0}".format(match[-2])
-        #
-        #     opt_list = ["".format(match)]
+class BASC(BasePipeline):
 
-        # for anat_sub
-        opt_list = []
-        opt_list += ["files_in.subject1.anat=\'{0}/anat_subject1.mnc.gz\'".format(self.folder_in)]
-        # % fMRI run 1
-        opt_list += ["files_in.subject1.fmri.session1.motor=\'{0}/func_motor_subject1.mnc.gz\'".format(self.folder_in)]
-        opt_list += ["files_in.subject2.anat=\'{0}/anat_subject2.mnc.gz\'".format(self.folder_in)]
-        # % fMRI run 1
-        opt_list += ["files_in.subject2.fmri.session1.motor=\'{0}/func_motor_subject2.mnc.gz\'".format(self.folder_in)]
+    def __init__(self, grabber_option, *args, **kwargs):
+        super(BASC, self).__init__(*args, **kwargs)
+
+        self.pipeline_name = "niak_pipeline_stability_rest"
+
+        self.grabber_option = grabber_option
+
+    def get_file_in(self):
+        """
+        :return:
+        """
+
+        file_in = []
+
+        file_in.append("opt_g.min_nb_vol = 100")
+        file_in.append("opt_g.type_files = 'roi'")
+        file_in.append("files_in = niak_grab_fmri_preprocess('{0}',opt_g)".format(self.folder_in))
+
+
+        return file_in
 
 
 
-    def build_cmd(self):
-
-        self.octave_cmd = ["/usr/bin/env", "octave", "--eval", "{0};niak_pipeline_fmri_preprocess(files_in, opt)"
-                           .format(";".join(self.octave_options))]
-
-
-SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess}
+# Dictionary for supported class
+SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess, "Niak_basc": BASC}
 
 
 def load(pipeline_name, folder_in, folder_out, options=None):
@@ -172,6 +203,6 @@ if __name__ == '__main__':
     folder_in = "/home/poquirion/test/data_test_niak_mnc1"
     folder_out = "/var/tmp"
 
-    fmrip = FmriPreprocess(folder_in=folder_in, folder_out=folder_out)
+    basc = BASC(folder_in=folder_in, folder_out=folder_out)
 
-    fmrip.load_subject()
+    print(basc.octave_cmd)
