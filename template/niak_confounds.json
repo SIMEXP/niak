@@ -1,0 +1,17 @@
+{
+    "motion_tx": "rigid-body motion parameter - translation along the x-axis (unit consistent with header, expect mm).",
+    "motion_ty": "rigid-body motion parameter - translation along the y-axis (unit consistent with header, expect mm).",
+    "motion_tz": "rigid-body motion parameter - translation along the z-axis (unit consistent with header, expect mm).",
+    "motion_rx": "rigid-body motion parameter - rotation along the x-axis (degrees).",
+    "motion_ry": "rigid-body motion parameter - rotation along the y-axis (degrees).",
+    "motion_rz": "rigid-body motion parameter - rotation along the z-axis (degrees).",
+    "FD": "Frame Displacement, as defined in Power et al. (Neuroimage 2012). Value for first volume is (arbitrarily) set to 0.",
+    "slow_drift": "Slow time drifts, modelled by discrete cosines. The actual spectral band coverd by the basis is specified at preprocessing.",
+    "slow_drift": "Slow time drifts, modelled by discrete cosines. The actual spectral band coverd by the basis is specified at preprocessing.",
+    "high_freq": "High frequencies, modelled by discrete cosines. The actual spectral band coverd by the basis is specified at preprocessing.",
+    "wm_avg": "average signal in a conservative mask of the white matter.",
+    "vent_avg": "average signal in a conservative mask of the lateral ventricles.",
+    "global_signal_pca": "global signal (over all brain tissues, including grey matter), estimated through PCA, see Carbonell et al. (Brain Connectivity, 2011).",
+    "compcor": "confounds estimated by a component based noise correction (COMPCOR), see (Behzadi et al, Neuroimage 2007). Exact parameters are specified at preprocessing.",
+    "manual": "user-specified confounds.",
+}
