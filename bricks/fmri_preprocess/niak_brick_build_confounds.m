@@ -305,7 +305,7 @@ end
 
 %% Save the confounds
 if ~strcmp(files_out.confounds,'gb_niak_omitted')
-    
+    niak_write_csv_cell(files_out.confounds,[labels ; num2cell(x)]); 
 end
 
 %%%%%%%%%%%%%%%%%%
