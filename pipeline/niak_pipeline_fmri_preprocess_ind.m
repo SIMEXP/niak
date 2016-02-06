@@ -88,8 +88,12 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       (string, default FOLDER_OUT/logs/) where to write the logs of the
 %       pipeline.
 %
+%   FOLDER_RESAMPLE
+%       (string, default FOLDER_OUT/resample/) where to write the minimally 
+%       preprocessed (spatially resampled) fMRI volumes.
+%
 %   FOLDER_FMRI
-%       (string, default FOLDER_OUT/fmri/) where to write the preprocessed 
+%       (string, default FOLDER_OUT/fmri/) where to write the fully preprocessed 
 %       fMRI volumes.
 %
 %   FOLDER_ANAT
@@ -449,8 +453,8 @@ end
 files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correct format
 
 %% OPT
-list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_resample' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''                , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -472,6 +476,10 @@ end
 
 if isempty(opt.folder_logs)
     opt.folder_logs = [opt.folder_out 'logs'];
+end
+
+if isempty(opt.folder_logs)
+    opt.folder_resample = [opt.folder_out 'resample'];
 end
 
 if isempty(opt.folder_fmri)
@@ -689,11 +697,8 @@ for num_e = 1:length(fmri);
     end
     job_out = '';            
     job_opt = opt.resample_vol;
-    job_opt.folder_out = [opt.folder_intermediate 'resample' filesep];
+    job_opt.folder_out = [opt.folder_resample filesep];
     pipeline = psom_add_job(pipeline,['resample_' label(num_e).name],'niak_brick_resample_vol',job_in,job_out,job_opt);
-    if strcmp(opt.size_output,'quality_control')
-        pipeline = psom_add_clean(pipeline,['clean_resample_' label(num_e).name],pipeline.(['resample_' label(num_e).name]).files_out);
-    end
 end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
