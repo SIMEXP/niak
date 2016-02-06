@@ -102,7 +102,7 @@ function [] = niak_write_vol(hdr,vol)
 % COMMENTS:
 %
 % As mentioned in the description of HDR.FILE_NAME, the extension of zipped 
-% file is assumed to be .gz. The tools used to zip files in 'gzip'. This 
+% file is assumed to be .gz. The tools used to zip files is 'gzip'. This 
 % setting can be changed by changing the variables GB_NIAK_ZIP_EXT and 
 % GB_NIAK_UNZIP in the file NIAK_GB_VARS.
 %
