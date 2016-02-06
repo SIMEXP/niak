@@ -8,13 +8,16 @@ function  [err,msg] = niak_write_csv_cell(file_name,csv_cell,separator)
 % INPUTS:
 %
 % FILE_NAME     
-%   (string) the name of the text file (usually ends in .csv)
+%   (string) the name of the text file. This usually ends in .csv for comma-separated 
+%   values, .tsv for tabulation-separated values and and can have a .gz extension for
+%   compressed files.
 %
 % CSV_CELL
 %   (cell of strings/float) the data
 %
 % SEPARATOR
-%   (string, default ',') The character used to separate values. 
+%   (string, default ',' for csv files, char(9) - tabulation - for .tsv files, ',' otherwise) 
+%   The character used to separate values. 
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -32,10 +35,14 @@ function  [err,msg] = niak_write_csv_cell(file_name,csv_cell,separator)
 % _________________________________________________________________________
 % COMMENTS:
 %
+% The extension of zipped files is assumed to be .gz. The tools used to zip 
+% files is 'gzip'. This setting can be changed by changing the variables 
+% GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
+
 % Copyright (c) Pierre Bellec, 
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2013
+% University of Montreal, Qubec, Canada, 2013-2015
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : table, CSV
@@ -58,14 +65,29 @@ function  [err,msg] = niak_write_csv_cell(file_name,csv_cell,separator)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+% Load global variables
+flag_gb_niak_fast_gb = 1;
+niak_gb_vars
+
 %% Default inputs
 if ~exist('csv_cell','var')||~exist('file_name','var')
     error('Please specify FILE_NAME and CSV_CELL as inputs');
 end
 
+%% Check extension
+[path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(file_name);
+file_name = [path_f,name_f,ext_short];
+
 %% Options
 if nargin < 3
-   separator = ',';
+   switch ext_short
+       case '.csv'
+           separator = ',';
+       case '.tsv'
+           separator = char(9);
+       otherwise
+           separator = ',';
+   end
 end
 
 [nx,ny] = size(csv_cell);
@@ -92,7 +114,7 @@ for numx = 1:nx
             error('all cells should be either string or numeric variables')
         end 
         if numy ~= ny
-            fprintf(hf,[sw ','],csv_cell{numx,numy});            
+            fprintf(hf,[sw separator],csv_cell{numx,numy});            
         else
             fprintf(hf,[sw '\n'],csv_cell{numx,numy});
         end     
@@ -100,3 +122,12 @@ for numx = 1:nx
 end
 
 fclose(hf);
+
+%% Compress file
+if flag_zip
+    instr_zip = cat(2,gb_niak_zip,' ',file_name);
+    [status,msg] = system(instr_zip);
+    if status~=0
+        error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
+    end
+end
