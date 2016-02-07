@@ -142,20 +142,19 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 % THE SOFTWARE.
 
 %% FILES_IN
-list_fields    = { 'fmri' , 'confounds' }
+list_fields    = { 'fmri' , 'confounds' };
 list_defaults  = { NaN    , NaN         };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 %% FILES_OUT
-if ~ischar(files_out)
-    error('FILES_OUT should be a string')
-end
+list_fields    = { 'filtered_data'   , 'scrubbing'       };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' };
+files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'flag_compcor' , 'compcor' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc' , 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
-list_defaults  = { false          , struct()  , 40           , true             , 0.5       , true        , false       , ''            , true          , true                , true     , true        , false      , true             , false      , 0.95               };
+list_fields    = { 'flag_compcor' , 'nb_vol_min' , 'flag_scrubbing' , 'thre_fd' , 'flag_slow' , 'flag_high' ,  'folder_out' , 'flag_verbose', 'flag_motion_params', 'flag_wm', 'flag_vent' , 'flag_gsc' , 'flag_pca_motion', 'flag_test', 'pct_var_explained'};
+list_defaults  = { false          , 40           , true             , 0.5       , true        , false       , ''            , true          , true                , true     , true        , false      , true             , false      , 0.95               };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
-
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri);
 
@@ -163,8 +162,12 @@ if isempty(opt.folder_out)
     opt.folder_out = path_f;
 end
 
-if isempty(files_out)
-    files_out = cat(2,opt.folder_out,filesep,name_f,'_cor',ext_f);
+if isempty(files_out.filtered_data)
+    files_out.filtered_data = cat(2,opt.folder_out,filesep,name_f,'_cor',ext_f);
+end
+
+if isempty(files_out.scrubbing)
+    files_out.scrubbing = cat(2,opt.folder_out,filesep,name_f,'_scrub.mat');
 end
 
 if opt.flag_test 
@@ -311,13 +314,20 @@ if ~isempty(x2)
 end
     
 %% Save the fMRI dataset after regressing out the confounds
-if opt.flag_verbose
-    fprintf('Saving results in %s ...\n',files_out.filtered_data);
-end  
-hdr_vol.file_name = files_out.filtered_data;
-if isfield(hdr_vol,'extra')
-    % Store the regression covariates in the extra .mat companion that comes with the 3D+t dataset
-    hdr_vol.extra.confounds = x2;
-    hdr_vol.extra.labels_confounds = labels(:);
+if ~strcmp(files_out.filtered_data,'gb_niak_omitted')
+    if opt.flag_verbose
+        fprintf('Saving results in %s ...\n',files_out.filtered_data);
+    end  
+    hdr_vol.file_name = files_out.filtered_data;
+    if isfield(hdr_vol,'extra')
+        % Store the regression covariates in the extra .mat companion that comes with the 3D+t dataset
+        hdr_vol.extra.confounds = x2;
+        hdr_vol.extra.labels_confounds = labels(:);
+    end
+    niak_write_vol(hdr_vol,vol_denoised);
 end
-niak_write_vol(hdr_vol,vol_denoised);
+
+%% Save the scrubbing parameters
+if ~strcmp(files_out.scrubbing,'gb_niak_omitted')
+    save(files_out.scrubbing,'mask_scrubbing','fd');
+end

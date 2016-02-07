@@ -7,7 +7,6 @@
     "motion_rz": "rigid-body motion parameter - rotation along the z-axis (degrees).",
     "FD": "Frame Displacement, as defined in Power et al. (Neuroimage 2012). Value for first volume is (arbitrarily) set to 0.",
     "slow_drift": "Slow time drifts, modelled by discrete cosines. The actual spectral band coverd by the basis is specified at preprocessing.",
-    "slow_drift": "Slow time drifts, modelled by discrete cosines. The actual spectral band coverd by the basis is specified at preprocessing.",
     "high_freq": "High frequencies, modelled by discrete cosines. The actual spectral band coverd by the basis is specified at preprocessing.",
     "wm_avg": "average signal in a conservative mask of the white matter.",
     "vent_avg": "average signal in a conservative mask of the lateral ventricles.",
