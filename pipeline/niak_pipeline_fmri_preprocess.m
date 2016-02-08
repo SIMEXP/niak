@@ -27,7 +27,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %
 %   SIZE_OUTPUT 
 %       (string, default 'quality_control') possible values : 
-%       'quality_control, all.
+%       'quality_control', 'all'.
 %       The quantity of intermediate results that are generated. 
 %           * With the option quality_control, only the preprocessed 
 %             data and quality controls at the final stage are generated. 
