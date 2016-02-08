@@ -446,7 +446,7 @@ if isempty(opt.folder_logs)
     opt.folder_logs = [opt.folder_out 'logs'];
 end
 
-if isempty(opt.folder_logs)
+if isempty(opt.folder_resample)
     opt.folder_resample = [opt.folder_out 'resample'];
 end
 
@@ -663,7 +663,7 @@ for num_e = 1:length(fmri);
         otherwise
             error('%s is an unknown target space (see OPT.TARGET_SPACE)',opt.target_space)
     end
-    job_out = '';            
+    job_out = [opt.folder_resample filesep label(num_e).name '_n' ext_f];            
     job_opt = opt.resample_vol;
     job_opt.folder_out = [opt.folder_resample filesep];
     pipeline = psom_add_job(pipeline,['resample_' label(num_e).name],'niak_brick_resample_vol',job_in,job_out,job_opt);
