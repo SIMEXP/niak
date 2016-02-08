@@ -202,7 +202,7 @@ end
 labels = { 'motion_tx' 'motion_ty' 'motion_tz' 'motion_rx' 'motion_ry' 'motion_rz' };
 transf = load(files_in.motion_param);
 [rot,tsl] = niak_transf2param(transf.transf);
-x = [tsl rot];
+x = [tsl' rot'];
 
 %% Scrubbing
 if opt.flag_verbose
@@ -212,7 +212,7 @@ rot_d = 50*(rot/360)*pi*2; % adjust rotation parameters to express them as a dis
 rot_d = rot_d(:,2:end) - rot_d(:,1:(end-1));
 tsl_d = tsl(:,2:end) - tsl(:,1:(end-1));
 fd = sum(abs(rot_d)+abs(tsl_d),1)';
-fd = [0;fd];
+fd = [fd;0];
 labels = [labels {'FD'}];
 x = [x fd];
 
@@ -287,8 +287,8 @@ if ~strcmp(files_in.custom_param,'gb_niak_omitted')
     end
     if ~isempty(covar) && (size(covar,1)==size(y,1))
         covar = niak_normalize_tseries(covar);
-        x2 = [x2 covar];
-        labels2 = [ labels2 repmat({'custom'},[1 size(covar,2)]) ];
+        x = [x covar];
+        labels = [ labels repmat({'custom'},[1 size(covar,2)]) ];
     else
         error('The dimensions of the user-specified covariates are inappropriate (%i samples, functional datasets has %i time points)',size(covar,1),size(y,1))
     end

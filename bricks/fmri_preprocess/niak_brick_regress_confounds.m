@@ -185,9 +185,9 @@ y = niak_normalize_tseries(y,'mean');
 
 %% Read the confounds
 if opt.flag_verbose
-    fprintf('Reading the confounds...\n%s\n',files_in);
+    fprintf('Reading the confounds...\n%s\n',files_in.confounds);
 end
-tab = niak_read_csv_cell(files_in);
+tab = niak_read_csv_cell(files_in.confounds);
 x = str2double(tab(2:end,:));
 all_labels = tab(1,:);
 
@@ -199,7 +199,7 @@ mask_fd = strcmp(all_labels,'FD');
 if nnz(mask_fd)~=1
     error('I found either no or too many FD covariates in the array of confounds')
 end 
-fd = x(:,mask_fd);
+fd = x(1:(end-1),mask_fd);
 mask_scrubbing = false(size(y,1),1);
 if opt.flag_scrubbing
     mask_scrubbing(2:end) = (fd>opt.thre_fd);
@@ -231,16 +231,30 @@ labels = {};
 
 %% Slow time drifts
 if opt.flag_slow 
+    if opt.flag_verbose
+        fprintf('Adding slow time drifts ...\n')
+    end
     mask_slow = strcmp(all_labels,'slow_drift');
     x2 = [x2 x(:,mask_slow)];
     labels = [labels all_labels(mask_slow)];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring slow time drifts...\n')
+    end
 end
 
 %% High frequencies
 if opt.flag_high 
+    if opt.flag_verbose
+        fprintf('Adding high frequency noise...\n')
+    end
     mask_high = strcmp(all_labels,'high_freq');
     x2 = [x2 x(:,mask_high)];
     labels = [labels all_labels(mask_high)];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring high frequency noise...\n')
+    end
 end
 
 %% Motion parameters
@@ -251,53 +265,79 @@ if opt.flag_pca_motion
     [eig_val,motion_param] = niak_pca(motion_param',opt.pct_var_explained);
 end
 if opt.flag_motion_params
+    if opt.flag_verbose
+        fprintf('Adding high frequency noise...\n')
+    end
     x2 = [x2 motion_param];
     labels = [labels repmat({'motion'},[1 size(motion_param,2)])];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring motion parameters...\n')
+    end
 end
 
 %% Add white matter average
-if opt.flag_verbose
-    fprintf('White matter average ...\n')
-end
 if opt.flag_wm
+    if opt.flag_verbose
+       fprintf('Adding white matter average...\n')
+    end
     mask_wm = strcmp(all_labels,'wm_avg');
     x2 = [x2 x(:,mask_wm)];
     labels = [labels all_labels(mask_wm)];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring white matter average...\n')
+    end
 end
 
 %% Add ventricle average
-if opt.flag_verbose
-    fprintf('Ventricles average ...\n')
-end
 if opt.flag_vent
+    if opt.flag_verbose
+       fprintf('Adding ventricular average...\n')
+    end
     mask_vent = strcmp(all_labels,'vent_avg');
     x2 = [x2 x(:,mask_vent)];
     labels = [labels all_labels(mask_vent)];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring ventricular average...\n')
+    end
 end
 
 %% Add Global signal
-if opt.flag_verbose
-    fprintf('Global signal ...\n')
-end
 if opt.flag_gsc
+    if opt.flag_verbose
+       fprintf('Adding global signal...\n')
+    end
     mask_gs = strcmp(all_labels,'global_signal_pca');
     x2 = [x2 x(:,mask_gs)];
     labels = [labels all_labels(mask_gs)];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring global signal...\n')
+    end
 end
 
 %% Add Compcor
-if opt.flag_verbose
-    fprintf('COMPCOR ...\n')
-end
 if opt.flag_compcor
+    if opt.flag_verbose
+       fprintf('Adding COMPCOR...\n')
+    end
     mask_compcor = strcmp(all_labels,'compcor');
     x2 = [x2 x(:,mask_compcor)];
     labels = [labels all_labels(mask_compcor)];
+else
+    if opt.flag_verbose
+        fprintf('Ignoring COMPCOR...\n')
+    end
 end
 
 %% Add custom regressors
 mask_manual = strcmp(all_labels,'manual');
 if any(mask_manual)
+    if opt.flag_verbose
+       fprintf('Adding user-specified confounds...\n')
+    end    
     x2 = [x2 x(:,mask_manual)];
     labels = [labels all_labels(mask_manual)];
 end
@@ -305,12 +345,18 @@ end
 %% Regress confounds 
 if ~isempty(x2)
     if opt.flag_verbose
-        fprintf('Regress the confounds...\n')
+        fprintf('Regressing the confounds...\n    Total number of confounds: %i\n    Total number of time points for regression: %i\n',size(x,2),sum(~mask_scrubbing))
     end
     model.y = y(~mask_scrubbing,:);
     model.x = x(~mask_scrubbing,:);
+    opt_glm.flag_beta = true;
     res = niak_glm(model,opt_glm); % Run the regression excluding time points with excessive motion
     y = y - x*res.beta; % Generate the residuals for all time points combined
+    y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
+    vol_denoised = reshape(y',size(vol));
+else
+    warning('Found no confounds to regress! Leaving the dataset as is')
+    vol_denoised = vol;
 end
     
 %% Save the fMRI dataset after regressing out the confounds

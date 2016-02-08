@@ -76,7 +76,7 @@ end
 
 %% Check extension
 [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(file_name);
-file_name = [path_f,name_f,ext_short];
+file_name = [path_f,filesep,name_f,ext_short];
 
 %% Options
 if nargin < 3
