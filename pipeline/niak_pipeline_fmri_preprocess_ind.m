@@ -251,7 +251,24 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           filtering. opt.lp = Inf means no low-pass filtering.
 %
 %   BUILD_CONFOUNDS
-%       (structure) Options of NIAK_BRICK_BUILD_CONFOUNDS.
+%       (structure) Options of NIAK_BRICK_BUILD_CONFOUNDS. 
+%
+%      WW_FD
+%           (vector, default [3 6]) defines the time window to be removed around each time frame
+%           identified with excessive motion. First value is for time prior to motion peak, and second value 
+%           is for time following motion peak. 
+%
+%       NB_VOL_MIN
+%           (integer, default 40) the minimal number of volumes remaining after 
+%           scrubbing (unless the data themselves are shorter). If there are not enough
+%           time frames after scrubbing, the time frames with lowest FD are selected.
+%
+%       THRE_FD
+%           (scalar, default 0.5) the maximal acceptable framewise displacement 
+%           after scrubbing.
+%
+%       COMPCOR
+%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
 %
 %   REGRESS_CONFOUNDS
 %       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
@@ -281,13 +298,6 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %          (boolean, default true) turn on/off the removal of the average 
 %          signal in the lateral ventricles.
 %
-%       PCT_VAR_EXPLAINED 
-%           (boolean, default 0.95) the % of variance explained by the selected 
-%           PCA components when reducing the dimensionality of motion parameters.
-%
-%       COMPCOR
-%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
-% 
 %       FLAG_PCA_MOTION 
 %           (boolean, default true) turn on/off the PCA reduction of motion 
 %           parameters.
@@ -712,7 +722,7 @@ job_out.mask_stem_ind     = [opt.folder_anat subject filesep 'func_' subject '_m
 job_out.white_matter_ind  = [opt.folder_anat subject filesep 'func_' subject '_mask_wm_' opt.target_space ext_f];
 job_opt.target_space = opt.target_space;
 job_opt.flag_test = false;
-pipeline = psom_add_job(pipeline,['mask_corsica_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
+pipeline = psom_add_job(pipeline,['mask_confounds_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
 
 %% temporal filtering 
 if opt.flag_verbose
@@ -745,8 +755,8 @@ for num_e = 1:length(fmri)
     job_in.fmri         = pipeline.(['resample_' label(num_e).name]).files_out;
     job_in.dc_low       = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_low;
     job_in.dc_high      = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_high;
-    job_in.mask_vent    = pipeline.(['mask_corsica_' subject]).files_out.mask_vent_ind;
-    job_in.mask_wm      = pipeline.(['mask_corsica_' subject]).files_out.white_matter_ind;
+    job_in.mask_vent    = pipeline.(['mask_confounds_' subject]).files_out.mask_vent_ind;
+    job_in.mask_wm      = pipeline.(['mask_confounds_' subject]).files_out.white_matter_ind;
     job_in.mask_brain   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
     job_in.motion_param = pipeline.(['motion_parameters_' label(num_e).name]).files_out;
     job_in.custom_param = files_in.custom_confounds;
@@ -754,7 +764,7 @@ for num_e = 1:length(fmri)
     job_opt = opt.build_confounds;
     job_opt.folder_out     = opt.folder_resample;
 
-    job_out.confounds = [job_opt.folder_out filesep label(num_e).name '_confounds.tsv' gb_niak_zip_ext]; 
+    job_out.confounds = [job_opt.folder_out filesep label(num_e).name '_n_confounds.tsv' gb_niak_zip_ext]; 
     if num_e == 1
         job_out.compcor_mask   = [opt.folder_anat filesep label(num_e).name filesep 'func_' label(num_e).subject '_mask_compcor_' opt.target_space ext_f];     
     end    
