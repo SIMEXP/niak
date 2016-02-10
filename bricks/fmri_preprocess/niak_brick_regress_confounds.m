@@ -16,6 +16,7 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   CONFOUNDS
 %      (string) the name of a file with (compressed) tab-separated values. 
 %      Each column corresponds to a "confound" effect. 
+%      see template/niak_confounds.json for a list of expected confounds.
 %
 % FILES_OUT 
 %      (string, default FOLDER_OUT/<base FMRI>_cor.<ext FMRI>) the name 
@@ -54,15 +55,6 @@ function [files_in,files_out,opt]=niak_brick_regress_confounds(files_in,files_ou
 %   FLAG_SCRUBBING
 %      (boolean, default true) turn on/off the "scrubbing" of volumes with 
 %      excessive motion.
-%
-%   THRE_FD
-%      (scalar, default 0.5) the maximal acceptable framewise displacement 
-%      after scrubbing.
-%
-%   NB_VOL_MIN
-%      (integer, default 40) the minimal number of volumes remaining after 
-%      scrubbing (unless the data themselves are shorter). If there are not enough
-%      time frames after scrubbing, the time frames with lowest FD are selected.
 %
 %   PCT_VAR_EXPLAINED 
 %      (boolean, default 0.95) the % of variance explained by the selected 
@@ -180,8 +172,6 @@ if opt.flag_verbose
 end
 [hdr_vol,vol] = niak_read_vol(files_in.fmri); % fMRI dataset
 y = reshape(vol,[size(vol,1)*size(vol,2)*size(vol,3) size(vol,4)])'; % organize the fMRI dataset as a time x space array
-mean_y = mean(y,1);
-y = niak_normalize_tseries(y,'mean');
 
 %% Read the confounds
 if opt.flag_verbose
@@ -195,26 +185,9 @@ all_labels = tab(1,:);
 if opt.flag_verbose
     fprintf('Scrubbing frames exhibiting large motion ...\n')
 end
-mask_fd = strcmp(all_labels,'FD');
-if nnz(mask_fd)~=1
-    error('I found either no or too many FD covariates in the array of confounds')
-end 
-fd = x(1:(end-1),mask_fd);
-mask_scrubbing = false(size(y,1),1);
-if opt.flag_scrubbing
-    mask_scrubbing(2:end) = (fd>opt.thre_fd);
-    mask_scrubbing2 = mask_scrubbing;
-    mask_scrubbing2(1:(end-1)) = mask_scrubbing2(1:(end-1))|mask_scrubbing(2:end);
-    mask_scrubbing2(2:end) = mask_scrubbing2(2:end)|mask_scrubbing(1:(end-1));
-    mask_scrubbing2(3:end) = mask_scrubbing2(3:end)|mask_scrubbing(1:(end-2));
-    mask_scrubbing = mask_scrubbing2;
-    if sum(~mask_scrubbing) < opt.nb_vol_min
-        mask_scrubbing = true(size(mask_scrubbing));
-        [val_scr,order_scr] = sort(max([0 ; fd(:)],[fd(:) ; 0]),'ascend');
-        mask_scrubbing(order_scr(1:min(length(mask_scrubbing),opt.nb_vol_min))) = false;
-        warning('There was not enough time frames left after scrubbing, kept the %i time frames with smallest frame displacement. See OPT.NB_VOL_MIN.',opt.nb_vol_min)
-     end
-end
+mask_scrubbing = x(:,strcmp(all_labels,'scrub'));
+fd = x(:,strcmp(all_labels,'FD'));
+fd = fd(1:end-1);
 hdr_vol.extra.mask_scrubbing = mask_scrubbing;
 
 % Normalize data
@@ -348,11 +321,11 @@ if ~isempty(x2)
         fprintf('Regressing the confounds...\n    Total number of confounds: %i\n    Total number of time points for regression: %i\n',size(x,2),sum(~mask_scrubbing))
     end
     model.y = y(~mask_scrubbing,:);
-    model.x = x(~mask_scrubbing,:);
+    model.x = x2(~mask_scrubbing,:);
     opt_glm.flag_beta = true;
     res = niak_glm(model,opt_glm); % Run the regression excluding time points with excessive motion
-    y = y - x*res.beta; % Generate the residuals for all time points combined
-    y = y + repmat(mean_y,[size(y,1) 1]); % put the mean back in the time series
+    y = y - x2*res.beta; % Generate the residuals for all time points combined
+    y = y + repmat(y_mean,[size(y,1) 1]); % put the mean back in the time series
     vol_denoised = reshape(y',size(vol));
 else
     warning('Found no confounds to regress! Leaving the dataset as is')

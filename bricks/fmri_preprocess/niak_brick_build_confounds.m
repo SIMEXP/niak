@@ -65,6 +65,20 @@ function [files_in,files_out,opt]=niak_brick_build_confounds(files_in,files_out,
 %      (structure) the options of the COMPCOR method. See the OPT argument
 %      of NIAK_COMPCOR.
 %
+%   THRE_FD
+%      (scalar, default 0.5) the maximal acceptable framewise displacement 
+%      after scrubbing.
+%
+%   WW_FD
+%      (vector, default [3 6]) defines the time window to be removed around each time frame
+%      identified with excessive motion. First value is for time prior to motion peak, and second value 
+%      is for time following motion peak. 
+%
+%   NB_VOL_MIN
+%      (integer, default 40) the minimal number of volumes remaining after 
+%      scrubbing (unless the data themselves are shorter). If there are not enough
+%      time frames after scrubbing, the time frames with lowest FD are selected.
+%
 %    FLAG_VERBOSE 
 %        (boolean, default 1) if the flag is 1, then the function 
 %        prints some infos during the processing.
@@ -148,8 +162,8 @@ list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% OPTIONS
-list_fields    = { 'compcor' , 'folder_out' , 'flag_verbose', 'flag_test' };
-list_defaults  = { struct()  , ''           , true          , false       };
+list_fields    = { 'thre_fd' , 'ww_fd' , 'nb_min_vol' , 'compcor' , 'folder_out' , 'flag_verbose', 'flag_test' };
+list_defaults  = { 0.5       , [3 6]   , 40           , struct()  , ''           , true          , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.fmri);
@@ -204,7 +218,7 @@ transf = load(files_in.motion_param);
 [rot,tsl] = niak_transf2param(transf.transf);
 x = [tsl' rot'];
 
-%% Scrubbing
+%% Frame displacement
 if opt.flag_verbose
     fprintf('Adding frame displacement...\n')
 end
@@ -215,6 +229,19 @@ fd = sum(abs(rot_d)+abs(tsl_d),1)';
 fd = [fd;0];
 labels = [labels {'FD'}];
 x = [x fd];
+
+%% Scrubbing
+if isfield(hdr_vol,'extra')
+    time_frames = hdr_vol.extra.time_frames;
+else
+    time_frames = (0:(size(vol,4)-1))*hdr_vol.info.tr;
+end
+opt_s.thre = opt.thre_fd;
+opt_s.ww = opt.ww_fd;
+opt_s.nb_min_vol = opt.nb_min_vol;
+scrub = niak_fd2mask(fd,time_frames,opt_s);
+labels = [labels {'scrub'}];
+x = [x scrub];
 
 %% Add Time filter dc low
 if opt.flag_verbose
