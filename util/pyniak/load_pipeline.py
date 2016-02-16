@@ -160,6 +160,10 @@ class FmriPreprocess(BasePipeline):
 
 
 class BASC(BasePipeline):
+    """
+    Class to run basc. Only work with outputs from niak preprocessing,
+    at least for now.
+    """
 
     def __init__(self, grabber_option, *args, **kwargs):
         super(BASC, self).__init__(*args, **kwargs)
@@ -172,10 +176,11 @@ class BASC(BasePipeline):
         """
         :return:
         """
-
         file_in = []
 
+
         file_in.append("opt_g.min_nb_vol = 100")
+
         file_in.append("opt_g.type_files = 'roi'")
         file_in.append("files_in = niak_grab_fmri_preprocess('{0}',opt_g)".format(self.folder_in))
 
@@ -185,7 +190,9 @@ class BASC(BasePipeline):
 
 
 # Dictionary for supported class
-SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess, "Niak_basc": BASC}
+SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
+                       "Niak_basc": BASC,
+                       "Niak_stability_rest": BASC}
 
 
 def load(pipeline_name, folder_in, folder_out, options=None):
