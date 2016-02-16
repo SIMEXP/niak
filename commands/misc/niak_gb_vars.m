@@ -54,7 +54,7 @@ tag_windaub = {'PCWIN','windows'};
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
 if ~exist('gb_psom_gb_vars','var')&&exist('psom_gb_vars.m','file')
-    gb_psom_gb_var = true;
+    gb_psom_gb_vars = true;
     psom_gb_vars
 end
 
@@ -92,7 +92,6 @@ else
     elseif ~isempty(findstr('linux',comp))
         gb_niak_OS = 'unix';
     else
-        warning('System %s unknown!\n',comp);
         gb_niak_OS = 'unkown';
     end
 
