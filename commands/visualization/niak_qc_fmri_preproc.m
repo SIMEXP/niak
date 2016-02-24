@@ -33,6 +33,14 @@ function [] = niak_qc_fmri_preproc(opt)
 %   TEMPLATE_ASYM
 %      (boolean, default false) select betewen symetric(false) or asymetric(true)
 %      anatomical template (mni_icbm152_t1_tal_nlin)
+%   TAG_FILE
+%      (string, Default 'template_qc_tag.tag') sepcifie the MNI tags point file 
+%       that list a word coordinate of tag brain regions
+%
+%   FLAG_LINEAR
+%      (boolean, default false) option to grab the linear files when the 
+%      preprocessing is executed with the option for target output at linear 
+%      instead of non-linear.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -60,9 +68,9 @@ function [] = niak_qc_fmri_preproc(opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Yassine Benhajali, Pierre Bellec
-% Centre de recherche de l'institut de gériatrie de MontrÃ©al, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Qébec, Canada, 2013-2014
+% University of Montreal, Qbec, Canada, 2013-2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI preprocessing, quality control
@@ -86,8 +94,8 @@ function [] = niak_qc_fmri_preproc(opt)
 % THE SOFTWARE.
 
 %% Set default options
-list_fields   = { 'type_order' , 'path_qc' , 'list_subject' , 'flag_restart' , 'template_asym'  };
-list_defaults = { 'xcorr_func' , pwd       , {}             , false          , false            };
+list_fields   = { 'type_order' , 'path_qc' , 'list_subject' , 'flag_restart' , 'template_asym'  , 'tag_file', 'flag_linear'};
+list_defaults = { 'xcorr_func' , pwd       , {}             , false          , false            , ''        , false};
 if nargin == 0
     opt = struct();
 end
@@ -98,7 +106,17 @@ path_qc = niak_full_path(opt.path_qc);
 
 %% Grab the results of the fMRI preprocessing pipeline
 files = niak_grab_all_preprocess(path_qc);
-      
+
+% set the tag file
+niak_gb_vars
+if isempty(opt.tag_file) && exist([ gb_niak_path_template 'qc_tag_template.tag' ] )
+    opt.tag_file =  ( [ gb_niak_path_template 'qc_tag_template.tag' ] );
+elseif ~exist( opt.tag_file)
+    error('The tag files %s does not exist' , opt.tag_file)
+else
+    error('No tag file found')    
+end
+
 %% Set default for the list of subjects
 list_subject = opt.list_subject;
 
@@ -130,9 +148,17 @@ else
 end
 
 %% Sort subjects by selected option
-[xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.csv);
+if opt.flag_linear==true                                                                                                                                                         
+    [xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.stereolin.csv);
+else
+    [xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.csv);
+end
 xcorr_func = xcorr_func(:,2);
-[xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereonl.csv);
+if opt.flag_linear==true
+    [xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereolin.csv);
+else
+    [xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereonl.csv);
+end
 xcorr_anat = xcorr_anat(:,2);
 switch opt.type_order
 case 'xcorr_func'
@@ -188,13 +214,21 @@ for num_s = order
     if ~isfield(files.anat,subject)
         error('I could not find subject %s in the preprocessing',subject)
     end
-    file_anat = files.anat.(subject).t1.nuc_stereonl; % The individual T1 scan in (non-linear) stereotaxic space
+    if opt.flag_linear==true                                                                                                                                                     
+        file_anat = files.anat.(subject).t1.nuc_stereolin; % The individual T1 scan in (linear) stereotaxic space
+    else
+        file_anat = files.anat.(subject).t1.nuc_stereonl; % The individual T1 scan in (non-linear) stereotaxic space
+    end
     if ~psom_exist(file_anat)
-        error('I could not find the anatomical scan %s in stereotaxic (non-linear) space for subject %s',file_anat,subject)
+        error('I could not find the anatomical scan %s in stereotaxic space for subject %s',file_anat,subject)
     end    
-    fprintf('    Individual T1 scan in stereotaxic (non-linear) space, against the MNI template\n')
-    call_reg = ['register "' file_template '" "' file_anat '"'];
-    [status,msg] = system(call_reg);   
+    if opt.flag_linear==true                                                                                                                                                     
+        fprintf('    Individual T1 scan in stereotaxic (linear) space, against the MNI template\n')
+    else
+        fprintf('    Individual T1 scan in stereotaxic (non-linear) space, against the MNI template\n')
+    end
+    [status,msg] = niak_register(file_template , file_anat , [opt.tag_file  ' -global Initial_volumes_synced True']);   
+    
     if status ~=0
         error('There was an error calling register. The call was: %s ; The error message was: %s',call_ref,msg)
     end
@@ -235,13 +269,16 @@ for num_s = order
     end    
     
     % Coregister T1 with functional image
-    file_func = files.anat.(subject).func.mean_stereonl;
+    if opt.flag_linear==true                                                                                                                                                     
+        file_func = files.anat.(subject).func.mean_stereolin;
+    else
+        file_func = files.anat.(subject).func.mean_stereonl;
+    end
     if ~psom_exist(file_func)
-        error('I could not find the mean functional scan %s in stereotaxic (non-linear) space for subject %s',file_func,subject)
+        error('I could not find the mean functional scan %s in stereotaxic space for subject %s',file_func,subject)
     end
     
-    call_ref = ['register "' file_func '" "' file_anat '"'];
-    [status,msg] = system(call_ref);
+    [status,msg] = niak_register(file_func , file_anat , [opt.tag_file  ' -global Initial_volumes_synced True']); 
     if status ~=0
         error('There was an error calling register. The call was: %s ; The error message was: %s',call_ref,msg)
     end
