@@ -96,7 +96,7 @@ path_qc    = [path_data 'quality_control' filesep];
 %path_fmri  = [path_data 'fmri' filesep];
 %path_inter = [path_data 'intermediate' filesep];
 
-if ~flag_in&&(~exist(path_anat,'dir')||~exist(path_qc,'dir'))%||~exist(path_fmri,'dir')||~exist(path_inter,'dir'))
+if ~flag_in&&(~exist(path_anat,'dir')||~exist(path_qc,'dir'))
     warning('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control)')
 end
 
@@ -104,12 +104,18 @@ end
 if length(fieldnames(files_in))>0
     list_subject = fieldnames(files_in);
 else
-    list_qc = dir(path_qc);
+    list_qc = dir(path_anat);
+    list_qc = {list_qc.name};
+    list_qc = list_qc(~ismember(list_qc,{'.','..'}));
     nb_subject = 0;
     for num_q = 1:length(list_qc)
-        if ~ismember(list_qc(num_q).name,{'group_motion','group_coregistration','group_confounds','group_corsica','.','..'})&&list_qc(num_q).isdir
+        list_anat = dir([path_anat list_qc{num_q} ]);
+        list_anat = {list_anat.name};
+        list_anat = list_anat(~ismember(list_anat,{'.','..'}));
+        mask_exist =  ismember(list_anat,{ ['anat_' list_qc{num_q} '_nuc_stereonl.mnc.gz'] , ['func_' list_qc{num_q} '_mean_stereonl.mnc.gz']});
+        if  ~(sum(mask_exist) < 2)
             nb_subject = nb_subject + 1;
-            list_subject{nb_subject} = list_qc(num_q).name;
+            list_subject{nb_subject} = list_qc{num_q};
         end
     end
 end
