@@ -105,7 +105,7 @@ opt = psom_struct_defaults(opt,list_fields,list_defaults);
 path_qc = niak_full_path(opt.path_qc);
 
 %% Grab the results of the fMRI preprocessing pipeline
-files = niak_grab_all_preprocess(path_qc);
+[files,opt_graber] = niak_grab_qc_preprocess(path_qc);
 
 % set the tag file
 niak_gb_vars
@@ -125,7 +125,7 @@ if ischar(list_subject)
 end
 
 if isempty(list_subject)
-    list_subject = fieldnames(files.fmri.vol);
+    list_subject = fieldnames(files.anat);
 end
 
 %% Look for an existing QC report

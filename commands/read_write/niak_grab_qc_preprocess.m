@@ -1,9 +1,9 @@
-function files = niak_grab_qc_preprocess(path_data,files_in)
+function [files,opt] = niak_grab_qc_preprocess(path_data,opt)
 % Grab files created by NIAK_PIPELINE_FMRI_PREPROCESS  needed by 
 % NIAK_QC_FMRI_PREPROCESS
 %
 % SYNTAX:
-% FILES_OUT = NIAK_GRAB_QC_PREPROCESS( PATH_DATA , [FILES_IN] )
+% FILES_OUT = NIAK_GRAB_QC_PREPROCESS( PATH_DATA , OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -12,20 +12,25 @@ function files = niak_grab_qc_preprocess(path_data,files_in)
 %   (string, default [pwd filesep], aka './') full path to the outputs of 
 %   NIAK_PIPELINE_FMRI_PREPROCESS
 %
-% FILES_IN
-%   (structure, default struct() ) the FILES_IN structure fed to the fMRI 
-%   preprocessing pipeline. If left empty, some minimal information are
-%   gathered from the folder to build the list of expected outputs (see
-%   the COMMENTS section below). However, if these information are 
-%   incomplete or corrupted, the list of expected outputs may be 
-%   inaccurate.
+% OPT
+%   (structure) with the following fields:
 %
+%   FILE_EXT
+%      (string, default '.mnc.gz') files extension possible esxtention 
+%      '.nii' , '.nii.gz' , '.mnc' , '.mnc.gz'
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % FILES_OUT
 %   (structure) the list of all expected outputs of the fMRI preprocessing
 %   pipeline to be fed to NIAK_QC_FMRI_PREPROCESS. 
+%
+% OPT
+%   (structure) with the following fields:
+%
+%   FLAG_INCOMPLETE
+%      (boolean, default false) If the preprocessing pipeline is not completed this 
+%       option tuns to true. 
 %
 % _________________________________________________________________________
 % SEE ALSO:
@@ -73,107 +78,52 @@ function files = niak_grab_qc_preprocess(path_data,files_in)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-%% Default path for the database
-if (nargin<1)||isempty(path_data)
+%% Default setting
+list_fields     = { 'file_ext'  ,  'flag_incomplete' };
+list_defaults = { '.mnc.gz' , false                     };
+
+if nargin<1
     path_data = [pwd filesep];
 end
-
-if nargin<2
-    files_in = struct();
-    flag_in = false;
-    ext_f = '';
-else 
-    flag_in = true;
-    [files_c,label] = niak_fmri2cell(files_in);
-    [path_tmp,name_tmp,ext] = niak_fileparts(files_c{1});
-end
-
+opt = struct();
+opt = psom_struct_defaults(opt,list_fields,list_defaults);
 path_data = niak_full_path(path_data);
+
+%% Default varaibles
+files = struct();
+ext= opt.file_ext;
 
 %% List of folders
 path_anat  = [path_data 'anat' filesep];
 path_qc    = [path_data 'quality_control' filesep];
-%path_fmri  = [path_data 'fmri' filesep];
-%path_inter = [path_data 'intermediate' filesep];
 
-if ~flag_in&&(~exist(path_anat,'dir')||~exist(path_qc,'dir'))
-    warning('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control)')
+if ~exist(path_anat,'dir')||~exist(path_qc,'dir')
+    error('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control)')
 end
 
 %% Grab the list of subjects
-if length(fieldnames(files_in))>0
-    list_subject = fieldnames(files_in);
-else
-    list_qc = dir(path_anat);
-    list_qc = {list_qc.name};
-    list_qc = list_qc(~ismember(list_qc,{'.','..'}));
-    nb_subject = 0;
-    for num_q = 1:length(list_qc)
-        list_anat = dir([path_anat list_qc{num_q} ]);
-        list_anat = {list_anat.name};
-        list_anat = list_anat(~ismember(list_anat,{'.','..'}));
-        mask_exist =  ismember(list_anat,{ ['anat_' list_qc{num_q} '_nuc_stereonl.mnc.gz'] , ['func_' list_qc{num_q} '_mean_stereonl.mnc.gz']});
-        if  ~(sum(mask_exist) < 2)
-            nb_subject = nb_subject + 1;
-            list_subject{nb_subject} = list_qc{num_q};
-        end
+list_qc = dir(path_anat);
+list_qc = {list_qc.name};
+list_qc = list_qc(~ismember(list_qc,{'.','..'}));
+nb_subject = 0;
+for num_q = 1:length(list_qc)
+    list_anat = dir([path_anat list_qc{num_q} ]);
+    list_anat = {list_anat.name};
+    list_anat = list_anat(~ismember(list_anat,{'.','..'}));
+    mask_exist =  ismember(list_anat,{ ['anat_' list_qc{num_q} '_nuc_stereonl.mnc.gz'] , ['func_' list_qc{num_q} '_mean_stereonl.mnc.gz']});
+    if  ~(sum(mask_exist) < 2)
+        nb_subject = nb_subject + 1;
+        list_subject{nb_subject} = list_qc{num_q};
     end
 end
 
-%% Grab the list of sessions and runs
-if length(fieldnames(files_in))>0
-    for num_s = 1:length(list_subject) % loop over subjects
-        subject = list_subject{num_s};
-        list_session = fieldnames(files_in.(subject).fmri);
-        for num_sess = 1:length(list_session) % loop over sessions
-            session = list_session{num_sess};
-            list_run = fieldnames(files_in.(subject).fmri.(session));
-            for num_r = 1:length(list_run) % loop over runs
-                run = list_run{num_r};
-                files.fmri.vol.(subject).(session).(run) = '';
-            end
-        end
-     end
-else
-    file_scrub = [path_qc 'group_motion' filesep 'qc_scrubbing_group.csv'];
-    [tab_scrub,labx_scrub,laby_scrub] = niak_read_csv(file_scrub);
-    for num_s = 1:nb_subject
-        subject = list_subject{num_s};
-        ind_r = regexp(labx_scrub,['^' subject '_']);
-        ind_r = find(cellfun(@length,ind_r,'UniformOutput',true)>0);
-        files.fmri.vol.(subject) = struct();
-        if ~isempty(ind_r)
-            for num_r = 1:length(ind_r)
-                ind_e = regexp(labx_scrub{ind_r(num_r)},'_');
-                ind_e = ind_e(end);            
-                run = labx_scrub{ind_r(num_r)}((ind_e+1):end);
-                session = labx_scrub{ind_r(num_r)}((length(subject)+2):(ind_e-1));
-                files.fmri.vol.(subject).(session).(run) = '';
-            end
-        else
-	    error('I could not find any fmri dataset for subject %s, that''s weird.',subject);
-        end    
-    end
-end
-
-%% Grab the preprocessed fMRI datasets
-[fmri_c,lc] = niak_fmri2cell(files.fmri.vol);
-list_ext = { '.nii' , '.nii.gz' , '.mnc' , '.mnc.gz' };
-for num_f = 1:length(lc)
-    base_fmri = [path_fmri 'fmri_' lc(num_f).name];
-    if ~flag_in
-        ext = list_ext{end};
-    else
-        list_ext = {ext};
-    end
-    for num_e = 1:length(list_ext)    
-        file_fmri = [base_fmri list_ext{num_e}];
-        if flag_in||psom_exist(file_fmri)
-            ext = list_ext{num_e};
-            files.fmri.vol.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = file_fmri;
-            files.fmri.extra.(lc(num_f).subject).(lc(num_f).session).(lc(num_f).run) = [base_fmri '_extra.mat'];
-        end
-     end     
+%% Check if pipeline comp;eted
+file_scrub = [path_qc 'group_motion' filesep 'qc_scrubbing_group.csv'];
+if exist(file_scrub)
+   fprintf('Congrats seems that you completed your preprocessing pepeline\n')
+else 
+    warning('Seems that your preprocessing pipeline is not fully completed, do not worry you will be able to QC\n')
+    opt.flag_incomplete = true;
 end
 
 %% Grab the preprocessed anat datasets
@@ -188,11 +138,6 @@ for num_s = 1:length(list_subject)
                   'classify_stereolin' , ...
                   'mask_stereolin'     , ...
                   'mask_stereonl'};
-%                  'pve_csf_stereolin'  , ... % Commented out because it is an optional output
-%                  'pve_wm_stereolin'   , ... % Commented out because it is an optional output
-%                  'pve_gm_stereolin'   , ... % Commented out because it is an optional output
-%                  'pve_disc_stereolin' , ... % Commented out because it is an optional output
-
                    
     list_func = { 'mask_stereonl'  , ...
                   'mean_stereonl'  , ...
@@ -251,17 +196,9 @@ files.quality_control.group_coregistration.func.mask_group   = [path_qc 'group_c
 files.quality_control.group_coregistration.func.mean_average = [path_qc 'group_coregistration' filesep 'func_mean_average_stereonl' ext];
 files.quality_control.group_coregistration.func.mean_std     = [path_qc 'group_coregistration' filesep 'func_mean_std_stereonl' ext];
 
-%% Grab the results of quality control -- CORSICA
-% files.quality_control.group_corsica.pdf  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.pdf'];  % Commented out because this is an optional output
-% files.quality_control.group_corsica.csv  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_fit.csv'];  % Commented out because this is an optional output
-% files.quality_control.group_corsica.mean = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_mean' ext]; % Commented out because this is an optional output
-% files.quality_control.group_corsica.std  = [path_qc 'group_corsica' filesep 'func_ratio_var_corsica_stereonl_std' ext];  % Commented out because this is an optional output 
-
 %% Grab the results of quality control -- MOTION
 files.quality_control.group_motion.between_run.csv = [path_qc 'group_motion' filesep 'qc_coregister_between_runs_group.csv'];
-files.quality_control.group_motion.between_run.pdf = [path_qc 'group_motion' filesep 'qc_coregister_between_runs_group.pdf'];
 files.quality_control.group_motion.within_run.csv  = [path_qc 'group_motion' filesep 'qc_motion_group.csv'];
-files.quality_control.group_motion.within_run.pdf  = [path_qc 'group_motion' filesep 'qc_motion_group.pdf'];
 files.quality_control.group_motion.scrubbing       = [path_qc 'group_motion' filesep 'qc_scrubbing_group.csv'];
 
 %% Grab the results of quality control -- INDIVIDUAL
@@ -280,46 +217,4 @@ for num_s = 1:length(list_subject)
     files.quality_control.individual.(subject).motion.coregister.pdf = [path_qc subject filesep 'motion_correction' filesep 'fig_coregister_motion.pdf'];
     files.quality_control.individual.(subject).motion.mask           = [path_qc subject filesep 'motion_correction' filesep 'func_' subject '_mask_average_stereonl' ext];
     files.quality_control.individual.(subject).motion.within_run     = [path_qc subject filesep 'motion_correction' filesep 'fig_motion_within_run.pdf'];
-        
-    %% Run level
-    list_session = fieldnames ( files.fmri.vol.(subject) );
-    for num_sess = 1:length(list_session)
-        session = list_session{num_sess};
-        list_run = fieldnames( files.fmri.vol.(subject).(session) );
-        for num_r = 1:length(list_run)
-            run = list_run{num_r};
-            
-            % CORSICA
-            % files.quality_control.individual.(subject).corsica.pdf.(session).(run)  = [path_qc subject filesep 'corsica' filesep 'fmri_' subject '_' session '_' run '_cor_sica_space_qc_corsica.pdf']; % Commented out because this is an optional output
-            % files.quality_control.individual.(subject).corsica.var.(session).(run)  = [path_qc subject filesep 'corsica' filesep 'qc_corsica_var_' subject '_' session '_' run '_funcstereonl' ext]; % Commented out because this is an optional output
-            
-            % CONFOUNDS
-            for num_c = 1:length(list_conf)
-                conf = list_conf{num_c};
-                files.quality_control.individual.(subject).confounds.(session).(run).(conf) = [path_qc subject filesep 'regress_confounds' filesep subject '_' session '_' run '_qc_' conf '_funcstereonl' ext]; 
-            end            
-        end
-    end
-end
-
-%% Grab the intermediate results
-for num_s = 1:length(list_subject)
-    subject = list_subject{num_s};
-    
-    %% Run level
-    list_session = fieldnames ( files.fmri.vol.(subject) );
-    for num_sess = 1:length(list_session)
-        session = list_session{num_sess};
-        list_run = fieldnames( files.fmri.vol.(subject).(session) );
-        for num_r = 1:length(list_run)
-            run = list_run{num_r};
-            files.intermediate.(subject).(session).(run).motion.target     = [path_inter subject filesep 'motion_correction' filesep 'motion_target_' subject '_' session '_' run ext];
-            files.intermediate.(subject).(session).(run).motion.with_run   = [path_inter subject filesep 'motion_correction' filesep 'motion_Wrun_' subject '_' session '_' run '.mat'];
-            files.intermediate.(subject).(session).(run).motion.parameters = [path_inter subject filesep 'motion_correction' filesep 'motion_parameters_' subject '_' session '_' run '.mat'];
-            files.intermediate.(subject).(session).(run).confounds         = [path_inter subject filesep 'regress_confounds' filesep 'confounds_gs_' subject '_' session '_' run '_cor.mat'];
-            files.intermediate.(subject).(session).(run).scrubbing         = [path_inter subject filesep 'regress_confounds' filesep 'scrubbing_' subject '_' session '_' run '.mat'];
-            files.intermediate.(subject).(session).(run).filter.high       = [path_inter subject filesep 'time_filter' filesep 'fmri_' subject '_' session '_' run '_a_res_dc_high.mat'];
-            files.intermediate.(subject).(session).(run).filter.low        = [path_inter subject filesep 'time_filter' filesep 'fmri_' subject '_' session '_' run '_a_res_dc_low.mat'];
-        end
-    end
 end
