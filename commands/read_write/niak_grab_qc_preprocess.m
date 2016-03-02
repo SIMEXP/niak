@@ -40,25 +40,24 @@ function [files,opt] = niak_grab_qc_preprocess(path_data,opt)
 %
 % This "data grabber" based on the output folder of 
 % NIAK_PIPELINE_FMRI_PREPROCESS
-% It grabs only things nedded by NIAK_QC_FMRI_PREPROCESS.
+% It grabs only files nedded by NIAK_QC_FMRI_PREPROCESS fonction.
 %
-% The grabber will build a fairly exhaustive list of outputs.
-% If FILES_IN is specified, the list can build even if PATH_DATA does not 
+% The grabber will build a list of outputs neded by the fonction NIAK_QC_FMRI_PREPROCESS.
+% The list can build even if PATH_DATA does not 
 % exist. Otherwise, a limited number of outputs actually need to be present 
 % for the list to build:
-%   * The individual subfolders in the 'quality_control' folder.
-%   * The qc_scrubbing_group.csv file in 'quality_control/group_motion'
-%   * The preprocessed fMRI datasets in the folder 'fmri'
+%   * The individual subfolders in the 'anat' folder.
+%   * The 'quality_control' folder
 %
-% The "logs" folder is not excluded in the list.
 %
-% Copyright (c) Pierre Bellec
+% Copyright (c) Pierre Bellec, Yassine Benhajlai
 %               Centre de recherche de l'institut de Griatrie de Montral,
 %               Dpartement d'informatique et de recherche oprationnelle,
 %               Universit de Montral, 2011-2012.
-% Maintainer : pierre.bellec@criugm.qc.ca
+% Maintainer : pierre.bellec@criugm.qc.ca, yassine.ben.haj.ali@umontreal.ca
 % See licensing information in the code.
-% Keywords : grabber
+% Keywords : grabber, QC
+% See also: NIAK_QC_FMRI_PREPROCESS
 
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -81,22 +80,18 @@ function [files,opt] = niak_grab_qc_preprocess(path_data,opt)
 %% Default setting
 list_fields     = { 'file_ext'  ,  'flag_incomplete' };
 list_defaults = { '.mnc.gz' , false                     };
-
 if nargin<1
     path_data = [pwd filesep];
 end
 opt = struct();
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 path_data = niak_full_path(path_data);
-
-%% Default varaibles
 files = struct();
 ext= opt.file_ext;
 
 %% List of folders
 path_anat  = [path_data 'anat' filesep];
 path_qc    = [path_data 'quality_control' filesep];
-
 if ~exist(path_anat,'dir')||~exist(path_qc,'dir')
     error('The specified folder does not contain some expected outputs from the fMRI preprocess (anat ; quality_control)')
 end
@@ -117,7 +112,7 @@ for num_q = 1:length(list_qc)
     end
 end
 
-%% Check if pipeline comp;eted
+%% Check if preprocessing pipeline completed
 file_scrub = [path_qc 'group_motion' filesep 'qc_scrubbing_group.csv'];
 if exist(file_scrub)
    fprintf('Congrats seems that you completed your preprocessing pepeline\n')

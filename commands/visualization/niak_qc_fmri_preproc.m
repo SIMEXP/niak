@@ -147,44 +147,48 @@ else
     qc_report = sub_init_report(list_subject);
 end
 
-%% Sort subjects by selected option
-if opt.flag_linear==true                                                                                                                                                         
-    [xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.stereolin.csv);
-else
-    [xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.csv);
-end
-xcorr_func = xcorr_func(:,2);
-if opt.flag_linear==true
-    [xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereolin.csv);
-else
-    [xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereonl.csv);
-end
-xcorr_anat = xcorr_anat(:,2);
-switch opt.type_order
-case 'xcorr_func'
-    [mask_sub,ind_sub] = ismember(list_subject,lxf);
-    if any(~mask_sub)
-        ind = find(~mask_sub);        
-        error('Some subjects (e.g. %s) could not be found in the xcorr_func file %s',list_subject{ind(1)},files.quality_control.group_coregistration.func.csv)
+%% Sort subjects by selected option or force alphabetical order if preprocessing incomplete
+if ~(opt_graber.flag_incomplete == true)
+    if opt.flag_linear==true                                                                                                                                                         
+        [xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.stereolin.csv);
+    else
+        [xcorr_func,lxf,lyf] = niak_read_csv(files.quality_control.group_coregistration.func.csv);
     end
-    xcorr_func = xcorr_func(ind_sub);
-    [val,order] = sort(xcorr_func);
-    order = order(:)';
-case 'xcorr_anat'
-    [mask_sub,ind_sub] = ismember(list_subject,lxa);
-    if any(~mask_sub)
-        ind = find(~mask_sub);        
-        error('Some subjects (e.g. %s) could not be found in the xcorr_func file %s',list_subject{ind(1)},files.quality_control.group_coregistration.func.csv)
+    xcorr_func = xcorr_func(:,2);
+    if opt.flag_linear==true
+        [xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereolin.csv);
+    else
+        [xcorr_anat,lxa,lya] = niak_read_csv(files.quality_control.group_coregistration.anat.stereonl.csv);
     end
-    xcorr_anat = xcorr_anat(ind_sub);
-    [val,order] = sort(xcorr_anat); 
-    order = order(:)';
-case 'alpha'
+    xcorr_anat = xcorr_anat(:,2);
+    switch opt.type_order
+    case 'xcorr_func'
+        [mask_sub,ind_sub] = ismember(list_subject,lxf);
+        if any(~mask_sub)
+            ind = find(~mask_sub);        
+            error('Some subjects (e.g. %s) could not be found in the xcorr_func file %s',list_subject{ind(1)},files.quality_control.group_coregistration.func.csv)
+        end
+        xcorr_func = xcorr_func(ind_sub);
+        [val,order] = sort(xcorr_func);
+        order = order(:)';
+    case 'xcorr_anat'
+        [mask_sub,ind_sub] = ismember(list_subject,lxa);
+        if any(~mask_sub)
+            ind = find(~mask_sub);        
+            error('Some subjects (e.g. %s) could not be found in the xcorr_func file %s',list_subject{ind(1)},files.quality_control.group_coregistration.func.csv)
+        end
+        xcorr_anat = xcorr_anat(ind_sub);
+        [val,order] = sort(xcorr_anat); 
+        order = order(:)';
+    case 'alpha'
+        order = (1:length(list_subject))';
+    otherwise
+        error('%s is not a supported ordering of subjects', opt.type_order);
+    end
+else
     order = (1:length(list_subject))';
-otherwise
-    error('%s is not a supported ordering of subjects', opt.type_order);
 end
-    
+
 %% The template file 
 niak_gb_vars
 if ~opt.template_asym
