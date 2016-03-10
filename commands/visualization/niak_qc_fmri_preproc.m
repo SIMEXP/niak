@@ -181,12 +181,12 @@ if ~(opt_graber.flag_incomplete == true)
         [val,order] = sort(xcorr_anat); 
         order = order(:)';
     case 'alpha'
-        order = (1:length(list_subject))';
+        order = (1:length(list_subject));
     otherwise
         error('%s is not a supported ordering of subjects', opt.type_order);
     end
 else
-    order = (1:length(list_subject))';
+    order = (1:length(list_subject));
 end
 
 %% The template file 
@@ -199,10 +199,13 @@ end
    
 %% Loop over subjects 
 for num_s = order
-
     % Initialize the report    
-    subject = list_subject{num_s};           
-    fprintf('\nQuality control of Subject %s, xcorr anat = %1.3f, xcorr func = %1.3f\n' ,subject,xcorr_anat(num_s),xcorr_func(num_s))
+    subject = list_subject{num_s};
+    if opt_graber.flag_incomplete == true
+       fprintf('\nQuality control of Subject %s \n' ,subject)
+    else 
+       fprintf('\nQuality control of Subject %s, xcorr anat = %1.3f, xcorr func = %1.3f\n' ,subject,xcorr_anat(num_s),xcorr_func(num_s))
+    end
     if ~opt.flag_restart && ~isempty(qc_report{num_s+1,2})
         fprintf('    Skipping, QC report already completed\n',subject)            
         continue
