@@ -89,7 +89,7 @@
 % FILES
 %   (structure) the exact fields depend on OPT.TYPE_FILES. 
 %
-%   case 'rest' :
+%   case {'rest','scores'} :
 %
 %       DATA.(SUBJECT).(SESSION).(RUN)
 %           (string) preprocessed fMRI datasets. 
@@ -329,7 +329,7 @@ if ~strcmp(opt.type_files,'glm_connectome')
     files.mask = [path_qc 'group_coregistration' filesep files.mask(1).name];
     if opt.flag_areas && ~strcmp(opt.type_files,'scores')
         files.areas = dir([path_data 'anat' filesep 'template_aal.*']);
-        if isempty(files.mask)
+        if isempty(files.areas)
             error('Could not find the AAL parcelation for functional data')
         end
         files.areas = [path_data 'anat' filesep files.areas(1).name];
