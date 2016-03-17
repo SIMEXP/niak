@@ -30,11 +30,11 @@ docker run -i -t --privileged --rm \
        -v /tmp/.X11-unix:/tmp/.X11-unix \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:0.13.1 \
+       simexp/niak-boss:0.13.4 \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
 
-Replace `simexp/niak-boss:0.13.3` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.13.3)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak-boss:0.13.4` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.13.4)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
@@ -51,7 +51,7 @@ This will start a bash terminal (as opposed to the standard OSX tcsh) where you 
 ```bash
 docker run -i -t --privileged --rm \
        -v $HOME:$HOME \
-       simexp/niak-boss:0.13.1 \
+       simexp/niak-boss:0.13.4 \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
@@ -81,7 +81,7 @@ default_save_options('-7');
 graphics_toolkit gnuplot
 ```
 
-**NIAK library**. Download the [latest NIAK release on NITRC](http://www.nitrc.org/frs/download.php/7470/niak-boss-0.13.0.zip), a free open-source software (MIT license). Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path. At this stage all pipelines (except the preprocessing pipeline) will work for nifti files. Any manipulation of MINC files will require the installation of the MINC tools (see below). The NIAK archive bundles the [brain connectivity toolbox](https://sites.google.com/site/bctnet/) and [PSOM](http://psom.simexp-lab.org/), which do not need to be installed separately.
+**NIAK library**. Download the [latest NIAK release on Github](https://github.com/SIMEXP/niak/releases/download/v0.13.4/niak-with-dependencies.zip), a free open-source software (MIT license). Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path. At this stage all pipelines (except the preprocessing pipeline) will work for nifti files. Any manipulation of MINC files will require the installation of the MINC tools (see below). The NIAK archive bundles the [brain connectivity toolbox](https://sites.google.com/site/bctnet/) and [PSOM](http://psom.simexp-lab.org/), which do not need to be installed separately.
 ```matlab
  path_niak = '/home/toto/niak/';
  P = genpath(path_niak);
