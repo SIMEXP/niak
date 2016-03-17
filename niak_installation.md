@@ -40,7 +40,7 @@ docker stop niak
 docker rm niak
 ```
 
-The procedure as been tested on Debian 8.0, Ubuntu 14.10, centOS 7 and fedora 20 and we expect it to run smootly on many other Linux distributions.
+The procedure as been tested on Debian 8.0, Ubuntu 14.10, 15.10, centOS 6, 7 and fedora 20, 21 and we expect it to run smootly on many other Linux distributions.
 
 ### Mac OSX
 
