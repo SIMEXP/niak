@@ -30,6 +30,8 @@ install:
   - mkdir -p /home/travis/build/SIMEXP/psom
   - cd /home/travis/build/SIMEXP/psom
   - git clone https://github.com/SIMEXP/psom.git
+  - cd psom 
+  - git checkout v1.2.0
   - mkdir -p /home/travis/build/SIMEXP/BCT
   - cd /home/travis/build/SIMEXP/BCT
   - wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip
