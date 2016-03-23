@@ -68,7 +68,12 @@ To release only a new target
 
     parser.add_argument('--push_niak_release', '-n', action='store_true'
                         , help='Will only push niak to '
-                               'url repo if this option is given')
+                               'url repo and create a new release '
+                               'if this option is given')
+
+    parser.add_argument('--force_niak_release', '-f', action='store_true',
+                        help='Will push a Niak release even if the release '
+                             'assets already exist')
 
     parser.add_argument('--redo_target', '-R', help='will recompute target event if already present')
 
@@ -83,8 +88,8 @@ To release only a new target
 
 
 
-    parser.add_argument('--target_work_dir', '-w', help='the path to the Target work dir',
-                        default=config.TARGET.WORK_DIR)
+    # parser.add_argument('--target_work_dir', '-w', help='the path to the Target work dir',
+    #                     default=config.TARGET.WORK_DIR)
 
 
 
@@ -95,11 +100,11 @@ To release only a new target
                                        niak_url=parsed.niak_url,
                                        target_path=parsed.target_path,
                                        target_name=parsed.target_name,
-                                       work_dir=parsed.target_work_dir,
-                                       new_target=parsed.release_target,
+                                       release_target=parsed.release_target,
                                        psom_path=parsed.psom_path,
                                        psom_url=parsed.psom_url,
-                                       push_niak_release=parsed.push_niak_release)
+                                       push_niak_release=parsed.push_niak_release,
+                                       force_niak_release=parsed.force_niak_release)
 
 
     new_target.start()

@@ -5,6 +5,8 @@ This is a simple class to implement things I need to do with git
 
 __author__ = 'poquirion'
 
+import collections
+import logging
 import os
 import queue
 import subprocess
@@ -13,28 +15,42 @@ import signal
 import time
 import threading
 
+
 # This way of dealing with error seems pretty crappy!
 # but lets test before I make a better opinion
-def std_return_on_error(func):
-    def wrapper_func(*args, **kwargs):
+def stderror_handling(func):
+    def wrapper_func(self, *args, **kwargs):
         # Invoke the wrapped function first
-        stdout, stderr = func(*args, **kwargs)
-        print(stdout)
-        if stderr:
-            print(stderr)
-            # raise ChildProcessError ("Git has failed")
-            return stderr
-        return stdout, stderr
+        did_fail = False
+        stdout, stderr = func(self, *args, **kwargs)
+        logging.info(stdout)
+        if isinstance(stderr, str):
+            stdout = stderr.splitlines()
+        for line in stderr:
+            if "warning" in line:
+                logging.warning(line)
+            elif "error" in line:
+                logging.error(line)
+                did_fail = False
+            else:
+                logging.warning(line)
+            if self.fail_on_error and did_fail:
+                # raise in the end so the full std_err logged
+                raise ChildProcessError("Git has failed")
+
+        if isinstance(stdout, str):
+            stdout = stdout.splitlines()
+        return stdout
     return wrapper_func
 
 
 def clone(source, dest):
 
     r = Repo(dest)
-    ret = r._clone(source, dest)
+    ret = r.clone(source, dest)
 
     if ret is None:
-        r._initialize()
+        r.initialize()
     return r
 
 
@@ -45,7 +61,7 @@ class Repo(object):
     __untracked_tag = "??"
     __merge_strategy = ["ours", "theirs"]
 
-    def __init__(self, path):
+    def __init__(self, path, fail_on_error=False):
         """
 
         :param path: the repo path
@@ -60,33 +76,29 @@ class Repo(object):
         self._untracked = []
         self._process_loop_sleep = 0.01
         self._timeout_once_done = 10
-        self._init_hash = None
+        self._init_sha1 = None
         self._init_branch = None
         self._new_branch = None
+        self.fail_on_error = fail_on_error
 
-        if not os.path.isdir(".git/{0}".format(self.path)):
-            self._initialize()
-            #Todo load origin
+        if os.path.isdir("{0}.git".format(self.path)):
+            self.initialize()
+            # Todo load origin
 
+    def initialize(self):
+        self._init_sha1 = self.sha1()
+        self._init_branch = self.branch(None)
+        # self._init_branches = self.branch(None)
 
-    def _initialize(self):
-        # self.which_git = "/usr/bin/git"
-        self._init_hash, _ = self.hash()
-        self._init_branch, _ = self.branch(None)
-        self._init_branches, _ = self.branch(None)
+    @property
+    def init_branch(self):
+        return self._init_branch
 
+    @property
+    def init_hash(self):
+        return self._init_sha1
 
-    def _clean(self, commit=None, branch=None):
-        """
-        Remove commit or branch added after
-        _initialize has been called
-
-        :param commit: True to revert all
-        :param branch: only delete the given branch
-        :return:
-        """
-        pass
-
+    @stderror_handling
     def git_go(self, cmd, cwd=None):
         """
 
@@ -94,6 +106,12 @@ class Repo(object):
         :return: std out and std err
         """
         # Cleaning before each call
+
+        if cwd is None:
+            cwd = self.path
+        if not cwd:
+            cwd = None
+
         stderr = []
         stdout = []
         self._activity = {}
@@ -103,8 +121,8 @@ class Repo(object):
         completion_time = 0
 
         # Running the process
-        print("running {0}".format(" ".join(self.which_git+cmd)))
-        print("  in {0}".format(cwd))
+        logging.info("running {0}".format(" ".join(self.which_git+cmd)))
+        logging.info("  in {0}".format(cwd))
         p = subprocess.Popen(self.which_git+cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # p = subprocess.Popen(self.which_git+cmd, cwd=cwd)
 
@@ -141,12 +159,10 @@ class Repo(object):
             if process_is_done:
                 while not stdout_queue.empty():
                     stdout.append(stdout_queue.get_nowait())
-                interrupt_the_process = False
                 stdout_is_close = True
             if process_is_done:
                 while not stderr_queue.empty():
                     stderr.append(stderr_queue.get_nowait())
-                interrupt_the_process = False
                 stderr_is_close = True
 
             # Start the countdown for the done_timeout
@@ -157,23 +173,6 @@ class Repo(object):
             time.sleep(self._process_loop_sleep)
 
         return_code = p.poll()
-
-        if return_code is None:
-
-            if interrupt_the_process:
-                print("The git process is running (PID {0}). Sending it an "
-                      "interrupt signal...".format(p.pid))
-                p.send_signal(signal.SIGKILL)
-
-            # Let the subprocess die peacefully...
-            time_to_wait = self._timeout_once_done
-            while time_to_wait > 0 and p.poll() is None:
-                time.sleep(0.1)
-                time_to_wait -= 0.1
-
-            # Force the process to die if it's still running.
-            return_code = p.poll()
-
         return stdout, stderr
 
     @staticmethod
@@ -186,30 +185,24 @@ class Repo(object):
                 sys.stderr.write(line.decode('utf-8'))
         stream.close()
 
-    # @property
-    # def remote(self):
-    #     if self._remote is None:
-    #         if not self.initialized:
-    #             raise IOError("Repo at {0} no initialised yet".format(self.path))
-    #
-    #         self._remote =
-    #
-    #     return self._remote
-
-    @std_return_on_error
-    def remote(self, remote_name=None):
+    def show_ref(self):
+        """
+        A sha1 can point to many ref tags
+        :return: A dictionary with
+                  {sha1: [ref_tag1, ref_tag2], sha1, [ref_tag3]}
         """
 
-        :param remote_name:
-        :return: a dictionary
-                {remote_name: url}
-        """
+        cmd = ["show-ref"]
+        refs = self.git_go(cmd=cmd)
+        refs_dico = collections.defaultdict(list)
+        # format the dico according to doc
+        for ref in refs:
+            k, v = ref.split()
+            refs_dico[k].append(v)
 
+        return refs_dico
 
-        return {}
-
-    @std_return_on_error
-    def _clone(self, source, dest):
+    def clone(self, source, dest):
         """
 
         :param source: an url or path
@@ -218,25 +211,24 @@ class Repo(object):
         """
 
         cmd = ["clone", source, dest]
-        return self.git_go(cmd, cwd=None)
+        return self.git_go(cmd, cwd=False)
 
-
-    @std_return_on_error
-    def checkout(self, *args, force=False):
+    def checkout(self, reference, force=False):
         """
-
-        :param args: any of git checkout args
+        :param reference: Can be a branch, a tag, a commit...
         :return: The error string or None if successful
         """
+
+        if not reference:
+            reference = " "
 
         cmd = ["checkout"]
         if force:
             cmd.append("-f")
-        cmd.extend(args)
+        cmd.append(reference)
         return self.git_go(cmd, cwd=self.path)
 
 
-    @std_return_on_error
     def reset(self, commit, hard=False):
 
         cmd = ["reset"]
@@ -245,14 +237,15 @@ class Repo(object):
         cmd.append(commit)
         return self.git_go(cmd, cwd=self.path)
 
-
-    @std_return_on_error
-    def pull(self, branch="master", remote_name="origin"):
+    def pull(self, branch=None, remote_name=None):
+        if branch is None:
+            branch = "master"
+        if remote_name is None:
+            remote_name = "origin"
 
         cmd = ["pull", remote_name, branch]
         return self.git_go(cmd, cwd=self.path)
 
-    @std_return_on_error
     def tag(self, name, force=False):
 
         cmd = ["tag", name]
@@ -260,16 +253,19 @@ class Repo(object):
             cmd.append("-f")
         return self.git_go(cmd, cwd=self.path)
 
-    @std_return_on_error
-    def push(self, branch="master", remote_name="origin", push_tags=None):
+    def push(self, branch=None, remote_name=None, push_tags=None):
 
-        cmd = ["push", remote_name, branch]
+        if remote_name is None:
+            remote_name = "origin"
+
+        cmd = ["push", remote_name]
+        if branch:
+            cmd.append(branch)
         if push_tags:
             cmd.append("--tags")
         return self.git_go(cmd, cwd=self.path)
 
 
-    @std_return_on_error
     def merge(self, to_branch, from_branch, strategy=None):
 
 
@@ -286,14 +282,12 @@ class Repo(object):
         cmd = ["merge", from_branch]
         return self.git_go(cmd, cwd=self.path)
 
-    @std_return_on_error
     def add_all(self):
 
         cmd = ["add", "-A"]
 
         return self.git_go(cmd, cwd=self.path)
 
-    @std_return_on_error
     def commit(self, message, add_all=True):
 
         if add_all:
@@ -305,11 +299,11 @@ class Repo(object):
 
         return self.git_go(cmd, cwd=self.path)
 
-    @std_return_on_error
-    def branch(self, name= None, checkout=False, delete=False):
+    def branch(self, name=None, checkout=False, delete=False):
         """
         :param name: branch name or None or ""
         :param checkout: Will checkout the branch
+        :param delete: If true Force delete the 'name' branch
         :return: If name is a "False" boolean, returns the current branch name
         """
         cmd = ["branch"]
@@ -318,7 +312,7 @@ class Repo(object):
             if delete:
                 cmd.append("-D")
 
-        out, err = self.git_go(cmd)
+        out = self.git_go(cmd)
 
         if checkout:
             self.checkout(name)
@@ -326,24 +320,19 @@ class Repo(object):
         if name is None:
             for o in out:
                 if o.startswith("*"):
-                    _out = o.split()[0]
-                    return _out, err
+                    _out = o.split()[1]
+                    return _out
 
-        return out, err
+        return out
 
-    @std_return_on_error
-    def hash(self):
+    def sha1(self):
         """
-        :return: the actual git hash
+        :return: the actual git sha1 hash
         """
         cmd = ["rev-parse", "--verify", "HEAD"]
-        out, err = self.git_go(cmd=cmd)
-        if isinstance(out, str):
-            return out, err
-        else:
-            return str(out[0]), err
+        out = self.git_go(cmd=cmd)
+        return str(out[0])
 
-    @std_return_on_error
     def status(self):
         """
             update repo status
@@ -355,23 +344,16 @@ class Repo(object):
         """
         cmd = ["status", "-s"]
 
-        out, err = self.git_go(cmd=cmd)
-
-        if err:
-            return out, err
-        else:
-            for line in out.splitlines():
-                line = line.strip()
-                if line.startswith(self.__deleted_tag):
-                    self._deleted.append(line.split()[-1])
-                elif line.startswith(self.__untracked_tag):
-                    self._untracked.append(line.split()[-1])
-                elif line.startswith(self.__modified_tag):
-                    self._modified.append(line.split()[-1])
-                else:
-                    err_m = "{0} is not a recognise git status".format(line)
-                    return out, err_m
-        return out, None
+        out = self.git_go(cmd=cmd)
+        for line in out:
+            line = line.strip()
+            if line.startswith(self.__deleted_tag):
+                self._deleted.append(line.split()[-1])
+            elif line.startswith(self.__untracked_tag):
+                self._untracked.append(line.split()[-1])
+            elif line.startswith(self.__modified_tag):
+                self._modified.append(line.split()[-1])
+        return out
 
 
 
