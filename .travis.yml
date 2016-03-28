@@ -1,50 +1,16 @@
+sudo: required
+
+services:
+  - docker
+
+
+
+
+
 before_install:
-  # Add the backports to the sources
-  - sudo apt-get update
-  - sudo apt-get install software-properties-common python-software-properties dpkg-dev -y
-  # build a local octave repo
-  - sudo wget --directory-prefix=/local_repo/octave  https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/liboctave2_3.8.1-1ubuntu1~octave1~precise1_amd64.deb   https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/octave_3.8.1-1ubuntu1~octave1~precise1_amd64.deb    https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/liboctave-dev_3.8.1-1ubuntu1~octave1~precise1_amd64.deb    https://launchpad.net/~octave/+archive/ubuntu/stable/+build/5921916/+files/octave-dbg_3.8.1-1ubuntu1~octave1~precise1_amd64.deb   https://launchpad.net/~octave/+archive/ubuntu/stable/+files/octave-common_3.8.1-1ubuntu1~octave1~precise1_all.deb  https://launchpad.net/~octave/+archive/ubuntu/stable/+files/octave-info_3.8.1-1ubuntu1~octave1~precise1_all.deb
-  - cd /local_repo/octave
-  - dpkg-scanpackages . /dev/null | gzip -9c | sudo tee Packages.gz
-  - echo "deb [arch=amd64] file:/local_repo/octave ./" | sudo tee --append /etc/apt/sources.list
-  - sudo apt-get update
-  - sudo apt-get install --fix-missing
+  - docker pull simexp/niak_dependency
+  - docker run -it --privileged -v $HOME:$HOME simexp/niak_dependency /bin/bash --login -c "cd $HOME; octave --eval 'addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',2,'flag_pause',false))); system('cat result/report_test_re    gression_fmripreproc_demoniak.csv'), exit(status)   '"
 
-install:
-  # Install dependencies
-  - sudo apt-get install build-essential g++ cmake cmake-curses-gui bison flex freeglut3 freeglut3-dev libxi6 libxi-dev libxmu6 libxmu-dev libxmu-headers imagemagick libjpeg62 -y
-  # Install octave dependecies
-  - sudo apt-get install -y --force-yes liboctave-dev 
-  - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/control-2.8.0.tar.gz -P /home/octave
-  - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/general-1.3.4.tar.gz -P /home/octave
-  - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/signal-1.3.0.tar.gz -P /home/octave
-  - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/image-2.2.2.tar.gz -P /home/octave
-  - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/io-2.0.2.tar.gz -P /home/octave
-  - sudo wget http://sourceforge.net/projects/octave/files/Octave%20Forge%20Packages/Individual%20Package%20Releases/statistics-1.2.4.tar.gz -P /home/octave
-  - sudo octave --eval "cd /home/octave; more off; pkg install -auto -global -verbose control-2.8.0.tar.gz general-1.3.4.tar.gz signal-1.3.0.tar.gz image-2.2.2.tar.gz io-2.0.2.tar.gz statistics-1.2.4.tar.gz"
-  # Get the minc toolkit
-  - wget http://packages.bic.mni.mcgill.ca/minc-toolkit/Debian/minc-toolkit-1.9.2-20140730-Ubuntu_14.04-x86_64.deb -P /home/travis
-  # Install the minc toolkit
-  - sudo dpkg -i /home/travis/minc-toolkit-1.9.2-20140730-Ubuntu_14.04-x86_64.deb
-  # Install psom
-  - mkdir -p /home/travis/build/SIMEXP/psom
-  - cd /home/travis/build/SIMEXP/psom
-  - git clone https://github.com/SIMEXP/psom.git
-  - mkdir -p /home/travis/build/SIMEXP/BCT
-  - cd /home/travis/build/SIMEXP/BCT
-  - wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip
-  - unzip BCT.zip
-  - cd /home/travis
-
-before_script:
-  # Set up the octave config file
-  - touch /home/travis/.octaverc
-  - echo more off >> /home/travis/.octaverc
-  - echo save_default_options\(\'-7\'\)\; >> /home/travis/.octaverc
-  - echo graphics_toolkit gnuplot >> /home/travis/.octaverc
-  - echo addpath\(genpath\(\"/home/travis/build/SIMEXP/\"\)\)\; >> /home/travis/.octaverc
-  # Add the minc toolkit to the bash config
-  - source /opt/minc-itk4/minc-toolkit-config.sh
 
 script:
   - octave --eval "[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',2,'flag_pause',false))); system('cat result/report_test_regression_fmripreproc_demoniak.csv'), exit(status)"
