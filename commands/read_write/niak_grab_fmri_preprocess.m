@@ -83,17 +83,13 @@
 %
 %           'scores' : FILES is ready to feed into NIAK_PIPELINE_SCORES
 %
-%   TEMPLATE
-%       (string, default '') specifies full path for the template to be used. this 
-%       option is active only if  OPT.TYPE_FILES is set to 'scores'
-%
 % _________________________________________________________________________
 % OUTPUTS:
 %
 % FILES
 %   (structure) the exact fields depend on OPT.TYPE_FILES. 
 %
-%   case 'rest' :
+%   case {'rest','scores'} :
 %
 %       DATA.(SUBJECT).(SESSION).(RUN)
 %           (string) preprocessed fMRI datasets. 
@@ -124,7 +120,7 @@
 % SEE ALSO:
 % NIAK_PIPELINE_STABILITY_REST, NIAK_PIPELINE_REGION_GROWING
 % NIAK_PIPELINE_STABILITY_FIR, NIAK_PIPELINE_GLM_CONNECTOME
-%
+% NIAK_PIPELINE_SCORES
 % _________________________________________________________________________
 % COMMENTS:
 %
@@ -139,7 +135,7 @@
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, stability, bootstrap, time series
-
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -168,8 +164,8 @@ if ~strcmp(path_data(end),filesep)
 end
 
 %% Default options
-list_fields   = { 'filter' , 'flag_areas' , 'min_nb_vol' , 'max_translation' , 'max_rotation' , 'min_xcorr_func' , 'min_xcorr_anat' , 'exclude_subject' , 'include_subject' , 'type_files' , 'template'  };
-list_defaults = { struct   , true         , 100          , Inf               , Inf            , 0.5              , 0.5              , {}                , {}                , 'rest'       , '' };
+list_fields     = { 'filter' , 'flag_areas' , 'min_nb_vol' , 'max_translation' , 'max_rotation' , 'min_xcorr_func' , 'min_xcorr_anat' , 'exclude_subject' , 'include_subject' , 'type_files'  };
+list_defaults = { struct  , true           , 100               , Inf                        , Inf                   , 0.5                      , 0.5                      , {}                        , {}                       , 'rest'           };
 if nargin > 1
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -333,19 +329,9 @@ if ~strcmp(opt.type_files,'glm_connectome')
     files.mask = [path_qc 'group_coregistration' filesep files.mask(1).name];
     if opt.flag_areas && ~strcmp(opt.type_files,'scores')
         files.areas = dir([path_data 'anat' filesep 'template_aal.*']);
-        if isempty(files.mask)
+        if isempty(files.areas)
             error('Could not find the AAL parcelation for functional data')
         end
         files.areas = [path_data 'anat' filesep files.areas(1).name];
     end
-end
-
-if strcmp(opt.type_files, 'scores')
-   if isempty(opt.template)
-      warning('Template file is empty')
-   elseif exist(opt.template)
-      files.part = opt.template;
-   else 
-      error('Could not find the template file %s', opt.template)
-   end
 end
