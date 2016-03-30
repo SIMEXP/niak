@@ -3,9 +3,11 @@ sudo: required
 services:
   - docker
 
+git:
+  depth: 1
 
 
-before_install:
+install:
   - docker pull simexp/niak_dependency
   - echo $PWD
 
