@@ -30,9 +30,10 @@ import requests
 
 try:
     from . import config
+    from . import simplegit
 except SystemError:
     import config
-
+    import simplegit
 
 class Error(Exception):
     """
@@ -215,15 +216,51 @@ class Runner(object):
             parent.kill()
 
 
-def upload_release_to_git(repo_owner, repo_name, tag, file_path):
-    """A convenience fct to upload release file to github
+def delete_git_asset(repo_owner, repo_name, tag, asset_name):
+    """ Delete the assset "asset_name" of the git release "repo_owner/repo_name:tag"
+    :param repo_owner: the repo owner
+    :param repo_name: the repo name
+    :param tag: the release tag
+    :param asset_name: the asset name
+    :return:
+    """
+    import requests
+    GIT = config.GIT
+
+    headers = {"Accept": "application/vnd.github.manifold-preview",
+                "Authorization": "token {}".format(config.GIT.TOKEN)}
+    url = "{api}/repos/{owner}/{repo}/releases".format(api=GIT.API, owner=repo_owner, repo=repo_name)
+
+    get = urllib.request.Request(url=url)
+
+    to_be_deleted_id = None
+    with urllib.request.urlopen(url=get) as fp:
+        reply = json.loads(fp.read().decode('utf-8'))
+        for elem in reply:
+            if elem['tag_name'] == tag and elem.get("assets") is not None:
+                for asset in elem["assets"]:
+                    if asset["name"] == asset_name:
+                        to_be_deleted_id = asset["id"]
+
+    if to_be_deleted_id is None:
+        print("The asset does not exist")
+        return
+
+    del_url = "{api}/repos/{owner}/{repo}/releases/assets/{asset_id}"\
+        .format(api=GIT.API, owner=repo_owner, repo=repo_name, asset_id=to_be_deleted_id)
+    requests.delete(url=del_url, headers=headers)
+
+def upload_release_to_git(repo_owner, repo_name, tag, file_path, asset_name):
+    """A convenience method to upload release file to github
 
     :param repo_owner: the repo owner
     :param repo_name: the repo name
     :param tag: the release tag
     :param file_path: the file to upload
     :return: the upload post reply
+
     """
+    logging.info("Preparing {} to {}/{} tag {}".format(file_path, repo_owner, repo_name, tag))
     GIT = config.GIT
 
     headers = {"Accept": "application/vnd.github.manifold-preview",
@@ -255,12 +292,9 @@ def upload_release_to_git(repo_owner, repo_name, tag, file_path):
         dir, file = os.path.split(file_path)
     else:
         raise FileNotFoundError(file_path)
-    with open(file_path, "rb") as fp :
+    with open(file_path, "rb") as fp:
 
-        # upload_url = upload_url.replace(",label", "")
-        # upload_url = upload_url.replace("{?name}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE))
-        # that should be more robust!
-        upload_url = re.sub("\{.*\}", "?name={}".format(config.NIAK.DEPENDENCY_RELEASE), upload_url)
+        upload_url = re.sub("\{.*\}", "?name={}".format(asset_name), upload_url)
 
         length = os.path.getsize(file_path)
         headers.update({"Content-Type": "application/zip",
@@ -268,6 +302,7 @@ def upload_release_to_git(repo_owner, repo_name, tag, file_path):
 
         post = urllib.request.Request(url=upload_url, data=fp, headers=headers)
         #
+        logging.info("url:\n{}\nheaders:\n{}".format(upload_url, headers))
         logging.info("uploading {} to github".format(file_path))
         with urllib.request.urlopen(url=post) as reply:
                 return json.loads(reply.read().decode('utf-8'))
@@ -278,8 +313,6 @@ class TargetRelease(object):
     Used for releasing targets
 
     """
-
-    GIT_CMD = ["/usr/bin/env", "git"]
 
     TAG_PREFIX = "target_test_niak_mnc1-"
 
@@ -293,13 +326,20 @@ class TargetRelease(object):
 
     AT_ORIGIN = "Your branch is up-to-date with 'origin"
 
-    TMP_BRANCH = '_UGLY_TMP_BRANCH_'
+    TMP_BRANCH = '_TMP_RELEASE_BRANCH_'
 
     def __init__(self, target_path=None, niak_path=None, target_name=None,
-                 work_dir=None, niak_tag=None, dry_run=False,
-                 recompute_target=False, result_dir=None, new_target=True,
-                 niak_url=None, psom_path=None, psom_url=None):
-        niak_release_branch= config.NIAK.RELEASE_BRANCH
+                 niak_tag=None, dry_run=False, recompute_target=False,
+                 result_dir=None, release_target=True, niak_url=None, psom_path=None,
+                 psom_url=None, push_niak_release=False, niak_release_from_branch=None,
+                 niak_release_from_commit=None, force_niak_release=False):
+
+
+        # TODO add a niak_release_from_commit option, right now release can only be done
+        #       from the tip of a the niak_release_from_branch
+        # , niak_release_commit=None):
+
+        niak_release_branch = config.NIAK.RELEASE_BRANCH
         # target tag name
         self.target_name = target_name
 
@@ -315,26 +355,36 @@ class TargetRelease(object):
 
         self.niak_release_branch = niak_release_branch if niak_release_branch else config.NIAK.RELEASE_BRANCH
 
-        self.new_target = new_target
+        self.release_target = release_target
 
         self.recompute_target = recompute_target
 
-        self.work_dir = work_dir
+        self.work_dir = config.TARGET.WORK_DIR
 
         self.dry_run = dry_run
 
         # the name of the release
         self.niak_tag = niak_tag if niak_tag else config.NIAK.TAG_NAME
 
+        # release from branch release
+        self.niak_release_from_branch = niak_release_from_branch if \
+            niak_release_from_branch else config.NIAK.RELEASE_FROM_BRANCH
+
+        # the name of the release
+        self.niak_release_commit = niak_release_from_commit if \
+            niak_release_from_commit else config.NIAK.RELEASE_FROM_COMMIT
+
+        self.push_niak_release = push_niak_release
+        self.force_niak_release = force_niak_release
+
 
         self._sanity_check()
 
-        self.niak_repo = git.Repo(self.niak_path)
+        self.niak_repo = simplegit.Repo(self.niak_path)
 
-        self.niak_repo_head_start = self.niak_repo.active_branch
+        self.niak_repo.branch(self.TMP_BRANCH, delete=True)
 
-        self._del_branch(self.niak_repo, self.TMP_BRANCH)
-
+        self._log_path = config.TARGET.LOG_PATH
 
     @property
     def tag_w_prefix(self):
@@ -410,7 +460,9 @@ class TargetRelease(object):
                 logging.info('cleaning niak directory')
                 shutil.rmtree(self.niak_path, ignore_errors=True)
                 logging.info('cloning niak')
-                git.Repo.clone_from(self.niak_url, self.niak_path)
+                # git.Repo.clone_from(self.niak_url, self.niak_path)
+                simplegit.clone(self.niak_url, self.niak_path)
+
             else:
                 errors.append('"{}" is not a Niak/git repo'.format(self.niak_path))
 
@@ -422,7 +474,8 @@ class TargetRelease(object):
                 logging.info('cleaning psom directory')
                 shutil.rmtree(self.psom_path, ignore_errors=True)
                 logging.info('cloning niak')
-                git.Repo.clone_from(self.psom_url, self.psom_path)
+                simplegit.clone(self.psom_url, self.psom_path)
+                # git.Repo.clone_from(self.psom_url, self.psom_path)
             else:
                 errors.append('"{}" is not a Niak/git repo '.format(self.psom_path))
 
@@ -432,15 +485,59 @@ class TargetRelease(object):
 
     def start(self):
 
-        if self.recompute_target:
-            pass
-        if self.new_target:
+        self.repo_prerelease_setup(branch=self.niak_release_from_branch
+                                   , sha1=self.niak_release_commit)
+
+        if self.release_target:
+            if self.recompute_target:
+                self.delete_target_log()
             self._build()
             pass
         # if self.niak_release_branch:
         self._release()
 
         self._finaly()
+
+    def repo_prerelease_setup(self, branch=None, sha1=None):
+        """ Move the repo to the revision to be released.
+            Targets can only be released at the tip of a branch
+            Niak can be released at any revision (branch and commit)
+        :param branch: The name of the dev branch to release from
+        :return:
+        """
+
+        if self.release_target:
+            if branch is None:
+                raise IOError("can only release target from a specific branch")
+            if sha1 is not None:
+                ref_dico = self.niak_repo.show_ref()
+                if sha1 in ref_dico:
+                    for ref in ref_dico[sha1]:
+                        if branch in ref:
+                            # ALL set!
+                            break
+                        #  NO
+                        m = ("To release a target, the sha1 ref must be at "
+                             "the tip a a branch sha1 {} is not in branch {} "
+                             .format(sha1, branch))
+                        raise IOError(m)
+            self.niak_repo.checkout(branch, force=True)
+        else:
+            if sha1 is not None:
+                # Releasing form hash, the release_from_branch will not be updated
+                self.niak_repo.checkout(sha1, force=True)
+            else:
+                self.niak_repo.checkout(branch, force=True)
+
+
+    def delete_target_log(self):
+        """ Delete the target logs so it recomputes
+
+        :return:
+        """
+        if os.path.isdir(self._log_path):
+            os.removedirs(self._log_path)
+
 
     def _build(self):
         """
@@ -451,7 +548,8 @@ class TargetRelease(object):
         bool
             True if successful, False otherwise.
         """
-        target = TargetBuilder(error_form_log=True, niak_path=self.niak_path, work_dir=self.work_dir)
+        target = TargetBuilder(niak_path=self.niak_path, work_dir=self.work_dir
+                               , error_form_log=True,)
         ret_val = target.run()
         happiness = input("Are you happy with the target?Y/[N]")
         logging.info("look at {}/logs for more info".format(self.work_dir))
@@ -468,13 +566,12 @@ class TargetRelease(object):
         target_path = target_path if target_path else self.target_path
 
         if not os.path.isdir(target_path):
-            git.Repo.clone_from(config.TARGET.URL, target_path)
-        target = git.Repo(target_path)
-        remote = target.remote()
-        remote.pull()
-        if branch:
-            br = target.refs[branch]
-            br.checkout()
+            target = simplegit.clone(config.TARGET.URL, target_path)
+        if branch is not None:
+            target.pull(branch=branch)
+            target.checkout(branch)
+        else:
+            target.pull()
 
     def _update_target(self):
         """
@@ -499,13 +596,15 @@ class TargetRelease(object):
 
         self.tag = self.auto_tag(self.result_dir, self.target_name)
 
-    def _push(self, path, push_tag=False):
+    def _push(self, path, push_tag=False, remote_name=None, branch=None):
+        #TODO let change to non defaut
+        repo = simplegit.Repo(path)
+        # remote = repo.remote(remote_name=remote_name)
+        # logging.info("pushing {} to {}".format(path, remote[remote_name]))
+        repo.push(remote_name=remote_name, branch=branch)
+        if push_tag:
+            repo.push(remote_name=remote_name, branch=branch, push_tags=push_tag)
 
-        repo = git.Repo(path)
-        remote = repo.remote()
-        logging.info("pushing {} to {}".format(path, repo.remotes.origin.url))
-        remote.push()
-        remote.push(tags=push_tag)
 
     def _commit(self, path, comment, branch=None, files=None, tag=None):
         """
@@ -516,53 +615,27 @@ class TargetRelease(object):
         file : will only add and commit these
         """
 
-        repo = git.Repo(path)
+        repo = simplegit.Repo(path)
 
         if branch:
             logging.info("checking out branch {} in ".format(branch, path))
-            if branch not in repo.heads:
-                tmp_branch = repo.create_head(branch)
-            else:
-                tmp_branch = repo.refs[branch]
-            tmp_branch.checkout()
+            if branch:
+                repo.branch(branch, checkout=True)
 
+        repo.add_all()
 
-        new_files = repo.untracked_files
-        if files is not None:
-            new_files = [f for f in new_files if f in files]
-            modif_files = [diff.a_path for diff in repo.index.diff(None)
-                           if not diff.deleted_file and diff.a_path in files]
-            del_files = [diff.a_path for diff in repo.index.diff(None)
-                         if diff.deleted_file and diff.a_path in files]
-        else:
-            modif_files = [diff.a_path for diff in repo.index.diff(None) if not diff.deleted_file]
-            del_files = [diff.a_path for diff in repo.index.diff(None) if diff.deleted_file]
-
-        if del_files:
-            repo.index.remove(del_files)
-        if new_files or modif_files:
-            repo.index.add(new_files+modif_files)
-
-        if not new_files and not modif_files and not del_files:
-            logging.warning("Noting to be added or commited in {}".format(repo))
-
-
-        logging.info("committing to active branch {}".format(path))
-        repo.index.commit(comment)
+        repo.commit(comment)
 
         if tag:
             logging.warning("Adding tag {} to {} repo".format(tag, path))
-            repo.create_tag(tag, force=True)
+            repo.tag(tag, force=True)
 
         return True
 
-    def _update_niak(self, test_run=False):
+    def _update_niak(self):
         """
         point to the right zip file
         """
-        # must be up to date
-        repo = self.niak_repo
-        diff = [d.a_path for d in repo.index.diff(None)]
 
         niak_gb_vars_path = os.path.join(self.niak_path, self.NIAK_GB_VARS)
         docker_file = os.path.join(self.niak_path, config.DOCKER.FILE)
@@ -572,7 +645,7 @@ class TargetRelease(object):
             rfp = fp.read()
             fout = re.sub("gb_niak_version = .*",
                           "gb_niak_version = \'{}\';".format(self.niak_tag.replace('v', '')), rfp)
-            if self.new_target:
+            if self.release_target:
                     fout = re.sub("gb_niak_target_test = .*",
                                   "gb_niak_target_test = \'{}\';".format(self.tag), rfp)
 
@@ -582,18 +655,14 @@ class TargetRelease(object):
 
         with open(docker_file, "r") as fp:
             fout = re.sub("ENV {}.*".format(config.NIAK.VERSION_ENV_VAR),
-                          "ENV {0} {1}".format(config.NIAK.VERSION_ENV_VAR, self.niak_tag), fp.read())
+                          "ENV {0} {1}".format(config.NIAK.VERSION_ENV_VAR,
+                                               self.niak_tag), fp.read())
 
         with open(docker_file, "w") as fp:
             fp.write(fout)
 
-        # self._commit(config.NIAK.PATH, "Updated target name", file=self.NIAK_GB_VARS, branch=self.TMP_BRANCH)
-        self._commit(config.NIAK.PATH, "Updated target name", files=[self.NIAK_GB_VARS, config.DOCKER.FILE],
+        self._commit(self.niak_path, "Updated target name", files=[self.NIAK_GB_VARS, config.DOCKER.FILE],
                      branch=self.TMP_BRANCH)
-                     # branch=config.NIAK.DEV_BRANCH)
-        # self._commit(config.NIAK.PATH, "Updated Dockerfile", files=config.DOCKER.FILE, branch=config.NIAK.DEV_BRANCH)
-
-        # self._commit(config.NIAK.PATH, "Updated Dockerfile", file=config.DOCKER.FILE, branch=self.TMP_BRANCH)
 
     def _release(self):
         """
@@ -605,11 +674,7 @@ class TargetRelease(object):
             True if successful, False otherwise.
 
         """
-        # zip_file_path = self._build_niak_with_dependecy()
-        # upload_release_to_git(config.GIT.OWNER, config.NIAK.REPO, self.niak_tag, zip_file_path)
-        # return
-        # update target repo and push
-        if self.new_target:
+        if self.release_target:
             self._update_target()
 
         try:
@@ -619,15 +684,31 @@ class TargetRelease(object):
             raise e
 
         if not self.dry_run:
+
             self._merge(self.niak_repo, self.niak_release_branch, self.TMP_BRANCH, self.niak_tag)
-            self._merge(self.niak_repo, self.niak_release_branch, self.TMP_BRANCH)
-            self._push(self.niak_path, push_tag=True)
-            if self.new_target:
-                self._push(self.result_dir, push_tag=True)
+
+            if self.push_niak_release:
+                self._push(self.niak_path, push_tag=True, branch=self.niak_release_branch)
+
+            if self.release_target:
+                # The tmp branch is also merge to the "release from"
+                # branch so this development branch also point to the right target
+
+                # Push target
+                self._push(self.result_dir, push_tag=True, branch="master")
+                # merge and push niak
+                self._merge(self.niak_repo, self.niak_release_from_branch, self.TMP_BRANCH)
+                self._push(self.niak_path, push_tag=True, branch=self.niak_release_from_branch)
 
             zip_file_path = self._build_niak_with_dependecy()
 
-            upload_release_to_git(config.GIT.OWNER, config.NIAK.REPO, self.niak_tag, zip_file_path)
+            if self.push_niak_release:
+                if self.force_niak_release:
+                # Delete the release if it already exist and repush it.
+                    delete_git_asset(config.GIT.OWNER, config.NIAK.REPO,
+                                     self.niak_tag, config.NIAK.DEPENDENCY_RELEASE)
+                upload_release_to_git(config.GIT.OWNER, config.NIAK.REPO,
+                                      self.niak_tag, zip_file_path, config.NIAK.DEPENDENCY_RELEASE)
 
         else:
             self._cleanup()
@@ -640,18 +721,16 @@ class TargetRelease(object):
         :return: the path to the zip file
         """
 
-
         if os.path.isdir(config.NIAK.WORK_DIR):
             shutil.rmtree(config.NIAK.WORK_DIR)
-
+        ## HERE REFREACTOR!!!
         # Niak
         shutil.copytree(self.niak_path, config.NIAK.WORK_DIR)
-        n_repo = git.Repo(config.NIAK.WORK_DIR)
-        release_branch = n_repo.refs[config.NIAK.RELEASE_BRANCH]
-        release_branch.checkout()
+        n_repo = simplegit.Repo(config.NIAK.WORK_DIR)
+        n_repo.checkout(config.NIAK.RELEASE_BRANCH)
         shutil.rmtree(config.NIAK.WORK_DIR+"/.git")
         # PSOM
-        p_repo = git.Git(config.PSOM.PATH)
+        p_repo = simplegit.Repo(config.PSOM.PATH)
         p_repo.checkout(config.PSOM.RELEASE_TAG)
         shutil.copytree(config.PSOM.PATH, config.NIAK.WORK_DIR+"/extensions/psom-{}".format(config.PSOM.RELEASE_TAG))
         shutil.rmtree(config.NIAK.WORK_DIR+"/extensions/psom-{}/.git".format(config.PSOM.RELEASE_TAG))
@@ -665,7 +744,7 @@ class TargetRelease(object):
         filename, ext = os.path.splitext(config.NIAK.DEPENDENCY_RELEASE)
         shutil.make_archive(config.NIAK.WORK_DIR+"/../"+filename,
                             ext[1:], root_dir=config.NIAK.WORK_DIR+"/../",
-                            base_dir="niak-{}".format(config.NIAK.TAG_NAME))
+                            base_dir="niak-{}".format(self.niak_tag))
 
         return config.NIAK.WORK_DIR+"/../"+config.NIAK.DEPENDENCY_RELEASE
 
@@ -674,59 +753,42 @@ class TargetRelease(object):
         Merge branch2 to branch1
         @TODO Force branch 2 to win every time
         this will prevent merging problems
-        :return:
+
+        :param repo: a simplegit repo
+        :param branch1: The branch that receive the merge (does not need to exist)
+        :param branch2: The branch that provide the merge (need to exist)
+        :param tag: Tag to be added to branch1
+        :return: None
         """
-        try:
-            branch1_ = repo.refs[branch1]
-        except IndexError:
-            ret = input("{} Does not exist, you want to create it?"
-                        "Y/[N]".format(branch1))
-            if ret != "Y":
-                raise IOError
-            else:
-                repo.create_head(branch1)
-                branch1_ = repo.refs[branch1]
+        repo.branch(branch1, checkout=True)
+        repo.merge(branch1, branch2)
 
-        branch1_.checkout()
-        branch2_ = repo.refs[branch2]
-        base = repo.merge_base(branch1_, branch2_)
-        repo.index.merge_tree(branch2_, base=base)
-
-        repo.index.commit("New Niak Release {}{}".format(self.niak_release_branch,
-                                                         tag),
-                          parent_commits=(branch1_.commit, branch2_.commit))
+        repo.commit("New Niak Release {0}{0}"
+                    .format(self.niak_release_branch, tag))
         if tag is not None:
-            repo.create_tag(tag, force=True)
+            repo.tag(tag, force=True)
 
 
     def _finaly(self):
-
-        self.niak_repo_head_start.checkout()
-        self.niak_repo.index.checkout(force=True)
-        self._del_branch(self.niak_repo, self.TMP_BRANCH)
+        """
+        Delete tmp branch and checkout to the tip of the original branch
+        :return:
+        """
+        self.niak_repo.checkout(self.niak_repo._init_branch, force=True)
+        self.niak_repo.branch(name=self.TMP_BRANCH, delete=True)
 
     def _cleanup(self):
         """
         Checkout niak modified file
         Make sure that we are back in the init repo
-        Delete the TMP BRANCH
+        Delete the TMP BRANCH and the local release branch
         :return:
         """
-        repo = self.niak_repo
-        niak_gb_vars = os.path.join(self.niak_path, self.NIAK_GB_VARS)
-        self.niak_repo_head_start.checkout()
-        repo.index.checkout(force=True)
+        self.niak_repo.checkout(self.niak_repo._init_branch, force=True)
+        self.niak_repo.reset(self.niak_repo._init_sha1, hard=True)
+        self.niak_repo.branch(self.TMP_BRANCH, delete=True)
+        self.niak_repo.branch(self.niak_release_branch, delete=True)
 
-        # self.niak_repo_head_start.checkout()
-        self._del_branch(repo, self.TMP_BRANCH)
-
-    def _del_branch(self, repo, branch):
-        try:
-            repo.delete_head(branch, force=True)
-            logging.info("{} branch deleted".format(branch))
-        except git.exc.GitCommandError:
-            # Branch was not created yet
-            pass
 
 
 class TargetBuilder(Runner):
@@ -748,15 +810,15 @@ class TargetBuilder(Runner):
     MT_ROOT = [MT, "{0}:{0}".format(config.ROOT)]
     ENV_DISPLAY = ["-e", "DISPLAY=unix$DISPLAY"]
     USER = ["--user", str(os.getuid())]
-    IMAGE = [config.DOCKER.OCTAVE]
+    IMAGE = [config.DOCKER.IMAGE]
 
-    def __init__(self, work_dir=None, niak_path=None, psom_path=None, error_form_log=False):
+    def __init__(self, work_dir, niak_path, error_form_log=False):
 
         super().__init__(error_form_log=error_form_log)
 
         #TODO make them arg not kwargs
-        self.niak_path = niak_path if niak_path else config.NIAK.PATH
-        self.work_dir = work_dir if work_dir else config.TARGET.WORK_DIR
+        self.niak_path = niak_path
+        self.work_dir = work_dir
 
         if not os.path.isdir(self.work_dir):
             os.makedirs(self.work_dir)
@@ -775,9 +837,9 @@ class TargetBuilder(Runner):
                     .format(self.work_dir, self.load_niak)]
 
         # convoluted docker command
-        self.docker = self.DOCKER_RUN + self.FULL_PRIVILEDGE + self.RM + self.MT_HOME + self.MT_SHADOW + self.MT_GROUP \
-                      + self.MT_PASSWD + self.MT_X11 + self.MT_ROOT + self.MT_TMP + mt_work_dir + self.ENV_DISPLAY + self.USER \
-                      + self.IMAGE + cmd_line
+        self.docker = (self.DOCKER_RUN + self.FULL_PRIVILEDGE + self.RM + self.MT_HOME +
+                       self.MT_SHADOW + self.MT_GROUP + self.MT_PASSWD + self.MT_X11 + self.MT_ROOT +
+                       self.MT_TMP + mt_work_dir + self.ENV_DISPLAY + self.USER + self.IMAGE + cmd_line)
 
         self.subprocess_cmd = self.docker
 
@@ -864,7 +926,9 @@ class OctavePortal(Runner):
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.DEBUG)
-    release = TargetRelease()
+    # release = TargetRelease()
     # release._build_niak_with_dependecy()
 
-    # upload_release_to_git("poquirion", "pniak", "v0.12.20", "/usr/share/libreoffice/share/config/images_human.zip")
+    # delete_git_asset("poquirion", "niak", "v0.13.4", "niak-with-dependencies.zip")
+    # upload_release_to_git("poquirion", "niak", "v0.13.4", "/niak/work/niak-with-dependencies.zip"
+    #                       , "niak-with-dependencies.zip")
