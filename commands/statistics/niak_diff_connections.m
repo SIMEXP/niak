@@ -1,5 +1,5 @@
 function [score_ref, score_ind] = niak_diff_connections(ref_data, ind_data, target, opt)
-% Create outcome mesures for the preprocessing based on two reference DB a control poupulation and a patients population. 
+% Create outcome mesures for the preprocessing based on two reference DB a control population and a patients population. 
 %
 % SYNTAX : 
 % [] = NIAK_DIFF_CONNECTIONS()
