@@ -91,5 +91,11 @@ niak_visu_matrix(simmat,opt_png);
 namefig = fullfile(files_out, 'similarity_matrix.png');
 print(namefig,'-dpng','-r300');
 
+%% Save hierarchical clustering and ordering of subjects
+hier_file = fullfile(files_out, 'hier.mat');
+save(hier_file,'hier');
+order_file = fullfile(files_out, 'order.mat');
+save(order_file,'order');
+
 end
 
