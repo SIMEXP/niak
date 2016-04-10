@@ -45,6 +45,9 @@ end
 if ~exist('files_out','var')||isempty(files_out)
     files_out = pwd;
 end
+if ~ischar(files_out)
+    error('FILES_OUT should be a string');
+end
 
 % Options
 if nargin < 3
@@ -79,15 +82,14 @@ simmat = R(order,order);
 
 % Save as .mat file
 
-%%% files_out subfolder??
-mat_file = strcat(files_out,'_similarity_matrix.mat');
+mat_file = fullfile(files_out, 'similarity_matrix.mat');
 save(mat_file,'simmat');
 
 % Save as .png file
 opt_png.limits = [-1 1];
 opt_png.color_map = 'hot_cold';
 niak_visu_matrix(simmat,opt_png);
-namefig = 'similarity_matrix.png';
+namefig = fullfile(files_out, 'similarity_matrix.png');
 print(namefig,'-dpng','-r300');
 
 end
