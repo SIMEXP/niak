@@ -2,7 +2,7 @@ function [files_in,files_out,opt] = niak_brick_subtype_similarity_matrix(files_i
 % Build similarity matrix for subtype pipeline
 % 
 % SYNTAX:
-% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_subtype_similarity_matrix(FILE_IN,FILE_OUT,OPT)
+% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_SUBTYPE_SIMILARITY_MATRIX(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 % 
 % INPUTS:
@@ -81,7 +81,6 @@ simmat = R(order,order);
 %% Save the similarity matrix
 
 % Save as .mat file
-
 mat_file = fullfile(files_out, 'similarity_matrix.mat');
 save(mat_file,'simmat');
 
