@@ -2,7 +2,7 @@ function [files_in,files_out,opt] = niak_brick_subtype_similarity_matrix(files_i
 % Build similarity matrix for subtype pipeline
 % 
 % SYNTAX:
-% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_SUBTYPE_SIMILARITY_MATRIX(FILE_IN,FILE_OUT,OPT)
+% [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SUBTYPE_SIMILARITY_MATRIX(FILES_IN,FILES_OUT,OPT)
 % _________________________________________________________________________
 % 
 % INPUTS:
