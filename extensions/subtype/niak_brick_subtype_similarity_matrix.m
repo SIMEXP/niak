@@ -48,6 +48,9 @@ end
 if ~ischar(files_out)
     error('FILES_OUT should be a string');
 end
+if exist('files_out','var')
+    psom_mkdir(files_out);
+end
 
 % Options
 if nargin < 3
