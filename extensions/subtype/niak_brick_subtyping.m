@@ -117,20 +117,26 @@ file_name = 'mean_subtype.nii.gz';
 hdr.file_name = fullfile(files_out, file_name);
 niak_write_vol(hdr,vol_mean_sub);
     
+% Generating and writing the median subtype maps in a single volume
+sub.median = zeros(max(part),size(data.data,2));
+for ss = 1:max(part)
+    sub.median(ss,:) = median(data.data(part==ss,:),1);
+end
+vol_median_sub = niak_tseries2vol(sub.median,mask);
+file_name = 'median_subtype.nii.gz';
+hdr.file_name = fullfile(files_out, file_name);
+niak_write_vol(hdr,vol_median_sub);
+    
+% Generating and writing the maps of the difference between subtype average 
+% and grand average (t-test) in a single volume
+for ss = 1:max(part)
+    sub.ttest(ss,:) = niak_ttest(data.data(part==ss,:),data.data(part~=ss,:),true);
+end
+vol_ttest_sub = niak_tseries2vol(sub.ttest,mask);
+file_name = 'ttest_subtype.nii.gz';
+hdr.file_name = fullfile(files_out, file_name);
+niak_write_vol(hdr,vol_ttest_sub);
 
-
-%     sub.median(ss,:) = median(data.data(part==ss,:),1);
-%     vol_median_sub = niak_tseries2vol(sub.median,mask);
-%     hdr.file_name = [files_out filesep 'median_subtype_' num2str(ss) '.nii.gz'];
-%     niak_write_vol(hdr,vol_median_sub);
-%     
-% %     m_sub = mean(sub.map(ss,mask),2);
-% %     s_sub = std(sub.map(ss,mask),[],2);
-% %     sub.map(ss,:) = (sub.map(ss,:)-m_sub)/s_sub;
-%     sub.ttest(ss,:) = niak_ttest(data.data(part==ss,:),data.data(part~=ss,:),true);
-%     vol_ttest_sub = niak_tseries2vol(sub.ttest,mask);
-%     hdr.file_name = [files_out filesep 'ttest_subtype_' num2str(ss) '.nii.gz'];
-%     niak_write_vol(hdr,vol_ttest_sub);
 end
 
 
