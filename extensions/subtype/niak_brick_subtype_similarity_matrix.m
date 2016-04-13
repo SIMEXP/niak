@@ -94,6 +94,12 @@ niak_visu_matrix(simmat,opt_png);
 namefig = fullfile(files_out, 'similarity_matrix.png');
 print(namefig,'-dpng','-r300');
 
+%% Generate and save dendrogram
+figure
+niak_visu_dendrogram(hier);
+nameden = fullfile(files_out, 'dendrogram.png');
+print(nameden,'-dpng','-r300');
+
 %% Save hierarchical clustering and ordering of subjects
 hier_file = fullfile(files_out, 'hier.mat');
 save(hier_file,'hier');
