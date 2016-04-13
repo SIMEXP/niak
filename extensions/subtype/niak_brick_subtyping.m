@@ -100,7 +100,7 @@ data = load(files_in.data);
 hier = load(files_in.hier);
 
 % Read the mask
-[hdr_mask,mask] = niak_read_vol(files_in.mask);
+[hdr,mask] = niak_read_vol(files_in.mask);
 
 %% Build the clusters by thresholding the hiearchy by the number of subtypes
 part = niak_threshold_hierarchy(hier.hier,struct('thresh',opt.nb_subtype));
@@ -114,7 +114,6 @@ for ss = 1:max(part)
 end
 vol_mean_sub = niak_tseries2vol(sub.mean,mask);
 file_name = 'mean_subtype.nii.gz';
-hdr.type = 'nii';
 hdr.file_name = fullfile(files_out, file_name);
 niak_write_vol(hdr,vol_mean_sub);
     
