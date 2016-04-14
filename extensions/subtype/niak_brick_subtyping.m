@@ -87,9 +87,6 @@ end
 if ~isstruct(opt)
     error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
 end
-if nargin < 2
-        opt = struct;
-end
 list_fields   = { 'nb_subtype', 'sub_map_type', 'flag_verbose' , 'flag_test' };
 list_defaults = { NaN         , 'mean'        , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
