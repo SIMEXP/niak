@@ -79,41 +79,45 @@ list_fields   = { 'scale' , 'regress_conf' , 'flag_verbose' , 'flag_test' };
 list_defaults = {  {}     ,  {}            ,  true          ,  false      };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
-% If the test flag is true, stop here !
-if opt.flag_test == 1
-    return
-end
-
 % setup list of networks
 if isempty(opt.scale)
    [hdr,vol]=niak_read_vol(files_in.map.(fieldnames(files_in.map){1}));
    list_network =  hdr.info.dimensions(end);
    list_network = [1 : list_network];
+   opt.scale = num2cell(list_network);
 else
    list_network = cell2mat(opt.scale);
 end
 
+% If the test flag is true, stop here !
+if opt.flag_test == 1
+    return
+end
+
+% The brick start here 
 % Network 4D volumes with M subjects
 for ss = list_network
+    tseries = [];
+    subj_id = '';
+    fprintf('loading net_%d:\n',ss)
     for ii = 1:length(fieldnames(files_in.map))
         sub = fieldnames(files_in.map){ii};
-        fprintf('loading net_%d:\n',ss)
-        niak_progress(ii,length(fieldnames(files_in.map)),1)
+        niak_progress(ii,length(fieldnames(files_in.map)),5);
         [hdr,vol] = niak_read_vol(files_in.map.(sub));
-        tseries = niak_vol2tseries(vol,mask);
-        eval(sprintf('stack_net_%d(:,:,:,ii) = vol(:,:,:,ss);',ss));
+        tseries_tmp = niak_vol2tseries(vol(:,:,:,ss),mask);
+        tseries = [tseries ;tseries_tmp];
+        subj_id = [subj_id ; sub];
     end
     
-    
-    
-    hdr.file_name = [path_out 'stack_net_' num2str(ss) '.nii.gz'];
-    niak_write_vol(hdr,stack);
+    % Save stack and IDs for network N
+    eval(sprintf('stack.net_%d.load =  tseries;',ss));
+    eval(sprintf('stack.net_%d.ids =  subj_id;',ss));
 
-    % Mean & std 4D volumes with N networks
-    mean_stack(:,:,:,ss) = mean(stack,4);
-    std_stack(:,:,:,ss) = std(stack,0,4);
+    % Save Mean & std for the network N
+    eval(sprintf('stack.net_%d.mean =  mean(tseries);',ss));
+    eval(sprintf('stack.net_%d.mean =  std(tseries);',ss));
 end
-hdr.file_name = [path_out 'stack_mean.nii.gz'];
-niak_write_vol(hdr,mean_stack);
-hdr.file_name = [path_out,'stack_std.nii.gz'];
-niak_write_vol(hdr,std_stack);
+
+% Save the final stack file
+stack_file = fullfile(files_out, 'stack_file.mat');
+save(stack_file,'stack');
