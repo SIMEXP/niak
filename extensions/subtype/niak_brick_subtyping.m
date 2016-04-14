@@ -22,18 +22,19 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       are included in the time*space array
 % 
 % FILES_OUT 
-%       (string, optional) path for results (default pwd)
+%       (string) path for results
 % 
 % OPT 
 %       (structure) with the following fields:
 %
 %   NB_SUBTYPE
-%       (integer, default 2) the number of desired subtypes
+%       (integer) the number of desired subtypes
 %
-% % %   MASK (vector  1 x nb of voxels) a binary mask of voxels of interest. 
-% % %       Only these voxels will be used for subtyping, although maps will be 
-% % %       generated full brain. By default all voxels will be used.
-% 
+%   SUB_MAP_TYPE 
+%       (string, default 'mean') how the subtypes are represented in
+%       volumes
+%       (options: 'mean' or 'median') 
+%
 %   FLAG_VERBOSE
 %       (boolean, optional, default true) turn on/off the verbose.
 %
@@ -59,19 +60,19 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %% Initialization and syntax checks
 
 % Syntax
-if ~exist('files_in','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SUBTYPING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_subtyping'' for more info.')
 end
 
 % Input
+if ~isstruct(files_in)
+    error('FILES_IN should be a structure with the subfields DATA, HIER, and MASK');
+end
 list_fields   = { 'data' , 'hier' , 'mask' };
 list_defaults = { NaN    , NaN    , NaN    };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 % Output
-if ~exist('files_out','var')||isempty(files_out)
-    files_out = pwd;
-end
 if ~ischar(files_out)
     error('FILES_OUT should be a string');
 end
@@ -80,12 +81,17 @@ if exist('files_out','var')
 end
 
 % Options
-if nargin == 1
-    opt = struct;
+if ~exist('opt','var')||isempty(opt)
+    error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
 end
-
-list_fields   = { 'nb_subtype', 'flag_verbose' , 'flag_test' };
-list_defaults = { 2           , true           , false       };
+if ~isstruct(opt)
+    error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
+end
+if nargin < 2
+        opt = struct;
+end
+list_fields   = { 'nb_subtype', 'sub_map_type', 'flag_verbose' , 'flag_test' };
+list_defaults = { NaN         , 'mean'        , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % If the test flag is true, stop here !
@@ -98,37 +104,45 @@ data = load(files_in.data);
 
 % Load the hierarchy
 hier = load(files_in.hier);
+hier = hier.hier;
+
+% Order the subjects
+order = niak_hier2order(hier);
 
 % Read the mask
 [hdr,mask] = niak_read_vol(files_in.mask);
 
 %% Build the clusters by thresholding the hiearchy by the number of subtypes
-part = niak_threshold_hierarchy(hier.hier,struct('thresh',opt.nb_subtype));
+part = niak_threshold_hierarchy(hier,struct('thresh',opt.nb_subtype));
 
 %% Build subtype maps
 
 % Generating and writing the mean subtype maps in a single volume
-sub.mean = zeros(max(part),size(data.data,2));
-for ss = 1:max(part)
-    sub.mean(ss,:) = mean(data.data(part==ss,:),1);
+if strcmp(opt.sub_map_type, 'mean')
+    sub.mean = zeros(max(part),size(data.data,2));
+    for ss = 1:max(part)
+        sub.mean(ss,:) = mean(data.data(part==ss,:),1);
+    end
+    vol_mean_sub = niak_tseries2vol(sub.mean,mask);
+    file_name = 'mean_subtype.nii.gz';
+    hdr.file_name = fullfile(files_out, file_name);
+    niak_write_vol(hdr,vol_mean_sub);
 end
-vol_mean_sub = niak_tseries2vol(sub.mean,mask);
-file_name = 'mean_subtype.nii.gz';
-hdr.file_name = fullfile(files_out, file_name);
-niak_write_vol(hdr,vol_mean_sub);
     
 % Generating and writing the median subtype maps in a single volume
-sub.median = zeros(max(part),size(data.data,2));
-for ss = 1:max(part)
-    sub.median(ss,:) = median(data.data(part==ss,:),1);
+if strcmp(opt.sub_map_type, 'median')
+    sub.median = zeros(max(part),size(data.data,2));
+    for ss = 1:max(part)
+        sub.median(ss,:) = median(data.data(part==ss,:),1);
+    end
+    vol_median_sub = niak_tseries2vol(sub.median,mask);
+    file_name = 'median_subtype.nii.gz';
+    hdr.file_name = fullfile(files_out, file_name);
+    niak_write_vol(hdr,vol_median_sub);
 end
-vol_median_sub = niak_tseries2vol(sub.median,mask);
-file_name = 'median_subtype.nii.gz';
-hdr.file_name = fullfile(files_out, file_name);
-niak_write_vol(hdr,vol_median_sub);
     
-% Generating and writing the maps of the difference between subtype average 
-% and grand average (t-test) in a single volume
+% Generating and writing t-test maps of the difference between subtype average 
+% and grand average in a single volume
 for ss = 1:max(part)
     sub.ttest(ss,:) = niak_ttest(data.data(part==ss,:),data.data(part~=ss,:),true);
 end
@@ -136,6 +150,21 @@ vol_ttest_sub = niak_tseries2vol(sub.ttest,mask);
 file_name = 'ttest_subtype.nii.gz';
 hdr.file_name = fullfile(files_out, file_name);
 niak_write_vol(hdr,vol_ttest_sub);
+
+% Generating and writing effect maps of the difference between subtype
+% average and grand average in a single volume
+for ss = 1:max(part)
+    [~,~,sub.mean_eff(ss,:),~,~] = niak_ttest(data.data(part==ss,:),data.data(part~=ss,:),true);
+end
+vol_eff_sub = niak_tseries2vol(sub.mean_eff,mask);
+file_name = 'eff_subtype.nii.gz';
+hdr.file_name = fullfile(files_out, file_name);
+niak_write_vol(hdr,vol_eff_sub);
+
+%% Saving subtyping results and statistics
+
+file_sub = fullfile(files_out, 'subtypes.mat');
+save(file_sub,'sub','hier','order','part','opt')
 
 end
 
