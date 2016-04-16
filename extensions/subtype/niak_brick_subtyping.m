@@ -45,11 +45,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       (excluding column A for subject IDs) in the model csv that separates 
 %       subjects into groups to compare chi-squared and Cramer's V stats
 %
-% % % % % % % % % %   NB_GROUP
-% % % % % % % % % %       (integer, optional, default 'gb_niak_omitted') the number of
-% % % % % % % % % %       distinct groups from the column in NB_COL_CSV to compare
-% % % % % % % % % %       chi-squared and Cramer's V stats
-%
 %   FLAG_STATS
 %       (boolean, optional, default false) if the flag is true, the brick
 %       will calculate Cramer's V and chi-squared statistics for groups
@@ -91,6 +86,9 @@ end
 if isfield(files_in,'model') && ~ischar(files_in.model)
     error('FILES_IN.MODEL should be a string');
 end
+if strcmp(opt.flag_stats,'true')||opt.flag_stats==1 && ~isfield(files_in,'model')
+    error('When OPT.FLAG_STATS is true, FILES_IN.MODEL should be a string');
+end
 list_fields   = { 'data' , 'hier' , 'mask', 'model' };
 list_defaults = { NaN    , NaN    , NaN   , 'gb_niak_omitted' }; 
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
@@ -110,8 +108,14 @@ end
 if ~isstruct(opt)
     error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
 end
-list_fields   = { 'nb_subtype', 'sub_map_type', 'nb_col_csv'     , 'nb_group'       , 'flag_stats', 'flag_verbose' , 'flag_test' };  %%%%%%%%
-list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', 'gb_niak_omitted', false       , true           , false       };
+if strcmp(opt.flag_stats,'true')||opt.flag_stats==1 && ~isfield(opt,'nb_col_csv')
+    error('When OPT.FLAG_STATS is true, OPT.NB_COL_CSV must be specified with an integer');
+end
+if isfield(opt,'nb_col_csv') && ~isnumeric(opt.nb_col_csv)
+    error('OPT.NB_COL_CSV should be an integer');
+end
+list_fields   = { 'nb_subtype', 'sub_map_type', 'nb_col_csv'     , 'flag_stats', 'flag_verbose' , 'flag_test' }; 
+list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', false       , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % If the test flag is true, stop here !
@@ -183,7 +187,7 @@ niak_write_vol(hdr,vol_eff_sub);
 
 %% Calculate Cramer's V and Chi2
 
-if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(opt.nb_col_csv,'gb_niak_omitted') %%%% && ~strcmp(opt.nb_group,'gb_niak_omitted')
+if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(opt.nb_col_csv,'gb_niak_omitted')
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
     % build the model from user's csv and input column
