@@ -187,59 +187,41 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
     % build the model from user's csv and input column
-    model = [ones(length(sub_id),1) tab(:,opt.nb_col_csv)];
+    model = tab(:,opt.nb_col_csv);
     % build a mask for NaN values in model and mask out subjects with NaNs
     mask_nan = ~max(isnan(model),[],2);
     model = model(mask_nan,:);
-    grp = model(:,2);
     sub_id = sub_id(mask_nan,:);
     part = part(mask_nan,:);
         
     % build the contingency table 
     
-    list_gg = unique(model(:,2))';
+    name_clus = {};
+    name_grp = {};
+    list_gg = unique(model)';
     for cc = 1:opt.nb_subtype
         for gg = 1:length(list_gg) % for each group
             mask_sub = find(part(:)==cc); % build a mask to select subjects within one cluster 
-            sub_model = grp(mask_sub); % subjects within one cluster
+            sub_model = model(mask_sub); % subjects within one cluster
             nn = numel(find(sub_model(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
             contab(gg,cc) = nn;
+            name_clus{cc} = ['subt' num2str(cc)];
+            name_grp{gg} = ['grp' num2str(list_gg(gg))];
         end
     end
+    
+    % write the table into a csv
+    opt_ct.labels_x = name_grp;
+    opt_ct.labels_y = name_clus;
+    opt_ct.precision = 2;
+    path_ct = fullfile(files_out,'chi2_ct.csv');
+    niak_write_csv(path_ct,contab,opt_ct)
  
         
  
-% %%% pierre orban's example   
-%     for cc = 1:nb_clus
-%         mask_hc = tab(:,num_admci)==min(tab(:,num_admci));
-%         part_hc = part(mask_hc);
-%         p=0;
-%         for pp = 1:length(part_hc)
-%             if part_hc(pp) == cc
-%                 p=p+1;
-%             end
-%         end
-%         ct(1,cc) = p;
-%         
-%         mask_admci = tab(:,num_admci)==max(tab(:,num_admci));
-%         part_admci = part(mask_admci);
-%         p=0;
-%         for pp = 1:length(part_admci)
-%             if part_admci(pp) == cc
-%                 p=p+1;
-%             end
-%         end
-%         ct(2,cc) = p;
-%     end
-%     
 %     [~,pchi,~] = chi2cont(ct);
 %     statschi(n_net,1) = pchi;
 %     
-%     opt.labels_x = name_grp;
-%     opt.labels_y = name_clus;
-%     opt.precision = 2;
-%     path_ct = [path_res_net 'chi2_ct.csv'];
-%     niak_write_csv(path_ct,ct,opt)
 %     
 %     stats=mestab(ct);
 %     Vchi(n_net,1) = stats.cramerV;
