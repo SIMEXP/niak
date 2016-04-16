@@ -190,24 +190,27 @@ niak_write_vol(hdr,vol_eff_sub);
 if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(opt.nb_col_csv,'gb_niak_omitted')
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
-    % build the model from user's csv and input column
-    model = tab(:,opt.nb_col_csv);
+    %% build the model from user's csv and input column
+    col = tab(:,opt.nb_col_csv);
     % build a mask for NaN values in model and mask out subjects with NaNs
-    mask_nan = ~max(isnan(model),[],2);
-    model = model(mask_nan,:);
+    mask_nan = ~max(isnan(col),[],2);
+    col = col(mask_nan,:);
     sub_id = sub_id(mask_nan,:);
     part = part(mask_nan,:);
+    model(:,1) = sub_id;
+    model(:,2) = num2cell(part);
+    model(:,3) = num2cell(col);
         
-    % build the contingency table 
+    %% build the contingency table 
     
     name_clus = {};
     name_grp = {};
-    list_gg = unique(model)';
+    list_gg = unique(col)';
     for cc = 1:opt.nb_subtype
         for gg = 1:length(list_gg) % for each group
             mask_sub = find(part(:)==cc); % build a mask to select subjects within one cluster 
-            sub_model = model(mask_sub); % subjects within one cluster
-            nn = numel(find(sub_model(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
+            sub_col = col(mask_sub); % subjects within one cluster
+            nn = numel(find(sub_col(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
             contab(gg,cc) = nn;
             name_clus{cc} = ['subt' num2str(cc)];
             name_grp{gg} = ['grp' num2str(list_gg(gg))];
@@ -262,7 +265,7 @@ end
 %% Saving subtyping results and statistics
 
 file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'sub','hier','order','part','opt')
+save(file_sub,'sub','hier','order','part','opt','model')
 
 end
 
