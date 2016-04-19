@@ -185,30 +185,31 @@ file_name = 'eff_subtype.nii.gz';
 hdr.file_name = fullfile(files_out, file_name);
 niak_write_vol(hdr,vol_eff_sub);
 
-%% Calculate Cramer's V and Chi2
+%% Statistics
 
 if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(opt.nb_col_csv,'gb_niak_omitted')
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
-    %% build the model from user's csv and input column
+    %% Build the model from user's csv and input column
     col = tab(:,opt.nb_col_csv);
-    % build a mask for NaN values in model and mask out subjects with NaNs
+    % Build a mask for NaN values in model and mask out subjects with NaNs
     mask_nan = ~max(isnan(col),[],2);
     col = col(mask_nan,:);
     sub_id = sub_id(mask_nan,:);
-    part = part(mask_nan,:);
-    model(:,1) = sub_id;
-    model(:,2) = num2cell(part);
-    model(:,3) = num2cell(col);
+    partition = part(mask_nan,:);
+    % Save the model
+    model.subject_id = sub_id;
+    model.partition = partition;
+    model.group = col;
         
-    %% build the contingency table 
+    %% Build the contingency table 
     
     name_clus = {};
     name_grp = {};
-    list_gg = unique(col)';
-    for cc = 1:opt.nb_subtype
+    list_gg = unique(col)'; % find unique values from input column to differentiate the groups
+    for cc = 1:opt.nb_subtype % for each cluster
         for gg = 1:length(list_gg) % for each group
-            mask_sub = find(part(:)==cc); % build a mask to select subjects within one cluster 
+            mask_sub = partition(:)==cc; % build a mask to select subjects within one cluster 
             sub_col = col(mask_sub); % subjects within one cluster
             nn = numel(find(sub_col(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
             contab(gg,cc) = nn;
@@ -217,44 +218,50 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
         end
     end
     
-    % write the table into a csv
+    % Write the table into a csv
     opt_ct.labels_x = name_grp;
     opt_ct.labels_y = name_clus;
     opt_ct.precision = 2;
     path_ct = fullfile(files_out,'chi2_ct.csv');
     niak_write_csv(path_ct,contab,opt_ct)
+    
+    %% Chi-square test of the contigency table
+    
+    stats.chi2.expected = sum(contab,2)*sum(contab)/sum(contab(:)); % compute expected frequencies
+    stats.chi2.X2 = (contab-stats.chi2.expected).^2./stats.chi2.expected; % compute chi-square statistic
+    stats.chi2.X2 = sum(stats.chi2.X2(:)); 
+    stats.chi2.df = prod(size(contab)-[1 1]);
+    stats.chi2.p = 1-chi2cdf(stats.chi2.X2,stats.chi2.df); % determine p value
+    stats.chi2.h = double(stats.chi2.p<=0.05);
+    
+    %% Cramer's V
+    
+    [n_row n_col] = size(contab); % figure out size of contigency table
+    col_sum = sum(contab); % sum of columns
+    row_sum = sum(contab,2); % sum of rows
+    n_sum = sum(sum(contab)); % sum of everything
+    kk = min(n_row,n_col); 
+%     cramer_v.df=(n_row-1)*(n_col-1);
+%     % expected frequency of occurrence in each cell: product of row and
+%     % column totals divided by total N
+%     cramer_v.expected_frequency = (row_sum*col_sum)/n_sum;
+%     % chi square stats
+%     cramer_v.chi2 = (contab-cramer_v.expected_frequency).^2./cramer_v.expected_frequency;
+%     cramer_v.chi2 = sum(cramer_v.chi2(:));
+    % Cramer's V
+    stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
+
  
-        
- 
-%     [~,pchi,~] = chi2cont(ct);
-%     statschi(n_net,1) = pchi;
-%     
-%     
+         
 %     stats=mestab(ct);
 %     Vchi(n_net,1) = stats.cramerV;
-    
-    % calculate chi-squared and cramer's v
-    
-    % 
+
 % function [es,esCi,chi2]=cramerv(table,nRow,nCol,confLevel,is2by2)
 % % this function computes Cramer's V, including exact analytical CI
 % % ** NOTE: in the case of 2 by 2 tables Cramer's V is identical to phi
 % % except possibly for the sign), which will be taken care of in the last
 % % lines
 
-%     colSum=sum(table);
-%     rowSum=sum(table,2);
-%     n=sum(sum(table));
-%     k=min(nRow,nCol);
-%     df=(nRow-1)*(nCol-1);
-%     % expected frequency of occurrence in each cell: product of row and
-%     % column totals divided by total N
-%     ef=(rowSum*colSum)/n;
-%     % chi square stats
-%     chi2=(table-ef).^2./ef;
-%     chi2=sum(chi2(:));
-%     % Cramer's V
-%     es=sqrt(chi2/(n*(k-1)));
 
 
 % save the stats into a structure variable 'stats' with subfields
@@ -265,7 +272,7 @@ end
 %% Saving subtyping results and statistics
 
 file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'sub','hier','order','part','opt','model')
+save(file_sub,'sub','hier','order','part','opt','model','stats')
 
 end
 
