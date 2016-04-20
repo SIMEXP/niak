@@ -241,30 +241,17 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
     row_sum = sum(contab,2); % sum of rows
     n_sum = sum(sum(contab)); % sum of everything
     kk = min(n_row,n_col); 
-%     cramer_v.df=(n_row-1)*(n_col-1);
-%     % expected frequency of occurrence in each cell: product of row and
-%     % column totals divided by total N
-%     cramer_v.expected_frequency = (row_sum*col_sum)/n_sum;
-%     % chi square stats
-%     cramer_v.chi2 = (contab-cramer_v.expected_frequency).^2./cramer_v.expected_frequency;
-%     cramer_v.chi2 = sum(cramer_v.chi2(:));
-    % Cramer's V
     stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
-
- 
-         
-%     stats=mestab(ct);
-%     Vchi(n_net,1) = stats.cramerV;
-
-% function [es,esCi,chi2]=cramerv(table,nRow,nCol,confLevel,is2by2)
-% % this function computes Cramer's V, including exact analytical CI
-% % ** NOTE: in the case of 2 by 2 tables Cramer's V is identical to phi
-% % except possibly for the sign), which will be taken care of in the last
-% % lines
-
-
-
-% save the stats into a structure variable 'stats' with subfields
+    
+    % Pie chart visualization
+    
+    for pp = 1:length(contab(:,1))
+        pc = contab(pp,:);
+        pie(pc)
+        name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
+        pc_out = fullfile(files_out, name_pc);
+        print(pc_out, '-dpng', '-r300');
+    end
  
 
 end
