@@ -246,8 +246,14 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
     % Pie chart visualization
     
     for pp = 1:length(contab(:,1))
-        pc = contab(pp,:);
-        pie(pc)
+        pc_val = contab(pp,:);
+        pc = pie(pc_val);
+        textc = findobj(pc,'Type','text');
+        percval = get(textc,'String');
+        labels = strcat(percval',name_clus);
+        pc = pie(pc_val,labels);
+        c_title = ['Group' num2str(list_gg(pp))];
+        title(c_title);
         name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
         pc_out = fullfile(files_out, name_pc);
         print(pc_out, '-dpng', '-r300');
