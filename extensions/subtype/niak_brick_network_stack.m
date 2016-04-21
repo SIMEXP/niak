@@ -55,8 +55,8 @@ if ~exist('files_in','var')||~exist('files_out','var')
 end
 
 % FILES_IN
-list_fields   = { 'data' , 'mask' , 'model' };
-list_defaults = { NaN    , NaN    , NaN     };
+list_fields   = { 'data' , 'mask' , 'model'           };
+list_defaults = { NaN    , NaN    , 'gb_niak_omitted' };
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 % FILES_OUT
@@ -82,7 +82,7 @@ if opt.flag_test == 1
 end
 
 %% Brick starts here
-% Read mask
+% Read the mask
 [hdr_m,mask] = niak_read_vol(files_in.mask);
 
 
