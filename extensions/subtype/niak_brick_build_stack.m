@@ -1,8 +1,8 @@
-function [files_in,files_out,opt] = niak_brick_build_stack(files_in,files_out,opt)
+function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out, opt)
 % Create network, mean and std stack 4D maps from individual functional maps
 %
 % SYNTAX:
-% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_BUILD_STACK(FILE_IN,FILE_OUT,OPT)
+% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_network_stack(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 %
 % INPUTS:
@@ -49,23 +49,21 @@ function [files_in,files_out,opt] = niak_brick_build_stack(files_in,files_out,op
 
 %% Initialization and syntax checks
 
-% Input
-if ~isstruct(files_in)
-    error('niak:brick','FILES_IN should be a structure.\n Type ''help niak_brick_build_stack'' for more info.');
+% Syntax
+if ~exist('files_in','var')||~exist('files_out','var')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_NETWORK_STACK(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_network_stack'' for more info.')
 end
 
-if isempty(files_in.mask)
-    error('niak:brick','Mask missing.\n Type ''help niak_brick_build_stack'' for more info.')
-end
-% Read mask
-[hdr_m,mask] = niak_read_vol(files_in.mask);
+% FILES_IN
+list_fields   = { 'data' , 'mask' , 'model' };
+list_defaults = { NaN    , NaN    , NaN     };
+files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
-% Output
-if ~exist('files_out','var')||isempty(files_out)
-    files_out = pwd;
-end
+% FILES_OUT
 if ~ischar(files_out)
     error('FILES_OUT should be a string');
+elseif isempty(files_out)
+    files_out = pwd;
 end
 
 % Options
@@ -74,8 +72,19 @@ if nargin < 3
 end
 
 list_fields   = { 'scale' , 'regress_conf' , 'flag_verbose' , 'flag_test' };
-list_defaults = {  {}     ,  {}            ,  true          ,  false      };
-opt = psom_struct_defaults(opt,list_fields,list_defaults);
+list_defaults = { []      , {}             , true           , false       };
+opt = psom_struct_defaults(opt, list_fields, list_defaults);
+
+
+% If the test flag is true, stop here !
+if opt.flag_test == 1
+    return
+end
+
+%% Brick starts here
+% Read mask
+[hdr_m,mask] = niak_read_vol(files_in.mask);
+
 
 % setup list of networks
 if isempty(opt.scale)
@@ -85,11 +94,6 @@ if isempty(opt.scale)
    opt.scale = num2cell(list_network);
 else
    list_network = cell2mat(opt.scale);
-end
-
-% If the test flag is true, stop here !
-if opt.flag_test == 1
-    return
 end
 
 % The brick start here 
