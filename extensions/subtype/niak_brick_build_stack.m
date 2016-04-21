@@ -9,7 +9,7 @@ function [files_in,files_out,opt] = niak_brick_build_stack(files_in,files_out,op
 %
 % FILES_IN (structure) with the following fields :
 %
-%   MAP.<SUBJECT>
+%   DATA.<SUBJECT>
 %       (string) Containing the individual map (e.g. rmap_part,stability_maps, etc)
 %       NB: assumes there is only 1 .nii.gz or mnc.gz map per individual.
 %
@@ -17,7 +17,7 @@ function [files_in,files_out,opt] = niak_brick_build_stack(files_in,files_out,op
 %       (3D volume) a binary mask of the voxels that will be included in the 
 %       time*space array.
 %
-%   PHENO
+%   MODEL
 %       (strings,Default '') a .csv files coding for the pheno
 %
 %
@@ -29,13 +29,11 @@ function [files_in,files_out,opt] = niak_brick_build_stack(files_in,files_out,op
 %
 % OPT  (structure, optional) with the following fields:
 %
-%   SCALE (cell of integer,default all networks) A list of networks number 
+%   SCALE (int array, default all networks) A list of networks number 
 %   in individual maps
 %
-%   REGRESS_CONF (Cell of string, Default {}) A liste of variables name to be regressed out.
-%   WARNING: subject's ID should be the same as in the csv pheno file.
+%   REGRESS_CONF (Cell of string, Default {}) A list of variables name to be regressed out.
 %   
-%
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
