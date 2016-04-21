@@ -46,7 +46,7 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       subjects into groups to compare chi-squared and Cramer's V stats
 %
 %   FLAG_STATS
-%       (boolean, optional, default false) if the flag is true, the brick
+%       (boolean, optional, default 0) if the flag is 1 (true), the brick
 %       will calculate Cramer's V and chi-squared statistics for groups
 %       specified in files_in.model
 %
@@ -61,21 +61,12 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
-%
-% % % % % % % % .mat file
-% % % % % % % % % % PART
-% % % % % % % %       (array 1 x #subjects) the partition of subjects into subgroups
-% % % % % % % % % % hier
-% % % % % % % % % % stats (ex. cramer v, chi2)
-%%%%%%%%%%%%%%%% DIFF MAP  (vol)
-%%%%%%%%%%%%%%%% AVERAGE SUBTYPE MAP (vol)
-%%%%%%%%%%%%%%%% CHI2 .png
-%%%%%%%%%%%%%%%% 
+
 
 %% Initialization and syntax checks
 
 % Syntax
-if ~exist('files_in','var')||~exist('files_out','var')
+if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SUBTYPING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_subtyping'' for more info.')
 end
 
@@ -83,11 +74,11 @@ end
 if ~isstruct(files_in)
     error('FILES_IN should be a structure with the required subfields DATA, HIER, and MASK');
 end
+if isfield(opt,'flag_stats') && opt.flag_stats == 1 && ~isfield(files_in,'model')
+    error('When OPT.FLAG_STATS is true, FILES_IN.MODEL should be a string');
+end
 if isfield(files_in,'model') && ~ischar(files_in.model)
     error('FILES_IN.MODEL should be a string');
-end
-if strcmp(opt.flag_stats,'true')||opt.flag_stats==1 && ~isfield(files_in,'model')
-    error('When OPT.FLAG_STATS is true, FILES_IN.MODEL should be a string');
 end
 list_fields   = { 'data' , 'hier' , 'mask', 'model' };
 list_defaults = { NaN    , NaN    , NaN   , 'gb_niak_omitted' }; 
@@ -108,14 +99,14 @@ end
 if ~isstruct(opt)
     error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
 end
-if strcmp(opt.flag_stats,'true')||opt.flag_stats==1 && ~isfield(opt,'nb_col_csv')
+if isfield(opt,'flag_stats') && opt.flag_stats == 1 && ~isfield(opt,'nb_col_csv')
     error('When OPT.FLAG_STATS is true, OPT.NB_COL_CSV must be specified with an integer');
 end
 if isfield(opt,'nb_col_csv') && ~isnumeric(opt.nb_col_csv)
     error('OPT.NB_COL_CSV should be an integer');
 end
 list_fields   = { 'nb_subtype', 'sub_map_type', 'nb_col_csv'     , 'flag_stats', 'flag_verbose' , 'flag_test' }; 
-list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', false       , true           , false       };
+list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', 0           , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % If the test flag is true, stop here !
@@ -213,8 +204,8 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
             sub_col = col(mask_sub); % subjects within one cluster
             nn = numel(find(sub_col(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
             contab(gg,cc) = nn;
-            name_clus{cc} = ['subt' num2str(cc)];
-            name_grp{gg} = ['grp' num2str(list_gg(gg))];
+            name_clus{cc} = ['sub' num2str(cc)];
+            name_grp{gg} = ['group' num2str(list_gg(gg))];
         end
     end
     
@@ -222,7 +213,7 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
     opt_ct.labels_x = name_grp;
     opt_ct.labels_y = name_clus;
     opt_ct.precision = 2;
-    path_ct = fullfile(files_out,'chi2_ct.csv');
+    path_ct = fullfile(files_out,'chi2_contingency_table.csv');
     niak_write_csv(path_ct,contab,opt_ct)
     
     %% Chi-square test of the contigency table
@@ -250,7 +241,7 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
         pc = pie(pc_val);
         textc = findobj(pc,'Type','text');
         percval = get(textc,'String');
-        labels = strcat(percval',name_clus);
+        labels = strcat(name_clus, {': '},percval');
         pc = pie(pc_val,labels);
         c_title = ['Group' num2str(list_gg(pp))];
         title(c_title);
@@ -258,14 +249,16 @@ if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(o
         pc_out = fullfile(files_out, name_pc);
         print(pc_out, '-dpng', '-r300');
     end
- 
-
+    
+    file_stat = fullfile(files_out,'group_stats.mat');
+    save(file_stat,'model','stats')
+    
 end
 
 %% Saving subtyping results and statistics
 
 file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'sub','hier','order','part','opt','model','stats')
+save(file_sub,'sub','hier','order','part','opt')
 
 end
 
