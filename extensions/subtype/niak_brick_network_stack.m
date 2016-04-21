@@ -83,43 +83,48 @@ end
 
 %% Brick starts here
 % Read the mask
-[hdr_m,mask] = niak_read_vol(files_in.mask);
+[hdr_m, mask] = niak_read_vol(files_in.mask);
+% Turn the mask into a boolean array
+mask = logical(mask);
+% Get the number of non-zero voxels in the mask
+n_vox = sum(mask);
 
+% Check how many files we have to read
+in_names = fieldnames(files_in.data);
+n_input = length(in_names);
 
-% setup list of networks
-if isempty(opt.scale)
-   [hdr,vol]=niak_read_vol(files_in.map.(fieldnames(files_in.map){1}));
-   list_network =  hdr.info.dimensions(end);
-   list_network = [1 : list_network];
-   opt.scale = num2cell(list_network);
-else
-   list_network = cell2mat(opt.scale);
-end
+% Pre-allocate the output matrix. If we have more than one network, we'll
+% repmat it
+stack = zeros(n_input, n_vox);
 
-% The brick start here 
-% Network 4D volumes with M subjects
-for ss = list_network
-    tseries = [];
-    subj_id = '';
-    fprintf('loading net_%d:\n',ss)
-    for ii = 1:length(fieldnames(files_in.map))
-        sub = fieldnames(files_in.map){ii};
-        niak_progress(ii,length(fieldnames(files_in.map)),5);
-        [hdr,vol] = niak_read_vol(files_in.map.(sub));
-        tseries_tmp = niak_vol2tseries(vol(:,:,:,ss),mask);
-        tseries = [tseries ;tseries_tmp];
-        subj_id = [subj_id ; sub];
+% Iterate over the input files
+for in_id = 1:n_input
+    % Get the name for the input field we need
+    in_name = in_names{in_id};
+    % Load the corresponding path
+    [~, vol] = niak_read_vol(files_in.data.(in_name));
+    
+    % If this is the first iteration and scale is empty, set it to the
+    % number of networks in this file (we'll check that they are all the
+    % same across subjects)
+    if in_id == 1 && isempty(opt.scale)
+        n_nets = size(vol, 4);
+        opt.scale = 1:n_nets;
+        % Pre-allocate the stack variable as needed
+        stack = repmat(stack, [1, 1, n_nets]);
     end
     
-    % Save stack and IDs for network N
-    eval(sprintf('stack.net_%d.load =  tseries;',ss));
-    eval(sprintf('stack.net_%d.ids =  subj_id;',ss));
-
-    % Save Mean & std for the network N
-    eval(sprintf('stack.net_%d.mean =  mean(tseries);',ss));
-    eval(sprintf('stack.net_%d.mean =  std(tseries);',ss));
+    % Loop through the networks and mask the thing
+    for net_id = 1:length(opt.scale)
+        % Get the correct network number
+        net = opt.scale(net);
+        % Mask the volume
+        masked_vol = niak_vol2tseries(vol(:, :, :, net), mask);
+        % Save the masked array into the stack variable
+        stack(in_id, :, net_id) = masked_vol;
+    end
 end
 
-% Save the final stack file
+% Save the stack matrix
 stack_file = fullfile(files_out, 'stack_file.mat');
-save(stack_file,'stack');
+save(stack_file, 'stack');
