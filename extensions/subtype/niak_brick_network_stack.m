@@ -29,10 +29,14 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %
 % OPT  (structure, optional) with the following fields:
 %
-%   SCALE (int array, default all networks) A list of networks number 
-%   in individual maps
+%   SCALE 
+%       (int array, default all networks) A list of networks number in 
+%       individual maps
 %
-%   REGRESS_CONF (Cell of string, Default {}) A list of variables name to be regressed out.
+%   REGRESS_CONF 
+%       (Cell of string, Default {}) A list of variables name to be regressed out.
+%
+%   FLAG_CONF
 %   
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -124,6 +128,10 @@ for in_id = 1:n_input
         stack(in_id, :, net_id) = masked_vol;
     end
 end
+
+
+%% Regress confounds
+
 
 % Save the stack matrix
 stack_file = fullfile(files_out, 'stack_file.mat');
