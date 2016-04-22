@@ -2,7 +2,7 @@ FROM simexp/octave:01_09_2015
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
-ENV NIAK_VERSION v33.33.44
+ENV NIAK_VERSION v1.0.0
 ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the time of master
