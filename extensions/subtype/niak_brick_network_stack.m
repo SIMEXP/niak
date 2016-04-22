@@ -83,11 +83,11 @@ end
 
 %% Brick starts here
 % Read the mask
-[hdr_m, mask] = niak_read_vol(files_in.mask);
+[~, mask] = niak_read_vol(files_in.mask);
 % Turn the mask into a boolean array
 mask = logical(mask);
 % Get the number of non-zero voxels in the mask
-n_vox = sum(mask);
+n_vox = sum(mask(:));
 
 % Check how many files we have to read
 in_names = fieldnames(files_in.data);
@@ -117,7 +117,7 @@ for in_id = 1:n_input
     % Loop through the networks and mask the thing
     for net_id = 1:length(opt.scale)
         % Get the correct network number
-        net = opt.scale(net);
+        net = opt.scale(net_id);
         % Mask the volume
         masked_vol = niak_vol2tseries(vol(:, :, :, net), mask);
         % Save the masked array into the stack variable
