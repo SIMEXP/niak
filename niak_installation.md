@@ -33,10 +33,10 @@ docker run -i -t --privileged --rm \
        simexp/niak-boss:0.13.5 \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
-You can also add the followin to you $HOME/.bashrc file so you can simply run the `docker_run_niak` command.
+You can also add the followin to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
 
 ```bash 
-alias docker_run_niak="xhost +local: && \
+alias docker_run_niak="xhost +local: && docker stop niak && docker rm niak && \
 docker run -i -t --privileged --rm \
        --name niak \
        -v $HOME:$HOME -v /etc/group:/etc/group \
