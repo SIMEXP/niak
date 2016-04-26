@@ -196,7 +196,7 @@ raw_stack = zeros(n_input, n_vox, n_scales);
 % Iterate over the input files
 for in_id = 1:n_input
     % Get the name for the input field we need
-    in_name = in_names{in_id};
+    in_name = subject_list{in_id};
     % Load the corresponding path
     [~, vol] = niak_read_vol(files_in.data.(in_name));
     
@@ -242,7 +242,7 @@ provenance = struct;
 % Get the subjects
 provenance.subjects = cell(n_input, 2);
 % First column are the input field names
-provenance.subjects{:, 1} = subject_list;
+provenance.subjects(:, 1) = subject_list;
 % Second column is so far undefined
 
 % Add the model information
