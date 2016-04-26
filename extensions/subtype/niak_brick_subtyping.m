@@ -27,13 +27,13 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       containing information and variables about subjects 
 % 
 % FILES_OUT 
-%       (string) path for results
+%       (string) path for folder of results
 % 
 % OPT 
-%       (structure) with the following fields:
+%       (structure, optional) with the following fields:
 %
 %   NB_SUBTYPE
-%       (integer) the number of desired subtypes
+%       (integer, default 2) the number of desired subtypes
 %
 %   SUB_MAP_TYPE 
 %       (string, default 'mean') how the subtypes are represented in the
@@ -41,23 +41,61 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       (options: 'mean' or 'median')
 %
 %   NB_COL_CSV
-%       (integer, optional, default 'gb_niak_omitted') the column number
+%       (integer, default 'gb_niak_omitted') the column number
 %       (excluding column A for subject IDs) in the model csv that separates 
 %       subjects into groups to compare chi-squared and Cramer's V stats
 %
 %   FLAG_STATS
-%       (boolean, optional, default 0) if the flag is 1 (true), the brick
+%       (boolean, default 0) if the flag is 1 (true), the brick
 %       will calculate Cramer's V and chi-squared statistics for groups
 %       specified in files_in.model
 %
 %   FLAG_VERBOSE
-%       (boolean, optional, default true) turn on/off the verbose.
+%       (boolean, default true) turn on/off the verbose.
 %
 %   FLAG_TEST
-%       (boolean, optional, default false) if the flag is true, the brick does not do 
+%       (boolean, default false) if the flag is true, the brick does not do 
 %       anything but updating the values of FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % OUTPUTS:
+% 
+% FILES_OUT
+%       Directory containing the following: 
+%
+%   SUBTYPES.MAT
+%       (structure) with the following fields:
+%
+%       HIER
+%           (2D array) a copy of the variable from FILES_IN.HIER 
+%       OPT
+%           (structure) a copy of the options specified in OPT
+%       PART
+%           (vector) PART(I) = J if the object I is in the class J.
+%           See also: niak_threshold_hierarchy
+%       SUB
+%           (structure) contains subfield for different maps (e.g.
+%           mean/median, ttest, effect) for each subtype
+%       SUBJ_ORDER 
+%           (vector) defines a permutation on the objects as defined by
+%           HIER when splitting the objects backward.
+%           See also: niak_hier2order
+%
+%   4D VOLUMES (.nii.gz)
+%       Different maps for subtypes as saved in the variable SUB in
+%       SUBTYPES.MAT
+%
+%   GROUP_STATS.MAT
+%       (structure) If OPT.FLAG_STATS was true, this .mat file will be 
+%       generated, which contains Chi-squared and Cramer's V statistics
+%
+%   CHI2_CONTINGENCY_TABLE.CSV
+%       (.csv) If OPT.FLAG_STATS was true, a Chi2 contingency table will be
+%       saved
+%
+%   PIECHART_GROUP(n).PNG
+%       (figure, .png) If OPT.FLAG_STATS was true, pie chart figures will
+%       be generated to illustrate the proportions of data in n groups in 
+%       each subtype
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
@@ -66,7 +104,7 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %% Initialization and syntax checks
 
 % Syntax
-if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
+if ~exist('files_in','var')||~exist('files_out','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_SUBTYPING(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_subtyping'' for more info.')
 end
 
@@ -74,7 +112,7 @@ end
 if ~isstruct(files_in)
     error('FILES_IN should be a structure with the required subfields DATA, HIER, and MASK');
 end
-if isfield(opt,'flag_stats') && opt.flag_stats == 1 && ~isfield(files_in,'model')
+if exist('opt','var') && isfield(opt,'flag_stats') && opt.flag_stats == 1 && ~isfield(files_in,'model')
     error('When OPT.FLAG_STATS is true, FILES_IN.MODEL should be a string');
 end
 if isfield(files_in,'model') && ~ischar(files_in.model)
@@ -88,25 +126,28 @@ files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 if ~ischar(files_out)
     error('FILES_OUT should be a string');
 end
-if exist('files_out','var')
+if ~exist(files_out)
     psom_mkdir(files_out);
 end
 
 % Options
-if ~exist('opt','var')||isempty(opt)
-    error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
+if exist('opt','var') && ~isstruct(opt)
+    error('OPT should be a structure');
 end
-if ~isstruct(opt)
-    error('OPT should be a structure where the subfield NB_SUBTYPE must be specified with an integer');
+if ~exist('opt','var') || (exist('opt','var') && ~isfield(opt,'nb_subtype'))
+    warning('OPT.NB_SUBTYPE was left unspecified. Two (2) subtypes will be generated by default.')
 end
-if isfield(opt,'flag_stats') && opt.flag_stats == 1 && ~isfield(opt,'nb_col_csv')
+if exist('opt','var') && isfield(opt,'flag_stats') && opt.flag_stats == 1 && ~isfield(opt,'nb_col_csv')
     error('When OPT.FLAG_STATS is true, OPT.NB_COL_CSV must be specified with an integer');
 end
-if isfield(opt,'nb_col_csv') && ~isnumeric(opt.nb_col_csv)
+if exist('opt','var') && isfield(opt,'nb_col_csv') && ~isnumeric(opt.nb_col_csv)
     error('OPT.NB_COL_CSV should be an integer');
 end
+if nargin < 3
+    opt = struct;
+end
 list_fields   = { 'nb_subtype', 'sub_map_type', 'nb_col_csv'     , 'flag_stats', 'flag_verbose' , 'flag_test' }; 
-list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', 0           , true           , false       };
+list_defaults = { 2           , 'mean'        , 'gb_niak_omitted', 0           , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % If the test flag is true, stop here !
@@ -116,13 +157,14 @@ end
 
 %% Load the data
 data = load(files_in.data);
+data = data.data;
 
 % Load the hierarchy
 hier = load(files_in.hier);
 hier = hier.hier;
 
 % Order the subjects
-order = niak_hier2order(hier);
+subj_order = niak_hier2order(hier);
 
 % Read the mask
 [hdr,mask] = niak_read_vol(files_in.mask);
@@ -132,53 +174,43 @@ part = niak_threshold_hierarchy(hier,struct('thresh',opt.nb_subtype));
 
 %% Build subtype maps
 
-% Generating and writing the mean subtype maps in a single volume
-if strcmp(opt.sub_map_type, 'mean')
-    sub.mean = zeros(max(part),size(data.data,2));
-    for ss = 1:max(part)
-        sub.mean(ss,:) = mean(data.data(part==ss,:),1);
+% Generating and writing the mean or the median subtype maps in a single volume
+
+for ss = 1:opt.nb_subtype
+    if strcmp(opt.sub_map_type, 'mean')
+        sub.mean(ss,:) = mean(data(part==ss,:),1);
+        file_name = 'mean_subtype.nii.gz';
+        vol_map_sub = niak_tseries2vol(sub.mean,mask);
+    elseif strcmp(opt.sub_map_type, 'median')
+        sub.median(ss,:) = median(data(part==ss,:),1);
+        file_name = 'median_subtype.nii.gz';
+        vol_map_sub = niak_tseries2vol(sub.median,mask);
     end
-    vol_mean_sub = niak_tseries2vol(sub.mean,mask);
-    file_name = 'mean_subtype.nii.gz';
-    hdr.file_name = fullfile(files_out, file_name);
-    niak_write_vol(hdr,vol_mean_sub);
+    hdr.file_name = [files_out filesep file_name];
+    niak_write_vol(hdr,vol_map_sub);
 end
-    
-% Generating and writing the median subtype maps in a single volume
-if strcmp(opt.sub_map_type, 'median')
-    sub.median = zeros(max(part),size(data.data,2));
-    for ss = 1:max(part)
-        sub.median(ss,:) = median(data.data(part==ss,:),1);
-    end
-    vol_median_sub = niak_tseries2vol(sub.median,mask);
-    file_name = 'median_subtype.nii.gz';
-    hdr.file_name = fullfile(files_out, file_name);
-    niak_write_vol(hdr,vol_median_sub);
-end
-    
-% Generating and writing t-test maps of the difference between subtype average 
-% and grand average in a single volume
-for ss = 1:max(part)
-    sub.ttest(ss,:) = niak_ttest(data.data(part==ss,:),data.data(part~=ss,:),true);
+
+%% Generating and writing t-test and effect maps of the difference between subtype
+% average and grand average in volumes
+
+for ss = 1:opt.nb_subtype
+    [sub.ttest(ss,:),~,sub.mean_eff(ss,:),~,~] = niak_ttest(data(part==ss,:),data(part~=ss,:),true);
 end
 vol_ttest_sub = niak_tseries2vol(sub.ttest,mask);
 file_name = 'ttest_subtype.nii.gz';
-hdr.file_name = fullfile(files_out, file_name);
+hdr.file_name = [files_out filesep file_name];
 niak_write_vol(hdr,vol_ttest_sub);
 
-% Generating and writing effect maps of the difference between subtype
-% average and grand average in a single volume
-for ss = 1:max(part)
-    [~,~,sub.mean_eff(ss,:),~,~] = niak_ttest(data.data(part==ss,:),data.data(part~=ss,:),true);
-end
 vol_eff_sub = niak_tseries2vol(sub.mean_eff,mask);
 file_name = 'eff_subtype.nii.gz';
-hdr.file_name = fullfile(files_out, file_name);
+hdr.file_name = [files_out filesep file_name];
 niak_write_vol(hdr,vol_eff_sub);
+
+%% Generate and write grand mean and grand std maps?
 
 %% Statistics
 
-if opt.flag_stats == 1 && ~strcmp(files_in.model,'gb_niak_omitted') && ~strcmp(opt.nb_col_csv,'gb_niak_omitted')
+if opt.flag_stats == 1 
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
     %% Build the model from user's csv and input column
@@ -258,7 +290,7 @@ end
 %% Saving subtyping results and statistics
 
 file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'sub','hier','order','part','opt')
+save(file_sub,'sub','hier','subj_order','part','opt')
 
 end
 
