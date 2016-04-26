@@ -84,12 +84,13 @@ sim_matrix = R(subj_order,subj_order);
 %% Save the similarity matrix as png
 opt_png.limits = [-1 1];
 opt_png.color_map = 'hot_cold';
-fh1 = niak_visu_matrix(sim_matrix,opt_png);
+fh1 = figure('Visible', 'off');
+niak_visu_matrix(sim_matrix,opt_png);
 namefig = [files_out filesep 'similarity_matrix.png'];
 print(fh1, namefig,'-dpng','-r300');
 
 %% Generate and save dendrogram as png
-fh2 = figure();
+fh2 = figure('Visible', 'off');
 niak_visu_dendrogram(hier);
 nameden = [files_out filesep 'dendrogram.png'];
 print(fh2, nameden,'-dpng','-r300');
