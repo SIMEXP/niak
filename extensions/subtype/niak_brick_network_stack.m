@@ -47,6 +47,59 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 % _________________________________________________________________________
 % OUTPUTS:
 %
+% FILES_OUT (structure)with the following fields:
+%
+%   STACK
+%       (double array) SxVxN array where S is the number of subjects, V is
+%       the number of voxels and N the number of networks (if N=1, Matlab
+%       displays the array as 2 dimensional, i.e. the last dimension gets
+%       squeezed)
+%
+%   PROVENANCE
+%       (structure) with the following fields:
+%
+%       SUBJECTS
+%           (cell array) Sx2 cell array containing the names/IDs of
+%           subjects in the same order as they are supplied in
+%           FILES_IN.DATA and FILES_OUT.STACK. The first column contains
+%           the names as they are suppiled in FILES_IN.DATA whereas the
+%           second column contains the (optional) names that are taken from
+%           the model file in FILES_IN.MODEL
+%
+%       MODEL 
+%           (structure, optional) Only available if OPT.FLAG_CONF is set 
+%           to true and a correct model was supplied. Contains the
+%           following fields:
+%
+%           MATRIX
+%               (double array, optional) Contains the model matrix that was
+%               used to perform the confound regression.
+%
+%           CONFOUNDS
+%               (cell array, optional) Contains the names of the covariates
+%               in the model that are regressed from the input data
+%
+%           COL_NAMES
+%               (cell array, optional) Contains the header of the supplied
+%               model file.
+%
+%       VOLUME
+%           (structure) with the following fields:
+%
+%           NETWORK
+%               (double array) Contains the network ID or IDs in the same
+%               order that they appear in FILES_OUT.STACK
+%
+%           SCALE
+%               (double) The scale of the network solution of the input
+%               data (i.e. how many networks were available in the input
+%               data).
+%
+%           MASK
+%               (boolean array) The binary brain mask that can be used to
+%               map the vectorized data in FILES_OUT.STACK back into volume
+%               space.
+%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 
@@ -75,10 +128,49 @@ if nargin < 3
     opt = struct;
 end
 
-list_fields   = { 'scale' , 'regress_conf' , 'flag_verbose' , 'flag_test' };
-list_defaults = { []      , {}             , true           , false       };
+list_fields   = { 'scale' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' };
+list_defaults = { []      , {}             , true           , true        , false       };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 
+% Get the model and check if there are any NaNs in the factors to be
+% regressed
+[conf_model, ~, cat_names, ~] = niak_read_csv(files_in.model);
+n_conf = length(opt.regress_conf);
+conf_ids = zeros(n_conf, 1);
+% Go through the confound cell array and find the indices
+for cid = 1:n_conf
+    conf_name = opt.regress_conf{cid};
+    cidx = find(strcmp(cat_names, conf_name));
+    % Make sure we found the covariate
+    if ~isempty(cidx)
+        conf_ids(cid) = cidx;
+    else
+        error('Could not find column for %s in %s', conf_name, files_in.model);
+    end
+    % Make sure there are no NaNs in the model
+    if any(isnan(conf_model(:, cidx)))
+        % Get the indices of the subjects
+        missing = find(isnan(conf_model(:, cidx)));
+        % Matlab error messages only allow for the double to iterate. Not
+        % sure how we could tell them both the subject ID and the confound
+        % name
+        error('Subject #%d has missing data for one or more confounds. Please fix.\n', missing);
+    end
+end
+ 
+% Check the first subject file and see how many networks we have
+subject_list = fieldnames(files_in.data);
+n_input = length(subject_list);
+[~, vol] = niak_read_vol(files_in.data.(subject_list{1}));
+n_nets = size(vol, 4);
+% If no scale has been supplied, use all networks
+if isempty(opt.scale)
+    opt.scale = 1:n_nets;
+% Make sure all networks are there
+elseif max(opt.scale) > n_nets
+    error(['You requested networks up to #%d to be investigated '...
+           'but the specified input only has %d networks'], max(opt.scale), n_nets);
+end
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -92,14 +184,12 @@ end
 mask = logical(mask);
 % Get the number of non-zero voxels in the mask
 n_vox = sum(mask(:));
-
-% Check how many files we have to read
-in_names = fieldnames(files_in.data);
-n_input = length(in_names);
+% Get the number of scales
+n_scales = length(opt.scale);
 
 % Pre-allocate the output matrix. If we have more than one network, we'll
 % repmat it
-stack = zeros(n_input, n_vox);
+raw_stack = zeros(n_input, n_vox, n_scales);
 
 % Iterate over the input files
 for in_id = 1:n_input
@@ -108,30 +198,64 @@ for in_id = 1:n_input
     % Load the corresponding path
     [~, vol] = niak_read_vol(files_in.data.(in_name));
     
-    % If this is the first iteration and scale is empty, set it to the
-    % number of networks in this file (we'll check that they are all the
-    % same across subjects)
-    if in_id == 1 && isempty(opt.scale)
-        n_nets = size(vol, 4);
-        opt.scale = 1:n_nets;
-        % Pre-allocate the stack variable as needed
-        stack = repmat(stack, [1, 1, n_nets]);
-    end
-    
     % Loop through the networks and mask the thing
     for net_id = 1:length(opt.scale)
         % Get the correct network number
         net = opt.scale(net_id);
         % Mask the volume
         masked_vol = niak_vol2tseries(vol(:, :, :, net), mask);
-        % Save the masked array into the stack variable
-        stack(in_id, :, net_id) = masked_vol;
+        % Save the masked array into the stack variablne
+        raw_stack(in_id, :, net_id) = masked_vol;
     end
 end
 
-
 %% Regress confounds
+% Set up the model structure for the regression
+opt_mod = struct;
+opt_mod.flag_residuals = true;
+m = struct;
+m.x = conf_model(:, conf_ids);
 
+conf_stack = zeros(n_input, n_vox, n_scales);
+
+% Loop through the networks again for the regression
+for net_id = 1:length(opt.scale)
+    % Get the correct network
+    m.y = raw_stack(:, :, net_id);
+    [res] = niak_glm(m, opt_mod);
+    % Store the residuals in the confound stack
+    conf_stack(:, :, net_id) = res.e;
+end
+
+%% Build the outputs
+% Decide which of the two stacks to save
+if opt.flag_conf
+    stack = conf_stack;
+else
+    stack = raw_stack;
+end
+
+% Build the provenance data
+provenance = struct;
+% Get the subjects
+provenance.subjects = cell(n_input, 2);
+% First column are the input field names
+provenance.subjects{:, 1} = subject_list;
+% Second column is so far undefined
+
+% Add the model information
+provenance.model = struct;
+provenance.model.matrix = m.x;
+provenance.model.confounds = opt.regress_conf;
+provenance.model.col_names = cat_names;
+
+% Add the volume information
+provenance.volume.network = opt.scale;
+% Store the scale of the prior networks
+provenance.volume.scale = n_nets;
+% Save the brain mask to map the data back into volume space
+provenance.volume.mask = mask;
+% Region mask is missing so far
 
 % Save the stack matrix
 stack_file = fullfile(files_out, 'stack_file.mat');
