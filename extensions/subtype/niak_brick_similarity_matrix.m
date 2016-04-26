@@ -67,7 +67,7 @@ end
 
 %% Read the data
 data = load(files_in);
-data = data.data;
+data = data.stack;
 
 %% Build correlation matrix
 R = niak_build_correlation(data');
