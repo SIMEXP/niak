@@ -31,7 +31,7 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %
 % OPT  (structure, optional) with the following fields:
 %
-%   SCALE 
+%   NETWORK 
 %       (int array, default all networks) A list of networks number in 
 %       individual maps
 %
@@ -130,7 +130,7 @@ if nargin < 3
     opt = struct;
 end
 
-list_fields   = { 'scale' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' };
+list_fields   = { 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' };
 list_defaults = { []      , {}             , true           , true        , false       };
 opt = psom_struct_defaults(opt, list_fields, list_defaults);
 
@@ -164,14 +164,14 @@ end
 subject_list = fieldnames(files_in.data);
 n_input = length(subject_list);
 [~, vol] = niak_read_vol(files_in.data.(subject_list{1}));
-n_nets = size(vol, 4);
+scale = size(vol, 4);
 % If no scale has been supplied, use all networks
-if isempty(opt.scale)
-    opt.scale = 1:n_nets;
+if isempty(opt.network)
+    opt.network = 1:scale;
 % Make sure all networks are there
-elseif max(opt.scale) > n_nets
+elseif max(opt.network) > scale
     error(['You requested networks up to #%d to be investigated '...
-           'but the specified input only has %d networks'], max(opt.scale), n_nets);
+           'but the specified input only has %d networks'], max(opt.network), scale);
 end
 
 % If the test flag is true, stop here !
@@ -187,7 +187,7 @@ mask = logical(mask);
 % Get the number of non-zero voxels in the mask
 n_vox = sum(mask(:));
 % Get the number of scales
-n_scales = length(opt.scale);
+n_scales = length(opt.network);
 
 % Pre-allocate the output matrix. If we have more than one network, we'll
 % repmat it
@@ -201,9 +201,9 @@ for in_id = 1:n_input
     [~, vol] = niak_read_vol(files_in.data.(in_name));
     
     % Loop through the networks and mask the thing
-    for net_id = 1:length(opt.scale)
+    for net_id = 1:length(opt.network)
         % Get the correct network number
-        net = opt.scale(net_id);
+        net = opt.network(net_id);
         % Mask the volume
         masked_vol = niak_vol2tseries(vol(:, :, :, net), mask);
         % Save the masked array into the stack variablne
@@ -221,7 +221,7 @@ m.x = conf_model(:, conf_ids);
 conf_stack = zeros(n_input, n_vox, n_scales);
 
 % Loop through the networks again for the regression
-for net_id = 1:length(opt.scale)
+for net_id = 1:length(opt.network)
     % Get the correct network
     m.y = raw_stack(:, :, net_id);
     [res] = niak_glm(m, opt_mod);
@@ -252,13 +252,13 @@ provenance.model.confounds = opt.regress_conf;
 provenance.model.col_names = cat_names;
 
 % Add the volume information
-provenance.volume.network = opt.scale;
+provenance.volume.network = opt.network;
 % Store the scale of the prior networks
-provenance.volume.scale = n_nets;
+provenance.volume.scale = scale;
 % Save the brain mask to map the data back into volume space
 provenance.volume.mask = mask;
 % Region mask is missing so far
 
 % Save the stack matrix
 stack_file = fullfile(files_out, 'stack_file.mat');
-save(stack_file, 'stack');
+save(stack_file, 'stack', 'provenance');
