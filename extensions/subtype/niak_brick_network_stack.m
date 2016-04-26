@@ -18,7 +18,9 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %       time*space array.
 %
 %   MODEL
-%       (strings,Default '') a .csv files coding for the pheno
+%       (strings,Default '') a .csv files coding for the pheno data. Is
+%       expected to have a header and a first column specifying the case
+%       IDs/names corresponding to the data in FILES_IN.DATA
 %
 %
 % FILES_OUT (string) the full path for a load_stack.mat file with the folowing variables :
