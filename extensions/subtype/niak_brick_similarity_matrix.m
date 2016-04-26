@@ -97,6 +97,5 @@ print(fh2, nameden,'-dpng','-r300');
 %% Save hierarchical clustering and ordering of subjects and similarity matrix as mat
 mat_file = [files_out filesep 'similarity_matrix.mat'];
 save(mat_file,'hier','subj_order','sim_matrix');
-
 end
 
