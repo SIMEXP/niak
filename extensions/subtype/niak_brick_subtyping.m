@@ -15,6 +15,11 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       an array (#subjects x #voxels OR vertices OR regions), see also
 %       niak_brick_network_stack
 %
+%   MATRIX
+%       (string) path to a .mat file containing a variable SIM_MATRIX,
+%       which is an array (#subjects x #subjects). Note this matrix must be
+%       unordered/unclustered.
+%
 %   MASK
 %       (3D volume, default all voxels) a binary mask of the voxels that 
 %       are included in the time*space array
@@ -72,10 +77,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       SUB
 %           (structure) contains subfield for different maps (e.g.
 %           mean/median, ttest, effect) for each subtype
-%       SUBJ_ORDER 
-%           (vector) defines a permutation on the objects as defined by
-%           HIER when splitting the objects backward.
-%           See also: niak_hier2order
 %
 %   4D VOLUMES (.nii.gz)
 %       Different maps for subtypes as saved in the variable SUB in
@@ -132,14 +133,12 @@ end
 data = load(files_in.data);
 data = data.stack;
 
-%% Computer the hierarchy
-% Build correlation matrix
-R = niak_build_correlation(data');
+%% Compute the hierarchy
+% Load the similarity matrix
+R = load(files_in.matrix);
+R = matrix.sim_matrix;
 % Cluster subjects
 hier = niak_hierarchical_clustering(R);
-
-% Order the subjects
-subj_order = niak_hier2order(hier);
 
 % Read the mask
 [hdr,mask] = niak_read_vol(files_in.mask);
@@ -274,7 +273,7 @@ end
 %% Saving subtyping results and statistics
 
 file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'sub','hier','subj_order','part','opt')
+save(file_sub,'sub','hier','part','opt')
 
 end
 
