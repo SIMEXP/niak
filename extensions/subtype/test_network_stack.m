@@ -1,13 +1,14 @@
-%% Prepare it
-% Test script for the niak_brick_network_stack thing
-
+%% Wipe
 clear;
-% Go and load some test subjects by pheno file
-pheno_path = '/data1/subtypes/pipeline_test/pheno/useful_pheno.csv';
-num_path = '/data1/subtypes/pipeline_test/pheno/numeric_pheno.csv';
-data_path = '/data1/subtypes/pipeline_test/big_sample';
-mask_path = '/data1/subtypes/pipeline_test/big_sample/func_mask_group_stereonl.mnc.gz';
 
+%% Set up the paths
+base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/'];
+pheno_path = [base_path '/pheno/useful_pheno.csv'];
+num_path = [base_path '/pheno/numeric_pheno.csv'];
+data_path = [base_path '/raw'];
+mask_path = [base_path '/raw/func_mask_group_stereonl.mnc.gz'];
+
+%% Get the model and load the files
 [model, ~, cat_names, ~] = niak_read_csv(num_path);
 pheno = niak_read_csv_cell(num_path);
 
@@ -29,13 +30,15 @@ for ind = 2:size(pheno,1)
     files_in.data.(sub_name) = file_path;
 end
 
+%% Set up inputs
 files_in.mask = mask_path;
 files_in.model = num_path;
 files_out = '/data1/subtypes/pipeline_test/test_out';
 
-%% Do it
 opt.network = 3;
 opt.regress_conf = {'Gender', 'Age'};
 opt.flag_conf = true;
 opt.flag_test = false;
+
+%% Run the brick
 niak_brick_network_stack(files_in, files_out, opt);
