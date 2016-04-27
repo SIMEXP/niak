@@ -7,6 +7,7 @@ pheno_path = [base_path '/pheno/useful_pheno.csv'];
 num_path = [base_path '/pheno/numeric_pheno.csv'];
 data_path = [base_path '/raw'];
 mask_path = [base_path '/raw/func_mask_group_stereonl.mnc.gz'];
+out_path = [base_path 'out/seb'];
 
 %% Get the model and load the files
 [model, ~, cat_names, ~] = niak_read_csv(num_path);
@@ -22,6 +23,9 @@ for ind = 1:size(pheno,2)
 end
 
 % Now go through the array again
+
+
+%% Set up inputs
 for ind = 2:size(pheno,1)
     sub_name = ['HCP' pheno{ind, go_ind}];
     % Get the file name and path
@@ -30,10 +34,9 @@ for ind = 2:size(pheno,1)
     files_in.data.(sub_name) = file_path;
 end
 
-%% Set up inputs
 files_in.mask = mask_path;
 files_in.model = num_path;
-files_out = '/data1/subtypes/pipeline_test/test_out';
+files_out = out_path;
 
 opt.network = 3;
 opt.regress_conf = {'Gender', 'Age'};
