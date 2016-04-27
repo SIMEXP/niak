@@ -119,8 +119,8 @@ end
 % if isfield(files_in,'model') && ~ischar(files_in.model)
 %     error('FILES_IN.MODEL should be a string');
 % end
-list_fields   = { 'data' , %'hier' , 'mask', 'model' };
-list_defaults = { NaN    , %NaN    , NaN   , 'gb_niak_omitted' }; 
+list_fields   = { 'data' , 'mask', 'model' };
+list_defaults = { NaN    , NaN   , 'gb_niak_omitted' }; 
 files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 % Output
