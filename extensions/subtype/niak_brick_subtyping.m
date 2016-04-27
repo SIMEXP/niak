@@ -221,14 +221,16 @@ if opt.flag_stats == 1
     %% Build the model from user's csv and input column
     col = tab(:,opt.nb_col_csv);
     % Build a mask for NaN values in model and mask out subjects with NaNs
-%     mask_nan = ~max(isnan(col),[],2);
-%     col = col(mask_nan,:);    %%%% replace with what's on slack 
-    sub_id = sub_id(mask_nan,:);
-    partition = part(mask_nan,:);
+    [x, y] = find(~isnan(col));
+    sub_id = unique(x);
+    [a, b] = find(isnan(col));  % the subjects that were dropped due to having NaNs
+    sub_drop = unique(a);
+    partition = part(sub_id,:); 
     % Save the model
     model.subject_id = sub_id;
     model.partition = partition;
     model.group = col;
+    model.subject_drop = sub_drop;
         
     %% Build the contingency table 
     
@@ -274,6 +276,7 @@ if opt.flag_stats == 1
     % Pie chart visualization
     
     for pp = 1:length(contab(:,1))
+        fh = figure('Visible', 'off');
         pc_val = contab(pp,:);
         pc = pie(pc_val);
         textc = findobj(pc,'Type','text');
@@ -284,7 +287,7 @@ if opt.flag_stats == 1
         title(c_title);
         name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
         pc_out = fullfile(files_out, name_pc);
-        print(pc_out, '-dpng', '-r300');
+        print(fh, pc_out, '-dpng', '-r300');
     end
     
     file_stat = fullfile(files_out,'group_stats.mat');
