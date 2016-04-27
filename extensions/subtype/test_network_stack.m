@@ -2,7 +2,7 @@
 clear;
 
 %% Set up the paths
-base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/'];
+base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/';
 pheno_path = [base_path '/pheno/useful_pheno.csv'];
 num_path = [base_path '/pheno/numeric_pheno.csv'];
 data_path = [base_path '/raw'];
