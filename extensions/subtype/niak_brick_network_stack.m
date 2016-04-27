@@ -257,7 +257,7 @@ provenance.volume.mask = mask;
 % Save the stack matrix
 if length(opt.network) == 1
     % Only one network, give specific output name
-    stack_file = fullfile(files_out, sprintf('network_%d_stack.mat', opt.network(1));
+    stack_file = fullfile(files_out, sprintf('network_%d_stack.mat', opt.network(1)));
 else
     % Several networks, give a general name
     stack_file = fullfile(files_out, 'multi_network_stack.mat');
