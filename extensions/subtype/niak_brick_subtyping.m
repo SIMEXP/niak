@@ -159,9 +159,13 @@ for ss = 1:opt.nb_subtype
     end
 end
 
-if
-        file_name = 'mean_subtype.nii.gz';
-        vol_map_sub = niak_tseries2vol(sub.mean,mask);
+% Select which stats map to save
+if strcmp(opt.sub_map_type, 'mean')
+    file_name = 'mean_subtype.nii.gz';
+    vol_map_sub = niak_tseries2vol(sub.mean,mask);
+elseif strcmp(opt.sub_map_type, 'median')
+    file_name = 'median_subtype.nii.gz';
+    vol_map_sub = niak_tseries2vol(sub.median,mask);
 end
     
 hdr.file_name = [files_out filesep file_name];
