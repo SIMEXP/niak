@@ -110,6 +110,9 @@ if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
 end
 
 % Input
+files_in = psom_struct_defaults(opt.clustering,...
+           { 'data' , 'mask' , 'model'           },...
+           { NaN    , NaN    , 'gb_niak_omitted' });
 % if ~isstruct(files_in)
 %     error('FILES_IN should be a structure with the required subfields DATA, HIER, and MASK');
 % end
@@ -119,9 +122,6 @@ end
 % if isfield(files_in,'model') && ~ischar(files_in.model)
 %     error('FILES_IN.MODEL should be a string');
 % end
-list_fields   = { 'data' , 'mask', 'model' };
-list_defaults = { NaN    , NaN   , 'gb_niak_omitted' }; 
-files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
 
 % Output
 if ~ischar(files_out)
@@ -132,6 +132,10 @@ if ~exist(files_out)
 end
 
 % Options
+opt = psom_struct_defaults(opt.clustering,...
+      { 'nb_subtype', 'sub_map_type', 'nb_col_csv'      , 'flag_stats', 'flag_verbose' , 'flag_test' },...
+      { NaN         , 'mean'        , 'gb_niak_omitted' , 0           , true           , false       });
+
 % if exist('opt','var') && ~isstruct(opt)
 %     error('OPT should be a structure');
 % end
@@ -147,9 +151,6 @@ end
 % if nargin < 3
 %     opt = struct;
 % end
-list_fields   = { 'nb_subtype', 'sub_map_type', 'nb_col_csv'     , 'flag_stats', 'flag_verbose' , 'flag_test' }; 
-list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', 0           , true           , false       };
-opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
