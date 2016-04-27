@@ -70,22 +70,22 @@ data = load(files_in);
 data = data.stack;
 
 %% Build correlation matrix
-R = niak_build_correlation(data');
+sim_matrix = niak_build_correlation(data');
 
 % Cluster subjects
-hier = niak_hierarchical_clustering(R);
+hier = niak_hierarchical_clustering(sim_matrix);
 
 % Reorder subjects based on clustering
 subj_order = niak_hier2order(hier);
 
 % Generate re-ordered matrix
-sim_matrix = R(subj_order,subj_order);
+rm = sim_matrix(subj_order,subj_order);
 
 %% Save the similarity matrix as png
 opt_png.limits = [-1 1];
 opt_png.color_map = 'hot_cold';
 fh1 = figure('Visible', 'off');
-niak_visu_matrix(sim_matrix,opt_png);
+niak_visu_matrix(rm,opt_png);
 namefig = [files_out filesep 'similarity_matrix.png'];
 print(fh1, namefig,'-dpng','-r300');
 
