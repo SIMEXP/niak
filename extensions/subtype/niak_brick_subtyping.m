@@ -108,8 +108,8 @@ end
 
 % Input
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'mask' , 'model'           },...
-           { NaN    , NaN    , 'gb_niak_omitted' });
+           { 'data' , 'mask' , 'matrix' , 'model'           },...
+           { NaN    , NaN    , NaN      , 'gb_niak_omitted' });
 
 % Output
 if ~ischar(files_out)
@@ -136,7 +136,7 @@ data = data.stack;
 %% Compute the hierarchy
 % Load the similarity matrix
 R = load(files_in.matrix);
-R = matrix.sim_matrix;
+R = R.sim_matrix;
 % Cluster subjects
 hier = niak_hierarchical_clustering(R);
 
