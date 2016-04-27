@@ -81,10 +81,6 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %               (cell array, optional) Contains the names of the covariates
 %               in the model that are regressed from the input data
 %
-%           COL_NAMES
-%               (cell array, optional) Contains the header of the supplied
-%               model file.
-%
 %       VOLUME
 %           (structure) with the following fields:
 %
@@ -249,7 +245,6 @@ provenance.subjects(:, 1) = subject_list;
 provenance.model = struct;
 provenance.model.matrix = m.x;
 provenance.model.confounds = opt.regress_conf;
-provenance.model.col_names = cat_names;
 
 % Add the volume information
 provenance.volume.network = opt.network;
