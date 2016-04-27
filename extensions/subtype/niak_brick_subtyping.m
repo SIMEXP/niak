@@ -35,7 +35,7 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %   NB_SUBTYPE
 %       (integer, default 2) the number of desired subtypes
 %
-%   SUB_MAP_TYPE 
+%   SUB_MAP_TYPE
 %       (string, default 'mean') how the subtypes are represented in the
 %       volumes
 %       (options: 'mean' or 'median')
