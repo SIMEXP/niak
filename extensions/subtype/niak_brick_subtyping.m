@@ -15,10 +15,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       an array (#subjects x #voxels OR vertices OR regions), see also
 %       niak_brick_network_stack
 %
-% % % %   HIER
-% % % %       (string) path to a .mat file containing a variable HIER which is a
-% % % %       2D array defining a hierarchy on a similarity matrix
-%
 %   MASK
 %       (3D volume, default all voxels) a binary mask of the voxels that 
 %       are included in the time*space array
@@ -110,6 +106,11 @@ if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
 end
 
 % Input
+<<<<<<< HEAD
+list_fields   = { 'data' , 'mask', 'model' };
+list_defaults = { NaN    , NaN   , 'gb_niak_omitted' }; 
+files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
+=======
 files_in = psom_struct_defaults(files_in,...
            { 'data' , 'mask' , 'model'           },...
            { NaN    , NaN    , 'gb_niak_omitted' });
@@ -122,6 +123,7 @@ files_in = psom_struct_defaults(files_in,...
 % if isfield(files_in,'model') && ~ischar(files_in.model)
 %     error('FILES_IN.MODEL should be a string');
 % end
+>>>>>>> f9bf6e589ed36851a9e7356db72a8da31ab96b9e
 
 % Output
 if ~ischar(files_out)
@@ -132,6 +134,11 @@ if ~exist(files_out, 'dir')
 end
 
 % Options
+<<<<<<< HEAD
+list_fields   = { 'nb_subtype', 'sub_map_type', 'nb_col_csv'     , 'flag_stats', 'flag_verbose' , 'flag_test' }; 
+list_defaults = { NaN         , 'mean'        , 'gb_niak_omitted', 0           , true           , false       };
+opt = psom_struct_defaults(opt,list_fields,list_defaults);
+=======
 opt = psom_struct_defaults(opt,...
       { 'nb_subtype', 'sub_map_type', 'nb_col_csv'      , 'flag_stats', 'flag_verbose' , 'flag_test' },...
       { NaN         , 'mean'        , 'gb_niak_omitted' , 0           , true           , false       });
@@ -151,6 +158,7 @@ opt = psom_struct_defaults(opt,...
 % if nargin < 3
 %     opt = struct;
 % end
+>>>>>>> f9bf6e589ed36851a9e7356db72a8da31ab96b9e
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -161,11 +169,11 @@ end
 data = load(files_in.data);
 data = data.stack;
 
-% % Load the hierarchy
-% hier = load(files_in.hier);
-% hier = hier.hier;
-
-% recompute hierarchy
+%% Computer the hierarchy
+% Build correlation matrix
+R = niak_build_correlation(data');
+% Cluster subjects
+hier = niak_hierarchical_clustering(R);
 
 % Order the subjects
 subj_order = niak_hier2order(hier);
@@ -225,14 +233,16 @@ if opt.flag_stats == 1
     %% Build the model from user's csv and input column
     col = tab(:,opt.nb_col_csv);
     % Build a mask for NaN values in model and mask out subjects with NaNs
-%     mask_nan = ~max(isnan(col),[],2);
-%     col = col(mask_nan,:);    %%%% replace with what's on slack 
-    sub_id = sub_id(mask_nan,:);
-    partition = part(mask_nan,:);
+    [x, y] = find(~isnan(col));
+    sub_id = unique(x);
+    [a, b] = find(isnan(col));  % the subjects that were dropped due to having NaNs
+    sub_drop = unique(a);
+    partition = part(sub_id,:); 
     % Save the model
     model.subject_id = sub_id;
     model.partition = partition;
     model.group = col;
+    model.subject_drop = sub_drop;
         
     %% Build the contingency table 
     
@@ -278,6 +288,7 @@ if opt.flag_stats == 1
     % Pie chart visualization
     
     for pp = 1:length(contab(:,1))
+        fh = figure('Visible', 'off');
         pc_val = contab(pp,:);
         pc = pie(pc_val);
         textc = findobj(pc,'Type','text');
@@ -288,7 +299,7 @@ if opt.flag_stats == 1
         title(c_title);
         name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
         pc_out = fullfile(files_out, name_pc);
-        print(pc_out, '-dpng', '-r300');
+        print(fh, pc_out, '-dpng', '-r300');
     end
     
     file_stat = fullfile(files_out,'group_stats.mat');
