@@ -11,8 +11,9 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       (structure) with the following fields:
 %
 %   DATA 
-%       (string) path to a .mat file containing an array (#subjects x
-%       #voxels OR vertices OR regions) generated from subtype_preprocessing
+%       (string) path to a .mat file containing a variable STACK, which is 
+%       an array (#subjects x #voxels OR vertices OR regions), see also
+%       niak_brick_network_stack
 %
 %   HIER
 %       (string) path to a .mat file containing a variable HIER which is a
@@ -157,7 +158,7 @@ end
 
 %% Load the data
 data = load(files_in.data);
-data = data.data;
+data = data.stack;
 
 % Load the hierarchy
 hier = load(files_in.hier);
