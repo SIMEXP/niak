@@ -42,8 +42,8 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       volumes
 %       (options: 'mean' or 'median')
 %
-%   NB_COL_CSV
-%       (integer, optional, default 'gb_niak_omitted') the column number
+%   GROUP_COL_ID
+%       (integer, default 0) the column number
 %       (excluding column A for subject IDs) in the model csv that separates 
 %       subjects into groups to compare chi-squared and Cramer's V stats
 %
@@ -114,16 +114,20 @@ files_in = psom_struct_defaults(files_in,...
 % Output
 if ~ischar(files_out)
     error('FILES_OUT should be a string');
-end
-if ~exist(files_out, 'dir')
+elseif ~exist(files_out, 'dir')
     psom_mkdir(files_out);
 end
 
 % Options
 opt = psom_struct_defaults(opt,...
-      { 'nb_subtype', 'sub_map_type', 'nb_col_csv'      , 'flag_stats', 'flag_verbose' , 'flag_test' },...
-      { NaN         , 'mean'        , 'gb_niak_omitted' , 0           , true           , false       });
+      { 'nb_subtype', 'sub_map_type', 'group_col_id' , 'flag_stats' , 'flag_verbose' , 'flag_test' },...
+      { NaN         , 'mean'        , 0              , false        , true           , false       });
 
+% If the user wants stats, the group column must be specified
+if opt.flag_stats && opt.group_col_id == 0
+    error('OPT.FLAG_STATS is set to true but the group variable is undefined');
+end
+  
 % If the test flag is true, stop here !
 if opt.flag_test == 1
     return
