@@ -27,31 +27,31 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       (string) path for folder of results
 % 
 % OPT 
-%       (structure, optional) with the following fields:
+%       (structure) with the following fields:
 %
 %   NB_SUBTYPE
-%       (integer, default 2) the number of desired subtypes
+%       (integer) the number of desired subtypes
 %
 %   SUB_MAP_TYPE
-%       (string, default 'mean') how the subtypes are represented in the
+%       (string, optional, default 'mean') how the subtypes are represented in the
 %       volumes
 %       (options: 'mean' or 'median')
 %
 %   NB_COL_CSV
-%       (integer, default 'gb_niak_omitted') the column number
+%       (integer, optional, default 'gb_niak_omitted') the column number
 %       (excluding column A for subject IDs) in the model csv that separates 
 %       subjects into groups to compare chi-squared and Cramer's V stats
 %
 %   FLAG_STATS
-%       (boolean, default 0) if the flag is 1 (true), the brick
+%       (boolean, optional, default 0) if the flag is 1 (true), the brick
 %       will calculate Cramer's V and chi-squared statistics for groups
 %       specified in files_in.model
 %
 %   FLAG_VERBOSE
-%       (boolean, default true) turn on/off the verbose.
+%       (boolean, optional, default true) turn on/off the verbose.
 %
 %   FLAG_TEST
-%       (boolean, default false) if the flag is true, the brick does not do 
+%       (boolean, optional, default false) if the flag is true, the brick does not do 
 %       anything but updating the values of FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % OUTPUTS:
@@ -109,6 +109,21 @@ end
 files_in = psom_struct_defaults(files_in,...
            { 'data' , 'mask' , 'model'           },...
            { NaN    , NaN    , 'gb_niak_omitted' });
+<<<<<<< HEAD
+
+% Output
+if ~ischar(files_out)
+    error('FILES_OUT should be a string');
+end
+if ~exist(files_out, 'dir')
+    psom_mkdir(files_out);
+end
+
+% Options
+opt = psom_struct_defaults(opt,...
+      { 'nb_subtype', 'sub_map_type', 'nb_col_csv'      , 'flag_stats', 'flag_verbose' , 'flag_test' },...
+      { NaN         , 'mean'        , 'gb_niak_omitted' , 0           , true           , false       });
+=======
 % if ~isstruct(files_in)
 %     error('FILES_IN should be a structure with the required subfields DATA, HIER, and MASK');
 % end
@@ -118,6 +133,7 @@ files_in = psom_struct_defaults(files_in,...
 % if isfield(files_in,'model') && ~ischar(files_in.model)
 %     error('FILES_IN.MODEL should be a string');
 % end
+>>>>>>> 75df8276c2b03874a607552aa56f39ed44e77a34
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
