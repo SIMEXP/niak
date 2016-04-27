@@ -2,9 +2,9 @@
 clear;
 
 %% Set up paths
-base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/';
-stack_path = [base_path 'out/seb/stack_file.mat'];
-out_path = [base_path 'out/seb/'];
+base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/';
+stack_path = [base_path 'subtype_test_data/out/seb/stack_file.mat'];
+out_path = [base_path '/subtype_test_data/out/seb/'];
 
 %% Set up inputs
 files_in = stack_path;
