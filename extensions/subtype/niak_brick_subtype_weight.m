@@ -152,6 +152,9 @@ for net_id = 1:n_networks
     fig = figure('Visible', 'off');
     net_weight = weight_mat(:, :, net_id);
     niak_visu_matrix(net_weight, struct('limits', [-0.4, 0.4]));
+    ax = gca;
+    set(ax, 'XTick', 1:n_sbt, 'YTick', []);
+    xlabel('Subtypes');
     file_name = [files_out filesep sprintf('fig_sbt_weights_net_%d.pdf', net_id)];
     print(fig, file_name, '-dpdf');
 end
