@@ -11,14 +11,12 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 % FILES_IN
 %   (structure) with the following fields:
 %
-%   DATA
-%       (structure) every field in the structure is a network name. That
-%       field then contains the string path to the network stack with the
-%       preprocessed individual brain maps
+%   DATA.<NETWORK>
+%       (string) path to the network stack with the preprocessed individual 
+%       brain maps for each network
 %
-%   SUBTYPE
-%       (structure) each field is a network. The field value points to the
-%       subtype maps for that network
+%   SUBTYPE.<NETWORK>
+%       (string) path to the subtype maps for that network
 %
 % FILES_OUT
 %   (string) the path where the output files are to be generated
