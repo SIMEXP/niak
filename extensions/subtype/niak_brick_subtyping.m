@@ -196,7 +196,19 @@ file_name = 'eff_subtype.nii.gz';
 hdr.file_name = [files_out filesep file_name];
 niak_write_vol(hdr,vol_eff_sub);
 
-%% Generate and write grand mean and grand std maps?
+%% Generate and write grand mean map
+file_name = 'grand_mean.nii.gz';
+hdr.file_name = [files_out filesep file_name];
+sub.gd_mean = mean(data,1);
+vol_gd_mean = niak_tseries2vol(sub.gd_mean, mask);
+niak_write_vol(hdr,vol_gd_mean);
+
+% Generate and write the grand std map
+file_name = 'grand_std.nii.gz';
+hdr.file_name = [files_out filesep file_name];
+sub.gd_std = std(data,1);
+vol_std_mean = niak_tseries2vol(sub.gd_std, mask);
+niak_write_vol(hdr,vol_std_mean);
 
 %% Statistics
 
