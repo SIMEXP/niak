@@ -114,7 +114,7 @@ weight_mat = [];
 
 % Iterate over the networks and extract the weights
 for net_id = 1:n_networks
-    network = networks(net_id);
+    network = networks{net_id};
     % Get the network stack data
     tmp_data = load(files_in.data.(network));
     data = tmp_data.stack;
@@ -124,7 +124,11 @@ for net_id = 1:n_networks
     
     % If this is the first network, pre-allocate the weight matrix
     if net_id == 1
-        weight_mat = zeros([size(sbt), n_networks]);
+        % Get the number of subtypes
+        n_sbt = size(sbt, 1);
+        % Get the number of subjects
+        n_sub = size(data, 1);
+        weight_mat = zeros(n_sub, n_sbt, n_networks);
     end
     % Extract the weights and store them 
     weight_mat(:, :, net_id) = niak_corr(data', sbt');
@@ -146,8 +150,8 @@ end
 for net_id = 1:n_networks
     % Create a hidden figure
     fig = figure('Visible', 'off');
-    net_weight = weight_mat(:,:,net);
+    net_weight = weight_mat(:, :, net_id);
     niak_visu_matrix(net_weight, struct('limits', [-0.4, 0.4]));
-    file_name = [files_out filesep sprintf('fig_sbt_weights_net_%d.pdf', net)];
+    file_name = [files_out filesep sprintf('fig_sbt_weights_net_%d.pdf', net_id)];
     print(fig, file_name, '-dpdf');
 end
