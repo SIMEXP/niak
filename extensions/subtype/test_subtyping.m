@@ -3,7 +3,7 @@ clear;
 
 %% Set up the paths
 base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/';
-stack_path = [base_path '/out/seb/stack_file.mat'];
+stack_path = [base_path '/out/seb/network_stack.mat'];
 sim_path = [base_path '/out/seb/similarity_matrix.mat'];
 mask_path = [base_path '/raw/func_mask_group_stereonl.mnc.gz'];
 model_path = [base_path '/pheno/numeric_pheno.csv'];
@@ -20,6 +20,7 @@ files_out = out_path;
 
 opt = struct;
 opt.nb_subtype = 3;
+opt.flag_stats = false;
 
 %% Call the brick
 niak_brick_subtyping(files_in,files_out,opt)

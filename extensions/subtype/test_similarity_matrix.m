@@ -3,7 +3,7 @@ clear;
 
 %% Set up paths
 base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/';
-stack_path = [base_path '/out/seb/stack_file.mat'];
+stack_path = [base_path '/out/seb/network_stack.mat'];
 out_path = [base_path '/out/seb/'];
 
 %% Set up inputs
