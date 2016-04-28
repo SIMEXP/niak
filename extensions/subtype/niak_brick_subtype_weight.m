@@ -92,14 +92,13 @@ opt = psom_struct_defaults(opt,...
       { 'flag_verbose' , 'flag_test' },...
       { true           , false       });
 
-%% Sanity checks
 % Make sure we have the same order and set of networks for data and subtype
 if ~isequal(fieldnames(files_in.subtype), fieldnames(files_in.data))
     error(['The order or set of networks in files_in.subtype and '...
           'files_in.data does not match!']);
 end
 
-%% If the test flag is true, stop here !
+% If the test flag is true, stop here !
 if opt.flag_test == 1
     return
 end
@@ -116,12 +115,12 @@ weight_mat = [];
 % Iterate over the networks and extract the weights
 for net_id = 1:n_networks
     network = networks(net_id);
-    % Get the network data
+    % Get the network stack data
     tmp_data = load(files_in.data.(network));
-    data = tmp_data.data;
-    % Get the network subtypes
+    data = tmp_data.stack;
+    % Get the network subtype maps (i.e. for each subtype one)
     tmp_sbt = load(files_in.subtype.(network));
-    sbt = tmp_sbt.sbt_map;
+    sbt = tmp_sbt.sub.map;
     
     % If this is the first network, pre-allocate the weight matrix
     if net_id == 1
