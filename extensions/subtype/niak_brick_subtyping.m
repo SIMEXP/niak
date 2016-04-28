@@ -135,7 +135,8 @@ end
 
 %% Load the data
 data = load(files_in.data);
-data = data.stack;
+provenance = data.provenance; % loading provenance from the data file
+data = data.stack; % get the stack data
 
 %% Compute the hierarchy
 % Load the similarity matrix
@@ -295,7 +296,7 @@ end
 %% Saving subtyping results and statistics
 
 file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'sub','hier','part','opt')
+save(file_sub,'provenance','sub','hier','part','opt')
 
 end
 
