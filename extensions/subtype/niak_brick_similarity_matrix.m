@@ -67,7 +67,8 @@ end
 
 %% Read the data
 data = load(files_in);
-data = data.stack;
+provenance = data.provenance; % load provenance
+data = data.stack; % load stack data
 
 %% Build correlation matrix
 sim_matrix = niak_build_correlation(data');
@@ -94,10 +95,6 @@ fh2 = figure('Visible', 'off');
 niak_visu_dendrogram(hier);
 nameden = [files_out filesep 'dendrogram.png'];
 print(fh2, nameden,'-dpng','-r300');
-
-%% Load and copy provenance info from data
-provenance = load(files_in);
-provenance = provenance.provenance;
 
 %% Save hierarchical clustering and ordering of subjects and similarity matrix as mat
 mat_file = [files_out filesep 'similarity_matrix.mat'];
