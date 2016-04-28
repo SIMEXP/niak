@@ -254,13 +254,8 @@ provenance.volume.scale = scale;
 provenance.volume.mask = mask;
 % Region mask is missing so far
 
-% Save the stack matrix
-if length(opt.network) == 1
-    % Only one network, give specific output name
-    stack_file = fullfile(files_out, sprintf('network_%d_stack.mat', opt.network(1)));
-else
-    % Several networks, give a general name
-    stack_file = fullfile(files_out, 'multi_network_stack.mat');
-end
+% Define the output name
+stack_file = fullfile(files_out, 'network_stack.mat');
 
+% Save the stack matrix
 save(stack_file, 'stack', 'provenance');
