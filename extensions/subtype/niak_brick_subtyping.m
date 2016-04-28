@@ -146,6 +146,9 @@ hier = niak_hierarchical_clustering(R);
 
 % Read the mask
 [hdr,mask] = niak_read_vol(files_in.mask);
+mask = logical(mask);
+% Get the number of voxels
+n_vox = sum(mask(:));
 
 %% Build the clusters by thresholding the hiearchy by the number of subtypes
 part = niak_threshold_hierarchy(hier,struct('thresh',opt.nb_subtype));
@@ -153,39 +156,42 @@ part = niak_threshold_hierarchy(hier,struct('thresh',opt.nb_subtype));
 %% Build subtype maps
 
 % Generating and writing the mean or the median subtype maps in a single volume
-
+sub.map = zeros(opt.nb_subtype, n_vox);
 for ss = 1:opt.nb_subtype
     if strcmp(opt.sub_map_type, 'mean')
-        sub.mean(ss,:) = mean(data(part==ss,:),1);
+        % Construct the subtype map as the mean map of the subgroup
+        sub.map(ss,:) = mean(data(part==ss,:),1);
     elseif strcmp(opt.sub_map_type, 'median')
-        sub.median(ss,:) = median(data(part==ss,:),1);
+        % Construct the subtype map as the median map of the subgroup
+        sub.map(ss,:) = median(data(part==ss,:),1);
     end
 end
 
-% Select which stats map to save
+% Adjust the name of the volumetric output to match the subtype map
+% construction selection
 if strcmp(opt.sub_map_type, 'mean')
     file_name = 'mean_subtype.nii.gz';
-    vol_map_sub = niak_tseries2vol(sub.mean,mask);
 elseif strcmp(opt.sub_map_type, 'median')
     file_name = 'median_subtype.nii.gz';
-    vol_map_sub = niak_tseries2vol(sub.median,mask);
 end
-    
+
+% Bring the subtype map back to volumetric space
+vol_map_sub = niak_tseries2vol(sub.map, mask);
 hdr.file_name = [files_out filesep file_name];
-niak_write_vol(hdr,vol_map_sub);
+niak_write_vol(hdr, vol_map_sub);
 
 %% Generating and writing t-test and effect maps of the difference between subtype
 % average and grand average in volumes
 
 for ss = 1:opt.nb_subtype
-    [sub.ttest(ss,:),~,sub.mean_eff(ss,:),~,~] = niak_ttest(data(part==ss,:),data(part~=ss,:),true);
+    [sub.ttest(ss,:), ~, sub.mean_eff(ss,:), ~, ~] = niak_ttest(data(part==ss,:), data(part~=ss,:),true);
 end
-vol_ttest_sub = niak_tseries2vol(sub.ttest,mask);
+vol_ttest_sub = niak_tseries2vol(sub.ttest, mask);
 file_name = 'ttest_subtype.nii.gz';
 hdr.file_name = [files_out filesep file_name];
 niak_write_vol(hdr,vol_ttest_sub);
 
-vol_eff_sub = niak_tseries2vol(sub.mean_eff,mask);
+vol_eff_sub = niak_tseries2vol(sub.mean_eff, mask);
 file_name = 'eff_subtype.nii.gz';
 hdr.file_name = [files_out filesep file_name];
 niak_write_vol(hdr,vol_eff_sub);
