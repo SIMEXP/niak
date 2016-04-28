@@ -74,9 +74,9 @@ if ~exist('files_in','var')||~exist('files_out','var')
 end
 
 % FILES_IN
-list_fields   = { 'data' , 'subtype' };
-list_defaults = { NaN    , NaN       };
-files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
+files_in = psom_struct_defaults(files_in,...
+           { 'data' , 'subtype' },...
+           { NaN    , NaN       });
 
 % FILES_OUT
 if ~ischar(files_out)
@@ -88,9 +88,9 @@ if nargin < 3
     opt = struct;
 end
 
-list_fields   = { 'flag_verbose' , 'flag_test' };
-list_defaults = { true           , false       };
-opt = psom_struct_defaults(opt, list_fields, list_defaults);
+opt = psom_struct_defaults(opt,...
+      { 'flag_verbose' , 'flag_test' },...
+      { true           , false       });
 
 %% Sanity checks
 % Make sure we have the same order and set of networks for data and subtype
