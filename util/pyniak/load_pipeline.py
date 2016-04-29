@@ -43,10 +43,10 @@ class BasePipeline(object):
 
     def __init__(self, folder_in, folder_out, options=None):
 
-        # The name must be Provided in the derived class
-        self.pipeline_name =  None
+        # The name should be Provided in the derived class
+        self._options = []
+        self.pipeline_name = None
 
-        self.octave_options = None
         if os.path.islink(folder_in):
             self.folder_in = os.readlink(folder_in)
         else:
@@ -54,7 +54,6 @@ class BasePipeline(object):
         self.folder_out = folder_out
         self.octave_options = options
 
-        self._options = []
 
     def run(self):
         print(" ".join(self.octave_cmd))
@@ -107,7 +106,10 @@ class BasePipeline(object):
             if opt_description.get(self.BOUTIQUE_CMD_LINE) \
                     and opt_description[self.BOUTIQUE_CMD_LINE].startswith("--opt"):
                 opt = opt_description[self.BOUTIQUE_CMD_LINE].replace("--opt-", "opt.").replace("-", ".")
-                options[opt] = self.BOUTIQUE_TYPE_CAST[opt_description[self.BOUTIQUE_TYPE]](options[opt])
+                if options.get(opt) is None:
+                    pass  # All default option must be passed optional options are ignored
+                else:
+                    options[opt] = self.BOUTIQUE_TYPE_CAST[opt_description[self.BOUTIQUE_TYPE]](options[opt])
 
 
     def get_file_in(self):
