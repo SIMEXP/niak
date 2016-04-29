@@ -90,9 +90,9 @@ for num_r = 1:length(cell_tab)
     end
     for num_c = 1:length(cell_line)
         if opt.flag_string
-            csv_cell(num_r,num_c) = regexprep(cell_line{num_c},'[''"]','');
+            csv_cell{num_r,num_c} = regexprep(cell_line{num_c},'[''"]','');
         else
-            csv_cell(num_r,num_c) = cell_line{num_c};
+            csv_cell{num_r,num_c} = cell_line{num_c};
         end
     end 
 end
