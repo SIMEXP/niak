@@ -217,7 +217,7 @@ if opt.flag_stats == 1
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
     %% Build the model from user's csv and input column
-    col = tab(:,opt.nb_col_csv);
+    col = tab(:,opt.group_col_id);
     % Build a mask for NaN values in model and mask out subjects with NaNs
     [x, y] = find(~isnan(col));
     sub_id = unique(x);
