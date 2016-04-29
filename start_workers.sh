@@ -1,5 +1,6 @@
-~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w manager &
-~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w garbage &
+#!/bin/bash
+#~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w manager &
+#~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w garbage &
 ~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w 1 &
 ~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w 2 &
 ~/simexp/psom/psom_worker.py -d /home/poquirion/test/result -w 3 &
