@@ -93,8 +93,9 @@ class BasePipeline(object):
 
     @octave_options.setter
     def octave_options(self, value):
+        if value is not None:
             self.type_cast_options(value)
-            self._options += [ "{0}={1}".format(a[0], a[1]) for a in value.items()]
+            self._options += ["{0}={1}".format(a[0], a[1]) for a in value.items()]
 
 
     def type_cast_options(self, options):

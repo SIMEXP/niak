@@ -10,7 +10,6 @@ import argparse
 import os
 import re
 import sys
-import subprocess
 
 sys.path.append("{}/..".format(os.path.dirname(os.path.realpath(__file__))))
 import pyniak.load_pipeline
