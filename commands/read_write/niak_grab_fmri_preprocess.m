@@ -84,12 +84,8 @@
 %           'scores' : FILES is ready to feed into NIAK_PIPELINE_SCORES
 %
 %   TEMPLATE
-%       (string, default 'cambridge') specifies the template to be used if 
-%       OPT.TYPE_FILES is set to 'scores'.
-%       
-%       'cambridge' : the down-sampled cambridge template with 7 networks
-%
-%       'aal' : the aal template
+%       (string, default '') specifies full path for the template to be used. this 
+%       option is active only if  OPT.TYPE_FILES is set to 'scores'
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -173,7 +169,7 @@ end
 
 %% Default options
 list_fields   = { 'filter' , 'flag_areas' , 'min_nb_vol' , 'max_translation' , 'max_rotation' , 'min_xcorr_func' , 'min_xcorr_anat' , 'exclude_subject' , 'include_subject' , 'type_files' , 'template'  };
-list_defaults = { struct   , true         , 100          , Inf               , Inf            , 0.5              , 0.5              , {}                , {}                , 'rest'       , 'cambridge' };
+list_defaults = { struct   , true         , 100          , Inf               , Inf            , 0.5              , 0.5              , {}                , {}                , 'rest'       , '' };
 if nargin > 1
     opt = psom_struct_defaults(opt,list_fields,list_defaults);
 else
@@ -286,6 +282,9 @@ else
     list_subject = list_subject(mask_keep);    
 end
 nb_subject = length(list_subject);
+if nb_subject == 0
+   error('NO subject remaining after grabbing, review your filters')
+end
 
 %% generate file names
 path_fmri = [path_data 'fmri' filesep];
@@ -342,9 +341,11 @@ if ~strcmp(opt.type_files,'glm_connectome')
 end
 
 if strcmp(opt.type_files, 'scores')
-    files.part = dir([path_data 'anat' filesep sprintf('template_%s*.*', opt.template)]);
-    if isempty(files.part)
-        error('Could not find the %s template', opt.template)
-    end
-    files.part = [path_data 'anat' filesep files.part(1).name];
+   if isempty(opt.template)
+      warning('Template file is empty')
+   elseif exist(opt.template)
+      files.part = opt.template;
+   else 
+      error('Could not find the template file %s', opt.template)
+   end
 end
