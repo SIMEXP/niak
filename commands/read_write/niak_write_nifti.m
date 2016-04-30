@@ -4,41 +4,37 @@ function [] = niak_write_nifti(hdr,vol)
 % SYNTAX: [] = NIAK_WRITE_NIFTI(HDR,VOL)
 %
 % INPUTS:
-% VOL           (3D or 4D array) a 3D or 3D+t dataset
-% HDR.FILE_NAME (string) the name of the file that will be written.
-% HDR.TYPE      (string, default 'nii') the output format (either 'nii' for 
-%               NIFTI-1 one file data, 'img' for a couple '*.img'/'*.hdr' in 
-%               NIFTI-1 format or 'analyze' for a '*.img'/'*.hdr'/'*.mat')
-% HDR.INFO      (structure) The subfields are optional, yet they give control 
+%   VOL           (3D or 4D array) a 3D or 3D+t dataset
+%   HDR.FILE_NAME (string) the name of the file that will be written.
+%   HDR.TYPE      (string, default 'nii') the output format (either 'nii' for 
+%     NIFTI-1 one file data, 'img' for a couple '*.img'/'*.hdr' in 
+%     NIFTI-1 format or 'analyze' for a '*.img'/'*.hdr'/'*.mat')
+%   HDR.INFO      (structure) The subfields are optional, yet they give control 
 %               on critical space information. See NIAK_WRITE_VOL for more info.
-% HDR.DETAILS   (structure) the fields are the standard list of a NIFTI header.
+%   HDR.DETAILS   (structure) the fields are the standard list of a NIFTI header.
 %
 % OUTPUTS:
-% The data called VOL is stored into a file called FILENAME written in
-% nifti format. In the case of ANALYZE 7.5 file format, a file '.MAT' will 
-% also be created with the affine transform.
+%   The data called VOL is stored into a file called FILENAME written in
+%   nifti format. In the case of ANALYZE 7.5 file format, a file '.MAT' will 
+%   also be created with the affine transform.
 % 
+% NOTE: the output file name can also have a '.gz' extension, in which case 
+%   The output file will be automatically compressed. 
+%
 % SEE ALSO:
-% NIAK_READ_HDR_NIFTI, NIAK_READ_NIFTI, NIAK_WRITE_VOL, NIAK_READ_VOL
+% NIAK_READ_HDR_NIFTI, NIAK_READ_NIFTI, NIAK_READ_DATA_NIFTI, 
+% NIAK_WRITE_VOL, NIAK_READ_VOL
 %
-% COMMENTS:
 % See licensing information in the code.
-% Maintainer : pierre.bellec@criugm.qc.ca
-% Keywords : medical imaging, I/O, writer, nifti
 
-%   Part of this file is copied and modified under GNU license from
-%   MRI_TOOLBOX developed by CNSP in Flinders University, Australia
-%
-%   Important parts of this code are copied and modified from a matlab
-%   toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca), and reshared here 
-%   with agreement under a MIT license.  
-%   http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
-%   8797&objectType=file
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Centre de recherche de l'institut de griatrie de Montral, 
+% Copyright (c) Pierre Bellec, Jimmy Shen, 2008-2016.
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de geriatrie de Montreal, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Qubec, Canada, 2010-2014
+% University of Montreal, Qubec, Canada, 2010-2016
+% Maintainer: pierre.bellec@criugm.qc.ca
+% See licensing information in the code.
+% Keywords: medical imaging, I/O, reader, nifti
 %
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
@@ -101,8 +97,8 @@ end
 
 %% Updating information of the header
 hdr.info.precision = class(vol);
-precision = hdr.info.precision;
-
+hdr.details.scl_slope = 1;
+hdr.details.scl_inter = 0;
 hdr.info.dimensions = size(vol);
 
 if ~isfield(hdr.details,'dim')
