@@ -5,7 +5,7 @@ function [success,message,messageid] = niak_mkdir(path_name)
 % existing directory. 
 %
 % SYNTAX:
-% [SUCCESS,MESSAGE,MESSAGEID] = MKDIR(PATH_NAME)
+% [SUCCESS,MESSAGE,MESSAGEID] = NIAK_MKDIR(PATH_NAME)
 %
 % _________________________________________________________________________
 % INPUTS:
