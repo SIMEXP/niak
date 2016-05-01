@@ -4,6 +4,8 @@ function vol = niak_read_data_nifti(hdr)
 % SYNTAX: VOL = NIAK_READ_DATA_NIFTI(HDR)
 %
 % HDR (structure) a description of the data, generated from NIAK_READ_VOL.
+%   The name of the file that will be used to extract data is stored in 
+%   HDR.INFO.FILE_PARENT.
 % VOL (array) volume data from the nifti file used to read HDR. 
 %
 % SEE ALSO: NIAK_READ_HDR_NIFTI, NIAK_WRITE_NIFTI, NIAK_READ_VOL, 
@@ -16,6 +18,9 @@ function vol = niak_read_data_nifti(hdr)
 %   hdr = niak_read_vol('my_file.nii.gz');
 %   % latter read the actual volume data 
 %   vol = niak_read_data_nifti(hdr);
+%   % read a different file, with identical header structure
+%   hdr.info.file_parent = 'my_file2.nii.gz';
+%   vol2 = niak_read_data_nifti(hdr);
 %
 % See license in the code. 
  
