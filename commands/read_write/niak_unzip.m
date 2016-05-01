@@ -1,7 +1,7 @@
 function [file_tmp,flag_zip] = niak_unzip(file_name)
 % Unzip a zipped file 
 %
-% SYNTAX: [FILE_TMP,FLAG_ZIP] = NIAK_UNZIP(PATH_NAME)
+% SYNTAX: [FILE_TMP,FLAG_ZIP] = NIAK_UNZIP(FILE_NAME)
 %
 % FILE_NAME (string) the name to a zipped file.
 % FILE_TMP (string) the name of the unzipped file. 
@@ -54,9 +54,9 @@ if flag_zip
     
     [succ,msg] = system(instr_unzip);
     if succ ~= 0
-        error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',gb_niak_unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
+        error(cat(2,'There was a problem unzipping the file using GUNZIP: ',msg));
     end
-    file_tmp = file_tmp(1:end-length('.gz'))
+    file_tmp = file_tmp(1:end-length('.gz'));
 else
     file_tmp = file_name;
 end  
