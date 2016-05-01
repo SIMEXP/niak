@@ -52,23 +52,15 @@ function [hdr,vol] = niak_read_nifti(file_name)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-
 [path_f,name_f,ext_f] = fileparts(file_name);
-if isempty(path_f)
-    path_f = '.';
-end
-switch ext_f
-    case {'.nii','.nii.gz'}
-        file_header = file_name;
-    case '.img'
-        file_header = cat(2,path_f,filesep,name_f,'.hdr');
-    otherwise
-        error('niak:read: Unkown extension type : %s. I am expecting ''.nii'' or ''.img''',ext_f)
-end
-
-%% Parsing the header
-hdr = niak_read_hdr_nifti(file_header);
+path_f = niak_full_path(path_f);
+file_name = [path_f,name_f,ext_f];
+[file_tmp,flag_zip] = niak_unzip(file_name);
+hdr = niak_read_hdr_nifti(file_tmp);
 hdr.info.file_parent = file_name;
 if nargout > 1
-    vol = niak_read_data_nifti(hdr);
+  vol = niak_read_data_nifti(hdr);
+end
+if flag_zip
+  delete(file_tmp);
 end
