@@ -4,6 +4,8 @@ function vol = niak_read_data_minc(hdr,precision_data)
 % SYNTAX: VOL = NIAK_READ_DATA_MINC(HDR)
 %
 % HDR (structure) a description of the data, generated from NIAK_READ_VOL.
+%   The name of the file that will be used to extract data is stored in 
+%   HDR.INFO.FILE_PARENT.
 % VOL (array) volume data from the minc file used to read HDR. 
 %
 % SEE ALSO: NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_READ_VOL, 
@@ -16,6 +18,9 @@ function vol = niak_read_data_minc(hdr,precision_data)
 %   hdr = niak_read_vol('my_file.mnc');
 %   % latter read the actual volume data 
 %   vol = niak_read_data_minc(hdr);
+%   % read a different file, with identical header structure
+%   hdr.info.file_parent = 'my_file2.mnc';
+%   vol2 = niak_read_data_minc(hdr);
 %
 % See license in the code. 
  
