@@ -103,8 +103,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'scale'                        , 'folder_out' , 'flag_verbose' , 'flag_test' },...
-      { 1:length(fieldnames(files_in)) , ''           , true           , false       });
+      { 'scale'                             , 'folder_out' , 'flag_verbose' , 'flag_test' },...
+      { 1:length(fieldnames(files_in.data)) , ''           , true           , false       });
 
 % FILES_OUT
 if ~isempty(opt.folder_out)
