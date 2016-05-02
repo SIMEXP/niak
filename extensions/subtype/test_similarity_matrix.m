@@ -8,7 +8,10 @@ out_path = [base_path '/out/seb/'];
 
 %% Set up inputs
 files_in = stack_path;
-files_out = out_path;
+files_out = struct;
+
+opt = struct;
+opt.folder_out = out_path;
 opt.flag_test = false;
 
 %% Call the thing

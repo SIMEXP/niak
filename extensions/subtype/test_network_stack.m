@@ -36,12 +36,13 @@ end
 
 files_in.mask = mask_path;
 files_in.model = num_path;
-files_out = out_path;
+files_out = '';
 
 opt.network = 3;
+opt.folder_out = out_path;
 opt.regress_conf = {'Gender', 'Age'};
 opt.flag_conf = true;
 opt.flag_test = false;
 
 %% Run the brick
-niak_brick_network_stack(files_in, files_out, opt);
+[files_in, files_out, opt] = niak_brick_network_stack(files_in, files_out, opt);

@@ -12,15 +12,16 @@ out_path = [base_path '/out/seb/'];
 %% Set up inputs
 files_in = struct;
 files_in.data = stack_path;
+files_in.matrix = sim_path;
 files_in.mask = mask_path;
 files_in.model = model_path;
-files_in.matrix = sim_path;
 
-files_out = out_path;
+files_out = struct;
 
 opt = struct;
 opt.nb_subtype = 3;
+opt.folder_out = out_path;
 opt.flag_stats = false;
 
 %% Call the brick
-niak_brick_subtyping(files_in,files_out,opt)
+[files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt);
