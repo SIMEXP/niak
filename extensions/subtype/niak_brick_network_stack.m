@@ -110,9 +110,9 @@ if ~exist('files_in','var')||~exist('files_out','var')
 end
 
 % FILES_IN
-list_fields   = { 'data' , 'mask' , 'model'           };
-list_defaults = { NaN    , NaN    , 'gb_niak_omitted' };
-files_in = psom_struct_defaults(files_in,list_fields,list_defaults);
+files_in = psom_struct_defaults(files_in,...
+           { 'data' , 'mask' , 'model'           },...
+           { NaN    , NaN    , 'gb_niak_omitted' });
 
 % FILES_OUT
 if ~ischar(files_out)
@@ -126,9 +126,9 @@ if nargin < 3
     opt = struct;
 end
 
-list_fields   = { 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' };
-list_defaults = { []      , {}             , true           , true        , false       };
-opt = psom_struct_defaults(opt, list_fields, list_defaults);
+opt = psom_struct_defaults(opt,...
+      { 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' },...
+      { []        , {}             , true           , true        , false       });
 
 % Get the model and check if there are any NaNs in the factors to be
 % regressed
