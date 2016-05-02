@@ -13,9 +13,9 @@ out_path = [base_path 'out/seb'];
 %% Set up inputs
 files_in.data.net1 = stack_path;
 files_in.subtype.net1 = subtype_path;
-files_out = out_path;
+files_out = struct;
 
 opt.flag_test = false;
-
+opt.folder_out = out_path;
 %% Run the brick
-niak_brick_subtype_weight(files_in, files_out, opt);
+[files_in, files_out, opt] = niak_brick_subtype_weight(files_in, files_out, opt);
