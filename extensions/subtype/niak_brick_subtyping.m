@@ -8,7 +8,7 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 % INPUTS:
 % 
 % FILES_IN 
-%       (structure) with the following fields:
+%   (structure) with the following fields:
 %
 %   DATA 
 %       (string) path to a .mat file containing a variable STACK, which is 
@@ -29,18 +29,49 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       containing information and variables about subjects 
 % 
 % FILES_OUT 
-%       (string) path for folder of results
+%   (structure) with the following fields:
+%
+%   SUBTYPE
+%       (string, default 'subtype.mat') path to subject by subtype by voxel
+%       array .mat file
+%
+%   SUBTYPE_MAP
+%       (string, default '<OPT.SUB_MAP_TYPE>_subtype.nii.gz') path to ...
+%
+%   GRAND_MEAN_MAP
+%       (string, default 'grand_mean.nii.gz') path to ...
+%
+%   GRAND_STD_MAP
+%       (string, default 'grand_std.nii.gz') path to ...
+%
+%   TTEST_MAP
+%       (string, default 'ttest_subtype.nii.gz') path to ...
+% 
+%   EFF_MAP
+%       (string, default 'eff_subtype.nii.gz') path to ...
+%
+%   STATS
+%       (string, default 'group_stats.mat') path to ...
+%
+%   CONTAB
+%       (string, default 'chi2_contingency_table.csv') path to ...
+%
+%   PIE
+%       (string, default XXX) Implementation missing!
 % 
 % OPT 
-%       (structure) with the following fields:
+%   (structure) with the following fields:
+%
+%   FOLDER_OUT
+%       (string, default '') if not empty, this specifies the path where
+%       outputs are generated
 %
 %   NB_SUBTYPE
 %       (integer) the number of desired subtypes
 %
 %   SUB_MAP_TYPE
-%       (string, optional, default 'mean') how the subtypes are represented in the
-%       volumes
-%       (options: 'mean' or 'median')
+%       (string, default 'mean') how the subtypes are represented in the
+%       volumes (options: 'mean' or 'median')
 %
 %   GROUP_COL_ID
 %       (integer, default 0) the column number
@@ -48,15 +79,15 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       subjects into groups to compare chi-squared and Cramer's V stats
 %
 %   FLAG_STATS
-%       (boolean, optional, default 0) if the flag is 1 (true), the brick
+%       (boolean, default 0) if the flag is 1 (true), the brick
 %       will calculate Cramer's V and chi-squared statistics for groups
 %       specified in files_in.model
 %
 %   FLAG_VERBOSE
-%       (boolean, optional, default true) turn on/off the verbose.
+%       (boolean, default true) turn on/off the verbose.
 %
 %   FLAG_TEST
-%       (boolean, optional, default false) if the flag is true, the brick does not do 
+%       (boolean, default false) if the flag is true, the brick does not do 
 %       anything but updating the values of FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % OUTPUTS:
@@ -111,18 +142,23 @@ files_in = psom_struct_defaults(files_in,...
            { 'data' , 'mask' , 'matrix' , 'model'           },...
            { NaN    , NaN    , NaN      , 'gb_niak_omitted' });
 
-% Output
-if ~ischar(files_out)
-    error('FILES_OUT should be a string');
-elseif ~exist(files_out, 'dir')
-    psom_mkdir(files_out);
-end
-
 % Options
 opt = psom_struct_defaults(opt,...
-      { 'nb_subtype', 'sub_map_type', 'group_col_id' , 'flag_stats' , 'flag_verbose' , 'flag_test' },...
-      { NaN         , 'mean'        , 0              , false        , true           , false       });
+      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'group_col_id' , 'flag_stats' , 'flag_verbose' , 'flag_test' },...
+      { ''           , NaN         , 'mean'        , 0              , false        , true           , false       });
 
+% Output
+if ~isempty(opt.folder_out)
+    path_out = niak_full_path(opt.folder_out);
+    files_out = psom_struct_defaults(files_out,...
+                { 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                , 'pie' },...
+                { [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map.type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] , ''    });
+else
+    files_out = psom_struct_defaults(files_out,...
+                { 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'stats'           , 'contab'          , 'pie'             },...
+                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+end
+  
 % If the user wants stats, the group column must be specified
 if opt.flag_stats && opt.group_col_id == 0
     error('OPT.FLAG_STATS is set to true but the group variable is undefined');
@@ -168,18 +204,13 @@ for ss = 1:opt.nb_subtype
     end
 end
 
-% Adjust the name of the volumetric output to match the subtype map
-% construction selection
-if strcmp(opt.sub_map_type, 'mean')
-    file_name = 'mean_subtype.nii.gz';
-elseif strcmp(opt.sub_map_type, 'median')
-    file_name = 'median_subtype.nii.gz';
-end
-
 % Bring the subtype map back to volumetric space
-vol_map_sub = niak_tseries2vol(sub.map, mask);
-hdr.file_name = [files_out filesep file_name];
-niak_write_vol(hdr, vol_map_sub);
+% Check if to be saved - improvable
+if ~strcmp(files_out.subtype_map, 'gb_niak_omitted')
+    vol_map_sub = niak_tseries2vol(sub.map, mask);
+    hdr.file_name = files_out.subtype_map;
+    niak_write_vol(hdr, vol_map_sub);
+end
 
 %% Generating and writing t-test and effect maps of the difference between subtype
 % average and grand average in volumes
@@ -187,29 +218,33 @@ niak_write_vol(hdr, vol_map_sub);
 for ss = 1:opt.nb_subtype
     [sub.ttest(ss,:), ~, sub.mean_eff(ss,:), ~, ~] = niak_ttest(data(part==ss,:), data(part~=ss,:),true);
 end
-vol_ttest_sub = niak_tseries2vol(sub.ttest, mask);
-file_name = 'ttest_subtype.nii.gz';
-hdr.file_name = [files_out filesep file_name];
-niak_write_vol(hdr,vol_ttest_sub);
-
-vol_eff_sub = niak_tseries2vol(sub.mean_eff, mask);
-file_name = 'eff_subtype.nii.gz';
-hdr.file_name = [files_out filesep file_name];
-niak_write_vol(hdr,vol_eff_sub);
+% Check if to be saved - improvable
+if ~strcmp(files_out.ttest_map, 'gb_niak_omitted')
+    vol_ttest_sub = niak_tseries2vol(sub.ttest, mask);
+    hdr.file_name = files_out.ttest_map;
+    niak_write_vol(hdr,vol_ttest_sub);
+end
+% Check if to be saved - improvable
+if ~strcmp(files_out.eff_map, 'gb_niak_omitted')
+    vol_eff_sub = niak_tseries2vol(sub.mean_eff, mask);
+    hdr.file_name = files_out.eff_map;
+    niak_write_vol(hdr,vol_eff_sub);
+end
 
 %% Generate and write grand mean map
-file_name = 'grand_mean.nii.gz';
-hdr.file_name = [files_out filesep file_name];
+hdr.file_name = files_out.grand_mean_map;
 sub.gd_mean = mean(data,1);
 vol_gd_mean = niak_tseries2vol(sub.gd_mean, mask);
 niak_write_vol(hdr,vol_gd_mean);
 
 % Generate and write the grand std map
-file_name = 'grand_std.nii.gz';
-hdr.file_name = [files_out filesep file_name];
-sub.gd_std = std(data,1);
-vol_std_mean = niak_tseries2vol(sub.gd_std, mask);
-niak_write_vol(hdr,vol_std_mean);
+% Check if to be saved - improvable
+if ~strcmp(files_out.grand_std_map, 'gb_niak_omitted')
+    hdr.file_name = files_out.grand_std_map;
+    sub.gd_std = std(data,1);
+    vol_std_mean = niak_tseries2vol(sub.gd_std, mask);
+    niak_write_vol(hdr,vol_std_mean);
+end
 
 %% Statistics
 
@@ -250,8 +285,10 @@ if opt.flag_stats == 1
     opt_ct.labels_x = name_grp;
     opt_ct.labels_y = name_clus;
     opt_ct.precision = 2;
-    path_ct = fullfile(files_out,'chi2_contingency_table.csv');
-    niak_write_csv(path_ct,contab,opt_ct)
+    % Check if to be saved - improvable
+    if ~strcmp(files_out.contab, 'gb_niak_omitted')
+        niak_write_csv(files_out.contab, contab, opt_ct)
+    end
     
     %% Chi-square test of the contigency table
     
@@ -273,31 +310,32 @@ if opt.flag_stats == 1
     
     % Pie chart visualization
     
-    for pp = 1:length(contab(:,1))
-        fh = figure('Visible', 'off');
-        pc_val = contab(pp,:);
-        pc = pie(pc_val);
-        textc = findobj(pc,'Type','text');
-        percval = get(textc,'String');
-        labels = strcat(name_clus, {': '},percval');
-        pc = pie(pc_val,labels);
-        c_title = ['Group' num2str(list_gg(pp))];
-        title(c_title);
-        name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
-        pc_out = fullfile(files_out, name_pc);
-        print(fh, pc_out, '-dpng', '-r300');
+%     for pp = 1:length(contab(:,1))
+%         fh = figure('Visible', 'off');
+%         pc_val = contab(pp,:);
+%         pc = pie(pc_val);
+%         textc = findobj(pc,'Type','text');
+%         percval = get(textc,'String');
+%         labels = strcat(name_clus, {': '},percval');
+%         pc = pie(pc_val,labels);
+%         c_title = ['Group' num2str(list_gg(pp))];
+%         title(c_title);
+%         name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
+%         pc_out = fullfile(files_out, name_pc);
+%         print(fh, pc_out, '-dpng', '-r300');
+%     end
+    % Check if to be saved - improvable
+    if ~strcmp(files_out.stats, 'gb_niak_omitted')
+        save(files_out.stats,'model','stats')
     end
-    
-    file_stat = fullfile(files_out,'group_stats.mat');
-    save(file_stat,'model','stats')
     
 end
 
 %% Saving subtyping results and statistics
-
-file_sub = fullfile(files_out, 'subtypes.mat');
-save(file_sub,'provenance','sub','hier','part','opt')
-
+if ~strcmp(files_out.subtype, 'gb_niak_omitted')
+    file_sub = fullfile(files_out, 'subtypes.mat');
+    save(files_out.subtype,'provenance','sub','hier','part','opt')
+end
 end
 
 

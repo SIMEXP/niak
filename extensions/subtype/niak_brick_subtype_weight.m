@@ -19,10 +19,29 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %       (string) path to the subtype maps for that network
 %
 % FILES_OUT
-%   (string) the path where the output files are to be generated
+%   (structure) structure with the following fields:
+%
+%   WEIGHTS
+%       (string, default 'subtype_weights.mat') path to ...
+%
+%   WEIGHTS_CSV
+%       (cell array, default 'sbt_weights_net_<NETWORK>.csv') path to ...
+%
+%   WEIGHTS_PDF
+%       (cell array, default 'fig_sbt_weights_net_<NETWORK>.pdf') path to ...
 %
 % OPT
 %   (structure) with the following fields:
+%
+%   SCALE
+%       (array, default 1:<# of inputs in FILES_IN.DATA>) the array of
+%       networks in the same order as inputs in FILES_IN.DATA. If left
+%       unspecified, the inputs in FILES_IN.DATA are expected to be
+%       continuous network numbers, starting with 1.
+%
+%   FOLDER_OUT
+%       (string, default '') if not empty, this specifies the path where
+%       outputs are generated
 %
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -78,20 +97,28 @@ files_in = psom_struct_defaults(files_in,...
            { 'data' , 'subtype' },...
            { NaN    , NaN       });
 
-% FILES_OUT
-if ~ischar(files_out)
-    error('FILES_OUT should be a string');
-end
-
 % Options
 if nargin < 3
     opt = struct;
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'flag_verbose' , 'flag_test' },...
-      { true           , false       });
+      { 'scale'                        , 'folder_out' , 'flag_verbose' , 'flag_test' },...
+      { 1:length(fieldnames(files_in)) , ''           , true           , false       });
 
+% FILES_OUT
+if ~isempty(opt.folder_out)
+    path_out = niak_full_path(opt.folder_out);
+    files_out = psom_struct_defaults(files_out,...
+                { 'weights'                , 'weights_csv'                                              , 'weights_pdf'                                                  },...
+                { [path_out 'subtype.mat'] , make_paths([path_out 'sbt_weights_net_%d.csv'], opt.scale) , make_paths([path_out 'fig_sbt_weights_net_%d.pdf'], opt.scale) });
+else
+    files_out = psom_struct_defaults(files_out,...
+                { 'weights'         , 'weights_csv'     , 'weights_pdf' },...
+                { 'gb_niak_omitted' , {}                , {}            });
+end
+  
+  
 % Make sure we have the same order and set of networks for data and subtype
 if ~isequal(fieldnames(files_in.subtype), fieldnames(files_in.data))
     error(['The order or set of networks in files_in.subtype and '...
@@ -135,14 +162,13 @@ for net_id = 1:n_networks
 end
 
 % Save the weight matrix
-file_name = [files_out filesep 'subtype_weights.mat'];
-save(file_name, 'weight_mat');
+save(files_out.weights, 'weight_mat');
 
 %% Write the weight matrix for each network as a csv
 for net_id = 1:n_networks
    % Retrieve the correct weight matrix
    net_weight = weight_mat(:, :, net_id);
-   file_name = [files_out filesep sprintf('sbt_weights_net_%d.csv', net_id)];
+   file_name = files_out.weights_csv{net_id, 1};
    niak_write_csv(file_name, net_weight);
 end
 
@@ -155,6 +181,17 @@ for net_id = 1:n_networks
     ax = gca;
     set(ax, 'XTick', 1:n_sbt, 'YTick', []);
     xlabel('Subtypes');
-    file_name = [files_out filesep sprintf('fig_sbt_weights_net_%d.pdf', net_id)];
+    file_name = files_out.weights_pdf{net_id, 1};
     print(fig, file_name, '-dpdf');
 end
+
+function path_array = make_paths(template, scale)
+    % Get the number of networks
+    n_networks = length(scale);
+    path_array = cell(n_networks, 1);
+    for sc_id = 1:n_networks
+        sc = scale(sc_id);
+        path = sprintf(template, sc);
+        path_array{sc_id, 1} = path;
+    end
+return

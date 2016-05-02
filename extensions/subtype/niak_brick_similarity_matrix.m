@@ -14,19 +14,24 @@ function [files_in,files_out,opt] = niak_brick_similarity_matrix(files_in,files_
 % FILES_OUT
 %   (structure) with the following fields:
 %
-%       MATRIX
-%           (string) path to the .mat output file
+%   MATRIX
+%       (string, default 'similarity_matrix.mat) path to the .mat 
+%       output file
 %
-%       SIM_FIG
-%           (string, default 'gb_niak_omitted') path to the .png
-%           visualization of the similarity matrix. 
+%   SIM_FIG
+%       (string, default 'similarity_matrix.png') path to the .png
+%       visualization of the similarity matrix. 
 %
-%       DEN_FIG
-%           (string, default 'gb_niak_omitted') path to the .png
-%           visualization of the dendrogram
+%   DEN_FIG
+%       (string, default 'dendrogram.png') path to the .png
+%       visualization of the dendrogram
 % 
 % OPT 
-%       (structure, optional) with the following fields:
+%   (structure, optional) with the following fields:
+%
+%   FOLDER_OUT
+%       (string, default '') if not empty, this specifies the path where
+%       outputs are generated
 % 
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -52,19 +57,25 @@ if ~ischar(files_in)
     error('FILES_IN should be a string');
 end
 
-% Output
-files_out = psom_struct_defaults(files_out,...
-      { 'matrix' , 'figure'          },...
-      { NaN      , 'gb_niak_omitted' });
-
 % Options
 if nargin < 3
     opt = struct;
 end
+opt = psom_struct_defaults(opt,...
+      { 'folder_out' , 'flag_verbose' , 'flag_test' },...
+      { ''           , true           , false       });
 
-list_fields   = { 'flag_verbose' , 'flag_test' };
-list_defaults = { true           , false       };
-opt = psom_struct_defaults(opt,list_fields,list_defaults);
+% Output
+if ~isempty(opt.folder_out)
+    path_out = niak_full_path(opt.folder_out);
+    files_out = psom_struct_defaults(files_out,...
+                { 'matrix'                           , 'sim_fig'                          , 'den_fig'                   },...
+                { [path_out 'similarity_matrix.mat'] , [path_out 'similarity_matrix.png'] , [path_out 'dendrogram.png'] });
+else
+    files_out = psom_struct_defaults(files_out,...
+                { 'matrix'          , 'sim_fig'         , 'den_fig'         },...
+                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+end
 
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -104,7 +115,8 @@ if ~strcmp(files_out.de_fig, 'gb_niak_omitted')
     print(fh2, files_out.de_fig,'-dpng','-r300');
 end
 
+if ~strcmp(files_out.matrix, 'gb_niak_omitted')
 %% Save hierarchical clustering and ordering of subjects and similarity matrix as mat
-save(files_out.matrix,'provenance','hier','subj_order','sim_matrix');
+    save(files_out.matrix,'provenance','hier','subj_order','sim_matrix');
 end
 

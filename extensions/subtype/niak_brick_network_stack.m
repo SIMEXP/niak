@@ -7,7 +7,8 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %
 % INPUTS:
 %
-% FILES_IN (structure) with the following fields :
+% FILES_IN 
+%   (structure) with the following fields:
 %
 %   DATA.<SUBJECT>
 %       (string) Containing the individual map (e.g. rmap_part,stability_maps, etc)
@@ -18,18 +19,21 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %       time*space array.
 %
 %   MODEL
-%       (strings,Default '') a .csv files coding for the pheno data. Is
-%       expected to have a header and a first column specifying the case
-%       IDs/names corresponding to the data in FILES_IN.DATA
+%       (strings, default 'gb_niak_omitted') a .csv files coding for the 
+%       pheno data. Is expected to have a header and a first column 
+%       specifying the case IDs/names corresponding to the data in 
+%       FILES_IN.DATA
 %
+% FILES_OUT 
+%   (string, default 'network_stack.mat') absolute path to the output .mat 
+%   file containing the subject by voxel by network stack array.
 %
-% FILES_OUT (string) the full path for a load_stack.mat file with the folowing variables :
-%   
-%   STACK_NET_<N> 4D volumes stacking networks for network N across individual maps  
-%   MEAN_NET_<N>  4D volumes stacking networks for the mean networks across individual maps.
-%   STD_NET_<N>   4D volumes stacking networks for the std networks across individual maps.
+% OPT 
+%   (structure, optional) with the following fields:
 %
-% OPT  (structure, optional) with the following fields:
+%   FOLDER_OUT
+%       (string, default '') if not empty, this specifies the path where
+%       outputs are generated
 %
 %   NETWORK 
 %       (int array, default all networks) A list of networks number in 
@@ -113,22 +117,29 @@ end
 files_in = psom_struct_defaults(files_in,...
            { 'data' , 'mask' , 'model'           },...
            { NaN    , NaN    , 'gb_niak_omitted' });
-
+       
 % FILES_OUT
 if ~ischar(files_out)
     error('FILES_OUT should be a string');
-elseif isempty(files_out)
-    files_out = pwd;
 end
 
 % Options
 if nargin < 3
     opt = struct;
 end
-
 opt = psom_struct_defaults(opt,...
-      { 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' },...
-      { []        , {}             , true           , true        , false       });
+      { 'folder_out' , 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' },...
+      { ''           , []        , {}             , true           , true        , false       });
+
+% Check the output specification
+if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
+    if isempty(opt.folder_out)
+        warning('Neither FILES_OUT nor OPT.FOLDER_OUT are specified. Won''t generate any outputs');
+        files_out = 'gb_niak_omitted';
+    else
+        files_out = [niak_full_path(opt.folder_out) 'network_stack.mat'];
+    end
+end
 
 % Get the model and check if there are any NaNs in the factors to be
 % regressed
@@ -254,8 +265,7 @@ provenance.volume.scale = scale;
 provenance.volume.mask = mask;
 % Region mask is missing so far
 
-% Define the output name
-stack_file = fullfile(files_out, 'network_stack.mat');
-
-% Save the stack matrix
-save(stack_file, 'stack', 'provenance');
+if ~strcmp(files_out, 'gb_niak_omitted')
+    % Save the stack matrix
+    save(files_out, 'stack', 'provenance');
+end
