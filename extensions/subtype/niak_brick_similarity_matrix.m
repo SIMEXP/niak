@@ -105,14 +105,14 @@ if ~strcmp(files_out.sim_fig, 'gb_niak_omitted')
     opt_png.color_map = 'hot_cold';
     fh1 = figure('Visible', 'off');
     niak_visu_matrix(rm,opt_png);
-    print(fh1, files_out.figure,'-dpng','-r300');
+    print(fh1, files_out.sim_fig,'-dpng','-r300');
 end
 
-if ~strcmp(files_out.de_fig, 'gb_niak_omitted')
+if ~strcmp(files_out.den_fig, 'gb_niak_omitted')
     %% Generate and save dendrogram as png
     fh2 = figure('Visible', 'off');
     niak_visu_dendrogram(hier);
-    print(fh2, files_out.de_fig,'-dpng','-r300');
+    print(fh2, files_out.den_fig,'-dpng','-r300');
 end
 
 if ~strcmp(files_out.matrix, 'gb_niak_omitted')

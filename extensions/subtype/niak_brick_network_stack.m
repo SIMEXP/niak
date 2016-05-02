@@ -134,7 +134,7 @@ opt = psom_struct_defaults(opt,...
 % Check the output specification
 if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
     if isempty(opt.folder_out)
-        warning('Neither FILES_OUT nor OPT.FOLDER_OUT are specified. Won''t generate any outputs');
+        error('Neither FILES_OUT nor OPT.FOLDER_OUT are specified. Won''t generate any outputs');
         files_out = 'gb_niak_omitted';
     else
         files_out = [niak_full_path(opt.folder_out) 'network_stack.mat'];
@@ -265,7 +265,5 @@ provenance.volume.scale = scale;
 provenance.volume.mask = mask;
 % Region mask is missing so far
 
-if ~strcmp(files_out, 'gb_niak_omitted')
-    % Save the stack matrix
-    save(files_out, 'stack', 'provenance');
-end
+% Save the stack matrix
+save(files_out, 'stack', 'provenance');
