@@ -152,7 +152,7 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
                 { 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                , 'pie' },...
-                { [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map.type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] , ''    });
+                { [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] , ''    });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'stats'           , 'contab'          , 'pie'             },...
@@ -333,7 +333,6 @@ end
 
 %% Saving subtyping results and statistics
 if ~strcmp(files_out.subtype, 'gb_niak_omitted')
-    file_sub = fullfile(files_out, 'subtypes.mat');
     save(files_out.subtype,'provenance','sub','hier','part','opt')
 end
 end
