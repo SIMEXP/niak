@@ -8,11 +8,22 @@ function [files_in,files_out,opt] = niak_brick_similarity_matrix(files_in,files_
 % INPUTS:
 % 
 % FILES_IN 
-%       (string) path to a .mat file containing an array (#subjects x 
-%       #vertices OR voxels OR regions) generated from subtype_preprocessing  
+%   (string) path to a .mat file containing an array (#subjects x 
+%   #vertices OR voxels OR regions) generated from subtype_preprocessing  
 % 
-% FILES_OUT 
-%       (string) path for results (default pwd)
+% FILES_OUT
+%   (structure) with the following fields:
+%
+%       MATRIX
+%           (string) path to the .mat output file
+%
+%       SIM_FIG
+%           (string, default 'gb_niak_omitted') path to the .png
+%           visualization of the similarity matrix. 
+%
+%       DEN_FIG
+%           (string, default 'gb_niak_omitted') path to the .png
+%           visualization of the dendrogram
 % 
 % OPT 
 %       (structure, optional) with the following fields:
@@ -42,14 +53,9 @@ if ~ischar(files_in)
 end
 
 % Output
-if ~ischar(files_out)
-    error('FILES_OUT should be a string');
-elseif isempty(files_out)
-    files_out = pwd;
-end
-if exist('files_out','var')
-    psom_mkdir(files_out);
-end
+files_out = psom_struct_defaults(files_out,...
+      { 'matrix' , 'figure'          },...
+      { NaN      , 'gb_niak_omitted' });
 
 % Options
 if nargin < 3
@@ -82,22 +88,23 @@ subj_order = niak_hier2order(hier);
 % Generate re-ordered matrix
 rm = sim_matrix(subj_order,subj_order);
 
-%% Save the similarity matrix as png
-opt_png.limits = [-1 1];
-opt_png.color_map = 'hot_cold';
-fh1 = figure('Visible', 'off');
-niak_visu_matrix(rm,opt_png);
-namefig = [files_out filesep 'similarity_matrix.png'];
-print(fh1, namefig,'-dpng','-r300');
+if ~strcmp(files_out.sim_fig, 'gb_niak_omitted')
+    %% Save the similarity matrix as png
+    opt_png.limits = [-1 1];
+    opt_png.color_map = 'hot_cold';
+    fh1 = figure('Visible', 'off');
+    niak_visu_matrix(rm,opt_png);
+    print(fh1, files_out.figure,'-dpng','-r300');
+end
 
-%% Generate and save dendrogram as png
-fh2 = figure('Visible', 'off');
-niak_visu_dendrogram(hier);
-nameden = [files_out filesep 'dendrogram.png'];
-print(fh2, nameden,'-dpng','-r300');
+if ~strcmp(files_out.de_fig, 'gb_niak_omitted')
+    %% Generate and save dendrogram as png
+    fh2 = figure('Visible', 'off');
+    niak_visu_dendrogram(hier);
+    print(fh2, files_out.de_fig,'-dpng','-r300');
+end
 
 %% Save hierarchical clustering and ordering of subjects and similarity matrix as mat
-mat_file = [files_out filesep 'similarity_matrix.mat'];
-save(mat_file,'provenance','hier','subj_order','sim_matrix');
+save(files_out.matrix,'provenance','hier','subj_order','sim_matrix');
 end
 
