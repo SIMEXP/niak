@@ -33,7 +33,7 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 % OPT
 %   (structure) with the following fields:
 %
-%   SCALE
+%   SCALES
 %       (array, default 1:<# of inputs in FILES_IN.DATA>) the array of
 %       networks in the same order as inputs in FILES_IN.DATA. If left
 %       unspecified, the inputs in FILES_IN.DATA are expected to be
@@ -103,7 +103,7 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'scale'                             , 'folder_out' , 'flag_verbose' , 'flag_test' },...
+      { 'scales'                             , 'folder_out' , 'flag_verbose' , 'flag_test' },...
       { 1:length(fieldnames(files_in.data)) , ''           , true           , false       });
 
 % FILES_OUT
@@ -111,7 +111,7 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
                 { 'weights'                , 'weights_csv'                                              , 'weights_pdf'                                                  },...
-                { [path_out 'subtype.mat'] , make_paths([path_out 'sbt_weights_net_%d.csv'], opt.scale) , make_paths([path_out 'fig_sbt_weights_net_%d.pdf'], opt.scale) });
+                { [path_out 'subtype.mat'] , make_paths([path_out 'sbt_weights_net_%d.csv'], opt.scales) , make_paths([path_out 'fig_sbt_weights_net_%d.pdf'], opt.scales) });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'weights'         , 'weights_csv'     , 'weights_pdf' },...
@@ -185,12 +185,12 @@ for net_id = 1:n_networks
     print(fig, file_name, '-dpdf');
 end
 
-function path_array = make_paths(template, scale)
+function path_array = make_paths(template, scales)
     % Get the number of networks
-    n_networks = length(scale);
+    n_networks = length(scales);
     path_array = cell(n_networks, 1);
     for sc_id = 1:n_networks
-        sc = scale(sc_id);
+        sc = scales(sc_id);
         path = sprintf(template, sc);
         path_array{sc_id, 1} = path;
     end
