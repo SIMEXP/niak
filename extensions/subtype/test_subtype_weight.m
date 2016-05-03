@@ -4,7 +4,7 @@ clear;
 %% Set up the paths
 base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/';
 stack_path = [base_path '/out/seb/network_stack.mat'];
-subtype_path = [base_path '/out/seb/subtypes.mat'];
+subtype_path = [base_path '/out/seb/subtype.mat'];
 mask_path = [base_path '/raw/func_mask_group_stereonl.mnc.gz'];
 out_path = [base_path 'out/seb'];
 
