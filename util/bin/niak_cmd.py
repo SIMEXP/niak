@@ -30,13 +30,16 @@ def build_opt(option):
     for i, o in enumerate(option):
         if OPTION_PREFIX in o:
             option[i] = re.sub("(\w)-(\w)", "\g<1>{0}\g<2>".format(ESCAPE_STRING), o)
-            parser.add_argument(option[i], nargs='+')
+            parser.add_argument(option[i], nargs='?')
 
     parsed = parser.parse_known_args(option)
     print(parser)
 
     for k, v in parsed[0].__dict__.items():
-        opt_dico["{0}".format(k.replace(ESCAPE_STRING, "."))] = "{0}".format(v[0])
+        if v is None:
+            opt_dico["{0}".format(k.replace(ESCAPE_STRING, "."))] = "true"
+        else:
+            opt_dico["{0}".format(k.replace(ESCAPE_STRING, "."))] = "{0}".format(v)
 
     return opt_dico
 
@@ -48,7 +51,7 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(description='Run a niak script')
 
-    parser.add_argument("--pipeline", "-p", default=None)
+    parser.add_argument("pipeline", default=None)
 
     parser.add_argument("--file_in", default=None)
 

@@ -38,14 +38,18 @@ class BasePipeline(object):
         .format(os.path.dirname(os.path.realpath(__file__)))
     BOUTIQUE_INPUTS = "inputs"
     BOUTIQUE_CMD_LINE = "command-line-flag"
-    BOUTIQUE_TYPE_CAST = {"Number": num, "String": string, "File": string}
+    BOUTIQUE_TYPE_CAST = {"Number": num, "String": string, "File": string, "Flag": string}
     BOUTIQUE_TYPE = "type"
+    BOUTIQUE_LIST = "list"
 
-    def __init__(self, folder_in, folder_out, options=None):
+    def __init__(self, pipeline_name, folder_in, folder_out, options=None):
+
+        # literal file name in niak
+        self.pipeline_name = pipeline_name
 
         # The name should be Provided in the derived class
-        self._options = []
-        self.pipeline_name = None
+        self._grabber_options = []
+        self._pipeline_options = []
 
         if os.path.islink(folder_in):
             self.folder_in = os.readlink(folder_in)
@@ -76,64 +80,69 @@ class BasePipeline(object):
     @property
     def octave_cmd(self):
         return ["/usr/bin/env", "octave", "--eval", "{0};{1}(files_in, opt)"
-                           .format(";".join(self.octave_options), self.pipeline_name )]
+                           .format(";".join(self.octave_options), self.pipeline_name)]
 
     @property
     def octave_options(self):
 
         opt_list = ["opt.folder_out=\'{0}\'".format(self.folder_out)]
 
-        opt_list += self.get_file_in()
+        opt_list += self.grabber_construction()
 
-        if self._options:
-            opt_list += self._options
+        if self._pipeline_options:
+            opt_list += self._pipeline_options
 
         return opt_list
 
     @octave_options.setter
-    def octave_options(self, value):
-        if value is not None:
-            self.type_cast_options(value)
-            self._options += ["{0}={1}".format(a[0], a[1]) for a in value.items()]
+    def octave_options(self, options):
+
+        if options is not None:
+            # Sort options between grabber (the input file reader) and typecast
+            # them with the help of the boutique descriptor
+            with open("{0}/{1}.json".format(self.BOUTIQUE_PATH, self.__class__.__name__)) as fp:
+                boutique_descriptor = json.load(fp)
+
+            casting_dico = {elem.get(self.BOUTIQUE_CMD_LINE, "")
+                            .replace("--opt", "opt").replace("-", "."): [elem.get(self.BOUTIQUE_TYPE),
+                                                                         elem.get(self.BOUTIQUE_LIST)]
+                            for elem in boutique_descriptor[self.BOUTIQUE_INPUTS]}
+
+            for optk, optv in options.items():
 
 
-    def type_cast_options(self, options):
+                optv = self.BOUTIQUE_TYPE_CAST[casting_dico[optk][0]](optv)
 
-        with open("{0}/{1}.json".format(self.BOUTIQUE_PATH, self.__class__.__name__)) as fp :
-            boutique_descriptor = json.load(fp)
+                # if casting_dico[boutique_opt][1] is True:
 
-        for opt_description in boutique_descriptor[self.BOUTIQUE_INPUTS]:
-            if opt_description.get(self.BOUTIQUE_CMD_LINE) \
-                    and opt_description[self.BOUTIQUE_CMD_LINE].startswith("--opt"):
-                opt = opt_description[self.BOUTIQUE_CMD_LINE].replace("--opt-", "opt.").replace("-", ".")
-                if options.get(opt) is None:
-                    pass  # All default option must be passed optional options are ignored
+                if optk.startswith("--opt_g"):
+                    self._grabber_options.append("{0}={1}".format(optk, optv))
                 else:
-                    options[opt] = self.BOUTIQUE_TYPE_CAST[opt_description[self.BOUTIQUE_TYPE]](options[opt])
+                    self._pipeline_options.append("{0}={1}".format(optk, optv))
 
 
-    def get_file_in(self):
+
+    def grabber_construction(self):
         """
-        This function need to be overload to fill the file_in requirement of NIAK
+        This method needs to be overload to fill the file_in requirement of NIAK
         :return: A list that contains octave string that fill init the file_in variable
         """
-        # TODO write that methide for bids
-
+        pass
 
 
 
 class FmriPreprocess(BasePipeline):
 
     def __init__(self, *args, **kwargs):
-        super(FmriPreprocess, self).__init__(*args, **kwargs)
+        super(FmriPreprocess, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
 
-        self.pipeline_name = "niak_pipeline_fmri_preprocess"
-
-
-    def get_file_in(self):
+    def grabber_construction(self):
         """
 
         :return: A list that contains octave string that fill init the file_in variable
+
+        TODO write that method for bids
+
         """
         opt_list = []
         in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
@@ -168,23 +177,19 @@ class BASC(BasePipeline):
     at least for now.
     """
 
-    def __init__(self, grabber_option, *args, **kwargs):
-        super(BASC, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(BASC, self).__init__("niak_pipeline_stability_rest", *args, **kwargs)
 
-        self.pipeline_name = "niak_pipeline_stability_rest"
-
-        self.grabber_option = grabber_option
-
-    def get_file_in(self):
+    def grabber_construction(self):
         """
         :return:
         """
         file_in = []
 
 
-        file_in.append("opt_g.min_nb_vol = 100")
+        file_in.append("opt_g.min_nb_vol = {0}")
+        file_in.append("opt_g.type_files = 'rest'")
 
-        file_in.append("opt_g.type_files = 'roi'")
         file_in.append("files_in = niak_grab_fmri_preprocess('{0}',opt_g)".format(self.folder_in))
 
 
@@ -206,7 +211,7 @@ def load(pipeline_name, folder_in, folder_out, options=None):
 
     pipe = SUPPORTED_PIPELINES[pipeline_name]
 
-    return pipe(folder_in, folder_out, options)
+    return pipe(folder_in, folder_out, options=options)
 
 
 if __name__ == '__main__':
