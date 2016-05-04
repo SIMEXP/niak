@@ -18,6 +18,10 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %   SUBTYPE.<NETWORK>
 %       (string) path to the subtype maps for that network
 %
+%   SIM_MATRIX.<NETWORK>
+%       (string) path to the similarity matrix and hierarchical clustering
+%       of subjects for that network
+%
 % FILES_OUT
 %   (structure) structure with the following fields:
 %
@@ -94,8 +98,8 @@ end
 
 % FILES_IN
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'subtype' },...
-           { NaN    , NaN       });
+           { 'data' , 'subtype' , 'sim_matrix' },...
+           { NaN    , NaN       , NaN});
 
 % Options
 if nargin < 3
@@ -173,11 +177,18 @@ for net_id = 1:n_networks
 end
 
 %% Visualize the weight matrix for each network as a pdf
+
 for net_id = 1:n_networks
+    network = networks{net_id};
+    
+    % Get the subject order from files_in.sim_matrix
+    sim_matrix = load(files_in.sim_matrix.(network));
+    subj_order = sim_matrix.subj_order;
+    
     % Create a hidden figure
     fig = figure('Visible', 'off');
     net_weight = weight_mat(:, :, net_id);
-    niak_visu_matrix(net_weight, struct('limits', [-0.4, 0.4]));
+    niak_visu_matrix(net_weight(subj_order,:), struct('limits', [-0.4, 0.4]));
     ax = gca;
     set(ax, 'XTick', 1:n_sbt, 'YTick', []);
     xlabel('Subtypes');
