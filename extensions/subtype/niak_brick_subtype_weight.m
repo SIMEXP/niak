@@ -169,11 +169,27 @@ end
 save(files_out.weights, 'weight_mat');
 
 %% Write the weight matrix for each network as a csv
+
 for net_id = 1:n_networks
-   % Retrieve the correct weight matrix
-   net_weight = weight_mat(:, :, net_id);
-   file_name = files_out.weights_csv{net_id, 1};
-   niak_write_csv(file_name, net_weight);
+    network = networks{net_id};
+    % Get the subject list
+    tmp_list_sub = load(files_in.data.(network));
+    list_sub = tmp_list_sub.provenance.subjects(:,1);
+    % Retrieve the correct weight matrix
+    net_weight = weight_mat(:, :, net_id);
+    file_name = files_out.weights_csv{net_id, 1};
+    % Labels for the csv
+    name_clus = {}; % empty cell array for cluster lables because we don't know how many subtypes there are yet
+    tmp_sbt = load(files_in.subtype.(network));
+    sbt = tmp_sbt.sub.map;
+    n_sbt = size(sbt, 1); % get number of subtypes from files_in.subtype.(network)
+    for cc = 1:n_sbt
+        name_clus{cc} = ['sub' num2str(cc)]; % store the subtype labels
+    end
+    opt_w.labels_y = name_clus;
+    opt_w.labels_x = list_sub;
+    opt_w.precision = 3;
+    niak_write_csv(file_name, net_weight, opt_w); % Write the csv
 end
 
 %% Visualize the weight matrix for each network as a pdf
