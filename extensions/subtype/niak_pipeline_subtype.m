@@ -133,7 +133,7 @@ for net_id = 1:opt.scale;
     % Set the network
 	pre_opt.network = net_id;
     pre_in = files_in;
-    pre_out = [network_folder sprintf('network_%d_stack.mat', net_id)];
+    pre_out = [network_folder filesep sprintf('network_%d_stack.mat', net_id)];
     pipe = psom_add_job(pipe, pre_name, 'niak_brick_network_stack',...
                         pre_in, pre_out, pre_opt);
     % Assign output to weight extraction step
@@ -145,7 +145,7 @@ for net_id = 1:opt.scale;
     sim_opt.folder_out = network_folder;
     sim_in = pipe.(pre_name).files_out;
     sim_out = struct;
-    sim_out.matrix = [network_folder sprintf('network_%d_similarity_matrix.mat', net_id)];
+    sim_out.matrix = [network_folder filesep sprintf('network_%d_similarity_matrix.mat', net_id)];
     pipe = psom_add_job(pipe, sim_name, 'niak_brick_similarity_matrix',...
                         sim_in, sim_out, sim_opt);
     
@@ -160,7 +160,7 @@ for net_id = 1:opt.scale;
     sub_in.data = pipe.(pre_name).files_out;
     sub_in.matrix = pipe.(sim_name).files_out.matrix;
     sub_out = struct;
-    sub_out.subtype = [network_folder sprintf('network_%d_subtype.mat', net_id)];
+    sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
     pipe = psom_add_job(pipe, sub_name, 'niak_brick_subtyping',...
                         sub_in, sub_out, sub_opt);
     % Assign output to weight extraction step

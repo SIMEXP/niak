@@ -10,7 +10,7 @@ mask_path = [base_path '/raw/func_mask_group_stereonl.mnc.gz'];
 out_path = [base_path 'out/seb'];
 
 %% Get the model and load the files
-[model, ~, cat_names, ~] = niak_read_csv(num_path);
+[data, sub_names, cat_names, ~] = niak_read_csv(num_path);
 pheno = niak_read_csv_cell(num_path);
 
 % Go through the subjects and then make me some files_in struct
