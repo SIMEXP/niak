@@ -173,15 +173,16 @@ mask_var = ismember(model.labels_y,list_cont);
 model.x = model.x(:,mask_var);
 model.labels_y = model.labels_y(mask_var);
 
-model_select = model.x;
-
 %% Filter out the NaN entries
 if (opt.flag_filter_nan)&&~isempty(model.x)
-    mask_nan = max(isnan(model.x),[],2);    
+    mask_nan = max(isnan(model.x),[],2);
     if any(mask_nan)
         warning('The following entries were suppressed because they were associated to NaNs')
         char(model.labels_x{mask_nan})
     end    
     labels_x = labels_x(~mask_nan);
     ind_x = ind_x(~mask_nan);
+    model.x = model.x(~mask_nan, :);
 end
+
+model_select = model.x;
