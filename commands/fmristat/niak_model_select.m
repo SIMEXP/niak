@@ -1,4 +1,4 @@
-function [labels_x,ind_x] = niak_model_select (model, opt)
+function [labels_x,ind_x, selected_model] = niak_model_select (model, opt)
 % Select entries in a linear model
 % [LABELS_X,IND_X] = NIAK_MODEL_SELECT( MODEL , OPT )
 %
@@ -170,6 +170,9 @@ end
 mask_var = ismember(model.labels_y,list_cont);
 model.x = model.x(:,mask_var);
 model.labels_y = model.labels_y(mask_var);
+
+% Return the selected model matrix
+selected_model = model.x;
 
 %% Filter out the NaN entries
 if (opt.flag_filter_nan)&&~isempty(model.x)
