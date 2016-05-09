@@ -18,6 +18,10 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %   SUBTYPE.<NETWORK>
 %       (string) path to the subtype maps for that network
 %
+%   SIM_MATRIX.<NETWORK>
+%       (string) path to the similarity matrix and hierarchical clustering
+%       of subjects for that network
+%
 % FILES_OUT
 %   (structure) structure with the following fields:
 %
@@ -94,8 +98,8 @@ end
 
 % FILES_IN
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'subtype' },...
-           { NaN    , NaN       });
+           { 'data' , 'subtype' , 'sim_matrix' },...
+           { NaN    , NaN       , NaN});
 
 % Options
 if nargin < 3
@@ -111,7 +115,7 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
                 { 'weights'                , 'weights_csv'                                              , 'weights_pdf'                                                  },...
-                { [path_out 'subtype.mat'] , make_paths([path_out 'sbt_weights_net_%d.csv'], opt.scales) , make_paths([path_out 'fig_sbt_weights_net_%d.pdf'], opt.scales) });
+                { [path_out 'subtype_weights.mat'] , make_paths([path_out 'sbt_weights_net_%d.csv'], opt.scales) , make_paths([path_out 'fig_sbt_weights_net_%d.pdf'], opt.scales) });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'weights'         , 'weights_csv'     , 'weights_pdf' },...
@@ -165,19 +169,42 @@ end
 save(files_out.weights, 'weight_mat');
 
 %% Write the weight matrix for each network as a csv
+
 for net_id = 1:n_networks
-   % Retrieve the correct weight matrix
-   net_weight = weight_mat(:, :, net_id);
-   file_name = files_out.weights_csv{net_id, 1};
-   niak_write_csv(file_name, net_weight);
+    network = networks{net_id};
+    % Get the subject list
+    tmp_list_sub = load(files_in.data.(network));
+    list_sub = tmp_list_sub.provenance.subjects(:,1);
+    % Retrieve the correct weight matrix
+    net_weight = weight_mat(:, :, net_id);
+    file_name = files_out.weights_csv{net_id, 1};
+    % Labels for the csv
+    name_clus = {}; % empty cell array for cluster lables because we don't know how many subtypes there are yet
+    tmp_sbt = load(files_in.subtype.(network));
+    sbt = tmp_sbt.sub.map;
+    n_sbt = size(sbt, 1); % get number of subtypes from files_in.subtype.(network)
+    for cc = 1:n_sbt
+        name_clus{cc} = ['sub' num2str(cc)]; % store the subtype labels
+    end
+    opt_w.labels_y = name_clus;
+    opt_w.labels_x = list_sub;
+    opt_w.precision = 3;
+    niak_write_csv(file_name, net_weight, opt_w); % Write the csv
 end
 
 %% Visualize the weight matrix for each network as a pdf
+
 for net_id = 1:n_networks
+    network = networks{net_id};
+    
+    % Get the subject order from files_in.sim_matrix
+    sim_matrix = load(files_in.sim_matrix.(network));
+    subj_order = sim_matrix.subj_order;
+    
     % Create a hidden figure
     fig = figure('Visible', 'off');
     net_weight = weight_mat(:, :, net_id);
-    niak_visu_matrix(net_weight, struct('limits', [-0.4, 0.4]));
+    niak_visu_matrix(net_weight(subj_order,:), struct('limits', [-0.4, 0.4]));
     ax = gca;
     set(ax, 'XTick', 1:n_sbt, 'YTick', []);
     xlabel('Subtypes');
