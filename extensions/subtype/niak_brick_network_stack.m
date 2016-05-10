@@ -223,7 +223,7 @@ end
 opt_mod = struct;
 opt_mod.flag_residuals = true;
 m = struct;
-m.x = conf_model(:, conf_ids);
+m.x = [ones(length(conf_model),1) conf_model(:, conf_ids)];
 
 conf_stack = zeros(n_input, n_vox, n_scales);
 
