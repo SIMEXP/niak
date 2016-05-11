@@ -18,10 +18,9 @@ opt.folder_out = out_path;
 opt.interaction(1).label = 'test1';
 opt.interaction(1).factor = {'Gender', 'Age'};
 opt.test_name = 'dumbstuff';
-opt.contrast.Age = 1;
-opt.contrast.FD = 0;
-opt.contrast.test1 = 0;
-opt.flag_test = false;
+opt.cov = {'Age', 'FD'};
+opt.coi = 'Age';
+opt.flag_test = true;
 
 %% Run the brick
 [files_in, files_out, opt] = niak_brick_association_test(files_in, files_out, opt);
