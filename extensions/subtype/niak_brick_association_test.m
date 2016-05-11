@@ -16,17 +16,14 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %       subjects ordered the same way as in the MODEL
 %
 %   MODEL
-%       (string) a .csv files coding for the
-%       pheno data. Is expected to have a header and a first column
-%       specifying the case IDs/names corresponding to the data in
-%       FILES_IN.DATA
+%       (string) a .csv files coding for the pheno data. Is expected to
+%       have a header and a first column specifying the case IDs/names
+%       corresponding to the data in FILES_IN.DATA
 %
-%
-%   
 %
 % FILES_OUT
-%   (string, default 'network_stack.mat') absolute path to the output .mat
-%   file containing the subject by voxel by network stack array.
+%   (string) absolute path to the output .mat
+%   file containing the association results.
 %
 % OPT
 %   (structure, optional) with the following fields:
@@ -42,13 +39,93 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %   TEST_NAME
 %       (string) the name of the current analysis
 %
-%   INTERACTION.<LABEL>
-%       (cell array, optional) subfields denote interactions to be generated
-%       the brick. The new interaction will have the same name as the
-%       subfield (<LABEL>).
+%   FDR
+%      (scalar, default 0.05) the level of acceptable false-discovery rate
+%      for the t-maps.
 %
-%       (cell of string) covariates that are being multiplied together
-%       to build the interaction covariate.
+%   TYPE_FDR
+%      (string, default 'BH') how the FDR is controled. See the METHOD
+%      argument of NIAK_FDR.
+%
+%   CONTRAST
+%      (structure, with arbitray fields <NAME>, which needs to correspond
+%      to the label of one column in the file FILES_IN.MODEL) The
+%      fields found in CONTRAST will determine which covariates enter the
+%      model:
+%
+%      <NAME>
+%         (scalar) the weight of the covariate NAME in the contrast.
+% 
+%   INTERACTION
+%      (structure array, optional) with multiple entries and the following fields:
+%          
+%      LABEL
+%         (string) a label for the interaction covariate.
+%
+%      FACTOR
+%         (cell of string) covariates that are being multiplied together to
+%         build the interaction covariate.  There should be only one
+%         covariate associated with each label.
+%
+%      FLAG_NORMALIZE_INTER
+%         (boolean,default true) if FLAG_NORMALIZE_INTER is true, the
+%         factor of interaction will be normalized to a zero mean and unit
+%         variance before the interaction is derived (independently of
+%         OPT.<LABEL>.GROUP.NORMALIZE below).
+%
+%   NORMALIZE_X
+%      (structure or boolean, default true) If a boolean and true, all
+%      covariates of the model are normalized (see NORMALIZE_TYPE below).
+%      If a structure, the fields <NAME> need to correspond to the label of
+%      a column in the file FILES_IN.MODEL):
+%
+%      <NAME>
+%         (arbitrary value) if <NAME> is present, then the covariate is
+%         normalized (see NORMALIZE_TYPE below).
+%
+%   NORMALIZE_Y
+%      (boolean, default false) If true, the data is normalized (see
+%      NORMALIZE_TYPE below).
+%
+%   NORMALIZE_TYPE
+%      (string, default 'mean') Available options:
+%         'mean': correction to a zero mean (for each column) 'mean_var':
+%         correction to a zero mean and unit variance (for each column)
+%
+%   SELECT
+%      (structure, optional) with multiple entries and the following
+%      fields:
+%
+%      LABEL
+%         (string) the covariate used to select entries *before
+%         normalization*
+%
+%      VALUES
+%         (vector, default []) a list of values to select (if empty, all
+%         entries are retained).
+%
+%      MIN
+%         (scalar, default []) only values higher (strictly) than MIN are
+%         retained.
+%
+%      MAX
+%         (scalar, default []) only values lower (strictly) than MAX are
+%         retained.
+%
+%      OPERATION
+%         (string, default 'or') the operation that is applied to select
+%         the frames. Available options: 'or' : merge the current selection
+%         SELECT(E) with the result of the previous one. 'and' : intersect
+%         the current selection SELECT(E) with the result of the previous
+%         one.
+%
+%   FLAG_INTERCEPT
+%      (boolean, default true) if FLAG_INTERCEPT is true, a constant
+%      covariate will be added to the model.
+%
+%   FLAG_FILTER_NAN
+%      (boolean, default true) if the flag is true, any observation
+%      associated with a NaN in MODEL.X is removed from the model.
 %   
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -133,17 +210,25 @@ end
 if nargin < 3
     opt = struct;
 end
-opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network' , 'interaction'  , 'flag_verbose' , 'flag_conf' , 'flag_test' },...
-      { ''           , []        , struct         , true           , true        , false       });
 
-% Check the output specification
-if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
-    if isempty(opt.folder_out)
-        error('Neither FILES_OUT nor OPT.FOLDER_OUT are specified. Won''t generate any outputs');
-    else
-        files_out = [niak_full_path(opt.folder_out) 'network_stack.mat'];
-    end
+opt = psom_struct_defaults(opt,...
+      { 'folder_out' , 'network' , 'test_name' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
+      { ''           , []        , NaN         , 0.05  , 'BH'       , NaN        , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
+
+% Since we don't know which optional parameters were set, we'll remove the
+% empty default values again so they don't cause trouble downstream
+if ~isstruct(opt.interaction)
+    error('if specified, OPT.INTERACTION has to be a structure!');
+elseif isempty(fieldnames(opt.interaction))
+    % Option is empty, remove it
+    opt = rmfield(opt, 'interaction');
+end
+
+if ~isstruct(opt.select)
+    error('if specified, OPT.SELECT has to be a structure!');
+elseif isempty(fieldnames(opt.select))
+    % Option is empty, remove it
+    opt = rmfield(opt, 'select');
 end
 
 %% If the test flag is true, stop here !
@@ -157,103 +242,46 @@ if opt.flag_verbose
 end
 
 % Read the model file and store it in the internal structure
-[model_data, ~, cov_labels] = niak_read_csv(files_in.model);
-model.x = model_data(:, 2:end);
-model.labels_x = model_data(:, 1);
-model.labels_y = cov_labels(2:end);
+[model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
+model_raw.x = model_data;
+model_raw.labels_x = labels_x;
+model_raw.labels_y = labels_y;
 
-if ~isempty(fieldnames(opt.interaction))
-    % Add the interactions
-    model = make_interaction(model, opt.interaction);
+% Read the weight data
+if opt.flag_verbose
+    fprintf('Reading the weigfht data ...\n');
 end
 
-% Choose the subjects that go in the model
-opt_model.labels_y = {'Age', 'FD'};
-[labels, ind, model_select] = niak_model_select(model, opt_model);
+% Read the weights file
+tmp = load(files_in.weight);
+weights = tmp.weight_mat;
+% Figure out how many cases we are dealing with
+[n_sub, n_sbt, n_net] = size(weights);
 
-% Normalize the model (X/Y)
-index = find(cellfun('length',regexp(C,'B')) == 1);
+% Prepare the variable for the p-value storage
+pvals = zeros(n_net, n_sbt);
 
-% Fit the model
-
-
-% Compute the post hoc contrasts
-
+% Iterate over each network and perform the normalization and fitting
+for net_id = 1:n_net
+    % Select the weight matrix for the current network
+    model_raw.y = weights(:, :, net_id);
+    % Perform the model selection, adding the intercept and interaction,
+    % and normalization - all in one step. This step is partly redundant
+    % since the model will be the same for each network. However, since we
+    % also want select and potentially normalize the data, we do this every
+    % time.
+    opt_model = struct;
+    opt_model = rmfield(opt, {'folder_out', 'network', 'test_name',...
+                              'flag_verbose', 'flag_test', 'fdr', 'type_fdr'});
+    [model_norm, opt_model] = niak_normalize_model(model_raw, opt_model);
+    % Fit the model
+    opt_glm = struct;
+    opt_glm.test  = 'ttest';
+    opt_glm.flag_beta = true; 
+    opt_glm.flag_residuals = true;
+    [results, opt_glm] = niak_glm(model_norm, opt_glm);
+    pvals(net_id, :) = results.pce;
+end
 
 % Run FDR on the p-values
-
-
-% Create figures and volumes
-
-
-
-% choosing the subjects of the model
-
-
-% Need to setup interactions
-int
-
-% need to normalize the model
-norm
-
-% fit the model
-fit
-
-%post hoc tests
-post hoc
-
-% fdr correction
-fdr
-
-
-
-
-
-
-
-
-
-
-%% Check which subjects will be included in the analysis based on test specifications
-opt_sel.select = opt.test.(test).select;
-opt_sel.flag_filter_nan = true;
-opt_sel.labels_x = fieldnames(files_in.connectome);
-opt_sel.labels_y = fieldnames(opt.test.(test).contrast);
-[list_subject, ind_s] = niak_model_select(model_csv,opt_sel);
-
-% Subfunctions
-function model = make_interaction(model, interaction)
-    % Updates the model file with a new interaction. 
-    %
-    % MODEL is a structure expected to contain the subfields:
-    %   X (array) the model data
-    %   LABELS_Y (cell array) the labels corresponding to the covariates in
-    %   the model
-    %
-    % INTERACTION is a structure expected to contain the subfields:
-    %   <LABEL>(cell array) subfield name corresponds to the name of the
-    %   interaction variable. The cell array contains the covariates that
-    %   are supposed to enter the corresponding interaction.
-    interaction_list = fieldnames(interaction);
-    n_interact = length(interaction_list);
-
-    % Iterate over the requested interactions
-    for int_id = 1:n_interact
-       % Get the name of the interaction
-       int_name = interaction_list{int_id};
-       % Get the names of the variables to combine
-       int_factors = interaction.(int_name);
-       n_factors = length(int_factors);
-       % Find the indices of these factors
-       cov_index = zeros(n_factors, 1);
-       for fac_id = 1:n_factors
-          cov_index(fac_id) = find(strcmp([model.labels_y], int_factors{fac_id}));
-       end
-       % Get the slice of the model that corresponds to these factors and
-       % multiply the elements columnwise
-       int_prod = prod(model.x(:, cov_index),2);
-       % Add the interaction to the model
-       model.x(:, end+1) = int_prod;
-       model.labels_y{end+1} = int_name;
-    end
-return
+[fdr,test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
