@@ -20,7 +20,7 @@ opt.interaction(1).factor = {'Gender', 'Age'};
 opt.test_name = 'dumbstuff';
 opt.cov = {'Age', 'FD'};
 opt.coi = 'Age';
-opt.flag_test = true;
+opt.flag_test = false;
 
 %% Run the brick
 [files_in, files_out, opt] = niak_brick_association_test(files_in, files_out, opt);

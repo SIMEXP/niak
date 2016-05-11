@@ -234,7 +234,7 @@ else
     for n_inter = 1:n_interactions
         name_inter = opt.interaction(n_inter).label;
         interactions{n_inter} = name_inter;
-    end 
+    end
 end
 
 if ~isstruct(opt.select)
@@ -244,31 +244,38 @@ elseif isempty(fieldnames(opt.select))
     opt = rmfield(opt, 'select');
 end
 
-% Load the model to check that the covariates and interactions are
-% correctly specified
+% Load the model to check that the covariates are correctly specified
 [model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
 % Check if covariates are specified
 if isempty(opt.cov)
     % No covariates specified, take all covariates from the model
     opt.cov = labels_y;
-    % Add all requested interactions, if there are any
-    if n_interactions > 0
-        opt.cov = [opt.cov, interactions];
-    end
+    n_cov = length(opt.cov);
 else
     % Make sure all the specified covariates exist
     n_cov = length(opt.cov);
     for cov_id = 1:n_cov
         % check if the covariate is available in the model or interactions
-        if ~ismember(opt.cov{cov_id}, labels_y) && ~ismember(opt.cov{cov_id}, interactions)
-            error('The requested covariate %s is not in FILES_IN.MODEL or designated as an interaction', opt.cov{cov_id});
+        if ~ismember(opt.cov{cov_id}, labels_y)
+            error('The requested covariate %s could not be found in FILES_IN.MODEL', opt.cov{cov_id});
         end
     end
 end
-% Check if all the specified interactions are also selected as covariates
-for n_inter = 1:n_interactions
-    if ~ismember(interactions{n_inter}, opt.cov)
-        warning('The interaction %s is requested but not specified in OPT.COV and will therefore not be added to the model', interactions{n_inter});
+
+% Make sure that the covariate of interest is specified either as a
+% covariate or interaction
+if ~ismember(opt.coi, opt.cov) && ~ismember(opt.coi, interactions)
+    error('The covariate of interest %s is not a covariate in OPT.COV or an interaction in OPT.INTERACTION', opt.coi);
+end
+
+% Add the covariates to OPT.CONTRAST which is not exposed to the user
+opt.contrast = struct;
+for cov_id = 1:n_cov
+    cov_name = opt.cov{cov_id};
+    if strcmp(cov_name, opt.coi)
+        opt.contrast.(cov_name) = 1;
+    else
+        opt.contrast.(cov_name) = 0;
     end
 end
 
@@ -311,7 +318,6 @@ for net_id = 1:n_net
     % since the model will be the same for each network. However, since we
     % also want select and potentially normalize the data, we do this every
     % time.
-    opt_model = struct;
     opt_model = rmfield(opt, {'folder_out', 'network', 'test_name',...
                               'flag_verbose', 'flag_test', 'fdr', 'type_fdr'});
     [model_norm, opt_model] = niak_normalize_model(model_raw, opt_model);
