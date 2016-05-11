@@ -15,8 +15,12 @@ files_out = out_path;
 
 opt.network = 3;
 opt.folder_out = out_path;
-opt.regress_conf = {'Gender', 'Age'};
-opt.flag_conf = true;
+opt.interaction(1).label = 'test1';
+opt.interaction(1).factor = {'Gender', 'Age'};
+opt.test_name = 'dumbstuff';
+opt.contrast.Age = 1;
+opt.contrast.FD = 0;
+opt.contrast.test1 = 0;
 opt.flag_test = false;
 
 %% Run the brick
