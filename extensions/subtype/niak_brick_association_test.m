@@ -50,13 +50,7 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %   COV
 %       (cell array, default {}) the covariates that will enter the linear
 %       model as predictors of the weight matrix. If empty, all covariates 
-%       in FILES_IN.MODEL and all requested interactions from OPT.INTERACTION
-%       will be used.
-%       ***
-%       NOTE: Unless empty, the names of all interactions that you 
-%       request in OPT.INTERACTION have to be specified here as well 
-%       or they will not be added to the model!
-%       ***
+%       in FILES_IN.MODEL will be used.
 %
 %   COI
 %       (string) the Covariate of Interest. One covariate that is also a
@@ -223,6 +217,7 @@ opt = psom_struct_defaults(opt,...
       { 'folder_out' , 'network' , 'test_name' , 'fdr' , 'type_fdr' , 'cov' , 'coi' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
       { ''           , []        , NaN         , 0.05  , 'BH'       , {}    , NaN   , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
 
+%% Sanity Checks
 % Since we don't know which optional parameters were set, we'll remove the
 % empty default values again so they don't cause trouble downstream
 if ~isstruct(opt.interaction)
@@ -249,7 +244,7 @@ elseif isempty(fieldnames(opt.select))
     opt = rmfield(opt, 'select');
 end
 
-% Load the model and check that the covariates and interactions are
+% Load the model to check that the covariates and interactions are
 % correctly specified
 [model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
 % Check if covariates are specified
