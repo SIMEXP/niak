@@ -47,14 +47,22 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %      (string, default 'BH') how the FDR is controled. See the METHOD
 %      argument of NIAK_FDR.
 %
-%   CONTRAST
-%      (structure, with arbitray fields <NAME>, which needs to correspond
-%      to the label of one column in the file FILES_IN.MODEL) The
-%      fields found in CONTRAST will determine which covariates enter the
-%      model:
+%   COV
+%       (cell array, default {}) the covariates that will enter the linear
+%       model as predictors of the weight matrix. If empty, all covariates 
+%       in FILES_IN.MODEL and all requested interactions from OPT.INTERACTION
+%       will be used.
+%       ***
+%       NOTE: Unless empty, the names of all interactions that you 
+%       request in OPT.INTERACTION have to be specified here as well 
+%       or they will not be added to the model!
+%       ***
 %
-%      <NAME>
-%         (scalar) the weight of the covariate NAME in the contrast.
+%   COI
+%       (string) the Covariate of Interest. One covariate that is also a
+%       member of OPT.COV for which the association with the weight matrix
+%       will be investigated. Results and figures will be based on the
+%       association of this covariate of interest and the weight matrix.
 % 
 %   INTERACTION
 %      (structure array, optional) with multiple entries and the following fields:
@@ -212,8 +220,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network' , 'test_name' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
-      { ''           , []        , NaN         , 0.05  , 'BH'       , NaN        , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
+      { 'folder_out' , 'network' , 'test_name' , 'fdr' , 'type_fdr' , 'cov' , 'coi' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
+      { ''           , []        , NaN         , 0.05  , 'BH'       , {}    , NaN   , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
 
 % Since we don't know which optional parameters were set, we'll remove the
 % empty default values again so they don't cause trouble downstream
@@ -222,6 +230,16 @@ if ~isstruct(opt.interaction)
 elseif isempty(fieldnames(opt.interaction))
     % Option is empty, remove it
     opt = rmfield(opt, 'interaction');
+    n_interactions = 0;
+    interactions = {};
+else
+    n_interactions = size(opt.interaction,2);
+    interactions = cell(n_interactions, 1);
+    % Get the names of the interactions
+    for n_inter = 1:n_interactions
+        name_inter = opt.interaction(n_inter).label;
+        interactions{n_inter} = name_inter;
+    end 
 end
 
 if ~isstruct(opt.select)
@@ -231,18 +249,41 @@ elseif isempty(fieldnames(opt.select))
     opt = rmfield(opt, 'select');
 end
 
+% Load the model and check that the covariates and interactions are
+% correctly specified
+[model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
+% Check if covariates are specified
+if isempty(opt.cov)
+    % No covariates specified, take all covariates from the model
+    opt.cov = labels_y;
+    % Add all requested interactions, if there are any
+    if n_interactions > 0
+        opt.cov = [opt.cov, interactions];
+    end
+else
+    % Make sure all the specified covariates exist
+    n_cov = length(opt.cov);
+    for cov_id = 1:n_cov
+        % check if the covariate is available in the model or interactions
+        if ~ismember(opt.cov{cov_id}, labels_y) && ~ismember(opt.cov{cov_id}, interactions)
+            error('The requested covariate %s is not in FILES_IN.MODEL or designated as an interaction', opt.cov{cov_id});
+        end
+    end
+end
+% Check if all the specified interactions are also selected as covariates
+for n_inter = 1:n_interactions
+    if ~ismember(interactions{n_inter}, opt.cov)
+        warning('The interaction %s is requested but not specified in OPT.COV and will therefore not be added to the model', interactions{n_inter});
+    end
+end
+
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
     return
 end
 
 %% Read and prepare the group model
-if opt.flag_verbose
-    fprintf('Reading the group model ...\n');
-end
-
-% Read the model file and store it in the internal structure
-[model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
+% Store the model in the internal structure
 model_raw.x = model_data;
 model_raw.labels_x = labels_x;
 model_raw.labels_y = labels_y;
@@ -260,9 +301,14 @@ weights = tmp.weight_mat;
 
 % Prepare the variable for the p-value storage
 pvals = zeros(n_net, n_sbt);
+% The GLM results will be stored in a structure with the network names as
+% subfield labels
+glm_results = struct;
 
 % Iterate over each network and perform the normalization and fitting
 for net_id = 1:n_net
+    % Specify the name of the current network
+    net_name = sprintf('net_%d', net_id);
     % Select the weight matrix for the current network
     model_raw.y = weights(:, :, net_id);
     % Perform the model selection, adding the intercept and interaction,
@@ -281,7 +327,10 @@ for net_id = 1:n_net
     opt_glm.flag_residuals = true;
     [results, opt_glm] = niak_glm(model_norm, opt_glm);
     pvals(net_id, :) = results.pce;
+    glm_results.(net_name) = results;
 end
 
 % Run FDR on the p-values
 [fdr,test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
+
+%% Create figures of the results
