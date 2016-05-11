@@ -1,3 +1,4 @@
+
 function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_out, opt)
 % Extract individual subtype weights for predefined subtypes across a range
 % of networks
@@ -193,7 +194,6 @@ for net_id = 1:n_networks
 end
 
 %% Visualize the weight matrix for each network as a pdf
-
 for net_id = 1:n_networks
     network = networks{net_id};
     
