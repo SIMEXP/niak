@@ -2,7 +2,7 @@
 clear;
 
 %% Set up the paths
-base_path = '/home/surchs/GDrive/PhD/TeamStuff/Niak_Stuff/subtype_test_data/';
+base_path = 'C:\Users\Sebastian\Documents\GDrive\PhD\TeamStuff\Niak_Stuff\subtype_test_data';
 model_path = [base_path '/pheno/numeric_pheno.csv'];
 weight_path = [base_path '/out/seb/subtype_weights.mat'];
 out_path = [base_path 'out/seb/'];
