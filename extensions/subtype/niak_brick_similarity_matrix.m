@@ -9,7 +9,7 @@ function [files_in,files_out,opt] = niak_brick_similarity_matrix(files_in,files_
 % 
 % FILES_IN 
 %   (string) path to a .mat file containing an array (#subjects x 
-%   #vertices OR voxels OR regions) generated from subtype_preprocessing  
+%   #vertices OR voxels OR regions) generated from NIAK_BRICK_NETWORK_STACK  
 % 
 % FILES_OUT
 %   (structure) with the following fields:

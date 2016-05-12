@@ -310,20 +310,20 @@ if opt.flag_stats == 1
     
     % Pie chart visualization
     
-%     for pp = 1:length(contab(:,1))
-%         fh = figure('Visible', 'off');
-%         pc_val = contab(pp,:);
-%         pc = pie(pc_val);
-%         textc = findobj(pc,'Type','text');
-%         percval = get(textc,'String');
-%         labels = strcat(name_clus, {': '},percval');
-%         pc = pie(pc_val,labels);
-%         c_title = ['Group' num2str(list_gg(pp))];
-%         title(c_title);
-%         name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
-%         pc_out = fullfile(files_out, name_pc);
-%         print(fh, pc_out, '-dpng', '-r300');
-%     end
+    for pp = 1:length(contab(:,1))
+        fh = figure('Visible', 'off');
+        pc_val = contab(pp,:);
+        pc = pie(pc_val);
+        textc = findobj(pc,'Type','text');
+        percval = get(textc,'String');
+        labels = strcat(name_clus, {': '},percval');
+        pc = pie(pc_val,labels);
+        c_title = ['Group' num2str(list_gg(pp))];
+        title(c_title);
+        name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
+        pc_out = fullfile(files_out, name_pc);
+        print(fh, pc_out, '-dpng', '-r300');
+    end
     % Check if to be saved - improvable
     if ~strcmp(files_out.stats, 'gb_niak_omitted')
         save(files_out.stats,'model','stats')
