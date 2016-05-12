@@ -22,8 +22,8 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %
 %
 % FILES_OUT
-%   (string) absolute path to the output .mat
-%   file containing the association results.
+%   (string) absolute path to the output .mat file containing the
+%   association results.
 %
 % OPT
 %   (structure, optional) with the following fields:
@@ -47,19 +47,17 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %      (string, default 'BH') how the FDR is controled. See the METHOD
 %      argument of NIAK_FDR.
 %
-%   COV
-%       (cell array, default {}) the covariates that will enter the linear
-%       model as predictors of the weight matrix. If empty, all covariates 
-%       in FILES_IN.MODEL will be used.
+%   CONTRAST
+%      (structure, with arbitray fields <NAME>, which needs to correspond
+%      to the label of one column in the file FILES_IN.MODEL) The fields
+%      found in CONTRAST will determine which covariates enter the model:
 %
-%   COI
-%       (string) the Covariate of Interest. One covariate that is also a
-%       member of OPT.COV for which the association with the weight matrix
-%       will be investigated. Results and figures will be based on the
-%       association of this covariate of interest and the weight matrix.
+%      <NAME>
+%         (scalar) the weight of the covariate NAME in the contrast.
 % 
 %   INTERACTION
-%      (structure array, optional) with multiple entries and the following fields:
+%      (structure array, optional) with multiple entries and the following
+%      fields:
 %          
 %      LABEL
 %         (string) a label for the interaction covariate.
@@ -214,8 +212,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network' , 'test_name' , 'fdr' , 'type_fdr' , 'cov' , 'coi' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
-      { ''           , []        , NaN         , 0.05  , 'BH'       , {}    , NaN   , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
+      { 'folder_out' , 'network' , 'test_name' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
+      { ''           , []        , NaN         , 0.05  , 'BH'       , struct     , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
 
 %% Sanity Checks
 % Since we don't know which optional parameters were set, we'll remove the
@@ -248,6 +246,11 @@ end
 % correctly specified
 [model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
 % Check if covariates are specified
+if ~isstruct(opt.contrast)
+    %misspecified contrasts
+    error('OPT.CONTRAST has to be a structure');
+end
+
 if isempty(opt.cov)
     % No covariates specified, take all covariates from the model
     opt.cov = labels_y;
@@ -271,6 +274,8 @@ for n_inter = 1:n_interactions
         warning('The interaction %s is requested but not specified in OPT.COV and will therefore not be added to the model', interactions{n_inter});
     end
 end
+
+
 
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -311,9 +316,11 @@ for net_id = 1:n_net
     % since the model will be the same for each network. However, since we
     % also want select and potentially normalize the data, we do this every
     % time.
-    opt_model = struct;
     opt_model = rmfield(opt, {'folder_out', 'network', 'test_name',...
                               'flag_verbose', 'flag_test', 'fdr', 'type_fdr'});
+    opt_model.contrast.Age = 0;
+    opt_model.contrast.FD = 0;
+    opt_model.contrast.test1 = 1;
     [model_norm, opt_model] = niak_normalize_model(model_raw, opt_model);
     % Fit the model
     opt_glm = struct;
