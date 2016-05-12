@@ -242,47 +242,11 @@ elseif isempty(fieldnames(opt.select))
     opt = rmfield(opt, 'select');
 end
 
-% Load the model to check that the covariates are correctly specified
-[model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
 % Check if covariates are specified
 if ~isstruct(opt.contrast)
     %misspecified contrasts
     error('OPT.CONTRAST has to be a structure');
 end
-
-if isempty(opt.cov)
-    % No covariates specified, take all covariates from the model
-    opt.cov = labels_y;
-    n_cov = length(opt.cov);
-else
-    % Make sure all the specified covariates exist
-    n_cov = length(opt.cov);
-    for cov_id = 1:n_cov
-        % check if the covariate is available in the model or interactions
-        if ~ismember(opt.cov{cov_id}, labels_y)
-            error('The requested covariate %s could not be found in FILES_IN.MODEL', opt.cov{cov_id});
-        end
-    end
-end
-
-% Make sure that the covariate of interest is specified either as a
-% covariate or interaction
-if ~ismember(opt.coi, opt.cov) && ~ismember(opt.coi, interactions)
-    error('The covariate of interest %s is not a covariate in OPT.COV or an interaction in OPT.INTERACTION', opt.coi);
-end
-
-% Add the covariates to OPT.CONTRAST which is not exposed to the user
-opt.contrast = struct;
-for cov_id = 1:n_cov
-    cov_name = opt.cov{cov_id};
-    if strcmp(cov_name, opt.coi)
-        opt.contrast.(cov_name) = 1;
-    else
-        opt.contrast.(cov_name) = 0;
-    end
-end
-
-
 
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -290,6 +254,12 @@ if opt.flag_test == 1
 end
 
 %% Read and prepare the group model
+% Read the model data
+if opt.flag_verbose
+    fprintf('Reading the model data ...\n');
+end
+[model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
+
 % Store the model in the internal structure
 model_raw.x = model_data;
 model_raw.labels_x = labels_x;
@@ -297,7 +267,7 @@ model_raw.labels_y = labels_y;
 
 % Read the weight data
 if opt.flag_verbose
-    fprintf('Reading the weigfht data ...\n');
+    fprintf('Reading the weight data ...\n');
 end
 
 % Read the weights file
@@ -325,9 +295,6 @@ for net_id = 1:n_net
     % time.
     opt_model = rmfield(opt, {'folder_out', 'network', 'test_name',...
                               'flag_verbose', 'flag_test', 'fdr', 'type_fdr'});
-    opt_model.contrast.Age = 0;
-    opt_model.contrast.FD = 0;
-    opt_model.contrast.test1 = 1;
     [model_norm, opt_model] = niak_normalize_model(model_raw, opt_model);
     % Fit the model
     opt_glm = struct;
