@@ -422,7 +422,9 @@ end
 %% Copying and renaming the results of CIVET %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin','anat_nuc_stereonl','mask','mask_stereolin','classify','pve_wm','pve_gm','pve_csf','verify','mask_stereonl'};
+list_results = {'transformation_lin','transformation_nl','transformation_nl_grid','anat_nuc','anat_nuc_stereolin', ...
+                'anat_nuc_stereonl','mask','mask_stereolin','classify','pve_wm','pve_gm','pve_csf','verify', ...
+                'mask_stereonl'};
 
 for num_r = 1:length(list_results)
 

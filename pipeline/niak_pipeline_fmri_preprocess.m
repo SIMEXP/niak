@@ -540,7 +540,6 @@ if ischar(opt.template)
         template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_pure_wm_2mm.mnc.gz'];   % The white matter mask
         template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                               % The venticle mask 
         template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                    % The mask of the stem + basal artery + circle of Willis
-        opt.template = template;
     case 'mni_icbm152_nlin_asym_09a'
         template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                    % The T1 non-linear average
         template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                  % the functional stereotaxic space (is only using the FOV and resolution)
@@ -553,10 +552,14 @@ if ischar(opt.template)
         template.mask_wm      = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_2mm.mnc.gz'];   % The white matter mask
         template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                                % The venticle mask 
         template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                                     % The mask of the stem + basal artery + circle of Willis
-        opt.template = template;
     otherwise
         error('%s is an unkown template space',opt.template)
     end
+        
+        template.root_path    = [gb_niak_path_niak 'template']
+        template.space        = [opt.template]
+        opt.template = template;    
+
 end
 if ~ischar(opt.template)
     opt.template = psom_struct_defaults(opt.template, ...
