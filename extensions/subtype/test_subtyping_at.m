@@ -4,12 +4,12 @@ clear all
 
 %% set up path
 
-base_path = '/Users/AngelaTam/Desktop/subtype_pipeline_test/';
-stack_path = [base_path 'preventad_test/network_stack.mat'];
-sim_path = [base_path 'preventad_test/similarity_matrix.mat'];
-mask_path = [base_path 'subtype_test_data/func_mask_group_stereonl.nii.gz'];
-model_path = '/Users/AngelaTam/Desktop/adsf/model/preventad_model_20160408.csv';
-out_path = [base_path 'preventad_test/'];
+base_path = '/Users/AngelaTam/Desktop/subtype_pipeline_test/subtype_test_data/';
+stack_path = [base_path 'pipeline/network_stack.mat'];
+sim_path = [base_path 'pipeline/similarity_matrix.mat'];
+mask_path = [base_path 'func_mask_group_stereonl.nii.gz'];
+model_path = [base_path 'niak_pheno.csv'];
+out_path = [base_path 'pipeline/'];
 
 %% Set up inputs
 files_in = struct;
