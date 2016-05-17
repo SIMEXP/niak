@@ -244,8 +244,6 @@ if ~isstruct(opt.interaction)
 elseif isempty(fieldnames(opt.interaction))
     % Option is empty, remove it
     opt = rmfield(opt, 'interaction');
-    n_interactions = 0;
-    interactions = {};
 else
     n_interactions = size(opt.interaction,2);
     interactions = cell(n_interactions, 1);
@@ -314,13 +312,13 @@ for net_id = 1:n_net
     % time.
     opt_model = rmfield(opt, {'folder_out', 'network', 'test_name',...
                               'flag_verbose', 'flag_test', 'fdr', 'type_fdr'});
-    [model_norm, opt_model] = niak_normalize_model(model_raw, opt_model);
+    [model_norm, ~] = niak_normalize_model(model_raw, opt_model);
     % Fit the model
     opt_glm = struct;
     opt_glm.test  = 'ttest';
     opt_glm.flag_beta = true; 
     opt_glm.flag_residuals = true;
-    [results, opt_glm] = niak_glm(model_norm, opt_glm);
+    [results, ~] = niak_glm(model_norm, opt_glm);
     pvals(net_id, :) = results.pce;
     glm_results.(net_name) = results;
 end
