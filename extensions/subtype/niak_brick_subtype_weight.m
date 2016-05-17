@@ -115,8 +115,8 @@ opt = psom_struct_defaults(opt,...
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'weights'                , 'weights_csv'                                              , 'weights_pdf'                                                  },...
-                { [path_out 'subtype_weights.mat'] , make_paths([path_out 'sbt_weights_net_%d.csv'], opt.scales) , make_paths([path_out 'fig_sbt_weights_net_%d.pdf'], opt.scales) });
+                { 'weights'                        , 'weights_csv'                                              , 'weights_pdf'                                                  },...
+                { [path_out 'subtype_weights.mat'] , make_paths(path_out, 'sbt_weights_net_%d.csv', opt.scales) , make_paths(path_out, 'fig_sbt_weights_net_%d.pdf', opt.scales) });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'weights'         , 'weights_csv'     , 'weights_pdf' },...
@@ -212,13 +212,13 @@ for net_id = 1:n_networks
     print(fig, file_name, '-dpdf');
 end
 
-function path_array = make_paths(template, scales)
+function path_array = make_paths(out_path, template, scales)
     % Get the number of networks
     n_networks = length(scales);
     path_array = cell(n_networks, 1);
     for sc_id = 1:n_networks
         sc = scales(sc_id);
-        path = sprintf(template, sc);
+        path = fullfile(out_path, sprintf(template, sc));
         path_array{sc_id, 1} = path;
     end
 return
