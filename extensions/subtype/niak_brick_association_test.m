@@ -281,11 +281,13 @@ pvals = zeros(n_net, n_sbt);
 % The GLM results will be stored in a structure with the network names as
 % subfield labels
 glm_results = struct;
+net_names = cell(n_net);
 
 % Iterate over each network and perform the normalization and fitting
 for net_id = 1:n_net
     % Specify the name of the current network
     net_name = sprintf('net_%d', net_id);
+    net_names{net_id} = net_name;
     % Select the weight matrix for the current network
     model_raw.y = weights(:, :, net_id);
     % Perform the model selection, adding the intercept and interaction,
@@ -307,6 +309,119 @@ for net_id = 1:n_net
 end
 
 % Run FDR on the p-values
-[fdr,test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
+[fdr,fdr_test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
 
-%% Create figures of the results
+% Save the model and FDR test
+%save(files_out, 'fdr', 'fdr_test', 'results');
+
+%% Create result summaries
+[net_ids, sbt_ids] = find(fdr_test);
+% Sort the subtypes by the network IDs
+[~, ind] = sort(net_ids);
+net_ids = net_ids(ind);
+sbt_ids = sbt_ids(ind);
+% Check if any results passed FDR
+if isempty(net_ids)
+    warning('No results passed FDR');
+    out_str = 'No results passed FDR';
+else
+    out_str = 'Network,Subtype,Association,T_value,P_value,FDR\n';
+    % Iterate over the significant findings
+    for res_id = 1:length(net_ids)
+        net_id = net_ids(res_id);
+        sbt_id = sbt_ids(res_id);
+        net_name = net_names{net_id};
+        % Get the corresponding T-, p-, and FDR-values
+        t_val = glm_results.(net_name).ttest(sbt_id);
+        p_val = pvals(net_id, sbt_id);
+        fdr_val = fdr(net_id, sbt_id);
+        % Determine the direction of the association
+        if t_val > 0
+            direction = 'positive';
+        else
+            direction = 'negative';
+        end
+        % Assemble the out string
+        out_str = [out_str sprintf('%s,%d,%s,%d,%d,%d\n', net_name, sbt_id,...
+                                                         direction, t_val,...
+                                                         p_val,fdr_val)];
+    end
+end
+
+% Save the string to file
+% fid = fopen(files_out,'wt');
+% fprintf(fid, out_str);
+% fclose(fid);
+
+%% Visualize the weights and covariate of interest
+% First, determine if the coi is continuous or categorical - currently only
+% works if there is not more than one covariate of interest
+coi_name = model_norm.labels_y{logical(model_norm.c)};
+coi = model_norm.x(:, logical(model_norm.c));
+% Get the number unique elements of the coi
+coi_unique = unique(coi);
+n_coi_unique = length(coi_unique);
+% If there are fewer than 3 unique values, this is categorical
+if n_coi_unique < 3
+    % This is a categorical variable
+    coi_cat = true;
+    % Make an index of the coi
+    coi_ind = coi==coi_unique(1);
+else
+    % THis is a dimensional variable
+    coi_cat = false;
+end
+
+% Determine the number of rows and columns for the subyptes
+n_cols = floor(sqrt(n_sbt));
+n_rows = ceil(n_sbt/n_cols);
+
+% Make a figure for each network
+for net_id = 1:n_net
+    % Start with the figure
+    fh = figure;
+    % Go through the subtypes
+    for sbt_id = 1:n_sbt
+        % Get the subtype weights
+        sbt_weights = weights(:, sbt_id, net_id);
+        % Create the subplot
+        subplot(n_rows, n_cols, sbt_id);
+        ax = gca;
+        % Chose whether to plot categorical or dimensional data
+        if coi_cat
+            % Work around the incompatibilities between Matlab and Octave for
+            % the boxplot
+            is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
+            % Generate the boxplots
+            if is_octave
+                % The groups are supposed to go in a cell
+                boxplot({sbt_weights(coi_ind), sbt_weights(~coi_ind)}); 
+            else
+                % The groups can be in a vector
+                boxplot(sbt_weights, coi_ind);
+            end
+            % Set the x axis ticks and labels
+            ax.XTickLabel = cellstr(num2str(coi_unique));
+        else
+            % This is a dimensional variable
+            % Fit a regression line between the weights and the covariate
+            plot_model.x = [ones(size(coi)), coi];
+            plot_model.y = sbt_weights;
+            [res, ~] = niak_glm(plot_model, struct('flag_beta', true));
+            x_fit = linspace(min(coi),max(coi),10);
+            y_fit = res.beta(1) + x_fit.*res.beta(2);
+            % Make the scatterplot
+            hold on;
+            plot(coi, sbt_weights, '.k');
+            plot(x_fit, y_fit, 'r');
+            hold off;
+            disp('done');
+        end
+    end
+end
+    
+
+
+
+
+end
