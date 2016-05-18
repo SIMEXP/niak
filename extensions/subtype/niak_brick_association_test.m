@@ -286,14 +286,14 @@ model_raw.labels_x = labels_x;
 model_raw.labels_y = labels_y;
 
 % Prepare the variable for the p-value storage
-pvals = zeros(n_net, n_sbt);
+pvals = zeros(opt.scale, n_sbt);
 % The GLM results will be stored in a structure with the network names as
 % subfield labels
 glm_results = struct;
-net_names = cell(n_net);
+net_names = cell(opt.scale);
 
 % Iterate over each network and perform the normalization and fitting
-for net_id = 1:n_net
+for net_id = 1:opt.scale
     % Specify the name of the current network
     net_name = sprintf('net_%d', net_id);
     net_names{net_id} = net_name;
@@ -413,7 +413,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     n_rows = ceil(n_sbt/n_cols);
 
     % Make a figure for each network
-    for net_id = 1:n_net
+    for net_id = 1:opt.scale
         % Start with the figure
         fh = figure('Visible', 'off');
         title(sprintf('Network %d, Association w %s', net_id, coi_name));
