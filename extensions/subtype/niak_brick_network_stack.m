@@ -41,8 +41,6 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %
 %   REGRESS_CONF 
 %       (Cell of string, Default {}) A list of variables name to be regressed out.
-%
-%   FLAG_CONF
 %   
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -128,14 +126,13 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' },...
-      { ''           , []        , {}             , true           , true        , false       });
+      { 'folder_out' , 'network' , 'regress_conf' , 'flag_verbose' , 'flag_test' },...
+      { ''           , []        , {}             , true           , false       });
 
 % Check the output specification
 if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
     if isempty(opt.folder_out)
         error('Neither FILES_OUT nor OPT.FOLDER_OUT are specified. Won''t generate any outputs');
-        files_out = 'gb_niak_omitted';
     else
         files_out = [niak_full_path(opt.folder_out) 'network_stack.mat'];
     end
@@ -238,7 +235,7 @@ end
 
 %% Build the outputs
 % Decide which of the two stacks to save
-if opt.flag_conf
+if ~isempty(opt.regress_conf)
     stack = conf_stack;
 else
     stack = raw_stack;
