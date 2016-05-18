@@ -44,9 +44,6 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %       (int array, default all networks) A list of networks number in
 %       individual maps
 %
-%   TEST_NAME
-%       (string) the name of the current analysis
-%
 %   FDR
 %      (scalar, default 0.05) the level of acceptable false-discovery rate
 %      for the t-maps.
@@ -221,8 +218,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network'  'test_name' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
-      { ''           , []        , NaN         , 0.05  , 'BH'       , struct     , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
+      { 'folder_out' , 'network' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
+      { ''           , []        , 0.05  , 'BH'       , struct     , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
 
 % FILES_OUT
 if ~isempty(opt.folder_out)
