@@ -55,9 +55,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %
 %   CONTAB
 %       (string, default 'chi2_contingency_table.csv') path to ...
-%
-%   PIE
-%       (string, default XXX) Implementation missing!
 % 
 % OPT 
 %   (structure) with the following fields:
@@ -151,8 +148,8 @@ opt = psom_struct_defaults(opt,...
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                , 'pie' },...
-                { [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] , ''    });
+                { 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                },...
+                { [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'stats'           , 'contab'          , 'pie'             },...
@@ -308,9 +305,10 @@ if opt.flag_stats == 1
     kk = min(n_row,n_col); 
     stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
     
-    % Pie chart visualization
+    files_out.pie = make_paths(opt.folder_out, 'pie_chart_%d.png', 1:n_row);
     
-    for pp = 1:length(contab(:,1))
+    % Pie chart visualization
+    for pp = 1:n_row
         fh = figure('Visible', 'off');
         pc_val = contab(pp,:);
         pc = pie(pc_val);
@@ -320,9 +318,7 @@ if opt.flag_stats == 1
         pc = pie(pc_val,labels);
         c_title = ['Group' num2str(list_gg(pp))];
         title(c_title);
-        name_pc = ['piechart_group' num2str(list_gg(pp)) '.png'];
-        pc_out = fullfile(files_out, name_pc);
-        print(fh, pc_out, '-dpng', '-r300');
+        print(fh, files_out.pie{pp}, '-dpng', '-r300');
     end
     % Check if to be saved - improvable
     if ~strcmp(files_out.stats, 'gb_niak_omitted')
@@ -337,6 +333,17 @@ if ~strcmp(files_out.subtype, 'gb_niak_omitted')
 end
 end
 
+function path_array = make_paths(out_path, template, scales)
+    % Get the number of networks
+    n_networks = length(scales);
+    path_array = cell(n_networks, 1);
+    for sc_id = 1:n_networks
+        sc = scales(sc_id);
+        path = fullfile(out_path, sprintf(template, sc));
+        path_array{sc_id, 1} = path;
+    end
+return
+end
 
 
 
