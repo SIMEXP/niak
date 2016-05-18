@@ -63,6 +63,9 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %   ASSOCIATION
 %       (struct, optional) with the following fields:
 %
+%       SCALE
+%           (integer, default OPT.SCALE) ...
+%
 %       FDR
 %           (scalar, default 0.05) the level of acceptable false-discovery rate
 %       for the t-maps.
@@ -217,8 +220,8 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
 
 % Association options
 opt.association = psom_struct_defaults(opt.association,...
-                  { 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
-                  { 0.05  , 'BH'       , struct()   , struct()      , true          , false         , struct() , true             });
+                  { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
+                  { opt.scale , 0.05  , 'BH'       , struct()   , struct()      , true          , false         , struct() , true             });
          
 %% Construct the pipeline
 pipe = struct;
@@ -252,6 +255,8 @@ for net_id = 1:opt.scale;
     sim_out.matrix = [network_folder filesep sprintf('network_%d_similarity_matrix.mat', net_id)];
     pipe = psom_add_job(pipe, sim_name, 'niak_brick_similarity_matrix',...
                         sim_in, sim_out, sim_opt);
+    % Assign output to weight extraction step
+    weight_in.sim_matrix.(net_name) = pipe.(sim_name).files_out.matrix;
     
     % Subtyping
     sub_name = sprintf('subtype_%d', net_id);
