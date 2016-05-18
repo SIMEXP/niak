@@ -56,7 +56,7 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %      argument of NIAK_FDR.
 %
 %   CONTRAST
-%      (structure, with arbitray fields <NAME>, which needs to correspond
+%      (structure, with fields <NAME>, which needs to correspond
 %      to the label of one column in the file FILES_IN.MODEL) The fields
 %      found in CONTRAST will determine which covariates enter the model:
 %
@@ -216,7 +216,7 @@ end
 
 opt = psom_struct_defaults(opt,...
       { 'folder_out' , 'scale' , 'network' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
-      { ''           , NaN     , []        , 0.05  , 'BH'       , struct     , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
+      { ''           , NaN     , []        , 0.05  , 'BH'       , NaN        , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
 
 % FILES_OUT
 if ~isempty(opt.folder_out)
@@ -285,6 +285,17 @@ model_raw.x = model_data;
 model_raw.labels_x = labels_x;
 model_raw.labels_y = labels_y;
 
+% Read the weight data
+if opt.flag_verbose
+    fprintf('Reading the weight data ...\n');
+end
+
+% Read the weights file
+tmp = load(files_in.weight);
+weights = tmp.weight_mat;
+% Figure out how many cases we are dealing with
+[n_sub, n_sbt, n_net] = size(weights);
+
 % Prepare the variable for the p-value storage
 pvals = zeros(opt.scale, n_sbt);
 % The GLM results will be stored in a structure with the network names as
@@ -305,7 +316,7 @@ for net_id = 1:opt.scale
     % also want select and potentially normalize the data, we do this every
     % time.
     opt_model = rmfield(opt, {'folder_out', 'network', 'flag_verbose', ...
-                              'flag_test', 'fdr', 'type_fdr'});
+                              'flag_test', 'fdr', 'type_fdr', 'scale'});
     [model_norm, ~] = niak_normalize_model(model_raw, opt_model);
     % Fit the model
     opt_glm = struct;

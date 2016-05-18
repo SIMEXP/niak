@@ -75,7 +75,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           argument of NIAK_FDR.
 %
 %       CONTRAST
-%           (structure, with arbitray fields <NAME>, which needs to correspond
+%           (structure, with fields <NAME>, which needs to correspond
 %           to the label of one column in the file FILES_IN.MODEL) The fields
 %           found in CONTRAST will determine which covariates enter the model:
 %
@@ -221,7 +221,7 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
 % Association options
 opt.association = psom_struct_defaults(opt.association,...
                   { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
-                  { opt.scale , 0.05  , 'BH'       , struct()   , struct()      , true          , false         , struct() , true             });
+                  { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
          
 %% Construct the pipeline
 pipe = struct;
