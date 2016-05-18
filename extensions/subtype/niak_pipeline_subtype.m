@@ -10,8 +10,8 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 % FILES_IN (structure) with the following fields :
 %
 %   DATA.<SUBJECT>
-%       (string) Containing the individual map (e.g. rmap_part,stability_maps, etc)
-%       NB: assumes there is only 1 .nii.gz or mnc.gz map per individual.
+%       (string) Containing the individual map (e.g. rmap_part,stability_maps, 
+%       etc) NB: assumes there is only 1 .nii.gz or mnc.gz map per individual.
 %
 %   MASK
 %       (string) path to mask of the voxels that will be included in the 
@@ -42,7 +42,6 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 %   SUBTYPE
 %       (struct, optional) with the following fields:
-%'nb_subtype' , 'sub_map_type' , 'group_col_id' , 'flag_stats'
 %
 %       NB_SUBTYPE
 %           (integer, default 2) the number of subtypes to extract
@@ -60,6 +59,93 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       FLAG_STATS
 %           (boolean, default true) if set to true, stats will be computed for
 %           the extracted subtypes.
+%
+%   ASSOCIATION
+%       (struct, optional) with the following fields:
+%
+%       FDR
+%           (scalar, default 0.05) the level of acceptable false-discovery rate
+%       for the t-maps.
+%
+%       TYPE_FDR
+%           (string, default 'BH') how the FDR is controled. See the METHOD
+%           argument of NIAK_FDR.
+%
+%       CONTRAST
+%           (structure, with arbitray fields <NAME>, which needs to correspond
+%           to the label of one column in the file FILES_IN.MODEL) The fields
+%           found in CONTRAST will determine which covariates enter the model:
+%
+%           <NAME>
+%               (scalar) the weight of the covariate NAME in the contrast.
+%
+%       INTERACTION
+%           (structure array, optional) with multiple entries and the following
+%           fields:
+%          
+%           LABEL
+%               (string) a label for the interaction covariate.
+%
+%           FACTOR
+%               (cell of string) covariates that are being multiplied together 
+%               to build the interaction covariate.  There should be only one
+%               covariate associated with each label.
+%
+%           FLAG_NORMALIZE_INTER
+%               (boolean,default true) if FLAG_NORMALIZE_INTER is true, the
+%               factor of interaction will be normalized to a zero mean and unit
+%               variance before the interaction is derived (independently of
+%               OPT.<LABEL>.GROUP.NORMALIZE below).
+%
+%       NORMALIZE_X
+%           (structure or boolean, default true) If a boolean and true, all
+%           covariates of the model are normalized (see NORMALIZE_TYPE below).
+%           If a structure, the fields <NAME> need to correspond to the label of
+%           a column in the file FILES_IN.MODEL):
+%
+%           <NAME>
+%               (arbitrary value) if <NAME> is present, then the covariate is
+%               normalized (see NORMALIZE_TYPE below).
+%
+%       NORMALIZE_Y
+%           (boolean, default false) If true, the data is normalized (see
+%           NORMALIZE_TYPE below).
+%
+%       NORMALIZE_TYPE
+%           (string, default 'mean') Available options:
+%               'mean': correction to a zero mean (for each column) 'mean_var':
+%               correction to a zero mean and unit variance (for each column)
+%
+%       SELECT
+%           (structure, optional) with multiple entries and the following
+%           fields:
+%
+%           LABEL
+%               (string) the covariate used to select entries *before
+%               normalization*
+%
+%           VALUES
+%               (vector, default []) a list of values to select (if empty, all
+%               entries are retained).
+%
+%           MIN
+%               (scalar, default []) only values higher (strictly) than MIN are
+%               retained.
+%
+%           MAX
+%               (scalar, default []) only values lower (strictly) than MAX are
+%               retained.
+%
+%           OPERATION
+%               (string, default 'or') the operation that is applied to select
+%               the frames. Available options: 'or' : merge the current 
+%               selection SELECT(E) with the result of the previous one. 'and' :
+%               intersect the current selection SELECT(E) with the result of the
+%               previous one.
+%
+%       FLAG_INTERCEPT
+%           (boolean, default true) if FLAG_INTERCEPT is true, a constant
+%           covariate will be added to the model.
 %
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -111,8 +197,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'preproc' , 'subtype' , 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , true           , false       });
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
@@ -129,6 +215,11 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
              { 'nb_subtype' , 'sub_map_type' , 'group_col_id' , 'flag_stats' },...
              { 2            , 'mean'         , 0              , true         });
 
+% Association options
+opt.association = psom_struct_defaults(opt.association,...
+                  { 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
+                  { 0.05  , 'BH'       , struct()   , struct()      , true          , false         , struct() , true             });
+         
 %% Construct the pipeline
 pipe = struct;
 % Prepare the input structure for the subtype weight extraction step
@@ -142,7 +233,7 @@ for net_id = 1:opt.scale;
     network_folder = [opt.folder_out filesep net_name];
     % Network extraction and preprocessing
     pre_name = sprintf('stack_%d', net_id);
-    pre_opt = opt.preproc;
+    pre_opt = opt.stack;
     % Set the network
 	pre_opt.network = net_id;
     pre_in = files_in;
@@ -187,6 +278,16 @@ weight_opt.folder_out = opt.folder_out;
 weight_out.weights = [opt.folder_out filesep 'subtype_weights.mat'];
 pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
+                
+% Set up the association test options
+assoc_opt = opt.association;
+assoc_opt.folder_out = opt.folder_out;
+assoc_in = struct;
+assoc_in.weight = pipe.weight_extraction.files_out.weights;
+assoc_in.model = files_in.model;
+assoc_out = struct;
+pipe = psom_add_job(pipe, 'association_test', 'niak_brick_association_test',...
+                    assoc_in, assoc_out, assoc_opt);
 
 %% Run the pipeline
 if ~opt.flag_test

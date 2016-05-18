@@ -307,8 +307,8 @@ for net_id = 1:n_net
     % since the model will be the same for each network. However, since we
     % also want select and potentially normalize the data, we do this every
     % time.
-    opt_model = rmfield(opt, {'folder_out', 'network', 'test_name',...
-                              'flag_verbose', 'flag_test', 'fdr', 'type_fdr'});
+    opt_model = rmfield(opt, {'folder_out', 'network', 'flag_verbose', ...
+                              'flag_test', 'fdr', 'type_fdr'});
     [model_norm, ~] = niak_normalize_model(model_raw, opt_model);
     % Fit the model
     opt_glm = struct;
