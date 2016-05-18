@@ -100,7 +100,7 @@ end
 % FILES_IN
 files_in = psom_struct_defaults(files_in,...
            { 'data' , 'subtype' , 'sim_matrix' },...
-           { NaN    , NaN       , NaN});
+           { NaN    , NaN       , NaN          });
 
 % Options
 if nargin < 3
