@@ -33,7 +33,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       FILES_IN.DATA. E.g. a brain partition of 5 networks is considered
 %       to be at scale 5.
 %
-%   PREPROC
+%   STACK
 %       (struct, optional) with the following fields:
 %
 %       REGRESS_CONF 
@@ -102,9 +102,9 @@ opt.psom = psom_struct_defaults(opt.psom,...
            { [opt.folder_out filesep 'logs'] });
 
 % Preprocessing options
-opt.preproc = psom_struct_defaults(opt.preproc,...
-              { 'regress_conf' },...
-              { {}             });
+opt.stack = psom_struct_defaults(opt.stack,...
+            { 'regress_conf' },...
+            { {}             });
           
 % Subtype options
 opt.subtype = psom_struct_defaults(opt.subtype,...
