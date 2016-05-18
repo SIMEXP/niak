@@ -40,6 +40,9 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %       (string, default '') if not empty, this specifies the path where
 %       outputs are generated
 %
+%   SCALE
+%       (integer) the scale of the network solutions
+%
 %   NETWORK
 %       (int array, default all networks) A list of networks number in
 %       individual maps
@@ -205,12 +208,6 @@ end
 files_in = psom_struct_defaults(files_in,...
            { 'weight' , 'model' },...
            { NaN      , NaN     });
-       
-% Need to read the weights for default values
-tmp = load(files_in.weight);
-weights = tmp.weight_mat;
-% Figure out how many cases we are dealing with
-[n_sub, n_sbt, n_net] = size(weights);
 
 % Options
 if nargin < 3
@@ -218,15 +215,15 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
-      { ''           , []        , 0.05  , 'BH'       , struct     , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
+      { 'folder_out' , 'scale' , 'network' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'normalize_type' , 'select' , 'flag_intercept' , 'flag_filter_nan' , 'flag_verbose' , 'flag_test' },...
+      { ''           , NaN     , []        , 0.05  , 'BH'       , struct     , struct        , true          , false         ,  'mean'          , struct   , true             , true              , true           , false       });
 
 % FILES_OUT
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'stats'                            , 'csv'                             , 'figures'                                                     },...
-                { [path_out 'association_stats.mat'] , [path_out 'results_overview.csv'] , make_paths(path_out, 'fig_association_net_%d.png', 1:n_net) });
+                { 'stats'                            , 'csv'                             , 'figures'                                                       },...
+                { [path_out 'association_stats.mat'] , [path_out 'results_overview.csv'] , make_paths(path_out, 'fig_association_net_%d.png', 1:opt.scale) });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'stats'           , 'csv'             , 'figures'         },...
@@ -266,8 +263,8 @@ end
 
 % Check that we have an output name for every figure
 if ~strcmp(files_out.figures, 'gb_niak_omitted')
-    if ~length(files_out.figures) == n_net
-        error('I have %d networks from FILES_IN.WEIGHTS but %d specified output files for FILES_OUT.FIGURES', n_nets, length(files_out.figures));
+    if ~length(files_out.figures) == opt.scale
+        error('I have %d networks from FILES_IN.WEIGHTS but %d specified output files for FILES_OUT.FIGURES', opt.scale, length(files_out.figures));
     end
 end
 
