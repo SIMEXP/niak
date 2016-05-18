@@ -38,10 +38,28 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 %       REGRESS_CONF 
 %           (Cell of string, Default {}) A list of variable names to be 
-%`          regressed out.
+%           regressed out.
 %
-%   SIMMAT
+%   SUBTYPE
 %       (struct, optional) with the following fields:
+%'nb_subtype' , 'sub_map_type' , 'group_col_id' , 'flag_stats'
+%
+%       NB_SUBTYPE
+%           (integer, default 2) the number of subtypes to extract
+%
+%       SBT_MAP_TYPE
+%           (string, default 'mean') the model for the subtype map. Options are:
+%               'mean'
+%               'median'
+%
+%       GROUP_COL
+%           (integer, default 0) the index of the group column in FILES_IN.MODEL
+%           that the confusion table is based on. If OPT.SUBTYPE.FLAG_STATS is
+%           set to true, then this value has to be a non-zero integer.
+%
+%       FLAG_STATS
+%           (boolean, default true) if set to true, stats will be computed for
+%           the extracted subtypes.
 %
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
