@@ -70,7 +70,7 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
                 { 'matrix'                           , 'sim_fig'                          , 'den_fig'                   },...
-                { [path_out 'similarity_matrix.mat'] , [path_out 'similarity_matrix.png'] , [path_out 'dendrogram.png'] });
+                { [path_out 'similarity_matrix.mat'] , [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'matrix'          , 'sim_fig'         , 'den_fig'         },...
@@ -100,19 +100,19 @@ subj_order = niak_hier2order(hier);
 rm = sim_matrix(subj_order,subj_order);
 
 if ~strcmp(files_out.sim_fig, 'gb_niak_omitted')
-    %% Save the similarity matrix as png
-    opt_png.limits = [-1 1];
-    opt_png.color_map = 'hot_cold';
+    %% Save the similarity matrix as pdf
+    opt_pdf.limits = [-0.4 0.4];
+    opt_pdf.color_map = 'hot_cold';
     fh1 = figure('Visible', 'off');
-    niak_visu_matrix(rm,opt_png);
-    print(fh1, files_out.sim_fig,'-dpng','-r300');
+    niak_visu_matrix(rm,opt_pdf);
+    print(fh1, files_out.sim_fig,'-dpdf','-r300');
 end
 
 if ~strcmp(files_out.den_fig, 'gb_niak_omitted')
-    %% Generate and save dendrogram as png
+    %% Generate and save dendrogram as pdf
     fh2 = figure('Visible', 'off');
     niak_visu_dendrogram(hier);
-    print(fh2, files_out.den_fig,'-dpng','-r300');
+    print(fh2, files_out.den_fig,'-dpdf','-r300');
 end
 
 if ~strcmp(files_out.matrix, 'gb_niak_omitted')
