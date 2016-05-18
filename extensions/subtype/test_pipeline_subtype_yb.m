@@ -2,11 +2,11 @@
 clear;
 
 %% Set up the paths
-base_path = '/media/yassinebha/database23/Drive/subtype_test_data';
+base_path = '/home/yassinebha/Drive/subtype_test_data';
 pheno_path = [base_path '/pheno/numeric_pheno.csv'];
 data_path = [base_path '/raw'];
 mask_path = [base_path '/raw/func_mask_group_stereonl.mnc.gz'];
-out_path = [base_path '/out/ybh/test'];
+out_path = [base_path '/out/ybh_01/test'];
 
 %% Configure the inputs
 pheno = niak_read_csv_cell(pheno_path);
