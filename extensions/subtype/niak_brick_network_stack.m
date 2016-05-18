@@ -205,7 +205,11 @@ for in_id = 1:n_input
     % Get the name for the input field we need
     in_name = subject_list{in_id};
     % Load the corresponding path
-    [~, vol] = niak_read_vol(files_in.data.(in_name));
+    read_file = files_in.data.(in_name);
+    if opt.flag_verbose
+        fprintf('Reading %s now ...\n', read_file);
+    end
+    [~, vol] = niak_read_vol(read_file);
     
     % Loop through the networks and mask the thing
     for net_id = 1:length(opt.network)
