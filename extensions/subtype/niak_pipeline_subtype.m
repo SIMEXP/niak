@@ -40,11 +40,6 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           (Cell of string, Default {}) A list of variable names to be 
 %`          regressed out.
 %
-%       FLAG_CONF
-%           (boolean, default false) If true, confounds are regressed based
-%           on the columns select by OPT.PREPROC.REGRESS_CONF in
-%           FILES_IN.MODEL
-%
 %   SIMMAT
 %       (struct, optional) with the following fields:
 %
@@ -108,8 +103,8 @@ opt.psom = psom_struct_defaults(opt.psom,...
 
 % Preprocessing options
 opt.preproc = psom_struct_defaults(opt.preproc,...
-              { 'regress_conf' , 'flag_conf' },...
-              { {}             , false       });
+              { 'regress_conf' },...
+              { {}             });
           
 % Subtype options
 opt.subtype = psom_struct_defaults(opt.subtype,...
