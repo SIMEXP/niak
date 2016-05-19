@@ -60,19 +60,20 @@ switch gb_niak_format_demo
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        file_anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
+        file_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
         
     case 'minc1'
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        file_anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
+        file_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
         
     otherwise 
-        
+    
         error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
 end
+
 
 files_out.transformation_lin = '';
 files_out.transformation_nl = '';
@@ -84,6 +85,6 @@ files_out.mask_stereolin = '';
 files_out.mask_stereonl = '';
 files_out.classify = '';
 
-opt.nu_correct.arg = '-distance 50';
+opt.nu_correct.arg = '-distance 200';
 
-niak_brick_t1_preprocess(file_anat,files_out,opt);
+niak_brick_t1_preprocess(file_in,files_out,opt);

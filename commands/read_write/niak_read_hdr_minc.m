@@ -235,6 +235,9 @@ if strcmp(hdr.type,'minc1')
     [flag,str_info] = system(cat(2,'mincinfo ',file_name));
     cell_lines = niak_string2lines(str_info);
     str_dim = cell_lines{niak_find_str_cell(cell_lines,'image dimensions')};
+    length (cell_lines{niak_find_str_cell(cell_lines,'image dimensions')})
+   
+    disp( str_dim)
 end
 
 if strcmp(hdr.type,'minc2')

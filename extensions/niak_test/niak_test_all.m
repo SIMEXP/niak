@@ -153,6 +153,9 @@ opt.psom.path_logs = [path_test.result 'logs'];
 %% Initialization
 opt_pipe.flag_test = true;
 opt_pipe.flag_target = opt.flag_target;
+%%
+opt_pipe.minc_standard.scanner_strength = '3T';
+%%
 pipe = struct;
 
 %% Add the test of the preprocessing pipeline
@@ -182,6 +185,14 @@ else
     % In test mode, use the provided target to feed into the region growing pipeline
     files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
 end
+%%% DEBUG !!!
+if ~opt.flag_test
+    status = psom_run_pipeline(pipe,opt.psom);
+else 
+    status = [];
+end
+return
+%%%
 opt_pipe = struct;
 opt_pipe.flag_test = true;
 opt_pipe.flag_target = opt.flag_target;

@@ -340,8 +340,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %   MINC_STANDARD (structure)
 %       If provided, NIAK will process the T1 image, with the 
 %       minc toolkit standard_pipeline (https://github.com/BIC-MNI/bic-pipelines)        
-%       SCANNER_STRENGHT
-%       Either 1.5T of 3T, will set the N3 spline distance parameters for the 
+%       
+%       SCANNER_STRENGTH
+%       Either 1.5T (default) of 3T, will set the N3 spline distance parameters for the 
 %       non uniform correction
 % _________________________________________________________________________
 % OUTPUTS : 
@@ -455,8 +456,8 @@ end
 files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correct format
 
 %% OPT
-list_fields    = { 'minc_standard', 'civet'           , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = {  false         ,'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'minc_standard'   , 'civet'          , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' ,'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -510,7 +511,7 @@ fmri_s = niak_fmri2struct(fmri,label);
 [path_f,name_f,ext_f] = niak_fileparts(fmri{1});
 
 %% T1 preprocess
-if opt.minc_standard
+if isstruct(opt.minc_standard)
     % Use standard_pipeline.pl from minc toolkit
     if opt.flag_verbose
         t1 = clock;
@@ -519,21 +520,22 @@ if opt.minc_standard
 
     clear job_in job_out job_opt
     job_in.anat = files_in.anat;
-    job_in.template.root = opt.template.root
-    job_in.template.space = opt.template.space
   
     job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
-    job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
-    job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
-    job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
-    job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f];
+    job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid' ext_f];
+    job_out.anat_clp                = [opt.folder_anat 'anat_'   subject '_clp_nativet1' ext_f];
+    job_out.anat_stereolin      = [opt.folder_anat 'anat_'   subject '_stereolin' ext_f];
+    job_out.anat_stereonl       = [opt.folder_anat 'anat_'   subject '_stereonl' ext_f];
     job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
-    job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
+
     job_opt                         = opt.t1_preprocess;
     job_opt.folder_out              = opt.folder_anat;
-    
+    job_opt.scanner_strength        = opt.minc_standard.scanner_strength
+%    job_opt.template_root = opt.template.root
+%    job_opt.template_space = opt.template.space
+
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess_minc',job_in,job_out,job_opt);
     
     if opt.flag_verbose        
