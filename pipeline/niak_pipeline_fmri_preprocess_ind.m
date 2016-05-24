@@ -344,6 +344,10 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       SCANNER_STRENGTH
 %       Either 1.5T (default) of 3T, will set the N3 spline distance parameters for the 
 %       non uniform correction
+%       
+%       SYMETRIC_TEMPLATE (bool)
+%       It True, will chose symetric ICBM 152 09c symetric template, if false, 
+%       will use the asymetric ones. 
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -473,6 +477,13 @@ if ~ischar(opt.civet)
     opt.civet = psom_struct_defaults(opt.civet,list_fields,list_defaults);
 end
 
+if ~ischar(opt.minc_standard)
+    list_fields   = { 'scanner_strength' , 'symetric_template'};
+    list_defaults = { "1.5T"   , true }; 
+    opt.minc_standard = psom_struct_defaults(opt.civet,list_fields,list_defaults);
+end
+
+
 if ~ismember(opt.size_output,{'quality_control','all'}) % check that the size of outputs is a valid option
     error(sprintf('%s is an unknown option for OPT.SIZE_OUTPUT. Available options are ''minimum'', ''quality_control'', ''all''',opt.size_output))
 end
@@ -524,15 +535,17 @@ if isstruct(opt.minc_standard)
     job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
     job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid' ext_f];
-    job_out.anat_clp                = [opt.folder_anat 'anat_'   subject '_clp_nativet1' ext_f];
-    job_out.anat_stereolin      = [opt.folder_anat 'anat_'   subject '_stereolin' ext_f];
-    job_out.anat_stereonl       = [opt.folder_anat 'anat_'   subject '_stereonl' ext_f];
+    job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
+    job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
+    job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f];
     job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
 
     job_opt                         = opt.t1_preprocess;
     job_opt.folder_out              = opt.folder_anat;
     job_opt.scanner_strength        = opt.minc_standard.scanner_strength
+    job_opt.symetric_template       = opt.minc_standard.symetric_template
+    
 %    job_opt.template_root = opt.template.root
 %    job_opt.template_space = opt.template.space
 

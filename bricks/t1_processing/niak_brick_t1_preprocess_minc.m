@@ -48,7 +48,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess_minc(files_in,files
 %    ANAT_NUC 
 %        (string, default <BASE_ANAT>_nuc_native.<EXT>)
 %        t1 image partially corrected for non-uniformities (without
-%        mask), in native space. Intensities have not been normalized.
+%        mask), in native space. Intensities have been normalized.
 %    
 %    ANAT_NUC_STEREOLIN 
 %        (string, default <BASE_ANAT>_nuc_stereolin.<EXT>)
@@ -75,27 +75,16 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess_minc(files_in,files
 %        final masked discrete tissue classification in stereotaxic
 %        (linear) space.
 %
-% OPT        
-%    (structure) with the following fields:
-%
-%    MASK_BRAIN_T1
-%        (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
-%        for an exact list of options.
-%
-%    MASK_HEAD_T1
-%        (structure) See the OPT structure of NIAK_BRICK_MASK_HEAD_T1
-%        for an exact list of options.
-%
-%    NU_CORRECT
-%        (structure) See the OPT structure of NIAK_BRICK_NU_CORRECT
-%        for an exact list of options. The most usefull option is the
-%        following :
-%
-%        ARG
-%         (string, default '-distance 200') any argument that will be 
-%         passed to the NU_CORRECT command. The '-distance' option 
-%         sets the N3 spline distance in mm (suggested values: 200 
-%         for 1.5T scan; 50 for 3T scan). 
+% OPT 
+%  (structure) with the following fields:       
+%         
+%    SCANNER_STRENGTH
+%        Either 1.5T (default) of 3T, will set the N3 spline distance parameters for the 
+%        non uniform correction
+%       
+%    SYMETRIC_TEMPLATE (bool)
+%        It True, will chose symetric ICBM 152 09c symetric template, if false, 
+%        will use the asymetric ones. 
 %
 %    FLAG_ALL
 %        (boolean, default false) if FLAG_ALL is true, by default 
@@ -301,8 +290,8 @@ end
  %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_all' , 'template'                 , 'flag_test' , 'folder_out' , 'flag_verbose', 'scanner_strength' };
-gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09c' , 0           , ''           , 1             , '1.5T' };
+gb_list_fields    = {'flag_all' , 'template'                 , 'flag_test' , 'folder_out' , 'flag_verbose', 'scanner_strength', 'symetric_template' };
+gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09c' , 0           , ''           , 1             , '1.5T'            , true};
 niak_set_defaults
                                        
 
@@ -333,16 +322,20 @@ end
 
 %% FILES_OUT
 gb_name_structure = 'files_out';
-gb_list_fields        = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_clp'        , 'anat_stereolin'   , 'anat_stereonl'   , 'mask_stereolin'   , 'classify'       };
+gb_list_fields        = {'transformation_lin' , 'transformation_nl' , 'transformation_nl_grid' , 'anat_nuc'        , 'anat_nuc_stereolin'   , 'anat_nuc_stereonl'   , 'mask_stereolin', 'mask_stereonl'   , 'classify'       };
 if flag_all 
     gb_list_defaults  = {'' , '' , '' , '' , '' , '' , '' , '' };
 else
-    gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+    gb_list_defaults  = {'gb_niak_omitted'    , 'gb_niak_omitted'   , 'gb_niak_omitted'        , 'gb_niak_omitted' , 'gb_niak_omitted'  , 'gb_niak_omitted' , 'gb_niak_omitted', 'gb_niak_omitted' , 'gb_niak_omitted' };
 end
 niak_set_defaults
 
 if strcmp(files_out.transformation_lin,'')
     files_out.transformation_lin =  cat(2,folder_anat,name_anat,'_native2stereolin.xfm');   
+end
+
+if strcmp(files_out.transformation_nl,'')
+    files_out.transformation_nl =  cat(2,folder_anat,name_anat,'_stereolin2stereonl.xfm');   
 end
 
 
@@ -351,20 +344,25 @@ if strcmp(files_out.transformation_nl_grid,'')
 end
 
 if strcmp(files_out.anat_nuc,'')
-    files_out.anat_nuc = cat(2,folder_anat,name_anat,'_clp',ext_anat);
+    files_out.anat_nuc = cat(2,folder_anat,name_anat,'_nuc',ext_anat);
 end
 
 if strcmp(files_out.anat_nuc_stereolin,'')
-    files_out.anat_nuc_stereolin = cat(2,folder_anat,name_anat,'_stereolin',ext_anat);
+    files_out.anat_nuc_stereolin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);
 end
 
 if strcmp(files_out.anat_nuc_stereonl,'')
-    files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_stereonl',ext_anat);
+    files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);
 end
 
 if strcmp(files_out.mask_stereolin,'')
     files_out.mask_stereolin = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
 end
+
+if strcmp(files_out.mask_stereonl,'')
+    files_out.mask_stereonl = cat(2,folder_anat,name_anat,'_mask_stereonl',ext_anat);
+end
+
 
 if strcmp(files_out.classify,'')
     files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
@@ -385,8 +383,9 @@ if flag_verbose
 end
 
 
-%standard_pipeline_out_tmp  = niak_path_tmp()
-standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
+standard_pipeline_out_tmp  = niak_path_tmp('')
+% DEBUG
+%standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
 
 if is_gz;
     copyfile(files_in.anat, standard_pipeline_out_tmp);
@@ -394,8 +393,14 @@ if is_gz;
     t1_path = [standard_pipeline_out_tmp, filesep, name_anat, ext_anat];
 end
 
+if opt.symetric_template
+    symetrie = '--model mni_icbm152_t1_tal_nlin_sym_09c'
+else 
+    symetrie = '--model mni_icbm152_t1_tal_nlin_asym_09c'
+end
 
-cmd = ['standard_pipeline.pl ' scanner_strength ' --verbose --basedir ' standard_pipeline_out_tmp  ' 0 0 ' t1_path];
+cmd = ['standard_pipeline.pl ', scanner_strength, symetrie, ' --verbose --basedir ', standard_pipeline_out_tmp, ...
+       ' 0 0 ', t1_path];
 
 system( cmd );
 
@@ -403,59 +408,66 @@ if strcmp(files_out.transformation_lin,'gb_niak_omitted')
     files_out.transformation_lin =  cat(2,folder_anat,name_anat,'_native2stereolin.xfm');   
 end
 
+if strcmp(files_out.transformation_nl,'gb_niak_omitted')
+    files_out.transformation_nl =  cat(2,folder_anat,name_anat,'_stereolin2stereonl.xfm');   
+end
 
 if strcmp(files_out.transformation_nl_grid,'gb_niak_omitted')
     files_out.transformation_nl_grid = cat(2,folder_anat,name_anat,'_stereolin2stereonl_grid', ext_anat);
 end
 
-if strcmp(files_out.anat_clp,'gb_niak_omitted')
-    files_out.anat_nuc = cat(2,folder_anat,name_anat,'_clp',ext_anat);
+if strcmp(files_out.anat_nuc,'gb_niak_omitted')
+    files_out.anat_nuc = cat(2,folder_anat,name_anat,'_nuc',ext_anat);
 end
 
 if strcmp(files_out.anat_nuc_stereolin,'gb_niak_omitted')
-    files_out.anat_nuc_stereolin = cat(2,folder_anat,name_anat,'_stereolin',ext_anat);
+    files_out.anat_nuc_stereolin = cat(2,folder_anat,name_anat,'_nuc_stereolin',ext_anat);
 end
 
 if strcmp(files_out.anat_nuc_stereonl,'gb_niak_omitted')
-    files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_stereonl',ext_anat);
+    files_out.anat_nuc_stereonl = cat(2,folder_anat,name_anat,'_nuc_stereonl',ext_anat);
 end
 
 if strcmp(files_out.mask_stereolin,'gb_niak_omitted')
     files_out.mask_stereolin = cat(2,folder_anat,name_anat,'_mask_stereolin',ext_anat);
 end
 
+if strcmp(files_out.mask_stereonl,'gb_niak_omitted')
+    files_out.mask_stereonl = cat(2,folder_anat,name_anat,'_mask_stereonl',ext_anat);
+end
+
 if strcmp(files_out.classify,'gb_niak_omitted')
     files_out.classify = cat(2,folder_anat,name_anat,'_classify_stereolin',ext_anat);
 end
 
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'tal/tal_xfm_0_0_t1w.xfm'], files_out.transformation_lin);
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'clp/clamp_0_0_t1w.mnc'], files_out.anat_nuc);
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'tal/tal_0_0_t1w.mnc'], files_out.anat_nuc_stereolin);
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'nl/nl_0_0_t1w.mnc'], files_out.anat_nuc_stereonl);
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'tal/tal_comp_msk_0_0.mnc'], files_out.mask_stereolin);
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'tal_cls/tal_clean_0_0.mnc'], files_out.classify);
+copy_and_zip([ standard_pipeline_out_tmp, filesep, 'nl/nl_xfm_0_0_grid_0.mnc'], files_out.transformation_nl_grid);
 
-
+% rename path to the grid in the nl xfm file
+xfm_source = [ standard_pipeline_out_tmp, filesep, 'nl/nl_xfm_0_0.xfm']
+[bidon, new_xfm, new_xfm_ext] = fileparts(files_out.transformation_nl_grid)
+str_file = regexprep(fileread(xfm_source),'Displacement_Volume =(.*);', ['Displacement_Volume = ', new_xfm, new_xfm_ext, ' ;'])
+fid = fopen(files_out.transformation_nl, 'w');
+fprintf(fid, '%s', str_file);
+fclose(fid);
+    
 %% Resample the template mask in non linear space by using the tal_mask and nl xmf 
-%if flag_verbose
-%    fprintf('\n\n\n**********\nResampling the brain mask in non linear space ...\n');
-%end
-%clear files_in_tmp files_out_tmp opt_tmp
-%files_in_tmp.source         = files_out.mask_stereonl;
-%files_in_tmp.target         = file_template;
-%files_in_tmp.transformation = files_out.transformation_nl;
-%files_out_tmp               = files_out.mask_stereolin;
-%opt_tmp.interpolation       = 'nearest_neighbour';
-%opt_tmp.flag_invert_transf  = true;
-%opt_tmp.flag_verbose        = flag_verbose;
-%niak_brick_resample_vol(files_in_tmp,files_out_tmp,opt_tmp);
-
-
-
-
-
-    copy_and_zip('tal/tal_xfm_0_0_t1w.xfm', file_out.transformation_lin);
-    copy_and_zip('nl/nl_xfm_1_0.xfm', file_out.transformation_nl);
-    copy_and_zip('nl/nl_xfm_0_0_grid_0.mnc', files_out.transformation_nl_grid);
-    copy_and_zip('clp/clamp_0_0_t1w.mnc', files_out.anat_clp);
-    copy_and_zip('tal/tal_0_0_t1w.mnc', files_out.anat_stereolin);
-    copy_and_zip('nl/nl_0_0_t1w.mnc', files_out.anat_stereonl);
-    copy_and_zip('tal/tal_comp_msk_0_0.mnc', files_out.mask_stereolin);
-    copy_and_zip('tal_cls/tal_clean_0_0.mnc', files_out.classify);
+if flag_verbose
+    fprintf('\n\n\n**********\nResampling the brain mask in non linear space ...\n');
+end
+files_in_resample.source         = files_out.mask_stereolin;
+files_in_resample.transformation = files_out.transformation_nl;
+files_out_resample               = files_out.mask_stereonl;
+opt_resample.interpolation       = 'nearest_neighbour';
+opt_resample.flag_verbose        = flag_verbose;
+niak_brick_resample_vol(files_in_resample,files_out_resample,opt_resample);
+    
+    
 
 %[status,msg] = system(['rm -rf ' path_tmp]);
 %if status~=0
@@ -467,9 +479,10 @@ end
 function copy_and_zip(src,dest)
     [bidon, bidon, ext_src] = fileparts(src);
     [bidon, bidon, ext_dst] = fileparts(dest);
+    fprintf('coping %s to %s\n', src, dest)
     if strcmp(dest,'.gz') && ~strcmp(src, '.gz')
         z_file = gzip(src);       
-        copyfile(z_file.filenames,dest);
+        copyfile(z_file,dest);
     else
         copyfile(src, dest);
     end
