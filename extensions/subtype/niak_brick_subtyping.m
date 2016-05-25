@@ -184,22 +184,39 @@ provenance = data.provenance; % loading provenance from the data file
 data = data.stack; % get the stack data
 
 %% Build the similarity matrix
-R = niak_build_correlation(data');
+sim_matrix = niak_build_correlation(data');
 
 %% Compute the hierarchy
-% % % Load the similarity matrix
-% % % R = load(files_in.matrix);
-% % % R = R.sim_matrix;
-
 % Cluster subjects
-hier = niak_hierarchical_clustering(R);
-
+hier = niak_hierarchical_clustering(sim_matrix);
 % Reorder subjects based on clustering
 subj_order = niak_hier2order(hier);
 % Generate re-ordered matrix
 rm = sim_matrix(subj_order,subj_order);
 
-% Read the mask
+%% Saving the clustering and matrix
+if ~strcmp(files_out.sim_fig, 'gb_niak_omitted')
+    % Save the similarity matrix as pdf
+    opt_pdf.limits = [-0.4 0.4];
+    opt_pdf.color_map = 'hot_cold';
+    fh1 = figure('Visible', 'off');
+    niak_visu_matrix(rm,opt_pdf);
+    print(fh1, files_out.sim_fig,'-dpdf','-r300');
+end
+
+if ~strcmp(files_out.den_fig, 'gb_niak_omitted')
+    % Generate and save dendrogram as pdf
+    fh2 = figure('Visible', 'off');
+    niak_visu_dendrogram(hier);
+    print(fh2, files_out.den_fig,'-dpdf','-r300');
+end
+
+if ~strcmp(files_out.matrix, 'gb_niak_omitted')
+% Save hierarchical clustering and ordering of subjects and similarity matrix as mat
+    save(files_out.matrix,'provenance','hier','subj_order','sim_matrix');
+end
+
+%% Read the mask
 [hdr,mask] = niak_read_vol(files_in.mask);
 mask = logical(mask);
 % Get the number of voxels
