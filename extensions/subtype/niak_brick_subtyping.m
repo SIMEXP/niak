@@ -15,11 +15,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       an array (#subjects x #voxels OR vertices OR regions), see also
 %       niak_brick_network_stack
 %
-%   MATRIX
-%       (string) path to a .mat file containing a variable SIM_MATRIX,
-%       which is an array (#subjects x #subjects). Note this matrix must be
-%       unordered/unclustered.
-%
 %   MASK
 %       (3D volume, default all voxels) a binary mask of the voxels that 
 %       are included in the time*space array
@@ -30,10 +25,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 % 
 % FILES_OUT 
 %   (structure) with the following fields:
-%
-%   MATRIX
-%       (string, default 'similarity_matrix.mat) path to the .mat 
-%       output file
 %
 %   SIM_FIG
 %       (string, default 'similarity_matrix.png') path to the .png
@@ -108,7 +99,8 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       (structure) with the following fields:
 %
 %       HIER
-%           (2D array) a copy of the variable from FILES_IN.HIER 
+%           (2D array) defines the hierarchy. See also
+%           NIAK_HIERARCHICAL_CLUSTERING
 %       OPT
 %           (structure) a copy of the options specified in OPT
 %       PART
@@ -117,6 +109,10 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       SUB
 %           (structure) contains subfield for different maps (e.g.
 %           mean/median, ttest, effect) for each subtype
+%
+%       SUBJ_ORDER
+%           (vector) order of objects based on HIER. See also:
+%           NIAK_HIER2ORDER
 %
 %   4D VOLUMES (.nii.gz)
 %       Different maps for subtypes as saved in the variable SUB in
@@ -209,11 +205,6 @@ if ~strcmp(files_out.den_fig, 'gb_niak_omitted')
     fh2 = figure('Visible', 'off');
     niak_visu_dendrogram(hier);
     print(fh2, files_out.den_fig,'-dpdf','-r300');
-end
-
-if ~strcmp(files_out.matrix, 'gb_niak_omitted')
-% Save hierarchical clustering and ordering of subjects and similarity matrix as mat
-    save(files_out.matrix,'provenance','hier','subj_order','sim_matrix');
 end
 
 %% Read the mask
@@ -367,7 +358,7 @@ end
 
 %% Saving subtyping results and statistics
 if ~strcmp(files_out.subtype, 'gb_niak_omitted')
-    save(files_out.subtype,'provenance','sub','hier','part','opt')
+    save(files_out.subtype,'provenance','subj_order','sim_matrix','sub','hier','part','opt')
 end
 end
 
