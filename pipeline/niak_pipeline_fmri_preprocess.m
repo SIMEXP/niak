@@ -218,9 +218,24 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           filtering. opt.lp = Inf means no low-pass filtering.
 %
 %   BUILD_CONFOUNDS
-%       (structure) Options of NIAK_BRICK_BUILD_CONFOUNDS. Note that parameters WW_FD 
-%       and NB_MIN_VOL inherit from REGRESS_CONFOUNDS, but LIST_THRE_FD
-%       is independent from REGRESS_CONFOUNDS.FD. 
+%       (structure) Options of NIAK_BRICK_BUILD_CONFOUNDS. 
+%
+%      WW_FD
+%           (vector, default [3 6]) defines the time window to be removed around each time frame
+%           identified with excessive motion. First value is for time prior to motion peak, and second value 
+%           is for time following motion peak. 
+%
+%       NB_VOL_MIN
+%           (integer, default 40) the minimal number of volumes remaining after 
+%           scrubbing (unless the data themselves are shorter). If there are not enough
+%           time frames after scrubbing, the time frames with lowest FD are selected.
+%
+%       THRE_FD
+%           (scalar, default 0.5) the maximal acceptable framewise displacement 
+%           after scrubbing.
+%
+%       COMPCOR
+%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
 %
 %   REGRESS_CONFOUNDS
 %       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.

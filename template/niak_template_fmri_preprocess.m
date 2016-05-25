@@ -94,6 +94,7 @@ opt.time_filter.lp = 0.1;  % Cut-off frequency for low-pass filtering, or remova
 
 % Parameters for confounds
 opt.build_confounds.thre_fd = 0.5; % The threshold on frame displacement that is used to determine frames with excessive motion in the scrubbing procedure
+opt.build_confounds.nb_min_vol = 40; % The minimal number of volumes left after scrubbing
 
 % Regression of confounds and scrubbing (niak_brick_regress_confounds)
 opt.regress_confounds.flag_high = false;         % Turn on/off the regression of high frequency (true: apply / false : don't apply)

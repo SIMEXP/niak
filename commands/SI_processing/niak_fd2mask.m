@@ -56,11 +56,19 @@ mask = false(length(fd),1);
 list_peak = find(fd>opt.thre);
 for pp = 1:length(list_peak)
     peak = list_peak(pp);
-    mask_before = time_frames>=(time_frames(peak)-opt.ww(1));
-    mask_after  = time_frames<=(time_frames(peak)+opt.ww(2));
-    mask_scrub = mask_before & mask_after;
+    mask_before = (time_frames(peak)>time_frames)&(time_frames>=time_frames(peak)-opt.ww(1));
+    if isempty(mask_before)&&(peak>1)
+        mask_before(peak-1)  = true;
+    end
+    mask_after  = (time_frames(peak)<time_frames)&(time_frames<=(time_frames(peak)+opt.ww(2)));
+    if isempty(mask_after)&&(peak<length(fd))
+        mask_after(peak+1) = true;
+    end
+    mask_peak = false(size(fd));
+    mask_peak(peak) = true;
+    mask_scrub = mask_peak(:) | mask_before(:) | mask_after(:);
     if sum(~(mask|mask_scrub))>=opt.nb_min_vol
-        mask = mask|mask_scrub(:);
+        mask = mask|mask_scrub;
     else
         warning('There was not enough time frames left after scrubbing, kept %i time frames. See OPT.NB_VOL_MIN.',sum(~mask))
         break
