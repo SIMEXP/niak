@@ -31,6 +31,18 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 % FILES_OUT 
 %   (structure) with the following fields:
 %
+%   MATRIX
+%       (string, default 'similarity_matrix.mat) path to the .mat 
+%       output file
+%
+%   SIM_FIG
+%       (string, default 'similarity_matrix.png') path to the .png
+%       visualization of the similarity matrix. 
+%
+%   DEN_FIG
+%       (string, default 'dendrogram.png') path to the .png
+%       visualization of the dendrogram
+%
 %   SUBTYPE
 %       (string, default 'subtype.mat') path to subject by subtype by voxel
 %       array .mat file
@@ -136,8 +148,8 @@ end
 
 % Input
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'mask' , 'matrix' , 'model'           },...
-           { NaN    , NaN    , NaN      , 'gb_niak_omitted' });
+           { 'data' , 'mask' , 'model'           },...
+           { NaN    , NaN    , 'gb_niak_omitted' });
 
 % Options
 opt = psom_struct_defaults(opt,...
@@ -148,12 +160,12 @@ opt = psom_struct_defaults(opt,...
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                },...
-                { [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] });
+                { 'matrix'                           , 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                },...
+                { [path_out 'similarity_matrix.mat'] , [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] });
 else
     files_out = psom_struct_defaults(files_out,...
-                { 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'stats'           , 'contab'          , 'pie'             },...
-                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+                { 'matrix'          , 'sim_fig'         , 'den_fig'         , 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'stats'           , 'contab'          , 'pie'             },...
+                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
 end
   
 % If the user wants stats, the group column must be specified
@@ -171,12 +183,21 @@ data = load(files_in.data);
 provenance = data.provenance; % loading provenance from the data file
 data = data.stack; % get the stack data
 
+%% Build the similarity matrix
+R = niak_build_correlation(data');
+
 %% Compute the hierarchy
-% Load the similarity matrix
-R = load(files_in.matrix);
-R = R.sim_matrix;
+% % % Load the similarity matrix
+% % % R = load(files_in.matrix);
+% % % R = R.sim_matrix;
+
 % Cluster subjects
 hier = niak_hierarchical_clustering(R);
+
+% Reorder subjects based on clustering
+subj_order = niak_hier2order(hier);
+% Generate re-ordered matrix
+rm = sim_matrix(subj_order,subj_order);
 
 % Read the mask
 [hdr,mask] = niak_read_vol(files_in.mask);
