@@ -149,16 +149,27 @@ class FmriPreprocess(BasePipeline):
         list_in_dir = os.listdir(in_full_path)
 
         # TODO Control that with an option
+        bids_description = None
         subject_input_list = None
         for f in list_in_dir:
             if f.endswith("_demographics.txt"):
                 subject_input_list = f
+            elif f.endswith("dataset_description.json"):
+                with open(f) as fp:
+                    bids_description = json.load(fp)
+
 
         if subject_input_list:
             opt_list += ["list_subject=fcon_read_demog('{0}/{1}')".format(in_full_path, subject_input_list)]
             opt_list += ["opt_g.path_database='{0}/'".format(in_full_path)]
             opt_list += ["files_in=fcon_get_files(list_subject,opt_g)"]
+
+        elif bids_description:
+            if 'minc' in bids_description["flavor"].lower():
+                opt_list += ["files_is=read_bids('{0}/{1}')".format(in_full_path)]
+
         else:
+
             # Todo find a good strategy to load subject, to is make it general! --> BIDS
             # % Structural scan
             opt_list += ["files_in.subject1.anat=\'{0}/anat_subject1.mnc.gz\'".format(self.folder_in)]
