@@ -5,9 +5,11 @@ import re
 import json
 import subprocess
 
-import psutil
-
-
+try:
+    import psutil
+    psutil_loaded = True
+except ImportError:
+    psutil_loaded = False
 
 
 def num(s):
@@ -62,11 +64,12 @@ class BasePipeline(object):
     def run(self):
         print(" ".join(self.octave_cmd))
         p = None
+
         try:
             p = subprocess.Popen(self.octave_cmd)
             p.wait()
         except BaseException as e:
-            if p:
+            if p and psutil_loaded:
                 parent = psutil.Process(p.pid)
                 try:
                     children = parent.children(recursive=True)

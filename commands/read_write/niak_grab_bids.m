@@ -1,5 +1,5 @@
 function files = niak_grab_bids(path_data)
-% Grab the T1+fMRI datasets of bids database to process with the 
+% Grab the T1+fMRI datasets of BIDS (http://bids.neuroimaging.io/) database to process with the 
 % NIAK fMRI preprocessing.
 %
 % SYNTAX:
@@ -10,7 +10,7 @@ function files = niak_grab_bids(path_data)
 %
 % PATH_DATA
 %   (string, default [pwd filesep], aka './') full path to one site of 
-%   the ABIDE dataset
+%   a BIDS dataset
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -73,10 +73,46 @@ if ~strcmp(path_data(end),filesep);
     path_data = [path_data filesep];
 end
 
-list_files = dir([path_data]);
-for num_f = 1:length(list_files)
-    if list_files(num_f).isdir
-        path_subj = [path_data list_files(num_f).name filesep];
+list_dir = dir([path_data]);
+for num_f = 1:length(list_dir)
+
+    if list_dir(num_f).isdir
+        subject_dir = list_dir(num_f);
+        reg_out = regexp(subject_dir,"(.*)-(.*)", 'tokens');
+        sub = reg_out{1}{1};
+        if strcmp(sub,"sub")
+            sub_id = reg_out{1}{1,2};
+        else
+            continue   
+        
+        list_sub_dir = dir([path_data, subject_dir]);
+        all_sessions = []
+        for n_ses = 1:length(list_sub_dir)
+            reg_out = regexp(list_sub_dir(n_ses),"(ses)-(.*)", 'tokens');
+            if ~isempty(reg_out)
+                all_sessions = [all_sessions, reg_out{1}{1,2}];
+l           end
+        end
+        if isempty(all_sessions):
+            % no session dir means only one session
+            all_sessions = 0;
+        end
+
+    for n_ses = 1:length(all_sessions)
+        if ~all_sessions(n_ses)
+            ses_id = 1
+            ses_pat = [path_data, subject_dir]
+            anat_path = [path_data, subject_dir, 'anat']
+            fmri_path = [path_data, subject_dir, 'anat']
+
+            else
+            
+        
+        
+    end
+end
+
+    path_subj = [path_data list_files(num_f).name filesep];
         subject = list_files(num_f).name;
         if ~isempty(regexp(subject,'^\d'))
             subject = ['X' subject];
