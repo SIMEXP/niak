@@ -505,6 +505,7 @@ if ~ischar(opt.template)
     opt.template = psom_struct_defaults(opt.template, ...
                    { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_bold' , 'mask_avg' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
                    { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN         , NaN        , NaN       , NaN         , NaN           });
+    template = opt.template;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
