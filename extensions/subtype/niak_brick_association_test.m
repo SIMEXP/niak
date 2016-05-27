@@ -336,7 +336,7 @@ if ~strcmp(files_out.stats, 'gb_niak_omitted')
     if opt.flag_verbose
         fprintf('Saving stats to %s\n', files_out.stats);
     end
-    save(files_out.stats, 'fdr', 'fdr_test', 'results');
+    save(files_out.stats, 'model_norm', 'model_raw', 'fdr', 'fdr_test', 'results');
 end
 
 %% Create result summaries
