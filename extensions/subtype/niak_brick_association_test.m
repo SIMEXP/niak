@@ -341,38 +341,8 @@ end
 
 %% Create result summaries
 if ~strcmp(files_out.csv, 'gb_niak_omitted')
-    [net_ids, sbt_ids] = find(fdr_test);
-    % Sort the subtypes by the network IDs
-    [~, ind] = sort(net_ids);
-    net_ids = net_ids(ind);
-    sbt_ids = sbt_ids(ind);
-    % Check if any results passed FDR
-    if isempty(net_ids)
-        warning('No results passed FDR');
-        out_str = 'No results passed FDR';
-    else
-        out_str = 'Network,Subtype,Association,T_value,P_value,FDR\n';
-        % Iterate over the significant findings
-        for res_id = 1:length(net_ids)
-            net_id = net_ids(res_id);
-            sbt_id = sbt_ids(res_id);
-            net_name = net_names{net_id};
-            % Get the corresponding T-, p-, and FDR-values
-            t_val = glm_results.(net_name).ttest(sbt_id);
-            p_val = pvals(net_id, sbt_id);
-            fdr_val = fdr(net_id, sbt_id);
-            % Determine the direction of the association
-            if t_val > 0
-                direction = 'positive';
-            else
-                direction = 'negative';
-            end
-            % Assemble the out string
-            out_str = [out_str sprintf('%s,%d,%s,%d,%d,%d\n', net_name, sbt_id,...
-                                                             direction, t_val,...
-                                                             p_val,fdr_val)];
-        end
-    end
+    % Summarize the results
+    out_str = summarize_results(fdr_test, glm_results, pvals, fdr)
 
     % Save the string to file
     if opt.flag_verbose
@@ -486,4 +456,40 @@ function path_array = make_paths(out_path, template, scales)
         path_array{sc_id, 1} = path;
     end
 return
+end
+
+function out_str = summarize_results(fdr_test, glm_results, pvals, fdr)
+
+    [net_ids, sbt_ids] = find(fdr_test);
+    % Sort the subtypes by the network IDs
+    [~, ind] = sort(net_ids);
+    net_ids = net_ids(ind);
+    sbt_ids = sbt_ids(ind);
+    % Check if any results passed FDR
+    if isempty(net_ids)
+        warning('No results passed FDR');
+        out_str = 'No results passed FDR';
+    else
+        out_str = 'Network,Subtype,Association,T_value,P_value,FDR\n';
+        % Iterate over the significant findings
+        for res_id = 1:length(net_ids)
+            net_id = net_ids(res_id);
+            sbt_id = sbt_ids(res_id);
+            net_name = net_names{net_id};
+            % Get the corresponding T-, p-, and FDR-values
+            t_val = glm_results.(net_name).ttest(sbt_id);
+            p_val = pvals(net_id, sbt_id);
+            fdr_val = fdr(net_id, sbt_id);
+            % Determine the direction of the association
+            if t_val > 0
+                direction = 'positive';
+            else
+                direction = 'negative';
+            end
+            % Assemble the out string
+            out_str = [out_str sprintf('%s,%d,%s,%d,%d,%d\n', net_name, sbt_id,...
+                                                             direction, t_val,...
+                                                             p_val,fdr_val)];
+        end
+    end
 end
