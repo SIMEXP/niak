@@ -312,7 +312,7 @@ if regexpi(opt.scanner_strength, "3.*t");
 end
 
 is_gz = false
-if strcmp(ext_anat, '.gz');
+if strcmp(ext_anat, gb_niak_zip_ext);
     [bidon, name_anat, ext_anat] = fileparts(name_anat);
 is_gz = true
 else
@@ -389,7 +389,7 @@ standard_pipeline_out_tmp  = niak_path_tmp('')
 
 if is_gz;
     copyfile(files_in.anat, standard_pipeline_out_tmp);
-    system(['gunzip -f ', standard_pipeline_out_tmp, filesep, name_anat, ext_anat, '.gz']);
+    system([gb_niak_unzip , standard_pipeline_out_tmp, filesep, name_anat, ext_anat, gb_niak_zip_ext]);
     t1_path = [standard_pipeline_out_tmp, filesep, name_anat, ext_anat];
 end
 
@@ -399,8 +399,10 @@ else
     symetrie = '--model mni_icbm152_t1_tal_nlin_asym_09c'
 end
 
-cmd = ['standard_pipeline.pl ', scanner_strength, symetrie, ' --verbose --basedir ', standard_pipeline_out_tmp, ...
-       ' 0 0 ', t1_path];
+cmd = sprintf('standard_pipeline.pl %s  %s  --verbose --basedir %s  0 0 %s ', ...
+               scanner_strength, symetrie, standard_pipeline_out_tmp, t1_path)
+
+fprintf("executing: \n\t%s\n", cmd);
 
 system( cmd );
 
@@ -477,13 +479,16 @@ niak_brick_resample_vol(files_in_resample,files_out_resample,opt_resample);
 end
 
 function copy_and_zip(src,dest)
-    [bidon, bidon, ext_src] = fileparts(src);
+    niak_gb_vars
+    [bidon, src_name, ext_src] = fileparts(src);
     [bidon, bidon, ext_dst] = fileparts(dest);
-    fprintf('coping %s to %s\n', src, dest)
-    if strcmp(dest,'.gz') && ~strcmp(src, '.gz')
-        z_file = gzip(src);       
-        copyfile(z_file,dest);
+    if strcmp(ext_dst,gb_niak_zip_ext) && ~strcmp(ext_src, gb_niak_zip_ext)
+        system(sprintf(" %s -c %s > %s ", gb_niak_zip, src, dest));  
+%        disp(z_file)
+%        fprintf('copying %s to %s\n', z_file, dest)
+%        copyfile(z_file,dest);
     else
+        fprintf('copying %s to %s\n', src, dest)
         copyfile(src, dest);
     end
 end

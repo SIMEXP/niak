@@ -221,7 +221,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       motion correction).
 %
 %   RESAMPLE_VOL 
-%       (structure) options of NIAK_BRICK_RESAMPLE_VOL (spatial resampling 
+%       (structure) options of NIAK_BRICK_   (spatial resampling 
 %       in the stereotaxic space).
 %
 %       INTERPOLATION 
@@ -480,7 +480,7 @@ end
 if ~ischar(opt.minc_standard)
     list_fields   = { 'scanner_strength' , 'symetric_template'};
     list_defaults = { "1.5T"   , true }; 
-    opt.minc_standard = psom_struct_defaults(opt.civet,list_fields,list_defaults);
+    opt.minc_standard = psom_struct_defaults(opt.minc_standard,list_fields,list_defaults);
 end
 
 
