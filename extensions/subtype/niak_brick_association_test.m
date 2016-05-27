@@ -1,9 +1,9 @@
 function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_out, opt)
-% Create network, mean and std stack 4D maps from individual functional
-% maps
+% Statistical tests for the significance of associations between subtype
+% weights and variables of interest
 %
 % SYNTAX: [FILE_IN,FILE_OUT,OPT] =
-% NIAK_BRICK_network_stack(FILE_IN,FILE_OUT,OPT)
+% NIAK_BRICK_association_test(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 %
 % INPUTS:
@@ -29,9 +29,6 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %   CSV
 %       (string, default 'results_overview.csv') path to the .csv file 
 %       containing the overview of significant results passing FDR
-%
-%   FIGURES
-%       (cell array,  default 'fig_association_<NETWORK>.pdf') path to the ...
 %
 % OPT
 %   (structure, optional) with the following fields:
@@ -143,55 +140,6 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %       anything but updating the values of FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % OUTPUTS:
-%
-% FILES_OUT (structure)with the following fields:
-%
-%   STACK
-%       (double array) SxVxN array where S is the number of subjects, V is
-%       the number of voxels and N the number of networks (if N=1, Matlab
-%       displays the array as 2 dimensional, i.e. the last dimension gets
-%       squeezed)
-%
-%   PROVENANCE
-%       (structure) with the following fields:
-%
-%       SUBJECTS
-%           (cell array) Sx2 cell array containing the names/IDs of
-%           subjects in the same order as they are supplied in
-%           FILES_IN.DATA and FILES_OUT.STACK. The first column contains
-%           the names as they are suppiled in FILES_IN.DATA whereas the
-%           second column contains the (optional) names that are taken from
-%           the model file in FILES_IN.MODEL
-%
-%       MODEL
-%           (structure, optional) Only available if OPT.FLAG_CONF is set to
-%           true and a correct model was supplied. Contains the following
-%           fields:
-%
-%           MATRIX
-%               (double array, optional) Contains the model matrix that was
-%               used to perform the confound regression.
-%
-%           CONFOUNDS
-%               (cell array, optional) Contains the names of the covariates
-%               in the model that are regressed from the input data
-%
-%       VOLUME
-%           (structure) with the following fields:
-%
-%           NETWORK
-%               (double array) Contains the network ID or IDs in the same
-%               order that they appear in FILES_OUT.STACK
-%
-%           SCALE
-%               (double) The scale of the network solution of the input
-%               data (i.e. how many networks were available in the input
-%               data).
-%
-%           MASK
-%               (boolean array) The binary brain mask that can be used to
-%               map the vectorized data in FILES_OUT.STACK back into volume
-%               space.
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
@@ -351,98 +299,6 @@ if ~strcmp(files_out.csv, 'gb_niak_omitted')
     fid = fopen(files_out.csv,'wt');
     fprintf(fid, out_str);
     fclose(fid);
-end
-
-%% Visualize the weights and covariate of interest
-if ~strcmp(files_out.figures, 'gb_niak_omitted')
-    % First, get the covariate of interest. 
-    contrasts = fieldnames(opt.contrast);
-    n_contrasts = length(contrasts);
-    coi_name = '';
-    for con_id = 1:n_contrasts
-        contrast_name = contrasts{con_id};
-        if opt.contrast.(contrast_name) ~= 0 && isempty(coi_name)
-            coi_name = contrast_name;
-        elseif opt.contrast.(contrast_name) ~= 0 && ~isempty(coi_name)
-            error('Contrast %s is nonzero but contrast %s is also nonzero. I can only deal with one contrast', contrast_name, coi_name);
-        end
-    end
-    % Determine whether the coi is an interaction
-    if ismember(coi_name, model_raw.labels_y)
-        % This was specified in the original model, we can take it from there. Find
-        % the index of the column
-        coi_col = find(strcmp(coi_name, model_raw.labels_y));
-        coi = model_raw.x(:, coi_col);
-    else
-        % This was not in the original model, we need to retrieve it from the
-        % normalized, contstrained model
-        coi_col = find(strcmp(coi_name, model_norm.labels_y));
-        coi = model_norm.x(:, coi_col);
-    end
-    % Determine whether the coi is categorical
-    coi_unique = unique(coi);
-    n_unique = length(coi_unique);
-    if n_unique > 2
-        coi_cat = false;
-    else
-        coi_cat = true;
-        coi_ind = coi==coi_unique(1);
-    end
-
-    % Determine the number of rows and columns for the subyptes
-    n_cols = floor(sqrt(n_sbt));
-    n_rows = ceil(n_sbt/n_cols);
-
-    % Make a figure for each network
-    for net_id = 1:opt.scale
-        % Start with the figure
-        fh = figure('Visible', 'off');
-        title(sprintf('Network %d, Association w %s', net_id, coi_name));
-        % Go through the subtypes
-        for sbt_id = 1:n_sbt
-            % Get the subtype weights
-            sbt_weights = weights(:, sbt_id, net_id);
-            % Create the subplot
-            subplot(n_rows, n_cols, sbt_id);
-            ax = gca;
-            % Chose whether to plot categorical or dimensional data
-            if coi_cat
-                % Work around the incompatibilities between Matlab and Octave for
-                % the boxplot
-                is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
-                % Generate the boxplots
-                if is_octave
-                    % The groups are supposed to go in a cell
-                    boxplot({sbt_weights(coi_ind), sbt_weights(~coi_ind)}); 
-                else
-                    % The groups can be in a vector
-                    boxplot(sbt_weights, coi_ind);
-                end
-                % Set the x axis ticks and labels
-                ax.XTickLabel = cellstr(num2str(coi_unique));
-            else
-                % This is a dimensional variable
-                % Fit a regression line between the weights and the covariate
-                plot_model.x = [ones(size(coi)), coi];
-                plot_model.y = sbt_weights;
-                [res, ~] = niak_glm(plot_model, struct('flag_beta', true));
-                x_fit = linspace(min(coi),max(coi),10);
-                y_fit = res.beta(1) + x_fit.*res.beta(2);
-                % Make the scatterplot
-                hold on;
-                plot(coi, sbt_weights, '.k');
-                plot(x_fit, y_fit, 'r');
-                hold off;
-                disp('done');
-            end
-            xlabel(ax, coi_name);
-            title(sprintf('Subtype %d', sbt_id));
-        end
-        if opt.flag_verbose
-            fprintf('Saving association plot to %s\n', files_out.figures{net_id});
-        end
-        print(fh, files_out.figures{net_id}, '-dpng');
-    end
 end
 end
 
