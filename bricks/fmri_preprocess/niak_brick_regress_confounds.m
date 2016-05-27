@@ -190,14 +190,6 @@ fd = x(:,strcmp(all_labels,'FD'));
 fd = fd(1:end-1);
 hdr_vol.extra.mask_scrubbing = mask_scrubbing;
 
-% Normalize data
-y_mean = mean(y(~mask_scrubbing,:),1); % Exclude time points with excessive motion to estimate mean/std
-y_std  =  std(y(~mask_scrubbing,:),[],1);
-y = (y-repmat(y_mean,[size(y,1),1]))./repmat(y_std,[size(y,1) 1]);
-x_mean = mean(x(~mask_scrubbing,:),1); % Exclude time points with excessive motion to estimate mean/std
-x_std = std(x(~mask_scrubbing,:),[],1);
-x = (x-repmat(x_mean,[size(x,1),1]))./repmat(x_std,[size(x,1) 1]);
-
 %% Build model
 x2 = [];
 labels = {};
@@ -320,6 +312,16 @@ if ~isempty(x2)
     if opt.flag_verbose
         fprintf('Regressing the confounds...\n    Total number of confounds: %i\n    Total number of time points for regression: %i\n',size(x,2),sum(~mask_scrubbing))
     end
+    
+    %% Normalize data
+    y_mean = mean(y(~mask_scrubbing,:),1); % Exclude time points with excessive motion to estimate mean/std
+    y_std  =  std(y(~mask_scrubbing,:),[],1);
+    y = (y-repmat(y_mean,[size(y,1),1]))./repmat(y_std,[size(y,1) 1]);
+    x2_mean = mean(x2(~mask_scrubbing,:),1); % Exclude time points with excessive motion to estimate mean/std
+    x2_std = std(x2(~mask_scrubbing,:),[],1);
+    x2 = (x2-repmat(x2_mean,[size(x2,1),1]))./repmat(x2_std,[size(x2,1) 1]);
+
+    %% Run the regression
     model.y = y(~mask_scrubbing,:);
     model.x = x2(~mask_scrubbing,:);
     opt_glm.flag_beta = true;
@@ -327,9 +329,12 @@ if ~isempty(x2)
     y = y - x2*res.beta; % Generate the residuals for all time points combined
     y = y + repmat(y_mean,[size(y,1) 1]); % put the mean back in the time series
     vol_denoised = reshape(y',size(vol));
+    
 else
+
     warning('Found no confounds to regress! Leaving the dataset as is')
     vol_denoised = vol;
+
 end
     
 %% Save the fMRI dataset after regressing out the confounds
