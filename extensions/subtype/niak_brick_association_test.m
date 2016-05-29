@@ -170,12 +170,12 @@ opt = psom_struct_defaults(opt,...
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'stats'                            , 'csv'                             , 'figures'                                                       },...
-                { [path_out 'association_stats.mat'] , [path_out 'results_overview.csv'] , make_paths(path_out, 'fig_association_net_%d.png', 1:opt.scale) });
+                { 'stats'                            , 'csv'                             },...
+                { [path_out 'association_stats.mat'] , [path_out 'results_overview.csv'] });
 else
     files_out = psom_struct_defaults(files_out,...
-                { 'stats'           , 'csv'             , 'figures'         },...
-                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+                { 'stats'           , 'csv'             },...
+                { 'gb_niak_omitted' , 'gb_niak_omitted' });
 end
   
 %% Sanity Checks
@@ -207,13 +207,6 @@ end
 if ~isstruct(opt.contrast)
     %misspecified contrasts
     error('OPT.CONTRAST has to be a structure');
-end
-
-% Check that we have an output name for every figure
-if ~strcmp(files_out.figures, 'gb_niak_omitted')
-    if ~length(files_out.figures) == opt.scale
-        error('I have %d networks from FILES_IN.WEIGHTS but %d specified output files for FILES_OUT.FIGURES', opt.scale, length(files_out.figures));
-    end
 end
 
 %% If the test flag is true, stop here !
