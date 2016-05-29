@@ -677,6 +677,33 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
+%% GROUP QC MOTION CORRECTION 
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding group-level quality control of motion correction (motion parameters) ; ');
+end
+clear job_in job_out job_opt
+for num_s = 1:length(list_subject)
+    if strcmp(opt.granularity,'subject')
+        ind = find(ismember(pipeline.(['preproc_' list_subject{num_s}]).opt.list_jobs,['qc_motion_' list_subject{num_s}]));
+        job_in.(list_subject{num_s}).motion_parameters_ind = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_in.motion_parameters;
+        job_in.(list_subject{num_s}).tab_coregister_ind    = pipeline.(['preproc_' list_subject{num_s}]).opt.pipeline{ind}.files_out.tab_coregister;
+    else
+        job_in.(list_subject{num_s}).tab_coregister_ind    = pipeline.(['qc_motion_' list_subject{num_s}]).files_out.tab_coregister;
+        job_in.(list_subject{num_s}).motion_parameters_ind = pipeline.(['qc_motion_' list_subject{num_s}]).files_in.motion_parameters;
+    end 
+end
+
+job_out.fig_coregister_group  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_coregister_between_runs_group.pdf'];
+job_out.tab_coregister_group  = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_coregister_between_runs_group.csv'];
+job_out.fig_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.pdf'];
+job_out.tab_motion_group      = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_motion_group.csv'];
+job_opt.flag_test                   = true;
+pipeline = psom_add_job(pipeline,'qc_group_motion_estimation','niak_brick_qc_motion_correction_group',job_in,job_out,job_opt);
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
 %% GROUP QC CONFOUNDS : scrubbing
 if opt.flag_verbose
     t1 = clock;
