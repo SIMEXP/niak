@@ -106,6 +106,10 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       PART
 %           (vector) PART(I) = J if the object I is in the class J.
 %           See also: niak_threshold_hierarchy
+%
+%       SIM_MATRIX
+%           (2D array) a #subject x #subject correlation matrix
+%
 %       SUB
 %           (structure) contains subfield for different maps (e.g.
 %           mean/median, ttest, effect) for each subtype
