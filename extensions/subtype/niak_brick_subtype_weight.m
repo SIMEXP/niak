@@ -17,11 +17,7 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %       brain maps for each network
 %
 %   SUBTYPE.<NETWORK>
-%       (string) path to the subtype maps for that network
-%
-%   SIM_MATRIX.<NETWORK>
-%       (string) path to the similarity matrix and hierarchical clustering
-%       of subjects for that network
+%       (string) path to the subtype maps and similarity matrix for that network
 %
 % FILES_OUT
 %   (structure) structure with the following fields:
@@ -99,8 +95,8 @@ end
 
 % FILES_IN
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'subtype' , 'sim_matrix' },...
-           { NaN    , NaN       , NaN          });
+           { 'data' , 'subtype' },...
+           { NaN    , NaN       });
 
 % Options
 if nargin < 3
@@ -197,9 +193,9 @@ end
 for net_id = 1:n_networks
     network = networks{net_id};
     
-    % Get the subject order from files_in.sim_matrix
-    sim_matrix = load(files_in.sim_matrix.(network));
-    subj_order = sim_matrix.subj_order;
+    % Get the subject order from files_in.subtype
+    tmp_subj_order = load(files_in.subtype.(network));
+    subj_order = tmp_subj_order.subj_order;
     
     % Create a hidden figure
     fig = figure('Visible', 'off');
