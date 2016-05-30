@@ -293,11 +293,11 @@ if opt.flag_visu
     visu_in.weight = pipe.weight_extraction.files_out.weights;
     visu_in.association = pipe.association_test.files_out.stats;
     visu_out = struct;
-    visu_out.figures = [opt.folder_out filesep sprintf('fig_association_net_%d.png', net_id)];
     visu_opt = struct;
     fields = {'fdr', 'type_fdr', 'interaction', 'normalize_x', 'normalize_y',...
                         'select', 'flag_intercept'};
     visu_opt = rmfield(opt.association, fields);
+    visu_opt.folder_out = opt.folder_out;
     pipe = psom_add_job(pipe, 'visu_association', 'niak_brick_visu_subtype_glm',...
                         visu_in, visu_out, visu_opt);
 end
