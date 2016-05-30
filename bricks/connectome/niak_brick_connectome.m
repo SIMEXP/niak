@@ -95,7 +95,7 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Christian L. Dansereau, 
-% Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
+% Centre de recherche de l'Institut universitaire de griatrie de Montral, 2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, connectome, atoms, fMRI
@@ -185,12 +185,12 @@ end
 
 %% The brick starts here
 
-nb_fmri = length(files_in.fmri);
-nb_mask = length(files_in.mask);
-all_conn = cell(nb_mask,1);
+nb_fmri     = length(files_in.fmri);
+nb_mask     = length(files_in.mask);
+all_conn    = cell(nb_mask,1);
 all_ind_roi = cell(nb_mask,1);
-all_mask = cell(nb_mask,1);
-all_hdr = cell(nb_mask,1);
+all_mask    = cell(nb_mask,1);
+all_hdr     = cell(nb_mask,1);
 if opt.flag_verbose
     fprintf('Generating ''%s'' connectomes ...\n',type)
 end
@@ -199,6 +199,9 @@ for num_f = 1:nb_fmri
         fprintf('Reading fMRI dataset %s ...\n',files_in.fmri{num_f});
     end
     [hdr,vol] = niak_read_vol(files_in.fmri{num_f});
+    if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_scubbing')
+        vol = vol(:,:,:,~hdr.extra.mask_scubbing);
+    end
     [nx,ny,nz,nt] = size(vol);
     for num_m = 1:nb_mask
         if num_f == 1
