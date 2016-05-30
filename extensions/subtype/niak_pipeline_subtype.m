@@ -250,18 +250,6 @@ for net_id = 1:opt.scale;
     % Assign output to weight extraction step
     weight_in.data.(net_name) = pipe.(pre_name).files_out;
 
-    % Similarity matrix computation
-    sim_name = sprintf('similarity_%d', net_id);
-    sim_opt = struct;
-    sim_opt.folder_out = network_folder;
-    sim_in = pipe.(pre_name).files_out;
-    sim_out = struct;
-    sim_out.matrix = [network_folder filesep sprintf('network_%d_similarity_matrix.mat', net_id)];
-    pipe = psom_add_job(pipe, sim_name, 'niak_brick_similarity_matrix',...
-                        sim_in, sim_out, sim_opt);
-    % Assign output to weight extraction step
-    weight_in.sim_matrix.(net_name) = pipe.(sim_name).files_out.matrix;
-
     % Subtyping
     sub_name = sprintf('subtype_%d', net_id);
     % Assign options
@@ -271,7 +259,6 @@ for net_id = 1:opt.scale;
     % Assign inputs
     sub_in = rmfield(files_in, 'data');
     sub_in.data = pipe.(pre_name).files_out;
-    sub_in.matrix = pipe.(sim_name).files_out.matrix;
     sub_out = struct;
     sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
     pipe = psom_add_job(pipe, sub_name, 'niak_brick_subtyping',...
