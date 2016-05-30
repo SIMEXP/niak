@@ -293,7 +293,6 @@ if ~strcmp(files_out.csv, 'gb_niak_omitted')
     fprintf(fid, out_str);
     fclose(fid);
 end
-end
 
 function path_array = make_paths(out_path, template, scales)
     % Get the number of networks
@@ -341,4 +340,5 @@ function out_str = summarize_results(fdr_test, glm_results, pvals, fdr)
                                                              p_val,fdr_val)];
         end
     end
+end
 end
