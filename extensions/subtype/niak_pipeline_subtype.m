@@ -10,11 +10,11 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 % FILES_IN (structure) with the following fields :
 %
 %   DATA.<SUBJECT>
-%       (string) Containing the individual map (e.g. rmap_part,stability_maps, 
+%       (string) Containing the individual map (e.g. rmap_part,stability_maps,
 %       etc) NB: assumes there is only 1 .nii.gz or mnc.gz map per individual.
 %
 %   MASK
-%       (string) path to mask of the voxels that will be included in the 
+%       (string) path to mask of the voxels that will be included in the
 %       time*space array.
 %
 %   MODEL
@@ -36,8 +36,8 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %   STACK
 %       (struct, optional) with the following fields:
 %
-%       REGRESS_CONF 
-%           (Cell of string, Default {}) A list of variable names to be 
+%       REGRESS_CONF
+%           (Cell of string, Default {}) A list of variable names to be
 %           regressed out.
 %
 %   SUBTYPE
@@ -85,12 +85,12 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       INTERACTION
 %           (structure array, optional) with multiple entries and the following
 %           fields:
-%          
+%
 %           LABEL
 %               (string) a label for the interaction covariate.
 %
 %           FACTOR
-%               (cell of string) covariates that are being multiplied together 
+%               (cell of string) covariates that are being multiplied together
 %               to build the interaction covariate.  There should be only one
 %               covariate associated with each label.
 %
@@ -141,7 +141,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 %           OPERATION
 %               (string, default 'or') the operation that is applied to select
-%               the frames. Available options: 'or' : merge the current 
+%               the frames. Available options: 'or' : merge the current
 %               selection SELECT(E) with the result of the previous one. 'and' :
 %               intersect the current selection SELECT(E) with the result of the
 %               previous one.
@@ -150,12 +150,16 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           (boolean, default true) if FLAG_INTERCEPT is true, a constant
 %           covariate will be added to the model.
 %
+%   FLAG_VISU
+%       (boolean, default true) turn on/off to generate figures for the
+%       association test
+%
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
 %   FLAG_TEST
 %       (boolean, default false) if the flag is true, the brick does not do
-%       anything but updating the values of IN, OUT and OPT. 
+%       anything but updating the values of IN, OUT and OPT.
 % ______________________________________________________________________________
 % COMMENTS:
 %
@@ -200,8 +204,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'flag_visu' , 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , true        , true           , false       });
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
@@ -212,7 +216,7 @@ opt.psom = psom_struct_defaults(opt.psom,...
 opt.stack = psom_struct_defaults(opt.stack,...
             { 'regress_conf' },...
             { {}             });
-          
+
 % Subtype options
 opt.subtype = psom_struct_defaults(opt.subtype,...
              { 'nb_subtype' , 'sub_map_type' , 'group_col_id' , 'flag_stats' },...
@@ -222,7 +226,7 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
 opt.association = psom_struct_defaults(opt.association,...
                   { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
                   { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
-         
+
 %% Construct the pipeline
 pipe = struct;
 % Prepare the input structure for the subtype weight extraction step
@@ -245,7 +249,7 @@ for net_id = 1:opt.scale;
                         pre_in, pre_out, pre_opt);
     % Assign output to weight extraction step
     weight_in.data.(net_name) = pipe.(pre_name).files_out;
-                    
+
     % Similarity matrix computation
     sim_name = sprintf('similarity_%d', net_id);
     sim_opt = struct;
@@ -257,7 +261,7 @@ for net_id = 1:opt.scale;
                         sim_in, sim_out, sim_opt);
     % Assign output to weight extraction step
     weight_in.sim_matrix.(net_name) = pipe.(sim_name).files_out.matrix;
-    
+
     % Subtyping
     sub_name = sprintf('subtype_%d', net_id);
     % Assign options
@@ -283,7 +287,7 @@ weight_opt.folder_out = opt.folder_out;
 weight_out.weights = [opt.folder_out filesep 'subtype_weights.mat'];
 pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
-                
+
 % Set up the association test options
 assoc_opt = opt.association;
 assoc_opt.folder_out = opt.folder_out;
@@ -291,8 +295,25 @@ assoc_in = struct;
 assoc_in.weight = pipe.weight_extraction.files_out.weights;
 assoc_in.model = files_in.model;
 assoc_out = struct;
+assoc_out.stats = [opt.folder_out filesep 'association_stats.mat'];
+assoc_out.csv = [opt.folder_out filesep 'association_summary.csv'];
 pipe = psom_add_job(pipe, 'association_test', 'niak_brick_association_test',...
                     assoc_in, assoc_out, assoc_opt);
+
+if opt.flag_visu
+    % Generate the figures for the association test brick
+    visu_in = struct;
+    visu_in.weight = pipe.weight_extraction.files_out.weights;
+    visu_in.association = pipe.association_test.files_out.stats;
+    visu_opt = struct;
+    visu_opt = rmfields(opt.association, 'network', 'fdr', 'type_fdr',...
+                        'interaction', 'normalize_x', 'normalize_y',...
+                        'normalize_type', 'select', 'flag_intercept',...
+                        'flag_filter_nan');
+    pipe = psom_add_job(pipe, 'visu_association', 'niak_brick_visu_subtype_glm',...
+                        visu_in, visu_out, visu_opt);
+end
+
 
 %% Run the pipeline
 if ~opt.flag_test
