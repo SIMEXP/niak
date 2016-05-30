@@ -107,6 +107,11 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     end
 end
 
+%% If the test flag is true, stop here !
+if opt.flag_test == 1
+    return
+end
+
 %% Read and prepare the group model
 % Read the model data
 if opt.flag_verbose
