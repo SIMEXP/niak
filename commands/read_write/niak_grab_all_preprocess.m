@@ -302,11 +302,11 @@ for num_s = 1:length(list_subject)
             files.intermediate.(subject).(session).(run).motion.with_run    = [path_inter subject filesep 'motion_correction' filesep 'motion_Wrun_' subject '_' session '_' run '.mat'];
             files.intermediate.(subject).(session).(run).motion.parameters  = [path_inter subject filesep 'motion_correction' filesep 'motion_parameters_' subject '_' session '_' run '.mat'];
             files.intermediate.(subject).(session).(run).confounds          = [path_inter subject filesep 'regress_confounds' filesep 'fmri_' subject '_' session '_' run '_cor' ext];
-            files.intermediate.(subject).(session).(run).confounds          = [path_inter subject filesep 'regress_confounds' filesep 'func_' subject '_' session '_' run '_mask_compcor_stereo' ext];
+            files.intermediate.(subject).(session).(run).confounds_mask     = [path_inter subject filesep 'regress_confounds' filesep 'fmri_' subject '_' session '_' run '_mask_compcor_stereo' ext];
             files.intermediate.(subject).(session).(run).confounds_extra    = [path_inter subject filesep 'regress_confounds' filesep 'fmri_' subject '_' session '_' run '_cor_extra.mat'];
             files.intermediate.(subject).(session).(run).scrubbing          = [path_inter subject filesep 'regress_confounds' filesep 'scrubbing_' subject '_' session '_' run '.mat'];
-            files.intermediate.(subject).(session).(run).filter.high        = [path_inter subject filesep 'time_filter' filesep subject '_' session '_' run '_n_dc_high.mat'];
-            files.intermediate.(subject).(session).(run).filter.low         = [path_inter subject filesep 'time_filter' filesep subject '_' session '_' run '_n_dc_low.mat'];
+            files.intermediate.(subject).(session).(run).filter.high        = [path_inter subject filesep 'time_filter' filesep 'fmri_' subject '_' session '_' run '_n_dc_high.mat'];
+            files.intermediate.(subject).(session).(run).filter.low         = [path_inter subject filesep 'time_filter' filesep 'fmri_' subject '_' session '_' run '_n_dc_low.mat'];
         end
     end
 end

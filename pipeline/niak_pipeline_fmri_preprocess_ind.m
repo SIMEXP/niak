@@ -717,9 +717,9 @@ job_in.aal                = opt.template.aal;
 job_in.functional_space   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.transformation_nl  = pipeline.(['t1_preprocess_',subject]).files_out.transformation_nl;
 job_in.segmentation       = pipeline.(['t1_preprocess_' subject]).files_out.classify;
-job_out.mask_vent_ind     = [opt.folder_anat subject filesep 'func_' subject '_mask_vent_stereo' ext_f];
-job_out.mask_stem_ind     = [opt.folder_anat subject filesep 'func_' subject '_mask_stem_stereo' ext_f];
-job_out.white_matter_ind  = [opt.folder_anat subject filesep 'func_' subject '_mask_wm_stereo' ext_f];
+job_out.mask_vent_ind     = [opt.folder_anat 'func_' subject '_mask_vent_stereo' ext_f];
+job_out.mask_stem_ind     = [opt.folder_anat 'func_' subject '_mask_stem_stereo' ext_f];
+job_out.white_matter_ind  = [opt.folder_anat 'func_' subject '_mask_wm_stereo' ext_f];
 job_opt.target_space = opt.target_space;
 job_opt.flag_test = false;
 pipeline = psom_add_job(pipeline,['mask_confounds_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
@@ -764,8 +764,8 @@ for num_e = 1:length(fmri)
     job_opt = opt.build_confounds;
     job_opt.folder_out     = opt.folder_resample;
 
-    job_out.confounds = [job_opt.folder_out filesep label(num_e).name '_n_confounds.tsv' gb_niak_zip_ext]; 
-    job_out.compcor_mask = [opt.folder_intermediate filesep 'regress_confounds' filesep 'func_' label(num_e).name '_mask_compcor_stereo' ext_f];     
+    job_out.confounds = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_n_confounds.tsv' gb_niak_zip_ext]; 
+    job_out.compcor_mask = [opt.folder_intermediate filesep 'regress_confounds' filesep 'fmri_' label(num_e).name '_mask_compcor_stereo' ext_f];     
     pipeline = psom_add_job(pipeline,['build_confounds_' label(num_e).name],'niak_brick_build_confounds',job_in,job_out,job_opt);      
 end
 if opt.flag_verbose        
