@@ -53,7 +53,7 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FILES_OUT (structure)with the following fields:
+% FILES_OUT (structure) with the following fields:
 %
 %   STACK
 %       (double array) SxVxN array where S is the number of subjects, V is
@@ -135,7 +135,6 @@ opt = psom_struct_defaults(opt,...
 if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
     if isempty(opt.folder_out)
         error('Neither FILES_OUT nor OPT.FOLDER_OUT are specified. Won''t generate any outputs');
-        files_out = 'gb_niak_omitted';
     else
         files_out = [niak_full_path(opt.folder_out) 'network_stack.mat'];
     end

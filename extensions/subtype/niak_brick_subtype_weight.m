@@ -17,7 +17,8 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %       brain maps for each network
 %
 %   SUBTYPE.<NETWORK>
-%       (string) path to the subtype maps and similarity matrix for that network
+%       (string) path to the subtype maps for that network. The subtype map is
+%       expected to be inside a structure SBT.MAP inside the file.
 %
 % FILES_OUT
 %   (structure) structure with the following fields:
@@ -118,8 +119,8 @@ else
                 { 'weights'         , 'weights_csv'     , 'weights_pdf' },...
                 { 'gb_niak_omitted' , {}                , {}            });
 end
-  
-  
+
+
 % Make sure we have the same order and set of networks for data and subtype
 if ~isequal(fieldnames(files_in.subtype), fieldnames(files_in.data))
     error(['The order or set of networks in files_in.subtype and '...
