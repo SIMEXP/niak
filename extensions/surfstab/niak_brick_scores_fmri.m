@@ -272,7 +272,7 @@ for rr = 1:length(in.fmri)
         [FDhdr,vol] = niak_read_vol(in.fmri{rr});
     end
     if isfield(FDhdr,'extra')&&isfield(FDhdr.extra,'mask_scrubbing')
-        vol = vol(:,:,:,~hdr.extra.mask_scrubbing);
+        vol = vol(:,:,:,~FDhdr.extra.mask_scrubbing);
     end
     if rr == 1
          tseries = niak_normalize_tseries(niak_vol2tseries(vol,mask));
