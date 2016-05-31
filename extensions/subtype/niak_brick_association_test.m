@@ -209,6 +209,25 @@ if ~isstruct(opt.contrast)
     error('OPT.CONTRAST has to be a structure');
 end
 
+% Make sure the main effects of the requested interactions are also requested as
+% contrasts
+contrasts = fieldnames(opt.contrast);
+for n_inter = 1:n_interactions
+    % Get the factors for this interaction
+    int_facs = length(opt.interaction(n_inter).factor);
+    n_facs = length(int_facs);
+    for ifac = 1:n_facs
+        fac_name = opt.interaction(n_inter).factor{ifac};
+        if ~ismember(fac_name, contrasts)
+            % One of the factors for this interaction is not a contrast. We need
+            % to change that
+            warning('The interaction %s is based on factor %s but there is no contrast for this factor. I will add a zero contrast.\n', interactions{n_inter}, fac_name);
+            opt.contrast.(fac_name) = 0;
+        end
+    end
+end
+    
+
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
     return
