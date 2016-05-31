@@ -22,6 +22,14 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       expected to have a header and a first column specifying the case
 %       IDs/names corresponding to the data in FILES_IN.DATA
 %
+%   SUBTYPE.<NETWORK>
+%       (string, default 'gb_niak_omitted' ) path to previously
+%       generated subtype maps that will be used for weight extraction on the
+%       current dataset. The scale of these subtypes has to match the scale in
+%       OPT.SCALE with continuously ascending order 1:OPT.SCALE. Naming of the
+%       subfields has to correspond to the pattern 'network_i' for the ith
+%       network in 1:OPT.SCALE.
+%
 % OPT
 %   (structure, optional) with the following fields:
 %
@@ -199,8 +207,8 @@ end
 
 % FILES_IN
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'mask' , 'model'           },...
-           { NaN    , NaN    , 'gb_niak_omitted' });
+           { 'data' , 'mask' , 'model'           , 'subtype'         },...
+           { NaN    , NaN    , 'gb_niak_omitted' , 'gb_niak_omitted' });
 
 % Options
 opt = psom_struct_defaults(opt,...
@@ -226,6 +234,20 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
 opt.association = psom_struct_defaults(opt.association,...
                   { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
                   { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
+              
+% See if external subtypes have been specified
+ext_sbt = false;
+if ~strcmp(files_in.subtype, 'gb_niak_omitted')
+    % External subtypes were specified
+    ext_sbt = true;
+    n_sbt_ext = length(fieldnames(files_in.subtype));
+    % See if we have the same number of networks
+    if ~n_sbt_ext == opt.scale
+        % For some reason we don't have the correct number of external subtype
+        % networks
+        error('The external subtypes in FILES_IN.SUBTYPE have %d networks but OPT.SCALE = %d. These have to be the same. Exiting!', n_sbt_ext, opt.scale);
+    end
+end
 
 %% Construct the pipeline
 pipe = struct;
@@ -249,22 +271,29 @@ for net_id = 1:opt.scale;
                         pre_in, pre_out, pre_opt);
     % Assign output to weight extraction step
     weight_in.data.(net_name) = pipe.(pre_name).files_out;
-
-    % Subtyping
-    sub_name = sprintf('subtype_%d', net_id);
-    % Assign options
-    sub_opt = opt.subtype;
-    % Set the network folder
-    sub_opt.folder_out = network_folder;
-    % Assign inputs
-    sub_in = rmfield(files_in, 'data');
-    sub_in.data = pipe.(pre_name).files_out;
-    sub_out = struct;
-    sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
-    pipe = psom_add_job(pipe, sub_name, 'niak_brick_subtyping',...
-                        sub_in, sub_out, sub_opt);
-    % Assign output to weight extraction step
-    weight_in.subtype.(net_name) = pipe.(sub_name).files_out.subtype;
+    
+    % Check if external subtypes have been supplied
+    if ~ext_sbt
+        % Compute subtypes on the current data
+        % Subtyping
+        sub_name = sprintf('subtype_%d', net_id);
+        % Assign options
+        sub_opt = opt.subtype;
+        % Set the network folder
+        sub_opt.folder_out = network_folder;
+        % Assign inputs
+        sub_in = rmfield(files_in, 'data');
+        sub_in.data = pipe.(pre_name).files_out;
+        sub_out = struct;
+        sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
+        pipe = psom_add_job(pipe, sub_name, 'niak_brick_subtyping',...
+                            sub_in, sub_out, sub_opt);
+        % Assign output to weight extraction step
+        weight_in.subtype.(net_name) = pipe.(sub_name).files_out.subtype;
+    else
+        % Assign output to weight extraction step
+        weight_in.subtype.(net_name) = files_in.subtype.(net_name);
+    end
 end
 
 % Set up the weight extraction options
