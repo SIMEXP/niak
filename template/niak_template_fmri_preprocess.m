@@ -82,7 +82,6 @@ opt.motion.session_ref  = 'session1'; % The session that is used as a reference.
 % resampling in stereotaxic space
 opt.resample_vol.interpolation = 'trilinear'; % The resampling scheme. The fastest and most robust method is trilinear. 
 opt.resample_vol.voxel_size    = [3 3 3];     % The voxel size to use in the stereotaxic space
-opt.resample_vol.flag_skip     = 0;           % Skip resampling (data will stay in native functional space after slice timing/motion correction) (0: don't skip, 1 : skip)
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
 % space (niak_brick_t1_preprocess)

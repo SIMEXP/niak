@@ -242,6 +242,8 @@ if ~isempty(opt.interaction)
               ind    = find(mask == 1);
               if length(ind)>1
                   error('Attempt to define an interaction term using the label %s, which is associated with more than one covariate',factor)
+              elseif isempty(ind)
+                  warning('Attempt to define an interaction term using the label %s, but it is not a covariate in FILES_IN.MODEL',factor)
               end
               % Optional : normalisation of the covariate, which is involved in this interaction, BEFORE building the crossproduct
               if isfield(opt.interaction(num_i),'flag_normalize_inter') && ~opt.interaction(num_i).flag_normalize_inter
