@@ -250,9 +250,6 @@ for j_id = 1:j_number
         elseif ischar(opt.files_out.(out_name))
             error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
         end
-        if ~isdir([opt.folder_out filesep out_name])
-                psom_mkdir([opt.folder_out filesep out_name]);
-        end
     end
     s_opt = opt.scores;
     if ~opt.flag_rand
