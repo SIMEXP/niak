@@ -322,7 +322,6 @@ if opt.flag_visu
     visu_in.weight = pipe.weight_extraction.files_out.weights;
     visu_in.association = pipe.association_test.files_out.stats;
     visu_out = struct;
-    visu_opt = struct;
     fields = {'fdr', 'type_fdr', 'interaction', 'normalize_x', 'normalize_y',...
                         'select', 'flag_intercept'};
     visu_opt = rmfield(opt.association, fields);
