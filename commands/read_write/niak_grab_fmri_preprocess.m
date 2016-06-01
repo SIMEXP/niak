@@ -191,23 +191,23 @@ mask_keep = false([nb_subject 1]);
 
 %% check max motion
 file_motion = [path_qc 'group_motion' filesep 'qc_motion_group.csv'];
-[tab_motion,labx,laby] = niak_read_csv(file_motion);
 mask_keep = true(nb_subject,1);
 if (opt.max_translation<Inf)||(opt.max_rotation<Inf)
-for num_s = 1:nb_subject
-    ind_s = find(ismember(labx,list_subject{num_s}));
-    if ~isempty(ind_s)
-    	tsl   = tab_motion(ind_s,2);
-    	rot   = tab_motion(ind_s,1);
-    	flag_keep = (tsl<opt.max_translation)&&(rot<opt.max_rotation)||ismember(list_subject{num_s},opt.include_subject);
-    	if ~flag_keep
-            fprintf('Subject %s was excluded because of excessive motion\n',list_subject{num_s});
-    	end
-    	mask_keep(num_s) = flag_keep;
-    else
-	fprintf('I could not find subject %s for quality control of max motion (rotation)\n',list_subject{num_s});
-    end    
-end
+    [tab_motion,labx,laby] = niak_read_csv(file_motion);
+    for num_s = 1:nb_subject
+        ind_s = find(ismember(labx,list_subject{num_s}));
+        if ~isempty(ind_s)
+    	      tsl   = tab_motion(ind_s,2);
+    	      rot   = tab_motion(ind_s,1);
+    	      flag_keep = (tsl<opt.max_translation)&&(rot<opt.max_rotation)||ismember(list_subject{num_s},opt.include_subject);
+    	      if ~flag_keep
+                fprintf('Subject %s was excluded because of excessive motion\n',list_subject{num_s});
+    	      end
+    	      mask_keep(num_s) = flag_keep;
+        else
+	          fprintf('I could not find subject %s for quality control of max motion (rotation)\n',list_subject{num_s});
+        end    
+    end
 end
 
 %% Check the amount of time frames
