@@ -79,13 +79,19 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess_minc(files_in,files
 %  (structure) with the following fields:       
 %         
 %    SCANNER_STRENGTH
-%        Either 1.5T (default) of 3T, will set the N3 spline distance parameters for the 
-%        non uniform correction
+%         (string default 1.5 T) Either 1.5T of 3T, will set the N3 
+%        spline distance parameters for the non uniform correction for
+%        standard_pipeline
 %       
-%    SYMETRIC_TEMPLATE (bool)
-%        It True, will chose symetric ICBM 152 09c symetric template, if false, 
-%        will use the asymetric ones. 
+%    SYMETRIC_TEMPLATE 
+%        (bool, default :true) It True, will chose symetric 
+%        ICBM 152 09c symetric template, if false, will use the 
+%        asymetric ones. 
 %
+%    TEMPLATE_DIR 
+%        (string, default '/opt/minc-itk4/share/icbm152_model_09c/') The
+%        template used for the T1 processing
+%    
 %    FLAG_ALL
 %        (boolean, default false) if FLAG_ALL is true, by default 
 %        the brick will generate all outputs with default output 
@@ -290,8 +296,8 @@ end
  %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_all' , 'template'                 , 'flag_test' , 'folder_out' , 'flag_verbose', 'scanner_strength', 'symetric_template' };
-gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09c' , 0           , ''           , 1             , '1.5T'            , true};
+gb_list_fields    = {'flag_all' , 'template'                 , 'flag_test' , 'folder_out' , 'flag_verbose', 'scanner_strength', 'symetric_template', 'template_dir' };
+gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09c' , 0           , ''           , 1             , '1.5T'            , true               , ''};
 niak_set_defaults
                                        
 
@@ -311,11 +317,11 @@ if regexpi(opt.scanner_strength, "3.*t");
   scanner_strength = '--3t';
 end
 
-is_gz = false
 if strcmp(ext_anat, gb_niak_zip_ext);
     [bidon, name_anat, ext_anat] = fileparts(name_anat);
-is_gz = true
+    is_gz = true;
 else
+    is_gz = false;
     t1_path = files_in.anat;
 end
 
@@ -383,9 +389,10 @@ if flag_verbose
 end
 
 
-standard_pipeline_out_tmp  = niak_path_tmp('')
+%standard_pipeline_out_tmp  = niak_path_tmp('')
 % DEBUG
-%standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
+standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
+% /home/poquirion/test/standard_subject_1_level2
 
 if is_gz;
     copyfile(files_in.anat, standard_pipeline_out_tmp);
@@ -399,12 +406,23 @@ else
     symetrie = '--model mni_icbm152_t1_tal_nlin_asym_09c'
 end
 
-cmd = sprintf('standard_pipeline.pl %s  %s  --verbose --basedir %s  0 0 %s ', ...
-               scanner_strength, symetrie, standard_pipeline_out_tmp, t1_path)
+if strcmp(opt.template_dir, '')
+    template_dir = ''
+else
+    template_dir = sprintf(' --model_dir  %s', opt.template_dir)
+end
+
+cmd = sprintf('standard_pipeline.pl %s  %s %s --basedir %s --verbose 0 0 %s ', ...
+               scanner_strength, symetrie, template_dir, standard_pipeline_out_tmp, t1_path)
 
 fprintf("executing: \n\t%s\n", cmd);
 
-system( cmd );
+[status,cmdout] = system( cmd );
+
+
+if ~status:
+    fprintf("Minc standard_pipeline.pl t1 registration  failed with status %s", status)
+end 
 
 if strcmp(files_out.transformation_lin,'gb_niak_omitted')
     files_out.transformation_lin =  cat(2,folder_anat,name_anat,'_native2stereolin.xfm');   
@@ -484,9 +502,6 @@ function copy_and_zip(src,dest)
     [bidon, bidon, ext_dst] = fileparts(dest);
     if strcmp(ext_dst,gb_niak_zip_ext) && ~strcmp(ext_src, gb_niak_zip_ext)
         system(sprintf(" %s -c %s > %s ", gb_niak_zip, src, dest));  
-%        disp(z_file)
-%        fprintf('copying %s to %s\n', z_file, dest)
-%        copyfile(z_file,dest);
     else
         fprintf('copying %s to %s\n', src, dest)
         copyfile(src, dest);
