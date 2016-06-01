@@ -244,6 +244,30 @@ path_test_sc.reference = [path_test.target 'demoniak_scores'];
 path_test_sc.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_scores_demoniak(path_test_sc,opt_scores),'sco_');
 
+%% Add the test for the subtype pipeline
+opt_subtype = struct;
+opt_subtype.flag_test = true;
+opt_subtype.flag_target = opt.flag_target;
+
+% Bring paths to the structure expected for the subtype pipeline
+fsub = fieldnames(files_all.fmri.vol);
+files_sbt = struct;
+for sub_id = 1:numel(fsub)
+    sub = fsub{sub_id};
+    fses = fieldnames(files_all.fmri.vol.(sub));
+    for ses_id = 1:numel(fses)
+        ses = fses{ses_id};
+        frun = fieldnames(files_all.fmri.vol.(sub).(ses));
+        for run_id = 1:numel(frun)
+            run = frun{run_id};
+            sname = [sub '_' ses '_' run];
+            files_sbt.data.(sname) = files_all.fmri.vol.(sub).(ses).(run);
+        end
+    end
+end
+
+files_sbt.
+
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
 opt_glm.flag_test = true;
