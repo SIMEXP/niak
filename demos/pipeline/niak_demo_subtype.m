@@ -12,7 +12,7 @@ function [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_demo,opt)
 %   can be found at http://www.nitrc.org/frs/?group_id=411
 %
 % OPT
-%   (structure, optional) Any argument passed to NIAK_PIPELINE_SCORES
+%   (structure, optional) Any argument passed to NIAK_PIPELINE_SUBTYPE
 %   will do here. The demo only changes one default and enforces a few 
 %   parameters (see COMMENTS below):
 %
@@ -21,7 +21,7 @@ function [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_demo,opt)
 %      for the region growing.
 
 %   FOLDER_OUT
-%      (string, default PATH_DEMO/SCORES) where to store the 
+%      (string, default PATH_DEMO/SUBTYPE) where to store the 
 %      results of the pipeline.
 %
 % _________________________________________________________________________
@@ -32,17 +32,17 @@ function [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_demo,opt)
 %   PSOM_RUN_PIPELINE.
 %
 % OPT_PIPE
-%   (structure) the option to call NIAK_PIPELINE_SCORES
+%   (structure) the option to call NIAK_PIPELINE_SUBTYPE
 %
 % FILES_IN
 %   (structure) the description of input files used to call 
-%   NIAK_PIPELINE_SCORES
+%   NIAK_PIPELINE_SUBTYPE
 %
 % _________________________________________________________________________
 % COMMENTS
 %
 % Note 1:
-% The demo will apply the region growing pipeline on preprocessed version of 
+% The demo will apply the subtyping pipeline on preprocessed version of 
 % the DEMONIAK dataset. It is possible to configure the pipeline manager to 
 % use parallel computing using OPT.PSOM, see : 
 % http://code.google.com/p/psom/wiki/PsomConfiguration
@@ -53,7 +53,7 @@ function [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_demo,opt)
 % by itself. 
 %
 % _________________________________________________________________________
-% Copyright (c) Pierre Bellec, Sebastian Urchs
+% Copyright (c) Pierre Bellec, Sebastian Urchs, Angela Tam
 % Centre de recherche de l'institut de gériatrie de Montréal, 
 % Department of Computer Science and Operations Research
 % University of Montreal, Québec, Canada, 2013
@@ -88,7 +88,7 @@ end
 
 path_demo = niak_full_path(path_demo);
 opt = psom_struct_defaults(opt,{'files_in','folder_out'                        ,'flag_test' },...
-						       {''        ,[path_demo,filesep,'scores',filesep],false       });
+						       {''        ,[path_demo,filesep,'subtype',filesep],false       });
 
 if isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     %% Grab the results from the NIAK fMRI preprocessing pipeline
@@ -98,4 +98,4 @@ if isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
 else
     files_in = opt.files_in;
 end
-[pipeline,opt_pipe] = niak_pipeline_scores(files_in,rmfield(opt,'files_in'));
+[pipeline,opt_pipe] = niak_pipeline_subtype(files_in,rmfield(opt,'files_in'));
