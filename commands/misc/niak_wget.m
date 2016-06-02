@@ -90,6 +90,13 @@ if ~psom_exist(data.path)
     % The folder is not present, download data
     psom_mkdir(data.path);
 %    [status,msg] = system(['env -i bash -ilc "wget ' data.url ' -P ' data.path '  "'])
+    [status,msg] = system(['env -i bash -ilc "env"'])
+    disp(msg)
+    [status,msg] = system(['env -i bash -ic "env"'])
+    disp(msg)
+    [status,msg] = system(['env -i bash -lc "env"'])
+    disp(msg)
+
     [status,msg] = system(['wget ' data.url ' -P ' data.path])
     disp(data)
     if status
