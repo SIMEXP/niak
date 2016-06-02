@@ -89,8 +89,8 @@ end
 if ~psom_exist(data.path)
     % The folder is not present, download data
     psom_mkdir(data.path);
-    [status,msg] = system(['env -i bash -ilc "wget ' data.url ' -P ' data.path ' "']);
-    if status
+    [status,msg] = system(['env -i bash -ilc "wget ' data.url ' -P ' data.path '  "'])
+    if 1
         warning('There was a problem downloading the test data: %s',msg)
     end    
     if strcmp(data.type, 'target_test_niak_mnc1')
