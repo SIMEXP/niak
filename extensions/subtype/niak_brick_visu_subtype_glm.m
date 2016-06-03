@@ -198,7 +198,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
                     boxplot(sbt_weights, coi_ind);
                 end
                 % Set the x axis ticks and labels
-                ax.XTickLabel = cellstr(num2str(coi_unique));
+                set(ax,'XTickLabel',cellstr(num2str(coi_unique)));
             else
                 % This is a dimensional variable
                 % Fit a regression line between the weights and the covariate
