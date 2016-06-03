@@ -83,7 +83,7 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
                 { 'figures'                                                       },...
-                { make_paths(path_out, 'fig_association_net_%d.png', 1:opt.scale) });
+                { make_paths(path_out, 'fig_association_net_%d.pdf', 1:opt.scale) });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'figures'         },...
@@ -220,7 +220,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
         if opt.flag_verbose
             fprintf('Saving association plot to %s\n', files_out.figures{net_id});
         end
-        print(fh, files_out.figures{net_id}, '-dpng');
+        print(fh, files_out.figures{net_id}, '-dpdf');
     end
 end
 end
