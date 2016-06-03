@@ -79,6 +79,8 @@ function [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_demo,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+niak_gb_vars
+
 if nargin < 1
     error('Please specify the path to the preprocessed DEMONIAK database in PATH_DEMO')
 end
@@ -87,15 +89,36 @@ if nargin < 2
 end
 
 path_demo = niak_full_path(path_demo);
-opt = psom_struct_defaults(opt,{'files_in','folder_out'                        ,'flag_test' },...
-						       {''        ,[path_demo,filesep,'subtype',filesep],false       });
+opt = psom_struct_defaults(opt,{'files_in','folder_out'                        ,'flag_test'},...
+						       {''        ,[path_demo,filesep,'subtype',filesep],false     });
 
 if isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     %% Grab the results from the NIAK fMRI preprocessing pipeline
     opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
-    opt_g.type_files = 'scores'; % Specify to the grabber to prepare the files for the scores pipeline
+    opt_g.type_files = 'subtype'; % Specify to the grabber to prepare the files for the scores pipeline
     files_in = niak_grab_fmri_preprocess(path_demo,opt_g); % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 else
     files_in = opt.files_in;
 end
-[pipeline,opt_pipe] = niak_pipeline_subtype(files_in,rmfield(opt,'files_in'));
+
+files_in.model = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+
+%% Duplicate subjects
+files_du = struct();
+files_du.data.subject1a_session1_motor = files_in.data.subject1_session1_motor;
+files_du.data.subject1b_session1_motor = files_in.data.subject1_session1_motor;
+files_du.data.subject1c_session1_motor = files_in.data.subject1_session1_motor;
+files_du.data.subject1d_session1_motor = files_in.data.subject1_session1_motor;
+files_du.data.subject2a_session1_motor = files_in.data.subject2_session1_motor;
+files_du.data.subject2b_session1_motor = files_in.data.subject2_session1_motor;
+files_du.data.subject2c_session1_motor = files_in.data.subject2_session1_motor;
+files_du.data.subject2d_session1_motor = files_in.data.subject2_session1_motor;
+files_in.data = files_du.data;
+
+%% Options for the subtyping pipeline
+opt.scale = 1;
+opt.stack.regress_conf = {'site'};
+opt.association.contrast.age = 1;
+
+%% Run the pipeline
+[pipeline,opt_pipe] = niak_pipeline_subtype(files_in,opt);
