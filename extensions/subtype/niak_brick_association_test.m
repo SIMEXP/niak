@@ -186,6 +186,7 @@ if ~isstruct(opt.interaction)
 elseif isempty(fieldnames(opt.interaction))
     % Option is empty, remove it
     opt = rmfield(opt, 'interaction');
+    n_interactions = 0;
 else
     n_interactions = size(opt.interaction,2);
     interactions = cell(n_interactions, 1);
@@ -212,17 +213,19 @@ end
 % Make sure the main effects of the requested interactions are also requested as
 % contrasts
 contrasts = fieldnames(opt.contrast);
-for n_inter = 1:n_interactions
-    % Get the factors for this interaction
-    int_facs = length(opt.interaction(n_inter).factor);
-    n_facs = length(int_facs);
-    for ifac = 1:n_facs
-        fac_name = opt.interaction(n_inter).factor{ifac};
-        if ~ismember(fac_name, contrasts)
-            % One of the factors for this interaction is not a contrast. We need
-            % to change that
-            warning('The interaction %s is based on factor %s but there is no contrast for this factor. I will add a zero contrast.\n', interactions{n_inter}, fac_name);
-            opt.contrast.(fac_name) = 0;
+if isfield(opt, 'interaction')
+    for n_inter = 1:n_interactions
+        % Get the factors for this interaction
+        int_facs = length(opt.interaction(n_inter).factor);
+        n_facs = length(int_facs);
+        for ifac = 1:n_facs
+            fac_name = opt.interaction(n_inter).factor{ifac};
+            if ~ismember(fac_name, contrasts)
+                % One of the factors for this interaction is not a contrast. We need
+                % to change that
+                warning('The interaction %s is based on factor %s but there is no contrast for this factor. I will add a zero contrast.\n', interactions{n_inter}, fac_name);
+                opt.contrast.(fac_name) = 0;
+            end
         end
     end
 end
