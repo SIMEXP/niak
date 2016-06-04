@@ -119,6 +119,7 @@ files_in.data = files_du.data;
 opt.scale = 1;
 opt.stack.regress_conf = {'site'};
 opt.association.contrast.age = 1;
+opt.subtype.group_col_id = 2;
 
 %% Run the pipeline
 [pipeline,opt_pipe] = niak_pipeline_subtype(files_in,opt);
