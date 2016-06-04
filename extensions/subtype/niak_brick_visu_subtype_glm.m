@@ -175,7 +175,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     % Make a figure for each network
     for net_id = 1:opt.scale
         % Start with the figure
-        fh = figure('Visible', 'off');
+        fh = figure('Visible', 'on');
         title(sprintf('Network %d, Association w %s', net_id, coi_name));
         % Go through the subtypes
         for sbt_id = 1:n_sbt
@@ -198,7 +198,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
                     boxplot(sbt_weights, coi_ind);
                 end
                 % Set the x axis ticks and labels
-                set(ax,'XTickLabel',cellstr(num2str(coi_unique)));
+                %set(ax,'XTickLabel',cellstr(num2str(coi_unique)));
             else
                 % This is a dimensional variable
                 % Fit a regression line between the weights and the covariate
