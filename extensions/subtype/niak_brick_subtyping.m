@@ -154,7 +154,7 @@ files_in = psom_struct_defaults(files_in,...
 % Options
 opt = psom_struct_defaults(opt,...
       { 'folder_out' , 'nb_subtype', 'sub_map_type', 'group_col_id' , 'flag_stats' , 'flag_verbose' , 'flag_test' },...
-      { ''           , NaN         , 'mean'        , 0              , false        , true           , false       });
+      { ''           , NaN         , 'mean'        , 'Group'        , false        , true           , false       });
 
 % Output
 if ~isempty(opt.folder_out)
@@ -168,10 +168,10 @@ else
                 { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
 end
   
-% If the user wants stats, the group column must be specified
-if opt.flag_stats && opt.group_col_id == 0
-    error('OPT.FLAG_STATS is set to true but the group variable is undefined');
-end
+% % If the user wants stats, the group column must be specified
+% if opt.flag_stats && opt.group_col_id == 0
+%     error('OPT.FLAG_STATS is set to true but the group variable is undefined');
+% end
   
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -282,7 +282,11 @@ if opt.flag_stats == 1
     [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
     
     %% Build the model from user's csv and input column
-    col = tab(:,opt.group_col_id);
+    col_ind = find(strcmp(opt.group_col_id,labels_y));
+    if all(col_ind == 0)
+        error('Group column %s has not been found in %s',opt.group_col_id,files_in.model)
+    end
+    col = tab(:,col_ind);
     % Build a mask for NaN values in model and mask out subjects with NaNs
     [x, y] = find(~isnan(col));
     sub_id = unique(x);
@@ -347,8 +351,14 @@ if opt.flag_stats == 1
         pc = pie(pc_val);
         textc = findobj(pc,'Type','text');
         percval = get(textc,'String');
-        labels = strcat(name_clus, {': '},percval');
-        pc = pie(pc_val,labels);
+        prune_clus = name_clus(pc_val ~= 0);
+        prune_val = pc_val(pc_val ~= 0);
+        if length(prune_clus) == 1
+            labels = {sprintf('%s: %s',prune_clus{1},percval)};
+        else
+            labels = strcat(prune_clus, {': '},percval');
+        end
+        pc = pie(prune_val,labels);
         c_title = ['Group' num2str(list_gg(pp))];
         title(c_title);
         print(fh, files_out.pie{pp}, '-dpng', '-r300');
