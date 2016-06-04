@@ -6,7 +6,7 @@ base_path = '/Users/AngelaTam/Desktop/subtype_pipeline_test/subtype_test_data/';
 pheno_path = [base_path 'numeric_pheno.csv'];
 data_path = [base_path 'raw_nii/'];
 mask_path = [base_path 'raw_nii/func_mask_group_stereonl.nii.gz'];
-out_path = [base_path 'pipe_out_regress/'];
+out_path = [base_path 'pipe_out_jun3/'];
 
 %% Configure the inputs
 pheno = niak_read_csv_cell(pheno_path);
@@ -35,10 +35,11 @@ opt.flag_test = false;
 opt.scale = 7;
 opt.folder_out = out_path;
 opt.subtype.group_col_id = 2;
-opt.stack.regress_conf = {'Gender', 'Age'};
-opt.association.contrast.Age_by_Gender = 1;
-opt.association.interaction(1).label = 'Age_by_Gender';
-opt.association.interaction(1).factor = {'Age','Gender'};
+opt.stack.regress_conf = {'Age'};
+opt.association.contrast.Gender = 1;
+% opt.association.contrast.Age_by_Gender = 1;
+% opt.association.interaction(1).label = 'Age_by_Gender';
+% opt.association.interaction(1).factor = {'Age','Gender'};
 opt.association.fdr = 0.5;
 %% Start the pipeline
 [pipe,opt] = niak_pipeline_subtype(files_in,opt);
