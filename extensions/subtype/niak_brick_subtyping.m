@@ -18,10 +18,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %   MASK
 %       (3D volume, default all voxels) a binary mask of the voxels that 
 %       are included in the time*space array
-%
-%   MODEL
-%       (string, optional, default 'gb_niak_omitted') the name of a csv file
-%       containing information and variables about subjects 
 % 
 % FILES_OUT 
 %   (structure) with the following fields:
@@ -52,12 +48,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 % 
 %   EFF_MAP
 %       (string, default 'eff_subtype.nii.gz') path to ...
-%
-%   STATS
-%       (string, default 'group_stats.mat') path to ...
-%
-%   CONTAB
-%       (string, default 'chi2_contingency_table.csv') path to ...
 % 
 % OPT 
 %   (structure) with the following fields:
@@ -72,16 +62,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %   SUB_MAP_TYPE
 %       (string, default 'mean') how the subtypes are represented in the
 %       volumes (options: 'mean' or 'median')
-%
-%   GROUP_COL_ID
-%       (integer, default 0) the column number
-%       (excluding column A for subject IDs) in the model csv that separates 
-%       subjects into groups to compare chi-squared and Cramer's V stats
-%
-%   FLAG_STATS
-%       (boolean, default 0) if the flag is 1 (true), the brick
-%       will calculate Cramer's V and chi-squared statistics for groups
-%       specified in files_in.model
 %
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -122,19 +102,6 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       Different maps for subtypes as saved in the variable SUB in
 %       SUBTYPES.MAT
 %
-%   GROUP_STATS.MAT
-%       (structure) If OPT.FLAG_STATS was true, this .mat file will be 
-%       generated, which contains Chi-squared and Cramer's V statistics
-%
-%   CHI2_CONTINGENCY_TABLE.CSV
-%       (.csv) If OPT.FLAG_STATS was true, a Chi2 contingency table will be
-%       saved
-%
-%   PIECHART_GROUP(n).PNG
-%       (figure, .png) If OPT.FLAG_STATS was true, pie chart figures will
-%       be generated to illustrate the proportions of data in n groups in 
-%       each subtype
-%
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
 
@@ -148,30 +115,25 @@ end
 
 % Input
 files_in = psom_struct_defaults(files_in,...
-           { 'data' , 'mask' , 'model'           },...
-           { NaN    , NaN    , 'gb_niak_omitted' });
+           { 'data' , 'mask' },...
+           { NaN    , NaN    });
 
 % Options
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'group_col_id' , 'flag_stats' , 'flag_verbose' , 'flag_test' },...
-      { ''           , NaN         , 'mean'        , 'Group'        , false        , true           , false       });
+      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'flag_verbose' , 'flag_test' },...
+      { ''           , NaN         , 'mean'        , true           , false       });
 
 % Output
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'stats'                      , 'contab'                                },...
-                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] });
+                { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       },...
+                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] });
 else
     files_out = psom_struct_defaults(files_out,...
-                { 'sim_fig'         , 'den_fig'         , 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'stats'           , 'contab'          , 'pie'             },...
-                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+                { 'sim_fig'         , 'den_fig'         , 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         },...
+                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
 end
-  
-% % If the user wants stats, the group column must be specified
-% if opt.flag_stats && opt.group_col_id == 0
-%     error('OPT.FLAG_STATS is set to true but the group variable is undefined');
-% end
   
 % If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -274,100 +236,6 @@ if ~strcmp(files_out.grand_std_map, 'gb_niak_omitted')
     sub.gd_std = std(data,1);
     vol_std_mean = niak_tseries2vol(sub.gd_std, mask);
     niak_write_vol(hdr,vol_std_mean);
-end
-
-%% Statistics
-
-if opt.flag_stats == 1 
-    [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
-    
-    %% Build the model from user's csv and input column
-    col_ind = find(strcmp(opt.group_col_id,labels_y));
-    if all(col_ind == 0)
-        error('Group column %s has not been found in %s',opt.group_col_id,files_in.model)
-    end
-    col = tab(:,col_ind);
-    % Build a mask for NaN values in model and mask out subjects with NaNs
-    [x, y] = find(~isnan(col));
-    sub_id = unique(x);
-    [a, b] = find(isnan(col));  % the subjects that were dropped due to having NaNs
-    sub_drop = unique(a);
-    partition = part(sub_id,:); 
-    % Save the model
-    model.subject_id = sub_id;
-    model.partition = partition;
-    model.group = col;
-    model.subject_drop = sub_drop;
-        
-    %% Build the contingency table 
-    
-    name_clus = {};
-    name_grp = {};
-    list_gg = unique(col)'; % find unique values from input column to differentiate the groups
-    for cc = 1:opt.nb_subtype % for each cluster
-        for gg = 1:length(list_gg) % for each group
-            mask_sub = partition(:)==cc; % build a mask to select subjects within one cluster 
-            sub_col = col(mask_sub); % subjects within one cluster
-            nn = numel(find(sub_col(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
-            contab(gg,cc) = nn;
-            name_clus{cc} = ['sub' num2str(cc)];
-            name_grp{gg} = ['group' num2str(list_gg(gg))];
-        end
-    end
-    
-    % Write the table into a csv
-    opt_ct.labels_x = name_grp;
-    opt_ct.labels_y = name_clus;
-    opt_ct.precision = 2;
-    % Check if to be saved - improvable
-    if ~strcmp(files_out.contab, 'gb_niak_omitted')
-        niak_write_csv(files_out.contab, contab, opt_ct)
-    end
-    
-    %% Chi-square test of the contigency table
-    
-    stats.chi2.expected = sum(contab,2)*sum(contab)/sum(contab(:)); % compute expected frequencies
-    stats.chi2.X2 = (contab-stats.chi2.expected).^2./stats.chi2.expected; % compute chi-square statistic
-    stats.chi2.X2 = sum(stats.chi2.X2(:)); 
-    stats.chi2.df = prod(size(contab)-[1 1]);
-    stats.chi2.p = 1-chi2cdf(stats.chi2.X2,stats.chi2.df); % determine p value
-    stats.chi2.h = double(stats.chi2.p<=0.05);
-    
-    %% Cramer's V
-    
-    [n_row n_col] = size(contab); % figure out size of contigency table
-    col_sum = sum(contab); % sum of columns
-    row_sum = sum(contab,2); % sum of rows
-    n_sum = sum(sum(contab)); % sum of everything
-    kk = min(n_row,n_col); 
-    stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
-    
-    files_out.pie = make_paths(opt.folder_out, 'pie_chart_%d.png', 1:n_row);
-    
-    % Pie chart visualization
-    for pp = 1:n_row
-        fh = figure('Visible', 'off');
-        pc_val = contab(pp,:);
-        pc = pie(pc_val);
-        textc = findobj(pc,'Type','text');
-        percval = get(textc,'String');
-        prune_clus = name_clus(pc_val ~= 0);
-        prune_val = pc_val(pc_val ~= 0);
-        if length(prune_clus) == 1
-            labels = {sprintf('%s: %s',prune_clus{1},percval)};
-        else
-            labels = strcat(prune_clus, {': '},percval');
-        end
-        pc = pie(prune_val,labels);
-        c_title = ['Group' num2str(list_gg(pp))];
-        title(c_title);
-        print(fh, files_out.pie{pp}, '-dpng', '-r300');
-    end
-    % Check if to be saved - improvable
-    if ~strcmp(files_out.stats, 'gb_niak_omitted')
-        save(files_out.stats,'model','stats')
-    end
-    
 end
 
 %% Saving subtyping results and statistics
