@@ -12,7 +12,7 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 %   (structure) with the following fields:
 %
 %   MODEL
-%       (strings, default 'gb_niak_omitted') a .csv files coding for the 
+%       (string) a .csv files coding for the 
 %       pheno data. Is expected to have a header and a first column 
 %       specifying the case IDs/names corresponding to the data in 
 %       FILES_IN.DATA
@@ -29,10 +29,12 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 %   (structure) with the following fields:
 %
 %   STATS
-%       (string, default 'group_stats.mat') path to ...
+%       (string, default 'group_stats.mat') path to the .mat file output
+%       containing chi-squared and Cramer's V stats
 %
 %   CONTAB
-%       (string, default 'chi2_contingency_table.csv') path to ...
+%       (string, default 'chi2_contingency_table.csv') path to .csv file
+%       output containing the contingency table
 %
 % OPT
 %   (structure) with the following fields:
@@ -50,7 +52,34 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 % _________________________________________________________________________
 % OUTPUTS:
 %
-% FILES_OUT (structure) with the following fields:
+%  GROUP_STATS.MAT
+%       (.mat) contains the following variables:
+%
+%       MODEL
+%           (structure) contains the fields: 
+%               SUBJECT_ID: list of subject IDs
+%               PARTITION: the subtypes in which subjects were clustered
+%                   from files_in.subtype
+%               GROUP: the grouping variable from files_in.model
+%               SUBJECT_DROP: list of subjects that had to be dropped due
+%                   to presence of NaN values
+%       STATS
+%           (structure) with the following fields:
+%               CHI2 (structure): 
+%                   EXPECTED: contains expected cell frequencies
+%                   X2: computed CHI2 stat
+%                   DF: degrees of freedom
+%                   P: p-value
+%                   H: significance of hypothesis testing (0 not
+%                       significant, 1 significant)
+%               CRAMERV: computed Cramer's V stat
+%
+%   CHI2_CONTINGENCY_TABLE.CSV
+%       (.csv) containing the calculated contingency table
+%
+%   PIE_CHART_(n).PDF
+%       pie charts illustrating the proportions of data in n groups in 
+%       each subtype
 %
 % The structures FILES_IN, FILES_OUT and OPT are updated with default
 % valued. If OPT.FLAG_TEST == 0, the specified outputs are written.
@@ -59,7 +88,7 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 
 % Syntax
 if ~exist('files_in','var')||~exist('files_out','var')||~exist('opt','var')
-    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CHI_CRAMER(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_subtyping'' for more info.')
+    error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_CHI_CRAMER(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_chi_cramer'' for more info.')
 end
 
 % Input
@@ -80,8 +109,8 @@ if ~isempty(opt.folder_out)
                 { [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] });
 else
     files_out = psom_struct_defaults(files_out,...
-                { 'stats'           , 'contab'          , 'pie'             },...
-                { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+                { 'stats'           , 'contab'                     },...
+                { 'group_stats.mat' , 'chi2_contingency_table.csv' });
 end
 
 % If the test flag is true, stop here !
@@ -134,10 +163,7 @@ end
 opt_ct.labels_x = name_grp;
 opt_ct.labels_y = name_clus;
 opt_ct.precision = 2;
-% Check if to be saved - improvable
-if ~strcmp(files_out.contab, 'gb_niak_omitted')
-    niak_write_csv(files_out.contab, contab, opt_ct)
-end
+niak_write_csv(files_out.contab, contab, opt_ct)
 
 %% Chi-square test of the contigency table
 
@@ -157,9 +183,9 @@ n_sum = sum(sum(contab)); % sum of everything
 kk = min(n_row,n_col);
 stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
 
-files_out.pie = make_paths(opt.folder_out, 'pie_chart_%d.png', 1:n_row);
-
 % Pie chart visualization
+files_out.pie = make_paths(opt.folder_out, 'pie_chart_%d.pdf', 1:n_row);
+
 for pp = 1:n_row
     fh = figure('Visible', 'off');
     pc_val = contab(pp,:);
@@ -176,12 +202,11 @@ for pp = 1:n_row
     pc = pie(prune_val,labels);
     c_title = ['Group' num2str(list_gg(pp))];
     title(c_title);
-    print(fh, files_out.pie{pp}, '-dpng', '-r300');
+    print(fh, files_out.pie{pp}, '-dpdf', '-r300');
 end
-% % Check if to be saved - improvable
-% if ~strcmp(files_out.stats, 'gb_niak_omitted')
-    save(files_out.stats,'model','stats')
-% end
+
+%% Save the model and stats
+save(files_out.stats,'model','stats')
     
 end
 
