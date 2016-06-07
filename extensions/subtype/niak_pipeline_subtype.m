@@ -158,6 +158,17 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           (boolean, default true) if FLAG_INTERCEPT is true, a constant
 %           covariate will be added to the model.
 %
+%   CHI2
+%       (struct, optional) with the following fields:
+%
+%       GROUP_COL_ID
+%           (string, default 'Group') the name of the column in
+%           FILES_IN.MODEL that categorizes subjects into groups
+%
+%       NB_SUBTYPE 
+%           (integer, default OPT.SUBTYPE.NB_SUBTYPE) the 
+%           number of subtypes extracted during the clustering
+%
 %   FLAG_VISU
 %       (boolean, default true) turn on/off to generate figures for the
 %       association test
@@ -171,7 +182,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 % ______________________________________________________________________________
 % COMMENTS:
 %
-% Copyright (c) Pierre Bellec, Sebastian Urchs
+% Copyright (c) Pierre Bellec, Sebastian Urchs, Angela Tam
 %   Centre de recherche de l'institut de Gériatrie de Montréal
 %   Département d'informatique et de recherche opérationnelle
 %   Université de Montréal, 2010-2016
@@ -227,8 +238,13 @@ opt.stack = psom_struct_defaults(opt.stack,...
 
 % Subtype options
 opt.subtype = psom_struct_defaults(opt.subtype,...
-             { 'nb_subtype' , 'sub_map_type' , 'group_col_id' , 'flag_stats' },...
-             { 2            , 'mean'         , 0              , true         });
+             { 'nb_subtype' , 'sub_map_type' },...
+             { 2            , 'mean'         });         
+
+% % Chi-2 and Cramer's V options
+% opt.chi2 = psom_struct_defaults(opt.chi2,...
+%              { 'nb_subtype'           , 'group_col_id' },...
+%              { opt.subtype.nb_subtype , 'Group'        });  
 
 % Association options
 opt.association = psom_struct_defaults(opt.association,...
@@ -247,6 +263,8 @@ if ~strcmp(files_in.subtype, 'gb_niak_omitted')
         % networks
         error('The external subtypes in FILES_IN.SUBTYPE have %d networks but OPT.SCALE = %d. These have to be the same. Exiting!', n_sbt_ext, opt.scale);
     end
+else
+    files_in = rmfield(files_in, 'subtype'); % remove files_in.subtype if not supplied by user
 end
 
 %% Construct the pipeline
@@ -282,7 +300,8 @@ for net_id = 1:opt.scale;
         % Set the network folder
         sub_opt.folder_out = network_folder;
         % Assign inputs
-        sub_in = rmfield(files_in, 'data');
+        sfields = {'data', 'model'};
+        sub_in = rmfield(files_in, sfields);
         sub_in.data = pipe.(pre_name).files_out;
         sub_out = struct;
         sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
@@ -303,6 +322,16 @@ weight_opt.folder_out = opt.folder_out;
 weight_out.weights = [opt.folder_out filesep 'subtype_weights.mat'];
 pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
+                
+                
+%     % Set up the Chi2 and Cramer's V test options
+%     chi2_in = struct;
+%     chi2_in.model = files_in.model;
+%     chi2_in.subtype = sub_out.subtype;
+%     chi2_out = struct;
+%     chi2_opt = opt.chi2;
+%     pipe = psom_add_job(pipe, 'chi2_cramerv', 'niak_brick_chi_cramer',...
+%         chi2_in, chi2_out, chi2_opt);
 
 % Set up the association test options
 assoc_opt = opt.association;
