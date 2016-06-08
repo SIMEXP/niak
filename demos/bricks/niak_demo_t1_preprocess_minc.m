@@ -83,7 +83,9 @@ files_out.mask_stereolin = '';
 files_out.mask_stereonl = '';
 files_out.classify = '';
 opt.scanner_strength = '3t';
-opt.template_dir = '/home/poquirion/simexp/icbm152_model_09c_low_rez';
+#opt.template_dir = '/opt/minc-itk4/share/icbm152_model_09c';
+opt.nl_resolution = 4;
+
 
 %opt.template_root = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep'];
 %opt.template_space = 'mni_icbm152_t1_tal_nlin_asym_09a';

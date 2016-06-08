@@ -127,6 +127,9 @@ end
 % The folder of the CIVET pipeline
 gb_niak_path_civet = '/data/aces/aces1/quarantines/Linux-i686/Feb-14-2008/CIVET-1.1.9' ;
 
+% The root of the  minc tools
+gb_niak_path_minc = '/opt/minc-itk4' ;
+
 % program to display ps files
 gb_niak_viewerps = 'evince';
 

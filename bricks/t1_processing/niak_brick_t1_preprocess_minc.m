@@ -83,6 +83,10 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess_minc(files_in,files
 %        spline distance parameters for the non uniform correction for
 %        standard_pipeline
 %       
+%    NL_RESOLUTION
+%        (int default 2) In mm, The higest resolution mincbeast will got to,
+%         can be 1mm, 2mm or 4mm.
+%
 %    SYMETRIC_TEMPLATE 
 %        (bool, default :true) It True, will chose symetric 
 %        ICBM 152 09c symetric template, if false, will use the 
@@ -296,8 +300,8 @@ end
  %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_all' , 'template'                 , 'flag_test' , 'folder_out' , 'flag_verbose', 'scanner_strength', 'symetric_template', 'template_dir' };
-gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09c' , 0           , ''           , 1             , '1.5T'            , true               , ''};
+gb_list_fields    = {'nl_resolution', 'flag_all' , 'template'                 , 'flag_test' , 'folder_out' , 'flag_verbose', 'scanner_strength', 'symetric_template', 'template_dir' };
+gb_list_defaults  = {2              ,false       , 'mni_icbm152_nlin_sym_09c' , 0           , ''           , 1             , '1.5T'            , true               , ''};
 niak_set_defaults
                                        
 
@@ -389,9 +393,9 @@ if flag_verbose
 end
 
 
-%standard_pipeline_out_tmp  = niak_path_tmp('')
+standard_pipeline_out_tmp  = niak_path_tmp('')
 % DEBUG
-standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
+%standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
 % /home/poquirion/test/standard_subject_1_level2
 
 if is_gz;
@@ -406,21 +410,28 @@ else
     symetrie = '--model mni_icbm152_t1_tal_nlin_asym_09c'
 end
 
+if opt.nl_resolution
+    nl_resolution = sprintf(' --segmentation_resolution %dmm --non_linear_fit_level %d ', nl_resolution, nl_resolution)
+else 
+    nl_resolution = sprintf(' --segmentation_resolution 2mm --non_linear_fit_level 2 ')
+end
+
+
 if strcmp(opt.template_dir, '')
     template_dir = ''
 else
     template_dir = sprintf(' --model_dir  %s', opt.template_dir)
 end
 
-cmd = sprintf('standard_pipeline.pl %s  %s %s --basedir %s --verbose 0 0 %s ', ...
-               scanner_strength, symetrie, template_dir, standard_pipeline_out_tmp, t1_path)
+cmd = sprintf('standard_pipeline.pl %s %s  %s %s --basedir %s --verbose 0 0 %s ', ...
+               nl_resolution, scanner_strength, symetrie, template_dir, standard_pipeline_out_tmp, t1_path)
 
 fprintf("executing: \n\t%s\n", cmd);
 
 [status,cmdout] = system( cmd );
 
 
-if ~status:
+if ~status
     fprintf("Minc standard_pipeline.pl t1 registration  failed with status %s", status)
 end 
 

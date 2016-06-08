@@ -154,26 +154,15 @@ opt.psom.path_logs = [path_test.result 'logs'];
 opt_pipe.flag_test = true;
 opt_pipe.flag_target = opt.flag_target;
 %%
-opt_pipe.minc_standard.scanner_strength = '3T';
-%%
 pipe = struct;
 
 %% Add the test of the preprocessing pipeline
 path_test_fp.demoniak  = path_test.demoniak;
 path_test_fp.reference = [path_test.target 'demoniak_preproc'];
 path_test_fp.result    = path_test.result;
-opt_pipe.resample_vol.voxel_size = [10 10 10];
-opt_pipe.template.t1           = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_5mm.mnc.gz'];
-opt_pipe.template.mask         = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_5mm.mnc.gz'];
-opt_pipe.template.mask_eroded  = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_avg     = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_dilated = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_bold = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_wm      = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_5mm.mnc.gz'];
-opt_pipe.template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
-opt_pipe.template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
-opt_pipe.template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                         
-opt_pipe.template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                              
+opt_pipe.minc_standard.nl_resolution = 4;
+opt_pipe.minc_standard.scanner_strength = '3T';
+
 [pipe_fp,opt_p,files_fp] = niak_test_fmripreproc_demoniak(path_test_fp,opt_pipe);
 pipe = psom_merge_pipeline(pipe,pipe_fp,'fp_');
 

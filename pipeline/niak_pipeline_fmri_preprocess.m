@@ -354,6 +354,27 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %          present in PARAM will override the fields of OPT of the subject
 %          or group of subjects that fit with LABEL.
 %
+%   MINC_STANDARD (structure)
+%       If provided, NIAK will process the T1 image, with the 
+%       minc toolkit standard_pipeline (https://github.com/BIC-MNI/bic-pipelines)        
+%       
+%       SCANNER_STRENGTH
+%           (string default 1.5 T) Either 1.5T of 3T, will set the N3 
+%           spline distance parameters for the non uniform correction for
+%           standard_pipeline
+%       
+%       NL_RESOLUTION
+%           (int default 2) In mm, The higest resolution mincbeast will got to,
+%           can be 1mm, 2mm or 4mm.
+%
+%       SYMETRIC_TEMPLATE 
+%           (bool, default :true) It True, will chose symetric 
+%           ICBM 152 09c symetric template, if false, will use the 
+%           asymetric ones. 
+%
+%       TEMPLATE_DIR 
+%           (string, default '/opt/minc-itk4/share/icbm152_model_09c/') The
+%           template used for the T1 processing
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -502,8 +523,8 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 
-list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()          , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
+list_fields    = { 'minc_standard'   , 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds' };
+list_defaults  = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()          , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults, false);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];

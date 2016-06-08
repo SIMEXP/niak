@@ -342,12 +342,22 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       minc toolkit standard_pipeline (https://github.com/BIC-MNI/bic-pipelines)        
 %       
 %       SCANNER_STRENGTH
-%       Either 1.5T (default) of 3T, will set the N3 spline distance parameters for the 
-%       non uniform correction
+%           (string default 1.5 T) Either 1.5T of 3T, will set the N3 
+%           spline distance parameters for the non uniform correction for
+%           standard_pipeline
 %       
-%       SYMETRIC_TEMPLATE (bool)
-%       It True, will chose symetric ICBM 152 09c symetric template, if false, 
-%       will use the asymetric ones. 
+%       NL_RESOLUTION
+%           (int default 2) In mm, The higest resolution mincbeast will got to,
+%           can be 1mm, 2mm or 4mm.
+%
+%       SYMETRIC_TEMPLATE 
+%           (bool, default :true) It True, will chose symetric 
+%           ICBM 152 09c symetric template, if false, will use the 
+%           asymetric ones. 
+%
+%       TEMPLATE_DIR 
+%           (string, default '/opt/minc-itk4/share/icbm152_model_09c/') The
+%           template used for the T1 processing
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -478,8 +488,8 @@ if ~ischar(opt.civet)
 end
 
 if ~ischar(opt.minc_standard)
-    list_fields   = { 'scanner_strength' , 'symetric_template'};
-    list_defaults = { "1.5T"   , true }; 
+    list_fields   = { 'scanner_strength' , 'symetric_template', 'nl_resolution', 'template_dir'};
+    list_defaults = { "1.5T"             , true               , 2               , ''}; 
     opt.minc_standard = psom_struct_defaults(opt.minc_standard,list_fields,list_defaults);
 end
 
@@ -545,10 +555,9 @@ if isstruct(opt.minc_standard)
     job_opt.folder_out              = opt.folder_anat;
     job_opt.scanner_strength        = opt.minc_standard.scanner_strength
     job_opt.symetric_template       = opt.minc_standard.symetric_template
+    job_opt.nl_resolution          = opt.minc_standard.nl_resolution
+    job_opt.template_dir            = opt.minc_standard.template_dir
     
-%    job_opt.template_root = opt.template.root
-%    job_opt.template_space = opt.template.space
-
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess_minc',job_in,job_out,job_opt);
     
     if opt.flag_verbose        
