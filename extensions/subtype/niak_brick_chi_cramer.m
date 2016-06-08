@@ -17,13 +17,21 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 %       specifying the case IDs/names corresponding to the data in 
 %       FILES_IN.DATA
 %
-%   SUBTYPE.<NETWORK>
-%       (string) path to the subtype maps for that network. The following
-%       field is expected to be inside the structure inside the .mat file.
-%
+%   SUBTYPE
+%       (string, default 'gb_niak_omitted) path to the subtype maps for 
+%       a given network. The following field is expected to be inside the 
+%       structure inside the .mat file.
 %       PART
 %           (vector) PART(I) = J if the object I is in the class J.
 %           See also: niak_threshold_hierarchy
+%       Note: Must be supplied when files_in.weights is omitted
+%
+%   WEIGHTS
+%       (string, default 'gb_niak_omitted) path to the subtype_weights.mat 
+%       file containing subtype weights for each subject, generated from 
+%       NIAK_BRICK_SUBTYPE_WEIGHT
+%       Note: Must be supplied when files_in.subtype is omitted and when
+%       OPT.FLAG_WEIGHTS is true
 %
 % FILES_OUT
 %   (structure) with the following fields:
@@ -39,16 +47,29 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 % OPT
 %   (structure) with the following fields:
 %
+%   FLAG_WEIGHTS
+%       (boolean, default false) if the flag is true, the brick will
+%       calculate statistics based on the weights from FILES_IN.WEIGHTS
+%
 %   FOLDER_OUT
 %       (string, default '') if not empty, this specifies the path where
 %       outputs are generated
 %
 %   GROUP_COL_ID
-%       (string, default 'Group') the column name in the model csv that separates 
-%       subjects into groups to compare chi-squared and Cramer's V stats
+%       (string, default 'Group') the column name in the model csv that 
+%       separates subjects into groups to compare chi-squared and 
+%       Cramer's V stats
 %
-%   NB_SUBTYPE
-%       (integer) the number of desired subtypes
+%   NETWORK 
+%       (integer, default 'gb_niak_omitted') the number of the desired
+%       network; must be supplied when OPT.FLAG_WEIGHTS is true
+%
+%   FLAG_VERBOSE
+%       (boolean, default true) turn on/off the verbose.
+%
+%   FLAG_TEST
+%       (boolean, default false) if the flag is true, the brick does not do
+%       anything but updating the values of FILES_IN, FILES_OUT and OPT.
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -93,13 +114,22 @@ end
 
 % Input
 files_in = psom_struct_defaults(files_in,...
-           { 'model', 'subtype' },...
-           { NaN    , NaN       });
+           { 'model', 'subtype'        , 'weights'         },...
+           { NaN    , 'gb_niak_omitted', 'gb_niak_omitted' });
+if strcmp(files_in.subtype, 'gb_niak_omitted') && strcmp(files_in.weights, 'gb_niak_omitted')
+    error('Either FILES_IN.SUBTYPE or FILES_IN.WEIGHTS must be supplied')
+end
 
 % Options
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'nb_subtype',  'group_col_id' ,  'flag_verbose' , 'flag_test' },...
-      { ''           , NaN         ,  'Group'        ,  true           , false       });
+      { 'folder_out' , 'group_col_id' , 'network'        , 'flag_weights', 'flag_verbose' , 'flag_test' },...
+      { ''           , 'Group'        , 'gb_niak_omitted', false         , true           , false       });
+if strcmp(files_in.weights, 'gb_niak_omitted') && opt.flag_weights 
+    error('When OPT.FLAG_WEIGHTS is true, FILES_IN.WEIGHTS must be specified')
+end
+if strcmp(opt.network, 'gb_niak_omitted') && opt.flag_weights
+    error('When OPT.FLAG_WEIGHTS is true, OPT.NETWORK must be specified')
+end
 
 % Output
 if ~isempty(opt.folder_out)
@@ -121,9 +151,17 @@ end
 %% Load the model
 [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
 
-%% Load the subtypes
-subtype = load(files_in.subtype);
-part = subtype.part;
+%% Load the subtypes or the weights (depending on opt.flag_weights) & get the partition
+if opt.flag_weights
+    tmp_weights = load(files_in.weights);
+    weights = tmp_weights.weight_mat;
+    nn = opt.network;
+    [~, maxind] = max(weights(:,:,nn)'); % determine highest subtype weight for each subject
+    part = maxind'; % generate partition based on weights
+else
+    subtype = load(files_in.subtype);
+    part = subtype.part; % load partition
+end
 
 %% Build the model from user's csv and input column
 col_ind = find(strcmp(opt.group_col_id,labels_y));
@@ -132,26 +170,35 @@ if all(col_ind == 0)
 end
 col = tab(:,col_ind);
 % Build a mask for NaN values in model and mask out subjects with NaNs
-[x, y] = find(~isnan(col));
-sub_id = unique(x);
+[x, y] = find(~isnan(col)); % find subjects that have non-NaN values
+sub_ret = unique(x);
 [a, b] = find(isnan(col));  % the subjects that were dropped due to having NaNs
 sub_drop = unique(a);
-partition = part(sub_id,:);
+partition = part(sub_ret,:); % mask partition on only subjects with non-NaN values
 % Save the model
-model.subject_id = sub_id;
+model.subject_retained = sub_id(sub_ret,:);
 model.partition = partition;
+model.group_name = opt.group_col_id;
 model.group = col;
-model.subject_drop = sub_drop;
+model.subject_dropped = sub_id(sub_drop,:);
 
 %% Build the contingency table
 
 name_clus = {};
 name_grp = {};
-list_gg = unique(col)'; % find unique values from input column to differentiate the groups
-for cc = 1:opt.nb_subtype % for each cluster
+
+col_val = unique(col)'; % find unique values from input column to differentiate the groups
+[i, j] = find(~isnan(col_val)); % find the non-NaN values
+list_mask = unique(j); % find unique values from non-NaN values
+% Retain only non-NaN in data and differentiating variables
+list_gg = col_val(list_mask); 
+ret_col = col(sub_ret);
+
+nb_subtype = max(part); % get number of subtypes from partition
+for cc = 1:nb_subtype % for each cluster
     for gg = 1:length(list_gg) % for each group
         mask_sub = partition(:)==cc; % build a mask to select subjects within one cluster
-        sub_col = col(mask_sub); % subjects within one cluster
+        sub_col = ret_col(mask_sub); % subjects within one cluster
         nn = numel(find(sub_col(:)==list_gg(gg))); % number of subjects for a single group that is in the cluster
         contab(gg,cc) = nn;
         name_clus{cc} = ['sub' num2str(cc)];
