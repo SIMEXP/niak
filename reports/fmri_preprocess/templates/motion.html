@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Report on fMRI motion levels</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <link rel="stylesheet" type="text/css" href="motion.css" /> <!--Custom style sheet for motion report-->
+  <link rel="stylesheet" type="text/css" href="assets/bootstrap/bootstrap.min.css" /> <!--from keen.io-->
+  <link rel="stylesheet" type="text/css" href="assets/keen/keen-dashboards.css" />    <!--from keen.io-->
+  <link href="assets/select2/select2.min.css" rel="stylesheet" /> <!--from select 2-->
+  <link href="assets/c3js/c3.min.css" rel="stylesheet" type="text/css"> <!--from c3.js-->
+</head>
+<body class="application">
+
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="http://niak.simexp-lab.org/pipe_preprocessing.html">fMRI preprocessing pipeline</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="index.html">Summary</a></li>
+          <li><a href="group.html">Group</a></li>
+          <li><a href="registration.html">Registration</a></li>
+          <li><a href="motion.html">Motion</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+           
+<!-- FD plots -->
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Frame displacement
+          </div>
+          <div class="chart-stage">
+            <div id="chartFd"></div>
+          </div>
+          <div class="chart-notes">
+            Click to select a time point. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+
+<!-- Motion visualizer in native space -->
+      <div class="col-sm-9">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            fMRI time frames in native space. Select a new run: 
+            <select id="select-BOLD" style="width: 50%"> </select>
+          </div>
+          <div class="chart-stage" id="motionNative">
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+            <canvas id="sliderNative"> 
+            <img id="spriteNative" class="hidden" src="motion/motion_subject1_native.png">
+          </div>
+          <div class="chart-notes">
+            Click the left/right arrows to go forward/backward in time.
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- end of two -->
+      
+<!-- Translation plots -->
+  <div class="row">
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Translation parameters
+          </div>
+          <div class="chart-stage">
+            <div id="chartTsl"></div>
+          </div>
+          <div class="chart-notes">
+            Click to select a time point. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+
+<!-- Motion visualizer in native space -->
+      <div class="col-sm-9">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            fMRI time frames in stereotaxic space
+          </div>
+          <div class="chart-stage" id="motionNative">
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+            <canvas id="sliderStereo"> 
+            <img id="spriteStereo" class="hidden" src="motion/motion_subject1_stereo.png">
+          </div>
+          <div class="chart-notes">
+            Click the left/right arrows to go forward/backward in time.
+          </div>
+        </div>
+      </div>
+    </div>    
+<!-- end of two -->
+ 
+<!-- Rotation plots -->      
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Rotation parameters
+          </div>
+          <div class="chart-stage">
+            <div id="chartRot" style="width:100%"></div>
+          </div>
+          <div class="chart-notes">
+            Click to select a time point. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+      
+<!-- Registration with the session/run of reference -->      
+      <div class="col-sm-9">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Run vs Reference volume (session1_run1)
+          </div>
+          <div class="chart-stage">
+            <div id="divRegistration" class="register">
+            <img id="registration" src="motion/ref_volume.jpg" style="display:block; margin-left:auto; margin-right:auto">
+            </div>
+          </div>
+          <div class="chart-notes">
+            Hover the mouse over to switch between images. 
+          </div>
+        </div>
+      </div>
+<!-- end of two -->
+    </div>
+  </div>
+
+
+    <hr>
+
+    <p class="small text-muted">Built with &#9829; by <a href="http://niak.simexp-lab.org">NIAK</a> using dashboards from <a href="https://keen.io">Keen IO</a></p>
+
+  </div>
+
+  <!--Dependencies-->
+  <script src="assets/d3js/d3.min.js" charset="utf-8"></script>
+  <script src="assets/c3js/c3.min.js"></script></head>
+  <script type="text/javascript" src="assets/jquery/jquery.min.js"></script>       <!--from keen.io-->
+  <script type="text/javascript" src="assets/bootstrap/bootstrap.min.js"></script> <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/keen.min.js"></script>           <!--from keen.io-->
+  <script src="assets/select2/select2.min.js"></script> <!--from select 2-->
+  <script src="motion/dataMotion.js"></script> <!--Motion (and FD) parameters-->
+  <script src="motion/dataRun.js"></script> <!--List of available runs-->
+  
+  <script> 
+  
+  // Constants
+  var numFrame = 0; // Initially display the first time frame
+  var percVisu = 0.7; // The BOLD montage use 70% of the window
+  var percVisuStr = 100*percVisu;
+  percVisuStr = percVisuStr.toString()+"%";
+  
+  // Load spacer images, to set the size of a montage in each mosaic  
+  var spacerNative = new Image();
+  spacerNative.src = "motion/spacer.png";
+  var spacerStereo = new Image();
+  spacerStereo.src = "motion/spacer_stereo.png";
+  
+  // Create a button to select a new session
+  var $eventSelect = $("#select-BOLD");
+  $eventSelect.select2({
+    placeholder: "Select a new session",
+    data: dataRun
+  });
+  $eventSelect.on("select2:select", function (e) { 
+    var id = e.params.data.id;
+    if (id>0) {
+      subject = $("#select-BOLD option[value=" + id + "]").text();
+      location.assign(['registration.html?id=' + subject]);
+    }
+  });
+  
+  // c3.js data for the translation parameters chart
+  var chartTsl = c3.generate({
+    bindto: '#chartTsl',
+    data: tsl,
+    axis: {
+        x: {
+            label: 'Time (TRs)'
+        },
+        y: {
+            label: 'Translation (mm)',
+            tick: {
+                format: d3.format('0.2f'),
+            }
+        }
+    },
+    zoom: {
+      enabled: true
+    },
+  });
+  
+  // c3.js data for the rotation parameters chart
+  var chartRot = c3.generate({
+    bindto: '#chartRot',
+    data: rot,
+    axis: {
+        x: {
+            label: 'Time (TRs)'
+        },
+        y: {
+            label: 'Rotation (degrees))',
+            tick: {
+                format: d3.format('0.2f')
+            }
+        }
+    },
+    zoom: {
+      enabled: true
+    }
+  });
+  
+  // c3.js data for the FD chart
+  var chartFd = c3.generate({
+    bindto: '#chartFd',
+    data: fd,
+    axis: {
+        x: {
+            label: 'Time (TRs)'
+        },
+        y: {
+            label: 'Frame displacement (pseudo mm))',
+            tick: {
+                format: d3.format('0.2f')
+            }
+        },
+        y2: {
+            show: true,
+            label: 'Scrubbing (0: no / 1: yes))',
+            tick: {
+                format: d3.format('b')
+            }
+        }
+    },
+    zoom: {
+      enabled: true
+    }
+  });
+  
+  // function to draw volumes for a particular time frame. 
+  // Update canvas based on two big mosaic files
+  // native: images in native space, prior to motion correction
+  // stereo: images in stereostaxic space, after motion correction
+  function drawMotion(frame,type) {
+    var canvas = document.getElementById("slider" + type);
+    var wImg = $("#slider"+type).parent().width();    
+    var wSpacer = {Native:spacerNative.width , Stereo:spacerStereo.width};
+    var hSpacer = {Native:spacerNative.height , Stereo:spacerStereo.height};    
+    var nbTimeFrames = (document.getElementById("spriteNative").width/wSpacer.Native)-1; 
+    var rSpacer = hSpacer[type] / wSpacer[type] ;
+    var hImg = Math.round(wImg * percVisu * rSpacer);
+    // Get number of time frames
+    if (canvas.width!=wImg) {   
+      canvas.width = wImg;
+      canvas.height = hImg;
+    };    
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(document.getElementById("sprite"+type),
+                frame*wSpacer[type], 0, wSpacer[type], hSpacer[type], wImg*(1-percVisu)/2, 0, wImg*percVisu, hImg );
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Frame number "+frame+"/"+nbTimeFrames,wImg*1.2*(1-percVisu)/2,0.05*hImg);
+    numFrame = frame;
+    return hImg
+  };
+    
+  // function to select a time frame. It calls the drawing of canvas, 
+  // select the correct time point in the graphs, and also resize 
+  // the translation and rotation graphs based on the corresponding movies. 
+  function selectTime(frame) {
+    hImgNative = drawMotion(frame,"Native");
+    if ($("#chartFd").height()!=hImgNative) {
+      chartFd.resize({height:hImgNative});
+    };
+    hImgStereo = drawMotion(frame,"Stereo");
+    if ($("#chartTsl").height()!=hImgStereo) {
+      chartTsl.resize({height:hImgStereo});
+    };
+    chartTsl.select(['motion_tx' , 'motion_ty' , 'motion_tz'], [frame], true);
+    chartRot.select(['motion_rx' , 'motion_ry' , 'motion_rz'], [frame], true);
+    chartFd.select(['FD' , 'scrub' ], [frame], true);
+  };
+    
+  // function to move forward by one time sample
+  function nextTime() {
+    nextFrame = numFrame+1;
+    // Get number of time frames
+    var nbTimeFrames = (document.getElementById("spriteNative").width/spacerNative.width)-1; 
+    if (nextFrame>nbTimeFrames){return} else {selectTime(nextFrame)};
+    };
+
+  // Function to move back by one time sample
+  function prevTime() {
+    prevFrame = numFrame - 1;
+    if (prevFrame<0){return} else {selectTime(prevFrame)};
+    };
+
+  // associate the arrows of the slider with backward/forward time shifts
+  window.onload = function() {  
+    document.getElementsByClassName("sliderNext")[0].onclick = function fun() { nextTime();};
+    document.getElementsByClassName("sliderNext")[1].onclick = function fun() { nextTime();};
+    document.getElementsByClassName("sliderPrev")[0].onclick = function fun() {prevTime();};
+    document.getElementsByClassName("sliderPrev")[1].onclick = function fun() {prevTime();};
+  };
+  
+  // Add key bindings, left/right arrow to move backward/forward in time  
+  function reactKey(key){
+    if (key==39) { nextTime() } 
+    else if (key==37) {prevTime()};
+  };
+  window.onkeydown = function(e) { reactKey(e.keyCode) };
+   
+  // On load: build all figures   
+  $( window ).load(function() {
+    // Trigger the building of motion movies   
+    selectTime(numFrame);
+    // set the size of the registration figure in tune with motion movies
+    $("#registration").width(percVisuStr);
+    // Add background image with correct size in the registration figure
+    figRegistration = $("#divRegistration");
+    figRegistration.css("backgroundImage","url('motion/median_volume.jpg')");
+    figRegistration.css("backgroundSize",percVisuStr);
+    figRegistration.css("backgroundPosition","center");
+    figRegistration.css("backgroundRepeat","no-repeat");
+    // Resize the rotation chart, which is not tweaked by selectTime (unlike the FD and translation charts)
+    chartRot.resize({height:$("#registration").height()});
+
+    // On window resizing, trigger a re-size of all graphs
+    window.addEventListener("resize", function() {
+      selectTime(numFrame); 
+      chartRot.resize({height:$("#registration").height()});
+    });
+  });
+  
+  </script>
+ 
+</body>
+</html>
