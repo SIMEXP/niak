@@ -544,11 +544,12 @@ if isstruct(opt.minc_standard)
   
     job_out.transformation_lin      = [opt.folder_anat 'transf_' subject '_nativet1_to_stereolin.xfm'];
     job_out.transformation_nl       = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl.xfm'];
-    job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid' ext_f];
+    job_out.transformation_nl_grid  = [opt.folder_anat 'transf_' subject '_stereolin_to_stereonl_grid.mnc'];
     job_out.anat_nuc                = [opt.folder_anat 'anat_'   subject '_nuc_nativet1' ext_f];
     job_out.anat_nuc_stereolin      = [opt.folder_anat 'anat_'   subject '_nuc_stereolin' ext_f];
     job_out.anat_nuc_stereonl       = [opt.folder_anat 'anat_'   subject '_nuc_stereonl' ext_f];
     job_out.mask_stereolin          = [opt.folder_anat 'anat_'   subject '_mask_stereolin' ext_f];
+    job_out.mask_stereonl           = [opt.folder_anat 'anat_'   subject '_mask_stereonl' ext_f];
     job_out.classify                = [opt.folder_anat 'anat_'   subject '_classify_stereolin' ext_f];
 
     job_opt                         = opt.t1_preprocess;
