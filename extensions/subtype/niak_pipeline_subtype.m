@@ -257,9 +257,9 @@ if ~strcmp(files_in.subtype, 'gb_niak_omitted')
         % For some reason we don't have the correct number of external subtype
         % networks
         error('The external subtypes in FILES_IN.SUBTYPE have %d networks but OPT.SCALE = %d. These have to be the same. Exiting!', n_sbt_ext, opt.scale);
-    end
+    end 
 else
-    files_in = rmfield(files_in, 'subtype'); % remove files_in.subtype if not supplied by user
+    files_in = rmfield(files_in, 'subtype'); % remove files_in.subtype in everything if not supplied by user
 end
 
 %% Construct the pipeline
@@ -278,7 +278,11 @@ for net_id = 1:opt.scale;
     pre_opt = opt.stack;
     % Set the network
 	pre_opt.network = net_id;
-    pre_in = files_in;
+    if ext_sbt
+        pre_in = rmfield(files_in, 'subtype'); % remove 'subtype' field from files_in for brick stack when subtypes are supplied by user
+    else
+        pre_in = files_in;
+    end
     pre_out = [network_folder filesep sprintf('network_%d_stack.mat', net_id)];
     pipe = psom_add_job(pipe, pre_name, 'niak_brick_network_stack',...
                         pre_in, pre_out, pre_opt);
