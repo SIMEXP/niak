@@ -1,4 +1,0 @@
-var dataBOLD= [	
-  ['Subject'     ,'X0010001' , 'X0010002'],		 
-  ['corr_target' ,      0.62 ,       0.53]		
-];
