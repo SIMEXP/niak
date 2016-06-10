@@ -54,19 +54,10 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       NB_SUBTYPE
 %           (integer, default 2) the number of subtypes to extract
 %
-%       SBT_MAP_TYPE
+%       SUB_MAP_TYPE
 %           (string, default 'mean') the model for the subtype map. Options are:
 %               'mean'
-%               'median'
-%
-%       GROUP_COL
-%           (integer, default 0) the index of the group column in FILES_IN.MODEL
-%           that the confusion table is based on. If OPT.SUBTYPE.FLAG_STATS is
-%           set to true, then this value has to be a non-zero integer.
-%
-%       FLAG_STATS
-%           (boolean, default true) if set to true, stats will be computed for
-%           the extracted subtypes.
+%               'median' 
 %
 %   ASSOCIATION
 %       (struct, optional) with the following fields:
@@ -162,12 +153,16 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       (struct, optional) with the following fields:
 %
 %       GROUP_COL_ID
-%           (string, default 'Group') the name of the column in
-%           FILES_IN.MODEL that categorizes subjects into groups
+%           (string, default 'Group') the name of the column in 
+%           FILES_IN.MODEL that the contingency table will be based on.
 %
-%       NB_SUBTYPE 
-%           (integer, default OPT.SUBTYPE.NB_SUBTYPE) the 
-%           number of subtypes extracted during the clustering
+%       FLAG_WEIGHTS
+%           (boolean, default false) if the flag is true, the brick will
+%           calculate statistics based on the weights from FILES_IN.WEIGHTS
+%
+%   FLAG_CHI2
+%       (boolean, default true) turn on/off to calculate Chi2 and Cramer's
+%       V statistics
 %
 %   FLAG_VISU
 %       (boolean, default true) turn on/off to generate figures for the
@@ -223,8 +218,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'flag_visu' , 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , true        , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'flag_visu' , 'flag_chi2' , 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct() , true        , true       , true           , false       });
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
@@ -241,15 +236,15 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
              { 'nb_subtype' , 'sub_map_type' },...
              { 2            , 'mean'         });         
 
-% % Chi-2 and Cramer's V options
-% opt.chi2 = psom_struct_defaults(opt.chi2,...
-%              { 'nb_subtype'           , 'group_col_id' },...
-%              { opt.subtype.nb_subtype , 'Group'        });  
-
 % Association options
 opt.association = psom_struct_defaults(opt.association,...
                   { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
                   { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
+              
+% Chi-2 and Cramer's V options
+opt.chi2 = psom_struct_defaults(opt.chi2,...
+             { 'group_col_id' , 'flag_weights' , 'network'         },...
+             { 'Group'        , false          , 'gb_niak_omitted'  }); 
               
 % See if external subtypes have been specified
 ext_sbt = false;
@@ -323,16 +318,6 @@ weight_out.weights = [opt.folder_out filesep 'subtype_weights.mat'];
 pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
                 
-                
-%     % Set up the Chi2 and Cramer's V test options
-%     chi2_in = struct;
-%     chi2_in.model = files_in.model;
-%     chi2_in.subtype = sub_out.subtype;
-%     chi2_out = struct;
-%     chi2_opt = opt.chi2;
-%     pipe = psom_add_job(pipe, 'chi2_cramerv', 'niak_brick_chi_cramer',...
-%         chi2_in, chi2_out, chi2_opt);
-
 % Set up the association test options
 assoc_opt = opt.association;
 assoc_opt.folder_out = opt.folder_out;
@@ -357,8 +342,38 @@ if opt.flag_visu
     visu_opt.folder_out = opt.folder_out;
     pipe = psom_add_job(pipe, 'visu_association', 'niak_brick_visu_subtype_glm',...
                         visu_in, visu_out, visu_opt);
-end
+end 
 
+% Set up the Chi2 and Cramer's V test options
+if opt.flag_chi2
+    % Iterate these jobs for each network
+    for net_id = 1:opt.scale; 
+        % Set network and subtype name
+        net_name = sprintf('network_%d', net_id);
+        sub_name = sprintf('subtype_%d', net_id);
+        % Set the root folder to the network name
+        network_folder = [opt.folder_out filesep net_name];
+        chi2_in = struct;
+        chi2_in.model = files_in.model;
+        % Set the network folder
+        chi2_opt.folder_out = network_folder;
+        chi2_out = struct;
+        chi2_out.stats = [network_folder filesep sprintf('network_%d_group_stats.mat', net_id)];
+        chi2_out.contab = [network_folder filesep sprintf('network_%d_chi2_contingency_table.csv', net_id)];
+        chi2_opt = opt.chi2;
+        % Check if external subtypes have been supplied
+        if ~ext_sbt
+            chi2_in.subtype = pipe.(sub_name).files_out.subtype;
+        else
+            chi2_opt.network = net_id;
+            chi2_opt.flag_weights = true;
+            chi2_in.weights = weight_out.weights;
+        end
+        chi2_name = sprintf('chi2_network_%d', net_id);
+        pipe = psom_add_job(pipe, chi2_name, 'niak_brick_chi_cramer',...
+            chi2_in, chi2_out, chi2_opt);
+    end
+end
 
 %% Run the pipeline
 if ~opt.flag_test
