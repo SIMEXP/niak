@@ -355,12 +355,12 @@ if opt.flag_chi2
         network_folder = [opt.folder_out filesep net_name];
         chi2_in = struct;
         chi2_in.model = files_in.model;
+        chi2_opt = opt.chi2;
         % Set the network folder
         chi2_opt.folder_out = network_folder;
         chi2_out = struct;
         chi2_out.stats = [network_folder filesep sprintf('network_%d_group_stats.mat', net_id)];
         chi2_out.contab = [network_folder filesep sprintf('network_%d_chi2_contingency_table.csv', net_id)];
-        chi2_opt = opt.chi2;
         % Check if external subtypes have been supplied
         if ~ext_sbt
             chi2_in.subtype = pipe.(sub_name).files_out.subtype;
