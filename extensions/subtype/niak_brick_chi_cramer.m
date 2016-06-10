@@ -44,6 +44,10 @@ function [files_in,files_out,opt] = niak_brick_chi_cramer(files_in,files_out,opt
 %       (string, default 'chi2_contingency_table.csv') path to .csv file
 %       output containing the contingency table
 %
+%   PIE
+%       (string, default 'gb_niak_omitted') path to folder containing pie
+%       charts output
+%
 % OPT
 %   (structure) with the following fields:
 %
@@ -139,8 +143,8 @@ if ~isempty(opt.folder_out)
                 { [path_out 'group_stats.mat'] , [path_out 'chi2_contingency_table.csv'] });
 else
     files_out = psom_struct_defaults(files_out,...
-                { 'stats'           , 'contab'                     },...
-                { 'group_stats.mat' , 'chi2_contingency_table.csv' });
+                { 'stats'           , 'contab'         , 'pie'             },...
+                { 'gb_niak_omitted' , 'gb_niak_omitted', 'gb_niak_omitted' });
 end
 
 % If the test flag is true, stop here !
@@ -231,8 +235,6 @@ kk = min(n_row,n_col);
 stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
 
 % Pie chart visualization
-files_out.pie = make_paths(opt.folder_out, 'pie_chart_%d.pdf', 1:n_row);
-
 for pp = 1:n_row
     fh = figure('Visible', 'off');
     pc_val = contab(pp,:);
@@ -249,7 +251,14 @@ for pp = 1:n_row
     pc = pie(prune_val,labels);
     c_title = ['Group' num2str(list_gg(pp))];
     title(c_title);
-    print(fh, files_out.pie{pp}, '-dpdf', '-r300');
+    if isempty(opt.folder_out);
+        pie_name = sprintf('pie_chart_%d.pdf', pp);
+        pc_out = [files_out.pie filesep pie_name];
+        print(fh, pc_out, '-dpdf', '-r300');
+    else
+        files_out.pie = make_paths(opt.folder_out, 'pie_chart_%d.pdf', 1:n_row);
+        print(fh, files_out.pie{pp}, '-dpdf', '-r300');
+    end
 end
 
 %% Save the model and stats
