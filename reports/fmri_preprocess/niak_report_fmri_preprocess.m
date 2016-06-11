@@ -3,40 +3,53 @@ function pipe = niak_report_fmri_preprocess(in,opt)
 %
 % SYNTAX: PIPE = NIAK_REPORT_FMRI_PREPROCESS(IN,OPT)
 %
-% IN.PIPE (string) the name of a .mat file with two variables FILES_IN (the 
-%   input files) and OPT (the options), describing the parameters of the 
-%   pipeline. 
-% IN.GROUP.AVG_T1 (string) the file name of the average T1 of all subjects, 
-%   after non-linear coregistration in stereotaxic space. 
-% IN.GROUP.AVG_FUNC (string) the file name of the average BOLD volume of all subjects, 
-%   after non-linear coregistration in stereotaxic space. 
-% IN.GROUP.AVG_MASK_FUNC (string) the file name of the average indivudal BOLD mask,
-%   after non-linear coregistration in stereotaxic space. 
-% IN.GROUP.MASK_FUNC_GROUP (string) the file name of the group mask for BOLD data, 
-%   in non-linear stereotaxic space. 
-% IN.GROUP.SUMMARY_SCRUBBING (string) the file name of a .csv file with a summary of 
-%   scrubbing of fMRI time series. 
-% IN.GROUP.SUMMARY_REGISTRATION (string) the file name of a .csv file with a summary of
-%   T1 and BOLD registration. 
-% IN.IND.FMRI_NATIVE.(SUBJECT).(SESSION).(RUN) (string) file name of an fMRI dataset
-%   in native space (before resampling for motion). 
-% IN.IND.FMRI_STEREO.(SUBJECT).(SESSION).(RUN) (string) file name of an fMRI dataset
-%   after spatial resampling to correct for motion. 
-% IN.IND.CONFOUNDS.(SUBJECT).(SESSION).(RUN) (string) file name of a a .tsv file_in_loadpath
-%   with confound variables (motion parameters, FD and scrubbing mask).  
-% IN.IND.ANAT.(SUBJECT) (string) the file name of an individual T1 volume (in stereotaxic space).
-% IN.IND.FUNC.(SUBJECT) (string) the file name of an individual functional volume (in stereotaxic space)
-% IN.TEMPLATE (string) the file name of the template used for registration in stereotaxic space.
-% OPT.FOLDER_OUT (string) where to generate the outputs. 
-% OPT.COORD (array N x 3) Coordinates for the registration figures. 
-%   The default is:
-%   [-30 , -65 , -15 ; 
-%     -8 , -25 ,  10 ;  
-%     30 ,  45 ,  60];    
-% OPT.PSOM (structure) options for PSOM. See PSOM_RUN_PIPELINE.
-% OPT.FLAG_VERBOSE (boolean, default true) if true, verbose on progress. 
-% OPT.FLAG_TEST (boolean, default false) if the flag is true, the pipeline will 
-%   be generated but no processing will occur.
+% IN.PIPE (string) 
+%   The name of a .mat file with two variables FILES_IN (the input files) and 
+%   OPT (the options), describing the parameters of the pipeline. 
+%
+% IN.GROUP (structure)
+%   with the following fields:
+%   AVG_T1 (string) the file name of the average T1 of all subjects, 
+%     after non-linear coregistration in stereotaxic space. 
+%   AVG_FUNC (string) the file name of the average BOLD volume of all subjects, 
+%     after non-linear coregistration in stereotaxic space. 
+%   AVG_MASK_FUNC (string) the file name of the average indivudal BOLD mask,
+%     after non-linear coregistration in stereotaxic space. 
+%   MASK_FUNC_GROUP (string) the file name of the group mask for BOLD data, 
+%     in non-linear stereotaxic space. 
+%   SUMMARY_SCRUBBING (string) the file name of a .csv file with a summary of 
+%     scrubbing of fMRI time series. 
+%   SUMMARY_FUNC (string) the file name of a .csv file with a summary of
+%     BOLD registration. 
+%   SUMMARY_ANAT (string) the file name of a .csv file with a summary of
+%     T1 registration. 
+%
+% IN.IND (structure)
+%   with the following fields:
+%   FMRI_NATIVE.(SUBJECT).(SESSION).(RUN) (string) file name of an fMRI dataset
+%     in native space (before resampling for motion). 
+%   FMRI_STEREO.(SUBJECT).(SESSION).(RUN) (string) file name of an fMRI dataset
+%     after spatial resampling to correct for motion. 
+%   CONFOUNDS.(SUBJECT).(SESSION).(RUN) (string) file name of a .tsv file
+%     with confound variables (motion parameters, FD and scrubbing mask).  
+%   ANAT.(SUBJECT) (string) the file name of an individual T1 volume (in stereotaxic space).
+%   FUNC.(SUBJECT) (string) the file name of an individual functional volume (in stereotaxic space)
+%
+% IN.TEMPLATE (string) 
+%   the file name of the template used for registration in stereotaxic space.
+%
+% OPT
+%   (structure) with the following fields:
+%   FOLDER_OUT (string) where to generate the outputs. 
+%   COORD (array N x 3) Coordinates for the registration figures. 
+%     The default is:
+%     [-30 , -65 , -15 ; 
+%       -8 , -25 ,  10 ;  
+%       30 ,  45 ,  60];    
+%   PSOM (structure) options for PSOM. See PSOM_RUN_PIPELINE.
+%   FLAG_VERBOSE (boolean, default true) if true, verbose on progress. 
+%   FLAG_TEST (boolean, default false) if the flag is true, the pipeline will 
+%     be generated but no processing will occur.
 %
 % Note:
 %   Labels SUBJECT, SESSION and RUN are arbitrary but need to conform to matlab's 
@@ -79,8 +92,8 @@ in = psom_struct_defaults( in , ...
     { NaN     , NaN   });
 
 in.group = psom_struct_defaults( in.group , ...
-    { 'avg_t1' , 'avg_func' , 'avg_mask_func' , 'mask_func_group' , 'summary_registration' , 'summary_scrubbing' }, ...
-    { NaN      , NaN        , NaN             , NaN               , NaN                    , NaN                 });
+    { 'avg_t1' , 'avg_func' , 'avg_mask_func' , 'mask_func_group' , 'summary_func' , 'summary_anat' , 'summary_scrubbing' }, ...
+    { NaN      , NaN        , NaN             , NaN               , NaN            , NaN            , NaN                 });
 
 in.ind = psom_struct_defaults( in.ind , ...
     { 'fmri_native' , 'fmri_stereo' , 'confounds' , 'anat' , 'func' }, ...
