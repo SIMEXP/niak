@@ -39,8 +39,9 @@ function files = niak_grab_all_preprocess(path_data,files_in)
 % reproducibility tests across NIAK versions and production sites.
 %
 % The grabber will build a fairly exhaustive list of outputs.
-% If FILES_IN is specified, the list can build even if PATH_DATA does not 
-% exist. Otherwise, a limited number of outputs actually need to be present 
+% If FILES_IN is specified, or a file `pipe_parameters.mat` can be found in 
+% PATH_DATA, the list will build even if PATH_DATA does not contain all expected
+% outputs. Otherwise, a limited number of outputs actually need to be present 
 % for the list to build:
 %   * The individual subfolders in the 'quality_control' folder.
 %   * The qc_scrubbing_group.csv file in 'quality_control/group_motion'
@@ -80,11 +81,21 @@ if (nargin<1)||isempty(path_data)
 end
 
 if nargin<2
-    files_in = struct();
-    flag_in = false;
-    ext_f = '';
+    file_params = [path_data 'pipe_parameters.mat'];
+    if psom_exist(file_params)
+        params = load(file_params);
+        files_in = params.files_in;
+        flag_in = true;
+    else
+        files_in = struct();
+        flag_in = false;
+        ext = '';
+    end
 else 
     flag_in = true;
+end
+
+if flag_in 
     [files_c,label] = niak_fmri2cell(files_in);
     [path_tmp,name_tmp,ext] = niak_fileparts(files_c{1});
 end
@@ -171,6 +182,9 @@ for num_f = 1:length(lc)
         end
      end     
 end
+
+%% Grab the parameters
+files.params = [ path_data 'pipe_parameters.mat'];
 
 %% Grab the templates
 files.template.anat = [path_anat 'template_anat_stereo' ext];
@@ -296,8 +310,8 @@ for num_s = 1:length(list_subject)
         list_run = fieldnames( files.fmri.vol.(subject).(session) );
         for num_r = 1:length(list_run)
             run = list_run{num_r};
-            files.intermediate.(subject).(session).(run).slice_timing       = [path_inter subject filesep 'slice_timing' filesep 'fmri_' subject '_' session '_' run '_a_extra.mat'];
-            files.intermediate.(subject).(session).(run).slice_timing_extra = [path_inter subject filesep 'slice_timing' filesep 'fmri_' subject '_' session '_' run '_a' ext];
+            files.intermediate.(subject).(session).(run).slice_timing       = [path_inter subject filesep 'slice_timing' filesep 'fmri_' subject '_' session '_' run '_a' ext];
+            files.intermediate.(subject).(session).(run).slice_timing_extra = [path_inter subject filesep 'slice_timing' filesep 'fmri_' subject '_' session '_' run '_a_extra.mat'];
             files.intermediate.(subject).(session).(run).motion.target      = [path_inter subject filesep 'motion_correction' filesep 'motion_target_' subject '_' session '_' run ext];
             files.intermediate.(subject).(session).(run).motion.with_run    = [path_inter subject filesep 'motion_correction' filesep 'motion_Wrun_' subject '_' session '_' run '.mat'];
             files.intermediate.(subject).(session).(run).motion.parameters  = [path_inter subject filesep 'motion_correction' filesep 'motion_parameters_' subject '_' session '_' run '.mat'];
