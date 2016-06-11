@@ -513,6 +513,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pipeline = struct();
 
+%% Save the pipeline parameters
+pipeline.pipe_params.command = 'save(files_out,''-struct'',''opt'')';
+pipeline.pipe_params.files_out = [opt.folder_out 'pipe_parameters.mat'];
+pipeline.pipe_params.opt.opt = opt;
+pipeline.pipe_params.opt.files_in = files_in;
+
 %% Resample the AAL template 
 clear job_in job_out job_opt
 [path_t,name_t,ext_t] = niak_fileparts(opt.template.fmri);
