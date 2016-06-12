@@ -1,4 +1,4 @@
-function pipe = niak_report_fmri_preprocess(in,opt)
+function pipeline = niak_report_fmri_preprocess(in,opt)
 % Generate a report for the fMRI preprocessing pipeline
 %
 % SYNTAX: PIPE = NIAK_REPORT_FMRI_PREPROCESS(IN,OPT)
@@ -59,7 +59,7 @@ function pipe = niak_report_fmri_preprocess(in,opt)
 %   http://psom.simexp-lab.org/
 % 
 % Copyright (c) Pierre Bellec
-% Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2016.
+% Centre de recherche de l'Institut universitaire de griatrie de Montral, 2016.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : visualization, montage, 3D brain volumes
@@ -88,8 +88,8 @@ psom_gb_vars;
 
 % Inputs
 in = psom_struct_defaults( in , ...
-    { 'group' , 'ind' }, ...
-    { NaN     , NaN   });
+    { 'group' , 'ind' , 'template' }, ...
+    { NaN     , NaN   , NaN        });
 
 in.group = psom_struct_defaults( in.group , ...
     { 'avg_t1' , 'avg_func' , 'avg_mask_func' , 'mask_func_group' , 'summary_func' , 'summary_anat' , 'summary_scrubbing' }, ...
@@ -116,28 +116,71 @@ opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
 %% Build file names 
-niak_gb_vars
-templates.motion_html  = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'motion.html'];
-templates.motion_css   = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'motion.css'];
-templates.index        = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'index.html'];
-templates.registration = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'registration.html'];
-templates.group        = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'group.html'];
 
 %% Copy and update the templates
 pipeline = struct;
-clear in out jopt
-in = templates;
-out = struct;
-list_fields = fieldnames(in);
-for ee = 1:length(list_fields)
-    [~,name_f,ext_f] = fileparts(in.(list_fields{ee}));
-    out.(list_fields{ee}) = [opt.folder_out name_f ext_f];
-end
+clear jin jout jopt
+niak_gb_vars
+path_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep ];
+jin = niak_grab_folder( path_template , {'.git',[path_template 'motion'],[path_template 'registration'],[path_template 'summary']});
+jout = strrep(jin,path_template,opt.folder_out);
 jopt.folder_out = opt.folder_out;
-pipeline = psom_add_job(pipeline,'report_fp_cp_templates',in,out,jopt);
+pipeline = psom_add_job(pipeline,'cp_templates','niak_brick_copy',jin,jout,jopt);
+
+%% Generate group images
+clear jin jout jopt
+jin.target = in.template;
+jopt.coord = opt.coord;
+jopt.colorbar = true;
+
+% Template
+jin.source = in.template;
+jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
+jopt.colormap = 'gray';
+jopt.limits = [0 100];
+jopt.title = 'T1 Template';
+jopt.method = 'linear';
+pipeline = psom_add_job(pipeline,'template_stereo','niak_brick_vol2img',jin,jout,jopt);
+
+% Group average T1
+jin.source = in.group.avg_t1;
+jout = [opt.folder_out 'group' filesep 'average_t1_stereotaxic.png'];
+jopt.colormap = 'gray';
+jopt.limits = [0 100];
+jopt.title = 'Group average T1';
+jopt.method = 'linear';
+pipeline = psom_add_job(pipeline,'average_t1_stereo','niak_brick_vol2img',jin,jout,jopt);
+
+% Group average BOLD
+jin.source = in.group.avg_func;
+jout = [opt.folder_out 'group' filesep 'average_func_stereotaxic.png'];
+jopt.colormap = 'jet';
+jopt.limits = 'adaptative';
+jopt.title = 'Group average BOLD';
+jopt.method = 'linear';
+pipeline = psom_add_job(pipeline,'average_func_stereo','niak_brick_vol2img',jin,jout,jopt);
+
+% Group BOLD mask
+jin.source = in.group.mask_func_group;
+jout = [opt.folder_out 'group' filesep 'mask_func_group_stereotaxic.png'];
+jopt.colormap = 'jet';
+jopt.limits = [0 1];
+jopt.title = 'Group BOLD mask';
+jopt.method = 'nearest';
+pipeline = psom_add_job(pipeline,'mask_func_group_stereo','niak_brick_vol2img',jin,jout,jopt);
+
+% Average BOLD mask
+jin.source = in.group.avg_mask_func;
+jout = [opt.folder_out 'group' filesep 'average_mask_func_stereotaxic.png'];
+jopt.colormap = 'jet';
+jopt.limits = [0 1];
+jopt.title = 'Average BOLD mask';
+jopt.method = 'linear';
+pipeline = psom_add_job(pipeline,'avg_mask_func_stereo','niak_brick_vol2img',jin,jout,jopt);
+
 
 if ~opt.flag_test
-    psom_run_pipeline(pipe,opt.psom);
+    psom_run_pipeline(pipeline,opt.psom);
 end
 
 return
