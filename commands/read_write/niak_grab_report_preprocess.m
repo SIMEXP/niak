@@ -43,6 +43,10 @@ if nargin < 1
 end
 files_all = niak_grab_all_preprocess(path_data);
 
+%% Pipeline parameters
+files.params = files_all.params;
+
+%% Group-level results
 files.group.avg_t1            = files_all.quality_control.group_coregistration.anat.stereonl.mean_average;
 files.group.avg_func          = files_all.quality_control.group_coregistration.func.mean_average;
 files.group.avg_mask_func     = files_all.quality_control.group_coregistration.func.mask_average;
@@ -51,6 +55,7 @@ files.group.summary_scrubbing = files_all.quality_control.group_motion.scrubbing
 files.group.summary_func      = files_all.quality_control.group_coregistration.func.csv;
 files.group.summary_anat      = files_all.quality_control.group_coregistration.anat.stereonl.csv;
 
+%% Individual results
 [fmri_c,labels] = niak_fmri2cell(files_all.resample.fmri);
 files.ind.fmri_stereo = files_all.resample.fmri;
 for ee = 1:length(labels)
@@ -64,4 +69,6 @@ for ss = 1:length(list_subject)
     files.ind.anat.(list_subject{ss}) = files_all.anat.(list_subject{ss}).t1.nuc_stereonl;
     files.ind.func.(list_subject{ss}) = files_all.anat.(list_subject{ss}).func.mean_stereonl;
 end
+
+%% T1 template
 files.template = files_all.template.anat;
