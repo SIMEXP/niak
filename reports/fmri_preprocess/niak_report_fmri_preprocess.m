@@ -3,7 +3,7 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 %
 % SYNTAX: PIPE = NIAK_REPORT_FMRI_PREPROCESS(IN,OPT)
 %
-% IN.PIPE (string) 
+% IN.PARAMS (string) 
 %   The name of a .mat file with two variables FILES_IN (the input files) and 
 %   OPT (the options), describing the parameters of the pipeline. 
 %
@@ -88,8 +88,8 @@ psom_gb_vars;
 
 % Inputs
 in = psom_struct_defaults( in , ...
-    { 'group' , 'ind' , 'template' }, ...
-    { NaN     , NaN   , NaN        });
+    { 'params' , 'group' , 'ind' , 'template' }, ...
+    { NaN      , NaN     , NaN   , NaN        });
 
 in.group = psom_struct_defaults( in.group , ...
     { 'avg_t1' , 'avg_func' , 'avg_mask_func' , 'mask_func_group' , 'summary_func' , 'summary_anat' , 'summary_scrubbing' }, ...
@@ -117,7 +117,7 @@ opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
 %% Build file names 
 
-%% Copy and update the templates
+%% Copy and update the report templates
 pipeline = struct;
 clear jin jout jopt
 niak_gb_vars
@@ -125,7 +125,15 @@ path_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep '
 jin = niak_grab_folder( path_template , {'.git',[path_template 'motion'],[path_template 'registration'],[path_template 'summary']});
 jout = strrep(jin,path_template,opt.folder_out);
 jopt.folder_out = opt.folder_out;
-pipeline = psom_add_job(pipeline,'cp_templates','niak_brick_copy',jin,jout,jopt);
+pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jout,jopt);
+
+%% Write a text description of the pipeline parameters
+clear jin jout jopt
+jin = in.params;
+jout.list_subject = [opt.folder_out 'registration' filesep 'listSubject.js'];
+jout.list_run = [opt.folder_out 'listRun.js'];
+jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
+pipeline = psom_add_job(pipeline,'params','niak_brick_preproc_params2report',jin,jout);
 
 %% Generate group images
 clear jin jout jopt
@@ -178,6 +186,29 @@ jopt.title = 'Average BOLD mask';
 jopt.method = 'linear';
 pipeline = psom_add_job(pipeline,'avg_mask_func_stereo','niak_brick_vol2img',jin,jout,jopt);
 
+%% Panel on individual registration
+
+% Individual T1 images
+jopt.colormap = 'gray';
+jopt.limits = [0 100];
+jopt.method = 'linear';
+for ss = 1:length(list_subject)
+    jin.source = in.ind.anat.(list_subject{ss});
+    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_anat.png'];
+    jopt.title = sprintf('Individual T1 subject %s',list_subject{ss});
+    pipeline = psom_add_job(pipeline,['t1_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
+end
+
+% Individual BOLD images
+jopt.colormap = 'jet';
+jopt.limits = 'adaptative';
+jopt.method = 'linear';
+for ss = 1:length(list_subject)
+    jin.source = in.ind.func.(list_subject{ss});
+    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_func.png'];
+    jopt.title = sprintf('Individual BOLD subject %s',list_subject{ss});
+    pipeline = psom_add_job(pipeline,['bold_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
+end
 
 if ~opt.flag_test
     psom_run_pipeline(pipeline,opt.psom);
