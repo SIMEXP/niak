@@ -13,7 +13,7 @@
 % BLACK_LIST
 %   (string or cell of string) a list of folder (or subfolders) to 
 %   be ignored by the grabber. Absolute names should be used
-%   (i.e. 'toto' rather than '/home/user23/database/toto'). If not, the names
+%   (i.e. '/home/user23/database/toto' rather than 'toto'). If not, the names
 %   will be assumed to refer to the current directory.
 %
 % _________________________________________________________________________
@@ -27,9 +27,9 @@
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal,
-%               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2011-2012.
+%               Centre de recherche de l'institut de Griatrie de Montral,
+%               Dpartement d'informatique et de recherche oprationnelle,
+%               Universit de Montral, 2011-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : grabber
