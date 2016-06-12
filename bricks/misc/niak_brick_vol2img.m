@@ -17,10 +17,12 @@ function [in,out,opt] = niak_brick_vol2img(in,out,opt)
 % OPT.TITLE (string, default '') a title for the figure. 
 % OPT.LIMITS (vector 1x2) the limits for the colormap. By defaut it is using [min,max].
 %    If a string is specified, the function will implement an adaptative strategy. 
-% FLAG_VERTICAL (boolean, default true) if the flag is true multiple coordinates / time frames
+% OPT.FLAG_VERTICAL (boolean, default true) if the flag is true multiple coordinates / time frames
 %    are stacked vertically, otherwise the stack is build horizontally. 
-% FLAG_DECORATION (boolean, default true) if the flag is true, produce a regular figure
+% OPT.FLAG_DECORATION (boolean, default true) if the flag is true, produce a regular figure
 %    with axis, title and colorbar. Otherwise just output the plain mosaic.
+% OPT.METHOD     (string, default 'linear') the spatial interpolation 
+%            method. See METHOD in INTERP2.
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
 %    update IN, OUT and OPT.
 %
@@ -54,8 +56,8 @@ in = psom_struct_defaults( in , ...
     { NaN       , ''          });
     
 opt = psom_struct_defaults ( opt , ...
-    { 'flag_vertical' , 'colorbar' , 'coord' , 'limits' , 'colormap' , 'size_slices' , 'title' , 'flag_decoration' , 'flag_test' }, ...
-    { true            , true       , NaN     , []       , 'gray'     , []            , ''      , true              , false         });
+    { 'method' , 'flag_vertical' , 'colorbar' , 'coord' , 'limits' , 'colormap' , 'size_slices' , 'title' , 'flag_decoration' , 'flag_test' }, ...
+    { 'linear' , true            , true       , NaN     , []       , 'gray'     , []            , ''      , true              , false         });
 
 if opt.flag_test 
     return
@@ -87,10 +89,10 @@ if (length(opt.coord)==4)&&(ndims(vol)==4)
 else
     list_vol = 1:size(vol,4);
 end
-
+opt_v.method = opt.method;
 for tt = list_vol
     for cc = 1:size(opt.coord,1)
-        [img_tmp,slices] = niak_vol2img(hdr,vol(:,:,:,tt),opt.coord(cc,1:3));
+        [img_tmp,slices] = niak_vol2img(hdr,vol(:,:,:,tt),opt.coord(cc,1:3),opt_v);
         if (cc == 1)&&(tt==1)
             img = img_tmp;
             size_slices = size(slices{1});
@@ -173,8 +175,6 @@ set(ha,'yticklabelmode','manual')
 set(ha,'yticklabel',label_view);
 
 %% Deal with font type and size
-%FN = findall(ha,'-property','FontName');
-%set(FN,'FontName','/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed.ttf');
 FS = findall(ha,'-property','FontSize');
 set(FS,'FontSize',8);
 
