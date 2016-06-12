@@ -129,16 +129,14 @@
   <script type="text/javascript" src="assets/keen/keen.min.js"></script>           <!--from keen.io-->
   <script type="text/javascript" src="assets/keen/meta.js"></script>               <!--from keen.io-->
   <script src="assets/select2/select2.min.js"></script> <!--from select 2-->
+  <script src="registration/listSubject.js"></script> <!--List of subjects-->
   
   <script>
   $(document).ready(function() {
   
-  <!-- List of subjects -->
-  var data = [{ id: 1, text: 'X0010001' }, { id: 2, text: 'X0010002' }];
-  
   <!--Add a subject selection-->
   $(".select-subject").select2({
-  data: data
+  data: listSubject
   });  
   var $eventSelect = $(".select-subject");
   $eventSelect.on("select2:select", function (e) { setImg(e); })
@@ -162,10 +160,10 @@
     var newFigT1 = document.createElement("img");
     
     <!--Populate figures-->    
-    newFigBOLD.src = "registration/summary_" + subject + "_func.jpg";
+    newFigBOLD.src = "registration/" + subject + "_func.png";
     newFigBOLD.setAttribute("width", "100%");
     newFigBOLD.className = "BOLD";
-    newFigT1.src = "registration/summary_" + subject + "_anat.jpg";
+    newFigT1.src = "registration/" + subject + "_anat.png";
     newFigT1.setAttribute("width", "100%");
     newFigT1.className = "T1";
 
@@ -173,10 +171,10 @@
     figBOLD.replaceWith(newFigBOLD);
     figT1.replaceWith(newFigT1);
     figBoldVsT1 = $("#boldVsT1");
-    figBoldVsT1.css("backgroundImage","url(registration/summary_" + subject + "_anat.jpg)");
+    figBoldVsT1.css("backgroundImage","url(registration/" + subject + "_anat.png)");
     figBoldVsT1.css("backgroundSize","100%");
     figT1vsTemplate = $("#T1-indVsTemplate");
-    figT1vsTemplate.css("backgroundImage","url(registration/summary_template.jpg)");
+    figT1vsTemplate.css("backgroundImage","url(group/template_stereotaxic.png)");
     figT1vsTemplate.css("backgroundSize","100%");
   }  
   
@@ -260,9 +258,9 @@
   <!--Read page parameters and update accordingly-->    
   var subject = getParameterByName('id');
   if (!subject) {
-    var subject = "X0010001";
+    var subject = listSubject[0]['text'];
     };
-  id = findID(data,subject);
+  id = findID(listSubject,subject);
   if (!id) {
     id = "1";  
   } 
