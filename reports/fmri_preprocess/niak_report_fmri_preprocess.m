@@ -130,7 +130,7 @@ pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jou
 %% Write a text description of the pipeline parameters
 clear jin jout jopt
 jin = in.params;
-jout.list_subject = [opt.folder_out 'registration' filesep 'listSubject.js'];
+jout.list_subject = [opt.folder_out 'listSubject.js'];
 jout.list_run = [opt.folder_out 'listRun.js'];
 jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
 pipeline = psom_add_job(pipeline,'params','niak_brick_preproc_params2report',jin,jout);

@@ -83,3 +83,19 @@ if hf == -1
 end
 fprintf(hf,'%s',text_subject);
 fclose(hf);
+
+%% List of runs
+text_run = sprintf(['  // Data structure describing all available runs\n' ...   
+                    '  var dataRun = [\n' ...
+                    '    { id: 0, text: "Select a session"},\n']);
+for ll = 1:(length(labels)-1)
+    text_run = [ text_run sprintf('    { id: %i, text: ''%s'' },\n',ll,labels(ll).name)];
+end 
+text_run = [ text_run sprintf('    { id: %i, text: ''%s'' }\n  ];\n',length(labels),labels(end).name)];
+
+[hf,msg] = fopen(out.list_run,'w');
+if hf == -1
+    error(msg)
+end
+fprintf(hf,'%s',text_run);
+fclose(hf);
