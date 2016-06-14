@@ -122,7 +122,7 @@ pipeline = struct;
 clear jin jout jopt
 niak_gb_vars
 path_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep ];
-jin = niak_grab_folder( path_template , {'.git',[path_template 'motion'],[path_template 'registration'],[path_template 'summary']});
+jin = niak_grab_folder( path_template , {'.git',[path_template 'motion'],[path_template 'registration'],[path_template 'summary'],[path_template 'group']});
 jout = strrep(jin,path_template,opt.folder_out);
 jopt.folder_out = opt.folder_out;
 pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jout,jopt);
@@ -130,8 +130,8 @@ pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jou
 %% Write a text description of the pipeline parameters
 clear jin jout jopt
 jin = in.params;
-jout.list_subject = [opt.folder_out 'listSubject.js'];
-jout.list_run = [opt.folder_out 'listRun.js'];
+jout.list_subject = [opt.folder_out 'group' filesep 'listSubject.js'];
+jout.list_run = [opt.folder_out 'group' filesep 'listRun.js'];
 jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
 pipeline = psom_add_job(pipeline,'params','niak_brick_preproc_params2report',jin,jout);
 
