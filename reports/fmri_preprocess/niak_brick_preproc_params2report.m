@@ -107,7 +107,13 @@ for ss = 1:length(list_subject)
     json_files = savejson('',data.files_in.(list_subject{ss}));
     text_files = [text_files sprintf('    case "%s":\n      var filesIn = %s\n',list_subject{ss},json_files)];
 end
-text_files = [text_files sprintf('};\n\n')];
+text_files = [text_files sprintf(['};\n' ...
+              'var node2 = new PrettyJSON.view.Node({\n' ...
+              '    el:$(''#elem2''),\n' ...
+              '    data: filesIn,\n  });\n' ...
+              '  node2.expandAll();\n}\n'])];
+
+text_files = [text_files sprintf('\nvar opt = %s\n',savejson('',data.opt))];
 
 [hf,msg] = fopen(out.files_in,'w');
 if hf == -1
