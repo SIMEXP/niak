@@ -99,3 +99,19 @@ if hf == -1
 end
 fprintf(hf,'%s',text_run);
 fclose(hf);
+
+%% List of input filesep
+text_files = sprintf(['function buildFilesIn (evt) {\n' ...
+                      '  switch(evt.params.data.id) {\n']);
+for ss = 1:length(list_subject)
+    json_files = savejson('',data.files_in.(list_subject{ss}));
+    text_files = [text_files sprintf('    case "%s":\n      var filesIn = %s\n',list_subject{ss},json_files)];
+end
+text_files = [text_files sprintf('};\n\n')];
+
+[hf,msg] = fopen(out.files_in,'w');
+if hf == -1
+    error(msg)
+end
+fprintf(hf,'%s',text_files);
+fclose(hf);
