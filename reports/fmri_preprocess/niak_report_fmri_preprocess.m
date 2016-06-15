@@ -135,6 +135,18 @@ jout.list_run = [opt.folder_out 'group' filesep 'listRun.js'];
 jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
 pipeline = psom_add_job(pipeline,'params','niak_brick_preproc_params2report',jin,jout);
 
+%% The summary of BOLD registration
+clear jin jout jopt
+jin = in.group.summary_func;
+jout = [opt.folder_out 'summary' filesep 'chartBOLD.js'];
+pipeline = psom_add_job(pipeline,'summary_func','niak_brick_preproc_func2report',jin,jout);
+
+%% The summary of T1 registration
+clear jin jout jopt
+jin = in.group.summary_func;
+jout = [opt.folder_out 'summary' filesep 'chartT1.js'];
+pipeline = psom_add_job(pipeline,'summary_anat','niak_brick_preproc_anat2report',jin,jout);
+
 %% Generate group images
 clear jin jout jopt
 jin.target = in.template;

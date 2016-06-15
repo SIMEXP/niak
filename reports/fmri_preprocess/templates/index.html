@@ -289,7 +289,7 @@
   var chartBrain = c3.generate({
     bindto: '#chart-brain',
     data: {
-      x: 'Run',
+      x: 'Subject',
       columns: dataBrain,
       type: 'bar',		
       onclick: function (d) { selectRun(d,chartBrain)}		
@@ -297,7 +297,7 @@
     axis: {
         x: {
           type: 'category',
-          label: 'Run'
+          label: 'Subject'
         },
         y: {
             label: 'DICE',
