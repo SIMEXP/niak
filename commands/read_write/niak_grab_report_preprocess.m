@@ -68,7 +68,7 @@ list_subject = unique({labels(:).subject});
 for ss = 1:length(list_subject)
     files.ind.anat.(list_subject{ss}) = files_all.anat.(list_subject{ss}).t1.nuc_stereonl;
     files.ind.func.(list_subject{ss}) = files_all.anat.(list_subject{ss}).func.mean_stereonl;
-    files.ind.func.(list_subject{ss}) = files_all.quality_control.individual.(list_subject{ss}).motion.coregister.csv;
+    files.ind.registration.(list_subject{ss}) = files_all.quality_control.individual.(list_subject{ss}).motion.coregister.csv;
 end
 
 %% T1 template

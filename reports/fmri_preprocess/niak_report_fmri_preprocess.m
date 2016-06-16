@@ -34,6 +34,8 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 %     with confound variables (motion parameters, FD and scrubbing mask).  
 %   ANAT.(SUBJECT) (string) the file name of an individual T1 volume (in stereotaxic space).
 %   FUNC.(SUBJECT) (string) the file name of an individual functional volume (in stereotaxic space)
+%   REGISTRATION.(SUBJECT) (string) the file name of a .csv file with measures of 
+%     intra-subject, inter-run coregistration quality. 
 %
 % IN.TEMPLATE (string) 
 %   the file name of the template used for registration in stereotaxic space.
@@ -96,8 +98,8 @@ in.group = psom_struct_defaults( in.group , ...
     { NaN      , NaN        , NaN             , NaN               , NaN            , NaN            , NaN                 });
 
 in.ind = psom_struct_defaults( in.ind , ...
-    { 'fmri_native' , 'fmri_stereo' , 'confounds' , 'anat' , 'func' }, ...
-    { NaN           , NaN           , NaN         , NaN    , NaN    });
+    { 'fmri_native' , 'fmri_stereo' , 'confounds' , 'anat' , 'func' , 'registration' }, ...
+    { NaN           , NaN           , NaN         , NaN    , NaN    , NaN            });
 
 list_subject = fieldnames(in.ind.anat);
 
@@ -152,6 +154,12 @@ clear jin jout jopt
 jin = in.group.summary_scrubbing;
 jout = [opt.folder_out 'summary' filesep 'fd.js'];
 pipeline = psom_add_job(pipeline,'summary_scrubbing','niak_brick_preproc_scrubbing2report',jin,jout);
+
+%% The summary of FD
+clear jin jout jopt
+jin = in.ind.registration;
+jout = [opt.folder_out 'summary' filesep 'chartBrain.js'];
+pipeline = psom_add_job(pipeline,'summary_intra','niak_brick_preproc_intra2report',jin,jout);
 
 %% Generate group images
 clear jin jout jopt
