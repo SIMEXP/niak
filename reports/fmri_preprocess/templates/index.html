@@ -85,7 +85,7 @@
       <div class="col-sm-6 col-md-4">
         <div class="chart-wrapper">
           <div class="chart-title">
-            Average Frame Displacement (FD) and # time frames / run, before/after scrubbing
+            Average Frame Displacement (FD) and # time frames scrubbed vs OK
           </div>
           <div class="chart-stage">
             <div id="chart-FD" style="width:95%"></div>
@@ -182,8 +182,7 @@
   <script src="summary/chartT1.js"></script> <!--data for chartT1-->
   <script src="summary/chartBOLD.js"></script> <!--data for chartBOLD-->
   <script src="summary/fd.js"></script> <!--data for chartFD-->
-  <script src="summary/chartBrain.js"></script> <!--data for chartBrain-->
-  
+
   <script>
   // Chart of registration quality (spatial correlation) between the T1 scan and the template
   var chartT1 = c3.generate({		 
@@ -252,8 +251,8 @@
       axes: {
         FD_before: 'y',
         FD_after: 'y',
-        nb_vol_before: 'y2',        
-        nb_vol_after: 'y2',
+        vol_scrubbed: 'y2',
+        vol_ok: 'y2',
       },
       type: 'bar',		
       onclick: function (d) { selectRun(d,chartFD)}		

@@ -147,6 +147,12 @@ jin = in.group.summary_func;
 jout = [opt.folder_out 'summary' filesep 'chartT1.js'];
 pipeline = psom_add_job(pipeline,'summary_anat','niak_brick_preproc_anat2report',jin,jout);
 
+%% The summary of FD
+clear jin jout jopt
+jin = in.group.summary_scrubbing;
+jout = [opt.folder_out 'summary' filesep 'fd.js'];
+pipeline = psom_add_job(pipeline,'summary_scrubbing','niak_brick_preproc_scrubbing2report',jin,jout);
+
 %% Generate group images
 clear jin jout jopt
 jin.target = in.template;
