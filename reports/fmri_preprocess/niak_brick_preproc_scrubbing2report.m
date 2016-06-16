@@ -3,8 +3,8 @@ function [in,out,opt] = niak_brick_preproc_scrubbing2report(in,out,opt)
 %
 % SYNTAX: [IN,OUT,OPT] = NIAK_BRICK_PREPROC_SCRUBBING2REPORT(IN,OUT,OPT)
 %
-% IN (string) The name of a .csv file with measures of motion levels (frame)
-%   diplacement and scrubbing. 
+% IN (string) The name of a .csv file with measures of motion levels (frame
+%   displacement and scrubbing). 
 % OUT (string) the name of a .js file with one variable:
 %   dataFD 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
