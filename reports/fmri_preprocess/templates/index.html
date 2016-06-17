@@ -146,9 +146,7 @@
                     <div class="chart-title">
             Input files for subject 
             <select class="select-subject" style="width: 50%">
-              <option value="Subject1">Subject1</option>
-              <option value="Subject2">Subject2</option>
-            </select>
+              </select>
           </div>
           <div class="chart-stage">
             <div id="elem2">
@@ -181,8 +179,9 @@
   <script src="summary/filesIn.js"></script> <!--description of input files and options-->
   <script src="summary/chartT1.js"></script> <!--data for chartT1-->
   <script src="summary/chartBOLD.js"></script> <!--data for chartBOLD-->
+  <script src="summary/chartBrain.js"></script> <!--dataIntra-->
   <script src="summary/fd.js"></script> <!--data for chartFD-->
-
+  <script src="group/listSubject.js"></script> <!--list of subjects-->
   <script>
   // Chart of registration quality (spatial correlation) between the T1 scan and the template
   var chartT1 = c3.generate({		 
@@ -353,7 +352,7 @@
       //Browser has blocked it
       alert('Please allow popups for this website'); 
     }
-  }
+  };
 
   // Create links to motion report attached to the bars in chartMotion chartBrain and chartIntra
   function selectRun (d,chart) {		 
@@ -366,15 +365,30 @@
       //Browser has blocked it
       alert('Please allow popups for this website'); 
     }
-  }
+  };
   
+  // Create pretty jason for filesIn
+  function printFiles(files) {
+    var node2 = new PrettyJSON.view.Node({
+      el:$('#elem2'),
+      data: files,
+    });
+    node2.expandAll();
+  };
+   
   // Create button to select subjects
-  $(".select-subject").select2();  
-  $(".select-subject").on("select2:select", function (e) { buildFilesIn(e); })
+  $(".select-subject").select2({
+    data: listSubject
+  });  
+  $(".select-subject").on("select2:select", function (e) { 
+    filesIn = buildFilesIn(e); 
+    printFiles(filesIn);
+  });
     
   // Create the json description of input files  
-  var evt = {params:{data:{id:"Subject1"}}};
-  buildFilesIn (evt);
+  var evt = {params:{data:{id:"1"}}};
+  filesIn = buildFilesIn (evt);
+  printFiles(filesIn);
   
   // Create the json description of pipeline options
   var node = new PrettyJSON.view.Node({

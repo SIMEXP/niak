@@ -65,16 +65,15 @@ for ss = 1:length(list_subject)
     end
 end
 
-return
 %% Compose js text
-list_ind = [1 4 5 2 3];
-ind_ref = 4;
-labels = { 'Run' , 'FD_before' , 'FD_after' , 'vol_scrubbed' , 'vol_ok' };
+list_ind = [1 3];
+ind_ref = 3;
+labels = { 'Run' , 'corr_target' };
 val = str2double(tab(2:end,ind_ref));
 [val,order] = sort(val,'ascend');
 order = order(:)'+1;
 
-text_js = sprintf('var dataFD = [\n');
+text_js = sprintf('var dataIntra = [\n');
 for ii = 1:length(list_ind)
     text_js = [text_js sprintf('  [''%s'' ',labels{ii})];
     for ss = order
