@@ -21,6 +21,8 @@ function [in,out,opt] = niak_brick_vol2img(in,out,opt)
 %    are stacked vertically, otherwise the stack is build horizontally. 
 % OPT.FLAG_DECORATION (boolean, default true) if the flag is true, produce a regular figure
 %    with axis, title and colorbar. Otherwise just output the plain mosaic.
+% OPT.FLAG_MEDIAN (boolean, default false) if the flag is on and the input volume is 4D
+%    the median volume is extracted. 
 % OPT.METHOD     (string, default 'linear') the spatial interpolation 
 %            method. See METHOD in INTERP2.
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
@@ -56,8 +58,8 @@ in = psom_struct_defaults( in , ...
     { NaN       , ''          });
     
 opt = psom_struct_defaults ( opt , ...
-    { 'method' , 'flag_vertical' , 'colorbar' , 'coord' , 'limits' , 'colormap' , 'size_slices' , 'title' , 'flag_decoration' , 'flag_test' }, ...
-    { 'linear' , true            , true       , NaN     , []       , 'gray'     , []            , ''      , true              , false         });
+    { 'flag_median' , 'method' , 'flag_vertical' , 'colorbar' , 'coord' , 'limits' , 'colormap' , 'size_slices' , 'title' , 'flag_decoration' , 'flag_test' }, ...
+    { false         , 'linear' , true            , true       , NaN     , []       , 'gray'     , []            , ''      , true              , false         });
 
 if opt.flag_test 
     return
@@ -73,6 +75,10 @@ ext_f = ext_f(2:end);
     
 %% Read the data 
 [hdr.source,vol] = niak_read_vol(in.source);
+if opt.flag_median
+    vol = median(vol,4);
+end
+
 if isempty(in.target)
     N = [diag(hdr.source.info.voxel_size) zeros(3,1) ; 0 0 0 1];
     W = N\([hdr.source.info.mat(1:3,1:3) zeros(3,1) ; 0 0 0 1]);
