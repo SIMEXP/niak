@@ -1,13 +1,12 @@
-function [in,out,opt] = niak_brick_preproc_motion2report(in,out,opt)
-% Generate an html motion report
+function [in,out,opt] = niak_brick_preproc_ind_motion2report(in,out,opt)
+% Generate javascript formatted measure of intra-subject inter-run registration
 %
-% SYNTAX: [IN,OUT,OPT] = NIAK_BRICK_PREPROC_PARAMS2REPORT(IN,OUT,OPT)
+% SYNTAX: [IN,OUT,OPT] = NIAK_BRICK_PREPROC_IND_MOTION2REPORT(IN,OUT,OPT)
 %
-% IN (string) not used. 
-% OUT (string) the name of the .html report. 
-% OPT.LABEL (string) subject_session_run label.
-% OPT.LABEL_REF (string) subject_session_run label for the volume of reference (to 
-%   check coregistration).
+% IN.(SUBJECT) (string) The name of a .csv file with individual confound measures 
+%   for one run. 
+% OUT (string) the name of a .js file with three variables:
+%   tsl, rot and fd.  
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
 %    update IN, OUT and OPT.
 %
@@ -36,6 +35,10 @@ function [in,out,opt] = niak_brick_preproc_motion2report(in,out,opt)
 % THE SOFTWARE.
 
 %% Defaults
+if ~ischar(in) 
+    error('IN should be a string');
+end
+
 if ~ischar(out) 
     error('OUT should be a string');
 end
@@ -44,44 +47,47 @@ if nargin < 3
     opt = struct;
 end    
 opt = psom_struct_defaults ( opt , ...
-    { 'label_ref' , 'label' , 'flag_test' }, ...
-    { NaN         , NaN     , false         });
+    { 'flag_test' }, ...
+    { false         });
 
 if opt.flag_test 
     return
 end
 
-%% The template
-niak_gb_vars;
-file_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'motion' filesep 'motion_template.html'];
+%% Load confounds
+tab = niak_read_csv_cell(in);
+labels_tsl = {'motion_tx','motion_ty','motion_tz'};
+text_js = sub_add_js('',tab(:,ismember(tab(1,:),labels_tsl)),'tsl');
+labels_rot = {'motion_rx','motion_ry','motion_rz'};
+text_js = sub_add_js(text_js,tab(:,ismember(tab(1,:),labels_rot)),'rot');
+labels_fd = {'FD','scrub'};
+text_js = sub_add_js(text_js,tab(:,ismember(tab(1,:),labels_fd)),'fd');
 
-%% Read template
-hf = fopen(file_template);
-str_template = fread(hf,Inf,'uint8=>char')';
-fclose(hf);
-
-%% Update template
-
-% Motion native
-str_template = strrep(str_template,'$MOTION_NATIVE',['motion_native_' opt.label '.png']);
-% Motion stereo
-str_template = strrep(str_template,'$MOTION_STEREO',['motion_stereo_' opt.label '.png']);
-% spacer
-str_template = strrep(str_template,'$SPACER_NATIVE',['target_' opt.label '.png']);
-% spacer stereo (same as native ...)
-str_template = strrep(str_template,'$SPACER_STEREO',['target_' opt.label '.png']);
-% The target space
-str_template = strrep(str_template,'$VOL_RUN',['target_' opt.label '.jpg']);
-% The reference volume
-str_template = strrep(str_template,'$REF_VOLUME',['target_' opt.label_ref '.png']);
-
-% file with motion parameters
-str_template = strrep(str_template,'$dataMotion',['dataMotion_' opt.label '.js']);
-
-%% Write report
+%% Write output
 [hf,msg] = fopen(out,'w');
 if hf == -1
     error(msg)
 end
-fprintf(hf,'%s',str_template);
+fprintf(hf,'%s',text_js);
 fclose(hf);
+
+function text_js = sub_add_js(text_js,tab,name)
+
+%% Compose js text
+text_js = [text_js sprintf('var %s = {\n  columns: [\n',name)];
+for ii = 1:size(tab,2)
+    text_js = [text_js sprintf('    [''%s'' ',tab{1,ii})];
+    for ss = 2:size(tab,1)
+	      text_js = [text_js, ', ' tab{ss,ii} ];
+    end
+    if ii == size(tab,2)
+        text_js = [text_js sprintf(']\n')];
+    else
+        text_js = [text_js sprintf('],\n')];
+    end
+end
+text_js = sprintf([text_js '  ],\n  selection: {\n' ...
+          '    enabled: true\n' ...
+          '  },\n' ...
+          '  onclick: function (d) { selectTime(d.index);}\n' ...
+          '};\n']);

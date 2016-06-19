@@ -252,19 +252,29 @@ for ll = 1:length(labels)
     clear jin jout jopt
     jin.source = list_fmri_native{ll};
     jin.target = in.template.fmri;
-    jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.jpg'];
+    jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.png'];
     jopt.coord = [0 0 0];
     jopt.colormap = 'jet';
+    jopt.flag_vertical = false;
     jopt.limits = 'adaptative';
     jopt.flag_decoration = false;
     jopt.method = 'nearest';
     pipeline = psom_add_job(pipeline,['motion_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
     jin.source = list_fmri_stereo{ll};
-    jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.jpg'];
+    jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.png'];
     pipeline = psom_add_job(pipeline,['motion_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-    jin.source = in.template.fmri;
-    jout = [opt.folder_out 'motion' filesep 'spacer.jpg'];
-    pipeline = psom_add_job(pipeline,'spacer','niak_brick_vol2img',jin,jout,jopt);
+    jopt.flag_median = true;
+    jout = [opt.folder_out 'motion' filesep 'target_' labels(ll).name '.png'];
+    pipeline = psom_add_job(pipeline,['target_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+end    
+
+%% Motion parameters
+[list_confounds,labels] = niak_fmri2cell(in.ind.confounds);
+for ll = 1:length(labels)
+    clear jin jout jopt
+    jin = list_confounds{ll};
+    jout = [opt.folder_out 'motion' filesep 'dataMotion_' labels(ll).name '.js'];
+    pipeline = psom_add_job(pipeline,['motion_ind_' labels(ll).name],'niak_brick_preproc_ind_motion2report',jin,jout);
 end    
 
 %% Template
@@ -272,6 +282,7 @@ for ll = 1:length(labels)
     clear jin jout jopt
     jout = [opt.folder_out 'motion' filesep 'motion_report_' labels(ll).name '.html'];
     jopt.label = labels(ll).name;
+    jopt.label_ref = labels(1).name;
     pipeline = psom_add_job(pipeline,['motion_report_' labels(ll).name],'niak_brick_preproc_motion2report','',jout,jopt);
 end    
 

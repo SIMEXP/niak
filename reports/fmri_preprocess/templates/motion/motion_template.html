@@ -37,8 +37,7 @@
   <div class="container-fluid">
            
 <!-- FD plots -->
-    <div class="row">
-      <div class="col-sm-3">
+      <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
             Frame displacement
@@ -53,7 +52,7 @@
       </div>
 
 <!-- Motion visualizer in native space -->
-      <div class="col-sm-9">
+      <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
             fMRI time frames in native space. Select a new run: 
@@ -70,49 +69,45 @@
           </div>
         </div>
       </div>
-    </div>
 <!-- end of two -->
       
 <!-- Translation plots -->
-  <div class="row">
-    <div class="row">
-      <div class="col-sm-3">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            Translation parameters
+    <div class="col-sm-6">
+      <div class="chart-wrapper">
+        <div class="chart-title">
+          Translation parameters
+        </div>
+        <div class="chart-stage">
+          <div id="chartTsl"></div>
           </div>
-          <div class="chart-stage">
-            <div id="chartTsl"></div>
-          </div>
-          <div class="chart-notes">
-            Click to select a time point. Mouse scroll to zoom.
-          </div>
+        <div class="chart-notes">
+          Click to select a time point. Mouse scroll to zoom.
         </div>
       </div>
+    </div>
 
 <!-- Motion visualizer in native space -->
-      <div class="col-sm-9">
-        <div class="chart-wrapper">
-          <div class="chart-title">
-            fMRI time frames in stereotaxic space
-          </div>
-          <div class="chart-stage" id="motionNative">
-            <img class="sliderNext" src="../assets/jsImageSlider/navbuttons2.gif" >
-            <img class="sliderPrev" src="../assets/jsImageSlider/navbuttons2.gif" >
-            <canvas id="sliderStereo"> 
-            <img id="spriteStereo" class="hidden" src="$MOTION_STEREO">
-          </div>
-          <div class="chart-notes">
-            Click the left/right arrows to go forward/backward in time.
-          </div>
+    <div class="col-sm-6">
+      <div class="chart-wrapper">
+        <div class="chart-title">
+          fMRI time frames in stereotaxic space
+        </div>
+        <div class="chart-stage" id="motionNative">
+          <img class="sliderNext" src="../assets/jsImageSlider/navbuttons2.gif" >
+          <img class="sliderPrev" src="../assets/jsImageSlider/navbuttons2.gif" >
+          <canvas id="sliderStereo"> 
+          <img id="spriteStereo" class="hidden" src="$MOTION_STEREO">
+        </div>
+        <div class="chart-notes">
+          Click the left/right arrows to go forward/backward in time.
         </div>
       </div>
-    </div>    
+    </div>
+       
 <!-- end of two -->
  
 <!-- Rotation plots -->      
-    <div class="row">
-      <div class="col-sm-3">
+      <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
             Rotation parameters
@@ -127,7 +122,7 @@
       </div>
       
 <!-- Registration with the session/run of reference -->      
-      <div class="col-sm-9">
+      <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
             Run vs Reference volume (session1_run1)
@@ -143,9 +138,8 @@
         </div>
       </div>
 <!-- end of two -->
-    </div>
-  </div>
-
+    
+  
 
     <hr>
 

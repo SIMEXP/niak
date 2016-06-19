@@ -56,14 +56,20 @@ files.group.summary_func      = files_all.quality_control.group_coregistration.f
 files.group.summary_anat      = files_all.quality_control.group_coregistration.anat.stereonl.csv;
 
 %% Individual results
+
+% fMRI volumes in native and stereotaxic spaces
 [fmri_c,labels] = niak_fmri2cell(files_all.resample.fmri);
 files.ind.fmri_stereo = files_all.resample.fmri;
 for ee = 1:length(labels)
     files.ind.fmri_native.(labels(ee).subject).(labels(ee).session).(labels(ee).run) = ...
     files_all.intermediate.(labels(ee).subject).(labels(ee).session).(labels(ee).run).slice_timing;
 end
+
+% Confound variables (including motion parameters, frame displacement and scrubbing
 files.ind.confounds = files_all.resample.confounds;
 
+% The individual T1 and BOLD images (after nl registration)
+% as well as the intra-subject, inter-run registration
 list_subject = unique({labels(:).subject});
 for ss = 1:length(list_subject)
     files.ind.anat.(list_subject{ss}) = files_all.anat.(list_subject{ss}).t1.nuc_stereonl;
