@@ -175,7 +175,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     % Make a figure for each network
     for net_id = 1:opt.scale
         % Start with the figure
-        fh = figure('Visible', 'on');
+        fh = figure('Visible', 'off');
         title(sprintf('Network %d, Association w %s', net_id, coi_name));
         % Go through the subtypes
         for sbt_id = 1:n_sbt

@@ -48,6 +48,12 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           (Cell of string, Default {}) A list of variable names to be
 %           regressed out.
 %
+%       FLAG_CONF
+%           (boolean, default true) turn on or off the regression of
+%           confounds from the maps. Even if no regression confounds are
+%           specified, the intercept is always regressed unless this flag
+%           is set to false.
+%
 %   SUBTYPE
 %       (struct, optional) with the following fields:
 %
@@ -228,24 +234,24 @@ opt.psom = psom_struct_defaults(opt.psom,...
 
 % Preprocessing options
 opt.stack = psom_struct_defaults(opt.stack,...
-            { 'regress_conf' },...
-            { {}             });
+            { 'regress_conf' , 'flag_conf' },...
+            { {}             , true        });
 
 % Subtype options
 opt.subtype = psom_struct_defaults(opt.subtype,...
              { 'nb_subtype' , 'sub_map_type' },...
-             { 2            , 'mean'         });         
+             { 2            , 'mean'         });
 
 % Association options
 opt.association = psom_struct_defaults(opt.association,...
                   { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
                   { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
-              
+
 % Chi-2 and Cramer's V options
 opt.chi2 = psom_struct_defaults(opt.chi2,...
              { 'group_col_id' , 'flag_weights' , 'network'         },...
              { 'Group'        , false          , 'gb_niak_omitted'  }); 
-              
+
 % See if external subtypes have been specified
 ext_sbt = false;
 if ~strcmp(files_in.subtype, 'gb_niak_omitted')
@@ -288,7 +294,7 @@ for net_id = 1:opt.scale;
                         pre_in, pre_out, pre_opt);
     % Assign output to weight extraction step
     weight_in.data.(net_name) = pipe.(pre_name).files_out;
-    
+
     % Check if external subtypes have been supplied
     if ~ext_sbt
         % Compute subtypes on the current data
@@ -321,7 +327,7 @@ weight_opt.folder_out = opt.folder_out;
 weight_out.weights = [opt.folder_out filesep 'subtype_weights.mat'];
 pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
-                
+
 % Set up the association test options
 assoc_opt = opt.association;
 assoc_opt.folder_out = opt.folder_out;
