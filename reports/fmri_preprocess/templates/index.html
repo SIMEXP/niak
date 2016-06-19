@@ -42,8 +42,7 @@
             Pipeline overview
           </div>
           <div class="chart-stage">
-            <div id="grid-1-1">
-              This report on quality of registration for $N subjects was prepared by $USER, using <a href="http://niak.simexp-lab.org/">NIAK</a> version $NIAK_VERSION on the system $NAME_SYSTEM, on $DATE_TIME. A description of the pipeline can be found on the <a href="http://niak.simexp-lab.org/pipe_preprocessing.html">NIAK website</a>.. 
+            <div id="pipeSummary">
             </div>
           </div>
           <div class="chart-notes">
@@ -126,7 +125,7 @@
     </div>
 <!-- end of three -->
     <div class="row">
-      <div class="col-sm-3">
+      <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
             Pipeline options
@@ -141,7 +140,7 @@
         </div>
       </div>
 
-      <div class="col-sm-9">
+      <div class="col-sm-6">
         <div class="chart-wrapper">
                     <div class="chart-title">
             Input files for subject 
@@ -182,7 +181,12 @@
   <script src="summary/chartBrain.js"></script> <!--dataIntra-->
   <script src="summary/fd.js"></script> <!--data for chartFD-->
   <script src="group/listSubject.js"></script> <!--list of subjects-->
+  <script src="summary/pipeSummary.js"></script> <!--text summary for the pipeline-->
   <script>
+  
+  // Summary for the pipeline
+  document.getElementById('pipeSummary').innerHTML = pipeSummary;
+  
   // Chart of registration quality (spatial correlation) between the T1 scan and the template
   var chartT1 = c3.generate({		 
     bindto: '#chart-T1',		

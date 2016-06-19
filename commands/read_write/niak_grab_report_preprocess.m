@@ -71,5 +71,6 @@ for ss = 1:length(list_subject)
     files.ind.registration.(list_subject{ss}) = files_all.quality_control.individual.(list_subject{ss}).motion.coregister.csv;
 end
 
-%% T1 template
-files.template = files_all.template.anat;
+%% Templates
+files.template.anat = files_all.template.anat;
+files.template.fmri = files_all.template.fmri;

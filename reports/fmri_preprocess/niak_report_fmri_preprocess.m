@@ -37,8 +37,10 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 %   REGISTRATION.(SUBJECT) (string) the file name of a .csv file with measures of 
 %     intra-subject, inter-run coregistration quality. 
 %
-% IN.TEMPLATE (string) 
+% IN.TEMPLATE.ANAT (string) 
 %   the file name of the template used for registration in stereotaxic space.
+% IN.TEMPLATE.FMRI (string) 
+%   the file name of the template used to resample fMRI data.
 %
 % OPT
 %   (structure) with the following fields:
@@ -101,6 +103,10 @@ in.ind = psom_struct_defaults( in.ind , ...
     { 'fmri_native' , 'fmri_stereo' , 'confounds' , 'anat' , 'func' , 'registration' }, ...
     { NaN           , NaN           , NaN         , NaN    , NaN    , NaN            });
 
+in.template = psom_struct_defaults( in.template , ...
+    { 'anat' , 'fmri' }, ...
+    { NaN    , NaN    });
+
 list_subject = fieldnames(in.ind.anat);
 
 %% Options 
@@ -135,6 +141,7 @@ jin = in.params;
 jout.list_subject = [opt.folder_out 'group' filesep 'listSubject.js'];
 jout.list_run = [opt.folder_out 'group' filesep 'listRun.js'];
 jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
+jout.summary = [opt.folder_out 'summary' filesep 'pipeSummary.js'];
 pipeline = psom_add_job(pipeline,'params','niak_brick_preproc_params2report',jin,jout);
 
 %% The summary of BOLD registration
@@ -163,12 +170,12 @@ pipeline = psom_add_job(pipeline,'summary_intra','niak_brick_preproc_intra2repor
 
 %% Generate group images
 clear jin jout jopt
-jin.target = in.template;
+jin.target = in.template.anat;
 jopt.coord = opt.coord;
 jopt.colorbar = true;
 
 % Template
-jin.source = in.template;
+jin.source = in.template.anat;
 jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
 jopt.colormap = 'gray';
 jopt.limits = [0 100];
@@ -236,36 +243,38 @@ for ss = 1:length(list_subject)
     pipeline = psom_add_job(pipeline,['bold_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
 end
 
+%% Panel on motion
+
+%% Movie in native space
+[list_fmri_native,labels] = niak_fmri2cell(in.ind.fmri_native);
+[list_fmri_stereo,labels] = niak_fmri2cell(in.ind.fmri_stereo);
+for ll = 1:length(labels)
+    clear jin jout jopt
+    jin.source = list_fmri_native{ll};
+    jin.target = in.template.fmri;
+    jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.jpg'];
+    jopt.coord = [0 0 0];
+    jopt.colormap = 'jet';
+    jopt.limits = 'adaptative';
+    jopt.flag_decoration = false;
+    jopt.method = 'nearest';
+    pipeline = psom_add_job(pipeline,['motion_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+    jin.source = list_fmri_stereo{ll};
+    jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.jpg'];
+    pipeline = psom_add_job(pipeline,['motion_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+    jin.source = in.template.fmri;
+    jout = [opt.folder_out 'motion' filesep 'spacer.jpg'];
+    pipeline = psom_add_job(pipeline,'spacer','niak_brick_vol2img',jin,jout,jopt);
+end    
+
+%% Template
+for ll = 1:length(labels)
+    clear jin jout jopt
+    jout = [opt.folder_out 'motion' filesep 'motion_report_' labels(ll).name '.html'];
+    jopt.label = labels(ll).name;
+    pipeline = psom_add_job(pipeline,['motion_report_' labels(ll).name],'niak_brick_preproc_motion2report','',jout,jopt);
+end    
+
 if ~opt.flag_test
     psom_run_pipeline(pipeline,opt.psom);
 end
-
-return
-
-%% Add the generation of summary images for all subjects
-for ss = 1:length(list_subject)
-    clear inj outj optj
-    subject = list_subject{ss};
-    if opt.flag_verbose
-        fprintf('Adding job: QC report for subject %s\n',subject);
-    end
-    inj.anat = in.anat.(subject);
-    inj.func = in.func.(subject);
-    inj.template = in.template;
-    outj.anat = [opt.folder_out 'summary_' subject '_anat.jpg'];
-    outj.func = [opt.folder_out 'summary_' subject '_func.jpg'];
-    outj.template = 'gb_niak_omitted';
-    outj.report =  [opt.folder_out 'report_coregister_' subject '.html'];
-    optj.coord = opt.coord;
-    optj.id = subject;
-    optj.template = pipe.summary_template.files_out.template;
-    pipe = psom_add_job(pipe,['report_' subject],'niak_brick_qc_fmri_preprocess',inj,outj,optj);
-end
-
-%% Add a spreadsheet to write the QC. 
-clear inj outj optj
-outj = [opt.folder_out 'qc_report.csv'];
-optj.list_subject = list_subject;
-pipe = psom_add_job(pipe,'init_report','niak_brick_init_qc_report','',outj,optj);
-
-

@@ -12,6 +12,8 @@ function [in,out,opt] = niak_brick_preproc_params2report(in,out,opt)
 % OUT.FILES_IN (string) the name of a .js file with a json description of the 
 %   pipeline options, in a variable opt, as well as a function buildFilesIn that 
 %   generates a .json description of the input file for a particular subject. 
+% OUT.SUMMARY (string) the name of a .js file with a string summarizing the 
+%   pipeline options. 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
 %    update IN, OUT and OPT.
 %
@@ -45,8 +47,8 @@ if ~ischar(in)
 end
 
 out = psom_struct_defaults ( out , ...
-    { 'list_subject' , 'list_run' , 'files_in' }, ...
-    { NaN            , NaN        , NaN        });
+    { 'list_subject' , 'list_run' , 'files_in' , 'summary' }, ...
+    { NaN            , NaN        , NaN        , NaN       });
 
 if nargin < 3
     opt = struct;
@@ -118,3 +120,26 @@ if hf == -1
 end
 fprintf(hf,'%s',text_files);
 fclose(hf);
+
+%% Pipeline summary
+niak_gb_vars;
+psom_gb_vars;
+[status,ver_minc] = system('echo $MINC_TOOLKIT_VERSION');
+ver_minc = ver_minc(1:(end-1));
+%String.fromCharCode(13)
+text_js = sprintf(['var pipeSummary = ''<p>This report on fMRI preprocessing for %i subjects' ...
+          ' was prepared by user "%s" using the system "%s", ' ...
+          'on %s. The version of the software was as follows:</p>' ...
+          '<p>%s version "%s" </p>' ... 
+          '<p>Minc-toolkit version "%s" </p>' ...
+          '<p>PSOM version "%s", located in %s </p>' ...
+          '<p>NIAK version "%s", located in %s</p>'';'],length(list_subject),gb_niak_user, ...
+          gb_psom_localhost,datestr(clock),gb_niak_language,gb_niak_language_version, ...
+          ver_minc,gb_psom_version,gb_psom_path_psom,gb_niak_version,gb_niak_path_niak);
+[hf,msg] = fopen(out.summary,'w');
+if hf == -1
+    error(msg)
+end
+fprintf(hf,'%s',text_js);
+fclose(hf);
+
