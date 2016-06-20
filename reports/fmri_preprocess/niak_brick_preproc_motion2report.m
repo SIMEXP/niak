@@ -5,6 +5,7 @@ function [in,out,opt] = niak_brick_preproc_motion2report(in,out,opt)
 %
 % IN (string) not used. 
 % OUT (string) the name of the .html report. 
+% OPT.NUM_RUN (integer) the number of the run, as indexed in the full report.
 % OPT.LABEL (string) subject_session_run label.
 % OPT.LABEL_REF (string) subject_session_run label for the volume of reference (to 
 %   check coregistration).
@@ -44,8 +45,8 @@ if nargin < 3
     opt = struct;
 end    
 opt = psom_struct_defaults ( opt , ...
-    { 'label_ref' , 'label' , 'flag_test' }, ...
-    { NaN         , NaN     , false         });
+    { 'num_run' , 'label_ref' , 'label' , 'flag_test' }, ...
+    { NaN       , NaN         , NaN     , false         });
 
 if opt.flag_test 
     return
@@ -71,7 +72,9 @@ str_template = strrep(str_template,'$SPACER_NATIVE',['target_' opt.label '.png']
 % spacer stereo (same as native ...)
 str_template = strrep(str_template,'$SPACER_STEREO',['target_' opt.label '.png']);
 % The target space
-str_template = strrep(str_template,'$VOL_RUN',['target_' opt.label '.jpg']);
+str_template = strrep(str_template,'$VOL_RUN',['target_' opt.label '.png']);
+% The target space
+str_template = strrep(str_template,'$NUM_RUN',num2str(opt.num_run));
 % The reference volume
 str_template = strrep(str_template,'$REF_VOLUME',['target_' opt.label_ref '.png']);
 

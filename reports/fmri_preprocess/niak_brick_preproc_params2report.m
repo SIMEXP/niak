@@ -88,8 +88,7 @@ fclose(hf);
 
 %% List of runs
 text_run = sprintf(['  // Data structure describing all available runs\n' ...   
-                    '  var dataRun = [\n' ...
-                    '    { id: 0, text: "Select a session"},\n']);
+                    '  var dataRun = [\n']);
 for ll = 1:(length(labels)-1)
     text_run = [ text_run sprintf('    { id: %i, text: ''%s'' },\n',ll,labels(ll).name)];
 end 

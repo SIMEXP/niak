@@ -62,7 +62,7 @@ list_ind = [1 4 5 2 3];
 ind_ref = 4;
 labels = { 'Run' , 'FD_before' , 'FD_after' , 'vol_scrubbed' , 'vol_ok' };
 val = str2double(tab(2:end,ind_ref));
-[val,order] = sort(val,'ascend');
+[val,order] = sort(val,'descend');
 order = order(:)'+1;
 
 text_js = sprintf('var dataFD = [\n');

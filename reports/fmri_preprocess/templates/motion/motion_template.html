@@ -28,7 +28,7 @@
           <li><a href="../index.html">Summary</a></li>
           <li><a href="../group.html">Group</a></li>
           <li><a href="../registration.html">Registration</a></li>
-          <li><a href="../motion.html">Motion</a></li>
+          <li><a href="motion.html">Motion</a></li>
         </ul>
       </div>
     </div>
@@ -55,7 +55,7 @@
       <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
-            fMRI time frames in native space. Select a new run: 
+            fMRI time frames in native space. Select a run: 
             <select id="select-BOLD" style="width: 50%"> </select>
           </div>
           <div class="chart-stage" id="motionNative">
@@ -181,9 +181,11 @@
     var id = e.params.data.id;
     if (id>0) {
       subject = $("#select-BOLD option[value=" + id + "]").text();
-      location.assign(['registration.html?id=' + subject]);
+      location.assign(['motion_report_' + subject + '.html']);
     }
   });
+  $eventSelect.val("$NUM_RUN");
+  $eventSelect.trigger('change');
   
   // c3.js data for the translation parameters chart
   var chartTsl = c3.generate({

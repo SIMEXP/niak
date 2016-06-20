@@ -245,7 +245,7 @@ end
 
 %% Panel on motion
 
-%% Movie in native space
+%% Movies (and target image for all runs)
 [list_fmri_native,labels] = niak_fmri2cell(in.ind.fmri_native);
 [list_fmri_stereo,labels] = niak_fmri2cell(in.ind.fmri_stereo);
 for ll = 1:length(labels)
@@ -277,13 +277,28 @@ for ll = 1:length(labels)
     pipeline = psom_add_job(pipeline,['motion_ind_' labels(ll).name],'niak_brick_preproc_ind_motion2report',jin,jout);
 end    
 
-%% Template
+% Pick reference runs
+labels_ref = struct;
+for ss = 1:length(list_subject)
+    session = fieldnames(in.ind.fmri_native.(list_subject{ss}));
+    session = session{1};
+    run = fieldnames(in.ind.fmri_native.(list_subject{ss}).(session));
+    run = run{1};
+    labels_ref.(list_subject{ss}) = [list_subject{ss} '_' session '_' run];
+end
+
+% Generate the motion report
 for ll = 1:length(labels)
     clear jin jout jopt
     jout = [opt.folder_out 'motion' filesep 'motion_report_' labels(ll).name '.html'];
     jopt.label = labels(ll).name;
-    jopt.label_ref = labels(1).name;
+    jopt.label_ref = labels_ref.(labels(ll).subject);
+    jopt.num_run = ll;
     pipeline = psom_add_job(pipeline,['motion_report_' labels(ll).name],'niak_brick_preproc_motion2report','',jout,jopt);
+    if ll==1
+        jout = [opt.folder_out 'motion' filesep 'motion.html'];
+        pipeline = psom_add_job(pipeline,'motion_report','niak_brick_preproc_motion2report','',jout,jopt);
+    end
 end    
 
 if ~opt.flag_test

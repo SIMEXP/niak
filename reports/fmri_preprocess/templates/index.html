@@ -27,7 +27,7 @@
           <li><a href="index.html">Summary</a></li>
           <li><a href="group.html">Group</a></li>
           <li><a href="registration.html">Registration</a></li>
-          <li><a href="motion.html">Motion</a></li>
+          <li><a href="motion/motion.html">Motion</a></li>
         </ul>
       </div>
     </div>
@@ -294,7 +294,7 @@
       x: 'Subject',
       columns: dataBrain,
       type: 'bar',		
-      onclick: function (d) { selectRun(d,chartBrain)}		
+      onclick: function (d) { selectSubject(d,chartBrain)}		
     },	
     axis: {
         x: {
@@ -302,7 +302,7 @@
           label: 'Subject'
         },
         y: {
-            label: 'DICE',
+            label: '% overlap',
             tick: {
                 format: d3.format('0.2f')
             }
@@ -361,7 +361,7 @@
   // Create links to motion report attached to the bars in chartMotion chartBrain and chartIntra
   function selectRun (d,chart) {		 
     run = chart.internal.config.axis_x_categories[d.x];		
-    var win = window.open(['motion_'+run+'.html'], '_blank');
+    var win = window.open(['motion/motion_report_'+run+'.html'], '_blank');
     if (win) {
       //Browser has allowed it to be opened
       win.focus();
