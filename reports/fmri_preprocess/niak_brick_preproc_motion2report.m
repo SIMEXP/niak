@@ -68,15 +68,15 @@ str_template = strrep(str_template,'$MOTION_NATIVE',['motion_native_' opt.label 
 % Motion stereo
 str_template = strrep(str_template,'$MOTION_STEREO',['motion_stereo_' opt.label '.png']);
 % spacer
-str_template = strrep(str_template,'$SPACER_NATIVE',['target_' opt.label '.png']);
+str_template = strrep(str_template,'$SPACER_NATIVE',['target_native_' opt.label '.png']);
 % spacer stereo (same as native ...)
-str_template = strrep(str_template,'$SPACER_STEREO',['target_' opt.label '.png']);
+str_template = strrep(str_template,'$SPACER_STEREO',['target_stereo_' opt.label '.png']);
 % The target space
-str_template = strrep(str_template,'$VOL_RUN',['target_' opt.label '.png']);
+str_template = strrep(str_template,'$VOL_RUN',['target_stereo_' opt.label '.png']);
 % The target space
 str_template = strrep(str_template,'$NUM_RUN',num2str(opt.num_run));
 % The reference volume
-str_template = strrep(str_template,'$REF_VOLUME',['target_' opt.label_ref '.png']);
+str_template = strrep(str_template,'$REF_VOLUME',['target_stereo_' opt.label_ref '.png']);
 
 % file with motion parameters
 str_template = strrep(str_template,'$dataMotion',['dataMotion_' opt.label '.js']);

@@ -180,7 +180,6 @@ jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
 jopt.colormap = 'gray';
 jopt.limits = [0 100];
 jopt.title = 'T1 Template';
-jopt.method = 'linear';
 pipeline = psom_add_job(pipeline,'template_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Group average T1
@@ -189,7 +188,6 @@ jout = [opt.folder_out 'group' filesep 'average_t1_stereotaxic.png'];
 jopt.colormap = 'gray';
 jopt.limits = [0 100];
 jopt.title = 'Group average T1';
-jopt.method = 'linear';
 pipeline = psom_add_job(pipeline,'average_t1_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Group average BOLD
@@ -198,7 +196,6 @@ jout = [opt.folder_out 'group' filesep 'average_func_stereotaxic.png'];
 jopt.colormap = 'jet';
 jopt.limits = 'adaptative';
 jopt.title = 'Group average BOLD';
-jopt.method = 'linear';
 pipeline = psom_add_job(pipeline,'average_func_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Group BOLD mask
@@ -207,7 +204,6 @@ jout = [opt.folder_out 'group' filesep 'mask_func_group_stereotaxic.png'];
 jopt.colormap = 'jet';
 jopt.limits = [0 1];
 jopt.title = 'Group BOLD mask';
-jopt.method = 'nearest';
 pipeline = psom_add_job(pipeline,'mask_func_group_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Average BOLD mask
@@ -216,7 +212,6 @@ jout = [opt.folder_out 'group' filesep 'average_mask_func_stereotaxic.png'];
 jopt.colormap = 'jet';
 jopt.limits = [0 1];
 jopt.title = 'Average BOLD mask';
-jopt.method = 'linear';
 pipeline = psom_add_job(pipeline,'avg_mask_func_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 %% Panel on individual registration
@@ -250,22 +245,34 @@ end
 [list_fmri_stereo,labels] = niak_fmri2cell(in.ind.fmri_stereo);
 for ll = 1:length(labels)
     clear jin jout jopt
+    
+    % Native movie
     jin.source = list_fmri_native{ll};
-    jin.target = in.template.fmri;
+    jin.target = '';
     jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.png'];
-    jopt.coord = [0 0 0];
+    jopt.coord = 'CEN';
     jopt.colormap = 'jet';
     jopt.flag_vertical = false;
     jopt.limits = 'adaptative';
     jopt.flag_decoration = false;
-    jopt.method = 'nearest';
     pipeline = psom_add_job(pipeline,['motion_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+    
+    % Native spacer
+    jopt.flag_median = true;
+    jout = [opt.folder_out 'motion' filesep 'target_native_' labels(ll).name '.png'];
+    pipeline = psom_add_job(pipeline,['target_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+    
+    % Stereotaxic movie
+    jopt.flag_median = false;
+    jopt.coord = [0 0 0];
     jin.source = list_fmri_stereo{ll};
     jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.png'];
     pipeline = psom_add_job(pipeline,['motion_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+    
+    % Stereotaxic spacer
     jopt.flag_median = true;
-    jout = [opt.folder_out 'motion' filesep 'target_' labels(ll).name '.png'];
-    pipeline = psom_add_job(pipeline,['target_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
+    jout = [opt.folder_out 'motion' filesep 'target_stereo_' labels(ll).name '.png'];
+    pipeline = psom_add_job(pipeline,['target_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
 end    
 
 % Motion parameters
