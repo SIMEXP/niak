@@ -245,7 +245,7 @@ end
 
 %% Panel on motion
 
-%% Movies (and target image for all runs)
+% Movies (and target image for all runs)
 [list_fmri_native,labels] = niak_fmri2cell(in.ind.fmri_native);
 [list_fmri_stereo,labels] = niak_fmri2cell(in.ind.fmri_stereo);
 for ll = 1:length(labels)
@@ -268,7 +268,7 @@ for ll = 1:length(labels)
     pipeline = psom_add_job(pipeline,['target_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
 end    
 
-%% Motion parameters
+% Motion parameters
 [list_confounds,labels] = niak_fmri2cell(in.ind.confounds);
 for ll = 1:length(labels)
     clear jin jout jopt

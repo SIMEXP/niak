@@ -731,9 +731,21 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
+%% Generate the pipeline report 
+
 %% Run the pipeline 
 if ~opt.flag_test
     psom_run_pipeline(pipeline,opt.psom);
+end
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding the report on fMRI preprocessing ; ');
+end
+files_report = niak_grab_report_preprocess(opt.folder_out,files_in);
+opt_rep.folder_out = [opt.folder_out 'report'];
+pipeline = psom_merge_pipeline(pipeline,niak_report_fmri_preprocess(files_report,opt_rep));
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
 %%%%%%%%%%%%%%%%%%
