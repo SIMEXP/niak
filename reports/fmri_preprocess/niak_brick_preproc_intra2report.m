@@ -65,6 +65,12 @@ for ss = 1:length(list_subject)
     end
 end
 
+%% Get rid of prefix/suffix
+for rr=2:size(tab,1)
+    label_run = tab{rr,1};
+    tab{rr,1} = label_run(6:(end-2));
+end
+
 %% Compose js text
 list_ind = [1 3];
 ind_ref = 3;
