@@ -23,10 +23,13 @@ function [in,out,opt] = niak_brick_vol2img(in,out,opt)
 %    with axis, title and colorbar. Otherwise just output the plain mosaic.
 % OPT.FLAG_MEDIAN (boolean, default false) if the flag is on and the input volume is 4D
 %    the median volume is extracted. 
-% OPT.METHOD     (string, default 'linear') the spatial interpolation 
-%            method. See METHOD in INTERP2.
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
 %    update IN, OUT and OPT.
+%
+% The montage is generated in voxel space associated with the target. If no target is specified,
+% the source space is resampled with direction cosines, and the field of view is adjusted 
+% such that it includes all of the voxels. Only nearest neighbour interpolation is 
+% available. 
 %
 % Copyright (c) Pierre Bellec
 % Centre de recherche de l'Institut universitaire de griatrie de Montral, 2016.
@@ -80,14 +83,10 @@ if opt.flag_median
 end
 
 if isempty(in.target)
-    N = [diag(hdr.source.info.voxel_size) zeros(3,1) ; 0 0 0 1];
-    W = N\([hdr.source.info.mat(1:3,1:3) zeros(3,1) ; 0 0 0 1]);
-    hdr.target.info.mat = W*hdr.source.info.mat;
-    hdr.target.info.dimensions = hdr.source.info.dimensions;
+    hdr.target = [];
 else
     hdr.target = niak_read_vol(in.target);    
 end
-
 
 %% Build image
 if (length(opt.coord)==4)&&(ndims(vol)==4)
@@ -95,10 +94,9 @@ if (length(opt.coord)==4)&&(ndims(vol)==4)
 else
     list_vol = 1:size(vol,4);
 end
-opt_v.method = opt.method;
 for tt = list_vol
     for cc = 1:size(opt.coord,1)
-        [img_tmp,slices] = niak_vol2img(hdr,vol(:,:,:,tt),opt.coord(cc,1:3),opt_v);
+        [img_tmp,slices] = niak_vol2img(hdr,vol(:,:,:,tt),opt.coord(cc,1:3));
         if (cc == 1)&&(tt==1)
             img = img_tmp;
             size_slices = size(slices{1});
