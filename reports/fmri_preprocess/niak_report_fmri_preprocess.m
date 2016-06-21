@@ -178,7 +178,7 @@ jopt.colorbar = true;
 jin.source = in.template.anat;
 jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
 jopt.colormap = 'gray';
-jopt.limits = [0 100];
+jopt.limits = 'adaptative';
 jopt.title = 'T1 Template';
 pipeline = psom_add_job(pipeline,'template_stereo','niak_brick_vol2img',jin,jout,jopt);
 
@@ -186,7 +186,7 @@ pipeline = psom_add_job(pipeline,'template_stereo','niak_brick_vol2img',jin,jout
 jin.source = in.group.avg_t1;
 jout = [opt.folder_out 'group' filesep 'average_t1_stereotaxic.png'];
 jopt.colormap = 'gray';
-jopt.limits = [0 100];
+jopt.limits = 'adaptative';
 jopt.title = 'Group average T1';
 pipeline = psom_add_job(pipeline,'average_t1_stereo','niak_brick_vol2img',jin,jout,jopt);
 
@@ -218,7 +218,7 @@ pipeline = psom_add_job(pipeline,'avg_mask_func_stereo','niak_brick_vol2img',jin
 
 % Individual T1 images
 jopt.colormap = 'gray';
-jopt.limits = [0 100];
+jopt.limits = 'adaptative';
 jopt.method = 'linear';
 for ss = 1:length(list_subject)
     jin.source = in.ind.anat.(list_subject{ss});
