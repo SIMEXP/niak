@@ -178,6 +178,7 @@ jopt.colorbar = true;
 jin.source = in.template.anat;
 jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
 jopt.colormap = 'gray';
+jopt.colorbar = false;
 jopt.limits = 'adaptative';
 jopt.title = 'T1 Template';
 pipeline = psom_add_job(pipeline,'template_stereo','niak_brick_vol2img',jin,jout,jopt);
