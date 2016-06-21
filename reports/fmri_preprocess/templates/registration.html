@@ -183,7 +183,7 @@
     $es = $(".select-subject");
     currId = $es.val();
     currId = parseInt(currId);
-    if (currId < 2) {
+    if (currId < listSubject.length) {
       currId+=1;
     } else {
       currId = 1;
@@ -200,7 +200,7 @@
     if (currId > 1) {
        currId-=1;
     } else {
-       currId = 2;
+       currId = listSubject.length;
     }
     var evt = {params:{data:{id:currId.toString()}}};
     setImg (evt);
