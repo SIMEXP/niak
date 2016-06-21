@@ -11,7 +11,7 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %   (cell of strings) a list of file names
 %
 % FILES_OUT       
-%   (cell of strings, default OPT.FOLDER_OUT/<BASE FILES_IN>_copy.<EXT FILES_IN>) 
+%   (cell of strings, default OPT.FOLDER_OUT/(NAME_FILES_IN)) 
 %   File name for outputs. If FILES_OUT is an empty string, the default
 %   name is generated.
 %
@@ -87,7 +87,6 @@ gb_list_defaults  = {false       , 1              , 0           , ''           }
 niak_set_defaults
 
 %% Output files
-
 [path_f,name_f,ext_f] = fileparts(files_in{1});
 if isempty(path_f)
     path_f = '.';
@@ -101,6 +100,7 @@ end
 if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
 end
+opt.folder_out = niak_full_path(opt.folder_out);
 
 %% Building default output names
 nb_files = length(files_in);
@@ -111,7 +111,7 @@ if isempty(files_out)
 
     for num_f = 1:nb_files
         [path_f,name_f,ext_f] = niak_fileparts(files_in{num_f});
-        files_out{num_f} = cat(2,opt.folder_out,filesep,name_f,'_copy',ext_f);
+        files_out{num_f} = cat(2,opt.folder_out,name_f,ext_f);
     end
 
 end

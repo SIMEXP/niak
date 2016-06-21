@@ -513,6 +513,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pipeline = struct();
 
+%% Save the pipeline parameters
+pipeline.pipe_params.command = 'save(files_out,''-struct'',''opt'')';
+pipeline.pipe_params.files_out = [opt.folder_out 'pipe_parameters.mat'];
+pipeline.pipe_params.opt.opt = opt;
+pipeline.pipe_params.opt.files_in = files_in;
+
 %% Resample the AAL template 
 clear job_in job_out job_opt
 [path_t,name_t,ext_t] = niak_fileparts(opt.template.fmri);
@@ -721,6 +727,19 @@ end
 job_out = [opt.folder_out filesep 'quality_control' filesep 'group_motion' filesep 'qc_scrubbing_group.csv'];
 job_opt.flag_test = false;
 pipeline = psom_add_job(pipeline,'qc_group_scrubbing','niak_brick_qc_scrubbing',job_in,job_out,job_opt,false);
+if opt.flag_verbose        
+    fprintf('%1.2f sec\n',etime(clock,t1));
+end
+
+%% Generate the pipeline report 
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Adding the report on fMRI preprocessing ; ');
+end
+files_report = niak_grab_report_preprocess(opt.folder_out,files_in);
+opt_rep.folder_out = [opt.folder_out 'report'];
+opt_rep.flag_test = true;
+pipeline = psom_merge_pipeline(pipeline,niak_report_fmri_preprocess(files_report,opt_rep));
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end

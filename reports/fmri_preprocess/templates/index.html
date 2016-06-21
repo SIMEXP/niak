@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Summary of the fMRI preprocessing pipeline</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <link rel="stylesheet" type="text/css" href="assets/bootstrap/bootstrap.min.css" /> <!--from keen.io-->
+  <link rel="stylesheet" type="text/css" href="assets/keen/keen-dashboards.css" />    <!--from keen.io-->
+  <link rel="stylesheet" type="text/css" href="assets/pretty-json/pretty-json.css" /> <!--from pretty-json-->
+  <link href="assets/select2/select2.min.css" rel="stylesheet" /> <!--from select 2-->
+  <link href="assets/c3js/c3.min.css" rel="stylesheet" type="text/css"> <!--from c3.js-->
+</head>
+<body class="application">
+
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="http://niak.simexp-lab.org/pipe_preprocessing.html">fMRI preprocessing pipeline</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="index.html">Summary</a></li>
+          <li><a href="group.html">Group</a></li>
+          <li><a href="registration.html">Registration</a></li>
+          <li><a href="motion/motion.html">Motion</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+
+    <div class="row">
+      <div class="col-sm-6 col-md-4">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Pipeline overview
+          </div>
+          <div class="chart-stage">
+            <div id="pipeSummary">
+            </div>
+          </div>
+          <div class="chart-notes">
+            
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Summary T1 registration
+          </div>
+          <div class="chart-stage">
+            <div id="chart-T1" style="width:95%"></div>
+          </div>
+          <div class="chart-notes">
+            Click on a bar to open the registration report. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Summary BOLD registration
+          </div>
+          <div class="chart-stage">
+            <div id="chart-BOLD" style="width:95%"></div>
+          </div>
+          <div class="chart-notes">
+            Click on a bar to open the registration report. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- end of three -->
+
+    <div class="row">
+
+      <div class="col-sm-6 col-md-4">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Average Frame Displacement (FD) and # time frames scrubbed vs OK
+          </div>
+          <div class="chart-stage">
+            <div id="chart-FD" style="width:95%"></div>
+          </div>
+          <div class="chart-notes">
+            Click on a bar to open the motion report. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-sm-6 col-md-4">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Overlap between individual and group brain mask
+          </div>
+          <div class="chart-stage">
+            <div id="chart-brain" style="width:95%"></div>
+          </div>
+          <div class="chart-notes">
+            Click on a bar to open the motion report. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Spatial correlation with the individual run of reference
+          </div>
+          <div class="chart-stage">
+            <div id="chart-intra" style="width:95%"></div>
+          </div>
+          <div class="chart-notes">
+            Click on a bar to open the motion report. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- end of three -->
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Pipeline options
+          </div>
+          <div class="chart-stage">
+            <div id="elem">
+            </div>
+          </div>
+          <div class="chart-notes">
+            Click on {...} to collapse.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="chart-wrapper">
+                    <div class="chart-title">
+            Input files for subject 
+            <select class="select-subject" style="width: 50%">
+              </select>
+          </div>
+          <div class="chart-stage">
+            <div id="elem2">
+            </div>
+          </div>
+          <div class="chart-notes">
+            Click on {...} to collapse.
+          </div>
+
+        </div>
+      </div>
+   </div>
+    <hr>
+
+    <p class="small text-muted">Built with &#9829; by <a href="http://niak.simexp-lab.org">NIAK</a> using dashboards from <a href="https://keen.io">Keen IO</a></p>
+
+  
+
+  <!--Dependencies-->
+  <script src="assets/d3js/d3.min.js" charset="utf-8"></script>
+  <script src="assets/c3js/c3.min.js"></script></head>
+  <script type="text/javascript" src="assets/jquery/jquery.min.js"></script>       <!--from keen.io-->
+  <script type="text/javascript" src="assets/bootstrap/bootstrap.min.js"></script> <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/keen.min.js"></script>           <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/meta.js"></script>               <!--from keen.io-->
+  <script type="text/javascript" src="assets/underscore/underscore-min.js"></script>   <!--from pretty-json-->
+  <script type="text/javascript" src="assets/backbone/backbone-min.js"></script>       <!--from pretty-json-->
+  <script type="text/javascript" src="assets/pretty-json/pretty-json-min.js"></script> <!--from pretty-json-->
+  <script src="assets/select2/select2.min.js"></script> <!--from select 2-->
+  <script src="summary/filesIn.js"></script> <!--description of input files and options-->
+  <script src="summary/chartT1.js"></script> <!--data for chartT1-->
+  <script src="summary/chartBOLD.js"></script> <!--data for chartBOLD-->
+  <script src="summary/chartBrain.js"></script> <!--dataIntra-->
+  <script src="summary/fd.js"></script> <!--data for chartFD-->
+  <script src="group/listSubject.js"></script> <!--list of subjects-->
+  <script src="summary/pipeSummary.js"></script> <!--text summary for the pipeline-->
+  <script>
+  
+  // Summary for the pipeline
+  document.getElementById('pipeSummary').innerHTML = pipeSummary;
+  
+  // Chart of registration quality (spatial correlation) between the T1 scan and the template
+  var chartT1 = c3.generate({		 
+    bindto: '#chart-T1',		
+      data: {		 
+        x: 'Subject',		
+        columns: dataT1,		
+        type: 'bar',		
+        onclick: function (d) { selectSubject(d,chartT1)}		
+      },		
+    axis: {		
+      x: {		
+        type: 'category',		
+        label: 'Subject'
+      },	
+      y: {
+        label: 'spatial correlation',
+        tick: {
+          format: d3.format('0.2f')
+        }
+      }
+    },		
+    zoom: {		
+      enabled: true		
+    },		
+    selection: {		
+      enabled: true		
+    }		
+  });
+    
+  // Chart of registration quality (spatial correlation) between the functional scan and the template
+  var chartBOLD = c3.generate({		
+    bindto: '#chart-BOLD',		
+    data: {
+      x: 'Subject',
+      columns: dataBOLD,		
+      type: 'bar',		
+      onclick: function (d) { selectSubject(d,chartBOLD)}		
+    },		
+    axis: {		
+      x: {		
+        type: 'category',
+        label: 'Subject'	
+      },		
+      y: {
+        label: 'spatial correlation',
+        tick: {
+          format: d3.format('0.2f')
+        }
+      }
+    },		
+    zoom: {		
+      enabled: true		
+    },		
+    selection: {		
+      enabled: true		
+    }		
+  });		
+
+  // Chart of frame displacement and number of volumes
+  var chartFD = c3.generate({
+    bindto: '#chart-FD',
+    data: {
+      x: 'Run',
+      columns: dataFD,
+      axes: {
+        FD_before: 'y',
+        FD_after: 'y',
+        vol_scrubbed: 'y2',
+        vol_ok: 'y2',
+      },
+      type: 'bar',		
+      onclick: function (d) { selectRun(d,chartFD)}		
+    },	
+    axis: {
+        x: {
+          type: 'category',
+          label: 'Run'
+        },
+        y: {
+            label: 'FD',
+            tick: {
+                format: d3.format('0.2f')
+            }
+        },
+        y2: {
+            show: true,
+            label: '#time frames)',
+            tick: {
+                format: d3.format('1.0f')
+            }
+        }
+    },
+    zoom: {
+      enabled: true
+    },
+    selection: {		
+      enabled: true		
+    }	
+  });
+  
+  // Chart of brain mask overlap between individual BOLD data and template
+  var chartBrain = c3.generate({
+    bindto: '#chart-brain',
+    data: {
+      x: 'Subject',
+      columns: dataBrain,
+      type: 'bar',		
+      onclick: function (d) { selectSubject(d,chartBrain)}		
+    },	
+    axis: {
+        x: {
+          type: 'category',
+          label: 'Subject'
+        },
+        y: {
+            label: '% overlap',
+            tick: {
+                format: d3.format('0.2f')
+            }
+        }
+    },
+    zoom: {
+      enabled: true
+    },
+    selection: {		
+      enabled: true		
+    }	
+  });
+  
+  // Chart of spatial correlation of individual BOLD data and template
+  var chartIntra = c3.generate({
+    bindto: '#chart-intra',
+    data: {
+      x: 'Run',
+      columns: dataIntra,
+      type: 'bar',		
+      onclick: function (d) { selectRun(d,chartIntra)}		
+    },	
+    axis: {
+        x: {
+          type: 'category',
+          label: 'Run'
+        },
+        y: {
+            label: 'spatial correlation',
+            tick: {
+                format: d3.format('0.2f')
+            }
+        }
+    },
+    zoom: {
+      enabled: true
+    },
+    selection: {		
+      enabled: true		
+    }	
+  });
+  
+  // Create links to registration report attached to the bars in chartT1 and chartBOLD
+  function selectSubject (d,chart) {		 
+    subject = chart.internal.config.axis_x_categories[d.x];		
+    var win = window.open(['registration.html?id=' + subject], '_blank');
+    if (win) {
+      //Browser has allowed it to be opened
+      win.focus();
+    } else {
+      //Browser has blocked it
+      alert('Please allow popups for this website'); 
+    }
+  };
+
+  // Create links to motion report attached to the bars in chartMotion chartBrain and chartIntra
+  function selectRun (d,chart) {		 
+    run = chart.internal.config.axis_x_categories[d.x];		
+    var win = window.open(['motion/motion_report_'+run+'.html'], '_blank');
+    if (win) {
+      //Browser has allowed it to be opened
+      win.focus();
+    } else {
+      //Browser has blocked it
+      alert('Please allow popups for this website'); 
+    }
+  };
+  
+  // Create pretty jason for filesIn
+  function printFiles(files) {
+    var node2 = new PrettyJSON.view.Node({
+      el:$('#elem2'),
+      data: files,
+    });
+    node2.expandAll();
+  };
+   
+  // Create button to select subjects
+  $(".select-subject").select2({
+    data: listSubject
+  });  
+  $(".select-subject").on("select2:select", function (e) { 
+    filesIn = buildFilesIn(e); 
+    printFiles(filesIn);
+  });
+    
+  // Create the json description of input files  
+  var evt = {params:{data:{id:"1"}}};
+  filesIn = buildFilesIn (evt);
+  printFiles(filesIn);
+  
+  // Create the json description of pipeline options
+  var node = new PrettyJSON.view.Node({
+    el:$('#elem'),
+    data: opt
+  });
+  node.expandAll()
+  
+  $(document).ready(function() {
+    // Attach the chart on T1 registration to the figure
+    $('#chart-T1').data('c3-chart', chartT1);		  		
+    // Attach the chart on BOLD registration to the figure
+    $('#chart-BOLD').data('c3-chart', chartBOLD);			
+  });
+</script>
+
+</body>
+</html>
