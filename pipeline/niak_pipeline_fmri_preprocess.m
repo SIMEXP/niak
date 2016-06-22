@@ -739,7 +739,7 @@ end
 files_report = niak_grab_report_preprocess(opt.folder_out,files_in);
 opt_rep.folder_out = [opt.folder_out 'report'];
 opt_rep.flag_test = true;
-pipeline = psom_merge_pipeline(pipeline,niak_report_fmri_preprocess(files_report,opt_rep));
+pipeline = psom_merge_pipeline(pipeline,niak_report_fmri_preprocess(files_report,opt_rep),'rep_');
 if opt.flag_verbose        
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
