@@ -176,7 +176,6 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     for net_id = 1:opt.scale
         % Start with the figure
         fh = figure('Visible', 'off');
-        title(sprintf('Network %d, Association w %s', net_id, coi_name));
         % Go through the subtypes
         for sbt_id = 1:n_sbt
             % Get the subtype weights
@@ -220,6 +219,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
         if opt.flag_verbose
             fprintf('Saving association plot to %s\n', files_out.figures{net_id});
         end
+        subtitle(sprintf('Network %d, Association w %s', net_id, coi_name));
         print(fh, files_out.figures{net_id}, '-dpdf');
     end
 end
@@ -237,3 +237,21 @@ function path_array = make_paths(out_path, template, scales)
 return
 end
 
+function [ax,h] = subtitle(text)
+
+% Centers a title over a group of subplots.
+% Returns a handle to the title and the handle to an axis.
+%   [ax,h] = subtitle(text)
+%           returns handles to both the axis and the title.
+%   ax = subtitle(text)
+%           returns a handle to the axis only.
+%   Input variable TEXT must be a string.
+
+ax = axes('Units','Normal','Position',[.1 0.1 .85 .85],'Visible','Off');
+set(get(ax,'Title'),'Visible','on')
+title(text);
+if (nargout < 2)
+    return
+end
+h = get(ax,'Title');
+end
