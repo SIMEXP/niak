@@ -136,6 +136,12 @@ weights = tmp.weight_mat;
 % Figure out how many cases we are dealing with
 [n_sub, n_sbt, n_net] = size(weights);
 
+%% Work around the incompatibilities between Matlab and Octave 
+is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
+if is_octave
+    graphics_toolkit gnuplot
+end
+
 %% Visualize the weights and covariate of interest
 if ~strcmp(files_out.figures, 'gb_niak_omitted')
     % First, get the covariate of interest. 
@@ -186,9 +192,6 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
             ax = gca;
             % Chose whether to plot categorical or dimensional data
             if coi_cat
-                % Work around the incompatibilities between Matlab and Octave for
-                % the boxplot
-                is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
                 % Generate the boxplots
                 if is_octave
                     % The groups are supposed to go in a cell
