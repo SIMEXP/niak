@@ -42,6 +42,10 @@ function [files_in,files_out,opt] = niak_brick_visu_subtype_glm(files_in, files_
 %      <NAME>
 %         (scalar) the weight of the covariate NAME in the contrast.
 %
+%   DATA_TYPE
+%       (string, either 'continuous' or 'categorical') the kind of data in
+%       OPT.CONTRAST.<NAME>
+%
 %   SCALE
 %       (integer) the scale of the network solutions
 %
@@ -75,8 +79,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'folder_out', 'scale' , 'contrast' , 'flag_verbose' , 'flag_test' },...
-      { ''          , NaN     , NaN        , true           , false       });
+      { 'folder_out', 'scale' , 'contrast' , 'data_type', 'flag_verbose' , 'flag_test' },...
+      { ''          , NaN     , NaN        , NaN        , true           , false       });
 
 % FILES_OUT
 if ~isempty(opt.folder_out)
@@ -158,14 +162,11 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
         coi_col = find(strcmp(coi_name, model_norm.labels_y));
         coi = model_norm.x(:, coi_col);
     end
-    % Determine whether the coi is categorical
-    coi_unique = unique(coi);
-    n_unique = length(coi_unique);
-    if n_unique > 2
+    % Determine whether the coi is categorical or continuous
+    if strcmp(opt.data_type, 'continuous')
         coi_cat = false;
     else
         coi_cat = true;
-        coi_ind = coi==coi_unique(1);
     end
 
     % Determine the number of rows and columns for the subyptes
@@ -191,10 +192,15 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
                 % Generate the boxplots
                 if is_octave
                     % The groups are supposed to go in a cell
-                    boxplot({sbt_weights(coi_ind), sbt_weights(~coi_ind)}); 
+                    coi_unique = unique(coi); % find unique grouping values
+                    n_unique = length(coi_unique); % the number of unique grouping values
+                    for cc = 1:n_unique
+                        sbt_cell{cc} = sbt_weights(coi == coi_unique(cc)); % make the cell
+                    end
+                    boxplot(sbt_cell);
                 else
                     % The groups can be in a vector
-                    boxplot(sbt_weights, coi_ind);
+                    boxplot(sbt_weights, coi);
                 end
                 % Set the x axis ticks and labels
                 %set(ax,'XTickLabel',cellstr(num2str(coi_unique)));
