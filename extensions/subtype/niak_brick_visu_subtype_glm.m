@@ -222,9 +222,10 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
                 hold off;
                 disp('done');
             end
-            xlabel(ax, coi_name);
             title(sprintf('Subtype %d', sbt_id));
         end
+        xlabel(ax, coi_name);
+        ylabel(ax, 'Weight');
         if opt.flag_verbose
             fprintf('Saving association plot to %s\n', files_out.figures{net_id});
         end
