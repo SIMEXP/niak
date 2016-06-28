@@ -166,6 +166,13 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           (boolean, default false) if the flag is true, the brick will
 %           calculate statistics based on the weights from FILES_IN.WEIGHTS
 %
+%   VISU
+%       (struct, optional) with the following field:
+%
+%       DATA_TYPE
+%           (string, either 'categorical' or 'continuous') the kind of data
+%           in OPT.ASSOCIATION.CONTRAST.<NAME>
+%
 %   FLAG_CHI2
 %       (boolean, default true) turn on/off to calculate Chi2 and Cramer's
 %       V statistics
@@ -224,8 +231,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'flag_visu' , 'flag_chi2' , 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct() , true        , true       , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'visu'  , 'chi2'   , 'flag_visu' , 'flag_chi2' , 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct(), struct() , true        , true       , true           , false       });
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
@@ -250,8 +257,16 @@ opt.association = psom_struct_defaults(opt.association,...
 % Chi-2 and Cramer's V options
 opt.chi2 = psom_struct_defaults(opt.chi2,...
              { 'group_col_id' , 'flag_weights' , 'network'         },...
-             { 'Group'        , false          , 'gb_niak_omitted'  }); 
-
+             { 'Group'        , false          , 'gb_niak_omitted' }); 
+         
+% GLM visualization options
+opt.visu = psom_struct_defaults(opt.visu,...
+             { 'data_type'       },...
+             { 'gb_niak_omitted' }); 
+if opt.flag_visu && strcmp(opt.visu.data_type, 'gb_niak_omitted')
+    error('When OPT.FLAG_VISU is true, OPT.VISU.DATA_TYPE must be specified. Type ''help niak_pipeline_subtype'' for more info.')
+end
+         
 % See if external subtypes have been specified
 ext_sbt = false;
 if ~strcmp(files_in.subtype, 'gb_niak_omitted')
@@ -350,6 +365,7 @@ if opt.flag_visu
                         'select', 'flag_intercept'};
     visu_opt = rmfield(opt.association, fields);
     visu_opt.folder_out = opt.folder_out;
+    visu_opt.data_type = opt.visu.data_type;
     pipe = psom_add_job(pipe, 'visu_association', 'niak_brick_visu_subtype_glm',...
                         visu_in, visu_out, visu_opt);
 end 
