@@ -192,13 +192,13 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
             ax = gca;
             % Chose whether to plot categorical or dimensional data
             if coi_cat
+                coi_unique = unique(coi); % find unique grouping values
+                n_unique = length(coi_unique); % the number of unique grouping values
                 % Generate the boxplots
                 if is_octave
                     % The groups are supposed to go in a cell
-                    coi_unique = unique(coi); % find unique grouping values
-                    n_unique = length(coi_unique); % the number of unique grouping values
                     for cc = 1:n_unique
-                        sbt_cell{cc} = sbt_weights(coi == coi_unique(cc)); % make the cell
+                        sbt_cell{cc} = sbt_weights(coi == coi_unique(cc)); 
                     end
                     boxplot(sbt_cell);
                 else
@@ -206,7 +206,9 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
                     boxplot(sbt_weights, coi);
                 end
                 % Set the x axis ticks and labels
-                %set(ax,'XTickLabel',cellstr(num2str(coi_unique)));
+                nan_coi = find(isnan(coi_unique));
+                coi_unique(nan_coi) = []; % remove the NaN values from grouping values
+                set(ax,'xtick', 1:length(coi_unique'), 'xticklabel', cellstr(num2str(coi_unique)));
             else
                 % This is a dimensional variable
                 % Fit a regression line between the weights and the covariate
