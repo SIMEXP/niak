@@ -7,7 +7,7 @@ pheno_path = [base_path 'numeric_pheno.csv'];
 data_path = [base_path 'raw_nii/'];
 mask_path = [base_path 'raw_nii/func_mask_group_stereonl.nii.gz'];
 subtype_path = [base_path 'pipe_out_jun9_3_sub/'];
-out_path = [base_path 'pipe_out_jun9_3sub_weights/'];
+out_path = [base_path 'pipe_out_jun28/'];
 
 %% Configure the inputs
 pheno = niak_read_csv_cell(pheno_path);
@@ -46,6 +46,7 @@ opt.chi2.group_col_id = 'Gender';
 opt.chi2.flag_weights = true;
 opt.stack.regress_conf = {'Age'};
 opt.association.contrast.Gender = 1;
+opt.visu.data_type = 'categorical';
 % opt.subtype.nb_subtype = 3;
 % opt.association.contrast.Age_by_Gender = 1;
 % opt.association.interaction(1).label = 'Age_by_Gender';
