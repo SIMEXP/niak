@@ -52,6 +52,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   * glm_fir NIAK_PIPELINE_GLM_FIR
 %   * stability_rest NIAK_PIPELINE_STABILITY_REST
 %   * glm_connectome NIAK_PIPELINE_GLM_CONNECTOME
+%   * scores NIAK_PIPELINE_SCORES
+%   * subtype NIAK_PIPELINE_SUBTYPE
 %
 % Note that with OPT.FLAG_TARGET on, the region growing and connectome pipelines
 % are fed the output of the preprocessing pipeline. When the flag is off, by contrast,
@@ -268,7 +270,14 @@ for sub_id = 1:numel(fsub)
     end
 end
 
-files_sbt.
+%files_sbt.data
+files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
+% files_sbt.model = 
+
+path_test_sbt.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_sbt.reference = [path_test.target 'demoniak_subtype'];
+path_test_sbt.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_subtype_demoniak(path_test_sbt,opt_subtype),'sbt_');
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
