@@ -232,7 +232,7 @@ for num_f = 1:length(files)
                     tab(num_f,11) = mean(abs(y_s(:)-y_t(:))); % Compute the mean difference between the two volumes
                     y_s = niak_normalize_tseries(y_s,'mean');
                     y_t = niak_normalize_tseries(y_t,'mean');
-                    r_st = r_st = sum(y_s.*y_t,1)./(sqrt(sum(y_s.^2,1).*sum(y_t.^2,1))); % Compute the correlation between the two time series
+                    r_st = sum(y_s.*y_t,1)./(sqrt(sum(y_s.^2,1).*sum(y_t.^2,1))); % Compute the correlation between the two time series
                     tab(num_f,12) = max(r_st); % Compute the max correlation between the two time series
                     tab(num_f,13) = min(r_st); % Compute the min correlation between the two time series
                     tab(num_f,14) = mean(r_st); % Compute the mean correlation between the two time series
