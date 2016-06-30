@@ -338,9 +338,9 @@ function out_str = summarize_results(fdr_test, glm_results, pvals, fdr)
     % Check if any results passed FDR
     if isempty(net_ids)
         warning('No results passed FDR');
-        out_str = 'No results passed FDR';
+        out_str = ' ,No_results_passed_FDR';
     else
-        out_str = 'Network,Subtype,Association,T_value,P_value,FDR\n';
+        out_str = ' ,Subtype,Association,T_value,P_value,FDR\n';
         % Iterate over the significant findings
         for res_id = 1:length(net_ids)
             net_id = net_ids(res_id);
