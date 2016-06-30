@@ -76,7 +76,7 @@ function [pipeline,opt_pipe,files_in] = niak_test_subtype_demoniak(path_test,opt
 % THE SOFTWARE.
 
 %% Check the input paths
-path_test = psom_struct_defaults(path_test,{'demoniak','reference','result'},{NaN,'gb_niak_omitted',NaN});
+path_test = psom_struct_defaults(path_test,{'demoniak','reference','result'},{NaN,'',NaN});
 if ~ischar(path_test.demoniak)||~ischar(path_test.reference)||~ischar(path_test.result)
     error('PATH_TEST.{DEMONIAK,REFERENCE,RESULT} should be strings.')
 end
