@@ -24,7 +24,7 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %       along with fMRI datasets.
 %
 %   FOLDER_OUT 
-%       (string, default: same as FILES_IN{1}) If present, all default 
+%       (string, default: folder of FILES_IN{1}) If present, all default 
 %       outputs will be created in the folder FOLDER_OUT. The folder 
 %       needs to be created beforehand.
 %
