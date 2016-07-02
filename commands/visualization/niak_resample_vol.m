@@ -8,7 +8,7 @@ function vol_r = niak_resample_vol(hdr,vol)
 % VOL        (3D array) brain volume, in stereotaxic space.
 % VOL_R      (3D array) same as VOL, resampled in the voxel space of TARGET
 % 
-% Note: The montage is generated in voxel space associated with the target. 
+% Note: The new volume is generated in the voxel space associated with the target. 
 % If no target is specified, the source space is resampled with direction cosines, 
 % and the field of view is adjusted such that it includes all of the voxels. 
 % Only nearest neighbour interpolation is available. 
