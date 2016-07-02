@@ -57,6 +57,11 @@ function [flag_error,message] = niak_cp_fmri(source,target)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+% Check if this is an omitted file
+if strcmp(source,'gb_niak_omitted')
+    return
+end
+
 % Parse folder information
 source = niak_full_file(source);
 target = niak_full_file(target);
