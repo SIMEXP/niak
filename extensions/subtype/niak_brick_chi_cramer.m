@@ -152,6 +152,9 @@ if opt.flag_test == 1
     return
 end
 
+%% Work around the incompatibilities between Matlab and Octave 
+is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
+
 %% Load the model
 [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
 
@@ -244,7 +247,11 @@ for pp = 1:n_row
     prune_clus = name_clus(pc_val ~= 0);
     prune_val = pc_val(pc_val ~= 0);
     if length(prune_clus) == 1
-        labels = {sprintf('%s: %s',prune_clus{1},percval)};
+        if is_octave
+            labels = {sprintf('%s: %s',prune_clus{1},percval{1})};
+        else
+            labels = {sprintf('%s: %s',prune_clus{1},percval)};
+        end
     else
         labels = strcat(prune_clus, {': '},percval');
     end
