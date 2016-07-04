@@ -154,6 +154,9 @@ end
 
 %% Work around the incompatibilities between Matlab and Octave 
 is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
+if is_octave
+    graphics_toolkit gnuplot
+end
 
 %% Load the model
 [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
