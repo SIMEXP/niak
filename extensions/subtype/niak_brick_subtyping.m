@@ -140,6 +140,12 @@ if opt.flag_test == 1
     return
 end
 
+%% Work around the incompatibilities between Matlab and Octave 
+is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
+if is_octave
+    graphics_toolkit gnuplot
+end
+
 %% Load the data
 data = load(files_in.data);
 provenance = data.provenance; % loading provenance from the data file
