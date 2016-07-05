@@ -178,15 +178,20 @@ end
 
 %% Temporary file names
 path_tmp = niak_path_tmp(['_' name_f]);
-[path_f,name_f,ext_f] = niak_fileparts(files_in.vol);
-if strcmp(ext_f,'.mnc')
+[path_v,name_v,ext_v] = niak_fileparts(files_in.vol);
+[path_m,name_m,ext_m] = niak_fileparts(files_in.mask);
+if ismember(ext_v,{'.mnc','.mnc.gz'})
     in_vol = files_in.vol;
+else % On-the-fly conversion to minc
+    in_vol = [path_tmp 'vol.mnc'];
+    niak_brick_copy(files_in.vol,in_vol,struct('flag_fmri',true));
+end
+if ismember(ext_m,{'.mnc','.mnc.gz'})
     in_mask = files_in.mask;
 else
     % On-the-fly conversion to minc
-    in_vol = [path_tmp 'vol.mnc'];
     in_mask = [path_tmp 'mask.mnc'];
-    niak_brick_copy({files_in.vol,files_in.mask},{in_vol,in_mask},struct('flag_fmri',true));
+    niak_brick_copy(files_in.mask,in_mask,struct('flag_fmri',true));
 end
 
 file_tmp_nu = [path_tmp 'vol_nu.mnc'];
@@ -195,7 +200,7 @@ file_tmp_imp = [path_tmp 'vol_nu.imp'];
 if strcmp(files_in.mask,'gb_niak_omitted')
     instr = ['nu_correct -clobber -tmpdir ' path_tmp ' ' arg ' ' in_vol ' ' file_tmp_nu];
 else
-    instr = ['nu_correct -clobber -tmpdir ' path_tmp ' ' arg ' -mask ' in_mask ' ' files_in.vol ' ' file_tmp_nu];
+    instr = ['nu_correct -clobber -tmpdir ' path_tmp ' ' arg ' -mask ' in_mask ' ' in_vol ' ' file_tmp_nu];
 end
 
 %% Running NU_CORRECT
