@@ -576,7 +576,6 @@ opt_tmp.flag_verbose = flag_verbose;
 opt_tmp.operation    = 'vol = vol_in{2}; vol(round(vol_in{1})==0) = 0;';
 niak_brick_math_vol(files_in_tmp,files_out_tmp,opt_tmp);
 
-
 %% Resample the template mask in linear space by inverting non-linear deformations 
 if flag_verbose
     fprintf('\n\n\n**********\nResampling the brain mask in linear stereotaxic space ...\n');
@@ -601,7 +600,4 @@ opt_tmp.flag_verbose = flag_verbose;
 niak_brick_classify(files_in_tmp,files_out_tmp,opt_tmp);
 
 %% Clean the temporary folder
-[status,msg] = system(['rm -rf ' path_tmp]);
-if status~=0
-    error('There was a problem when trying to clean the temporary folder : %s',msg);
-end
+psom_clean(path_tmp)
