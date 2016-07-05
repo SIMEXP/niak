@@ -262,7 +262,9 @@ elseif ischar(file_name)
         %% if it has, remove details, unless we are only moving between nifti subtypes
         if ~strcmp(type_f,hdr.type)&&~min(ismember({type_f,hdr.type},{'analyze','nii','img'}))
             hdr.type = type_f;
-            hdr = rmfield(hdr,'details');
+            if isfield(hdr,'details')
+                hdr = rmfield(hdr,'details');
+            end
         end
         
         %% Deal with extra information
