@@ -121,6 +121,7 @@ opt.stack.regress_conf = {'site'};
 opt.association.contrast.age = 1;
 opt.chi2.group_col_id = 'subject1';
 opt.visu.data_type = 'continuous';
+opt.rand_seed = 1;
 
 %% Run the pipeline
 [pipeline,opt_pipe] = niak_pipeline_subtype(files_in,rmfield(opt,'files_in'));

@@ -23,11 +23,11 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %   (structure) with the following fields:
 %
 %   SIM_FIG
-%       (string, default 'similarity_matrix.png') path to the .png
+%       (string, default 'similarity_matrix.png') path to the .pdf
 %       visualization of the similarity matrix. 
 %
 %   DEN_FIG
-%       (string, default 'dendrogram.png') path to the .png
+%       (string, default 'dendrogram.png') path to the .pdf
 %       visualization of the dendrogram
 %
 %   SUBTYPE
@@ -62,6 +62,11 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %   SUB_MAP_TYPE
 %       (string, default 'mean') how the subtypes are represented in the
 %       volumes (options: 'mean' or 'median')
+%
+%   RAND_SEED
+%       (scalar, default []) The specified value is used to seed the random
+%       number generator with PSOM_SET_RAND_SEED. If left empty, no action
+%       is taken.
 %
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
@@ -120,8 +125,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'flag_verbose' , 'flag_test' },...
-      { ''           , NaN         , 'mean'        , true           , false       });
+      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'rand_seed', 'flag_verbose' , 'flag_test' },...
+      { ''           , NaN         , 'mean'        , []         , true           , false       });
 
 % Output
 if ~isempty(opt.folder_out)
@@ -138,6 +143,11 @@ end
 % If the test flag is true, stop here !
 if opt.flag_test == 1
     return
+end
+
+%% Seed the random generator
+if ~isempty(opt.rand_seed)
+    psom_set_rand_seed(opt.rand_seed);
 end
 
 %% Work around the incompatibilities between Matlab and Octave 
@@ -246,8 +256,12 @@ end
 
 %% Saving subtyping results and statistics
 if ~strcmp(files_out.subtype, 'gb_niak_omitted')
-    save(files_out.subtype,'provenance','subj_order','sim_matrix','sub','hier','part','opt')
+    save(files_out.subtype,'subj_order','sim_matrix','sub','hier','part')
 end
+
+% Save provenance and options in separate .mat file
+prov_file = [path_out 'provenance_opt_subtyping.mat'];
+save(prov_file,'provenance','opt');
 end
 
 function path_array = make_paths(out_path, template, scales)

@@ -181,6 +181,14 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       (boolean, default true) turn on/off to generate figures for the
 %       association test
 %
+%   RAND_SEED
+%       (scalar, default []) The specified value is used to seed the random
+%       number generator with PSOM_SET_RAND_SEED for each job. If left empty,
+%       the generator is not initialized by the bricks. As PSOM features an 
+%       initialization based on the clock, the results will be slightly 
+%       different due to random variations in bootstrap sampling if the 
+%       pipeline is executed twice.
+%
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
@@ -231,8 +239,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'visu'  , 'chi2'   , 'flag_visu' , 'flag_chi2' , 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct(), struct() , true        , true       , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'visu'  , 'chi2'   , 'flag_visu' , 'flag_chi2' , 'rand_seed', 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct(), struct() , true        , true        , []         , true           , false       });
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
@@ -317,6 +325,7 @@ for net_id = 1:opt.scale;
         sub_name = sprintf('subtype_%d', net_id);
         % Assign options
         sub_opt = opt.subtype;
+        sub_opt.rand_seed = opt.rand_seed;
         % Set the network folder
         sub_opt.folder_out = network_folder;
         % Assign inputs
