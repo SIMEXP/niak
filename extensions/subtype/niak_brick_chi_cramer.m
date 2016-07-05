@@ -249,8 +249,9 @@ for pp = 1:n_row
     percval = get(textc,'String');
     prune_clus = name_clus(pc_val ~= 0);
     prune_val = pc_val(pc_val ~= 0);
-    if length(prune_clus) == 1
+    if length(prune_clus) == 1 % in the case that one subtype makes up 100% of one group
         if is_octave
+            percval{1} = '100%';
             labels = {sprintf('%s: %s',prune_clus{1},percval{1})};
         else
             labels = {sprintf('%s: %s',prune_clus{1},percval)};
