@@ -29,9 +29,9 @@ function [files_in,files_out,opt] = niak_brick_inormalize(files_in,files_out,opt
 
 % McConnell Brain Imaging Center, 
 % Montreal Neurological Institute, McGill University, 2008-2010.
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2010-2014
+% University of Montreal, Qubec, Canada, 2010-2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, intensity normalization
@@ -121,15 +121,36 @@ if flag_verbose
 end
 
 %% Applying INORMALIZE
-[path_f,name_f,ext_f] = fileparts(files_out);
-flag_zip = strcmp(ext_f,gb_niak_zip_ext);
-if ~flag_zip
-    instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' files_in.vol ' ' files_out];
+[path_v,name_v,ext_v] = niak_fileparts(files_in.vol);
+[path_m,name_m,ext_m] = niak_fileparts(files_in.model);
+[path_o,name_o,ext_o,flag_zip] = niak_fileparts(files_out);
+path_tmp = niak_path_tmp(['_' name_f]);
+
+if ~ismember(ext_v,{'.mnc','.mnc.gz'})
+    in_vol = [path_tmp 'vol.mnc'];
+    niak_brick_copy(files_in.vol,in_vol,struct('flag_fmri',true));
 else
-    instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' files_in.vol ' ' path_f filesep name_f];
+    in_vol = files_in.vol;
 end
 
-%% Running NU_CORRECT
+if ~ismember(ext_m,{'.mnc','.mnc.gz'})
+    in_model = [path_tmp 'model.mnc'];
+    niak_brick_copy(files_in.model,in_model,struct('flag_fmri',true));
+else
+    in_model = files_in.model;
+end
+
+if ~ismember(ext_o,{'.mnc'})
+    tmp_out = [path_tmp 'out.mnc'];
+    flag_conv = true;
+else
+    tmp_out = files_out;
+    flag_conv = false;
+end
+
+instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' in_vol ' ' tmp_out];
+
+%% Running INORMALIZE
 if flag_verbose
     fprintf('Running INORMALIZE with the following command:\n%s\n\n',instr)
 end
@@ -144,7 +165,7 @@ else
 end
 
 %% Compressing outputs if needed
-if flag_zip
-    system([gb_niak_zip ' ' path_f filesep name_f]);    
+if flag_conv
+    niak_brick_copy(tmp_out,files_out,struct('flag_fmri',true));
 end
 
