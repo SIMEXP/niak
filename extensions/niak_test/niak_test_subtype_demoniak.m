@@ -107,8 +107,8 @@ if ~opt.flag_target
     out_c = [path_test.result 'report_test_regression_subtype_demoniak.csv'];
     opt_c.base_source = opt_demo.folder_out;
     opt_c.base_target = path_test.reference;
-    opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
-    opt_c.black_list_target = [path_test.reference 'logs' filesep];
+    opt_c.black_list_source = {[opt_demo.folder_out 'logs' filesep], [opt_demo.folder_out 'provenance' filesep]};
+    opt_c.black_list_target = {[path_test.reference 'logs' filesep], [path_test.reference 'provenance' filesep]};
     pipeline = psom_add_job(pipeline,'test_subtype','niak_test_cmp_files',in_c,out_c,opt_c,false);
     pipeline.test_subtype.dep = list_jobs;
 end
