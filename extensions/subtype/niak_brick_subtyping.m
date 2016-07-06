@@ -71,6 +71,11 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       number generator with PSOM_SET_RAND_SEED. If left empty, no action
 %       is taken.
 %
+%   FLAG_PROV
+%       (boolean, default false) if the flag is true, the provenance and
+%       brick options will be saved in the specified path in
+%       FILES_OUT.PROVENANCE and not OPT.FOLDER_OUT
+%
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
@@ -145,11 +150,15 @@ if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
                 { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'provenance'      },...
-                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , 'gb_niak_omitted' });
+                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , '' });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'sim_fig'         , 'den_fig'         , 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'provenance'      },...
                 { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
+end
+
+if opt.flag_prov && isempty(files_out.provenance)
+    warning('Provenance and options will not save when OPT.FLAG_PROV is true but FILES_OUT.PROVENANCE is empty')
 end
   
 % If the test flag is true, stop here !
@@ -252,10 +261,13 @@ if ~strcmp(files_out.eff_map, 'gb_niak_omitted')
 end
 
 %% Generate and write grand mean map
-hdr.file_name = files_out.grand_mean_map;
-sub.gd_mean = mean(data,1);
-vol_gd_mean = niak_tseries2vol(sub.gd_mean, mask);
-niak_write_vol(hdr,vol_gd_mean);
+% Check if to be saved - improvable
+if ~strcmp(files_out.grand_mean_map, 'gb_niak_omitted')
+    hdr.file_name = files_out.grand_mean_map;
+    sub.gd_mean = mean(data,1);
+    vol_gd_mean = niak_tseries2vol(sub.gd_mean, mask);
+    niak_write_vol(hdr,vol_gd_mean);
+end
 
 % Generate and write the grand std map
 % Check if to be saved - improvable
@@ -272,12 +284,15 @@ if ~strcmp(files_out.subtype, 'gb_niak_omitted')
 end
 
 % Save provenance and options in separate .mat file
-if opt.flag_prov
-    prov_file = files_out.provenance;
-else
-    prov_file = [path_out 'provenance.mat'];
+if ~isempty(files_out.provenance) && ~strcmp(files_out.provenance, 'gb_niak_omitted')
+    if opt.flag_prov
+        prov_file = files_out.provenance;
+    else
+        prov_file = [path_out 'provenance.mat'];
+    end
+    save(prov_file,'provenance','opt');
 end
-save(prov_file,'provenance','opt');
+
 end
 
 function path_array = make_paths(out_path, template, scales)
