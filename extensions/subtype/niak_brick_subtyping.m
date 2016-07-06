@@ -137,15 +137,15 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'rand_seed', 'flag_verbose' , 'flag_test' },...
-      { ''           , NaN         , 'mean'        , []         , true           , false       });
+      { 'folder_out' , 'nb_subtype', 'sub_map_type', 'rand_seed', 'flag_prov' , 'flag_verbose' , 'flag_test' },...
+      { ''           , NaN         , 'mean'        , []         , false       , true           , false       });
 
 % Output
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'provenance'                },...
-                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , [path_out 'provenance.mat'] });
+                { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'provenance'      },...
+                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , 'gb_niak_omitted' });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'sim_fig'         , 'den_fig'         , 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'provenance'      },...
@@ -272,10 +272,12 @@ if ~strcmp(files_out.subtype, 'gb_niak_omitted')
 end
 
 % Save provenance and options in separate .mat file
-if ~strcmp(files_out.provenance, 'gb_niak_omitted')
+if opt.flag_prov
+    prov_file = files_out.provenance;
+else
     prov_file = [path_out 'provenance.mat'];
-    save(prov_file,'provenance','opt');
 end
+save(prov_file,'provenance','opt');
 end
 
 function path_array = make_paths(out_path, template, scales)
