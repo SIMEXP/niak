@@ -328,12 +328,16 @@ for net_id = 1:opt.scale;
         sub_opt.rand_seed = opt.rand_seed;
         % Set the network folder
         sub_opt.folder_out = network_folder;
+        % Set the provenance folder
+        sub_opt.flag_prov = true;
+        prov_folder = [opt.folder_out filesep 'provenance']; 
         % Assign inputs
         sfields = {'data', 'model'};
         sub_in = rmfield(files_in, sfields);
         sub_in.data = pipe.(pre_name).files_out;
         sub_out = struct;
         sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
+        sub_out.provenance = [prov_folder filesep sprintf('network_%d_provenance.mat', net_id)];
         pipe = psom_add_job(pipe, sub_name, 'niak_brick_subtyping',...
                             sub_in, sub_out, sub_opt);
         % Assign output to weight extraction step
