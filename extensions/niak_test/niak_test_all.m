@@ -270,9 +270,10 @@ for sub_id = 1:numel(fsub)
     end
 end
 
-%files_sbt.data
+% files_sbt.data = files_all.fmri.vol;
 files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
-% files_sbt.model = 
+files_sbt.model = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+opt_subtype.files_in = files_sbt;
 
 path_test_sbt.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_sbt.reference = [path_test.target 'demoniak_subtype'];
