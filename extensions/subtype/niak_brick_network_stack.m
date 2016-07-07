@@ -140,6 +140,13 @@ if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
     end
 end
 
+% If the test flag is true, stop here !
+if opt.flag_test == 1
+    return
+end
+
+%% Additional checks
+
 % Get the model and check if there are any NaNs in the factors to be
 % regressed
 [conf_model, ~, cat_names, ~] = niak_read_csv(files_in.model);
@@ -178,11 +185,6 @@ if isempty(opt.network)
 elseif max(opt.network) > scale
     error(['You requested networks up to #%d to be investigated '...
            'but the specified input only has %d networks'], max(opt.network), scale);
-end
-
-% If the test flag is true, stop here !
-if opt.flag_test == 1
-    return
 end
 
 %% Brick starts here
