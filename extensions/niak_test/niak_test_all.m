@@ -249,9 +249,13 @@ path_test_sc.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_scores_demoniak(path_test_sc,opt_scores),'sco_');
 
 %% Add the test for the subtype pipeline
-opt_subtype = struct;
-opt_subtype.flag_test = true;
-opt_subtype.flag_target = opt.flag_target;
+if opt.flag_target
+    % In target mode, grab the results of the preprocessing and use them for subtyping
+    files_all = niak_grab_all_preprocess([path_test_fp.result 'demoniak_preproc'],files_fp);
+else
+    % In test mode, use the provided target to feed into the subtyping pipeline
+    files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
+end
 
 % Bring paths to the structure expected for the subtype pipeline
 fsub = fieldnames(files_all.fmri.vol);
@@ -269,10 +273,11 @@ for sub_id = 1:numel(fsub)
         end
     end
 end
-
-% files_sbt.data = files_all.fmri.vol;
 files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
 files_sbt.model = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+opt_subtype = struct;
+opt_subtype.flag_test = true;
+opt_subtype.flag_target = opt.flag_target;
 opt_subtype.files_in = files_sbt;
 
 path_test_sbt.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
