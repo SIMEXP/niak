@@ -292,7 +292,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           anything, just copy the input on the output. 
 %
 %   CIVET 
-%       (structure)If this field is present, NIAK will not process the T1 image, 
+%       (structure) If this field is present, NIAK will not process the T1 image, 
 %       but will rather grab the (previously generated) results of the CIVET 
 %       pipeline, i.e. copy/rename them. The following fields need
 %       to be specified :
@@ -521,10 +521,13 @@ pipeline.pipe_params.opt.files_in = files_in;
 
 %% Resample the AAL template 
 clear job_in job_out job_opt
+[path_t,name_t,ext_t] = niak_fileparts(opt.template.fmri);
 job_in.source      = opt.template.aal;
-job_in.target      = opt.template.fmri;
+job_in.target      = opt.template.aal;
 job_out            = [opt.folder_out 'anat' filesep 'template_aal' ext_f];
-pipeline = psom_add_job(pipeline,'resample_aal','niak_brick_resample_simple',job_in,job_out,struct);
+job_opt            = opt.resample_vol;
+job_opt.interpolation    = 'nearest_neighbour';
+pipeline = psom_add_job(pipeline,'resample_aal','niak_brick_resample_vol',job_in,job_out,job_opt);
 opt.template.aal = pipeline.resample_aal.files_out;
 
 %% Copy the description of confounds
