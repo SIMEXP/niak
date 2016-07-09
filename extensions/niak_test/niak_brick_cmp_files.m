@@ -26,6 +26,8 @@ function [in,out,opt] = niak_brick_cmp_files(in,out,opt)
 %       the tests will only consider fields found in the source, i.e. if there are 
 %       more fields in the target, those will be ignored. Only the variables found
 %       in the source will be compared with those from the target as well.
+%   FLAG_IGNORE_FORMAT (boolean, default 0) if the flag is on (1) all imaging data
+%       (.mnc, .mnc.gz, .nii, .nii.gz, .img) will be compared, regardless of extension. 
 %   FLAG_TEST (boolean, default 0) if the flag is 1, then the function does not
 %       do anything but update IN, OUT, OPT
 %   FLAG_VERBOSE (boolean, default 1) if the flag is 1, then the function 
@@ -96,8 +98,8 @@ function [in,out,opt] = niak_brick_cmp_files(in,out,opt)
 %      OPT.BASE_TARGET
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2012-2013.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2012-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords: files, comparison, test
@@ -126,8 +128,8 @@ if ~exist('in','var')||~exist('out','var')
 end
 
 %% Options
-list_fields   = { 'base_source' , 'base_target' , 'black_list_source' , 'black_list_target' , 'flag_source_only' , 'eps'   , 'flag_verbose' , 'flag_test' };
-list_defaults = { NaN           , NaN           , {}                  , {}                  , false              , 10^(-4) , true           , false       };
+list_fields   = { 'flag_ignore_format' , 'base_source' , 'base_target' , 'black_list_source' , 'black_list_target' , 'flag_source_only' , 'eps'   , 'flag_verbose' , 'flag_test' };
+list_defaults = { false                , NaN           , NaN           , {}                  , {}                  , false              , 10^(-4) , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if ~isempty(opt.base_source)
@@ -168,6 +170,10 @@ end
 %% Get rid of base directory
 source_b = regexprep(in.source,['^' opt.base_source],'');
 target_b = regexprep(in.target,['^' opt.base_target],'');
+if opt.flag_ignore_format
+    source_b = regexprep(source_b,'\.mnc$|\.mnc.gz$|\.img$|\.nii$|\.nii\.gz$','.*');
+    target_b = regexprep(target_b,'\.mnc$|\.mnc.gz$|\.img$|\.nii$|\.nii\.gz$','.*');
+end
 files = union(source_b,target_b);
 
 %% Loop over files
@@ -197,7 +203,7 @@ for num_f = 1:length(files)
     tab(num_f,1:2) = [1 1];
     switch ext_f
         
-        case {'.nii','.nii.gz','.mnc','.mnc.gz'}
+        case {'.mnc','.mnc.gz','.nii','.img','.nii.gz','.*'}
             %% A 3D or 3D+t image
             [hdr_s,vol_s] = niak_read_vol(file_source);
             [hdr_t,vol_t] = niak_read_vol(file_target);
