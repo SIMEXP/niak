@@ -148,7 +148,7 @@ else
     flag_conv = false;
 end
 
-instr = ['inormalize -clobber ' arg ' -model ' files_in.model ' ' in_vol ' ' tmp_out];
+instr = ['inormalize -clobber ' arg ' -model ' in_model ' ' in_vol ' ' tmp_out];
 
 %% Running INORMALIZE
 if flag_verbose
