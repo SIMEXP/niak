@@ -18,7 +18,7 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   with reference version of the results will be performed, but all test 
 %   pipelines will still run. If this flag is used, PATH_TEST.TARGET does not 
 %   need to be specified.
-% OPT.FORMAT (string, default 'nii') the format to use for the test
+% OPT.FORMAT (string, default 'mnc1') the format to use for the test
 %   Either 'nii' or 'mnc1'.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
@@ -97,7 +97,7 @@ if nargin < 2
 end
 opt = psom_struct_defaults(opt, ...
       {'format' , 'flag_target' , 'flag_test', 'psom' }, ...
-      {'nii'    , false         , false      , struct });
+      {'mnc1'   , false         , false      , struct });
 
 if ~isfield(opt.psom,'flag_pause')
     opt.psom.flag_pause = false;
