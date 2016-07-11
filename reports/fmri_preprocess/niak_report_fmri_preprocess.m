@@ -249,7 +249,7 @@ for ll = 1:length(labels)
     
     % Native movie
     jin.source = list_fmri_native{ll};
-    jin.target = '';
+    jin.target = list_fmri_native{ll};
     jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.png'];
     jopt.coord = 'CEN';
     jopt.colormap = 'jet';
