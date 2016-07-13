@@ -66,9 +66,11 @@ function files = niak_grab_bids(path_data)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+% If no path given, search local dir
 if (nargin < 1)||isempty(path_data)
     path_data = [pwd filesep];
 end
+
 if ~strcmp(path_data(end),filesep);
     path_data = [path_data filesep];
 end
@@ -76,88 +78,99 @@ end
 list_dir = dir([path_data]);
 for num_f = 1:length(list_dir)
 
-    if list_dir(num_f).isdir
-        subject_dir = list_dir(num_f);
-        reg_out = regexp(subject_dir,"(.*)-(.*)", 'tokens');
-        sub = reg_out{1}{1};
-        if strcmp(sub,"sub")
-            sub_id = reg_out{1}{1,2};
+    if list_dir(num_f).isdir && ~strcmpi(list_dir(num_f).name, '.') ...
+       && ~strcmpi(list_dir(num_f).name, '..')
+        subject_dir = list_dir(num_f).name;
+        dir_name = regexpi(subject_dir,"(sub)-(.*)", 'tokens');
+        if ~isempty(dir_name)
+            sub_id = dir_name{1}{1,2};
         else
             continue   
-        
+        end   
+
         list_sub_dir = dir([path_data, subject_dir]);
         all_sessions = []
         for n_ses = 1:length(list_sub_dir)
-            reg_out = regexp(list_sub_dir(n_ses),"(ses)-(.*)", 'tokens');
-            if ~isempty(reg_out)
-                all_sessions = [all_sessions, reg_out{1}{1,2}];
-l           end
+            subdir_name = regexp(list_sub_dir(n_ses).name,"(ses)-(.*)", 'tokens');
+            if ~isempty(subdir_name)
+                all_sessions = [all_sessions, subdir_name{1}{1,2}];
+            end
         end
-        if isempty(all_sessions):
+
+        if isempty(all_sessions);
             % no session dir means only one session
             all_sessions = 0;
         end
 
-    for n_ses = 1:length(all_sessions)
-        if ~all_sessions(n_ses)
-            ses_id = 1
-            ses_pat = [path_data, subject_dir]
-            anat_path = [path_data, subject_dir, 'anat']
-            fmri_path = [path_data, subject_dir, 'anat']
-
+%        add session and sub numbers
+        for n_ses = 1:length(all_sessions)
+            if ~all_sessions(n_ses)
+                ses_id = 1
+                ses_pat = [path_data, subject_dir]
+                anat_path = [path_data, subject_dir, 'anat']
+                fmri_path = [path_data, subject_dir, 'func']
             else
+                ses_id = all_sessions(n_ses) 
+                ses_pat = [path_data, subject_dir]
+                anat_path = [path_data, subject_dir, 'anat']
+                fmri_path = [path_data, subject_dir, 'func']
             
-        
-        
-    end
-end
-
-    path_subj = [path_data list_files(num_f).name filesep];
-        subject = list_files(num_f).name;
-        if ~isempty(regexp(subject,'^\d'))
-            subject = ['X' subject];
-        end
-        list_sessions = dir([path_subj]);
-        for num_s = 1:length(list_sessions)
-            if list_sessions(num_s).isdir&&~isempty(regexp(list_sessions(num_s).name,'^session'))
-                session = list_sessions(num_s).name;
-                path_session = [path_subj session filesep];
-                files_anat = {[path_session filesep 'anat_1' filesep 'mprage_noface.mnc.gz'],[path_session filesep 'anat_1' filesep 'mprage_noface.mnc'],[path_session filesep 'anat_1' filesep 'mprage_noface.nii.gz'],[path_session filesep 'anat_1' filesep 'mprage_noface.nii'],[path_session filesep 'anat_1' filesep 'mprage.mnc.gz'],[path_session filesep 'anat_1' filesep 'mprage.mnc'],[path_session filesep 'anat_1' filesep 'mprage.nii'],[path_session filesep 'anat_1' filesep 'mprage.nii.gz']};
-                flag_exist = false;
-		for num_a = 1:length(files_anat)
-                    if psom_exist(files_anat{num_a})
-                        file_anat = files_anat{num_a};
-                        flag_exist = true;
-                    end
-                end 
-                if ~flag_exist
-                    warning('Subject %s was excluded because no anatomical file could not be found',subject);
-                end
-                
-                if flag_exist
-                    files.(subject).anat = file_anat;
-                
-                list_runs = dir(path_session);
-                nb_runs = 0;
-                for num_r = 1:length(list_runs)
-                    if list_runs(num_r).isdir&&~isempty(regexp(list_runs(num_r).name,'^rest'))
-                        nb_runs = nb_runs+1;
-                        file_rest = [path_session list_runs(num_r).name filesep 'rest.mnc.gz'];
-                        flag_exist = true;
-                        if ~psom_exist(file_rest)
-                            file_rest = [path_session list_runs(num_r).name filesep 'rest.nii.gz'];
-                            if ~psom_exist(file_rest)
-                                warning('Subject %s session %s run %s was excluded because the resting-state file could not be found',subject,session,list_runs(num_r).name);
-                                flag_exist = false;                        
-                            end
-                        end
-                        if flag_exist
-                            files.(subject).fmri.(session){nb_runs} = file_rest;
-                        end
-                    end
-                end
             end
-        end
+        end      
     end
 end
-end
+    
+        
+        
+  
+
+
+#    path_subj = [path_data list_files(num_f).name filesep];
+#        subject = list_files(num_f).name;
+#        if ~isempty(regexp(subject,'^\d'));
+#            subject = ['X' subject];
+#        end
+#        list_sessions = dir([path_subj]);
+#        for num_s = 1:length(list_sessions)
+#            if list_sessions(num_s).isdir&&~isempty(regexp(list_sessions(num_s).name,'^session'))
+#                session = list_sessions(num_s).name;
+#                path_session = [path_subj session filesep];
+#                files_anat = {[path_session filesep 'anat_1' filesep 'mprage_noface.mnc.gz'],[path_session filesep 'anat_1' filesep 'mprage_noface.mnc'],[path_session filesep 'anat_1' filesep 'mprage_noface.nii.gz'],[path_session filesep 'anat_1' filesep 'mprage_noface.nii'],[path_session filesep 'anat_1' filesep 'mprage.mnc.gz'],[path_session filesep 'anat_1' filesep 'mprage.mnc'],[path_session filesep 'anat_1' filesep 'mprage.nii'],[path_session filesep 'anat_1' filesep 'mprage.nii.gz']};
+#                flag_exist = false;
+#		for num_a = 1:length(files_anat)
+#                    if psom_exist(files_anat{num_a})
+#                        file_anat = files_anat{num_a};
+#                        flag_exist = true;
+#                    end
+#                end 
+#                if ~flag_exist
+#                    warning('Subject %s was excluded because no anatomical file could not be found',subject);
+#                end
+                
+#                if flag_exist
+#                    files.(subject).anat = file_anat;
+                
+#                list_runs = dir(path_session);
+#                nb_runs = 0;
+#                for num_r = 1:length(list_runs)
+#                    if list_runs(num_r).isdir&&~isempty(regexp(list_runs(num_r).name,'^rest'))
+#                        nb_runs = nb_runs+1;
+#                        file_rest = [path_session list_runs(num_r).name filesep 'rest.mnc.gz'];
+#                        flag_exist = true;
+#                        if ~psom_exist(file_rest)
+#                            file_rest = [path_session list_runs(num_r).name filesep 'rest.nii.gz'];
+#                            if ~psom_exist(file_rest)
+#                                warning('Subject %s session %s run %s was excluded because the resting-state file could not be found',subject,session,list_runs(num_r).name);
+#                                flag_exist = false;                        
+#                            end
+#                        end
+#                        if flag_exist
+#                            files.(subject).fmri.(session){nb_runs} = file_rest;
+#                        end
+#                    end
+#                end
+#            end
+#        end
+#    end
+#end
+#end
