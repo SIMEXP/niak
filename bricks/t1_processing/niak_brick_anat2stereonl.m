@@ -228,7 +228,7 @@ if ~ismember(ext_f,{'.mnc','.mnc.gz'})
     niak_brick_copy({files_in.t1,files_in.t1_mask},{in_t1,in_mask},struct('flag_fmri',true));
 else
     in_t1 = files_in.t1;
-    in_mask = files_in.mask;
+    in_mask = files_in.t1_mask;
 end
 
 if ~ismember(ext_t,{'.mnc','.mnc.gz'})
@@ -257,9 +257,9 @@ if strcmp(files_out.t1_stereonl,'gb_niak_omitted')
     arg_out = '';
 else
     [path_o,name_o,ext_o] = niak_fileparts(files_out.t1_stereonl);
-    if ismember(ext_o,{'.mnc','.mnc.gz'})
+    if ismember(ext_o,{'.mnc'})
         flag_conv = false;
-        arg_out = files_out.t1_stereolin;
+        arg_out = files_out.t1_stereonl;
     else
         flag_conv = true;
         tmp_out = [path_tmp 't1_stereonl.mnc'];
