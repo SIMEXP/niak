@@ -1,4 +1,4 @@
-function files = niak_grab_bids(path_data)
+function files = niak_grab_bids(path_data,opt)
 % Grab the T1+fMRI datasets of BIDS (http://bids.neuroimaging.io/) database to process with the 
 % NIAK fMRI preprocessing.
 %
@@ -31,6 +31,23 @@ function files = niak_grab_bids(path_data)
 %      <SUBJECT>.ANAT 
 %          (string) anatomical volume, from the same subject as in 
 %          FILES_IN.<SUBJECT>.FMRI
+% OPT 
+%   (structure) grabber options
+%    
+%   FMRI_HINT
+%       (string) A hint to pick one out of many fmri input for exemple 
+%       if the fmri study includes "sub-XX_task-rest-somthing_bold.nii.gz" 
+%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the somthing flavor 
+%       needs to be selected, FMRI_HINT = 'somthing', would do the trick.
+%       Note that FMRI_HINT needs to be a string somewhere between 
+%       "task-rest" and the extention (.nii or .mnc)
+%
+%   ANAT_HINT
+%       (string) A hint to pick one out of many anat input. I only one file
+%       is present it will be used by default. If no hint is give an on file
+%       with T1 is given this file will be picked. If two file are present,
+%       "sub-11_T1.nii.gz" and "sub-11_T1w.nii.gz" and you need to select the
+%       "sub-11_T1.nii.gz" then the hint "T1."  will do the trick. 
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_FMRI_PREPROCESS
@@ -69,11 +86,26 @@ function files = niak_grab_bids(path_data)
 % If no path given, search local dir
 if (nargin < 1)||isempty(path_data)
     path_data = [pwd filesep];
+elseif nargin < 2
+    opt = struct;
 end
 
 if ~strcmp(path_data(end),filesep);
     path_data = [path_data filesep];
 end
+
+if ~isfield(opt,'fmri_hint')
+    fmri_hint = ''
+else
+    fmri_hint = regexptranslate('escape', opt.fmri_hint)
+end
+
+if ~isfield(opt,'anat_hint')
+    anat_hint = ''
+else
+    anat_hint = regexptranslate('escape', opt.anat_hint)
+end
+
 
 list_dir = dir([path_data]);
 for num_f = 1:length(list_dir)
@@ -102,21 +134,33 @@ for num_f = 1:length(list_dir)
             all_sessions = 0;
         end
 
-%        add session and sub numbers
+%        add session and sub numbers   a 
         for n_ses = 1:length(all_sessions)
             if ~all_sessions(n_ses)
                 ses_id = 1
-                ses_pat = [path_data, subject_dir]
-                anat_path = [path_data, subject_dir, 'anat']
-                fmri_path = [path_data, subject_dir, 'func']
             else
-                ses_id = all_sessions(n_ses) 
-                ses_pat = [path_data, subject_dir]
-                anat_path = [path_data, subject_dir, 'anat']
-                fmri_path = [path_data, subject_dir, 'func']
-            
+                ses_id = all_sessions(n_ses)             
             end
-        end      
+
+            
+            %% do the check here
+            
+            session_path = [path_data, subject_dir]
+
+            anat_path = [session_path, filesep, 'anat']
+            fmri_path = [session_path, filesep, 'func']
+            regex_str = [ subject_dir "(.*task-rest.*" fmri_hint ".*\.(nii|mnc).*)"]
+            anat_name = regexp(list_sub_dir(anat_path).name, "subjet_dir.*task-rest.*", 'tokens');
+            
+            
+            for f = dir(anat_path) 
+                fprintf(1,f)
+            end
+            file_in.(subject_dir).anat = 1 
+            file_in.(subject_dir).fmri.(ses_id) = 1
+
+            
+       end      
     end
 end
     
