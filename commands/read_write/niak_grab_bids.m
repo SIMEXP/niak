@@ -48,6 +48,9 @@ function files = niak_grab_bids(path_data,opt)
 %       with T1 is given this file will be picked. If two file are present,
 %       "sub-11_T1.nii.gz" and "sub-11_T1w.nii.gz" and you need to select the
 %       "sub-11_T1.nii.gz" then the hint "T1."  will do the trick. 
+%   TASK_TYPE
+%       (string, default = rest) The type of task, explicitely name in bids 
+%       file name
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_FMRI_PREPROCESS
@@ -90,6 +93,11 @@ elseif nargin < 2
     opt = struct;
 end
 
+if ~isdir(path_data)
+    error('Bid directory does not exist: %s', path_data)
+end
+
+
 if ~strcmp(path_data(end),filesep);
     path_data = [path_data filesep];
 end
@@ -106,14 +114,21 @@ else
     anat_hint = regexptranslate('escape', opt.anat_hint)
 end
 
+if ~isfield(opt,'task_type')
+    task_type = "rest"
+else
+    task_type = opt.task_type
+end
 
-list_dir = dir([path_data]);
+
+list_dir = dir(path_data);
+file_in = struct;
 for num_f = 1:length(list_dir)
 
     if list_dir(num_f).isdir && ~strcmpi(list_dir(num_f).name, '.') ...
        && ~strcmpi(list_dir(num_f).name, '..')
         subject_dir = list_dir(num_f).name;
-        dir_name = regexpi(subject_dir,"(sub)-(.*)", 'tokens');
+        dir_name = regexpi(subject_dir,"(sub-(.*))", 'tokens');
         if ~isempty(dir_name)
             sub_id = dir_name{1}{1,2};
         else
@@ -121,52 +136,82 @@ for num_f = 1:length(list_dir)
         end   
 
         list_sub_dir = dir([path_data, subject_dir]);
-        all_sessions = []
+        all_sessions = {}
         for n_ses = 1:length(list_sub_dir)
-            subdir_name = regexp(list_sub_dir(n_ses).name,"(ses)-(.*)", 'tokens');
+            subdir_name = regexp(list_sub_dir(n_ses).name,"(ses-(.*))", 'tokens');
             if ~isempty(subdir_name)
-                all_sessions = [all_sessions, subdir_name{1}{1,2}];
+                all_sessions = [all_sessions; (subdir_name{1})];
             end
         end
 
         if isempty(all_sessions);
             % no session dir means only one session
-            all_sessions = 0;
+            all_sessions = {'0'};
         end
 
 %        add session and sub numbers   a 
         for n_ses = 1:length(all_sessions)
-            if ~all_sessions(n_ses)
-                ses_id = 1
+            if all_sessions{1} == '0'
+                session_path = strcat(path_data, subject_dir)
+                session_id = "1"
+                no_session = true
             else
-                ses_id = all_sessions(n_ses)             
+                ses_name = all_sessions(n_ses,1){1}            
+                session_id = all_sessions(n_ses,2){1}
+                session_path = strcat(path_data, subject_dir, filesep, ses_name)
+                no_session = false
             end
 
+            anat_path = strcat(session_path, filesep, 'anat')
+            fmri_path = strcat(session_path, filesep, 'func')
+            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*" "\.(nii|mnc).*)"]
+            anat_regex = ['(', subject_dir, '_.*', anat_hint, '.*\.(nii|mnc).*)']
+            list_anat_dir = dir(anat_path) ;
+            list_fmri_dir = dir(fmri_path) ;
             
-            %% do the check here
-            
-            session_path = [path_data, subject_dir]
-
-            anat_path = [session_path, filesep, 'anat']
-            fmri_path = [session_path, filesep, 'func']
-            regex_str = [ subject_dir "(.*task-rest.*" fmri_hint ".*\.(nii|mnc).*)"]
-            anat_name = regexp(list_sub_dir(anat_path).name, "subjet_dir.*task-rest.*", 'tokens');
-            
-            
-            for f = dir(anat_path) 
-                fprintf(1,f)
+            anat_match = {}
+            for n_f = 1:length(list_anat_dir)
+                m = regexpi(list_anat_dir(n_f).name, anat_regex, 'tokens')
+                if ~isempty(m)
+                    anat_match = [ anat_match; m{1}];
+                end
             end
-            file_in.(subject_dir).anat = 1 
-            file_in.(subject_dir).fmri.(ses_id) = 1
+            fmri_match = {}
+            for n_f = 1:length(list_fmri_dir)
+                m = regexpi(list_fmri_dir(n_f).name, fmri_regex, 'tokens')
+                if ~isempty(m)
+                    fmri_match = [fmri_match; m{1}];
+                end
+            end
 
-            
-       end      
+            if length(fmri_match)
+                fmri.(session_id) = fmri_match{1}            
+            end
+                                                                
+        end      
+
+        if length(anat_match)             
+            anat= anat_match{1}
+        end
+
+        %% fiters 
+        % only resurt subject is anat and one func is found        
+        for n_ses = 1:length(all_sessions)
+            if no_session
+                session_id = "1"
+            else
+                session_id = all_sessions(n_ses,2){1}
+            end
+
+            if exist('anat') && exist('fmri')
+                file_in.(subject_dir).anat = anat
+                file_in.(subject_dir).fmri.(session_id) = fmri.(session_id)
+            end 
+        end
     end
 end
-    
-        
-        
-  
+       
+files.file_in = file_in
 
 
 #    path_subj = [path_data list_files(num_f).name filesep];
