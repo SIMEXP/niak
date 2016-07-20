@@ -150,7 +150,7 @@ for num_f = 1:length(list_dir)
         end
 
 %        add session and sub numbers   a 
-        for n_ses = 1:length(all_sessions)
+        for n_ses = 1:length(all_sessions(:,1))
             if all_sessions{1} == '0'
                 session_path = strcat(path_data, subject_dir)
                 session_id = "1"
@@ -196,7 +196,7 @@ for num_f = 1:length(list_dir)
 
         %% fiters 
         % only resurt subject is anat and one func is found        
-        for n_ses = 1:length(all_sessions)
+        for n_ses = 1:length(all_sessions(:,1))
             if no_session
                 session_id = "1"
             else
