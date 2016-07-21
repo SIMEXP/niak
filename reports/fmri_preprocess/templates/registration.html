@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+
+.sliderNext {
+  position: absolute;
+  top: 40%;
+  right: 2.5%;
+  object-fit: none;
+  object-position: 0 -150px;
+  width: 50px;
+  height: 150px;
+}
+
+.sliderNext:hover{
+  object-position: -50px -150px;
+}
+
+.sliderPrev {
+  position: absolute;
+  top: 40%;
+  left: 2.5%;
+  object-fit: none;
+  object-position: 0 0;
+  width: 50px;
+  height: 150px;
+}
+
+.sliderPrev:hover{
+  object-position: -50px 0;
+}
+
+.register img{
+    -webkit-transition: opacity 0.75s; /* Safari */
+    transition: opacity 0.75s;
+}
+
+.register img:hover{
+    opacity:0;
+}
+
+</style>
+
+<head>
+  <title>Report on the quality of MRI registration</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <link rel="stylesheet" type="text/css" href="assets/bootstrap/bootstrap.min.css" /> <!--from keen.io-->
+  <link rel="stylesheet" type="text/css" href="assets/keen/keen-dashboards.css" />    <!--from keen.io-->
+  <link href="assets/select2/select2.min.css" rel="stylesheet" /> <!--from select 2-->
+</head>
+
+<body class="application">
+
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="http://niak.simexp-lab.org/pipe_preprocessing.html">fMRI preprocessing pipeline</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="index.html">Summary</a></li>
+          <li><a href="group.html">Group</a></li>
+          <li><a href="registration.html">Registration</a></li>
+          <li><a href="motion/motion.html">Motion</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Individual vs template T1 scan for subject
+            <select class="select-subject" style="width: 50%"></select>
+          </div>
+          <div class="chart-stage">
+            <div id="T1-indVsTemplate" class="register">
+              <img class="T1" width=100%>
+            </div>
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+          </div>
+          <div class="chart-notes">
+            Hover the mouse over to switch between images. Click or press left/right arrows for prev/next subject. 
+          </div>
+        </div>
+      </div>
+    <div class="col-sm-6">
+    	<div class="chart-wrapper">
+      	<div class="chart-title">
+            BOLD vs T1 scan for subject  
+            <select id="select-BOLD" class="select-subject" style="width: 50%"></select>
+         </div>
+         <div class="chart-stage">
+           <div class="chart-stage">
+             <div id="boldVsT1" class="register">
+              <img class="BOLD" width=100%>
+             </div>
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+           </div>
+          <div class="chart-notes">
+            Hover the mouse over to switch between images. Click or press left/right arrows for prev/next subject.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <p class="small text-muted">Built with &#9829; by <a href="http://niak.simexp-lab.org">NIAK</a> using dashboards from <a href="https://keen.io">Keen IO</a></p>
+
+  </div>
+
+  <!--Dependencies-->
+  <script type="text/javascript" src="assets/jquery/jquery.min.js"></script>       <!--from keen.io-->
+  <script type="text/javascript" src="assets/bootstrap/bootstrap.min.js"></script> <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/keen.min.js"></script>           <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/meta.js"></script>               <!--from keen.io-->
+  <script src="assets/select2/select2.min.js"></script> <!--from select 2-->
+  <script src="group/listSubject.js"></script> <!--List of subjects-->
+  
+  <script>
+  $(document).ready(function() {
+  
+  <!--Add a subject selection-->
+  $(".select-subject").select2({
+  data: listSubject
+  });  
+  var $eventSelect = $(".select-subject");
+  $eventSelect.on("select2:select", function (e) { setImg(e); })
+  
+  <!--Update images-->
+  function setImg (evt) {
+  
+    <!--Get subject index and ID-->
+    var id = evt.params.data.id;
+    subject = $("#select-BOLD option[value=" + id + "]").text();
+    
+    <!--Update the selection of the subject button-->
+    $es = $(".select-subject");
+    $es.val(id);
+    $es.trigger('change');
+    
+    <!--Grab the T1 and BOLD div, and build new empty figures-->
+    var figBOLD = $(".BOLD");
+    var newFigBOLD = document.createElement("img");
+    var figT1 = $(".T1");
+    var newFigT1 = document.createElement("img");
+    
+    <!--Populate figures-->    
+    newFigBOLD.src = "registration/" + subject + "_func.png";
+    newFigBOLD.setAttribute("width", "100%");
+    newFigBOLD.className = "BOLD";
+    newFigT1.src = "registration/" + subject + "_anat.png";
+    newFigT1.setAttribute("width", "100%");
+    newFigT1.className = "T1";
+
+    <!--Update figures-->        
+    figBOLD.replaceWith(newFigBOLD);
+    figT1.replaceWith(newFigT1);
+    figBoldVsT1 = $("#boldVsT1");
+    figBoldVsT1.css("backgroundImage","url(registration/" + subject + "_anat.png)");
+    figBoldVsT1.css("backgroundSize","100%");
+    figT1vsTemplate = $("#T1-indVsTemplate");
+    figT1vsTemplate.css("backgroundImage","url(group/template_stereotaxic.png)");
+    figT1vsTemplate.css("backgroundSize","100%");
+  }  
+  
+  <!--Move on to the next subject-->
+  function nextSubject () {
+    $es = $(".select-subject");
+    currId = $es.val();
+    currId = parseInt(currId);
+    if (currId < listSubject.length) {
+      currId+=1;
+    } else {
+      currId = 1;
+    }
+    var evt = {params:{data:{id:currId.toString()}}};
+    setImg (evt);
+  }
+    
+  <!--Move back to the previous subject-->
+  function prevSubject () {
+    $es = $(".select-subject");
+    currId = $es.val();
+    currId = parseInt(currId);
+    if (currId > 1) {
+       currId-=1;
+    } else {
+       currId = listSubject.length;
+    }
+    var evt = {params:{data:{id:currId.toString()}}};
+    setImg (evt);
+  }
+  
+  <!--Attach events to clicks on the prev/next buttons-->  
+  window.onload = function() {
+    document.getElementsByClassName("sliderNext")[0].onclick = function fun() {
+        nextSubject();
+      }
+    document.getElementsByClassName("sliderNext")[1].onclick = function fun() {
+        nextSubject();
+      }
+    document.getElementsByClassName("sliderPrev")[0].onclick = function fun() {
+        prevSubject();
+      }
+    document.getElementsByClassName("sliderPrev")[1].onclick = function fun() {
+        prevSubject();
+      }
+  }
+  
+  <!--Changing subjects with left and right arrows (prev and next, resp)-->  
+  function reactKey(key){
+    if (key==39) {
+      nextSubject()
+    } 
+    else if (key==37) {
+      prevSubject() 
+    };
+  };
+  
+  window.onkeydown = function(e) { reactKey(e.keyCode) 
+      };
+  
+  <!--Function to parse the page parameters-->  
+  function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+  }
+
+  <!--Find subject ID-->
+  function findID(data,subject){
+    for (ii=0 ; ii<data.length; ii++) {
+      if (data[ii].text===subject) {
+        id = data[ii].id;
+        return id      
+      }      
+    } 
+  }
+  <!--Read page parameters and update accordingly-->    
+  var subject = getParameterByName('id');
+  if (!subject) {
+    var subject = listSubject[0]['text'];
+    };
+  id = findID(listSubject,subject);
+  if (!id) {
+    id = "1";  
+  } 
+  
+  var evt = {params:{data:{id:id}}};
+  setImg (evt); 
+  });
+  
+  </script>
+
+</body>
+</html>

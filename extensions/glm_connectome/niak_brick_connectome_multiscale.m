@@ -235,8 +235,8 @@ function [files_in,files_out,opt] = niak_brick_connectome_multiscale(files_in,fi
 % is used at the intra-run level. 
 %
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2010-2013.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2010-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : GLM, functional connectivity, connectome, PPI.
@@ -478,22 +478,29 @@ function intra_run = sub_read_time_series(file_run)
 [hdr_fmri,vol] = niak_read_vol(file_run);
 intra_run.tseries = niak_vol2tseries(vol);
 if isfield(hdr_fmri,'extra')
-    intra_run.time_frames = hdr_fmri.extra.time_frames;
+    if isfield(hdr_fmri.extra,'mask_scrubbing')
+        mask_scrubbing = hdr_fmri.extra.mask_scrubbing;
+    else
+        mask_scrubbing = false(size(intra_run.tseries,1),1);
+    end
+    intra_run.time_frames = hdr_fmri.extra.time_frames(~mask_scrubbing);
     if isfield(hdr_fmri.extra,'confounds')
-        intra_run.confounds = hdr_fmri.extra.confounds;
+        intra_run.confounds = hdr_fmri.extra.confounds(~mask_scrubbing,:);
         intra_run.labels_confounds = hdr_fmri.extra.labels_confounds;
     else
         intra_run.confounds = [];
         intra_run.labels_confounds = {};
     end
     if isfield(hdr_fmri.extra,'mask_suppressed')
-        intra_run.mask_suppressed = hdr_fmri.extra.mask_suppressed;
+        intra_run.mask_suppressed = hdr_fmri.extra.mask_suppressed|mask_scrubbing;
     else
         intra_run.mask_suppressed = false(size(intra_run.tseries,1),1);
     end
 else
     intra_run.time_frames = (0:(size(intra_run.tseries,1)-1))*hdr_fmri.info.tr;
-    intra_run.confounds = [];
+    intra_run.confounds   = [];
     intra_run.labels_confounds = {};
-    intra_run.mask_suppressed = false(size(intra_run.tseries,1),1);
+    intra_run.mask_suppressed  = false(size(intra_run.tseries,1),1);
+    mask_scrubbing = false(size(intra_run.tseries,1),1);
 end
+intra_run.tseries = intra_run.tseries(~mask_scrubbing,:);
