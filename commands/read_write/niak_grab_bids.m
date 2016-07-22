@@ -19,14 +19,11 @@ function files = niak_grab_bids(path_data,opt)
 %   (structure) with the following fields, ready to feed into 
 %   NIAK_PIPELINE_FMRI_PREPROCESS :
 %
-%   FILES_IN  
-%      (structure) with the following fields : 
-%
-%       <SUBJECT>.FMRI.<SESSION>   
+%       <SUBJECT>.FMRI.<SESSION>.<RUN>
 %          (cell of strings) a list of fMRI datasets, acquired in the 
 %          same session (small displacements). 
 %          The field names <SUBJECT> and <SESSION> can be any arbitrary 
-%          strings.
+%          strings. The <RUN> input is optional
 %
 %      <SUBJECT>.ANAT 
 %          (string) anatomical volume, from the same subject as in 
@@ -51,6 +48,10 @@ function files = niak_grab_bids(path_data,opt)
 %   TASK_TYPE
 %       (string, default = rest) The type of task, explicitely name in bids 
 %       file name
+%
+%   MAX_SUBJECTS
+%       (int, default = 0) 0 return all subjects. Used to put an upper limit
+%       on the number of subjects that are returned.
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_FMRI_PREPROCESS
@@ -63,7 +64,7 @@ function files = niak_grab_bids(path_data,opt)
 % Copyright (c) Pierre Bellec, P-O Quirion
 %               Centre de recherche de l'institut de Gériatrie de Montréal,
 %               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2012.
+%               Université de Montréal, 2016.
 % Maintainer : poq@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : clustering, stability, bootstrap, time series
@@ -103,26 +104,33 @@ if ~strcmp(path_data(end),filesep);
 end
 
 if ~isfield(opt,'fmri_hint')
-    fmri_hint = ''
+    fmri_hint = '';
 else
-    fmri_hint = regexptranslate('escape', opt.fmri_hint)
+    fmri_hint = regexptranslate('escape', opt.fmri_hint);
 end
 
 if ~isfield(opt,'anat_hint')
-    anat_hint = ''
+    anat_hint = '';
 else
-    anat_hint = regexptranslate('escape', opt.anat_hint)
+    anat_hint = regexptranslate('escape', opt.anat_hint);
 end
 
-if ~isfield(opt,'task_type')
-    task_type = "rest"
+if ~isfield(opt,'max_subjects')
+    max_subjects = 0;
 else
-    task_type = opt.task_type
+    max_subjects = opt.max_subjects;
+end
+
+
+if ~isfield(opt,'task_type')
+    task_type = "rest";
+else
+    task_type = opt.task_type;
 end
 
 
 list_dir = dir(path_data);
-file_in = struct;
+files = struct;
 for num_f = 1:length(list_dir)
 
     if list_dir(num_f).isdir && ~strcmpi(list_dir(num_f).name, '.') ...
@@ -136,7 +144,7 @@ for num_f = 1:length(list_dir)
         end   
 
         list_sub_dir = dir([path_data, subject_dir]);
-        all_sessions = {}
+        all_sessions = {};
         for n_ses = 1:length(list_sub_dir)
             subdir_name = regexp(list_sub_dir(n_ses).name,"(ses-(.*))", 'tokens');
             if ~isempty(subdir_name)
@@ -152,114 +160,62 @@ for num_f = 1:length(list_dir)
 %        add session and sub numbers   a 
         for n_ses = 1:length(all_sessions(:,1))
             if all_sessions{1} == '0'
-                session_path = strcat(path_data, subject_dir)
-                session_id = "1"
-                no_session = true
+                session_path = strcat(path_data, subject_dir);
+                session_id = "1";
+                no_session = true;
             else
-                ses_name = all_sessions(n_ses,1){1}            
-                session_id = all_sessions(n_ses,2){1}
-                session_path = strcat(path_data, subject_dir, filesep, ses_name)
-                no_session = false
+                ses_name = all_sessions(n_ses,1){1}   ;         
+                session_id = all_sessions(n_ses,2){1};
+                session_path = strcat(path_data, subject_dir, filesep, ses_name);
+                no_session = false;
             end
 
-            anat_path = strcat(session_path, filesep, 'anat')
-            fmri_path = strcat(session_path, filesep, 'func')
-            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*" "\.(nii|mnc).*)"]
-            anat_regex = ['(', subject_dir, '_.*', anat_hint, '.*\.(nii|mnc).*)']
+            anat_path = strcat(session_path, filesep, 'anat');
+            fmri_path = strcat(session_path, filesep, 'func');
+            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*", fmri_hint, ".*\.(nii|mnc).*)"];
+            anat_regex = ['(', subject_dir, '_T1w.*', anat_hint, '.*\.(nii|mnc).*)'] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;
             
-            anat_match = {}
-            for n_f = 1:length(list_anat_dir)
-                m = regexpi(list_anat_dir(n_f).name, anat_regex, 'tokens')
+            anat_match = {} ;
+            for n_f = 1:length(list_anat_dir) ;
+                m = regexpi(list_anat_dir(n_f).name, anat_regex, 'tokens');
                 if ~isempty(m)
-                    anat_match = [ anat_match; m{1}];
+                    anat_match = [ anat_match; strcat(anat_path, filesep, m{1}{1})];
                 end
             end
-            fmri_match = {}
-            for n_f = 1:length(list_fmri_dir)
-                m = regexpi(list_fmri_dir(n_f).name, fmri_regex, 'tokens')
+            fmri_match = {} ;
+            func_run_regex = 'run-([0-9]+)' ;
+            for n_f = 1:length(list_fmri_dir) ;
+                m = regexpi(list_fmri_dir(n_f).name, fmri_regex, 'tokens') ;
                 if ~isempty(m)
-                    fmri_match = [fmri_match; m{1}];
+                    run_num = regexpi(m{1}{1}, func_run_regex, 'tokens') ;
+                    full_path = strcat(fmri_path, filesep, m{1}{1});
+                    if length(run_num)
+                        fmri.(session_id).(run_num{1}{1}) = full_path ;
+                    else
+                        fmri.(session_id) = full_path ;           
+                    end
                 end
             end
-
-            if length(fmri_match)
-                fmri.(session_id) = fmri_match{1}            
-            end
-                                                                
+            
         end      
-
+        
+        % TODO figure out a way to pick the right anat file if there is more thant one 
         if length(anat_match)             
-            anat= anat_match{1}
-        end
-
-        %% fiters 
-        % only resurt subject is anat and one func is found        
-        for n_ses = 1:length(all_sessions(:,1))
-            if no_session
-                session_id = "1"
-            else
-                session_id = all_sessions(n_ses,2){1}
-            end
-
-            if exist('anat') && exist('fmri')
-                file_in.(subject_dir).anat = anat
-                file_in.(subject_dir).fmri.(session_id) = fmri.(session_id)
+            anat= anat_match{1} ;
+            %% TODO add more fiters options  
+            % only resurt subject is anat and one func is found        
+            if exist('fmri')
+                files.(subject_dir).anat = anat;
+                files.(subject_dir).fmri = fmri;
+                if max_subjects
+                    if length(fieldnames(files)) >= max_subjects
+                        break;
+                    end
+                end
             end 
         end
+        clear fmri anat
     end
 end
-       
-files.file_in = file_in
-
-
-#    path_subj = [path_data list_files(num_f).name filesep];
-#        subject = list_files(num_f).name;
-#        if ~isempty(regexp(subject,'^\d'));
-#            subject = ['X' subject];
-#        end
-#        list_sessions = dir([path_subj]);
-#        for num_s = 1:length(list_sessions)
-#            if list_sessions(num_s).isdir&&~isempty(regexp(list_sessions(num_s).name,'^session'))
-#                session = list_sessions(num_s).name;
-#                path_session = [path_subj session filesep];
-#                files_anat = {[path_session filesep 'anat_1' filesep 'mprage_noface.mnc.gz'],[path_session filesep 'anat_1' filesep 'mprage_noface.mnc'],[path_session filesep 'anat_1' filesep 'mprage_noface.nii.gz'],[path_session filesep 'anat_1' filesep 'mprage_noface.nii'],[path_session filesep 'anat_1' filesep 'mprage.mnc.gz'],[path_session filesep 'anat_1' filesep 'mprage.mnc'],[path_session filesep 'anat_1' filesep 'mprage.nii'],[path_session filesep 'anat_1' filesep 'mprage.nii.gz']};
-#                flag_exist = false;
-#		for num_a = 1:length(files_anat)
-#                    if psom_exist(files_anat{num_a})
-#                        file_anat = files_anat{num_a};
-#                        flag_exist = true;
-#                    end
-#                end 
-#                if ~flag_exist
-#                    warning('Subject %s was excluded because no anatomical file could not be found',subject);
-#                end
-                
-#                if flag_exist
-#                    files.(subject).anat = file_anat;
-                
-#                list_runs = dir(path_session);
-#                nb_runs = 0;
-#                for num_r = 1:length(list_runs)
-#                    if list_runs(num_r).isdir&&~isempty(regexp(list_runs(num_r).name,'^rest'))
-#                        nb_runs = nb_runs+1;
-#                        file_rest = [path_session list_runs(num_r).name filesep 'rest.mnc.gz'];
-#                        flag_exist = true;
-#                        if ~psom_exist(file_rest)
-#                            file_rest = [path_session list_runs(num_r).name filesep 'rest.nii.gz'];
-#                            if ~psom_exist(file_rest)
-#                                warning('Subject %s session %s run %s was excluded because the resting-state file could not be found',subject,session,list_runs(num_r).name);
-#                                flag_exist = false;                        
-#                            end
-#                        end
-#                        if flag_exist
-#                            files.(subject).fmri.(session){nb_runs} = file_rest;
-#                        end
-#                    end
-#                end
-#            end
-#        end
-#    end
-#end
-#end

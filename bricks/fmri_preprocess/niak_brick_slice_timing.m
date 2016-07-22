@@ -354,7 +354,7 @@ if isempty(opt.slice_order)
     switch opt.type_acquisition
         
         case 'manual'
-            if ~exist(opt.slice_order,'var') && ~opt.flag_skip
+            if (~isfield(opt,'slice_order') || isempty(opt.slice_order)) && ~opt.flag_skip
                 error('niak:brick', 'opt: slice_order must be specified when using type_acquisition manual.\n Type ''help niak_brick_slice_timing'' for more info.');
             end
 
