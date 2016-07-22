@@ -162,7 +162,7 @@ jin = in.group.summary_scrubbing;
 jout = [opt.folder_out 'summary' filesep 'fd.js'];
 pipeline = psom_add_job(pipeline,'summary_scrubbing','niak_brick_preproc_scrubbing2report',jin,jout);
 
-%% The summary of FD
+%% The summary of brain masks
 clear jin jout jopt
 jin = in.ind.registration;
 jout = [opt.folder_out 'summary' filesep 'chartBrain.js'];
