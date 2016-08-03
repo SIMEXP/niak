@@ -5,9 +5,7 @@ function Hash = niak_datahash(Data, Opt)
 % UINT16(0) have different hash values. Nested STRUCTs and CELLs are parsed
 % recursively.
 %
-% SYNTAX:
-% PIPELINE = NIAK_PIPELINE_FMRI_PREPROCESS(FILES_IN,OPT)
-% HASH = NIAK_DATAHASH(DATA, OPT)
+% SYNTAX: HASH = NIAK_DATAHASH(DATA, OPT)
 % _________________________________________________________________________
 % INPUT:
 %   Data: Array of these built-in types:
