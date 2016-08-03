@@ -1,5 +1,5 @@
 function [in,out,opt] = niak_brick_montage(in,out,opt)
-% Generate a figure with a montage of different slices of a volume 
+% Generate a figure with a montage of sagital slices in the volume 
 %
 % SYNTAX: [IN,OUT,OPT] = NIAK_BRICK_VOL2IMG(IN,OUT,OPT)
 %
@@ -13,7 +13,6 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 %   DATA(N) is the data point associated with the Nth color. 
 % OPT.NB_SLICES (scalar, default Inf) the number of slices to produce (with a parameter
 %   Inf, all possible slices will be generated). 
-% OPT.TYPE_VIEW (default 'sagital') type of montage ('axial' or 'coronal' or 'sagital'). 
 % OPT.COLORMAP (string, default 'gray') The type of colormap. Anything supported by 
 %   the instruction `colormap` will work, as well as 'hot_cold' (see niak_hot_cold).
 %   This last color map always centers on zero.
@@ -125,6 +124,8 @@ case 'sagital'
             end
         end
     end
+otherwise 
+    error('Only sagital slices are supported')
 end
 
 %% image limits
@@ -195,5 +196,6 @@ end
 %% Saving the quantization data
 if ~strcmp(out.quantization,'gb_niak_omitted')
     data = bins;
-    save(out.quantization,'data');    
+    nb_slices = dim_v([1 3 2]);
+    save(out.quantization,'data','nb_slices');    
 end
