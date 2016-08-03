@@ -1,4 +1,4 @@
-FROM simexp/octave:3.8.1
+FROM simexp/octave:4.0.0
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
