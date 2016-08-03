@@ -1,4 +1,4 @@
-function [labels_x,ind_x] = niak_model_select (model, opt)
+function [labels_x,ind_x,model_select] = niak_model_select (model, opt)
 % Select entries in a linear model
 % [LABELS_X,IND_X] = NIAK_MODEL_SELECT( MODEL , OPT )
 %
@@ -28,6 +28,8 @@ function [labels_x,ind_x] = niak_model_select (model, opt)
 % LABELS_X (cell of strings) same as MODEL.LABELS_X, but filtered and re-ordered based 
 %   on OPT.
 % IND_X (vector) the indices of extracted rows, i.e. LABELS_X = MODEL.LABELS_X(IND_X);
+% MODEL_SELECT (array) same as MODEL.X, but filtered and re-ordered based
+%   on OPT.
 %
 % COMMENTS:
 %   In the selection process, if several covariates are associated with OPT.SELECT.LABEL, 
@@ -173,11 +175,14 @@ model.labels_y = model.labels_y(mask_var);
 
 %% Filter out the NaN entries
 if (opt.flag_filter_nan)&&~isempty(model.x)
-    mask_nan = max(isnan(model.x),[],2);    
+    mask_nan = max(isnan(model.x),[],2);
     if any(mask_nan)
         warning('The following entries were suppressed because they were associated to NaNs')
         char(model.labels_x{mask_nan})
     end    
     labels_x = labels_x(~mask_nan);
     ind_x = ind_x(~mask_nan);
+    model.x = model.x(~mask_nan, :);
 end
+
+model_select = model.x;

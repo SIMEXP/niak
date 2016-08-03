@@ -218,7 +218,11 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 % Montreal Neurological Institute, 2008-2010
 % Centre de recherche de l'institut de geriatrie de Montreal, 
 % Department of Computer Science and Operations Research
+<<<<<<< HEAD
 % University of Montreal, Qubec, Canada, 2010-2014
+=======
+% University of Montreal, Qubec, Canada, 2010-2016
+>>>>>>> master
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, slice timing, fMRI

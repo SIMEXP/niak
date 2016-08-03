@@ -216,12 +216,35 @@ if ~exist('gb_niak_path_niak','var')
 end
 
 file_script = [gb_niak_path_niak 'commands' filesep 't1_processing' filesep 'niak_best1stepnlreg.pl'];
-   
+
+%% Convert inputs, if necessary 
+[path_f,name_f,ext_f] = niak_fileparts(files_in.t1);
+[path_t,name_t,ext_t] = niak_fileparts(files_in.template);
+path_tmp = niak_path_tmp(['_' name_f]);
+
+if ~ismember(ext_f,{'.mnc','.mnc.gz'})
+    in_t1 = [path_tmp 't1.mnc'];
+    in_mask = [path_tmp 'mask.mnc'];
+    niak_brick_copy({files_in.t1,files_in.t1_mask},{in_t1,in_mask},struct('flag_fmri',true));
+else
+    in_t1 = files_in.t1;
+    in_mask = files_in.t1_mask;
+end
+
+if ~ismember(ext_t,{'.mnc','.mnc.gz'})
+    in_template = [path_tmp 'template.mnc'];
+    in_template_mask = [path_tmp 'template_mask.mnc'];
+    niak_brick_copy({files_in.template,files_in.template_mask},{in_template,in_template_mask},struct('flag_fmri',true));
+else
+    in_template = files_in.template;
+    in_template_mask = files_in.template_mask;
+end
+
 %% Setting up the system call to NIAK_BESTLINREG.PL
 if strcmp(files_in.t1_mask,'gb_niak_omitted')
     arg_mask = '';
 else
-    arg_mask = ['-source_mask ' files_in.t1_mask ' -target_mask ' files_in.template_mask];
+    arg_mask = ['-source_mask ' in_mask ' -target_mask ' in_template_mask];
 end
 
 if strcmp(files_out.transformation,'gb_niak_omitted')
@@ -233,24 +256,18 @@ end
 if strcmp(files_out.t1_stereonl,'gb_niak_omitted')
     arg_out = '';
 else
-    [path_f,name_f,ext_f] = fileparts(files_out.t1_stereonl);
-    
-    if isempty(path_f)
-        path_f = '.';
+    [path_o,name_o,ext_o] = niak_fileparts(files_out.t1_stereonl);
+    if ismember(ext_o,{'.mnc'})
+        flag_conv = false;
+        arg_out = files_out.t1_stereonl;
+    else
+        flag_conv = true;
+        tmp_out = [path_tmp 't1_stereonl.mnc'];
+        arg_out = tmp_out;
     end
-    
-    if strcmp(ext_f,gb_niak_zip_ext)
-        [tmp,name_f,ext_f] = fileparts(name_f);        
-        flag_zip = true;        
-    else 
-        flag_zip = false;
-    end
-    file_stereonl = [path_f,filesep,name_f,ext_f];
-    
-    arg_out = file_stereonl;
 end
 
-instr = [file_script ' -clobber ' arg ' ' arg_mask ' ' files_in.t1 ' ' files_in.template ' ' arg_transf ' ' arg_out];    
+instr = [file_script ' -clobber ' arg ' ' arg_mask ' ' in_t1 ' ' in_template ' ' arg_transf ' ' arg_out];    
 
 %% Running NIAK_BESTLINREG.PL
 if flag_verbose
@@ -266,9 +283,8 @@ else
     end
 end
 
-%% if necessary, zip the output non-linear volume
-if flag_zip
-    system([gb_niak_zip ' ' file_stereonl]);
+if flag_conv
+    niak_brick_copy(tmp_out,files_out.t1_stereonl,struct('flag_fmri',true));
 end
 
 %% Renaming the output grid file
@@ -294,6 +310,7 @@ sub_rename_grid(files_out.transformation_grid,files_out.transformation);
 if strcmp(files_out.transformation,'gb_niak_omitted')
    system(['rm -f ' arg_transf])
 end
+psom_clean(path_tmp);
 if flag_verbose
     fprintf('Done !\n')
 end

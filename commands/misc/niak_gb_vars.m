@@ -54,7 +54,7 @@ tag_windaub = {'PCWIN','windows'};
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
 if ~exist('gb_psom_gb_vars','var')&&exist('psom_gb_vars.m','file')
-    gb_psom_gb_var = true;
+    gb_psom_gb_vars = true;
     psom_gb_vars
 end
 
@@ -92,7 +92,6 @@ else
     elseif ~isempty(findstr('linux',comp))
         gb_niak_OS = 'unix';
     else
-        warning('System %s unknown!\n',comp);
         gb_niak_OS = 'unkown';
     end
 
@@ -147,7 +146,7 @@ gb_niak_ps2pdf = 'ps2pdf';
 gb_niak_version = 'dev'; 
 
 %% Target for tests
-gb_niak_target_test = '0.13.6';
+gb_niak_target_test = '0.14.0';
 
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');
