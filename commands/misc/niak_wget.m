@@ -4,9 +4,12 @@ function [status,msg,data] = niak_wget(data)
 % SYNTAX: [STATUS,MSG,DATA] = NIAK_WGET(DATA)
 %
 % DATA.TYPE (string, default '') If provided, this sets the default for datasets
-%    'data_test_niak_mnc1': The small version of the demoniak dataset.
+%    'data_test_niak_mnc1': The small version of the demoniak dataset (minc 1 format).
+%    'data_test_niak_nii': The small version of the demoniak dataset (nifti format).
 %    'target_test_niak_mnc1': The results of all NIAK pipelines on the demoniak minc1 data.
 %    'single_subject_cambridge_preprocessed_nii': preprocessed data for a single subject.
+%    'cambridge_template_nii': The Cambridge BASC multiresolution parcels (nifti format).
+%    'cambridge_template_mnc': The Cambridge BASC multiresolution parcels (minc format).
 % DATA.URL (string, see DATA.TYPE for default) the url to get the dataset.
 % DATA.NAME (string, see DATA.TYPE for default) the name of the file to retrieve.
 % DATA.PATH (string, [pwd filesep DATA.NAME], without the extension of the name) 

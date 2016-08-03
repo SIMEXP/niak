@@ -57,15 +57,37 @@ end
 %% Load parameters
 tab = niak_read_csv_cell(in);
 
-%% Compose js text
-list_ind = [1 4 5 2 3];
+%% Compose js text -- FD
+list_ind = [1 4 5];
 ind_ref = 4;
-labels = { 'Run' , 'FD_before' , 'FD_after' , 'vol_scrubbed' , 'vol_ok' };
+labels = { 'Run' , 'FD_before' , 'FD_after'};
 val = str2double(tab(2:end,ind_ref));
 [val,order] = sort(val,'descend');
 order = order(:)'+1;
 
 text_js = sprintf('var dataFD = [\n');
+for ii = 1:length(list_ind)
+    text_js = [text_js sprintf('  [''%s'' ',labels{ii})];
+    for ss = order
+	      text_js = [text_js, ', ''' tab{ss,list_ind(ii)} ''''];
+    end
+    if ii == length(list_ind)
+        text_js = [text_js sprintf(']\n')];
+    else
+        text_js = [text_js sprintf('],\n')];
+    end
+end
+text_js = [text_js sprintf('];\n')];
+
+%% Compose js text -- # time points
+list_ind = [1 2 3];
+ind_ref = 3;
+labels = { 'Run' , 'vol_scrubbed' , 'vol_ok' };
+val = str2double(tab(2:end,ind_ref));
+[val,order] = sort(val,'descend');
+order = order(:)'+1;
+
+text_js = [text_js sprintf('var dataNbVol = [\n')];
 for ii = 1:length(list_ind)
     text_js = [text_js sprintf('  [''%s'' ',labels{ii})];
     for ss = order

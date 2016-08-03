@@ -171,89 +171,6 @@
   var spacerStereo = new Image();
   spacerStereo.src = "$SPACER_STEREO";
   
-  // Create a button to select a new session
-  var $eventSelect = $("#select-BOLD");
-  $eventSelect.select2({
-    placeholder: "Select a new session",
-    data: dataRun
-  });
-  $eventSelect.on("select2:select", function (e) { 
-    var id = e.params.data.id;
-    if (id>0) {
-      subject = $("#select-BOLD option[value=" + id + "]").text();
-      location.assign(['motion_report_' + subject + '.html']);
-    }
-  });
-  $eventSelect.val("$NUM_RUN");
-  $eventSelect.trigger('change');
-  
-  // c3.js data for the translation parameters chart
-  var chartTsl = c3.generate({
-    bindto: '#chartTsl',
-    data: tsl,
-    axis: {
-        x: {
-            label: 'Time (TRs)'
-        },
-        y: {
-            label: 'Translation (mm)',
-            tick: {
-                format: d3.format('0.2f'),
-            }
-        }
-    },
-    zoom: {
-      enabled: true
-    },
-  });
-  
-  // c3.js data for the rotation parameters chart
-  var chartRot = c3.generate({
-    bindto: '#chartRot',
-    data: rot,
-    axis: {
-        x: {
-            label: 'Time (TRs)'
-        },
-        y: {
-            label: 'Rotation (degrees))',
-            tick: {
-                format: d3.format('0.2f')
-            }
-        }
-    },
-    zoom: {
-      enabled: true
-    }
-  });
-  
-  // c3.js data for the FD chart
-  var chartFd = c3.generate({
-    bindto: '#chartFd',
-    data: fd,
-    axis: {
-        x: {
-            label: 'Time (TRs)'
-        },
-        y: {
-            label: 'Frame displacement (pseudo mm))',
-            tick: {
-                format: d3.format('0.2f')
-            }
-        },
-        y2: {
-            show: true,
-            label: 'Scrubbing (0: no / 1: yes))',
-            tick: {
-                format: d3.format('b')
-            }
-        }
-    },
-    zoom: {
-      enabled: true
-    }
-  });
-  
   // function to draw volumes for a particular time frame. 
   // Update canvas based on two big mosaic files
   // native: images in native space, prior to motion correction
@@ -281,6 +198,82 @@
     return hImg
   };
     
+  // associate the arrows of the slider with backward/forward time shifts
+  document.getElementsByClassName("sliderNext")[0].onclick = function fun() { nextTime();};
+  document.getElementsByClassName("sliderNext")[1].onclick = function fun() { nextTime();};
+  document.getElementsByClassName("sliderPrev")[0].onclick = function fun() {prevTime();};
+  document.getElementsByClassName("sliderPrev")[1].onclick = function fun() {prevTime();};
+
+  // On load: build all figures   
+  $( window ).load(function() {
+
+    // c3.js data for the translation parameters chart
+    var chartTsl = c3.generate({
+      bindto: '#chartTsl',
+      data: tsl,
+      axis: {
+          x: {
+              label: 'Time (TRs)'
+          },
+          y: {
+              label: 'Translation (mm)',
+              tick: {
+                  format: d3.format('0.2f'),
+              }
+          }
+      },
+      zoom: {
+        enabled: true
+      },
+    });
+  
+    // c3.js data for the rotation parameters chart
+    var chartRot = c3.generate({
+      bindto: '#chartRot',
+      data: rot,
+      axis: {
+          x: {
+              label: 'Time (TRs)'
+          },
+          y: {
+              label: 'Rotation (degrees))',
+              tick: {
+                  format: d3.format('0.2f')
+              }
+          }
+      },
+      zoom: {
+        enabled: true
+      }
+    });
+
+    // c3.js data for the FD chart
+    var chartFd = c3.generate({
+      bindto: '#chartFd',
+      data: fd,
+      axis: {
+          x: {
+              label: 'Time (TRs)'
+          },
+          y: {
+              label: 'Frame displacement (pseudo mm))',
+              tick: {
+                  format: d3.format('0.2f')
+              }
+          },
+          y2: {
+              show: true,
+              label: 'Scrubbing (0: no / 1: yes))',
+              tick: {
+                  format: d3.format('b')
+              }
+          }
+      },
+      zoom: {
+        enabled: true
+      }
+    });
+
   // function to select a time frame. It calls the drawing of canvas, 
   // select the correct time point in the graphs, and also resize 
   // the translation and rotation graphs based on the corresponding movies. 
@@ -311,14 +304,6 @@
     prevFrame = numFrame - 1;
     if (prevFrame<0){return} else {selectTime(prevFrame)};
     };
-
-  // associate the arrows of the slider with backward/forward time shifts
-  window.onload = function() {  
-    document.getElementsByClassName("sliderNext")[0].onclick = function fun() { nextTime();};
-    document.getElementsByClassName("sliderNext")[1].onclick = function fun() { nextTime();};
-    document.getElementsByClassName("sliderPrev")[0].onclick = function fun() {prevTime();};
-    document.getElementsByClassName("sliderPrev")[1].onclick = function fun() {prevTime();};
-  };
   
   // Add key bindings, left/right arrow to move backward/forward in time  
   function reactKey(key){
@@ -326,9 +311,23 @@
     else if (key==37) {prevTime()};
   };
   window.onkeydown = function(e) { reactKey(e.keyCode) };
-   
-  // On load: build all figures   
-  $( window ).load(function() {
+  
+    // Create a button to select a new session
+    var $eventSelect = $("#select-BOLD");
+    $eventSelect.select2({
+      placeholder: "Select a new session",
+      data: dataRun
+    });
+    $eventSelect.on("select2:select", function (e) { 
+      var id = e.params.data.id;
+      if (id>0) {
+        subject = $("#select-BOLD option[value=" + id + "]").text();
+        location.assign(['motion_report_' + subject + '.html']);
+      }
+    });
+    $eventSelect.val("$NUM_RUN");
+    $eventSelect.trigger('change');
+
     // Trigger the building of motion movies   
     selectTime(numFrame);
     // set the size of the registration figure in tune with motion movies

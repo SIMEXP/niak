@@ -7,12 +7,23 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 % IN.TARGET (string, default '') the file name of a 3D volume defining the target space. 
 %   If left empty, or unspecified, OUT is the world space associated with IN.SOURCE 
 %   i.e. the volume is resamples to have no direction cosines. 
-% OUT (string) the file name for the figure. The extension will determine the type. 
+% OUT.MONTAGE (string) the file name for the figure. The extension will determine the type. 
+% OUT.COLORMAP (string) the file name for a figure with the color map. 
+% OUT.QUANTIZATION (string) the file name for a .mat file with a variable DATA. 
+%   DATA(N) is the data point associated with the Nth color. 
 % OPT.NB_SLICES (scalar, default Inf) the number of slices to produce (with a parameter
 %   Inf, all possible slices will be generated). 
 % OPT.TYPE_VIEW (default 'sagital') type of montage ('axial' or 'coronal' or 'sagital'). 
 % OPT.COLORMAP (string, default 'gray') The type of colormap. Anything supported by 
-%   the instruction `colormap` will work. 
+%   the instruction `colormap` will work, as well as 'hot_cold' (see niak_hot_cold).
+%   This last color map always centers on zero.
+% OPT.NB_COLOR (default 256) the number of colors to use in quantization. If Inf is 
+%   specified, all values are included in the colormap. This is handy for integer 
+%   values images (e.g. parcellation).
+% OPT.QUALITY (default 90) for jpg images, set the quality of the outputs (from 0, bad, to 100, perfect).
+% OPT.THRESH (scalar or vector, default []) if empty, does nothing. If a scalar, any value 
+%   below threshold becomes transparent. If two values, any values that falls between the 
+%   bounds become transparent. 
 % OPT.LIMITS (vector 1x2) the limits for the colormap. By defaut it is using [min,max].
 %    If a string is specified, the function will implement an adaptative strategy. 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
@@ -23,6 +34,8 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 % such that it includes all of the voxels. Only nearest neighbour interpolation is 
 % available. For 4D data, the median volume is extracted.
 %
+% If OUT is a string, only OUT.MONTAGE is generated. 
+% 
 % Copyright (c) Pierre Bellec
 % Centre de recherche de l'Institut universitaire de griatrie de Montral, 2016.
 % Maintainer : pierre.bellec@criugm.qc.ca
@@ -56,9 +69,17 @@ if nargin < 3
     opt = struct;
 end
 
+if ischar(out)
+    out = struct('montage',out);
+end
+
+out = psom_struct_defaults( out , ...
+    { 'montage' , 'colormap'        , 'quantization'    }, ...
+    { NaN       , 'gb_niak_omitted' , 'gb_niak_omitted' });
+    
 opt = psom_struct_defaults ( opt , ...
-    { 'nb_slices' , 'type_view' , 'limits' , 'colormap' , 'flag_test' }, ...
-    { Inf         , 'sagital'   , ''       , 'gray'     , false       });
+    { 'nb_color' , 'quality' , 'thresh' , 'nb_slices' , 'type_view' , 'limits' , 'colormap' , 'flag_test' }, ...
+    { 256        , 90        , []       , Inf         , 'sagital'   , ''       , 'gray'     , false       });
 
 if opt.flag_test 
     return
@@ -120,15 +141,59 @@ if isempty(opt.limits)
 end
 climits = opt.limits;
 
-%% build the image
+%% Generate colormap
 img(img>climits(2)) = climits(2);
 img(img<climits(1)) = climits(1);
-cm = colormap(opt.colormap);
-bins = linspace(climits(1),climits(2),size(cm,1));
+if opt.nb_color < Inf
+    bins = linspace(climits(1),climits(2),size(cm,1));
+else
+    bins = unique(img(:));
+end
+opt.nb_color = length(bins);
+
+switch opt.colormap
+	case 'hot_cold'   
+    if (opt.limits(2)>0) && (opt.limits(1)<0)
+        per_hot = opt.limits(2)/(opt.limits(2)-opt.limits(1));
+    elseif opt.limits(2)<=0
+        per_hot = 0;
+    else 
+        per_hot = 1;
+    end
+    cm = niak_hot_cold(opt.nb_color,per_hot);
+  case 'gray'
+    cm = gray(opt.nb_color);
+  case 'jet'
+    cm = jet(opt.nb_color);
+	otherwise
+		error('only jet, gray and hot_cold color maps currently supported')
+end
+
+%% build the image
 [tmp,idx] = histc(img,bins);
 idx(idx==0) = 1;
 rgb = zeros([size(img),3]);
 rgb(:,:,1) = reshape(cm(idx(:),1),size(img));
 rgb(:,:,2) = reshape(cm(idx(:),2),size(img));
 rgb(:,:,3) = reshape(cm(idx(:),3),size(img));
-imwrite(rgb,out);
+if ~isempty(opt.thresh)
+    if length(opt.thresh)==1
+        opt.thresh = [-Inf opt.thresh];
+    end
+    imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double((img>opt.thresh(2))|(img<opt.thresh(1))));
+else
+    imwrite(rgb,out.montage,'quality',opt.quality);
+end
+
+%% The color map
+if ~strcmp(out.colormap,'gb_niak_omitted')
+    rgb = zeros(size(cm,1),1,size(cm,2));
+    rgb(:,1,:) = cm;
+    imwrite(rgb,out.colormap,'quality',opt.quality);
+end
+
+%% Saving the quantization data
+if ~strcmp(out.quantization,'gb_niak_omitted')
+    data = bins;
+    save(out.quantization,'data');    
+end
