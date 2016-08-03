@@ -27,9 +27,9 @@
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Griatrie de Montral,
-%               Dpartement d'informatique et de recherche oprationnelle,
-%               Universit de Montral, 2011-2012.
+%               Centre de recherche de l'institut de Gériatrie de Montréal,
+%               Département d'informatique et de recherche opérationnelle,
+%               Université de Montréal, 2011-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : grabber
