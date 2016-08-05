@@ -136,12 +136,6 @@ weights = tmp.weight_mat;
 % Figure out how many cases we are dealing with
 [n_sub, n_sbt, n_net] = size(weights);
 
-%% Work around the incompatibilities between Matlab and Octave 
-is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
-if is_octave
-    graphics_toolkit gnuplot
-end
-
 %% Visualize the weights and covariate of interest
 if ~strcmp(files_out.figures, 'gb_niak_omitted')
     % First, get the covariate of interest. 
@@ -178,6 +172,9 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     % Determine the number of rows and columns for the subyptes
     n_cols = floor(sqrt(n_sbt));
     n_rows = ceil(n_sbt/n_cols);
+    
+    %% Work around the incompatibilities between Matlab and Octave 
+    is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
 
     % Make a figure for each network
     for net_id = 1:opt.scale
