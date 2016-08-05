@@ -152,12 +152,6 @@ if opt.flag_test == 1
     return
 end
 
-%% Work around the incompatibilities between Matlab and Octave 
-is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
-if is_octave
-    graphics_toolkit gnuplot
-end
-
 %% Load the model
 [tab,sub_id,labels_y] = niak_read_csv(files_in.model);
 
@@ -239,6 +233,9 @@ row_sum = sum(contab,2); % sum of rows
 n_sum = sum(sum(contab)); % sum of everything
 kk = min(n_row,n_col);
 stats.cramerv = sqrt(stats.chi2.X2/(n_sum*(kk-1))); % calculate cramer's v
+
+%% Work around the incompatibilities between Matlab and Octave 
+is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
 
 % Pie chart visualization
 for pp = 1:n_row
