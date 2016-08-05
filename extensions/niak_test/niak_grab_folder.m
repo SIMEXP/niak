@@ -60,18 +60,20 @@ end
 path_data = niak_full_path(path_data);
 
 %% The black list
-if (nargin > 1)
-    if iscellstr(black_list)
-        black_n = 0;
-        for num_e = 1:length(black_list)
-            black_list{num_e} = niak_full_path(black_list{num_e});
-            % make sure there is no / and the end of a file name.
-            if ~isdir(black_list{num_e})
-               black_list_file{++black_n} = regexprep(black_list{num_e},'(.*)/','$1') ;
-            end
-        end
-    elseif ischar(black_list)
-        black_list = {niak_full_path(black_list)};
+black_list_file = {};
+if nargin < 2
+    black_list = {};
+end
+
+if ischar(black_list)
+    black_list = {black_list};
+end
+
+for num_e = 1:length(black_list)
+    black_list{num_e} = niak_full_path(black_list{num_e});
+    % make sure there is no file separator at the end of a file name.
+    if ~isdir(black_list{num_e})
+        black_list_file{end+1} = regexprep(black_list{num_e},['(.*)' filesep],'$1') ;
     end
 end
    
@@ -100,7 +102,5 @@ for num_d = 1:length(ind_dir)
     end
 end
 
-% Removing files
-if exist('black_list_file') && iscell(black_list_file)
-   files = setdiff(files,black_list_file) ;
-end
+% Removing black listed files
+files = files(~ismember(files,black_list_file));
