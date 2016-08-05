@@ -1,8 +1,8 @@
- function files = niak_grab_folder(path_data,black_list)
+ function files = niak_grab_folder(path_data,black_list,exclude_files)
 % Grab all the files inside a folder (recursively)
 %
 % SYNTAX:
-% FILES = NIAK_GRAB_FOLDER(PATH_DATA,BLACK_LIST)
+% FILES = NIAK_GRAB_FOLDER(PATH_DATA,BLACK_LIST,EXCLUDE_FILES)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -11,10 +11,13 @@
 %   (string, default [pwd filesep], aka './') a folder
 %
 % BLACK_LIST
-%   (string or cell of string) a list of folder (or subfolders) to 
-%   be ignored by the grabber. Absolute names should be used
-%   (i.e. '/home/user23/database/toto' rather than 'toto'). If not, the names
-%   will be assumed to refer to the current directory.
+%   (string or cell of string) a list of folders to be ignored by the grabber. 
+%   Absolute names should be used (i.e. '/home/user23/database/toto' rather 
+%   than 'toto'). If not, the names will be assumed to refer to the current 
+%   directory.
+%
+% EXCLUDE_FILES (string or cell of strings) a list of file names to exclude 
+%   from the list. Names should not include folders, e.g. 'toto.txt'.
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -68,6 +71,16 @@ if (nargin > 1)
     elseif ischar(black_list)
         black_list = {niak_full_path(black_list)};
     end
+else
+    black_list = {};
+end
+
+%% List of excluded files
+if (nargin < 3)
+    exclude_files = {};
+end
+if ischar(exclude_files)
+    exclude_files = {exclude_files};
 end
    
 %% List of folders
@@ -79,7 +92,7 @@ end
 files_loc = dir(path_data);
 is_dir = [files_loc.isdir];
 files_loc = {files_loc.name};
-mask = ~ismember(files_loc,{'.','..'});
+mask = ~ismember(files_loc,{'.','..'})&~ismember(files_loc,exclude_files);
 is_dir = is_dir(mask);
 files_loc = files_loc(mask);
 files_loc = strcat(repmat({path_data},size(files_loc)),files_loc);

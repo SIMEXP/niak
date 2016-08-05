@@ -16,10 +16,12 @@ function [in,out,opt] = niak_brick_cmp_files(in,out,opt)
 % OPT (structure) with the following fields:
 %   BASE_SOURCE (string, mandatory) the base folder for SOURCE files.
 %   BASE_TARGET (string, mandatory) the base folder for TARGET files.
-%   BLACK_LIST_SOURCE (string) the black list to grab files from SOURCE,
-%      if IN.SOURCE is omitted.
-%   BLACK_LIST_TARGET (string) the black list to grab files from TARGET,
-%      if IN.TARGET is omitted.
+%   BLACK_LIST_SOURCE (string or cell of strings) a list of folders to ignore 
+%      in SOURCE, if IN.SOURCE is omitted. Please specify full paths.
+%   BLACK_LIST_TARGET (string or cell of strings) a list of folders to ignore 
+%      in TARGET, if IN.SOURCE is omitted. Please specify full paths.
+%   EXCLUDE_FILES (string or cell of strings) a list of file names to exclude 
+%      from the comparison. Names should not include folders, e.g. 'toto.txt'.
 %   EPS (scalar, default 10^(-4)) the amount of "numeric noise" tolerated to 
 %       declare two volumes to be equal
 %   FLAG_SOURCE_ONLY (boolean, default false) when comparing two matlab structures,
@@ -128,8 +130,8 @@ if ~exist('in','var')||~exist('out','var')
 end
 
 %% Options
-list_fields   = { 'flag_ignore_format' , 'base_source' , 'base_target' , 'black_list_source' , 'black_list_target' , 'flag_source_only' , 'eps'   , 'flag_verbose' , 'flag_test' };
-list_defaults = { false                , NaN           , NaN           , {}                  , {}                  , false              , 10^(-4) , true           , false       };
+list_fields   = { 'exclude_files' , 'flag_ignore_format' , 'base_source' , 'base_target' , 'exclude_files' , 'black_list_source' , 'black_list_target' , 'flag_source_only' , 'eps'   , 'flag_verbose' , 'flag_test' };
+list_defaults = { {}              , false                , NaN           , NaN           , {}              , {}                  , {}                  , false              , 10^(-4) , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if ~isempty(opt.base_source)
@@ -146,11 +148,11 @@ opt_m.flag_source_only = opt.flag_source_only;
 in = psom_struct_defaults(in,{'source','target'},{{},{}});
 
 if isempty(in.source)
-    in.source = niak_grab_folder(opt.base_source,opt.black_list_source);
+    in.source = niak_grab_folder(opt.base_source,opt.black_list_source,exclude_files);
 end
 
 if isempty(in.target)
-    in.target = niak_grab_folder(opt.base_target,opt.black_list_target);
+    in.target = niak_grab_folder(opt.base_target,opt.black_list_target,exclude_files);
 end
 
 if ~iscellstr(in.source)||~iscellstr(in.target)
