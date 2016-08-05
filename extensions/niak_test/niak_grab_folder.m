@@ -11,7 +11,7 @@
 %   (string, default [pwd filesep], aka './') a folder
 %
 % BLACK_LIST
-%   (string or cell of string) a list of folder (or subfolders) to 
+%   (string or cell of string) a list of folders, or files to 
 %   be ignored by the grabber. Absolute names should be used
 %   (i.e. '/home/user23/database/toto' rather than 'toto'). If not, the names
 %   will be assumed to refer to the current directory.
@@ -100,7 +100,7 @@ for num_d = 1:length(ind_dir)
     end
 end
 
-% super slow way of removing files
+% Removing files
 if exist('black_list_file') && iscell(black_list_file)
    files = setdiff(files,black_list_file) ;
 end
