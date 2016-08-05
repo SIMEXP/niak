@@ -16,7 +16,7 @@ function [files_in,files_out,opt] = niak_brick_subtyping(files_in,files_out,opt)
 %       niak_brick_network_stack
 %
 %   MASK
-%       (3D volume, default all voxels) a binary mask of the voxels that 
+%       (3D volume) file name of a binary mask of the voxels that 
 %       are included in the time*space array
 % 
 % FILES_OUT 
@@ -139,6 +139,7 @@ end
 files_in = psom_struct_defaults(files_in,...
            { 'data' , 'mask' },...
            { NaN    , NaN    });
+[path_m,name_m,ext_m] = niak_fileparts(files_in.mask);
 
 % Options
 opt = psom_struct_defaults(opt,...
@@ -149,8 +150,8 @@ opt = psom_struct_defaults(opt,...
 if ~isempty(opt.folder_out)
     path_out = niak_full_path(opt.folder_out);
     files_out = psom_struct_defaults(files_out,...
-                { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                              , 'grand_mean_map'               , 'grand_std_map'               , 'ttest_map'                       , 'eff_map'                       , 'provenance'      },...
-                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out sprintf('%s_subtype.nii.gz' , opt.sub_map_type)] , [path_out 'grand_mean.nii.gz'] , [path_out 'grand_std.nii.gz'] , [path_out 'ttest_subtype.nii.gz'] , [path_out 'eff_subtype.nii.gz'] , '' });
+                { 'sim_fig'                          , 'den_fig'                   , 'subtype'                , 'subtype_map'                                , 'grand_mean_map'               , 'grand_std_map'             , 'ttest_map'                      , 'eff_map'                      , 'provenance'      },...
+                { [path_out 'similarity_matrix.pdf'] , [path_out 'dendrogram.pdf'] , [path_out 'subtype.mat'] , [path_out opt.sub_map_type '_subtype' ext_m] , [path_out 'grand_mean' ext_m] , [path_out 'grand_std' ext_m] , [path_out 'ttest_subtype' ext_m] , [path_out 'eff_subtype' ext_m] , ''                });
 else
     files_out = psom_struct_defaults(files_out,...
                 { 'sim_fig'         , 'den_fig'         , 'subtype'         , 'subtype_map'     , 'grand_mean_map'  , 'grand_std_map'   ,'ttest_map'        , 'eff_map'         , 'provenance'      },...
@@ -169,12 +170,6 @@ end
 %% Seed the random generator
 if ~isempty(opt.rand_seed)
     psom_set_rand_seed(opt.rand_seed);
-end
-
-%% Work around the incompatibilities between Matlab and Octave 
-is_octave = logical(exist('OCTAVE_VERSION', 'builtin') ~= 0);
-if is_octave
-    graphics_toolkit gnuplot
 end
 
 %% Load the data
