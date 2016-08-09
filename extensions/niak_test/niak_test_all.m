@@ -28,6 +28,17 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   argument of PSOM_RUN_PIPELINE. Note that the field PSOM.PATH_LOGS will be 
 %   set up by the pipeline. By default OPT.PSOM.FLAG_PAUSE is false (do 
 %   not wait for the user to confirm starting the tests).
+% OPT.PARTIAL (cell of stings) List od the test that ones what to run, if omited,
+%   all test will be run. Available test: - 'fmripreproc'
+%                                           'region_growing'
+%                                           'connectome'
+%                                           'stability_fir'
+%                                           'glm_fir'
+%                                           'stability_rest'
+%                                           'glm_connectome'
+%                                           'scores'
+%                                           'glm_connectome'
+%                                            
 %
 % _________________________________________________________________________
 % OUTPUTS:
@@ -96,8 +107,8 @@ if nargin < 2
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      {'format' , 'flag_target' , 'flag_test', 'psom' }, ...
-      {'mnc1'   , false         , false      , struct });
+      {'format' , 'flag_target' , 'flag_test', 'psom' , 'partial'}, ...
+      {'mnc1'   , false         , false      , struct ,  false  });
 
 if ~isfield(opt.psom,'flag_pause')
     opt.psom.flag_pause = false;
@@ -186,8 +197,9 @@ opt_pipe.template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_
 opt_pipe.template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                         
 opt_pipe.template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                              
 [pipe_fp,opt_p,files_fp] = niak_test_fmripreproc_demoniak(path_test_fp,opt_pipe);
-pipe = psom_merge_pipeline(pipe,pipe_fp,'fp_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'fmripreproc')
+    pipe = psom_merge_pipeline(pipe,pipe_fp,'fp_');
+end
 %% Add the test of the region growing pipeline
 if opt.flag_target
     % In target mode, grab the results of the preprocessing and carry on with region growing
@@ -206,38 +218,44 @@ opt_pipe.files_in = files_rf;
 path_test_rg.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_rg.reference = [path_test.target 'demoniak_region_growing'];
 path_test_rg.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_region_growing_demoniak(path_test_rg,opt_pipe),'rg_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'region_growing')
+  pipe = psom_merge_pipeline(pipe,niak_test_region_growing_demoniak(path_test_rg,opt_pipe),'rg_');
+end
 %% Add the test of the connectome pipeline
 path_test_con.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_con.reference = [path_test.target 'demoniak_connectome'];
 path_test_con.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_connectome_demoniak(path_test_con,opt_pipe),'con_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'connectome')
+    pipe = psom_merge_pipeline(pipe,niak_test_connectome_demoniak(path_test_con,opt_pipe),'con_');
+end
 %% Add the test of the stability_fir pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_stability_fir'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,opt_pipe),'fir_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'stability_fir')
+    pipe = psom_merge_pipeline(pipe,niak_test_stability_fir_demoniak(path_test_fir,opt_pipe),'fir_');
+end
 %% Add the test of the glm_fir pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_glm_fir'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),'gfir_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'glm_fir')
+    pipe = psom_merge_pipeline(pipe,niak_test_glm_fir_demoniak(path_test_fir,opt_pipe),'gfir_');
+end
 %% Add the test of the stability_rest pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_stability_rest'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),'basc_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'stability_rest')
+    pipe = psom_merge_pipeline(pipe,niak_test_stability_rest_demoniak(path_test_fir,opt_pipe),'basc_');
+end
 %% Add the test of the glm_connectome pipeline
 path_test_fir.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_fir.reference = [path_test.target 'demoniak_glm_connectome'];
 path_test_fir.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),'gcon_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'glm_connectome')
+    pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome_demoniak(path_test_fir,opt_pipe),'gcon_');
+end
 %% Add the test of the scores pipeline
 if opt.flag_target
     % In target mode, grab the results of the preprocessing and use them for scores
@@ -256,14 +274,16 @@ opt_scores.files_in = files_sc;
 path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_sc.reference = [path_test.target 'demoniak_scores'];
 path_test_sc.result    = path_test.result;
-pipe = psom_merge_pipeline(pipe,niak_test_scores_demoniak(path_test_sc,opt_scores),'sco_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'scores')
+    pipe = psom_merge_pipeline(pipe,niak_test_scores_demoniak(path_test_sc,opt_scores),'sco_');
+end
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
 opt_glm.flag_test = true;
 opt_glm.psom = opt.psom;
-pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome(path_test,opt_glm),'gun_');
-
+if isbool(opt.partial) || ismember(opt.partial, 'glm_connectome')
+    pipe = psom_merge_pipeline(pipe,niak_test_glm_connectome(path_test,opt_glm),'gun_');
+end
 %% Run the tests
 if ~opt.flag_test
     status = psom_run_pipeline(pipe,opt.psom);
