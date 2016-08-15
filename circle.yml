@@ -1,0 +1,31 @@
+general:
+  artifacts:
+    - "~/result"
+machine:
+  services:
+    - docker #don't use 1.10 - caching is broken
+
+dependencies:
+  cache_directories:
+    - "~/docker"
+    - "~/data"
+
+  override:
+  - if [[ ! -d ~/data/niak_test ]]; then wget -c -P ${HOME}/downloads/ "http://www.nitrc.org/frs/download.php/9120/data_test_niak_nii.zip" && mkdir -p ${HOME}/data && cd ${HOME}/data && unzip ${HOME}/downloads/data_test_niak_nii.zip ; fi
+  - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+  - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
+      timeout: 21600
+  - mkdir -p ~/docker; docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar
+  - mkdir -p ${HOME}/outputs
+
+
+test:
+  override:
+    - docker run -it -v $PWD:$PWD simexp/niak_dependency:1.1 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',2,'flag_pause',false))); system('cat result/report_test_regression_fmripreproc_demoniak.csv'), exit(status)\"":
+    - docker run -it -v -v ${HOME}/data/data_test_niak_nii:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs group :
+        timeout: 21600
+#deployment:
+#  hub:
+#    branch: master
+#    commands:
+#      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker push $DOCKER_REPO; fi
