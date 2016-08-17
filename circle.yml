@@ -21,7 +21,7 @@ dependencies:
 
 test:
   override:
-    - docker run -it -v -v ${HOME}/data/data_test_niak_nii:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs group :
+    - docker run -it -v ${HOME}/data/data_test_niak_nii:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs group :
         timeout: 21600
 #deployment:
 #  hub:
