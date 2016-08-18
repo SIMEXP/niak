@@ -110,7 +110,7 @@ case 'sagital'
     npix = sqrt(prod(dim_v));
     wy = floor(npix/dim_v(3));
     wx = ceil(prod(dim_v)/(wy*dim_v(3)*dim_v(2)));
-    img = zeros([wx*dim_v(2) wy*dim_v(3)]);
+    img = vol_rf(1)*ones([wx*dim_v(2) wy*dim_v(3)]);
     ss = 1;
     for xx = 1:wx
         for yy = 1:wy
@@ -146,7 +146,7 @@ climits = opt.limits;
 img(img>climits(2)) = climits(2);
 img(img<climits(1)) = climits(1);
 if opt.nb_color < Inf
-    bins = linspace(climits(1),climits(2),size(cm,1));
+    bins = linspace(climits(1),climits(2),opt.nb_color);
 else
     bins = unique(img(:));
 end
@@ -188,8 +188,8 @@ end
 
 %% The color map
 if ~strcmp(out.colormap,'gb_niak_omitted')
-    rgb = zeros(size(cm,1),1,size(cm,2));
-    rgb(:,1,:) = cm;
+    rgb = zeros(1,size(cm,1),size(cm,2));
+    rgb(1,:,:) = cm;
     imwrite(rgb,out.colormap,'quality',opt.quality);
 end
 
