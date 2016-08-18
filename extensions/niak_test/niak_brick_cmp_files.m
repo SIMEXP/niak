@@ -16,9 +16,9 @@ function [in,out,opt] = niak_brick_cmp_files(in,out,opt)
 % OPT (structure) with the following fields:
 %   BASE_SOURCE (string, mandatory) the base folder for SOURCE files.
 %   BASE_TARGET (string, mandatory) the base folder for TARGET files.
-%   BLACK_LIST_SOURCE (string) the black list to grab files from SOURCE,
+%   BLACK_LIST_SOURCE (string or cell of sting) the black list not to grab SOURCES file and folder,
 %      if IN.SOURCE is omitted.
-%   BLACK_LIST_TARGET (string) the black list to grab files from TARGET,
+%   BLACK_LIST_TARGET (string or cell of sting) the black list not to grab from TARGETS file and folder,
 %      if IN.TARGET is omitted.
 %   EPS (scalar, default 10^(-4)) the amount of "numeric noise" tolerated to 
 %       declare two volumes to be equal
