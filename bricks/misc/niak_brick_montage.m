@@ -188,8 +188,8 @@ end
 
 %% The color map
 if ~strcmp(out.colormap,'gb_niak_omitted')
-    rgb = zeros(size(cm,1),1,size(cm,2));
-    rgb(:,1,:) = cm;
+    rgb = zeros(1,size(cm,1),size(cm,2));
+    rgb(1,:,:) = cm;
     imwrite(rgb,out.colormap,'quality',opt.quality);
 end
 
