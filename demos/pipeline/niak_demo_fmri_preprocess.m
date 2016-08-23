@@ -117,9 +117,8 @@ if psom_exist(cat(2,path_demo,'anat_subject1.img'))
     error('analyze format is not currently supported');
 elseif psom_exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
     ext = '.mnc.gz';
-elseif psom_exist(cat(2,path_demo,'anat_subject1.nii'))
-    ext = '.nii';
-    error('analyze format is not currently supported');
+elseif psom_exist(cat(2,path_demo,'anat_subject1.nii.gz'))
+    ext = '.nii.gz';
 else
     ext = '.mnc';
 end

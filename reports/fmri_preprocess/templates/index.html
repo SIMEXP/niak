@@ -77,14 +77,27 @@
       </div>
 <!-- end of three -->
 
+      <div class="col-sm-6">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Average Frame Displacement (FD) 
+          </div>
+          <div class="chart-stage">
+            <div id="chart-FD" style="width:95%"></div>
+          </div>
+          <div class="chart-notes">
+            Click on a bar to open the motion report. Mouse scroll to zoom.
+          </div>
+        </div>
+      </div>
 
       <div class="col-sm-6">
         <div class="chart-wrapper">
           <div class="chart-title">
-            Average Frame Displacement (FD) and # time frames scrubbed vs OK
+            # time frames scrubbed vs OK
           </div>
           <div class="chart-stage">
-            <div id="chart-FD" style="width:95%"></div>
+            <div id="chart-nb-vol" style="width:95%"></div>
           </div>
           <div class="chart-notes">
             Click on a bar to open the motion report. Mouse scroll to zoom.
@@ -121,8 +134,24 @@
       </div>
 
 <!-- end of three -->
-    <div class="row">
       <div class="col-sm-6">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Input files for subject 
+            <select class="select-subject" style="width: 50%">
+            </select>
+          </div>
+          <div class="chart-stage">
+            <div id="elem2">
+            </div>
+          </div>
+          <div class="chart-notes">
+            Click on {...} to collapse.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-12">
         <div class="chart-wrapper">
           <div class="chart-title">
             Pipeline options
@@ -137,24 +166,6 @@
         </div>
       </div>
 
-      <div class="col-sm-6">
-        <div class="chart-wrapper">
-                    <div class="chart-title">
-            Input files for subject 
-            <select class="select-subject" style="width: 50%">
-              </select>
-          </div>
-          <div class="chart-stage">
-            <div id="elem2">
-            </div>
-          </div>
-          <div class="chart-notes">
-            Click on {...} to collapse.
-          </div>
-
-        </div>
-      </div>
-   </div>
     <hr>
 
     <p class="small text-muted">Built with &#9829; by <a href="http://niak.simexp-lab.org">NIAK</a> using dashboards from <a href="https://keen.io">Keen IO</a></p>
@@ -179,7 +190,16 @@
   <script src="summary/fd.js"></script> <!--data for chartFD-->
   <script src="group/listSubject.js"></script> <!--list of subjects-->
   <script src="summary/pipeSummary.js"></script> <!--text summary for the pipeline-->
+
   <script>
+    // Create pretty jason for filesIn
+  function printFiles(files) {
+    var node2 = new PrettyJSON.view.Node({
+      el:$('#elem2'),
+      data: files,
+    });
+    node2.expandAll();
+  };
   
   // Summary for the pipeline
   document.getElementById('pipeSummary').innerHTML = pipeSummary;
@@ -248,12 +268,6 @@
     data: {
       x: 'Run',
       columns: dataFD,
-      axes: {
-        FD_before: 'y',
-        FD_after: 'y',
-        vol_scrubbed: 'y2',
-        vol_ok: 'y2',
-      },
       type: 'bar',		
       onclick: function (d) { selectRun(d,chartFD)}		
     },	
@@ -268,8 +282,30 @@
                 format: d3.format('0.2f')
             }
         },
-        y2: {
-            show: true,
+    },
+    zoom: {
+      enabled: true
+    },
+    selection: {		
+      enabled: true		
+    }	
+  });
+  
+  // Chart of frame displacement and number of volumes
+  var chartNbVol = c3.generate({
+    bindto: '#chart-nb-vol',
+    data: {
+      x: 'Run',
+      columns: dataNbVol,
+      type: 'bar',		
+      onclick: function (d) { selectRun(d,chartNbVol)}		
+    },	
+    axis: {
+        x: {
+          type: 'category',
+          label: 'Run'
+        },
+        y: {
             label: '#time frames)',
             tick: {
                 format: d3.format('1.0f')
@@ -368,14 +404,6 @@
     }
   };
   
-  // Create pretty jason for filesIn
-  function printFiles(files) {
-    var node2 = new PrettyJSON.view.Node({
-      el:$('#elem2'),
-      data: files,
-    });
-    node2.expandAll();
-  };
    
   // Create button to select subjects
   $(".select-subject").select2({
@@ -397,8 +425,9 @@
     data: opt
   });
   node.expandAll()
-  
+
   $(document).ready(function() {
+
     // Attach the chart on T1 registration to the figure
     $('#chart-T1').data('c3-chart', chartT1);		  		
     // Attach the chart on BOLD registration to the figure

@@ -292,7 +292,7 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %           anything, just copy the input on the output. 
 %
 %   CIVET 
-%       (structure)If this field is present, NIAK will not process the T1 image, 
+%       (structure) If this field is present, NIAK will not process the T1 image, 
 %       but will rather grab the (previously generated) results of the CIVET 
 %       pipeline, i.e. copy/rename them. The following fields need
 %       to be specified :
@@ -524,7 +524,7 @@ clear job_in job_out job_opt
 [path_t,name_t,ext_t] = niak_fileparts(opt.template.fmri);
 job_in.source      = opt.template.aal;
 job_in.target      = opt.template.aal;
-job_out            = [opt.folder_out 'anat' filesep 'template_aal' ext_t];
+job_out            = [opt.folder_out 'anat' filesep 'template_aal' ext_f];
 job_opt            = opt.resample_vol;
 job_opt.interpolation    = 'nearest_neighbour';
 pipeline = psom_add_job(pipeline,'resample_aal','niak_brick_resample_vol',job_in,job_out,job_opt);
@@ -536,16 +536,16 @@ pipeline.cp_confounds_keys.files_out = [opt.folder_out 'resample' filesep 'niak_
 pipeline.cp_confounds_keys.command = '[status,msg] = copyfile(files_in,files_out); if status~=0; error(msg); end';
 
 %% Copy the template
-pipeline.cp_template.files_in  = template.t1;
-[path_t,name_t,ext_t] = niak_fileparts(template.t1);
-pipeline.cp_template.files_out = [opt.folder_out 'anat' filesep 'template_anat_stereo' ext_t];
-pipeline.cp_template.command = '[status,msg] = copyfile(files_in,files_out); if status~=0; error(msg); end';
+pipeline.cp_template.files_in  = {template.t1};
+pipeline.cp_template.files_out = {[opt.folder_out 'anat' filesep 'template_anat_stereo' ext_f]};
+pipeline.cp_template.opt.flag_fmri = true;
+pipeline.cp_template.command = 'niak_brick_copy(files_in,files_out,opt);';
 
 %% Resample the fMRI stereotaxic space, if needed
 pipeline.resample_fmri_stereo = pipeline.resample_aal;
 pipeline.resample_fmri_stereo.files_in.source = opt.template.fmri;
 pipeline.resample_fmri_stereo.files_in.target = opt.template.fmri;
-pipeline.resample_fmri_stereo.files_out = [opt.folder_out 'anat' filesep 'template_fmri_stereo' ext_t];
+pipeline.resample_fmri_stereo.files_out = [opt.folder_out 'anat' filesep 'template_fmri_stereo' ext_f];
 opt.template.fmri = pipeline.resample_fmri_stereo.files_out;
 
 %% Build individual pipelines

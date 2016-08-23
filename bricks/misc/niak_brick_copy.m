@@ -24,7 +24,7 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %       along with fMRI datasets.
 %
 %   FOLDER_OUT 
-%       (string, default: same as FILES_IN{1}) If present, all default 
+%       (string, default: folder of FILES_IN{1}) If present, all default 
 %       outputs will be created in the folder FOLDER_OUT. The folder 
 %       needs to be created beforehand.
 %
@@ -45,6 +45,9 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %              
 % _________________________________________________________________________
 % COMMENTS
+%
+% FILES_IN and FILES_OUT can also be passed as strings, in which case a single
+% files is copied. 
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -78,6 +81,16 @@ niak_gb_vars % Load some important NIAK variables
 
 if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COPY(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_copy'' for more info.')
+end
+
+%% Check inputs
+if ischar(files_in)&&ischar(files_out)
+    files_in = {files_in};
+    files_out = {files_out};
+end
+
+if ~iscellstr(files_in)||~iscellstr(files_out)
+    error('FILES_IN and FILES_OUT need to be both either strings or cell of strings')
 end
 
 %% Options
@@ -127,7 +140,7 @@ end
 for num_f = 1:nb_files
 
     if flag_verbose
-        msg = sprintf('Copying file %s to %s',files_in{num_f},files_out{num_f});
+        msg = sprintf('Copying or converting file %s to %s',files_in{num_f},files_out{num_f});
         fprintf('%s\n',msg);
     end
     if opt.flag_fmri

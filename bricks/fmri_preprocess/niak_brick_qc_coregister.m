@@ -286,7 +286,7 @@ mean_vol = mean_vol/length(files_in.vol);
 if flag_4d
     std_vol  = std_vol/length(files_in.vol);
 else
-    std_vol  = sqrt((std_vol-length(files_in.vol)*(mean_vol.^2))/(length(files_in.vol)-1));
+    std_vol  = sqrt(abs((std_vol-length(files_in.vol)*(mean_vol.^2)))/(length(files_in.vol)-1));
 end
 
 if flag_verbose

@@ -1,33 +1,29 @@
 function buildFilesIn (evt) {
   switch(evt.params.data.id) {
-    case "Subject1":
+    case "1":
       var filesIn = {
-		  "anat": "\/home\/pbellec\/demo_niak\/anat_subject1.mnc.gz",
+		  "anat": "\/home\/pbellec\/demo_niak\/anat_X0010001.mnc.gz",
 		  "fmri": {
 		    "session1": {
-			   "motor": "\/home\/pbellec\/demo_niak\/func_motor_subject1.mnc.gz",
-				"rest": "\/home\/pbellec\/demo_niak\/func_rest_subject1.mnc.gz"
+			   "motor": "\/home\/pbellec\/demo_niak\/func_rest_X0010001.mnc.gz",
+				"rest": "\/home\/pbellec\/demo_niak\/func_rest_X0010001.mnc.gz"
 		    }
 		  }
       };
       break;
-    case "Subject2":
+    case "2":
       var filesIn = {
-		  "anat": "\/home\/pbellec\/demo_niak\/anat_subject2.mnc.gz",
+		  "anat": "\/home\/pbellec\/demo_niak\/anat_X0010001.mnc.gz",
 		  "fmri": {
 		    "session1": {
-			   "motor": "\/home\/pbellec\/demo_niak\/func_motor_subject2.mnc.gz",
-				"rest": "\/home\/pbellec\/demo_niak\/func_rest_subject2.mnc.gz"
+			   "motor": "\/home\/pbellec\/demo_niak\/func_motor_X0010001.mnc.gz",
+				"rest": "\/home\/pbellec\/demo_niak\/func_rest_X0010001.mnc.gz"
 			 }
 		  }
 	   };
 	   break;
   };
-  var node2 = new PrettyJSON.view.Node({
-    el:$('#elem2'),
-    data: filesIn,
-  });
-  node2.expandAll();
+  return filesIn 
 }
 
 var opt = {

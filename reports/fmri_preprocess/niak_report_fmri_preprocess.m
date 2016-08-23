@@ -162,7 +162,7 @@ jin = in.group.summary_scrubbing;
 jout = [opt.folder_out 'summary' filesep 'fd.js'];
 pipeline = psom_add_job(pipeline,'summary_scrubbing','niak_brick_preproc_scrubbing2report',jin,jout);
 
-%% The summary of FD
+%% The summary of brain masks
 clear jin jout jopt
 jin = in.ind.registration;
 jout = [opt.folder_out 'summary' filesep 'chartBrain.js'];
@@ -249,7 +249,7 @@ for ll = 1:length(labels)
     
     % Native movie
     jin.source = list_fmri_native{ll};
-    jin.target = '';
+    jin.target = list_fmri_native{ll};
     jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.png'];
     jopt.coord = 'CEN';
     jopt.colormap = 'jet';
@@ -267,6 +267,7 @@ for ll = 1:length(labels)
     jopt.flag_median = false;
     jopt.coord = [0 0 0];
     jin.source = list_fmri_stereo{ll};
+    jin.target = list_fmri_stereo{ll};
     jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.png'];
     pipeline = psom_add_job(pipeline,['motion_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
     
