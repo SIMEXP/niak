@@ -69,8 +69,10 @@ switch data.type;
         data.name = 'data_test_niak_nii.zip';
         data.url  = ['http://www.nitrc.org/frs/download.php/9120/' data.name];
     case 'target_test_niak_mnc1'  
-        data.name = [ gb_niak_target_test '.zip']
-        data.url  = ['https://github.com/simexp/niak_target/archive/' data.name];
+        url_dir = ['target_test_niak_mnc1-' gb_niak_target_test]
+        data.name = ['target_test_niak_mnc1-' gb_niak_target_test '.zip']
+        #data.url  = ['https://github.com/simexp/niak/releases/download/' url_dir '/' data.name];
+        data.url  = ['https://github.com/poquirion/niak/releases/download/' url_dir '/' data.name];
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
         data.url = 'http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii.zip';
