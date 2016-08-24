@@ -173,6 +173,10 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %           (string, either 'categorical' or 'continuous') the kind of data
 %           in OPT.ASSOCIATION.CONTRAST.<NAME>
 %
+%   FLAG_ASSOC
+%       (boolean, default true) turn/off to calculate associations between 
+%       subtypes and a variable of interest from FILES_IN.MODEL
+%
 %   FLAG_CHI2
 %       (boolean, default true) turn on/off to calculate Chi2 and Cramer's
 %       V statistics
@@ -239,8 +243,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'visu'  , 'chi2'   , 'flag_visu' , 'flag_chi2' , 'rand_seed', 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct(), struct() , true        , true        , []         , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'visu'  , 'chi2'   , 'flag_assoc', 'flag_visu' , 'flag_chi2' , 'rand_seed', 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct(), struct() , true        , true        , true        , []         , true           , false       });
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
@@ -258,9 +262,11 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
              { 2            , 'mean'         });
 
 % Association options
-opt.association = psom_struct_defaults(opt.association,...
+if opt.flag_assoc
+    opt.association = psom_struct_defaults(opt.association,...
                   { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
                   { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
+end
 
 % Chi-2 and Cramer's V options
 opt.chi2 = psom_struct_defaults(opt.chi2,...
@@ -268,11 +274,15 @@ opt.chi2 = psom_struct_defaults(opt.chi2,...
              { 'Group'        , false          , 'gb_niak_omitted' }); 
          
 % GLM visualization options
-opt.visu = psom_struct_defaults(opt.visu,...
+if opt.flag_assoc
+    opt.visu = psom_struct_defaults(opt.visu,...
              { 'data_type'       },...
              { 'gb_niak_omitted' }); 
-if opt.flag_visu && strcmp(opt.visu.data_type, 'gb_niak_omitted')
-    error('When OPT.FLAG_VISU is true, OPT.VISU.DATA_TYPE must be specified. Type ''help niak_pipeline_subtype'' for more info.')
+    if opt.flag_visu && strcmp(opt.visu.data_type, 'gb_niak_omitted')
+        error('When OPT.FLAG_VISU is true, OPT.VISU.DATA_TYPE must be specified. Type ''help niak_pipeline_subtype'' for more info.')
+    end
+elseif ~opt.flag_assoc
+    opt.flag_visu = false;
 end
          
 % See if external subtypes have been specified
@@ -357,16 +367,18 @@ pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
 
 % Set up the association test options
-assoc_opt = opt.association;
-assoc_opt.folder_out = opt.folder_out;
-assoc_in = struct;
-assoc_in.weight = pipe.weight_extraction.files_out.weights;
-assoc_in.model = files_in.model;
-assoc_out = struct;
-assoc_out.stats = [opt.folder_out filesep 'association_stats.mat'];
-assoc_out.csv = [opt.folder_out filesep 'association_summary.csv'];
-pipe = psom_add_job(pipe, 'association_test', 'niak_brick_association_test',...
+if opt.flag_assoc
+    assoc_opt = opt.association;
+    assoc_opt.folder_out = opt.folder_out;
+    assoc_in = struct;
+    assoc_in.weight = pipe.weight_extraction.files_out.weights;
+    assoc_in.model = files_in.model;
+    assoc_out = struct;
+    assoc_out.stats = [opt.folder_out filesep 'association_stats.mat'];
+    assoc_out.csv = [opt.folder_out filesep 'association_summary.csv'];
+    pipe = psom_add_job(pipe, 'association_test', 'niak_brick_association_test',...
                     assoc_in, assoc_out, assoc_opt);
+end
 
 if opt.flag_visu
     % Generate the figures for the association test brick
