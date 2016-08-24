@@ -4,6 +4,8 @@ general:
 machine:
   services:
     - docker 
+  timezone:
+    America/New_York
 
 dependencies:
   cache_directories:
