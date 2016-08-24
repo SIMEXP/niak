@@ -1,5 +1,5 @@
 function [in,out,opt] = niak_brick_montage(in,out,opt)
-% Generate a figure with a montage of different slices of a volume 
+% Generate a figure with a montage of sagital slices in the volume 
 %
 % SYNTAX: [IN,OUT,OPT] = NIAK_BRICK_VOL2IMG(IN,OUT,OPT)
 %
@@ -13,7 +13,6 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 %   DATA(N) is the data point associated with the Nth color. 
 % OPT.NB_SLICES (scalar, default Inf) the number of slices to produce (with a parameter
 %   Inf, all possible slices will be generated). 
-% OPT.TYPE_VIEW (default 'sagital') type of montage ('axial' or 'coronal' or 'sagital'). 
 % OPT.COLORMAP (string, default 'gray') The type of colormap. Anything supported by 
 %   the instruction `colormap` will work, as well as 'hot_cold' (see niak_hot_cold).
 %   This last color map always centers on zero.
@@ -111,7 +110,7 @@ case 'sagital'
     npix = sqrt(prod(dim_v));
     wy = floor(npix/dim_v(3));
     wx = ceil(prod(dim_v)/(wy*dim_v(3)*dim_v(2)));
-    img = zeros([wx*dim_v(2) wy*dim_v(3)]);
+    img = vol_rf(1)*ones([wx*dim_v(2) wy*dim_v(3)]);
     ss = 1;
     for xx = 1:wx
         for yy = 1:wy
@@ -125,6 +124,8 @@ case 'sagital'
             end
         end
     end
+otherwise 
+    error('Only sagital slices are supported')
 end
 
 %% image limits
@@ -145,7 +146,7 @@ climits = opt.limits;
 img(img>climits(2)) = climits(2);
 img(img<climits(1)) = climits(1);
 if opt.nb_color < Inf
-    bins = linspace(climits(1),climits(2),size(cm,1));
+    bins = linspace(climits(1),climits(2),opt.nb_color);
 else
     bins = unique(img(:));
 end
@@ -187,13 +188,14 @@ end
 
 %% The color map
 if ~strcmp(out.colormap,'gb_niak_omitted')
-    rgb = zeros(size(cm,1),1,size(cm,2));
-    rgb(:,1,:) = cm;
+    rgb = zeros(1,size(cm,1),size(cm,2));
+    rgb(1,:,:) = cm;
     imwrite(rgb,out.colormap,'quality',opt.quality);
 end
 
 %% Saving the quantization data
 if ~strcmp(out.quantization,'gb_niak_omitted')
     data = bins;
-    save(out.quantization,'data');    
+    nb_slices = dim_v([1 3 2]);
+    save(out.quantization,'data','nb_slices');    
 end
