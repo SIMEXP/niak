@@ -7,10 +7,10 @@ git:
   depth: 1
 
 install:
-  - docker pull simexp/niak_dependency:1.0
+  - docker pull simexp/niak_dependency:u12_o4
 
 script:
-  - docker run -it --privileged -v $PWD:$PWD simexp/niak_dependency:1.0 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',2,'flag_pause',false))); system('cat result/report_test_regression_fmripreproc_demoniak.csv'), exit(status)\""
+  - docker run -it --privileged -v $PWD:$PWD simexp/niak_dependency:u12_o4 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',4,'flag_pause',false))); system('cat result/report_test_regression_fmripreproc_demoniak.csv'), exit(status)\""
 
 notifications:
   email: false

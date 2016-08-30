@@ -12,15 +12,12 @@ dependencies:
     - "data_test_niak_mnc1"
     - "~/docker"
   override:
-    - if [[ -e ~/docker/niak_d_1.1.tar ]]; then docker load -i ~/docker/niak_d_1.1.tar; fi
-    - if [[ -e ~/docker/niak_d_1.0.tar ]]; then docker load -i ~/docker/niak_d_1.0.tar; fi
-    - docker pull simexp/niak_dependency:1.0
-    - mkdir -p ~/docker; docker save simexp/niak_dependency:1.0 > ~/docker/niak_d_1.0.tar
+    - docker pull simexp/niak_dependency:u12_o4
 
 
 test:
   override:
-    - docker run -it -v $PWD:$PWD simexp/niak_dependency:1.0 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',4,'flag_pause',false))), exit(status)\"":
+    - docker run -it -v $PWD:$PWD simexp/niak_dependency:u12_o4 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',4,'flag_pause',false))), exit(status)\"":
        timeout: 21600
 
 #deployment:
