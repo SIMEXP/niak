@@ -1,4 +1,4 @@
-FROM simexp/octave:4.0.0
+FROM simexp/octave:4.0.2_ubuntu12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 ENV NIAK_VERSION dev-0.16.0
@@ -29,9 +29,6 @@ RUN chmod 755 /home/niak/extensions/psom/psom_worker.py && ln -s /home/niak/exte
 # Build octave configure file
 RUN echo addpath\(genpath\(\"/home/niak/\"\)\)\; >> /etc/octave.conf
 
-# Source minc tools
-RUN echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/profile \
-    && echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/bash.bashrc
 
 # 3D visualisation tools
 RUN apt-get install mricron -y \
