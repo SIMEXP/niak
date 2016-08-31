@@ -13,9 +13,8 @@ dependencies:
     - "~/docker"
   override:
     - if [[ -e ~/docker/niak_u12_o4.tar ]]; then docker load -i ~/docker/niak_u12_o4.tar; fi
-    - docker pull simexp/niak_dependency:1.1
+    - docker pull simexp/niak_dependency:u12_o4
     - mkdir -p ~/docker; docker save simexp/niak_dependency:u12_o4 > ~/docker/niak_u12_o4.tar
-
 
 test:
   override:
