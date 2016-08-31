@@ -4,6 +4,7 @@ MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 ENV NIAK_VERSION v0.16.0
 ENV NIAK_RELEASE_NAME niak-with-dependencies
+ENV PSOM_VERSION v2.0.2
 
 # Install NIAK from the tip of master
 RUN mkdir /home/niak \ 
@@ -11,6 +12,13 @@ RUN mkdir /home/niak \
    && wget https://github.com/SIMEXP/niak/releases/download/${NIAK_VERSION}/${NIAK_RELEASE_NAME}.zip \
    && unzip ${NIAK_RELEASE_NAME}.zip \
    && rm ${NIAK_RELEASE_NAME}.zip 
+
+# niak dependency ship with psom, but one may want buit the image with a newer version
+WORKDIR /home/niak/extensions
+RUN rm -rf psom* && wget https://github.com/SIMEXP/psom/archive/${PSOM_VERSION}.zip \ 
+    && unzip ${PSOM_VERSION}.zip \
+    && rm ${PSOM_VERSION}.zip
+
 
 
 # Build octave configure file
