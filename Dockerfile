@@ -1,4 +1,4 @@
-FROM simexp/octave:4.0.2_ubuntu12
+FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
