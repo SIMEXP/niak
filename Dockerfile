@@ -1,29 +1,16 @@
 FROM simexp/octave:4.0.2_ubuntu12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-ENV NIAK_VERSION dev-0.16.0
+
+ENV NIAK_VERSION 0.16.0
 ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
-RUN apt-get install git -y --fix-missing
-
-
-RUN cd /home \
-   && git clone https://github.com/SIMEXP/niak.git \
-   && cd niak \
-   && git checkout cbrain_integration 
-
-RUN cd /home/niak/extensions/ \
-   && wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
-   && unzip BCT.zip \
-   && rm BCT.zip
-
-RUN cd /home/niak/extensions/ \
-   && git clone https://github.com/SIMEXP/psom.git\
-   && cd psom \
-   && git checkout cbrain_integration 
-
-RUN chmod 755 /home/niak/extensions/psom/psom_worker.py && ln -s /home/niak/extensions/psom/psom_worker.py /usr/bin/psom_worker.py
+RUN mkdir /home/niak \ 
+   && cd /home/niak \
+   && wget https://github.com/SIMEXP/niak/releases/download/${NIAK_VERSION}/${NIAK_RELEASE_NAME}.zip \
+   && unzip ${NIAK_RELEASE_NAME}.zip \
+   && rm ${NIAK_RELEASE_NAME}.zip 
 
 
 # Build octave configure file
