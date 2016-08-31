@@ -2,11 +2,7 @@ FROM simexp/octave:4.0.2_ubuntu12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
-<<<<<<< HEAD
-ENV NIAK_VERSION v0.13.5
-=======
 ENV NIAK_VERSION v0.16.0
->>>>>>> _TMP_RELEASE_BRANCH_
 ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
