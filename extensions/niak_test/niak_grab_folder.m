@@ -11,9 +11,9 @@
 %   (string, default [pwd filesep], aka './') a folder
 %
 % BLACK_LIST
-%   (string or cell of string) a list of folder (or subfolders) to 
+%   (string or cell of string) a list of folders, or files to 
 %   be ignored by the grabber. Absolute names should be used
-%   (i.e. 'toto' rather than '/home/user23/database/toto'). If not, the names
+%   (i.e. '/home/user23/database/toto' rather than 'toto'). If not, the names
 %   will be assumed to refer to the current directory.
 %
 % _________________________________________________________________________
@@ -27,9 +27,9 @@
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal,
-%               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2011-2012.
+%               Centre de recherche de l'institut de Griatrie de Montral,
+%               Dpartement d'informatique et de recherche oprationnelle,
+%               Universit de Montral, 2011-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : grabber
@@ -60,13 +60,20 @@ end
 path_data = niak_full_path(path_data);
 
 %% The black list
-if (nargin > 1)
-    if iscellstr(black_list)
-        for num_e = 1:length(black_list)
-            black_list{num_e} = niak_full_path(black_list{num_e});
-        end
-    elseif ischar(black_list)
-        black_list = {niak_full_path(black_list)};
+black_list_file = {};
+if nargin < 2
+    black_list = {};
+end
+
+if ischar(black_list)
+    black_list = {black_list};
+end
+
+for num_e = 1:length(black_list)
+    black_list{num_e} = niak_full_path(black_list{num_e});
+    % make sure there is no file separator at the end of a file name.
+    if ~isdir(black_list{num_e})
+        black_list_file{end+1} = regexprep(black_list{num_e},['(.*)' filesep],'$1') ;
     end
 end
    
@@ -94,3 +101,6 @@ for num_d = 1:length(ind_dir)
         files = [ files ; niak_grab_folder(files_loc{ind_dir(num_d)}) ];    
     end
 end
+
+% Removing black listed files
+files = files(~ismember(files,black_list_file));

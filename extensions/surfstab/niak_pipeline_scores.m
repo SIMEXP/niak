@@ -112,9 +112,9 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Sebastian Urchs
-%   Centre de recherche de l'institut de Gériatrie de Montréal
-%   Département d'informatique et de recherche opérationnelle
-%   Université de Montréal, 2010-2015
+%   Centre de recherche de l'institut de Griatrie de Montral
+%   Dpartement d'informatique et de recherche oprationnelle
+%   Universit de Montral, 2010-2015
 %   Montreal Neurological Institute, 2015
 % Maintainer : sebastian.urchs@mail.mcgill.ca
 %
@@ -140,7 +140,6 @@ function [pipeline, opt] = niak_pipeline_scores(files_in, opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 % ______________________________________________________________________________
-
 %% Seting up default arguments
 if ~exist('files_in','var')||~exist('opt','var')
     error('niak:pipeline','syntax: [IN,OPT] = NIAK_PIPELINE_SCORES(IN,OPT).\n Type ''help niak_pipeline_scores'' for more info.');
@@ -150,9 +149,11 @@ files_in = psom_struct_defaults(files_in, ...
            { 'data' , 'part' , 'mask' }, ...
            { NaN    , NaN    , NaN    });
 % DEFAULTS
+
 opt = psom_struct_defaults(opt,...
       { 'flag_rand' , 'folder_out'      , 'files_out' , 'scores' , 'psom' , 'flag_test' },...
       { false       , 'gb_niak_omitted' , struct      , struct   , struct , false       });
+opt.folder_out = niak_full_path(opt.folder_out);
   
 opt.psom = psom_struct_defaults(opt.psom,...
            { 'max_queued' , 'path_logs'             },...
@@ -248,9 +249,6 @@ for j_id = 1:j_number
             continue
         elseif ischar(opt.files_out.(out_name))
             error('OPT.FILES_OUT can only have boolean values but not %s',class(opt.files_out.(out_name)));
-        end
-        if ~isdir([opt.folder_out filesep out_name])
-                psom_mkdir([opt.folder_out filesep out_name]);
         end
     end
     s_opt = opt.scores;

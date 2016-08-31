@@ -152,21 +152,32 @@ if flag_verbose
 end
 
 %% Setting up the system call to NU_CORRECT
-[path_f,name_f,ext_f] = fileparts(files_out);
-flag_zip = strcmp(ext_f,gb_niak_zip_ext);
-
-path_tmp = niak_path_tmp(['_' name_f]);
+[path_v,name_v,ext_v] = niak_fileparts(files_in.vol);
+[path_m,name_m,ext_m] = niak_fileparts(files_in.mask);
+path_tmp = niak_path_tmp(['_' name_v]);
+if ~ismember(ext_v,{'.mnc','.mnc.gz'})
+    in_vol = [path_tmp 'vol.mnc'];
+    niak_brick_copy(files_in.vol,in_vol,struct('flag_fmri',true));
+else
+    in_vol = files_in.vol;
+end
+if ~ismember(ext_m,{'.mnc','.mnc.gz'})
+    in_mask = [path_tmp 'mask.mnc'];
+    niak_brick_copy(files_in.mask,in_mask,struct('flag_fmri',true));
+else
+    in_mask = files_in.mask;
+end
 file_tmp_classify = [path_tmp 'vol_classify.mnc'];
 
 if ~strcmp(files_in.mask,'gb_niak_omitted')
-    arg = [arg ' -mask_source ' files_in.mask];
+    arg = [arg ' -mask_source ' in_mask];
 end
 
 if ~strcmp(files_in.transf,'gb_niak_omitted')
     arg = [arg ' -tag_transform ' files_in.transf];
 end
 
-instr = ['classify_clean -tmpdir ' path_tmp ' ' arg ' ' files_in.vol ' ' file_tmp_classify];
+instr = ['classify_clean -tmpdir ' path_tmp ' ' arg ' ' in_vol ' ' file_tmp_classify];
 
 %% Running NU_CORRECT
 if flag_verbose
@@ -183,12 +194,6 @@ else
 end
 
 %% Writting outputs
-if flag_zip
-    system([gb_niak_zip ' ' file_tmp_classify]);
-    system(['mv ' file_tmp_classify gb_niak_zip_ext ' ' files_out]);
-else
-    system(['mv ' file_tmp_classify ' ' files_out]);
-end
-
-system(['rm -rf ' path_tmp]);
+niak_brick_copy(file_tmp_classify,files_out,struct('flag_fmri',true));
+psom_clean(path_tmp)
 

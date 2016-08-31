@@ -168,6 +168,10 @@ end
 % Make header for 3D files
 [FDhdr,vol] = niak_read_vol(in.fmri{1});
 TDhdr = FDhdr;
+% Remove "extra" information, if present
+if isfield(TDhdr,'extra')
+    TDhdr = rmfield(TDhdr,'extra');
+end
 tmp = size(vol);
 td_size = tmp(1:3);
 % See if we have a nifti or a minc
@@ -266,7 +270,10 @@ part_v = part(mask);
 for rr = 1:length(in.fmri)
     if rr>1
         [FDhdr,vol] = niak_read_vol(in.fmri{rr});
-    end        
+    end
+    if isfield(FDhdr,'extra')&&isfield(FDhdr.extra,'mask_scrubbing')
+        vol = vol(:,:,:,~FDhdr.extra.mask_scrubbing);
+    end
     if rr == 1
          tseries = niak_normalize_tseries(niak_vol2tseries(vol,mask));
     else

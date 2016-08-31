@@ -1,0 +1,38 @@
+.hidden {display: none;}
+
+.sliderNext {
+  position: absolute;
+  top: 30%;
+  right: 0;
+  object-fit: none;
+  object-position: 0 -150px;
+  width: 50px;
+  height: 150px;
+}
+
+.sliderNext:hover{
+  object-position: -50px -150px;
+}
+
+.sliderPrev {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  object-fit: none;
+  object-position: 0 0;
+  width: 50px;
+  height: 150px;
+}
+
+.sliderPrev:hover{
+  object-position: -50px 0;
+}
+
+.register img{
+    -webkit-transition: opacity 0.75s; /* Safari */
+    transition: opacity 0.75s;
+}
+
+.register img:hover{
+    opacity:0;
+}

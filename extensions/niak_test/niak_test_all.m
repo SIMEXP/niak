@@ -7,7 +7,7 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_TEST.DEMONIAK (string, default download minc1 test data in 'test_niak_mnc1') 
+% PATH_TEST.DEMONIAK (string, default download nifti test data in 'test_niak_nii') 
 %   the path to the (raw, small) NIAK demo dataset.
 % PATH_TEST.TEMPLATE (string, default download the mnc cambridge template from figshare)
 % PATH_TEST.TARGET (string, default download minc1 target data in 'target') 
@@ -18,6 +18,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   with reference version of the results will be performed, but all test 
 %   pipelines will still run. If this flag is used, PATH_TEST.TARGET does not 
 %   need to be specified.
+% OPT.FORMAT (string, default 'mnc1') the format to use for the test
+%   Either 'nii' or 'mnc1'.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
 %   the folder where the results of reference for the tests have previously 
@@ -52,6 +54,7 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   * glm_fir NIAK_PIPELINE_GLM_FIR
 %   * stability_rest NIAK_PIPELINE_STABILITY_REST
 %   * glm_connectome NIAK_PIPELINE_GLM_CONNECTOME
+%   * stability cores NIAK_PIPELINE_SCORES
 %
 % Note that with OPT.FLAG_TARGET on, the region growing and connectome pipelines
 % are fed the output of the preprocessing pipeline. When the flag is off, by contrast,
@@ -93,8 +96,8 @@ if nargin < 2
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      {'flag_target' , 'flag_test', 'psom' }, ...
-      {false         , false      , struct });
+      {'format' , 'flag_target' , 'flag_test', 'psom' }, ...
+      {'mnc1'   , false         , false      , struct });
 
 if ~isfield(opt.psom,'flag_pause')
     opt.psom.flag_pause = false;
@@ -111,7 +114,7 @@ path_test = psom_struct_defaults(path_test, ...
 %% Check the demoniak data
 if isempty(path_test.demoniak)
     % Grab the demoniak dataset    
-    [status,err,data_demoniak] = niak_wget(struct('type','data_test_niak_mnc1'));
+    [status,err,data_demoniak] = niak_wget(struct('type',['data_test_niak_' opt.format]));
     path_test.demoniak = data_demoniak.path;
     if status
         error('There was a problem downloading the test data');
@@ -122,7 +125,7 @@ end
 
 %% Grab the demoniak dataset    
 if ~opt.flag_target&&isempty(path_test.target)
-    [status,err,data_target] = niak_wget(struct('type','target_test_niak_mnc1'));
+    [status,err,data_target] = niak_wget(struct('type',['target_test_niak_' opt.format]));
     path_test.target = data_target.path;
     if status
         error('There was a problem downloading the target data')
@@ -132,7 +135,7 @@ end
 %% Check the template data
 if isempty(path_test.template)
     % Grab the cambridge template
-    [status,err,data_demoniak] = niak_wget(struct('type','cambridge_template_mnc'));
+    [status,err,data_demoniak] = niak_wget(struct('type',['cambridge_template_' opt.format]));
     path_test.template = data_demoniak.path;
     if status
         error('There was a problem downloading the template data');
@@ -156,17 +159,28 @@ opt_pipe.flag_target = opt.flag_target;
 pipe = struct;
 
 %% Add the test of the preprocessing pipeline
+switch opt.format
+    case 'nii'
+        ext_t = '.nii.gz';
+    case 'mnc1'
+        ext_t = '.mnc.gz';
+    otherwise
+        error('%s is an unkown file format')
+end
+
 path_test_fp.demoniak  = path_test.demoniak;
 path_test_fp.reference = [path_test.target 'demoniak_preproc'];
 path_test_fp.result    = path_test.result;
+opt_pipe.build_confounds.thre_fd = 0.4;
+opt_pipe.build_confounds.nb_min_vol = 15;
 opt_pipe.resample_vol.voxel_size = [10 10 10];
-opt_pipe.template.t1           = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_5mm.mnc.gz'];
-opt_pipe.template.mask         = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_5mm.mnc.gz'];
-opt_pipe.template.mask_eroded  = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_avg     = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_dilated = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_bold = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm.mnc.gz'];
-opt_pipe.template.mask_wm      = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_5mm.mnc.gz'];
+opt_pipe.template.t1           = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_5mm' ext_t];
+opt_pipe.template.mask         = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_5mm' ext_t];
+opt_pipe.template.mask_eroded  = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm' ext_t];
+opt_pipe.template.mask_avg     = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm_5mm' ext_t];
+opt_pipe.template.mask_dilated = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm' ext_t];
+opt_pipe.template.mask_bold    = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm' ext_t];
+opt_pipe.template.mask_wm      = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_5mm' ext_t];
 opt_pipe.template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
 opt_pipe.template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
 opt_pipe.template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                         
@@ -180,14 +194,14 @@ if opt.flag_target
     files_all = niak_grab_all_preprocess([path_test_fp.result 'demoniak_preproc'],files_fp);
 else
     % In test mode, use the provided target to feed into the region growing pipeline
-    files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
+    files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc']);
 end
 opt_pipe = struct;
 opt_pipe.flag_test = true;
 opt_pipe.flag_target = opt.flag_target;
 files_rf.fmri  = files_all.fmri.vol;
 files_rf.mask  = files_all.quality_control.group_coregistration.func.mask_group;
-files_rf.areas = files_all.template_aal;
+files_rf.areas = files_all.template.aal;
 opt_pipe.files_in = files_rf;
 path_test_rg.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_rg.reference = [path_test.target 'demoniak_region_growing'];
@@ -237,7 +251,7 @@ opt_scores.flag_test = true;
 opt_scores.flag_target = opt.flag_target;
 files_sc.data  = files_all.fmri.vol;
 files_sc.mask  = files_all.quality_control.group_coregistration.func.mask_group;
-files_sc.part = [path_test.template filesep 'template_cambridge_basc_multiscale_sym_scale007.mnc.gz'];
+files_sc.part = [path_test.template filesep 'template_cambridge_basc_multiscale_sym_scale007' ext_t];
 opt_scores.files_in = files_sc;
 path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
 path_test_sc.reference = [path_test.target 'demoniak_scores'];

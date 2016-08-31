@@ -1,8 +1,12 @@
-FROM simexp/octave:01_09_2015
+FROM simexp/octave:4.0.2_ubuntu12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
+<<<<<<< HEAD
 ENV NIAK_VERSION v0.13.5
+=======
+ENV NIAK_VERSION v0.16.0
+>>>>>>> _TMP_RELEASE_BRANCH_
 ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
@@ -16,9 +20,6 @@ RUN mkdir /home/niak \
 # Build octave configure file
 RUN echo addpath\(genpath\(\"/home/niak/\"\)\)\; >> /etc/octave.conf
 
-# Source minc tools
-RUN echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/profile \
-    && echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/bash.bashrc
 
 # 3D visualisation tools
 RUN apt-get install mricron -y \
