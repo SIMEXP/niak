@@ -20,9 +20,8 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 %   specified, all values are included in the colormap. This is handy for integer 
 %   values images (e.g. parcellation).
 % OPT.QUALITY (default 90) for jpg images, set the quality of the outputs (from 0, bad, to 100, perfect).
-% OPT.THRESH (scalar or vector, default []) if empty, does nothing. If a scalar, any value 
-%   below threshold becomes transparent. If two values, any values that falls between the 
-%   bounds become transparent. 
+% OPT.THRESH (scalar, default []) if empty, does nothing. If a scalar, any value 
+%   below threshold becomes transparent. 
 % OPT.LIMITS (vector 1x2) the limits for the colormap. By defaut it is using [min,max].
 %    If a string is specified, the function will implement an adaptative strategy. 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
@@ -178,10 +177,7 @@ rgb(:,:,1) = reshape(cm(idx(:),1),size(img));
 rgb(:,:,2) = reshape(cm(idx(:),2),size(img));
 rgb(:,:,3) = reshape(cm(idx(:),3),size(img));
 if ~isempty(opt.thresh)
-    if length(opt.thresh)==1
-        opt.thresh = [-Inf opt.thresh];
-    end
-    imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double((img>opt.thresh(2))|(img<opt.thresh(1))));
+    imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double(img>opt.thresh));
 else
     imwrite(rgb,out.montage,'quality',opt.quality);
 end
@@ -190,6 +186,9 @@ end
 if ~strcmp(out.colormap,'gb_niak_omitted')
     rgb = zeros(1,size(cm,1),size(cm,2));
     rgb(1,:,:) = cm;
+    if ~isempty(opt.thresh)
+        rgb = rgb(1,bins>opt.thresh,:);
+    end
     imwrite(rgb,out.colormap,'quality',opt.quality);
 end
 
