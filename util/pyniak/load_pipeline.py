@@ -5,9 +5,10 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 
-
-PSOM_GB_LOCAL=\
+LOCAL_CONFIG_PATH = '/local_config'
+PSOM_GB_LOCAL =\
 """
 %% Here are important PSOM variables. Whenever needed, PSOM will call
 %% this script to initialize the variables. If PSOM does not behave the way
@@ -244,7 +245,6 @@ class BasePipeline(object):
         self.octave_options = options
 
         self.subjects = unroll_numbers(subjects)
-
         self.psom_gb_local_path = None
 
     def psom_gb_vars_local_setup(self):
@@ -252,15 +252,8 @@ class BasePipeline(object):
         This method is crucial to have psom/niak running properly on cbrain.
         :return:
         """
-        p = subprocess.Popen(['octave', '--eval', "which('psom_gb_vars')"],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        try:
-            octave_path = re.search("(/.*)/psom_gb_vars.m", out).groups()[0]
-        except AttributeError:
-            raise(IOError, "psom_gb_vars.m cannot be find by octave on this system")
 
-        self.psom_gb_local_path = "{0}/psom_gb_vars_local.m".format(octave_path)
+        self.psom_gb_local_path = "{0}/psom_gb_vars_local.m".format(LOCAL_CONFIG_PATH)
 
         with open(self.psom_gb_local_path, 'w') as fp:
             fp.write(PSOM_GB_LOCAL)
@@ -285,8 +278,6 @@ class BasePipeline(object):
                     child.kill()
                 parent.kill()
             raise e
-        # finally:
-        #     os.remove(self.psom_gb_local_path)
 
     @property
     def octave_cmd(self):

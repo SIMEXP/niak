@@ -1,7 +1,6 @@
 FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-
 ENV PSOM_VERSION 2.0.2
 
 # Install NIAK  
@@ -26,10 +25,10 @@ RUN wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
     && ln -s ../niak/extensions/psom-${PSOM_VERSION}/psom_worker.py psom_worker.py \
     && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py
 
-
-
 # Build octave configure file
-RUN echo addpath\(genpath\(\"/usr/local/niak/\"\)\)\; >> /etc/octave.conf
+RUN mkdir /local_config && chmod 777 /local_config \
+    && echo addpath\(genpath\(\"/usr/local/niak/\"\)\)\; >> /etc/octave.conf \
+    && echo addpath\(genpath\(\"/local_config/\"\)\)\; >> /etc/octave.conf
 
 
 # 3D visualisation tools
