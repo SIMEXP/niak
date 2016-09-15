@@ -1,9 +1,28 @@
 __author__ = 'poquirion'
 
+import shutil
+import json
 import os
 import re
-import json
 import subprocess
+
+
+PSOM_GB_LOCAL=\
+"""
+gb_psom_command_octave = 'octave';
+gb_psom_mode = 'cbrain';
+gb_psom_mode_pm = 'session';
+gb_psom_mode_deamon = 'background';
+gb_psom_mode_garbage = 'background';
+gb_psom_nb_resub = 5;
+pbs_jobid = getenv('PBS_JOBID');
+if isempty(pbs_jobid)
+    gb_psom_tmp = '/tmp/';
+else
+    gb_psom_tmp = ['/localscratch/' pbs_jobid filesep];
+end
+
+"""
 
 try:
     import psutil
@@ -44,7 +63,7 @@ class BasePipeline(object):
     BOUTIQUE_TYPE = "type"
     BOUTIQUE_LIST = "list"
 
-    def __init__(self, pipeline_name, folder_in, folder_out, options=None):
+    def __init__(self, pipeline_name, folder_in, folder_out, subjects=None, options=None):
 
         # literal file name in niak
         self.pipeline_name = pipeline_name
@@ -60,10 +79,33 @@ class BasePipeline(object):
         self.folder_out = folder_out
         self.octave_options = options
 
+        self.subjects = unroll_numbers(subjects)
+
+        self.psom_gb_local_path = None
+
+    def psom_gb_vars_local_setup(self):
+        """
+        This method is crucial to have psom/niak running properly on cbrain.
+        :return:
+        """
+        p = subprocess.Popen(['octave', '--eval', "which('psom_gb_vars')"],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        try:
+            octave_path  = re.search("(/.*)/psom_gb_vars.m", out).groups()[0]
+        except AttributeError:
+            raise(IOError, "psom_gb_vars.m cannot be find by octave on this system")
+
+        self.psom_gb_local_path = "{0}/psom_gb_vars_local.m".format(octave_path)
+
+        with open(self.psom_gb_local_path, 'w') as fp:
+            fp.write(PSOM_GB_LOCAL)
 
     def run(self):
         print(" ".join(self.octave_cmd))
         p = None
+
+        self.psom_gb_vars_local_setup()
 
         try:
             p = subprocess.Popen(self.octave_cmd)
@@ -79,6 +121,8 @@ class BasePipeline(object):
                     child.kill()
                 parent.kill()
             raise e
+        finally:
+            os.remove(self.psom_gb_local_path)
 
     @property
     def octave_cmd(self):
@@ -169,8 +213,13 @@ class FmriPreprocess(BasePipeline):
             opt_list += ["files_in=fcon_get_files(list_subject,opt_g)"]
 
         elif bids_description:
-                opt_list += ["files_in=niak_grab_bids('{0}')".format(in_full_path)]
-                opt_list += ["opt.slice_timing.flag_skip=true"]
+                if self.subjects is not None and len(self.subjects) >= 1:
+                    opt_list += ["opt_gr.subject_list = {0}".format(self.subjects).replace('[', '{').replace(']', '}')]
+                    opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
+                else:
+                    opt_list += ["files_in=niak_grab_bids('{0}')".format(in_full_path)]
+
+                # opt_list += ["opt.slice_timing.flag_skip=true"]
 
         else:
 
@@ -204,7 +253,8 @@ class BASC(BasePipeline):
 
         file_in.append("opt_g.min_nb_vol = {0}")
         file_in.append("opt_g.type_files = 'rest'")
-
+        if self.subjects is not None and len(self.subjects) >= 1:
+            file_in.append("opt_g.include_subject = {0}".format(self.subjects).replace('[', '{').replace(']', '}'))
         file_in.append("files_in = niak_grab_fmri_preprocess('{0}',opt_g)".format(self.folder_in))
 
 
@@ -218,21 +268,40 @@ SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
                        "Niak_stability_rest": BASC}
 
 
-def load(pipeline_name, folder_in, folder_out, options=None):
+def load(pipeline_name, folder_in, folder_out, *args, **kwargs):
 
     if not pipeline_name or not pipeline_name in SUPPORTED_PIPELINES:
-        m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name,SUPPORTED_PIPELINES)
+        m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name, SUPPORTED_PIPELINES)
         raise IOError(m)
 
     pipe = SUPPORTED_PIPELINES[pipeline_name]
 
-    return pipe(folder_in, folder_out, options=options)
+    return pipe(folder_in, folder_out, *args, **kwargs)
 
+
+
+def unroll_numbers(numbers):
+    import re
+
+    entries = [a[0].split('-') for a in  re.findall("([0-9]+((-[0-9]+)+)?)", numbers)]
+
+    unrolled = []
+    for elem in entries:
+        if len(elem) == 1:
+            unrolled.append(int(elem[0]))
+        elif len(elem) == 2:
+            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1)]
+        elif len(elem) == 3:
+            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1, int(elem[2]) )]
+
+    return sorted(list(set(unrolled)))
 
 if __name__ == '__main__':
-    folder_in = "/home/poquirion/test/data_test_niak_mnc1"
-    folder_out = "/var/tmp"
+    # folder_in = "/home/poquirion/test/data_test_niak_mnc1"
+    # folder_out = "/var/tmp"
+    #
+    # basc = BASC(folder_in=folder_in, folder_out=folder_out)
+    #
+    # print(basc.octave_cmd)
 
-    basc = BASC(folder_in=folder_in, folder_out=folder_out)
-
-    print(basc.octave_cmd)
+    print (unroll_numbers("1,3,4 15-20, 44, 18-27-2"))

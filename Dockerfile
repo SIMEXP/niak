@@ -2,21 +2,28 @@ FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 
-ENV PSOM_VERSION v2.0.2
+ENV PSOM_VERSION 2.0.2
 
 # Install NIAK  
 
 RUN mkdir /usr/local/niak
-ADD bricks commands demos util reports pipeline template extensions /usr/local/niak/
+ADD bricks/ /usr/local/niak/bricks/
+ADD commands/ /usr/local/niak/commands/
+ADD demos/ /usr/local/niak/demos/
+ADD util/  /usr/local/niak/util/
+ADD reports/ /usr/local/niak/reports/
+ADD pipeline/ /usr/local/niak/pipeline/
+ADD template/ /usr/local/niak/template/
+ADD extensions/ /usr/local/niak/extensions/
 WORKDIR  /usr/local/niak/extensions
 RUN wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
     && unzip BCT.zip \
     && rm BCT.zip \
-    && wget https://github.com/SIMEXP/psom/archive/${PSOM_VERSION}.zip \ 
-    && unzip ${PSOM_VERSION}.zip \
-    && rm ${PSOM_VERSION}.zip \
+    && wget https://github.com/SIMEXP/psom/archive/v${PSOM_VERSION}.zip \ 
+    && unzip v${PSOM_VERSION}.zip \
+    && rm v${PSOM_VERSION}.zip \
     && cd /usr/local/bin \
-    && ln -s ../niak/extention/psom_worker.py psom_worker.py \
+    && ln -s ../niak/extensions/psom-${PSOM_VERSION}/psom_worker.py psom_worker.py \
     && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py
 
 
