@@ -45,7 +45,8 @@ def build_opt(option):
 
 
 def main(args=None):
-
+    # print " ".join(args)
+    # return
     if args is None:
         args = sys.argv[1:]
 
