@@ -239,6 +239,12 @@ for ss = 1:length(list_subject)
     pipeline = psom_add_job(pipeline,['bold_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
 end
 
+% Add a spreadsheet to write the QC. 
+clear jin jout jopt
+jout = [opt.folder_out 'qc_registration.csv'];
+jopt.list_subject = list_subject;
+pipeline = psom_add_job(pipeline,'init_report','niak_brick_init_qc_report','',jout,jopt);
+
 %% Panel on motion
 
 % Movies (and target image for all runs)

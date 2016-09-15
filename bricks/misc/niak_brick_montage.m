@@ -177,6 +177,7 @@ rgb(:,:,1) = reshape(cm(idx(:),1),size(img));
 rgb(:,:,2) = reshape(cm(idx(:),2),size(img));
 rgb(:,:,3) = reshape(cm(idx(:),3),size(img));
 if ~isempty(opt.thresh)
+    img(img<opt.thresh) = 0;
     imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double(img>opt.thresh));
 else
     imwrite(rgb,out.montage,'quality',opt.quality);
