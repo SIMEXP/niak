@@ -91,7 +91,7 @@ function [files_in,files_out,opt] = niak_brick_graph_prop(files_in,files_out,opt
 % The measure 'Dcentrality' is described in the following paper:
 %   Buckner et al. Cortical Hubs Revealed by Intrinsic Functional Connectivity:
 %   Mapping, Assessment of Stability, and Relation to
-%   Alzheimer’s Disease. The Journal of Neuroscience, February 11, 2009.
+%   Alzheimers Disease. The Journal of Neuroscience, February 11, 2009.
 %
 % Some of the measures employed here depend on function from the "brain connectivity toolbox"
 %   https://sites.google.com/site/bctnet/Home/functions
@@ -103,7 +103,7 @@ function [files_in,files_out,opt] = niak_brick_graph_prop(files_in,files_out,opt
 %   URL http://dx.doi.org/10.1016/j.neuroimage.2009.10.003
 %
 % Copyright (c) Pierre Bellec, Christian L. Dansereau, 
-% Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
+% Centre de recherche de l'Institut universitaire de griatrie de Montral, 2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, connectome, atoms, fMRI
@@ -194,11 +194,16 @@ end
 if opt.flag_verbose
     fprintf('Reading connectome in file %s ...\n',files_in);
 end
-conn = load(files_in,'conn','G','ind_roi');
-G = niak_vec2mat(conn.G,false);
+conn = load(files_in,'conn','G','ind_roi','code');
 ind_roi = conn.ind_roi;
-conn = conn.conn;
-
+if strcmp('code','vec')
+    G = niak_vec2mat(conn.G,false);
+    conn = niak_vec2mat(conn.conn);
+else
+    G = niak_lvec2mat(conn.G,false);
+    conn = niak_lvec2mat(conn.conn);
+end
+   
 for num_m = 1:length(list_mes)
     name = list_mes{num_m};
     if opt.flag_verbose
@@ -215,8 +220,7 @@ for num_m = 1:length(list_mes)
             
         case 'p2p'
         
-            G = niak_vec2mat(conn); % For point-to-point, the graph is the weighted connectome
-            mes.(name).val = G(ind_roi == mes.(name).param(1),ind_roi == mes.(name).param(2));
+            mes.(name).val = conn(ind_roi == mes.(name).param(1),ind_roi == mes.(name).param(2));
             
         case 'clustering'
                         
