@@ -194,13 +194,18 @@ end
 if opt.flag_verbose
     fprintf('Reading connectome in file %s ...\n',files_in);
 end
-conn = load(files_in,'conn','G','ind_roi','code');
+conn = load(files_in,'conn','G','ind_roi','code','type');
 ind_roi = conn.ind_roi;
-if strcmp('code','vec')
+type = conn.type;
+code = conn.code;
+if strcmp(code,'vec')
     G = niak_vec2mat(conn.G,false);
     conn = niak_vec2mat(conn.conn);
 else
-    G = niak_lvec2mat(conn.G,false);
+    G = niak_lvec2mat(conn.G);
+    if ismember(type,{'A','AZ'})
+        G(eye(size(G))>0) = false; % Assume no intra-network connectivty for binary graph properties
+    end
     conn = niak_lvec2mat(conn.conn);
 end
    

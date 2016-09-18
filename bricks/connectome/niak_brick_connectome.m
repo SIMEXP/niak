@@ -246,7 +246,7 @@ for num_f = 1:nb_fmri
                 [tmp,tmp2,tmp3,conn] = niak_build_srup(tseries,true);
                 code = 'vec';
             case {'A','AZ'}
-                conn = niak_build_correlation(tseries);
+                [tmp,conn] = niak_build_srup(tseries,false);
                 tseries_n = niak_build_tseries(vol,all_mask{num_m},struct('correction','mean_var'));
                 ir = var(tseries_n,[],1)';
                 N = niak_build_size_roi (all_mask{num_m});       
