@@ -41,6 +41,8 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 %   the file name of the template used for registration in stereotaxic space.
 % IN.TEMPLATE.FMRI (string) 
 %   the file name of the template used to resample fMRI data.
+% IN.TEMPLATE.OUTLINE (string, default symmetric outline)
+%   the file name of a binary masks, highlighting regions for coregistration. 
 %
 % OPT
 %   (structure) with the following fields:
@@ -86,7 +88,9 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+%% PSOM/NIAK variables
 psom_gb_vars;
+niak_gb_vars;
 
 %% Defaults
 
