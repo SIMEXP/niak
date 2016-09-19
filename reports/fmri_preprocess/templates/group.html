@@ -3,13 +3,33 @@
 
 <style>
 
-.register img{
-    -webkit-transition: opacity 0.75s; /* Safari */
-    transition: opacity 0.75s;
+@keyframes flickerAnimation {
+  0%   { opacity:1; }
+  50%  { opacity:0; }
+  80% { opacity:1; }
 }
-
-.register img:hover{
-    opacity:0;
+@-o-keyframes flickerAnimation{
+  0%   { opacity:1; }
+  50%  { opacity:0; }
+  80% { opacity:1; }
+}
+@-moz-keyframes flickerAnimation{
+  0%   { opacity:1; }
+  50%  { opacity:0; }
+  80% { opacity:1; }
+}
+@-webkit-keyframes flickerAnimation{
+  0%   { opacity:1; }
+  25%  { opacity:0.5; }
+  50%  { opacity:0; }
+  75%  { opacity:0.5; }
+  80% { opacity:1; }
+}
+.register img{
+   -webkit-animation: flickerAnimation 1.5s infinite;
+   -moz-animation: flickerAnimation 1.5s infinite;
+   -o-animation: flickerAnimation 1.5s infinite;
+    animation: flickerAnimation 1.5s infinite;
 }
 
 </style>
@@ -55,8 +75,8 @@
             Group average T1 vs T1 template
           </div>
           <div class="chart-stage">
-            <div id="T1-groupVsTemplate" class="register" style="background-image: url(group/template_stereotaxic.png); width: 100%; background-size: 100%"> 
-              <img id="registration" src="group/average_t1_stereotaxic.png" width="100%">
+            <div id="T1-groupVsTemplate" class="register" style="background-image: url(group/template_stereotaxic_raw.png); width: 80%; background-size: 80%; background-repeat: no-repeat"> 
+              <img id="registration" src="group/average_t1_stereotaxic.png" width="80%">
             </div>
           </div>
           <div class="chart-notes">
@@ -71,8 +91,8 @@
            </div>
            <div class="chart-stage">
              <div class="chart-stage">
-               <div id="boldVsT1" class="register" style="background-image: url(group/average_t1_stereotaxic.png); width: 100%; background-size: 100%"> 
-                 <img id="registration" src="group/average_func_stereotaxic.png" width="100%">
+               <div id="boldVsT1" class="register" style="background-image: url(group/average_t1_stereotaxic.png); width: 80%; background-size: 80%; background-repeat: no-repeat"> 
+                 <img id="registration" src="group/average_func_stereotaxic.png" width="80%">
                </div>
              </div>
              <div class="chart-notes">
@@ -89,8 +109,8 @@
             Group BOLD mask vs T1 group average
           </div>
           <div class="chart-stage">
-            <div id="groupMaskVsT1" class="register" style="background-image: url(group/average_t1_stereotaxic.png); width: 100%; background-size: 100%"> 
-              <img id="registration" src="group/mask_func_group_stereotaxic.png" width="100%">
+            <div id="groupMaskVsT1" class="register" style="background-image: url(group/average_t1_stereotaxic.png); width: 80%; background-size: 80%; background-repeat: no-repeat"> 
+              <img id="registration" src="group/mask_func_group_stereotaxic.png" width="80%">
             </div>
           </div>
           <div class="chart-notes">
@@ -105,8 +125,8 @@
            </div>
            <div class="chart-stage">
              <div class="chart-stage">
-               <div id="avgMaskVsT1" class="register" style="background-image: url(group/average_t1_stereotaxic.png); width: 100%; background-size: 100%"> 
-                 <img id="registration" src="group/average_mask_func_stereotaxic.png" width="100%">
+               <div id="avgMaskVsT1" class="register" style="background-image: url(group/average_t1_stereotaxic.png); width: 80%; background-size: 80%; background-repeat: no-repeat"> 
+                 <img id="registration" src="group/average_mask_func_stereotaxic.png" width="80%">
                </div>
              </div>
              <div class="chart-notes">
