@@ -52,6 +52,8 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 %     [-30 , -65 , -15 ; 
 %       -8 , -25 ,  10 ;  
 %       30 ,  45 ,  60];    
+%   TYPE_OUTLINE (string, default 'sym') what type of registration landmarks to use (either
+%     'sym' for symmetrical templates or 'asym' for asymmetrical templates). 
 %   PSOM (structure) options for PSOM. See PSOM_RUN_PIPELINE.
 %   FLAG_VERBOSE (boolean, default true) if true, verbose on progress. 
 %   FLAG_TEST (boolean, default false) if the flag is true, the pipeline will 
@@ -121,11 +123,16 @@ coord_def =[-30 , -65 , -15 ;
              -8 , -25 ,  10 ;  
              30 ,  45 ,  60];
 opt = psom_struct_defaults ( opt , ...
-    { 'folder_out' , 'coord'   , 'flag_test' , 'psom'   , 'flag_verbose' }, ...
-    { pwd          , coord_def , false       , struct() , true           });
+    { 'type_outline' , 'folder_out' , 'coord'   , 'flag_test' , 'psom'   , 'flag_verbose' }, ...
+    { 'sym'          , pwd          , coord_def , false       , struct() , true           });
 
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
+
+if ~ismember(opt.type_outline,{'sym','asym'})
+    error(sprintf('%s is an unknown type of outline',opt.type_outline))
+end
+file_outline = [gb_niak_path_niak filesep 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_' opt.type_outline '_09a_outline_registration.mnc.gz'];
 
 %% Build file names 
 
@@ -180,11 +187,11 @@ jopt.colorbar = true;
 
 % Template
 jin.source = in.template.anat;
-jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
+jout = [opt.folder_out 'group' filesep 'template_stereotaxic_raw.png'];
 jopt.colormap = 'gray';
 jopt.colorbar = false;
 jopt.limits = 'adaptative';
-jopt.title = 'T1 Template';
+jopt.flag_decoration = false;
 pipeline = psom_add_job(pipeline,'template_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Group average T1
@@ -192,15 +199,23 @@ jin.source = in.group.avg_t1;
 jout = [opt.folder_out 'group' filesep 'average_t1_stereotaxic.png'];
 jopt.colormap = 'gray';
 jopt.limits = 'adaptative';
-jopt.title = 'Group average T1';
+jopt.flag_decoration = false;
 pipeline = psom_add_job(pipeline,'average_t1_stereo','niak_brick_vol2img',jin,jout,jopt);
+
+% Group outline
+jin.source = file_outline;
+jout = [opt.folder_out 'group' filesep 'outline.png'];
+jopt.colormap = 'jet';
+jopt.limits = [0 1.1];
+jopt.flag_decoration = false;
+pipeline = psom_add_job(pipeline,'t1_outline_registration','niak_brick_vol2img',jin,jout,jopt);
 
 % Group average BOLD
 jin.source = in.group.avg_func;
 jout = [opt.folder_out 'group' filesep 'average_func_stereotaxic.png'];
 jopt.colormap = 'jet';
 jopt.limits = 'adaptative';
-jopt.title = 'Group average BOLD';
+jopt.flag_decoration = false;
 pipeline = psom_add_job(pipeline,'average_func_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Group BOLD mask
@@ -208,7 +223,7 @@ jin.source = in.group.mask_func_group;
 jout = [opt.folder_out 'group' filesep 'mask_func_group_stereotaxic.png'];
 jopt.colormap = 'jet';
 jopt.limits = [0 1];
-jopt.title = 'Group BOLD mask';
+jopt.flag_decoration = false;
 pipeline = psom_add_job(pipeline,'mask_func_group_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 % Average BOLD mask
@@ -216,7 +231,7 @@ jin.source = in.group.avg_mask_func;
 jout = [opt.folder_out 'group' filesep 'average_mask_func_stereotaxic.png'];
 jopt.colormap = 'jet';
 jopt.limits = [0 1];
-jopt.title = 'Average BOLD mask';
+jopt.flag_decoration = false;
 pipeline = psom_add_job(pipeline,'avg_mask_func_stereo','niak_brick_vol2img',jin,jout,jopt);
 
 %% Panel on individual registration
@@ -227,8 +242,8 @@ jopt.limits = 'adaptative';
 jopt.method = 'linear';
 for ss = 1:length(list_subject)
     jin.source = in.ind.anat.(list_subject{ss});
-    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_anat.png'];
-    jopt.title = sprintf('Individual T1 subject %s',list_subject{ss});
+    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_anat_raw.png'];
+    jopt.flag_decoration = false;
     pipeline = psom_add_job(pipeline,['t1_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
 end
 
@@ -239,9 +254,33 @@ jopt.method = 'linear';
 for ss = 1:length(list_subject)
     jin.source = in.ind.func.(list_subject{ss});
     jout = [opt.folder_out 'registration' filesep list_subject{ss} '_func.png'];
-    jopt.title = sprintf('Individual BOLD subject %s',list_subject{ss});
+    jopt.flag_decoration = false;
     pipeline = psom_add_job(pipeline,['bold_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
 end
+
+% Merge individual T1 and outline
+for ss = 1:length(list_subject)
+    clear jin jout jopt
+    jin.background = pipeline.(['t1_' list_subject{ss}]).files_out;
+    jin.overlay = pipeline.t1_outline_registration.files_out;
+    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_anat.png'];
+    jopt.transparency = 0.7;
+    jopt.threshold = 0.9;
+    pipeline = psom_add_job(pipeline,['t1_' list_subject{ss} '_overlay'],'niak_brick_add_overlay',jin,jout,jopt);
+end
+
+jopt.transparency = 0.3;
+jopt.threshold = 0.9;
+pipeline = psom_add_job(pipeline,'template_stereo_overlay','niak_brick_add_overlay',jin,jout,jopt);
+
+% Merge average T1 and outline
+clear jin jout jopt
+jin.background = pipeline.template_stereo.files_out;
+jin.overlay = pipeline.t1_outline_registration.files_out;
+jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
+jopt.transparency = 0.7;
+jopt.threshold = 0.9;
+pipeline = psom_add_job(pipeline,'template_stereo_overlay','niak_brick_add_overlay',jin,jout,jopt);
 
 % Add a spreadsheet to write the QC. 
 clear jin jout jopt

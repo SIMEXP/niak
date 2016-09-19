@@ -182,10 +182,10 @@
     
     <!--Populate figures-->    
     newFigBOLD.src = "registration/" + subject + "_func.png";
-    newFigBOLD.setAttribute("width", "100%");
+    newFigBOLD.setAttribute("width", "80%");
     newFigBOLD.className = "BOLD";
     newFigT1.src = "registration/" + subject + "_anat.png";
-    newFigT1.setAttribute("width", "100%");
+    newFigT1.setAttribute("width", "80%");
     newFigT1.className = "T1";
 
     <!--Update figures-->        
@@ -193,10 +193,12 @@
     figT1.replaceWith(newFigT1);
     figBoldVsT1 = $("#boldVsT1");
     figBoldVsT1.css("backgroundImage","url(registration/" + subject + "_anat.png)");
-    figBoldVsT1.css("backgroundSize","100%");
+    figBoldVsT1.css("backgroundSize","80%");
+    figBoldVsT1.css("backgroundRepeat","no-repeat");
     figT1vsTemplate = $("#T1-indVsTemplate");
     figT1vsTemplate.css("backgroundImage","url(group/template_stereotaxic.png)");
-    figT1vsTemplate.css("backgroundSize","100%");
+    figT1vsTemplate.css("backgroundSize","80%");
+    figT1vsTemplate.css("backgroundRepeat","no-repeat");
   }  
   
   <!--Move on to the next subject-->
