@@ -203,9 +203,6 @@ if strcmp(code,'vec')
     conn = niak_vec2mat(conn.conn);
 else
     G = niak_lvec2mat(conn.G);
-    if ismember(type,{'A','AZ'})
-        G(eye(size(G))>0) = false; % Assume no intra-network connectivty for binary graph properties
-    end
     conn = niak_lvec2mat(conn.conn);
 end
    

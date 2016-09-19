@@ -279,7 +279,12 @@ for num_o = 1:length(files_out)
         fprintf('   %s\n',files_out{num_o})
     end
     conn = mean(all_conn{num_o},2);
-    G = niak_build_graph(conn,thresh);    
+    if ismember(type,{'A','AZ'})
+        % Skip diagonal elements in binary graphs when average intra-network connectivity was calculated
+        G = niak_mat2lvec(niak_vec2mat(niak_build_graph(niak_mat2vec(niak_lvec2mat(conn)),thresh),false));
+    else
+        G = niak_build_graph(conn,thresh);    
+    end
     ind_roi = all_ind_roi{num_o};
     save(files_out{num_o},'conn','G','ind_roi','type','thresh','code');
 end
