@@ -153,6 +153,7 @@ jout.list_subject = [opt.folder_out 'group' filesep 'listSubject.js'];
 jout.list_run = [opt.folder_out 'group' filesep 'listRun.js'];
 jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
 jout.summary = [opt.folder_out 'summary' filesep 'pipeSummary.js'];
+jopt.list_subject = list_subject;
 pipeline = psom_add_job(pipeline,'params','niak_brick_preproc_params2report',jin,jout);
 
 %% The summary of BOLD registration
