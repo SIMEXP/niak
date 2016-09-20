@@ -50,13 +50,11 @@ if opt.flag_test
 end
 
 %% Initialize the QC report
-qc_report = cell(length(opt.list_subject)+1,4);
+qc_report = cell(length(opt.list_subject)+1,2);
 qc_report(2:end,1) = opt.list_subject;
 qc_report(1,1) = 'id_subject';
-qc_report(1,2) = 'status';
-qc_report(1,3) = 'anat';
-qc_report(1,4) = 'func';
-qc_report(2:end,2:end) = repmat({''},[length(opt.list_subject),3]);
+qc_report(1,2) = 'QC';
+qc_report(2:end,2:end) = repmat({''},[length(opt.list_subject),1]);
     
 %% Save the report
 niak_write_csv_cell(out,qc_report);
