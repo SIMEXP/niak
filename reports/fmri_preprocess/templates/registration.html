@@ -33,17 +33,23 @@
 
 @keyframes flickerAnimation {
   0%   { opacity:1; }
+  25%  { opacity:0.5; }
   50%  { opacity:0; }
+  75%  { opacity:0.5; }
   100% { opacity:1; }
 }
 @-o-keyframes flickerAnimation{
   0%   { opacity:1; }
+  25%  { opacity:0.5; }
   50%  { opacity:0; }
+  75%  { opacity:0.5; }
   100% { opacity:1; }
 }
 @-moz-keyframes flickerAnimation{
   0%   { opacity:1; }
+  25%  { opacity:0.5; }
   50%  { opacity:0; }
+  75%  { opacity:0.5; }
   100% { opacity:1; }
 }
 @-webkit-keyframes flickerAnimation{
@@ -106,13 +112,13 @@
           </div>
           <div class="chart-stage">
             <div id="T1-indVsTemplate" class="register">
-              <img class="T1" width=100%>
+              <img class="T1 montage" width=100%>
             </div>
-            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
-            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons.png" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons.png" >
           </div>
           <div class="chart-notes">
-            Hover the mouse over to switch between images. Click or press left/right arrows for prev/next subject. 
+            Click or press left/right arrows for prev/next subject. 
           </div>
         </div>
       </div>
@@ -125,13 +131,13 @@
          <div class="chart-stage">
            <div class="chart-stage">
              <div id="boldVsT1" class="register">
-              <img class="BOLD" width=100%>
+              <img class="BOLD montage" width=100%>
              </div>
-            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
-            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons.png" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons.png" >
            </div>
           <div class="chart-notes">
-            Hover the mouse over to switch between images. Click or press left/right arrows for prev/next subject.
+            Click or press left/right arrows for prev/next subject.
           </div>
         </div>
       </div>
@@ -183,9 +189,13 @@
     <!--Populate figures-->    
     newFigBOLD.src = "registration/" + subject + "_func.png";
     newFigBOLD.setAttribute("width", "80%");
+    newFigBOLD.style.position = "relative";
+    newFigBOLD.style.left = "10%";
     newFigBOLD.className = "BOLD";
     newFigT1.src = "registration/" + subject + "_anat.png";
     newFigT1.setAttribute("width", "80%");
+    newFigT1.style.position = "relative";
+    newFigT1.style.left = "10%";
     newFigT1.className = "T1";
 
     <!--Update figures-->        
@@ -195,11 +205,13 @@
     figBoldVsT1.css("backgroundImage","url(registration/" + subject + "_anat.png)");
     figBoldVsT1.css("backgroundSize","80%");
     figBoldVsT1.css("backgroundRepeat","no-repeat");
+    figBoldVsT1.css("backgroundPosition","50% 0%");
     figT1vsTemplate = $("#T1-indVsTemplate");
     figT1vsTemplate.css("backgroundImage","url(group/template_stereotaxic.png)");
     figT1vsTemplate.css("backgroundSize","80%");
     figT1vsTemplate.css("backgroundRepeat","no-repeat");
-  }  
+    figT1vsTemplate.css("backgroundPosition","50% 0%");
+    }  
   
   <!--Move on to the next subject-->
   function nextSubject () {
