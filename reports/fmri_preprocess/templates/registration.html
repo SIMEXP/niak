@@ -32,40 +32,13 @@
 }
 
 @keyframes flickerAnimation {
-  0%   { opacity:1; }
-  25%  { opacity:0.5; }
-  50%  { opacity:0; }
-  75%  { opacity:0.5; }
-  100% { opacity:1; }
-}
-@-o-keyframes flickerAnimation{
-  0%   { opacity:1; }
-  25%  { opacity:0.5; }
-  50%  { opacity:0; }
-  75%  { opacity:0.5; }
-  100% { opacity:1; }
-}
-@-moz-keyframes flickerAnimation{
-  0%   { opacity:1; }
-  25%  { opacity:0.5; }
-  50%  { opacity:0; }
-  75%  { opacity:0.5; }
-  100% { opacity:1; }
-}
-@-webkit-keyframes flickerAnimation{
-  0%   { opacity:1; }
-  25%  { opacity:0.5; }
-  50%  { opacity:0; }
-  75%  { opacity:0.5; }
-  100% { opacity:1; }
-}
-.register img{
-   -webkit-animation: flickerAnimation 1.5s infinite;
-   -moz-animation: flickerAnimation 1.5s infinite;
-   -o-animation: flickerAnimation 1.5s infinite;
-    animation: flickerAnimation 1.5s infinite;
+  from { opacity: 1; }
+  to { opacity: 0;}
 }
 
+.register img{
+   animation: flickerAnimation 1s infinite alternate ease-in-out;
+}
 
 </style>
 
