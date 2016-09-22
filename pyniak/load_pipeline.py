@@ -149,9 +149,8 @@ class FmriPreprocess(BasePipeline):
 
         """
         opt_list = []
-        in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
+        in_full_path = "{1}".format(os.getcwd(), self.folder_in)
         list_in_dir = os.listdir(in_full_path)
-
         # TODO Control that with an option
         bids_description = None
         subject_input_list = None

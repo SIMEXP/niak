@@ -85,7 +85,7 @@ def main(args=None):
     if pipeline_name is None:
         pipeline_name = "Niak_fmri_preprocess"
 
-    if parsed.analysis_level =="group":
+    if parsed.analysis_level =="group" :
         pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir, options=options)
         pipeline.run()
     else:
