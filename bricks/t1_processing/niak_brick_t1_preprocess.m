@@ -98,7 +98,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %         for 1.5T scan; 50 for 3T scan). 
 %
 %    FLAG_ALL
-%        (boolean, default false) if FLAG_ALL is true, by default 
+%        (boolean, default true) if FLAG_ALL is true, by default 
 %        the brick will generate all outputs with default output 
 %        names.
 %
