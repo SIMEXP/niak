@@ -9,9 +9,8 @@ dependencies:
   cache_directories:
     - "~/docker"
     - "~/data"
-
   override:
-  - if [[ ! -d ~/data/sample_test ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tar"  && cd ${HOME}/data && tar -xvf sample_test.tar && rm sample_test.tar; fi
+  - if [[ ! -e ~/data/sample_test ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tar"  && cd ${HOME}/data && tar -xvf sample_test.tar && rm sample_test.tar; fi
   - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
   - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
       timeout: 21600
