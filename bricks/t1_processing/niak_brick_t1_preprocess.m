@@ -310,6 +310,7 @@ gb_list_defaults  = {true       , 'mni_icbm152_nlin_sym_09a' , opt_tmp         ,
 niak_set_defaults
 
 if ischar(files_in.template)
+    template = struct;
     switch files_in.template
     case 'mni_icbm152_nlin_sym_09a'
         template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average
