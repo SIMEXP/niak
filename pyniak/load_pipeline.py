@@ -68,7 +68,7 @@ class BasePipeline(object):
 
         try:
             p = subprocess.Popen(self.octave_cmd)
-            while not os.path.exists("{0}/log/tmp/psom1.sh".format(self.folder_out)):
+            while not os.path.exists("{0}/logs/tmp/psom1.sh".format(self.folder_out)):
                 time.sleep(.2)
             run_worker(self.folder_out, 1)
             p.wait()
