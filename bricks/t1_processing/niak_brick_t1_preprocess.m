@@ -306,7 +306,7 @@ files_in = psom_struct_defaults(files_in, ...
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
 gb_list_fields    = {'flag_all' , 'template'                 , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
-gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
+gb_list_defaults  = {true       , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
 niak_set_defaults
 
 if ischar(files_in.template)
