@@ -20,7 +20,7 @@ dependencies:
 
 test:
   override:
-    - case $CIRCLE_NODE_INDEX in 0) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs -v group ;; 1) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs -v participant --participant_label 2 ;; 2) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs -v participant --participant_label 3 ;; 3) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs -v participant --participant_label 4 ;; esac:
+    - case $CIRCLE_NODE_INDEX in 0) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} -v group /bids_dataset /outputs ;; 1) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} -v participant --participant_label 2 /bids_dataset /outputs ;; 2) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} -v participant --participant_label 3 /bids_dataset /outputs  ;; 3) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} -v participant --participant_label 4 /bids_dataset /outputs  ;; esac:
         parallel: true
         timeout: 21600
 
