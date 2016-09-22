@@ -8,20 +8,20 @@ MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 RUN apt-get install git -y --fix-missing
 
 
-RUN cd /home \
+RUN mkdir /code  && cd /code \
    && git clone -b "bids-app" --depth 1 https://github.com/SIMEXP/niak.git
 
 
-RUN cd /home/niak/extensions/ \
+RUN cd /code/niak/extensions/ \
    && wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip  \
    && unzip BCT.zip \
    && rm BCT.zip
 
-RUN cd /home/niak/extensions/ \
-   && git clone -b cbrain_integration --depth 1 https://github.com/SIMEXP/psom.git
+RUN cd /code/niak/extensions/ \
+   && git clone  --depth 1 https://github.com/SIMEXP/psom.git && cd /usr/local/bin \
+   && ln -s  /code/niak/extensions/psom/psom_worker.py psom_worker.py && chmod 755 /code/niak/extensions/psom/psom_worker.py
 
 # Build octave configure file
-RUN echo addpath\(genpath\(\"/home/niak/\"\)\)\; >> /etc/octave.conf
 
 # Source minc tools
 RUN echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/profile \
@@ -35,10 +35,10 @@ RUN mkdir /oasis
 RUN mkdir /projects
 RUN mkdir /scratch
 RUN mkdir /local-scratch
-COPY niak_cmd.py /code/run.py
+ADD niak_cmd.py /code/run.py
+ADD pyniak /code/pyniak
+ADD psom_gb_vars_local.m /code/niak/psom_gb_vars_local.m
 
 ENTRYPOINT ["/code/run.py"]
 
-
-# Command to run octave as GUI
-# docker run -i -t --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd   -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID poquirion/docker_build /bin/bash --login -c "cd $HOME/travail/simexp/software; octave --force-gui --persist --eval 'addpath(genpath(pwd))'; /bin/bash"
+RUN echo addpath\(genpath\(\"/code/niak/\"\)\)\; >> /etc/octave.conf

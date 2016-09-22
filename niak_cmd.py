@@ -3,7 +3,7 @@
 This module parse arbitrary NIAK opt arguments to run a pipeline with the needed inputs
 """
 __author__ = 'poquirion'
-
+__version__ = 1.0
 
 
 import argparse
@@ -60,7 +60,6 @@ def main(args=None):
                         'participants can be specified with a space separated list.',
                          nargs="+")
 
-    #only group right now...
     parser.add_argument('analysis_level', help='Level of the analysis that will be performed. '
                     'Multiple participant level analyses can be run independently '
                     '(in parallel) using the same output_dir.',
@@ -68,11 +67,14 @@ def main(args=None):
 
     parser.add_argument('bids_dir', help='The directory with the input dataset '
                     'formatted according to the BIDS standard.')
+
     parser.add_argument('output_dir', help='The directory where the output files '
                     'should be stored. If you are running group level analysis '
                     'this folder should be prepopulated with the results of the'
                     'participant level analysis.')
 
+    parser.add_argument('-v', '--version', action='version',
+                        version='BIDS-App example version {}'.format(__version__))
 
     parsed, unformated_options = parser.parse_known_args(args)
 
@@ -83,9 +85,12 @@ def main(args=None):
     if pipeline_name is None:
         pipeline_name = "Niak_fmri_preprocess"
 
-    pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir, options=options)
+    if parsed.analysis_level =="group":
+        pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir, options=options)
+        pipeline.run()
+    else:
+        pyniak.run_worker(parsed.output_dir, parsed.participant_label)
 
-    pipeline.run()
 
 
 if __name__ == '__main__':

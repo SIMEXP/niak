@@ -67,6 +67,7 @@ class BasePipeline(object):
 
         try:
             p = subprocess.Popen(self.octave_cmd)
+            run_worker(self.folder_out, 1)
             p.wait()
         except BaseException as e:
             if p and psutil_loaded:
@@ -211,6 +212,9 @@ class BASC(BasePipeline):
         return file_in
 
 
+def run_worker(dir, num):
+    cmd = ['psom_worker', '-d', dir, '-w', num]
+    subprocess.call(cmd)
 
 # Dictionary for supported class
 SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,

@@ -11,7 +11,7 @@ dependencies:
     - "~/data"
 
   override:
-  - if [[ ! -d ~/data/data_test_niak_nii ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "http://www.nitrc.org/frs/download.php/9120/data_test_niak_nii.zip"  && cd ${HOME}/data && unzip data_test_niak_nii.zip && rm data_test_niak_nii.zip; fi
+  - if [[ ! -d ~/data/sample_test ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tar"  && cd ${HOME}/data && tar -xvf sample_test.tar && rm sample_test.tar; fi
   - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
   - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
       timeout: 21600
@@ -21,7 +21,12 @@ dependencies:
 
 test:
   override:
-    - docker run -it -v ${HOME}/data/data_test_niak_nii:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs group :
+    - case $CIRCLE_NODE_INDEX in
+    0) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs group ;;
+    1) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 2 ;;
+    2) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 3 ;;
+    3) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 4 ;; esac:
+        parallel: true
         timeout: 21600
 #deployment:
 #  hub:
