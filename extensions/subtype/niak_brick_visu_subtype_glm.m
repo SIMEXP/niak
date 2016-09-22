@@ -2,7 +2,7 @@ function [files_in,files_out,opt] = niak_brick_visu_subtype_glm(files_in, files_
 % Generating graphs to visualize results of subtype association tests
 %
 % SYNTAX: [FILE_IN,FILE_OUT,OPT] =
-% NIAK_BRICK_association_test(FILE_IN,FILE_OUT,OPT)
+% NIAK_BRICK_VISU_SUBTYPE_GLM(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 %
 % INPUTS:
