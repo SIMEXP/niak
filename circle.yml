@@ -11,7 +11,7 @@ dependencies:
     - "~/data"
 
   override:
-  - if [[ ! -d ~/data/niak_test ]]; then wget -c -P ${HOME}/downloads/ "http://www.nitrc.org/frs/download.php/9120/data_test_niak_nii.zip" && mkdir -p ${HOME}/data && cd ${HOME}/data && unzip ${HOME}/downloads/data_test_niak_nii.zip ; fi
+  - if [[ ! -d ~/data/data_test_niak_nii ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "http://www.nitrc.org/frs/download.php/9120/data_test_niak_nii.zip"  && cd ${HOME}/data && unzip data_test_niak_nii.zip && rm data_test_niak_nii.zip; fi
   - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
   - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
       timeout: 21600
