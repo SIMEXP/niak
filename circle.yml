@@ -23,13 +23,18 @@ test:
   override:
     - case $CIRCLE_NODE_INDEX in
     0) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs group ;;
-    1) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 2 ;;
-    2) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 3 ;;
-    3) docker run -it -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 4 ;; esac:
+    1) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 2 ;;
+    2) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 3 ;;
+    3) docker run -it --read-only -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} /bids_dataset /outputs participant --participant_label 4 ;; esac:
         parallel: true
         timeout: 21600
-#deployment:
-#  hub:
-#    branch: master
-#    commands:
-#      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker push $DOCKER_REPO; fi
+
+deployment:
+  hub:
+    owner: BIDS-Apps
+    tag: /.*/
+    commands:
+      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker push bids/${CIRCLE_PROJECT_REPONAME,,}:latest; fi :
+          timeout: 21600
+      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker tag bids/${CIRCLE_PROJECT_REPONAME,,} bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG && docker push bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG; fi :
+          timeout: 21600
