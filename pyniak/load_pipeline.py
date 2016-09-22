@@ -1,9 +1,10 @@
 __author__ = 'poquirion'
 
+import json
 import os
 import re
-import json
 import subprocess
+import time
 
 try:
     import psutil
@@ -67,6 +68,8 @@ class BasePipeline(object):
 
         try:
             p = subprocess.Popen(self.octave_cmd)
+            while not os.path.exists("{0}/log/tmp/psom1.sh".format(self.folder_out)):
+                time.sleep(.2)
             run_worker(self.folder_out, 1)
             p.wait()
         except BaseException as e:
@@ -212,7 +215,7 @@ class BASC(BasePipeline):
 
 
 def run_worker(dir, num):
-    cmd = ['psom_worker', '-d', dir, '-w', num]
+    cmd = ['psom_worker.py', '-d', dir, '-w', str(num)]
     subprocess.call(cmd)
 
 # Dictionary for supported class
