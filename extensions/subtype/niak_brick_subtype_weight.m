@@ -45,6 +45,13 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %       (string, default '') if not empty, this specifies the path where
 %       outputs are generated
 %
+%   FLAG_EXTERNAL
+%       (boolean, default false) Set to true when external subtypes are
+%       supplied. When the flag is true, the brick will calculate a new
+%       partition based on the weights to order subjects for the weight
+%       matrix.
+%   
+%
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
@@ -105,8 +112,8 @@ if nargin < 3
 end
 
 opt = psom_struct_defaults(opt,...
-      { 'scales'                             , 'folder_out' , 'flag_verbose' , 'flag_test' },...
-      { 1:length(fieldnames(files_in.data)) , ''           , true           , false       });
+      { 'scales'                            , 'folder_out' , 'flag_external' , 'flag_verbose' , 'flag_test' },...
+      { 1:length(fieldnames(files_in.data)) , ''           , false           , true           , false       });
 
 % FILES_OUT
 if ~isempty(opt.folder_out)
@@ -194,9 +201,24 @@ end
 for net_id = 1:n_networks
     network = networks{net_id};
     
-    % Get the subject order from files_in.subtype
-    tmp_subj_order = load(files_in.subtype.(network));
-    subj_order = tmp_subj_order.subj_order;
+    if opt.flag_external
+        % if external subtypes are supplied, generate a new partition to get the subject order
+        % Get the network stack data
+        tmp_data = load(files_in.data.(network));
+        data = tmp_data.stack;
+        % pre-allocate size of partition
+        part = zeros(size(weight_mat,1),1);
+        for ss = 1:size(weight_mat,1)
+            [maxi,ind] = max(weight_mat(ss,:,net_id));
+            part(ss) = ind;
+        end
+        simmat = niak_build_correlation(data');
+        [subj_order,~,~] = niak_part2order(part,simmat);
+    else
+        % Get the subject order from files_in.subtype
+        tmp_subj_order = load(files_in.subtype.(network));
+        subj_order = tmp_subj_order.subj_order;
+    end
     
     % Create a hidden figure
     fig = figure('Visible', 'off');
