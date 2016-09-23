@@ -49,6 +49,8 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
+    print("{0} {1}".format(__file__, "".join(args)))
+
     parser = argparse.ArgumentParser(description='Run a niak script')
 
     # parser.add_argument("pipeline", default=None)
