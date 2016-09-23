@@ -362,6 +362,9 @@ end
 weight_opt = struct;
 weight_opt.scales = 1:opt.scale;
 weight_opt.folder_out = opt.folder_out;
+if ext_sbt
+    weight_opt.flag_external = true;
+end
 weight_out.weights = [opt.folder_out filesep 'subtype_weights.mat'];
 pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
                     weight_in, weight_out, weight_opt);
