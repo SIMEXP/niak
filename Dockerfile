@@ -23,9 +23,16 @@ RUN cd /code/niak/extensions/ \
 
 # Build octave configure file
 
-# Source minc tools
-RUN echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/profile \
-    && echo "source /opt/minc-itk4/minc-toolkit-config.sh" >> /etc/bash.bashrc
+# Set minc tools
+
+ENV MINC_TOOLKIT_VERSION="1.9.2-20140730"
+ENV PATH=/opt/minc-itk4/bin:/opt/minc-itk4/pipeline:${PATH}
+ENV PERL5LIB=/opt/minc-itk4/perl:/opt/minc-itk4/pipeline:${PERL5LIB}
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/minc-itk4/lib:/opt/minc-itk4/lib/InsightToolkit
+ENV MNI_DATAPATH=/opt/minc-itk4/share
+ENV MINC_FORCE_V2=1
+ENV MINC_COMPRESS=4
+ENV VOLUME_CACHE_THRESHOLD=-1
 
 # 3D visualisation tools
 RUN apt-get install mricron -y \
@@ -35,10 +42,12 @@ RUN mkdir /oasis
 RUN mkdir /projects
 RUN mkdir /scratch
 RUN mkdir /local-scratch
+ADD default_config.yaml /code/
 ADD niak_cmd.py /code/run.py
 ADD pyniak /code/pyniak
+ADD pyyaml /code/
 ADD psom_gb_vars_local.m /code/niak/psom_gb_vars_local.m
-
+WORKDIR /code
 ENTRYPOINT ["/code/run.py"]
 
 RUN echo addpath\(genpath\(\"/code/niak/\"\)\)\; >> /etc/octave.conf

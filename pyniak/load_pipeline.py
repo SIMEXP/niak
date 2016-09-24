@@ -3,15 +3,11 @@ __author__ = 'poquirion'
 import json
 import os
 import re
+import shutil
 import subprocess
 import time
 
-try:
-    import psutil
-    psutil_loaded = True
-except ImportError:
-    psutil_loaded = False
-
+import yaml
 
 def num(s):
     try:
@@ -31,6 +27,71 @@ def string(s):
     return "'{0}'".format(s)
 
 
+def unroll_numbers(numbers):
+    import re
+
+    entries = [a[0].split('-') for a in  re.findall("([0-9]+((-[0-9]+)+)?)", numbers)]
+
+    unrolled = []
+    for elem in entries:
+        if len(elem) == 1:
+            unrolled.append(int(elem[0]))
+        elif len(elem) == 2:
+            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1)]
+        elif len(elem) == 3:
+            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1, int(elem[2]))]
+
+    return sorted(list(set(unrolled)))
+
+
+def load_config(yaml_file):
+    """
+        Tranlate a yaml file into opt and opt.tune pipeline config
+    :param yaml_file: a yaml file
+    :return: a list of command to be executed before pipeline execution
+    """
+    with open(yaml_file) as fp:
+        config = yaml.load(fp)
+
+    bidon = ['']
+    all_cmd = []
+    s_cmd = []
+    prefix = ''
+    def unfold(value):
+
+        if isinstance(value, dict):
+            for k, v in value.items():
+                bidon[0] = "{0}.{1}".format(bidon[0], k)
+                unfold(v)
+        else:
+            if isinstance(value, basestring):
+                cast_value = "'{}'".format(value)
+            else:
+                cast_value = value
+            if '{0}'in prefix:
+                s_cmd.append("{0}{1}={2}".format(prefix, bidon[0], cast_value))
+            else:
+                all_cmd.append("{0}{1}={2}".format(prefix, bidon[0], cast_value))
+        bidon[0] = ''
+    counter = 1
+    for k_, v in config.items():
+        k = str(k_)
+        if k.lower().startswith('group'):
+            bidon = ['']
+            prefix = 'opt'
+            unfold(v)
+        else:
+            s_cmd = []
+            prefix = "opt.tune({0})"
+            unfold(v)
+            for i, subject in enumerate(unroll_numbers(k), counter):
+                all_cmd.append('opt.tune({0}).subject="sub-{1:04d}"'.format(i, subject))
+                for line in s_cmd:
+                #  TODO make the 4 in {1:04d} a configurable thing
+                    all_cmd.append(line.format(i))
+            counter = i + 1
+    return all_cmd
+
 class BasePipeline(object):
     """
     This is the base class to run PSOM/NIAK pipeline under CBRAIN and the
@@ -44,8 +105,9 @@ class BasePipeline(object):
     BOUTIQUE_TYPE_CAST = {"Number": num, "String": string, "File": string, "Flag": string}
     BOUTIQUE_TYPE = "type"
     BOUTIQUE_LIST = "list"
+    PIPELINE_M_FILE = 'pipeline.m'
 
-    def __init__(self, pipeline_name, folder_in, folder_out, options=None):
+    def __init__(self, pipeline_name, folder_in, folder_out, config_file=None, options=None):
 
         # literal file name in niak
         self.pipeline_name = pipeline_name
@@ -61,33 +123,32 @@ class BasePipeline(object):
         self.folder_out = folder_out
         self.octave_options = options
 
+        if config_file:
+           self.opt_and_tune_config = load_config(config_file)
+        else:
+            self.opt_and_tune_config = []
 
     def run(self):
         print(" ".join(self.octave_cmd))
         p = None
 
         try:
+            print(self.folder_out)
             p = subprocess.Popen(self.octave_cmd)
-            while not os.path.exists("{0}/logs/tmp/psom1.sh".format(self.folder_out)):
-                time.sleep(.2)
             run_worker(self.folder_out, 1)
             p.wait()
-        except BaseException as e:
-            if p and psutil_loaded:
-                parent = psutil.Process(p.pid)
-                try:
-                    children = parent.children(recursive=True)
-                except AttributeError:
-                    children = parent.get_children(recursive=True)
-                for child in children:
-                    child.kill()
-                parent.kill()
-            raise e
+        finally:
+            os.remove('{0}/logs/PIPE.lock'.format(self.folder_out))
+            shutil.rmtree('{0}/logs/tmp'.format(self.folder_out))
 
     @property
     def octave_cmd(self):
-        return ["/usr/bin/env", "octave", "--eval", "{0};{1}(files_in, opt)"
-                           .format(";".join(self.octave_options), self.pipeline_name)]
+        m_file = "{0}/{1}".format(self.folder_out, self.PIPELINE_M_FILE)
+        with open(m_file,'w') as fp:
+            print(self.opt_and_tune_config + self.octave_options)
+            fp.write(";\n".join(self.opt_and_tune_config + self.octave_options))
+            fp.write(";\n{0}(files_in, opt);\n".format(self.pipeline_name))
+        return ["/usr/bin/env", "octave", m_file]
 
     @property
     def octave_options(self):
@@ -216,7 +277,10 @@ class BASC(BasePipeline):
 
 def run_worker(dir, num):
     cmd = ['psom_worker.py', '-d', dir, '-w', str(num)]
-    subprocess.call(cmd)
+    while not os.path.exists("{0}/logs/tmp/".format(dir)):
+        # sleep long enough to be last on the race condition TODO (FIND A BETTER WAY TO DO THAT)
+        time.sleep(5)
+    return subprocess.Popen(cmd)
 
 # Dictionary for supported class
 SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
@@ -224,7 +288,7 @@ SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
                        "Niak_stability_rest": BASC}
 
 
-def load(pipeline_name, folder_in, folder_out, options=None):
+def load(pipeline_name, *args, **kwargs):
 
     if not pipeline_name or not pipeline_name in SUPPORTED_PIPELINES:
         m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name,SUPPORTED_PIPELINES)
@@ -232,13 +296,9 @@ def load(pipeline_name, folder_in, folder_out, options=None):
 
     pipe = SUPPORTED_PIPELINES[pipeline_name]
 
-    return pipe(folder_in, folder_out, options=options)
+    return pipe(*args, **kwargs)
 
 
 if __name__ == '__main__':
-    folder_in = "/home/poquirion/test/data_test_niak_mnc1"
-    folder_out = "/var/tmp"
-
-    basc = BASC(folder_in=folder_in, folder_out=folder_out)
-
-    print(basc.octave_cmd)
+    f = "/home/poquirion/simexp/bids-app/niak/default_config.yaml"
+    print (load_config(f))

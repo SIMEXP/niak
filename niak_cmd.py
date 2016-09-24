@@ -49,18 +49,11 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    print("{0} {1}".format(__file__, "".join(args)))
+    print("{0} {1}".format(__file__, " ".join(args)))
 
     parser = argparse.ArgumentParser(description='Run a niak script')
 
     # parser.add_argument("pipeline", default=None)
-    parser.add_argument("--participant_label",
-                        help='The label(s) of the participant(s) that should be analyzed. The label '
-                        'corresponds to sub-<participant_label> from the BIDS spec '
-                        '(so it does not include "sub-"). If this parameter is not '
-                        'provided all subjects should be analyzed. Multiple '
-                        'participants can be specified with a space separated list.',
-                         nargs="+")
 
     parser.add_argument('analysis_level', help='Level of the analysis that will be performed. '
                     'Multiple participant level analyses can be run independently '
@@ -78,6 +71,16 @@ def main(args=None):
     parser.add_argument('-v', '--version', action='version',
                         version='BIDS-App example version {}'.format(__version__))
 
+    parser.add_argument('--config_file', '-c', help='a yaml config file with the preprocessing configs')
+
+    parser.add_argument("--participant_label", nargs="+",
+                        help='The label(s) of the participant(s) that should be analyzed. The label '
+                        'corresponds to sub-<participant_label> from the BIDS spec '
+                        '(so it does not include "sub-"). If this parameter is not '
+                        'provided all subjects should be analyzed. Multiple '
+                        'participants can be specified with a space separated list.')
+
+
     parsed, unformated_options = parser.parse_known_args(args)
 
     options = build_opt(unformated_options)
@@ -88,11 +91,12 @@ def main(args=None):
         pipeline_name = "Niak_fmri_preprocess"
 
     if parsed.analysis_level =="group" :
-        pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir, options=options)
+        pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir,
+                                             config_file= parsed.config_file, options=options)
         pipeline.run()
     else:
-        pyniak.run_worker(parsed.output_dir, parsed.participant_label)
-
+        p = pyniak.load_pipeline.run_worker(parsed.output_dir, parsed.participant_label[0])
+        p.wait()
 
 
 if __name__ == '__main__':
