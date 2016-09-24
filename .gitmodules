@@ -1,6 +1,0 @@
-[submodule "niak"]
-	path = niak
-	url = https://github.com/SIMEXP/niak
-[submodule "psom"]
-	path = psom
-	url = https://github.com/SIMEXP/psom
