@@ -168,6 +168,10 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     else
         coi_cat = true;
     end
+    
+    % Filter out NaN values
+    nan_coi = find(isnan(coi)); 
+    coi(nan_coi) = []; 
 
     % Determine the number of rows and columns for the subyptes
     n_cols = floor(sqrt(n_sbt));
@@ -184,6 +188,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
         for sbt_id = 1:n_sbt
             % Get the subtype weights
             sbt_weights = weights(:, sbt_id, net_id);
+            sbt_weights(nan_coi) = []; % filter the weights from subjects with NaNs
             % Create the subplot
             subplot(n_rows, n_cols, sbt_id);
             ax = gca;
@@ -203,8 +208,8 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
                     boxplot(sbt_weights, coi);
                 end
                 % Set the x axis ticks and labels
-                nan_coi = find(isnan(coi_unique));
-                coi_unique(nan_coi) = []; % remove the NaN values from grouping values
+                nan_c = find(isnan(coi_unique));
+                coi_unique(nan_c) = []; % remove the NaN values from grouping values
                 set(ax,'xtick', 1:length(coi_unique'), 'xticklabel', cellstr(num2str(coi_unique)));
             else
                 % This is a dimensional variable
