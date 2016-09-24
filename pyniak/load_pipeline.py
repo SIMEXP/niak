@@ -138,8 +138,11 @@ class BasePipeline(object):
             run_worker(self.folder_out, 1)
             p.wait()
         finally:
-            os.remove('{0}/logs/PIPE.lock'.format(self.folder_out))
-            shutil.rmtree('{0}/logs/tmp'.format(self.folder_out))
+            try:
+                os.remove('{0}/logs/PIPE.lock'.format(self.folder_out))
+                shutil.rmtree('{0}/logs/tmp'.format(self.folder_out))
+            except OSError:
+                pass
 
     @property
     def octave_cmd(self):
