@@ -347,11 +347,12 @@ class FmriPreprocess(BasePipeline):
 
         :return: A list that contains octave string that fill init the file_in variable
 
-        TODO write that method for bids
-
         """
         opt_list = []
-        in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
+        if os.path.isfile("{0}/{1}".format(os.getcwd(), self.folder_in)):
+            in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
+        else:
+            in_full_path = "{0}".format(self.folder_in)
         list_in_dir = os.listdir(in_full_path)
 
         # TODO Control that with an option
