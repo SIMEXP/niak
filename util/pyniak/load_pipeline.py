@@ -237,10 +237,10 @@ class BasePipeline(object):
         self._grabber_options = []
         self._pipeline_options = []
 
-        if os.path.islink(folder_in):
-            self.folder_in = os.readlink(folder_in)
-        else:
-            self.folder_in = folder_in
+        # if os.path.islink(folder_in):
+        #     self.folder_in = os.readlink(folder_in)
+        # else:
+        self.folder_in = folder_in
         self.folder_out = folder_out
         self.octave_options = options
 
