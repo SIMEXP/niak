@@ -244,7 +244,11 @@ class BasePipeline(object):
         self.folder_out = folder_out
         self.octave_options = options
 
-        self.subjects = unroll_numbers(subjects)
+        if subjects is not None:
+            self.subjects = unroll_numbers(subjects)
+        else:
+            self.subjects = None
+
         self.psom_gb_local_path = None
 
     def psom_gb_vars_local_setup(self):
