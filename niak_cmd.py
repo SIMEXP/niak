@@ -33,7 +33,6 @@ def build_opt(option):
             parser.add_argument(option[i], nargs='?')
 
     parsed = parser.parse_known_args(option)
-    print(parser)
 
     for k, v in parsed[0].__dict__.items():
         if v is None:
@@ -80,10 +79,7 @@ def main(args=None):
                         'provided all subjects should be analyzed. Multiple '
                         'participants can be specified with a space separated list.')
 
-
     parsed, unformated_options = parser.parse_known_args(args)
-
-    options = build_opt(unformated_options)
 
     pipeline_name = None
 
@@ -92,7 +88,7 @@ def main(args=None):
 
     if parsed.analysis_level =="group" :
         pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir,
-                                             config_file= parsed.config_file, options=options)
+                                             config_file= parsed.config_file)
         pipeline.run()
     else:
         p = pyniak.load_pipeline.run_worker(parsed.output_dir, parsed.participant_label[0])
