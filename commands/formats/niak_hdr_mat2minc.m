@@ -1,10 +1,10 @@
-function [direction_cosine,step,start] = niak_hdr_mat2minc(mat)
+function [direction_cosine,step,start,dimension_order] = niak_hdr_mat2minc(mat)
 % Convert a "voxel-to-world" coordinates affine transformation from the standard
 % 4*4 matrix array (y=M*x+T) to the cosines/start/step representation used
 % in minc headers.
 %
 % SYNTAX:
-% [DIRECTION_COSINE,STEP,START] = NIAK_HDR_MAT2MINC(MAT)
+% [DIRECTION_COSINE,STEP,START,DIMENSION_ORDER] = NIAK_HDR_MAT2MINC(MAT)
 % 
 % _________________________________________________________________________
 % INPUTS:
@@ -23,6 +23,10 @@ function [direction_cosine,step,start] = niak_hdr_mat2minc(mat)
 %
 % STEP  (vector 3*1) the step made at each voxel dimension along the
 %       DIRECTION_COSINES vector.
+%
+% DIMENSION_ORDER (string) the order in which the dimensions are stored. 
+%   Each letter ('x', 'y' or 'z') indicates a directions as follows:
+%   x: left -> right; y: posterior -> anterior; z: dorsal -> ventral
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -70,6 +74,8 @@ step = sqrt(diag(R'*R));
 %% Trying to guess the orientation of axis in voxel space.
 %% This is ugly ! but I don't have anything better for now.
 [val,ind] = max(abs(R),[],1);
+dimension_order = 'xyz';
+dimension_order = dimension_order(ind);
 for num_d = 1:3
     step(num_d) = step(num_d) * sign(R(ind(num_d),num_d));    
 end
