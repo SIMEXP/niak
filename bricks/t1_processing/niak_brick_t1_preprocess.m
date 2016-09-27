@@ -98,7 +98,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %         for 1.5T scan; 50 for 3T scan). 
 %
 %    FLAG_ALL
-%        (boolean, default false) if FLAG_ALL is true, by default 
+%        (boolean, default true) if FLAG_ALL is true, by default 
 %        the brick will generate all outputs with default output 
 %        names.
 %
@@ -306,10 +306,11 @@ files_in = psom_struct_defaults(files_in, ...
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
 gb_list_fields    = {'flag_all' , 'template'                 , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
-gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
+gb_list_defaults  = {true       , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
 niak_set_defaults
 
 if ischar(files_in.template)
+    template = struct;
     switch files_in.template
     case 'mni_icbm152_nlin_sym_09a'
         template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average

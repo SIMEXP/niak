@@ -45,10 +45,11 @@ def build_opt(option):
 
 
 def main(args=None):
-    # print " ".join(args)
     # return
     if args is None:
         args = sys.argv[1:]
+
+    print('{0} {1}'.format(__file__, " ".join(args)))
 
     parser = argparse.ArgumentParser(description='Run a niak script')
 

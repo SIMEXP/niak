@@ -237,14 +237,18 @@ class BasePipeline(object):
         self._grabber_options = []
         self._pipeline_options = []
 
-        if os.path.islink(folder_in):
-            self.folder_in = os.readlink(folder_in)
-        else:
-            self.folder_in = folder_in
+        # if os.path.islink(folder_in):
+        #     self.folder_in = os.readlink(folder_in)
+        # else:
+        self.folder_in = folder_in
         self.folder_out = folder_out
         self.octave_options = options
 
-        self.subjects = unroll_numbers(subjects)
+        if subjects is not None:
+            self.subjects = unroll_numbers(subjects)
+        else:
+            self.subjects = None
+
         self.psom_gb_local_path = None
 
     def psom_gb_vars_local_setup(self):
@@ -343,11 +347,12 @@ class FmriPreprocess(BasePipeline):
 
         :return: A list that contains octave string that fill init the file_in variable
 
-        TODO write that method for bids
-
         """
         opt_list = []
-        in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
+        if os.path.isfile("{0}/{1}".format(os.getcwd(), self.folder_in)):
+            in_full_path = "{0}/{1}".format(os.getcwd(), self.folder_in)
+        else:
+            in_full_path = "{0}".format(self.folder_in)
         list_in_dir = os.listdir(in_full_path)
 
         # TODO Control that with an option
