@@ -1,7 +1,7 @@
 FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-ENV PSOM_VERSION 2.0.2
+ENV PSOM_VERSION 2.1.0
 
 # Install NIAK  
 
