@@ -1,8 +1,6 @@
 FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-#ENV NIAK_VERSION dev-0.14.0
-#ENV NIAK_RELEASE_NAME niak-with-dependencies
 
 # Install NIAK from the tip of master
 RUN apt-get install git -y --fix-missing
@@ -33,10 +31,12 @@ ENV MNI_DATAPATH=/opt/minc-itk4/share
 ENV MINC_FORCE_V2=1
 ENV MINC_COMPRESS=4
 ENV VOLUME_CACHE_THRESHOLD=-1
+ENV TMPDIR=/outputs/tmp
 
 # 3D visualisation tools
 RUN apt-get install mricron -y \
-     libcanberra-gtk-module
+     libcanberra-gtk-module \
+     rsync
 
 RUN mkdir /oasis
 RUN mkdir /projects
@@ -47,7 +47,7 @@ ADD niak_cmd.py /code/run.py
 ADD pyniak /code/pyniak
 ADD pyyaml /code/
 ADD psom_gb_vars_local.m /code/niak/psom_gb_vars_local.m
-WORKDIR /code
+WORKDIR /outputs
 ENTRYPOINT ["/code/run.py"]
 
 RUN echo addpath\(genpath\(\"/code/niak/\"\)\)\; >> /etc/octave.conf

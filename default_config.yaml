@@ -6,18 +6,22 @@
       nu_correct:
         arg: -distance 50
     psom:
-      max_queued: 30
+      max_queued: 5000
   198-200:
-    t1_preprocess:  
+    t1_preprocess:
       nu_correct:
         arg: -distance 55
   300,301:
-    slice_timing: 
+    slice_timing:
       type_scanner: Bruker
-    t1_preprocess:  
+    t1_preprocess:
       nu_correct:
         arg: -distance 49
   303:
-    t1_preprocess:  
+    t1_preprocess:
+      nu_correct:
+        arg: -distance 51
+  304:
+    t1_preprocess:
       nu_correct:
         arg: -distance 51

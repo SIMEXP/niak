@@ -85,14 +85,19 @@ def main(args=None):
 
     if pipeline_name is None:
         pipeline_name = "Niak_fmri_preprocess"
-
+    try:
+        os.mkdir('/outputs/tmp')
+    except OSError:
+        pass
     if parsed.analysis_level =="group" :
         pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir,
-                                             config_file= parsed.config_file)
+                                             config_file=parsed.config_file)
         pipeline.run()
     else:
-        p = pyniak.load_pipeline.run_worker(parsed.output_dir, parsed.participant_label[0])
-        p.wait()
+        pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir,
+                                             subjects=parsed.participant_label)
+        pipeline.run()
+
 
 
 if __name__ == '__main__':

@@ -1,11 +1,11 @@
 __author__ = 'poquirion'
-
 import json
 import os
 import re
 import shutil
 import subprocess
 import time
+import tempfile
 
 import yaml
 
@@ -28,21 +28,25 @@ def string(s):
 
 
 def unroll_numbers(numbers):
-    import re
-
-    entries = [a[0].split('-') for a in  re.findall("([0-9]+((-[0-9]+)+)?)", numbers)]
-
     unrolled = []
-    for elem in entries:
-        if len(elem) == 1:
-            unrolled.append(int(elem[0]))
-        elif len(elem) == 2:
-            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1)]
-        elif len(elem) == 3:
-            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1, int(elem[2]))]
+
+    def unroll_string(number, unrolled):
+        entries = [a[0].split('-') for a in re.findall("([0-9]+((-[0-9]+)+)?)", number)]
+        for elem in entries:
+            if len(elem) == 1:
+                unrolled.append(int(elem[0]))
+            elif len(elem) == 2:
+                unrolled += [a for a in range(int(elem[0]), int(elem[1]) + 1)]
+            elif len(elem) == 3:
+                unrolled += [a for a in range(int(elem[0]), int(elem[1]) + 1, int(elem[2]))]
+
+    if isinstance(numbers, basestring):
+        unroll_string(numbers, unrolled)
+    else:
+        for n in numbers:
+            unroll_string(n, unrolled)
 
     return sorted(list(set(unrolled)))
-
 
 def load_config(yaml_file):
     """
@@ -107,7 +111,7 @@ class BasePipeline(object):
     BOUTIQUE_LIST = "list"
     PIPELINE_M_FILE = 'pipeline.m'
 
-    def __init__(self, pipeline_name, folder_in, folder_out, config_file=None, options=None):
+    def __init__(self, pipeline_name, folder_in, folder_out, subjects=None, config_file=None, options=None):
 
         # literal file name in niak
         self.pipeline_name = pipeline_name
@@ -120,11 +124,20 @@ class BasePipeline(object):
             self.folder_in = os.readlink(folder_in)
         else:
             self.folder_in = folder_in
-        self.folder_out = folder_out
+        self.folder_out_finale = folder_out
         self.octave_options = options
 
+        if subjects is not None:
+            self.subjects = unroll_numbers(subjects)
+            prefix = str(self.subjects[0])
+        else:
+            self.subjects = None
+            prefix = None
+
+        self.folder_out = tempfile.mkdtemp(prefix='results', suffix=prefix, dir=folder_out)
+
         if config_file:
-           self.opt_and_tune_config = load_config(config_file)
+            self.opt_and_tune_config = load_config(config_file)
         else:
             self.opt_and_tune_config = []
 
@@ -138,11 +151,13 @@ class BasePipeline(object):
             run_worker(self.folder_out, 1)
             p.wait()
         finally:
-            try:
-                os.remove('{0}/logs/PIPE.lock'.format(self.folder_out))
-                shutil.rmtree('{0}/logs/tmp'.format(self.folder_out))
-            except OSError:
-                pass
+            self.rsync_to_finale_folder(self.folder_out_finale)
+
+    def rsync_to_finale_folder(self, folder_out):
+        rsync = "rsync -a  --exclude logs --exclude report {0}/ {1}".format(self.folder_out, self.folder_out_finale).split()
+
+        subprocess.call(rsync)
+
 
     @property
     def octave_cmd(self):
@@ -212,7 +227,6 @@ class FmriPreprocess(BasePipeline):
 
         :return: A list that contains octave string that fill init the file_in variable
 
-        TODO write that method for bids
 
         """
         opt_list = []
@@ -236,7 +250,12 @@ class FmriPreprocess(BasePipeline):
             opt_list += ["files_in=fcon_get_files(list_subject,opt_g)"]
 
         elif bids_description:
-                opt_list += ["files_in=niak_grab_bids('{0}')".format(in_full_path)]
+                if self.subjects is not None and len(self.subjects) >= 1:
+                    opt_list += ["opt_gr.subject_list = {0}".format(self.subjects).replace('[', '{').replace(']', '}')]
+                    opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
+                else:
+                    opt_list += ["files_in=niak_grab_bids('{0}')".format(in_full_path)]
+
                 opt_list += ["opt.slice_timing.flag_skip=true"]
 
         else:
@@ -267,11 +286,10 @@ class BASC(BasePipeline):
         :return:
         """
         file_in = []
-
-
         file_in.append("opt_g.min_nb_vol = {0}")
         file_in.append("opt_g.type_files = 'rest'")
-
+        if self.subjects is not None and len(self.subjects) >= 1:
+            file_in.append("opt_g.include_subject = {0}".format(self.subjects).replace('[', '{').replace(']', '}'))
         file_in.append("files_in = niak_grab_fmri_preprocess('{0}',opt_g)".format(self.folder_in))
 
 
@@ -294,7 +312,7 @@ SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
 def load(pipeline_name, *args, **kwargs):
 
     if not pipeline_name or not pipeline_name in SUPPORTED_PIPELINES:
-        m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name,SUPPORTED_PIPELINES)
+        m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name, SUPPORTED_PIPELINES)
         raise IOError(m)
 
     pipe = SUPPORTED_PIPELINES[pipeline_name]
@@ -302,6 +320,7 @@ def load(pipeline_name, *args, **kwargs):
     return pipe(*args, **kwargs)
 
 
-if __name__ == '__main__':
-    f = "/home/poquirion/simexp/bids-app/niak/default_config.yaml"
-    print (load_config(f))
+# if __name__ == '__main__':
+    # f = "/home/poquirion/simexp/bids-app/niak/default_config.yaml"
+    # print (load_config(f))
+    # print(unroll_numbers(["1","","3-8","8-33-2","275-278"]))

@@ -39,7 +39,7 @@ gb_psom_mode_deamon = 'background';
 gb_psom_mode_garbage = 'background';
 
 % Options for the maximal number of jobs
-gb_psom_max_queued = 4;
+gb_psom_max_queued = 1;
 
 % Default number of attempts of re-submission for failed jobs
 % [] is 0 for session, batch and background modes, and 1 for
@@ -56,7 +56,7 @@ gb_psom_path_search = '';
 % where to store temporary files
 pbs_jobid = getenv('PBS_JOBID');
 if isempty(pbs_jobid)
-    gb_psom_tmp = '/tmp/';
+    gb_psom_tmp = '/outputs/tmp/';
 else
     gb_psom_tmp = ['/localscratch/' pbs_jobid filesep];
 end
