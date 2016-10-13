@@ -2,7 +2,7 @@
 
 # In this Bids-apps
 
-This app implements a pipeline for preprocessing structural and functional MRI datasets. You can find the full descrition of the [NIAK fmri preprocessing pipeline here.](http://niak.simexp-lab.org/pipe_preprocessing.html)
+This app implements a pipeline for preprocessing structural and functional MRI datasets. You can find the full description of the NIAK fmri preprocessing pipeline [here](http://niak.simexp-lab.org/pipe_preprocessing.html).
 
 This pipeline first aims at reducing various noise sources that compromise the interpretation of fMRI fluctuations, e.g. physiological and motion artefacts. The second major aim is to align the data acquired at different time points and imaging modalities for a single subject, sometimes separated by years, and also to establish some correspondence between the brains of different subjects, such that an inference on the role of a given brain area can be carried at the level of a group.
 
