@@ -129,12 +129,12 @@ class BasePipeline(object):
 
         if subjects is not None:
             self.subjects = unroll_numbers(subjects)
-            prefix = str(self.subjects[0])
+            le_suffix = str(self.subjects[0])
         else:
             self.subjects = None
-            prefix = None
+            le_suffix = 'all'
 
-        self.folder_out = tempfile.mkdtemp(prefix='results', suffix=prefix, dir=folder_out)
+        self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=folder_out)
 
         if config_file:
             self.opt_and_tune_config = load_config(config_file)
