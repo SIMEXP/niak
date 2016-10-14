@@ -45,6 +45,8 @@ ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
 ADD util/lib/psom_gb_vars_local.jupyter /usr/local/lib/psom_gb_vars_local.jupyter
 RUN chmod 777 /usr/local/bin/niak_jupyter
 EXPOSE 80 
+# To run with jupyter
+# docker run -it --rm  -v /niak_sandbox:$PWD --users $UID -p 8080:80 niak/beta niak_jupyter
 
 
 
