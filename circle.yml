@@ -22,6 +22,7 @@ test:
   override:
     - docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --participant_label "274"
     - docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --participant_label "274 275"
+    - sudo chmod 777 -R /home/ubuntu/outputs
 
 deployment:
   hub:
