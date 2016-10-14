@@ -1,0 +1,12 @@
+#!/bin/bash
+cp /usr/local/lib/psom_gb_vars_local.jupyter $NIAK_ROOT
+export OCTAVE_EXECUTABLE=/usr/bin/octave
+jupyter notebook --no-browser --port 80  --ip=* > /dev/null 2>&1 &
+jupyter_pid=$!
+echo Welcome to NIAK in your browser, powerd by jupyter!
+echo NIAK is now available on you machine
+echo Open your favorite browser at the following address: localhost:8080
+echo "Then click New --> Octave" 
+echo 
+echo For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutorials.html
+wait $jupyter_pid  

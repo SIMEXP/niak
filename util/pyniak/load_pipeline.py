@@ -428,7 +428,7 @@ SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
                        "Niak_stability_rest": BASC}
 
 
-def load(pipeline_name, folder_in, folder_out, *args, **kwargs):
+def load(pipeline_name, *args, **kwargs):
 
     if not pipeline_name or not pipeline_name in SUPPORTED_PIPELINES:
         m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name, SUPPORTED_PIPELINES)
@@ -436,7 +436,7 @@ def load(pipeline_name, folder_in, folder_out, *args, **kwargs):
 
     pipe = SUPPORTED_PIPELINES[pipeline_name]
 
-    return pipe(folder_in, folder_out, *args, **kwargs)
+    return pipe(*args, **kwargs)
 
 
 
