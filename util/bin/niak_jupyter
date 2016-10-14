@@ -1,5 +1,5 @@
 #!/bin/bash
-cp /usr/local/lib/psom_gb_vars_local.jupyter $NIAK_ROOT
+cp /usr/local/lib/psom_gb_vars_local.jupyter ${NIAK_ROOT}/psom_gb_vars_local.m
 export OCTAVE_EXECUTABLE=/usr/bin/octave
 jupyter notebook --no-browser --port 80  --ip=* > /dev/null 2>&1 &
 jupyter_pid=$!

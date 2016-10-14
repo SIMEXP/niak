@@ -38,9 +38,7 @@ WORKDIR /niak_sandbox
 # jupyter install
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
-RUN pip install notebook
-# octave_kernel install
-RUN pip install octave_kernel
+RUN pip install notebook octave_kernel && rm get-pip.py
 RUN python -m octave_kernel.install
 RUN pip install ipywidgets
 ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
