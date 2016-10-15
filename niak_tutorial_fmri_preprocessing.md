@@ -11,16 +11,16 @@ clear
 niak_wget('data_test_niak_mnc1');
 ```
 
-    --2016-10-15 17:04:06--  http://www.nitrc.org/frs/download.php/7241/data_test_niak_mnc1.zip
+    --2016-10-15 18:36:07--  http://www.nitrc.org/frs/download.php/7241/data_test_niak_mnc1.zip
     Resolving www.nitrc.org (www.nitrc.org)... 132.239.16.23
     Connecting to www.nitrc.org (www.nitrc.org)|132.239.16.23|:80... connected.
     HTTP request sent, awaiting response... 200 OK
     Length: 2726269 (2.6M) [application/force-download]
     Saving to: `/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip'
     
-    100%[======================================>] 2,726,269    918K/s   in 2.9s    
+    100%[======================================>] 2,726,269    950K/s   in 2.8s    
     
-    2016-10-15 17:04:10 (918 KB/s) - `/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip' saved [2726269/2726269]
+    2016-10-15 18:36:10 (950 KB/s) - `/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip' saved [2726269/2726269]
     
     Deleting file '/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip' 
     ans = 0
@@ -76,7 +76,7 @@ opt.slice_timing.flag_center = false;
 opt.slice_timing.suppress_vol = 3;
 ```
 
-# Resampling
+## Resampling
 The voxel size for resampling in stereotaxic space is specified by the user:
 
 
@@ -85,7 +85,7 @@ The voxel size for resampling in stereotaxic space is specified by the user:
 opt.resample_vol.voxel_size    = 10;
 ```
 
-# T1 processing
+## T1 processing
 The options for non-uniformity correction of the T1 image is often useful to tweak:
 
 
@@ -96,7 +96,7 @@ The options for non-uniformity correction of the T1 image is often useful to twe
 opt.t1_preprocess.nu_correct.arg = '-distance 75';
 ```
 
-# Regression of confounds
+## Regression of confounds
 The options for temporal filtering, motion parameter regression, white matter and ventricle signal regression, COMPCOR, global signal correction and scrubbing.
 
 
@@ -132,7 +132,7 @@ opt.regress_confounds.flag_scrubbing = true;
 opt.regress_confounds.thre_fd = 0.5;    
 ```
 
-# Spatial smoothing
+## Spatial smoothing
 The size of the spatial Gaussian blurring kernel: 
 
 
@@ -141,77 +141,83 @@ The size of the spatial Gaussian blurring kernel:
 opt.smooth_vol.fwhm      = 6;
 ```
 
-# Run the pipeline
-This command can take up to 20-30 minutes to complete. It runs the full preprocessing pipeline on one subject/run. The text output normally gets regularly updated while the pipeline progresses. If the output gets interrupted, try simply to re-execute the cell to refresh the outputs. 
+## Run the pipeline
+This command can take up to 20-30 minutes to complete. It runs the full preprocessing pipeline on one subject/run. 
 
 
 ```octave
 niak_pipeline_fmri_preprocess(files_in,opt);
+% Check the content of fmri_preprocess/logs/PIPE_history.txt to monitor the progress of the pipeline
 ```
 
     Generating pipeline for individual fMRI preprocessing :
-        Adding subject1 ; 0.23 sec
-    Adding group-level quality control of coregistration in anatomical space (linear stereotaxic space) ; 0.02 sec
+        Adding subject1 ; 0.25 sec
+    Adding group-level quality control of coregistration in anatomical space (linear stereotaxic space) ; 0.01 sec
     Adding group-level quality control of coregistration in anatomical space (non-linear stereotaxic space) ; 0.01 sec
-    Adding group-level quality control of coregistration in functional space ; 0.01 sec
-    Adding group-level quality control of motion correction (motion parameters) ; 0.01 sec
+    Adding group-level quality control of coregistration in functional space ; 0.02 sec
+    Adding group-level quality control of motion correction (motion parameters) ; 0.02 sec
     Adding group-level quality control of scrubbing time frames with excessive motion ; 0.00 sec
-    Adding the report on fMRI preprocessing ; 0.52 sec
+    Adding the report on fMRI preprocessing ; 0.24 sec
     
     Logs will be stored in /sandbox/home/git/niak_tutorials/fmri_preprocessing/fmri_preprocess/logs/
     Generating dependencies ...
-       Percentage completed :  0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100- 0.12 sec
+       Percentage completed :  0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100- 0.05 sec
     Setting up the to-do list ...
        I found 50 job(s) to do.
     I could not find any log file. This pipeline has not been started (yet?). Press CTRL-C to cancel.
-    Deamon started on 15-Oct-2016 17:04:21
-    15-Oct-2016 17:04:21 Starting the pipeline manager...
-    15-Oct-2016 17:04:21 Starting the garbage collector...
-    15-Oct-2016 17:04:21 Starting worker number 1...
-    15-Oct-2016 17:04:21 Starting worker number 2...
+    Deamon started on 15-Oct-2016 18:36:20
+    15-Oct-2016 18:36:20 Starting the pipeline manager...
+    15-Oct-2016 18:36:20 Starting the garbage collector...
+    15-Oct-2016 18:36:20 Starting worker number 1...
+    15-Oct-2016 18:36:20 Starting worker number 2...
     
-    Pipeline started on 15-Oct-2016 17:04:22
+    Pipeline started on 15-Oct-2016 18:36:21
     user: , host: 6e3cbb9f4193, system: unix
     ****************************************
-    15-Oct-2016 17:04:23 pipe_params                               submitted  (1 run / 0 fail / 0 done / 49 left)
-    15-Oct-2016 17:04:23 resample_aal                              submitted  (2 run / 0 fail / 0 done / 48 left)
-    15-Oct-2016 17:04:23 cp_confounds_keys                         submitted  (3 run / 0 fail / 0 done / 47 left)
-    15-Oct-2016 17:04:23 cp_template                               submitted  (4 run / 0 fail / 0 done / 46 left)
-    15-Oct-2016 17:04:23 pipe_params                               finished   (3 run / 0 fail / 1 done / 46 left)
-    15-Oct-2016 17:04:23 cp_confounds_keys                         finished   (2 run / 0 fail / 2 done / 46 left)
-    15-Oct-2016 17:04:23 cp_template                               finished   (1 run / 0 fail / 3 done / 46 left)
-    15-Oct-2016 17:04:23 resample_fmri_stereo                      submitted  (2 run / 0 fail / 3 done / 45 left)
-    15-Oct-2016 17:04:23 t1_preprocess_subject1                    submitted  (3 run / 0 fail / 3 done / 44 left)
-    15-Oct-2016 17:04:23 slice_timing_subject1_session1_motor      submitted  (4 run / 0 fail / 3 done / 43 left)
-    15-Oct-2016 17:04:24 resample_aal                              finished   (3 run / 0 fail / 4 done / 43 left)
-    15-Oct-2016 17:04:24 rep_cp_report_templates                   submitted  (4 run / 0 fail / 4 done / 42 left)
-    15-Oct-2016 17:04:25 resample_fmri_stereo                      finished   (3 run / 0 fail / 5 done / 42 left)
-    15-Oct-2016 17:04:25 rep_params                                submitted  (4 run / 0 fail / 5 done / 41 left)
-    15-Oct-2016 17:04:25 slice_timing_subject1_session1_motor      finished   (3 run / 0 fail / 6 done / 41 left)
-    15-Oct-2016 17:04:25 motion_target_subject1_session1_motor     submitted  (4 run / 0 fail / 6 done / 40 left)
-    15-Oct-2016 17:04:26 rep_cp_report_templates                   finished   (3 run / 0 fail / 7 done / 40 left)
-    15-Oct-2016 17:04:26 rep_template_stereo                       submitted  (4 run / 0 fail / 7 done / 39 left)
-    15-Oct-2016 17:04:26 motion_target_subject1_session1_motor     finished   (3 run / 0 fail / 8 done / 39 left)
-    15-Oct-2016 17:04:26 motion_Wrun_subject1_session1_motor       submitted  (4 run / 0 fail / 8 done / 38 left)
-    15-Oct-2016 17:04:35 rep_template_stereo                       finished   (3 run / 0 fail / 9 done / 38 left)
-    15-Oct-2016 17:04:35 rep_t1_outline_registration               submitted  (4 run / 0 fail / 9 done / 37 left)
-    15-Oct-2016 17:04:51 motion_Wrun_subject1_session1_motor       finished   (3 run / 0 fail / 10 done / 37 left)
-    15-Oct-2016 17:04:51 motion_parameters_subject1_session1_motor submitted  (4 run / 0 fail / 10 done / 36 left)
+    .15-Oct-2016 18:36:22 pipe_params                               submitted  (1 run / 0 fail / 0 done / 49 left)
+    15-Oct-2016 18:36:22 resample_aal                              submitted  (2 run / 0 fail / 0 done / 48 left)
+    15-Oct-2016 18:36:22 cp_confounds_keys                         submitted  (3 run / 0 fail / 0 done / 47 left)
+    15-Oct-2016 18:36:22 cp_template                               submitted  (4 run / 0 fail / 0 done / 46 left)
     .
-    15-Oct-2016 17:04:56 motion_parameters_subject1_session1_motor finished   (3 run / 0 fail / 11 done / 36 left)
-    15-Oct-2016 17:04:56 rep_t1_outline_registration               finished   (2 run / 0 fail / 12 done / 36 left)
-    15-Oct-2016 17:04:56 rep_template_stereo_overlay               submitted  (3 run / 0 fail / 12 done / 35 left)
-    15-Oct-2016 17:04:56 rep_init_report                           submitted  (4 run / 0 fail / 12 done / 34 left)
-    15-Oct-2016 17:04:56 rep_init_report                           finished   (3 run / 0 fail / 13 done / 34 left)
-    15-Oct-2016 17:04:56 rep_motion_native_subject1_session1_motor submitted  (4 run / 0 fail / 13 done / 33 left)
-    15-Oct-2016 17:04:57 rep_template_stereo_overlay               finished   (3 run / 0 fail / 14 done / 33 left)
-    15-Oct-2016 17:04:57 rep_target_native_subject1_session1_motor submitted  (4 run / 0 fail / 14 done / 32 left)
-    15-Oct-2016 17:04:58 rep_motion_native_subject1_session1_motor finished   (3 run / 0 fail / 15 done / 32 left)
-    15-Oct-2016 17:04:58 rep_motion_report_subject1_session1_motor submitted  (4 run / 0 fail / 15 done / 31 left)
-    15-Oct-2016 17:04:59 rep_target_native_subject1_session1_motor finished   (3 run / 0 fail / 16 done / 31 left)
-    15-Oct-2016 17:04:59 rep_motion_report_subject1_session1_motor finished   (2 run / 0 fail / 17 done / 31 left)
-    15-Oct-2016 17:04:59 rep_motion_report                         submitted  (3 run / 0 fail / 17 done / 30 left)
-    15-Oct-2016 17:04:59 rep_motion_report                         finished   (2 run / 0 fail / 18 done / 30 left)
+    15-Oct-2016 18:36:22 pipe_params                               finished   (3 run / 0 fail / 1 done / 46 left)
+    15-Oct-2016 18:36:22 cp_confounds_keys                         finished   (2 run / 0 fail / 2 done / 46 left)
+    15-Oct-2016 18:36:22 cp_template                               finished   (1 run / 0 fail / 3 done / 46 left)
+    15-Oct-2016 18:36:22 resample_fmri_stereo                      submitted  (2 run / 0 fail / 3 done / 45 left)
+    15-Oct-2016 18:36:22 t1_preprocess_subject1                    submitted  (3 run / 0 fail / 3 done / 44 left)
+    15-Oct-2016 18:36:22 slice_timing_subject1_session1_motor      submitted  (4 run / 0 fail / 3 done / 43 left)
+    ..
+    15-Oct-2016 18:36:23 resample_aal                              finished   (3 run / 0 fail / 4 done / 43 left)
+    15-Oct-2016 18:36:23 rep_cp_report_templates                   submitted  (4 run / 0 fail / 4 done / 42 left)
+    .
+    15-Oct-2016 18:36:24 resample_fmri_stereo                      finished   (3 run / 0 fail / 5 done / 42 left)
+    15-Oct-2016 18:36:24 slice_timing_subject1_session1_motor      finished   (2 run / 0 fail / 6 done / 42 left)
+    15-Oct-2016 18:36:24 motion_target_subject1_session1_motor     submitted  (3 run / 0 fail / 6 done / 41 left)
+    15-Oct-2016 18:36:24 rep_params                                submitted  (4 run / 0 fail / 6 done / 40 left)
+    .
+    15-Oct-2016 18:36:24 rep_cp_report_templates                   finished   (3 run / 0 fail / 7 done / 40 left)
+    15-Oct-2016 18:36:24 rep_params                                finished   (2 run / 0 fail / 8 done / 40 left)
+    15-Oct-2016 18:36:24 rep_template_stereo                       submitted  (3 run / 0 fail / 8 done / 39 left)
+    15-Oct-2016 18:36:24 rep_t1_outline_registration               submitted  (4 run / 0 fail / 8 done / 38 left)
+    .................
+    15-Oct-2016 18:36:33 rep_t1_outline_registration               finished   (3 run / 0 fail / 9 done / 38 left)
+    15-Oct-2016 18:36:33 rep_init_report                           submitted  (4 run / 0 fail / 9 done / 37 left)
+    ....................
+    15-Oct-2016 18:36:43 rep_template_stereo                       finished   (3 run / 0 fail / 10 done / 37 left)
+    15-Oct-2016 18:36:43 rep_init_report                           finished   (2 run / 0 fail / 11 done / 37 left)
+    15-Oct-2016 18:36:43 rep_template_stereo_overlay               submitted  (3 run / 0 fail / 11 done / 36 left)
+    15-Oct-2016 18:36:43 rep_motion_native_subject1_session1_motor submitted  (4 run / 0 fail / 11 done / 35 left)
+    ...
+    15-Oct-2016 18:36:45 rep_motion_native_subject1_session1_motor finished   (3 run / 0 fail / 12 done / 35 left)
+    15-Oct-2016 18:36:45 rep_target_native_subject1_session1_motor submitted  (4 run / 0 fail / 12 done / 34 left)
+    .
+    15-Oct-2016 18:36:45 rep_template_stereo_overlay               finished   (3 run / 0 fail / 13 done / 34 left)
+    15-Oct-2016 18:36:45 rep_motion_report_subject1_session1_motor submitted  (4 run / 0 fail / 13 done / 33 left)
+    .
+    15-Oct-2016 18:36:46 rep_target_native_subject1_session1_motor finished   (3 run / 0 fail / 14 done / 33 left)
+    15-Oct-2016 18:36:46 rep_motion_report                         submitted  (4 run / 0 fail / 14 done / 32 left)
+    .
+    15-Oct-2016 18:36:46 rep_motion_report_subject1_session1_motor finished   (3 run / 0 fail / 15 done / 32 left)
+    15-Oct-2016 18:36:46 rep_motion_report                         finished   (2 run / 0 fail / 16 done / 32 left)
 
 
-Once the pipeline has completed, an interactive report is built as part of the output. The following [link](fmri_preprocess/report/index.html) will take you there once the pipeline is completed. Note that because of the very low resolution in the functional images of these data, the T1-BOLD registration fails. 
+Once the pipeline has completed, an interactive report is built as part of the output. Just open the file `fmri_preprocess/report/index.html` in your browser. Note that because of the very low resolution in the functional images of these data, the T1-BOLD registration fails. Check an example report on a real sample [here](https://simexp.github.io/qc_cobre/index.html).  
