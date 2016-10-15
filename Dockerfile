@@ -3,6 +3,10 @@ MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 ENV PSOM_VERSION 2.1.0
 ENV NIAK_ROOT /usr/local/niak
+ENV NIAK_CONFIG_PATH /local_config
+ENV NIAK_SANDBOX_ROOT /sandbox
+ENV NIAK_SANDBOX ${NIAK_SANDBOX_ROOT}/home
+ENV HOME ${NIAK_SANDBOX}
 
 # Install NIAK  
 
@@ -27,13 +31,13 @@ RUN wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
     && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py
 
 # Build octave configure file
-RUN mkdir /local_config && chmod 777 /local_config \
-    && echo addpath\(genpath\(\"/usr/local/niak/\"\)\)\; >> /etc/octave.conf \
-    && echo addpath\(genpath\(\"/local_config/\"\)\)\; >> /etc/octave.conf
-# "
+RUN mkdir ${NIAK_CONFIG_PATH} && chmod 777 ${NIAK_CONFIG_PATH} \
+    && echo addpath\(genpath\(\'${NIAK_ROOT}\'\)\)\; >> /etc/octave.conf \
+    && echo addpath\(genpath\(\'${NIAK_CONFIG_PATH}\'\)\)\; >> /etc/octave.conf
+
 # niak will run here
-RUN mkdir -p /niak_sandbox
-WORKDIR /niak_sandbox
+RUN mkdir -p ${NIAK_SANDBOX} && chmod -R 777 ${NIAK_SANDBOX_ROOT}
+WORKDIR ${NIAK_SANDBOX}
 
 # jupyter install
 RUN wget https://bootstrap.pypa.io/get-pip.py
@@ -43,10 +47,9 @@ RUN python -m octave_kernel.install
 RUN pip install ipywidgets
 ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
 ADD util/lib/psom_gb_vars_local.jupyter /usr/local/lib/psom_gb_vars_local.jupyter
-RUN chmod 777 /usr/local/bin/niak_jupyter
-EXPOSE 80 
+EXPOSE 8080
 # To run with jupyter
-# docker run -it --rm  -v /niak_sandbox:$PWD --users $UID -p 8080:80 niak/beta niak_jupyter
+# docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak:beta niak_jupyter
 
 
 
