@@ -98,7 +98,7 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 %  The measure 'Dcentrality' is described in the following paper:
 %   Buckner et al. Cortical Hubs Revealed by Intrinsic Functional Connectivity:
 %   Mapping, Assessment of Stability, and Relation to
-%   Alzheimer’s Disease. The Journal of Neuroscience, February 11, 2009.
+%   Alzheimers Disease. The Journal of Neuroscience, February 11, 2009.
 %
 % Some of the measures employed here depend on function from the "brain connectivity toolbox"
 %   https://sites.google.com/site/bctnet/Home/functions
@@ -137,9 +137,9 @@ function [pipeline,opt] = niak_pipeline_connectome(files_in,opt)
 % occur in particular with method 1. 
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal
-%               Département d'informatique et de recherche opérationnelle
-%               Université de Montréal, 2013
+%               Centre de recherche de l'institut de Griatrie de Montral
+%               Dpartement d'informatique et de recherche oprationnelle
+%               Universit de Montral, 2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, fMRI, connectome
@@ -245,7 +245,7 @@ end
 %% Add point-to-point connectivity, if required
 if opt.flag_p2p && ~strcmp(files_in.seeds,'gb_niak_omitted')    
     for x = 1:length(list_seed) 
-        for y = x+1:length(list_seed)
+        for y = x:length(list_seed)
             opt.graph_prop.(['p2p_' labels_seed{x} '_X_' labels_seed{y}]).param(1) = list_seed(x);
             opt.graph_prop.(['p2p_' labels_seed{x} '_X_' labels_seed{y}]).param(2) = list_seed(y);
             opt.graph_prop.(['p2p_' labels_seed{x} '_X_' labels_seed{y}]).type = 'p2p';

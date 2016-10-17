@@ -54,9 +54,9 @@ function [pipeline,opt_pipe,files_in] = niak_demo_connectome(path_demo,opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2013
+% University of Montreal, Qubec, Canada, 2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : region growing, fMRI
@@ -97,7 +97,7 @@ if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     files_in.fmri = opt.files_in.fmri;
 else
     %% Grab the results from the NIAK fMRI preprocessing pipeline
-    opt_g.min_nb_vol = 30; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
+    opt_g.min_nb_vol = 15; % the demo dataset is very short, so we have to lower considerably the minimum acceptable number of volumes per run 
     opt_g.type_files = 'roi'; % Specify to the grabber to prepare the files for the region growing pipeline
     files_in.fmri = niak_grab_fmri_preprocess(path_demo,opt_g).fmri; % Replace the folder by the path where the results of the fMRI preprocessing pipeline were stored. 
 end

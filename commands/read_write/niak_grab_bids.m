@@ -48,10 +48,12 @@ function files = niak_grab_bids(path_data,opt)
 %   TASK_TYPE
 %       (string, default = rest) The type of task, explicitely name in bids 
 %       file name
-%
 %   MAX_SUBJECTS
 %       (int, default = 0) 0 return all subjects. Used to put an upper limit
 %       on the number of subjects that are returned.
+%   SUBJECT_LIST
+%       (cellarray of int) The only subject to be retured
+%   
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_FMRI_PREPROCESS
@@ -121,6 +123,13 @@ else
     max_subjects = opt.max_subjects;
 end
 
+if ~isfield(opt,'subject_list')
+    subject_list = 0;
+else
+    subject_list = opt.subject_list;
+end
+
+
 
 if ~isfield(opt,'task_type')
     task_type = "rest";
@@ -139,6 +148,10 @@ for num_f = 1:length(list_dir)
         dir_name = regexpi(subject_dir,"(sub-(.*))", 'tokens');
         if ~isempty(dir_name)
             sub_id = dir_name{1}{1,2};
+            % Condition to return only subject in subject list
+            if ~isa(subject_list,'numeric') && ~any([subject_list{:}]==str2num(sub_id))
+                continue
+            end
         else
             continue   
         end   
@@ -173,7 +186,7 @@ for num_f = 1:length(list_dir)
             anat_path = strcat(session_path, filesep, 'anat');
             fmri_path = strcat(session_path, filesep, 'func');
             fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*", fmri_hint, ".*\.(nii|mnc).*)"];
-            anat_regex = ['(', subject_dir, '_T1w.*', anat_hint, '.*\.(nii|mnc).*)'] ;
+            anat_regex = ['(', subject_dir, '.*_T1w.*', anat_hint, '.*\.(nii|mnc).*)'] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;
             
