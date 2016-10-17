@@ -81,7 +81,8 @@ After a succefull docker installation, niak can be controlled throught a Jypiter
 
 ```bash
 docker pull simexp/niak-boss:beta
-docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:8080 simexp/niak-boss:beta niak_jupyter
+docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
+       -p 8080:8080 simexp/niak-boss:beta niak_jupyter
 ```
 
 And then connect your favorite browser to the the [following address: localhost:8080](localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the niak outputs will be in the directory where you called the `docker run` command (that is $PWD).
