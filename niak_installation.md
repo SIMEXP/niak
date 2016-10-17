@@ -1,6 +1,6 @@
 # NIAK with docker
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. It is possible to run a more secure niak/docker setup, we shall have instructions added in the near future.
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. We expect this issue to be resolved eventually, but this is currently a limitation of this installation method.
  > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
 
 ###Linux
@@ -23,7 +23,30 @@ All the members of the docker group will have access to the docker service.
 The following command will start NIAK with your home directory accessible (the rest of the file system is not accessible):
 ```bash
 xhost +local:
-docker run -i -t --privileged --rm --name niak -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak-boss:0.17.0 /bin/bash -c "cd $PWD; octave ;"
+docker run -i -t --privileged --rm \
+       --name niak \
+       -v $HOME:$HOME -v /etc/group:/etc/group \
+       -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  \
+       -v /tmp/.X11-unix:/tmp/.X11-unix \
+       -e DISPLAY=unix$DISPLAY \
+       --user $UID \
+       simexp/niak-boss:0.17.0 \
+       /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
+```
+You can also add the followin to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
+
+```bash
+alias docker_run_niak="xhost +local: && docker stop niak && docker rm niak && \
+docker run -i -t --privileged --rm \
+       --name niak \
+       -v $HOME:$HOME -v /etc/group:/etc/group \
+       -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  \
+       -v /tmp/.X11-unix:/tmp/.X11-unix \
+       -e DISPLAY=unix$DISPLAY \
+       --user $UID \
+       simexp/niak-boss:0.17.0 \
+       /bin/bash -ic \"cd $HOME; octave --force-gui; /bin/bash\""
+
 ```
 
 Replace `simexp/niak-boss:0.17.0` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.17.0)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
@@ -32,7 +55,7 @@ docker stop niak
 docker rm niak
 ```
 
-The procedure as been tested on Debian 8.0, Ubuntu 14.10,16.04, centOS 7 and fedora 20-23 and we expect it to run smootly on many other Linux distributions.
+The procedure as been tested on Debian 8.0, Ubuntu 14.10,15.10, 16.04, centOS 7 and fedora 20-23 and we expect it to run smootly on many other Linux distributions.
 
 ### Mac OSX
 
@@ -41,7 +64,10 @@ An extra step is needed to start a docker container on OSX. You first need to st
 This will start a bash terminal where you will be able to start the simex/niak docker container. Just type
 
 ```bash
-docker run -i -t --privileged --rm -v $HOME:$HOME  simexp/niak-boss:0.17.0 /bin/bash -c "cd $HOME; octave"
+docker run -i -t --privileged --rm \
+       -v $HOME:$HOME \
+       simexp/niak-boss:0.17.0 \
+       /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
 in that terminal.
@@ -80,7 +106,7 @@ default_save_options('-7');
 graphics_toolkit gnuplot
 ```
 
-**NIAK library**. Download the [latest NIAK release on NITRC](http://www.nitrc.org/frs/download.php/7470/niak-boss-0.13.0.zip), a free open-source software (MIT license). Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path. At this stage all pipelines (except the preprocessing pipeline) will work for nifti files. Any manipulation of MINC files will require the installation of the MINC tools (see below). The NIAK archive bundles the [brain connectivity toolbox](https://sites.google.com/site/bctnet/) and [PSOM](http://psom.simexp-lab.org/), which do not need to be installed separately.
+**NIAK library**. Download the [latest NIAK release on Github](https://github.com/SIMEXP/niak/releases/download/v0.16/niak-with-dependencies.zip), a free open-source software (MIT license). Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path. At this stage all pipelines (except the preprocessing pipeline) will work for nifti files. Any manipulation of MINC files will require the installation of the MINC tools (see below). The NIAK archive bundles the [brain connectivity toolbox](https://sites.google.com/site/bctnet/) and [PSOM](http://psom.simexp-lab.org/), which do not need to be installed separately.
 ```matlab
  path_niak = '/home/toto/niak/';
  P = genpath(path_niak);

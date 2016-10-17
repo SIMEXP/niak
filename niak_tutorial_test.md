@@ -14,25 +14,58 @@ This command will download the test dataset, as well as a series of results gene
 
 Those are spreadsheets formatted as comma-separated values. Each row is about one file of the associated pipeline, and includes the following information: 
 
- * 'source' (boolean) indicates if the file exist in the source (generated results). 
- * 'target' (boolean) the file exist in the target (reference results). 
- * 'identical' (boolean or NaN) the files are identical (see the note below). NaN for unsupported file types, or files that exist only on source or target 
- * 'same_labels' (boolean or NaN) the .csv files have the same labels. NaN indicates any other file type. 
- * 'same_variables' (boolean or NaN) the .mat files have the same variables. NaN for any other file type. 
- * 'same_header_info' (boolean or NaN) the .nii/.mnc files have the same info&nbsp;% in the header. NaN for any other file type. 
- * 'same_dim' (boolean or NaN) the volumes have the same dimensions (.nii/.mnc) or the spreadsheets have the same dimension (.csv). NaN for any other file type. 
- * 'dice_mask_brain' (scalar in [0,1] or NaN) the dice coefficient between the brain mask of the two volumes (.nii/.mnc). NaN for any other file type. 
- * 'max_diff' (positive scalar or NaN) the max absolute difference between the two volumes (.nii/.mnc) or spreadsheets (.csv). NaN for any other file type. 
- * 'min_diff' (positive scalar or NaN) the min absolute difference between the two volumes (.nii/.mnc) or spreadsheets (.csv). NaN for any other file type. 
- * 'mean_diff' (positive scalar or NaN) the mean absolute difference between the two volumes (.nii/.mnc) or spreadsheets (.csv). NaN for any other file type. 
- * 'max_corr' (scalar in [0,1] or NaN) the max correlation between the time series of voxels inside the brain mask between two 4D volumes (.nii/.mnc). NaN for any other file type. 
- * 'min_corr' (scalar in [0,1] or NaN) the min correlation between the time series of voxels inside the brain mask between two 4D volumes (.nii/.mnc). NaN for any other file type. 
- * 'mean_corr' (scalar in [0,1] or NaN) the mean correlation between the time series of voxels inside the brain mask between two 4D volumes (.nii/.mnc). NaN for any other file type.
+ * **`source`** (boolean) 
+   * **1**: the file exists in the source (generated results).
+   * **0**: the file is absent in the source (generated results).
+ * **`target`** (boolean) 
+   * **1**: the file exists in the target (reference results).
+   * **0**: the file is absent in the target (reference results). 
+ * **`identical`** (boolean or NaN) 
+   * **1**: the files are identical (the actual test depends on file type, see the note below).
+   * **0**: the files are different (the actual test depends on file type, see the note below).
+   * **NaN**: unsupported file type, or the file exists only on source or target. 
+ * **`same_labels`** (boolean or NaN)
+   * **1**: the .csv files have the same labels for rows and columns. 
+   * **0**: the .csv files have different labels for rows or columns. 
+   * **NaN**: not .csv files (the test does not apply, ignore value). 
+ * **`same_variables`** (boolean or NaN) 
+   * **1**: the .mat files contain the same variables. 
+   * **0**: the .mat files contain different variables.
+   * **NaN**: not .mat files (the test does not apply, ignore value).
+ * **`same_header_info`** (boolean or NaN) 
+   * **1**: the .nii/.mnc files have the same headers. 
+   * **0**: the .nii/.mnc files have different headers. 
+   * **NaN**: not .mnc/.nii files (the test does not apply, ignore value). 
+ * **`same_dim`** (boolean or NaN)
+   * **1**: the data inside .nii/.mnc or .csv files have the same dimensions.
+   * **0**: the data inside .nii/.mnc or .csv files have different dimensions.
+   * **NaN**: not .mnc/.nii/.csv files (the test does not apply, ignore value).  
+ * **`dice_mask_brain`** (scalar in [0,1] or NaN) 
+   * **scalar**: the dice coefficient for brain masks generated for two volumes (.nii/.mnc).
+   * **NaN**: not .mnc/.nii files (the test does not apply, ignore value).
+ * **`max_diff`** (positive scalar or NaN) 
+   * **scalar**: the max absolute difference between two volumes (.nii/.mnc) or spreadsheets (.csv).
+   * **NaN**: not .mnc/.nii/.csv files (the test does not apply, ignore value). 
+ * **`min_diff`** (positive scalar or NaN) 
+   * **scalar**: the min absolute difference between two volumes (.nii/.mnc) or spreadsheets (.csv). 
+   * **NaN**: not .mnc/.nii/.csv files (the test does not apply, ignore value).
+ * **`mean_diff`** (positive scalar or NaN)
+   * **scalar**: the mean absolute difference between two volumes (.nii/.mnc) or spreadsheets (.csv).
+   * **NaN**: not .mnc/.nii/.csv files (the test does not apply, ignore value).
+ * **`max_corr`** (scalar in [0,1] or NaN)
+   * **scalar**: the max correlation between the time series of voxels inside the brain masks, for two 4D volumes (.nii/.mnc). 
+   * **NaN**: not 4D .mnc/.nii files (the test does not apply, ignore value).
+ * **`min_corr`** (scalar in [0,1] or NaN) 
+   * **scalar**: the min correlation between the time series of voxels inside the brain masks, for two 4D volumes (.nii/.mnc). 
+   * **NaN**: not 4D .mnc/.nii files (the test does not apply, ignore value).
+ * **`mean_corr`** (scalar in [0,1] or NaN) 
+   * **scalar**: the mean correlation between the time series of voxels inside the brain masks, for two 4D volumes (.nii/.mnc). 
+   * **NaN**: not 4D .mnc/.nii files (the test does not apply, ignore value).
 
 Two files are identical if they exist in both source and target and 
 
-* for .nii/.mnc: the headers are identical and the max absolute difference is less than a tolerance value (10^-4). 
-* for .csv files: the labels of rows and columns are identical and the max absolute difference is less than a tolerance value (10^-4). 
-* for .mat files: the content is identical up to a tolerance value (10^-4).
+* **.nii/.mnc** files: the headers are identical and the max absolute difference is less than a tolerance value (10^-4). 
+* **.csv** files: the labels of rows and columns are identical and the max absolute difference is less than a tolerance value (10^-4, see `opt.eps` in `niak_brick_cmp_files`). 
+* **.mat** files: the content is identical up to a tolerance value (10^-4, see `opt.eps` in `niak_brick_cmp_files`).
 
 The tests fail if any two pairs of file are not identical in the reference results and the generated results. Note that tests can fail if slightly different versions of Matlab/Octave/minc tools are used when generating results as compared to the reference results. When NIAK is executed through docker, perfect replications are expected.
