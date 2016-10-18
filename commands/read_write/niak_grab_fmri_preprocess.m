@@ -83,6 +83,8 @@
 %
 %           'scores' : FILES is ready to feed into NIAK_PIPELINE_SCORES
 %
+%           'subtype' : FILES is ready to feed into NIAK_PIPELINE_SUBTYPE
+%
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -311,7 +313,10 @@ for num_s = 1:nb_subject
             if ismember(opt.type_files,{'roi','glm_connectome','fir'})
                 files.fmri.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];
             elseif ismember(opt.type_files,{'rest', 'scores'})
-                files.data.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];            
+                files.data.(list_subject{num_s}).(session).(run) = [path_fmri files_tmp{1}];
+            elseif ismember(opt.type_files,{'subtype'})
+                case_name = [list_subject{num_s} '_' session '_' run];
+                files.data.(case_name) = [path_fmri files_tmp{1}];
             else
                 error('%s is an unsupported type of output format for the files structure', opt.type_files)            
             end
@@ -327,7 +332,7 @@ if ~strcmp(opt.type_files,'glm_connectome')
         error('Could not find the group-level mask for functional data')
     end
     files.mask = [path_qc 'group_coregistration' filesep files.mask(1).name];
-    if opt.flag_areas && ~strcmp(opt.type_files,'scores')
+    if opt.flag_areas && ~strcmp(opt.type_files,'scores') && ~strcmp(opt.type_files, 'subtype')
         files.areas = dir([path_data 'anat' filesep 'template_aal.*']);
         if isempty(files.areas)
             error('Could not find the AAL parcelation for functional data')

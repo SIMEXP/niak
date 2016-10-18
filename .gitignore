@@ -2,4 +2,8 @@
 BCT/
 *.swp
 *.pyc
+<<<<<<< HEAD
+*.asv
+=======
 jsonlab*/
+>>>>>>> master

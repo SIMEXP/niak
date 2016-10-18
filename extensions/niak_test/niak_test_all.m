@@ -54,7 +54,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   * glm_fir NIAK_PIPELINE_GLM_FIR
 %   * stability_rest NIAK_PIPELINE_STABILITY_REST
 %   * glm_connectome NIAK_PIPELINE_GLM_CONNECTOME
-%   * stability cores NIAK_PIPELINE_SCORES
+%   * scores NIAK_PIPELINE_SCORES
+%   * subtype NIAK_PIPELINE_SUBTYPE
 %
 % Note that with OPT.FLAG_TARGET on, the region growing and connectome pipelines
 % are fed the output of the preprocessing pipeline. When the flag is off, by contrast,
@@ -257,6 +258,43 @@ path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly t
 path_test_sc.reference = [path_test.target 'demoniak_scores'];
 path_test_sc.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_scores_demoniak(path_test_sc,opt_scores),'sco_');
+
+%% Add the test for the subtype pipeline
+if opt.flag_target
+    % In target mode, grab the results of the preprocessing and use them for subtyping
+    files_all = niak_grab_all_preprocess([path_test_fp.result 'demoniak_preproc'],files_fp);
+else
+    % In test mode, use the provided target to feed into the subtyping pipeline
+    files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
+end
+
+% Bring paths to the structure expected for the subtype pipeline
+fsub = fieldnames(files_all.fmri.vol);
+files_sbt = struct;
+for sub_id = 1:numel(fsub)
+    sub = fsub{sub_id};
+    fses = fieldnames(files_all.fmri.vol.(sub));
+    for ses_id = 1:numel(fses)
+        ses = fses{ses_id};
+        frun = fieldnames(files_all.fmri.vol.(sub).(ses));
+        for run_id = 1:numel(frun)
+            run = frun{run_id};
+            sname = [sub '_' ses '_' run];
+            files_sbt.data.(sname) = files_all.fmri.vol.(sub).(ses).(run);
+        end
+    end
+end
+files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
+files_sbt.model = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+opt_subtype = struct;
+opt_subtype.flag_test = true;
+opt_subtype.flag_target = opt.flag_target;
+opt_subtype.files_in = files_sbt;
+
+path_test_sbt.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_sbt.reference = [path_test.target 'demoniak_subtype'];
+path_test_sbt.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_subtype_demoniak(path_test_sbt,opt_subtype),'sbt_');
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];
