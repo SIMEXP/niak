@@ -172,6 +172,7 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
     % Filter out NaN values
     nan_coi = find(isnan(coi)); 
     coi(nan_coi) = []; 
+    weights(nan_coi,:) = [];
 
     % Determine the number of rows and columns for the subyptes
     n_cols = floor(sqrt(n_sbt));
