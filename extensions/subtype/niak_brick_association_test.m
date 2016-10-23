@@ -286,6 +286,7 @@ for net_id = 1:opt.scale
     opt_glm.test  = 'ttest';
     opt_glm.flag_beta = true; 
     opt_glm.flag_residuals = true;
+    opt_glm.flag_rsquare = true;
     [results, ~] = niak_glm(model_norm, opt_glm);
     pvals(net_id, :) = results.pce;
     glm_results.(net_name) = results;
