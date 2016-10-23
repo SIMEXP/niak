@@ -189,7 +189,6 @@ if ~strcmp(files_out.figures, 'gb_niak_omitted')
         for sbt_id = 1:n_sbt
             % Get the subtype weights
             sbt_weights = weights(:, sbt_id, net_id);
-            sbt_weights(nan_coi) = []; % filter the weights from subjects with NaNs
             % Create the subplot
             subplot(n_rows, n_cols, sbt_id);
             ax = gca;
