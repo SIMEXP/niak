@@ -50,7 +50,6 @@ files_in.mask = '/home/atam/mask.mnc.gz';     % a 3D binary mask
 % Model
 files_in.model = '/home/atam/niak/demos/data/demoniak_model_group.csv';
 
-
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -65,12 +64,20 @@ opt.stack.regress_conf = {'confound1','confound2'};     % a list of varaible nam
 
 %% Subtyping
 opt.subtype.nb_subtype = 2;       % the number of subtypes to extract
-opt.sub_map_type = 'mean';        % the model for the subtype map
+opt.sub_map_type = 'mean';        % the model for the subtype maps (options are 'mean' or 'median')
 
-%% Association & visualization
+%% Association testing via GLM
+
+% GLM options
 opt.flag_assoc = true;                                % turn on/off GLM association testing (true: apply / false: don't apply)
 opt.association.fdr = 0.05;                           % scalar number for the level of acceptable false-discovery rate (FDR) for the t-maps
 opt.association.type_fdr = 'BH';                      % method for how the FDR is controlled
+opt.association.normalize_x = true;                   % turn on/off normalization of covariates in model (true: apply / false: don't apply)
+opt.association.normalize_y = false;                  % turn on/off normalization of all data (true: apply / false: don't apply)
+opt.association.normalize_type = 'mean';              % type of correction for normalization (options: 'mean', 'mean_var')
+opt.association.flag_intercept = true;                % turn on/off adding a constant covariate to the model
+
+% Note the pipeline can only test one main effect or interaction at a time
 
 % To test a main effect of a variable
 opt.association.contrast.variable_of_interest = 1;    % scalar number for the weight of the variable in the contrast
@@ -78,21 +85,29 @@ opt.association.contrast.confound1 = 0;               % scalar number for the we
 opt.association.contrast.confound2 = 0;               % scalar number for the weight of the variable in the contrast
 
 % To test an interaction
-opt.association.interaction(1).label = 'interaction1';
-opt.association.interaction(1).factor = {'variable1','variable2'};
-opt.association.contrast.interaction1 = 1;
-opt.association.contrast.variable1 = 0;
-opt.association.contrast.variable2 = 0;
+opt.association.interaction(1).label = 'interaction1';              % string label for the interaction
+opt.association.interaction(1).factor = {'variable1','variable2'};  % covariates (cell of strings) that are being multiplied together to build the interaction
+opt.association.contrast.interaction1 = 1;                          % scalar number for the weight of the interaction
+opt.association.contrast.variable1 = 0;                             % scalar number for the weight of the variable in the contrast
+opt.association.contrast.variable2 = 0;                             % scalar number for the weight of the variable in the contrast
+opt.association.flag_normalize_inter = true;  % turn on/off normalization of factors to zero mean and unit variance prior to the interaction
 
 
-
-opt.flag_visu = true; % turn on/off making plots for GLM testing (true: apply / false: don't apply)
-
-
-
+% Visualization
+opt.flag_visu = true;               % turn on/off making plots for GLM testing (true: apply / false: don't apply)
+opt.visu.data_type = 'continuous';  % type of data for contrast or interaction in opt.association (options are 'continuous' or 'categorical')
 
 %% Chi2 statistics
 
+opt.flag_chi2 = true;               % turn on/off running Chi-square test (true: apply / false: don't apply)
+opt.chi2.group_col_id = 'Group';    % string name of the column in files_in.model on which the contigency table will be based
 
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Run the pipeline  %%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+opt.flag_test = false;  % Put this flag to true to just generate the pipeline without running it.
+pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
 
 
