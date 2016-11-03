@@ -108,6 +108,6 @@ opt.chi2.group_col_id = 'Group';    % string name of the column in files_in.mode
 %%%%%%%%%%%%%%%%%%%%%%%
 
 opt.flag_test = false;  % Put this flag to true to just generate the pipeline without running it.
-pipeline = niak_pipeline_fmri_preprocess(files_in,opt);
+[pipeline,opt] = niak_pipeline_subtype(files_in,opt);
 
 
