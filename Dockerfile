@@ -29,7 +29,7 @@ RUN wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
     && cd /usr/local/bin \
     && ln -s ../niak/extensions/psom-${PSOM_VERSION}/psom_worker.py psom_worker.py \
     && ln -s ../niak/extensions/psom-${PSOM_VERSION}/container/psom_image_exec_redirection.sh psom_image_exec_redirection.sh \
-    && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py
+    && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py \
     && mkdir /scratch
 
 # Build octave configure file
@@ -56,7 +56,7 @@ EXPOSE 8080
 
 
 # 3D visualisation tools
-RUN apt-get install mricron -y \
+RUN apt-get update && apt-get install mricron -y \
      libcanberra-gtk-module
 
 # Command to run octave as GUI
