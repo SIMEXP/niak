@@ -1,7 +1,7 @@
 FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-ENV PSOM_VERSION 2.1.0
+ENV PSOM_VERSION 2.2.0
 ENV NIAK_ROOT /usr/local/niak
 ENV NIAK_CONFIG_PATH /local_config
 ENV NIAK_SANDBOX_ROOT /sandbox
@@ -28,7 +28,9 @@ RUN wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
     && rm v${PSOM_VERSION}.zip \
     && cd /usr/local/bin \
     && ln -s ../niak/extensions/psom-${PSOM_VERSION}/psom_worker.py psom_worker.py \
+    && ln -s ../niak/extensions/psom-${PSOM_VERSION}/container/psom_image_exec_redirection.sh psom_image_exec_redirection.sh \
     && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py
+    && mkdir /scratch
 
 # Build octave configure file
 RUN mkdir ${NIAK_CONFIG_PATH} && chmod 777 ${NIAK_CONFIG_PATH} \
