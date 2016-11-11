@@ -29,6 +29,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   set up by the pipeline. By default OPT.PSOM.FLAG_PAUSE is false (do 
 %   not wait for the user to confirm starting the tests).
 %
+% OPT.PARTIAL_TEST (cell of strings) if given only the pipeline in the 
+%   list will be tested, if empty, all test are ran.
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -97,12 +99,17 @@ if nargin < 2
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      {'format' , 'flag_target' , 'flag_test', 'psom' }, ...
-      {'mnc1'   , false         , false      , struct });
+      {'format' , 'flag_target' , 'flag_test', 'psom', 'partial_test' }, ...
+      {'mnc1'   , false         , false      , struct, {} });
 
 if ~isfield(opt.psom,'flag_pause')
     opt.psom.flag_pause = false;
 end
+
+if ~isfield(opt.psom,'flag_pause')
+    opt.psom.flag_pause = false;
+end
+
 
 %% Check the input paths
 if nargin < 1
