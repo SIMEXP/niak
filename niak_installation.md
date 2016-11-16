@@ -1,9 +1,16 @@
+* [NIAK with docker](#niak-with-docker)
+    * [Linux](#linux)
+    * [Mac OSX](#mac-osx)
+* [Running NIAK in a Jypiter notebook](#running-niak-in-a-jypiter-notebook)
+* [Manual installation](#manual-installation)
+* [Pipeline manager](#pipeline-manager)
+
 # NIAK with docker
 
 The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. We expect this issue to be resolved eventually, but this is currently a limitation of this installation method.
  > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
 
-###Linux
+### Linux
 The first step is to create a docker group and add the user that will use docker to that list.
 
 ```bash
@@ -117,6 +124,16 @@ graphics_toolkit gnuplot
 **MINC tools.** To read MINC files or run the fMRI preprocessing pipeline, it is necessary to install the [minc toolkit](http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) version 1.9.2 (free open-source software, with a custom MIT-like license).
 
 **Test the installation** Follow the [test tutorial](http://niak.simexp-lab.org/niak_tutorial_test.html) to make sure that your installation is working properly.
+
+# NIAK on HPC using qsub and singularity
+We recommend installing NIAK on HPC using the singularity technology (http://singularity.lbl.gov/). Singularity first needs to be installed on the HPC by a system administrator. Then, a Singularity image needs to be downloaded on the host. All the released named ending with `.img` on the https://github.com/SIMEXP/niak/releases are valid candidates. Once the image is download, NIAK can be installed on the system (instructions comming soon) or can simply be executed using the `psom_console.sh` script that can be found here: https://github.com/SIMEXP/psom/blob/master/container/psom_console.sh. by running: 
+
+```bash
+psom_console.sh -p niak-boss-vX.X.X.img
+```
+
+
+
 
 # Pipeline manager
 
