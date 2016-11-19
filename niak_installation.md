@@ -80,10 +80,9 @@ docker run -i -t --privileged --rm \
 
 in that terminal.
 
-Note that we do not have a procedure to run the octave gui on OSX yet (comming soon!). Also, on OSX, your data input and output has to be under `/Users`, which is the case for `$HOME = /User/your_name`. (Have a look [here](http://stackoverflow.com/questions/26348353/mount-volume-to-docker-image-on-osx), if you really need to access data from other places)
+Note that we do not have a procedure to run the octave gui on OSX yet. You can use jupyter notebooks as an alternative (see below). Also, on OSX, your data input and output has to be under `/Users`, which is the case for `$HOME = /User/your_name`. (Have a look [here](http://stackoverflow.com/questions/26348353/mount-volume-to-docker-image-on-osx), if you really need to access data from other places)
 
-
-# Running NIAK in a Jypiter notebook
+# NIAK in a Jypiter notebook
 
 After a succefull docker installation, niak can be controlled throught a Jypiter notebook. It is presently available in the beta release of the niak-boss docker image. You can run:
 
@@ -94,6 +93,13 @@ docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
 ```
 
 And then connect your favorite browser to the the [following address: localhost:8080](localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the niak outputs will be in the directory where you called the `docker run` command (that is $PWD).
+
+# NIAK in Singularity
+We recommend installing NIAK on servers shared by many users, or high-performance computing (HPC) environments, using the singularity technology (http://singularity.lbl.gov/). Singularity first needs to be installed on the HPC by a system administrator. Then, a Singularity image needs to be downloaded on the host. All the released named ending with `.img` on the https://github.com/SIMEXP/niak/releases are valid candidates. Once the image is download, NIAK can be installed on the system (instructions comming soon) or can simply be executed using the `psom_console.sh` script that can be found here: https://github.com/SIMEXP/psom/blob/master/container/psom_console.sh. by running: 
+
+```bash
+psom_console.sh -p niak-boss-vX.X.X.img
+```
 
 # Manual installation
 
@@ -125,16 +131,6 @@ graphics_toolkit gnuplot
 **MINC tools.** To read MINC files or run the fMRI preprocessing pipeline, it is necessary to install the [minc toolkit](http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) version 1.9.2 (free open-source software, with a custom MIT-like license).
 
 **Test the installation** Follow the [test tutorial](http://niak.simexp-lab.org/niak_tutorial_test.html) to make sure that your installation is working properly.
-
-# NIAK on HPC using qsub and singularity
-We recommend installing NIAK on HPC using the singularity technology (http://singularity.lbl.gov/). Singularity first needs to be installed on the HPC by a system administrator. Then, a Singularity image needs to be downloaded on the host. All the released named ending with `.img` on the https://github.com/SIMEXP/niak/releases are valid candidates. Once the image is download, NIAK can be installed on the system (instructions comming soon) or can simply be executed using the `psom_console.sh` script that can be found here: https://github.com/SIMEXP/psom/blob/master/container/psom_console.sh. by running: 
-
-```bash
-psom_console.sh -p niak-boss-vX.X.X.img
-```
-
-
-
 
 # Pipeline manager
 
