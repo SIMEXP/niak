@@ -10,6 +10,7 @@ function [status,msg,data] = niak_wget(data)
 %    'single_subject_cambridge_preprocessed_nii': preprocessed data for a single subject.
 %    'cambridge_template_nii': The Cambridge BASC multiresolution parcels (nifti format).
 %    'cambridge_template_mnc': The Cambridge BASC multiresolution parcels (minc format).
+%    'cober_lightweight20_nii': The lightweight COBRE release, with 10 patients and 10 controls (nifti format).
 % DATA.URL (string, see DATA.TYPE for default) the url to get the dataset.
 % DATA.NAME (string, see DATA.TYPE for default) the name of the file to retrieve.
 % DATA.PATH (string, [pwd filesep DATA.NAME], without the extension of the name) 
@@ -81,6 +82,9 @@ switch data.type;
     case 'cambridge_template_nii'
         data.name = 'template_cambridge_basc_multiscale_nii_sym.zip';
         data.url = 'http://files.figshare.com/1861819/template_cambridge_basc_multiscale_nii_sym.zip';
+    case 'cobre_lightweight20_nii'
+        data.name = 'cobre_lightweight20.zip';
+        data.url = 'https://www.nitrc.org/frs/download.php/9398/cobre_lightweight20.zip';
     case ''
         if isempty(data.name)||isempty(data.url)
             error('Please specify DATA.TYPE or DATA.NAME/DATA.URL')
