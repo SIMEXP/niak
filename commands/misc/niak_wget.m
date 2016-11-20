@@ -10,7 +10,7 @@ function [status,msg,data] = niak_wget(data)
 %    'single_subject_cambridge_preprocessed_nii': preprocessed data for a single subject.
 %    'cambridge_template_nii': The Cambridge BASC multiresolution parcels (nifti format).
 %    'cambridge_template_mnc': The Cambridge BASC multiresolution parcels (minc format).
-%    'cober_lightweight20_nii': The lightweight COBRE release, with 10 patients and 10 controls (nifti format).
+%    'cobre_lightweight20_nii': The lightweight COBRE release, with 10 patients and 10 controls (nifti format).
 % DATA.URL (string, see DATA.TYPE for default) the url to get the dataset.
 % DATA.NAME (string, see DATA.TYPE for default) the name of the file to retrieve.
 % DATA.PATH (string, [pwd filesep DATA.NAME], without the extension of the name) 
