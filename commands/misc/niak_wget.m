@@ -9,7 +9,7 @@ function [status,msg,data] = niak_wget(data)
 %    'target_test_niak_mnc1': The results of all NIAK pipelines on the demoniak minc1 data.
 %    'single_subject_cambridge_preprocessed_nii': preprocessed data for a single subject.
 %    'cambridge_template_nii': The Cambridge BASC multiresolution parcels (nifti format).
-%    'cambridge_template_mnc': The Cambridge BASC multiresolution parcels (minc format).
+%    'cambridge_template_mnc1': The Cambridge BASC multiresolution parcels (minc1 format).
 %    'cobre_lightweight20_nii': The lightweight COBRE release, with 10 patients and 10 controls (nifti format).
 % DATA.URL (string, see DATA.TYPE for default) the url to get the dataset.
 % DATA.NAME (string, see DATA.TYPE for default) the name of the file to retrieve.
