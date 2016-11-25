@@ -84,7 +84,7 @@ switch data.type;
         data.url = 'http://files.figshare.com/1861819/template_cambridge_basc_multiscale_nii_sym.zip';
     case 'cobre_lightweight20_nii'
         data.name = 'cobre_lightweight20.zip';
-        data.url = 'https://www.nitrc.org/frs/download.php/9398/cobre_lightweight20.zip';
+        data.url = 'https://www.nitrc.org/frs/download.php/9401/cobre_lightweight20.zip';
     case ''
         if isempty(data.name)||isempty(data.url)
             error('Please specify DATA.TYPE or DATA.NAME/DATA.URL')
