@@ -65,7 +65,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %               'mean'
 %               'median' 
 %
-%   ASSOCIATION
+%   ASSOCIATION.(NAME_CONTRAST)
 %       (struct, optional) with the following fields:
 %
 %       SCALE
@@ -73,7 +73,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 %       FDR
 %           (scalar, default 0.05) the level of acceptable false-discovery rate
-%       for the t-maps.
+%           for the t-maps.
 %
 %       TYPE_FDR
 %           (string, default 'BH') how the FDR is controled. See the METHOD
@@ -203,9 +203,9 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Sebastian Urchs, Angela Tam
-%   Centre de recherche de l'institut de Gériatrie de Montréal
-%   Département d'informatique et de recherche opérationnelle
-%   Université de Montréal, 2010-2016
+%   Centre de recherche de l'institut de Griatrie de Montral
+%   Dpartement d'informatique et de recherche oprationnelle
+%   Universit de Montral, 2010-2016
 %   Montreal Neurological Institute, 2016
 % Maintainer : sebastian.urchs@mail.mcgill.ca
 %
@@ -243,13 +243,14 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'visu'  , 'chi2'   , 'flag_assoc', 'flag_visu' , 'flag_chi2' , 'rand_seed', 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct(), struct() , true        , true        , true        , []         , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'flag_chi2' , 'rand_seed', 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct() , true        , []         , true           , false       });
+opt.folder_out = niak_full_path(opt.folder_out);
 
 % Psom options
 opt.psom = psom_struct_defaults(opt.psom,...
            { 'path_logs'                     },...
-           { [opt.folder_out filesep 'logs'] });
+           { [opt.folder_out 'logs'] });
 
 % Preprocessing options
 opt.stack = psom_struct_defaults(opt.stack,...
@@ -262,28 +263,19 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
              { 2            , 'mean'         });
 
 % Association options
-if opt.flag_assoc
-    opt.association = psom_struct_defaults(opt.association,...
-                  { 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
-                  { opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
+
+list_contrast = fieldnames(opt.association);
+for cc = 1:length(list_contrast)
+    opt.association.(list_contrast{cc}) = psom_struct_defaults(opt.association.(list_contrast{cc}),...
+        { 'type_visu'  , 'flag_visu' , 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
+        { 'continuous' , true        , opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
 end
+opt.flag_assoc = length(list_contrast)>0;
 
 % Chi-2 and Cramer's V options
 opt.chi2 = psom_struct_defaults(opt.chi2,...
              { 'group_col_id' , 'flag_weights' , 'network'         },...
-             { 'Group'        , false          , 'gb_niak_omitted' }); 
-         
-% GLM visualization options
-if opt.flag_assoc
-    opt.visu = psom_struct_defaults(opt.visu,...
-             { 'data_type'       },...
-             { 'gb_niak_omitted' }); 
-    if opt.flag_visu && strcmp(opt.visu.data_type, 'gb_niak_omitted')
-        error('When OPT.FLAG_VISU is true, OPT.VISU.DATA_TYPE must be specified. Type ''help niak_pipeline_subtype'' for more info.')
-    end
-elseif ~opt.flag_assoc
-    opt.flag_visu = false;
-end
+             { 'Group'        , false          , 'gb_niak_omitted' });
          
 % See if external subtypes have been specified
 ext_sbt = false;
@@ -371,32 +363,34 @@ pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
 
 % Set up the association test options
 if opt.flag_assoc
-    assoc_opt = opt.association;
-    assoc_opt.folder_out = opt.folder_out;
-    assoc_in = struct;
-    assoc_in.weight = pipe.weight_extraction.files_out.weights;
-    assoc_in.model = files_in.model;
-    assoc_out = struct;
-    assoc_out.stats = [opt.folder_out filesep 'association_stats.mat'];
-    assoc_out.csv = [opt.folder_out filesep 'association_summary.csv'];
-    pipe = psom_add_job(pipe, 'association_test', 'niak_brick_association_test',...
+    for cc = 1:length(list_contrast)
+        cont = list_contrast{cc};
+        assoc_opt = opt.association.(cont);
+        assoc_opt.folder_out = opt.folder_out;
+        assoc_in = struct;
+        assoc_in.weight = pipe.weight_extraction.files_out.weights;
+        assoc_in.model = files_in.model;
+        assoc_out = struct;
+        assoc_out.stats = [opt.folder_out filesep 'association_stats_' cont '.mat'];
+        assoc_out.csv = [opt.folder_out filesep 'association_summary_' cont '.csv'];
+        pipe = psom_add_job(pipe, ['association_test_' cont], 'niak_brick_association_test',...
                     assoc_in, assoc_out, assoc_opt);
-end
-
-if opt.flag_visu
-    % Generate the figures for the association test brick
-    visu_in = struct;
-    visu_in.weight = pipe.weight_extraction.files_out.weights;
-    visu_in.association = pipe.association_test.files_out.stats;
-    visu_out = struct;
-    fields = {'fdr', 'type_fdr', 'interaction', 'normalize_x', 'normalize_y',...
+        if opt.association.(cont).flag_visu
+            % Generate the figures for the association test brick
+            visu_in = struct;
+            visu_in.weight = pipe.weight_extraction.files_out.weights;
+            visu_in.association = pipe.(['association_test_' cont]).files_out.stats;
+            visu_out = struct;
+            fields = {'fdr', 'type_fdr', 'interaction', 'normalize_x', 'normalize_y',...
                         'select', 'flag_intercept'};
-    visu_opt = rmfield(opt.association, fields);
-    visu_opt.folder_out = opt.folder_out;
-    visu_opt.data_type = opt.visu.data_type;
-    pipe = psom_add_job(pipe, 'visu_association', 'niak_brick_visu_subtype_glm',...
+            visu_opt = rmfield(opt.association.(cont), fields);
+            visu_opt.folder_out = [opt.folder_out cont filesep];
+            visu_opt.data_type = opt.association.(cont).type_visu;
+            pipe = psom_add_job(pipe, ['visu_' cont], 'niak_brick_visu_subtype_glm',...
                         visu_in, visu_out, visu_opt);
-end 
+        end 
+    end
+end
 
 % Set up the Chi2 and Cramer's V test options
 if opt.flag_chi2
