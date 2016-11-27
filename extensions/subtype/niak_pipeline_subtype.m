@@ -46,13 +46,8 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 %       REGRESS_CONF
 %           (Cell of string, Default {}) A list of variable names to be
-%           regressed out.
-%
-%       FLAG_CONF
-%           (boolean, default true) turn on or off the regression of
-%           confounds from the maps. Even if no regression confounds are
-%           specified, the intercept is always regressed unless this flag
-%           is set to false.
+%           regressed out. If unspecified or left empty, no regression 
+%           is applied.
 %
 %   SUBTYPE
 %       (struct, optional) with the following fields:
@@ -227,8 +222,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'rand_seed', 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , ''       , []         , true           , false       });
+           { 'folder_out' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'rand_seed', 'flag_verbose' , 'flag_test' },...
+           { NaN          , struct() , struct()  , struct()  , struct()      , ''       , []         , true           , false       });
 opt.folder_out = niak_full_path(opt.folder_out);
 
 % Psom options
@@ -238,8 +233,8 @@ opt.psom = psom_struct_defaults(opt.psom,...
 
 % Preprocessing options
 opt.stack = psom_struct_defaults(opt.stack,...
-            { 'regress_conf' , 'flag_conf' },...
-            { {}             , true        });
+            { 'regress_conf' },...
+            { {}             });
 
 % Subtype options
 opt.subtype = psom_struct_defaults(opt.subtype,...
@@ -251,8 +246,8 @@ opt.subtype = psom_struct_defaults(opt.subtype,...
 list_contrast = fieldnames(opt.association);
 for cc = 1:length(list_contrast)
     opt.association.(list_contrast{cc}) = psom_struct_defaults(opt.association.(list_contrast{cc}),...
-        { 'type_visu'  , 'flag_visu' , 'scale'   , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
-        { 'continuous' , true        , opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
+        { 'type_visu'  , 'flag_visu' , 'fdr' , 'type_fdr' , 'contrast' , 'interaction' , 'normalize_x' , 'normalize_y' , 'select' , 'flag_intercept' },...
+        { 'continuous' , true        , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
 end
 opt.flag_assoc = length(list_contrast)>0;
          
@@ -263,10 +258,10 @@ if ~strcmp(files_in.subtype, 'gb_niak_omitted')
     ext_sbt = true;
     n_sbt_ext = length(fieldnames(files_in.subtype));
     % See if we have the same number of networks
-    if ~n_sbt_ext == opt.scale
+    if any(~ismember(fieldnames(files_in.subtype),list_net))||any(~ismember(list_net,fieldnames(files_in.subtype)))
         % For some reason we don't have the correct number of external subtype
         % networks
-        error('The external subtypes in FILES_IN.SUBTYPE have %d networks but OPT.SCALE = %d. These have to be the same. Exiting!', n_sbt_ext, opt.scale);
+        error('The external networks in FILES_IN.SUBTYPE are different from those in FILES_IN.DATA. These have to be the same. Exiting!');
     end 
 else
     files_in = rmfield(files_in, 'subtype'); % remove files_in.subtype in everything if not supplied by user
@@ -348,7 +343,8 @@ pipe = psom_add_job(pipe, 'weight_extraction', 'niak_brick_subtype_weight',...
 if opt.flag_assoc
     for cc = 1:length(list_contrast)
         cont = list_contrast{cc};
-        assoc_opt = opt.association.(cont);
+        assoc_opt = rmfield(opt.association.(cont),{'type_visu','flag_visu'});
+        assoc_opt.scale = length(list_net);
         assoc_opt.folder_out = opt.folder_out;
         assoc_in = struct;
         assoc_in.weight = pipe.weight_extraction.files_out.weights;
@@ -363,12 +359,11 @@ if opt.flag_assoc
             visu_in = struct;
             visu_in.weight = pipe.weight_extraction.files_out.weights;
             visu_in.association = pipe.(['association_test_' cont]).files_out.stats;
-            visu_out = struct;
-            fields = {'fdr', 'type_fdr', 'interaction', 'normalize_x', 'normalize_y',...
-                        'select', 'flag_intercept'};
-            visu_opt = rmfield(opt.association.(cont), fields);
+            visu_opt.contrast = opt.association.(cont).contrast;
+            visu_opt.scale = length(list_net);
             visu_opt.folder_out = [opt.folder_out 'associations' filesep cont filesep];
             visu_opt.data_type = opt.association.(cont).type_visu;
+            visu_out = struct;
             pipe = psom_add_job(pipe, ['visu_' cont], 'niak_brick_visu_subtype_glm',...
                         visu_in, visu_out, visu_opt);
         end 
