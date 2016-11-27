@@ -9,9 +9,9 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 % FILES_IN (structure) with the following fields :
 %
-%   DATA.<SUBJECT>
-%       (string) Containing the individual map (e.g. rmap_part,stability_maps,
-%       etc) NB: assumes there is only 1 .nii.gz or mnc.gz map per individual.
+%   DATA.(NETWORK).(SUBJECT)
+%       (string) Containing the individual 3D map (e.g. rmap_part,stability_maps,
+%       etc) for each SUBJECT and each NETWORK. 
 %
 %   MASK
 %       (string) path to mask of the voxels that will be included in the
@@ -154,36 +154,20 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       FLAG_INTERCEPT
 %           (boolean, default true) if FLAG_INTERCEPT is true, a constant
 %           covariate will be added to the model.
-%
-%   CHI2
-%       (struct, optional) with the following fields:
-%
-%       GROUP_COL_ID
-%           (string, default 'Group') the name of the column in 
-%           FILES_IN.MODEL that the contingency table will be based on.
-%
-%       FLAG_WEIGHTS
-%           (boolean, default false) if the flag is true, the brick will
-%           calculate statistics based on the weights from FILES_IN.WEIGHTS
-%
-%   VISU
-%       (struct, optional) with the following field:
-%
-%       DATA_TYPE
+%   
+%       TYPE_VISU
 %           (string, either 'categorical' or 'continuous') the kind of data
 %           in OPT.ASSOCIATION.CONTRAST.<NAME>
 %
-%   FLAG_ASSOC
-%       (boolean, default true) turn/off to calculate associations between 
-%       subtypes and a variable of interest from FILES_IN.MODEL
+%       FLAG_VISU
+%           (boolean, default true) turn on/off to generate figures for the
+%           association test
 %
-%   FLAG_CHI2
-%       (boolean, default true) turn on/off to calculate Chi2 and Cramer's
-%       V statistics
+%   CHI2
+%       (string, default '') the name of the column in 
+%       FILES_IN.MODEL that the contingency table will be based on.
+%       If left empty, no CHI2 will be applied. 
 %
-%   FLAG_VISU
-%       (boolean, default true) turn on/off to generate figures for the
-%       association test
 %
 %   RAND_SEED
 %       (scalar, default []) The specified value is used to seed the random
@@ -243,8 +227,8 @@ files_in = psom_struct_defaults(files_in,...
 
 % Options
 opt = psom_struct_defaults(opt,...
-           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'flag_chi2' , 'rand_seed', 'flag_verbose' , 'flag_test' },...
-           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , struct() , true        , []         , true           , false       });
+           { 'folder_out' , 'scale' , 'psom'   , 'stack'   , 'subtype' , 'association' , 'chi2'   , 'rand_seed', 'flag_verbose' , 'flag_test' },...
+           { NaN          , NaN     , struct() , struct()  , struct()  , struct()      , ''       , []         , true           , false       });
 opt.folder_out = niak_full_path(opt.folder_out);
 
 % Psom options
@@ -271,11 +255,6 @@ for cc = 1:length(list_contrast)
         { 'continuous' , true        , opt.scale , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
 end
 opt.flag_assoc = length(list_contrast)>0;
-
-% Chi-2 and Cramer's V options
-opt.chi2 = psom_struct_defaults(opt.chi2,...
-             { 'group_col_id' , 'flag_weights' , 'network'         },...
-             { 'Group'        , false          , 'gb_niak_omitted' });
          
 % See if external subtypes have been specified
 ext_sbt = false;
@@ -295,36 +274,41 @@ end
 
 %% Construct the pipeline
 pipe = struct;
+
 % Prepare the input structure for the subtype weight extraction step
 weight_in = struct('data', struct, 'subtype', struct);
+list_net = fieldnames(files_in.data);
 
 % Iterate these jobs for each network
-for net_id = 1:opt.scale;
+for net_id = 1:length(list_net);
     % Set network name
-    net_name = sprintf('network_%d', net_id);
+    net_name = list_net{net_id};
     % Set the root folder to the network name
-    network_folder = [opt.folder_out filesep net_name];
+    network_folder = [opt.folder_out filesep 'networks' filesep net_name];
     % Network extraction and preprocessing
-    pre_name = sprintf('stack_%d', net_id);
+    pre_name = sprintf('stack_%s', net_name);
     pre_opt = opt.stack;
     % Set the network
-	pre_opt.network = net_id;
+	  pre_opt.network = 1;
+    pre_in.mask  = files_in.mask;
+    pre_in.model = files_in.model;
+    pre_in.data  = files_in.data.(net_name);
     if ext_sbt
-        pre_in = rmfield(files_in, 'subtype'); % remove 'subtype' field from files_in for brick stack when subtypes are supplied by user
-    else
-        pre_in = files_in;
+        pre_in.subtype = files_in.subtype;
     end
-    pre_out = [network_folder filesep sprintf('network_%d_stack.mat', net_id)];
+    pre_out = [network_folder filesep sprintf('stack_%s.mat', net_name)];
     pipe = psom_add_job(pipe, pre_name, 'niak_brick_network_stack',...
                         pre_in, pre_out, pre_opt);
     % Assign output to weight extraction step
     weight_in.data.(net_name) = pipe.(pre_name).files_out;
-
+    weight_out.weights_csv{net_id} = [network_folder filesep sprintf('sbt_weights_net_%s.csv', net_name)];
+    weight_out.weights_pdf{net_id} = [network_folder filesep sprintf('sbt_weights_net_%s.pdf', net_name)];
+    
     % Check if external subtypes have been supplied
     if ~ext_sbt
         % Compute subtypes on the current data
         % Subtyping
-        sub_name = sprintf('subtype_%d', net_id);
+        sub_name = sprintf('subtype_%s', net_name);
         % Assign options
         sub_opt = opt.subtype;
         sub_opt.rand_seed = opt.rand_seed;
@@ -332,14 +316,13 @@ for net_id = 1:opt.scale;
         sub_opt.folder_out = network_folder;
         % Set the provenance folder
         sub_opt.flag_prov = true;
-        prov_folder = [opt.folder_out filesep 'provenance']; 
         % Assign inputs
         sfields = {'data', 'model'};
         sub_in = rmfield(files_in, sfields);
         sub_in.data = pipe.(pre_name).files_out;
         sub_out = struct;
-        sub_out.subtype = [network_folder filesep sprintf('network_%d_subtype.mat', net_id)];
-        sub_out.provenance = [prov_folder filesep sprintf('network_%d_provenance.mat', net_id)];
+        sub_out.subtype = [network_folder filesep sprintf('subtype_%s.mat', net_name)];
+        sub_out.provenance = [network_folder filesep sprintf('provenance_%s.mat', net_name)];
         pipe = psom_add_job(pipe, sub_name, 'niak_brick_subtyping',...
                             sub_in, sub_out, sub_opt);
         % Assign output to weight extraction step
@@ -352,7 +335,7 @@ end
 
 % Set up the weight extraction options
 weight_opt = struct;
-weight_opt.scales = 1:opt.scale;
+weight_opt.scales = 1:length(list_net);
 weight_opt.folder_out = opt.folder_out;
 if ext_sbt
     weight_opt.flag_external = true;
@@ -371,8 +354,8 @@ if opt.flag_assoc
         assoc_in.weight = pipe.weight_extraction.files_out.weights;
         assoc_in.model = files_in.model;
         assoc_out = struct;
-        assoc_out.stats = [opt.folder_out filesep 'association_stats_' cont '.mat'];
-        assoc_out.csv = [opt.folder_out filesep 'association_summary_' cont '.csv'];
+        assoc_out.stats = [opt.folder_out filesep 'associations' filesep cont filesep 'association_stats_' cont '.mat'];
+        assoc_out.csv = [opt.folder_out filesep 'associations' filesep cont filesep 'association_summary_' cont '.csv'];
         pipe = psom_add_job(pipe, ['association_test_' cont], 'niak_brick_association_test',...
                     assoc_in, assoc_out, assoc_opt);
         if opt.association.(cont).flag_visu
@@ -384,7 +367,7 @@ if opt.flag_assoc
             fields = {'fdr', 'type_fdr', 'interaction', 'normalize_x', 'normalize_y',...
                         'select', 'flag_intercept'};
             visu_opt = rmfield(opt.association.(cont), fields);
-            visu_opt.folder_out = [opt.folder_out cont filesep];
+            visu_opt.folder_out = [opt.folder_out 'associations' filesep cont filesep];
             visu_opt.data_type = opt.association.(cont).type_visu;
             pipe = psom_add_job(pipe, ['visu_' cont], 'niak_brick_visu_subtype_glm',...
                         visu_in, visu_out, visu_opt);
@@ -393,17 +376,17 @@ if opt.flag_assoc
 end
 
 % Set up the Chi2 and Cramer's V test options
-if opt.flag_chi2
+if ~isempty(opt.chi2)
     % Iterate these jobs for each network
-    for net_id = 1:opt.scale; 
+    for net_id = 1:length(list_net)
         % Set network and subtype name
-        net_name = sprintf('network_%d', net_id);
-        sub_name = sprintf('subtype_%d', net_id);
+        net_name = list_net{net_id};
+        sub_name = sprintf('subtype_%s', net_name);
         % Set the root folder to the network name
-        network_folder = [opt.folder_out filesep net_name];
+        network_folder = [opt.folder_out filesep 'networks' filesep net_name];
         chi2_in = struct;
         chi2_in.model = files_in.model;
-        chi2_opt = opt.chi2;
+        chi2_opt.group_col_id = opt.chi2;
         % Set the network folder
         chi2_opt.folder_out = network_folder;
         chi2_out = struct;
