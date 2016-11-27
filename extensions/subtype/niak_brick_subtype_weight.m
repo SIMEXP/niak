@@ -187,7 +187,7 @@ for net_id = 1:n_networks
 
     % Retrieve the correct weight matrix
     net_weight = weight_mat(:, :, net_id);
-    file_name = files_out.weights_csv{net_id, 1};
+    file_name = files_out.weights_csv{net_id};
     % Labels for the csv
     name_clus = {}; % empty cell array for cluster lables because we don't know how many subtypes there are yet
     tmp_sbt = load(files_in.subtype.(network));
@@ -232,7 +232,7 @@ for net_id = 1:n_networks
     ax = gca;
     set(ax, 'XTick', 1:n_sbt, 'YTick', []);
     xlabel('Subtypes');
-    file_name = files_out.weights_pdf{net_id, 1};
+    file_name = files_out.weights_pdf{net_id};
     print(fig, file_name, '-dpdf');
 end
 
