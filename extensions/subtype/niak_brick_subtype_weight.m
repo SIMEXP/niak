@@ -24,13 +24,18 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %   (structure) structure with the following fields:
 %
 %   WEIGHTS
-%       (string, default 'subtype_weights.mat') path to ...
+%       (string, default 'subtype_weights.mat') a .mat file with two variables.
+%       WEIGHT_MAT is a (#subjects)x(#subtype) matrix of weights. 
+%       LIST_SUBJECT is a (#subjects)x1 cell array of strings, with the subject
+%       labels for each row of WEIGHT_MAT. 
 %
 %   WEIGHTS_CSV
-%       (cell array, default 'sbt_weights_net_<NETWORK>.csv') path to ...
+%       (cell array, default 'sbt_weights_net_<NETWORK>.csv') a csv version of
+%       the weight matrix. 
 %
 %   WEIGHTS_PDF
-%       (cell array, default 'fig_sbt_weights_net_<NETWORK>.pdf') path to ...
+%       (cell array, default 'fig_sbt_weights_net_<NETWORK>.pdf') a pdf figure
+%       representing the weight matrix. 
 %
 % OPT
 %   (structure) with the following fields:
@@ -69,9 +74,9 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Sebastian Urchs
-% Centre de recherche de l'institut de Gériatrie de Montréal, 
-% Département d'informatique et de recherche opérationnelle, 
-% Université de Montréal, 2010-2016.
+% Centre de recherche de l'institut de Griatrie de Montral, 
+% Dpartement d'informatique et de recherche oprationnelle, 
+% Universit de Montral, 2010-2016.
 % Maintainer : sebastian.urchs@mail.mcgill.ca
 % See licensing information in the code.
 % Keywords : subtype, weights, clustering
@@ -154,6 +159,8 @@ for net_id = 1:n_networks
     % Get the network stack data
     tmp_data = load(files_in.data.(network));
     data = tmp_data.stack;
+    list_subject = tmp_data.provenance.subjects(:,1);
+    
     % Get the network subtype maps (i.e. for each subtype one)
     tmp_sbt = load(files_in.subtype.(network));
     sbt = tmp_sbt.sub.map;
@@ -171,15 +178,13 @@ for net_id = 1:n_networks
 end
 
 % Save the weight matrix
-save(files_out.weights, 'weight_mat');
+save(files_out.weights, 'weight_mat','list_subject');
 
 %% Write the weight matrix for each network as a csv
 
 for net_id = 1:n_networks
     network = networks{net_id};
-    % Get the subject list
-    tmp_list_sub = load(files_in.data.(network));
-    list_sub = tmp_list_sub.provenance.subjects(:,1);
+
     % Retrieve the correct weight matrix
     net_weight = weight_mat(:, :, net_id);
     file_name = files_out.weights_csv{net_id, 1};
@@ -192,7 +197,7 @@ for net_id = 1:n_networks
         name_clus{cc} = ['sub' num2str(cc)]; % store the subtype labels
     end
     opt_w.labels_y = name_clus;
-    opt_w.labels_x = list_sub;
+    opt_w.labels_x = list_subject;
     opt_w.precision = 3;
     niak_write_csv(file_name, net_weight, opt_w); % Write the csv
 end
