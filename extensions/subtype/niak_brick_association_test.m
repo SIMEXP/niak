@@ -12,13 +12,15 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %   (structure) with the following fields:
 %
 %   WEIGHT
-%       (string) path to a weight matrix. First column expected to be
-%       subjects ordered the same way as in the MODEL
+%       (string) a .mat file with two variables.
+%       WEIGHT_MAT is a (#subjects)x(#subtype) matrix of weights. 
+%       LIST_SUBJECT is a (#subjects)x1 cell array of strings, with the subject
+%       labels for each row of WEIGHT_MAT. 
 %
 %   MODEL
 %       (string) a .csv files coding for the pheno data. Is expected to
 %       have a header and a first column specifying the case IDs/names
-%       corresponding to the data in FILES_IN.DATA
+%       corresponding to LIST_SUBJECT in FILES_IN.WEIGHT
 %
 % FILES_OUT
 %   (structure) with the following fields:
@@ -228,8 +230,7 @@ if isfield(opt, 'interaction')
             end
         end
     end
-end
-    
+end  
 
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -243,11 +244,6 @@ if opt.flag_verbose
 end
 [model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
 
-% Store the model in the internal structure
-model_raw.x = model_data;
-model_raw.labels_x = labels_x;
-model_raw.labels_y = labels_y;
-
 % Read the weight data
 if opt.flag_verbose
     fprintf('Reading the weight data ...\n');
@@ -256,8 +252,19 @@ end
 % Read the weights file
 tmp = load(files_in.weight);
 weights = tmp.weight_mat;
+list_subject = tmp.list_subject;
+
 % Figure out how many cases we are dealing with
 [n_sub, n_sbt, n_net] = size(weights);
+
+% Store the model in the internal structure
+model_raw.x = zeros(length(list_subject),size(model_data,2));
+for ss = 1:length(list_subject)
+    ind = find(strcmp(labels_x,list_subject{ss}));
+    model_raw.x(ss,:) = model_data(ind,:);
+end
+model_raw.labels_x = list_subject;
+model_raw.labels_y = labels_y;
 
 % Prepare the variable for the p-value storage
 pvals = zeros(opt.scale, n_sbt);
