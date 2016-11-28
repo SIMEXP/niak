@@ -128,7 +128,6 @@ end
 opt = psom_struct_defaults(opt,...
       { 'folder_out' , 'network' , 'regress_conf' , 'flag_verbose' , 'flag_test' },...
       { ''           , []        , {}             , true           , false       });
-opt.flag_conf = ~isempty(opt.regress_conf);
 
 % Check the output specification
 if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
@@ -143,6 +142,8 @@ end
 if opt.flag_test == 1
     return
 end
+
+opt.flag_conf = ~isempty(opt.regress_conf);
 
 %% Prepare the confounds
 list_data = fieldnames(files_in.data);
@@ -175,7 +176,7 @@ if ~strcmp(files_in.model, 'gb_niak_omitted')
     mask_data = ismember(list_subject,list_data);
     if any(~mask_data)
         list_subject(~mask_data)
-        warning(sprintf('I had to remove %i subjects (listed above) who had missing values in their confounds.',sum(~mask_data)));
+        warning(sprintf('I had to remove %i subjects (listed above) who had missing imaging data.',sum(~mask_data)));
     end
     conf_model = conf_model(mask_data,:);
     list_subject = list_subject(mask_data,:);
