@@ -250,6 +250,10 @@ for cc = 1:length(list_contrast)
         { 'continuous' , true        , 0.05  , 'BH'       , NaN        , struct()      , true          , false         , struct() , true             });
 end
 opt.flag_assoc = length(list_contrast)>0;
+
+% Prepare the input structure for the subtype weight extraction step
+weight_in = struct('data', struct, 'subtype', struct);
+list_net = fieldnames(files_in.data);
          
 % See if external subtypes have been specified
 ext_sbt = false;
@@ -269,10 +273,6 @@ end
 
 %% Construct the pipeline
 pipe = struct;
-
-% Prepare the input structure for the subtype weight extraction step
-weight_in = struct('data', struct, 'subtype', struct);
-list_net = fieldnames(files_in.data);
 
 % Iterate these jobs for each network
 for net_id = 1:length(list_net);
