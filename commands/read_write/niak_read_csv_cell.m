@@ -16,6 +16,9 @@ function csv_cell = niak_read_csv_cell(file_name,opt)
 % OPT
 %   (structure, optional) with the following fields:
 %
+%   FLAG_VERBOSE
+%      (boolean, default false) verbose on progress
+%
 %   SEPARATOR
 %      (string, default ',' for csv files, char(9) - tabulation - for .tsv files, ',' otherwise) 
 %      The character used to separate values. 
@@ -83,8 +86,8 @@ niak_gb_vars
 [path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(file_name);
 
 %% Options
-list_fields   = {'separator' , 'flag_trim' , 'flag_string' };
-list_defaults = {''          , true        , true          };
+list_fields   = {'flag_verbose' , 'separator' , 'flag_trim' , 'flag_string' };
+list_defaults = {false          , ''          , true        , true          };
 if nargin == 1
     opt = struct();
 end
@@ -124,7 +127,13 @@ cell_tab = niak_string2lines(str_tab);
 fclose(hf);
 
 %% Extracting the labels
+if opt.flag_verbose
+    fprintf('Parsing .csv file: ')
+end
 for num_r = 1:length(cell_tab)
+    if opt.flag_verbose
+        niak_progress(num_r,length(cell_tab));
+    end
     cell_line = sub_csv(cell_tab{num_r},opt.separator);
     if num_r == 1
         csv_cell = cell(length(cell_tab),length(cell_line));
