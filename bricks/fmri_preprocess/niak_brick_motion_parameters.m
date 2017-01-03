@@ -10,7 +10,7 @@ function [files_in,files_out,opt] = niak_brick_motion_parameters(files_in,files_
 %   FILES_IN
 %       (structure) with the following fields :
 %
-%       RUN
+%       FMRI
 %           (string) a series of fMRI volumes.
 %
 %       TARGET
