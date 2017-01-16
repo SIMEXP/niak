@@ -18,7 +18,7 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %       time*space array.
 %
 %   MODEL
-%       (strings, Default '') a .csv files coding for the pheno data. Is
+%       (string, Default '') a .csv files coding for the pheno data. Is
 %       expected to have a header and a first column specifying the case
 %       IDs/names corresponding to the data in FILES_IN.DATA
 %
