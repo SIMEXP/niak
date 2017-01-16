@@ -180,6 +180,8 @@ if ~strcmp(files_in.model, 'gb_niak_omitted')
     end
     conf_model = conf_model(mask_data,:);
     list_subject = list_subject(mask_data,:);
+else
+    list_subject = fieldnames(files_in.data);
 end
  
 % Check the first subject file and see how many networks we have
