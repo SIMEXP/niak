@@ -34,10 +34,10 @@ function [tab,labels_x,labels_y,labels_id] = niak_read_csv(file_name,opt)
 %   (matrix M*N) the numerical data array. 
 %
 % LABELS_X
-%   (cell of strings 1*M) LABELS_X{X} is the label of line X in TAB.
+%   (cell of strings Mx1) LABELS_X{X} is the label of line X in TAB.
 %
 % LABELS_Y
-%   (cell of strings 1*N) LABELS_Y{Y} is the label of column Y in TAB.
+%   (cell of strings Nx1) LABELS_Y{Y} is the label of column Y in TAB.
 %
 % LABELS_ID
 %   (string) the labels of the first column (associated with LABELS_X).
@@ -59,8 +59,8 @@ function [tab,labels_x,labels_y,labels_id] = niak_read_csv(file_name,opt)
 %
 % Copyright (c) Pierre Bellec
 %               Centre de recherche de l'institut de 
-%               Gériatrie de Montréal, Département d'informatique et de recherche 
-%               opérationnelle, Université de Montréal, 2008-2013.
+%               Griatrie de Montral, Dpartement d'informatique et de recherche 
+%               oprationnelle, Universit de Montral, 2008-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : table, CSV
