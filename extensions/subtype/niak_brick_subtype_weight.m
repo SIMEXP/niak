@@ -25,10 +25,11 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %
 %   WEIGHTS
 %       (string, default 'subtype_weights.mat') a .mat file with two variables.
-%       WEIGHT_MAT is a (#subjects)x(#subtype) matrix of weights. 
-%       LIST_SUBJECT is a (#subjects)x1 cell array of strings, with the subject
-%       labels for each row of WEIGHT_MAT. 
-%
+%       WEIGHT_MAT  (#subjects x #subtype x #networks) the subtype weights
+%       LIST_SUBJECT (#subjects x 1 cell array of strings) the subject
+%           labels for each row of WEIGHT_MAT. 
+%       LIST_NETWORK (#networks x 1 cell array of strings) the labels of each 
+%           network in the third dimension of WEIGHT_MAT
 %   WEIGHTS_CSV
 %       (cell array, default 'sbt_weights_net_<NETWORK>.csv') a csv version of
 %       the weight matrix. 
@@ -146,16 +147,16 @@ end
 
 %% Brick begins here
 % Get the set of networks
-networks = fieldnames(files_in.data);
+list_network = fieldnames(files_in.data);
 % Get the number of networks
-n_networks = length(networks);
+n_networks = length(list_network);
 % Set up the weight matrix with empty dimensions since we don't yet know
 % how many subjects to expect
 weight_mat = [];
 
 % Iterate over the networks and extract the weights
 for net_id = 1:n_networks
-    network = networks{net_id};
+    network = list_network{net_id};
     % Get the network stack data
     tmp_data = load(files_in.data.(network));
     data = tmp_data.stack;
@@ -178,12 +179,12 @@ for net_id = 1:n_networks
 end
 
 % Save the weight matrix
-save(files_out.weights, 'weight_mat','list_subject');
+save(files_out.weights, 'weight_mat','list_subject','list_network');
 
 %% Write the weight matrix for each network as a csv
 
 for net_id = 1:n_networks
-    network = networks{net_id};
+    network = list_network{net_id};
 
     % Retrieve the correct weight matrix
     net_weight = weight_mat(:, :, net_id);
@@ -204,7 +205,7 @@ end
 
 %% Visualize the weight matrix for each network as a pdf
 for net_id = 1:n_networks
-    network = networks{net_id};
+    network = list_network{net_id};
     
     if opt.flag_external
         % if external subtypes are supplied, generate a new partition to get the subject order
