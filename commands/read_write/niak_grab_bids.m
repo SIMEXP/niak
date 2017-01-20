@@ -52,7 +52,7 @@ function files = niak_grab_bids(path_data,opt)
 %       (int, default = 0) 0 return all subjects. Used to put an upper limit
 %       on the number of subjects that are returned.
 %   SUBJECT_LIST
-%       (cellarray of int) The only subject to be retured
+%       (cellarray of int) The only subject to be returned
 %   
 % _________________________________________________________________________
 % SEE ALSO:
@@ -89,6 +89,7 @@ function files = niak_grab_bids(path_data,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+fprintf(1,"Reading Bids structure %s", path_data)
 % If no path given, search local dir
 if (nargin < 1)||isempty(path_data)
     path_data = [pwd filesep];
@@ -217,8 +218,8 @@ for num_f = 1:length(list_dir)
         % TODO figure out a way to pick the right anat file if there is more thant one 
         if length(anat_match)             
             anat= anat_match{1} ;
-            %% TODO add more fiters options  
-            % only resurt subject is anat and one func is found        
+            %% TODO add more filters options
+            % only return subject if anat and one func is found
             if exist('fmri')
                 files.(subject_dir).anat = anat;
                 files.(subject_dir).fmri = fmri;
