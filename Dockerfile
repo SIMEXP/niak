@@ -41,6 +41,9 @@ RUN mkdir ${NIAK_CONFIG_PATH} && chmod 777 ${NIAK_CONFIG_PATH} \
 RUN mkdir -p ${NIAK_SANDBOX} && chmod -R 777 ${NIAK_SANDBOX_ROOT}
 WORKDIR ${NIAK_SANDBOX}
 
+# 3D visualisation tools
+RUN apt-get update && apt-get install --force-yes -y python-dev
+
 # jupyter install
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
@@ -53,11 +56,6 @@ EXPOSE 8080
 # To run with jupyter
 # docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak:beta niak_jupyter
 
-
-
-# 3D visualisation tools
-RUN apt-get update && apt-get install mricron -y \
-     libcanberra-gtk-module
 
 # Command to run octave as GUI
 # docker run -it --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd   -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak-boss /bin/bash -lic "cd $HOME/software; octave --force-gui ; /bin/bash"
