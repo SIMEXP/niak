@@ -146,7 +146,7 @@ function [hdr,vol] = niak_read_vol(file_name)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
-flag_gb_niak_fast_gb = 1;
+
 niak_gb_vars
   
 if ~ischar(file_name)

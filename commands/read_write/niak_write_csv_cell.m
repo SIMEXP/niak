@@ -66,7 +66,7 @@ function  [err,msg] = niak_write_csv_cell(file_name,csv_cell,separator)
 % THE SOFTWARE.
 
 % Load global variables
-flag_gb_niak_fast_gb = 1;
+
 niak_gb_vars
 
 %% Default inputs

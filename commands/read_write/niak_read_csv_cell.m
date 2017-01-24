@@ -79,7 +79,7 @@ if ~exist(file_name,'file')
 end
 
 % Load global variables
-flag_gb_niak_fast_gb = 1;
+
 niak_gb_vars
 
 %% Check extension

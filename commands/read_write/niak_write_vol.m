@@ -143,7 +143,7 @@ function [] = niak_write_vol(hdr,vol)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = 1;
+
 niak_gb_vars
 
 if isempty(vol)

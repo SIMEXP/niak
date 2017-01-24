@@ -77,7 +77,7 @@ if iscellstr(file_name)
     return
 end
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars
 
 [path_f,name_f,ext_f] = fileparts(file_name);

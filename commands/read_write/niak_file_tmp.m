@@ -50,7 +50,7 @@ function file_name = niak_file_tmp(ext)
 % THE SOFTWARE.
 
 global gb_psom_name_job
-flag_gb_niak_fast_gb = 1; %% the initialization of global variables will be as fast as possible
+
 niak_gb_vars
 flag_tmp = 1;
 

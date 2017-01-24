@@ -150,7 +150,7 @@ function  [files_in,files_out,opt] = niak_brick_region_growing(files_in,files_ou
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% global NIAK variables
-flag_gb_niak_fast_gb = true; % Only load the most important global variables for fast initialization
+
 niak_gb_vars
 
 %% Check syntax

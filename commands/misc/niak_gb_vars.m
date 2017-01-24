@@ -114,10 +114,6 @@ GB_NIAK.unzip = 'gunzip -f';
 % The extension of zipped files
 GB_NIAK.zip_ext = '.gz';
 
-if exist('flag_gb_niak_fast_gb','var')&&flag_gb_niak_fast_gb
-    return
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables describe the folders and external tools NIAK is using for various tasks %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

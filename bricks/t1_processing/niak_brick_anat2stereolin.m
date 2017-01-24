@@ -133,7 +133,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars; % load important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -200,7 +200,7 @@ end
 
 %% Building the path to access the perl script
 if ~exist('GB_NIAK.path_niak','var')
-    flag_gb_niak_fast_gb = false;    
+
     niak_gb_vars; % load important NIAK variables
 end
 
