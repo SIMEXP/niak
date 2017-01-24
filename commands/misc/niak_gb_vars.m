@@ -37,6 +37,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+global tmpName = ''
+
+% an acessible tmpfs directory
+tmpfs_path = '/run/user/1000/niak-';
+
+if exist(tmpName, 'file')
+    load (tmpName)
+    return    
+else
+    [bidon, tmp_str ]= fileparts(tempname);
+    tmpName = [tmpfs_path, tmp_str, '.mat'];
+end
 
 %% What is the operating system ?
 comp = computer;
@@ -174,5 +186,10 @@ end
 %% Use the local configuration file if any
 if exist('niak_gb_vars_local.m','file')
     niak_gb_vars_local
-    return
+end
+
+save(tmpName, 'gb_*');
+
+function delete_tmpName(f)
+    delete(f)
 end
