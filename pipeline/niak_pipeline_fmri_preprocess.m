@@ -746,8 +746,7 @@ end
 
 %% Run the pipeline 
 if ~opt.flag_test
-%    psom_run_pipeline(pipeline,opt.psom);
-fprintf(1, 'Psom run Pipeline would run here\n')
+    psom_run_pipeline(pipeline,opt.psom);
 end
 
 %%%%%%%%%%%%%%%%%%
