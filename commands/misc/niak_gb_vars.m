@@ -34,13 +34,6 @@
 % THE SOFTWARE.
 
 
-%% Use the local configuration file if any
-if ~exist('gb_niak_gb_vars_local','var')&&exist('niak_gb_vars_local.m','file')
-    gb_niak_gb_vars_local = true;
-    niak_gb_vars_local
-    return
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,8 +46,7 @@ tag_windaub = {'PCWIN','windows'};
 
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
-if ~exist('gb_psom_gb_vars','var')&&exist('psom_gb_vars.m','file')
-    gb_psom_gb_vars = true;
+if exist('psom_gb_vars.m','file')
     psom_gb_vars
 end
 
@@ -177,4 +169,10 @@ elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.nii'),'file')
     gb_niak_format_demo = 'nii';
 elseif exist(cat(2,gb_niak_path_demo,'anat_subject1.img'),'file')
     gb_niak_format_demo = 'analyze';
+end
+
+%% Use the local configuration file if any
+if exist('niak_gb_vars_local.m','file')
+    niak_gb_vars_local
+    return
 end
