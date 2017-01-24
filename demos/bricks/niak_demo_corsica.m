@@ -69,7 +69,7 @@ function [pipeline,opt] = niak_demo_corsica(path_demo,opt)
 
 if nargin>=1
     if ~isempty(path_demo)
-        gb_niak_path_demo = path_demo;
+        GB_NIAK.path_demo = path_demo;
     end
 end
 
@@ -95,11 +95,11 @@ switch format_demo
     case 'minc2' % If data are in minc2 format
         
         %% Subject 1
-        files_in.subject1.fmri = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc')};
+        files_in.subject1.fmri = {cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc'),cat(2,GB_NIAK.path_demo,filesep,'func_rest_subject1.mnc')};
         files_in.subject1.transformation = 'gb_niak_omitted';                                                               
         
         %% Subject 2
-        files_in.subject2.fmri = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc')};
+        files_in.subject2.fmri = {cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject2.mnc'),cat(2,GB_NIAK.path_demo,filesep,'func_rest_subject2.mnc')};
         files_in.subject2.transformation = 'gb_niak_omitted';
         
         % Here, no transformation to the MNI152 space is specified. This is a disaster because the spatial apriori 
@@ -111,15 +111,15 @@ switch format_demo
     case 'minc1' % If data are in minc1 format
 
         %% Subject 1
-        files_in.subject1.fmri = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz')};
-        files_in.subject1.mask_selection{1} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_ventricle.mnc.gz');
-        files_in.subject1.mask_selection{2} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_stem.mnc.gz');
+        files_in.subject1.fmri = {cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc.gz'),cat(2,GB_NIAK.path_demo,filesep,'func_rest_subject1.mnc.gz')};
+        files_in.subject1.mask_selection{1} = cat(2,GB_NIAK.path_niak,filesep,'template',filesep,'roi_ventricle.mnc.gz');
+        files_in.subject1.mask_selection{2} = cat(2,GB_NIAK.path_niak,filesep,'template',filesep,'roi_stem.mnc.gz');
         files_in.subject1.transformation = 'gb_niak_omitted';
 
         %% Subject 2
-        files_in.subject2.fmri = {cat(2,gb_niak_path_demo,filesep,'func_motor_subject2.mnc.gz'),cat(2,gb_niak_path_demo,filesep,'func_rest_subject2.mnc.gz')};
-        files_in.subject2.mask_selection{1} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_ventricle.mnc.gz');
-        files_in.subject2.mask_selection{2} = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_stem.mnc.gz');       
+        files_in.subject2.fmri = {cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject2.mnc.gz'),cat(2,GB_NIAK.path_demo,filesep,'func_rest_subject2.mnc.gz')};
+        files_in.subject2.mask_selection{1} = cat(2,GB_NIAK.path_niak,filesep,'template',filesep,'roi_ventricle.mnc.gz');
+        files_in.subject2.mask_selection{2} = cat(2,GB_NIAK.path_niak,filesep,'template',filesep,'roi_stem.mnc.gz');
         files_in.subject2.transformation = 'gb_niak_omitted';
 
         % Here, no transformation to the MNI152 space is specified. This is a disaster because the spatial apriori
@@ -130,14 +130,14 @@ switch format_demo
  
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %% Pipeline options  %%
 %%%%%%%%%%%%%%%%%%%%%%%
-opt.folder_out  = cat(2,gb_niak_path_demo,filesep,'corsica',filesep);
+opt.folder_out  = cat(2,GB_NIAK.path_demo,filesep,'corsica',filesep);
 opt.labels_mask = {'ventricle','stem'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

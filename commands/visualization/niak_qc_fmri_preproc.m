@@ -109,8 +109,8 @@ path_qc = niak_full_path(opt.path_qc);
 
 % set the tag file
 niak_gb_vars
-if isempty(opt.tag_file) && exist([ gb_niak_path_template 'qc_tag_template.tag' ] )
-    opt.tag_file =  ( [ gb_niak_path_template 'qc_tag_template.tag' ] );
+if isempty(opt.tag_file) && exist([ GB_NIAK.path_template 'qc_tag_template.tag' ] )
+    opt.tag_file =  ( [ GB_NIAK.path_template 'qc_tag_template.tag' ] );
 elseif ~exist( opt.tag_file)
     error('The tag files %s does not exist' , opt.tag_file)
 else
@@ -192,9 +192,9 @@ end
 %% The template file 
 niak_gb_vars
 if ~opt.template_asym
-  file_template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
+  file_template = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
 else
-  file_template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];
+  file_template = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];
 end
    
 %% Loop over subjects 

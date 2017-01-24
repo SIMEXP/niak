@@ -172,8 +172,8 @@ niak_set_defaults
 
 %% Building default input names for template
 if isempty(files_in.template)
-    files_in.template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
-    files_in.template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
+    files_in.template = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
+    files_in.template_mask = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
 end
 
 %% Building default output names
@@ -210,12 +210,12 @@ if flag_verbose
 end
 
 %% Building the path to access the perl script
-if ~exist('gb_niak_path_niak','var')
+if ~exist('GB_NIAK.path_niak','var')
     flag_gb_niak_fast_gb = false;    
     niak_gb_vars; % load important NIAK variables
 end
 
-file_script = [gb_niak_path_niak 'commands' filesep 't1_processing' filesep 'niak_best1stepnlreg.pl'];
+file_script = [GB_NIAK.path_niak 'commands' filesep 't1_processing' filesep 'niak_best1stepnlreg.pl'];
 
 %% Convert inputs, if necessary 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.t1);
@@ -292,12 +292,12 @@ end
 file_grid = [path_t,filesep,name_t,'_grid_0.mnc'];
 [path_g,name_g,ext_g,flag_zip] = niak_fileparts(files_out.transformation_grid);
 if flag_zip    
-    instr_zip = [gb_niak_zip ' ' file_grid];
+    instr_zip = [GB_NIAK.zip ' ' file_grid];
     [status,msg] = system(instr_zip);
     if status ~= 0
         error('There was a problem zipping the grid file, error message : %s',msg);
     end
-    file_grid = [file_grid gb_niak_zip_ext];
+    file_grid = [file_grid GB_NIAK.zip_ext];
 end
 instr_mv = ['mv ' file_grid ' ' files_out.transformation_grid];
 [status,msg] = system(instr_mv);

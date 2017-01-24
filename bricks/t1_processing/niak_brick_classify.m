@@ -124,9 +124,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)    
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+    ext_f = cat(2,ext_f,GB_NIAK.zip_ext);
 end
 
 if strcmp(opt.folder_out,'')

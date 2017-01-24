@@ -296,12 +296,12 @@ elseif ischar(file_name)
         end
 
         if flag_zip
-            instr_zip = cat(2,gb_niak_zip,' ',hdr.file_name);
+            instr_zip = cat(2,GB_NIAK.zip,' ',hdr.file_name);
             [status,msg] = system(instr_zip);
             if status~=0
-                error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
+                error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',GB_NIAK.zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
             end
-            instr_mv = ['mv "' hdr.file_name gb_niak_zip_ext '" "' file_name '"'];
+            instr_mv = ['mv "' hdr.file_name GB_NIAK.zip_ext '" "' file_name '"'];
             [status,msg] = system(instr_mv);
             if status~=0
                 error(cat(2,'niak:write: ',msg,'. There was a problem moving the compressed file from the temporary folder to its final destination'));

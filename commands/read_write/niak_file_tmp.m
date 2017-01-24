@@ -56,9 +56,9 @@ flag_tmp = 1;
 
 while flag_tmp == 1;
     if ~isempty(gb_psom_name_job)
-        file_name = sprintf('%s_niak_tmp_%s_%i%s',gb_niak_tmp,gb_psom_name_job,floor(1000000000*rand(1)),ext);
+        file_name = sprintf('%s_niak_tmp_%s_%i%s',GB_NIAK.tmp,gb_psom_name_job,floor(1000000000*rand(1)),ext);
     else
-        file_name = sprintf('%sniak_tmp_%i%s',gb_niak_tmp,floor(1000000000*rand(1)),ext);
+        file_name = sprintf('%sniak_tmp_%i%s',GB_NIAK.tmp,floor(1000000000*rand(1)),ext);
     end
     flag_tmp = exist(file_name,'file')>0;
 end

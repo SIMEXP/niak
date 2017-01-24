@@ -132,7 +132,7 @@ opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 if ~ismember(opt.type_outline,{'sym','asym'})
     error(sprintf('%s is an unknown type of outline',opt.type_outline))
 end
-file_outline = [gb_niak_path_niak filesep 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_' opt.type_outline '_09a_outline_registration.mnc.gz'];
+file_outline = [GB_NIAK.path_niak filesep 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_' opt.type_outline '_09a_outline_registration.mnc.gz'];
 
 %% Build file names 
 
@@ -140,7 +140,7 @@ file_outline = [gb_niak_path_niak filesep 'template' filesep 'mni-models_icbm152
 pipeline = struct;
 clear jin jout jopt
 niak_gb_vars
-path_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep ];
+path_template = [GB_NIAK.path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep ];
 jin = niak_grab_folder( path_template , {'.git',[path_template 'motion'],[path_template 'registration'],[path_template 'summary'],[path_template 'group']});
 jout = strrep(jin,path_template,opt.folder_out);
 jopt.folder_out = opt.folder_out;

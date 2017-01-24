@@ -461,7 +461,7 @@ if nt1 == 1
     end
     
     if flag_zip
-        system([gb_niak_zip ' ' files_out]);
+        system([GB_NIAK.zip ' ' files_out]);
     end
 
 else

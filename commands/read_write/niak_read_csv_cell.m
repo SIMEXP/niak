@@ -112,12 +112,12 @@ if flag_zip
     if succ~=0
         error(msg)
     end            
-    instr_unzip = cat(2,gb_niak_unzip,' "',file_tmp_gz,'"');
+    instr_unzip = cat(2,GB_NIAK.unzip,' "',file_tmp_gz,'"');
     [succ,msg] = system(instr_unzip);
     if succ ~= 0
-        error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',gb_niak_unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
+        error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',GB_NIAK.unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
     end
-    file_name = file_tmp_gz(1:end-length(gb_niak_zip_ext));
+    file_name = file_tmp_gz(1:end-length(GB_NIAK.zip_ext));
 end
 
 %% Reading the table

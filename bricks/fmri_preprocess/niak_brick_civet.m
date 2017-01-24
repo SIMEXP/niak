@@ -229,7 +229,7 @@ gb_list_defaults = {0               , ''              , 0           , ''        
 niak_set_defaults
   
 if isempty(civet_command)
-    civet_command = cat(2,gb_niak_path_civet,filesep,'CIVET_Processing_Pipeline');
+    civet_command = cat(2,GB_NIAK.path_civet,filesep,'CIVET_Processing_Pipeline');
 end
 
 if isstruct(opt.civet)
@@ -255,7 +255,7 @@ if ~flag_civet
         path_anat = '.';
     end
 
-    if strcmp(ext_anat,gb_niak_zip_ext)
+    if strcmp(ext_anat,GB_NIAK.zip_ext)
         [tmp,name_anat,ext_anat] = fileparts(name_anat);        
         flag_zip = 1;
     else
@@ -396,11 +396,11 @@ if ~flag_civet
     %% civet-compliant name.
     flag = niak_mkdir(civet_folder);
     if flag_zip
-        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext));
+        [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',GB_NIAK.zip_ext));
         if succ~=0
             error(msg);
         end
-        [succ,msg] = system(cat(2,gb_niak_unzip,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',gb_niak_zip_ext));        
+        [succ,msg] = system(cat(2,GB_NIAK.unzip,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc',GB_NIAK.zip_ext));
     else
         [succ,msg] = system(cat(2,'cp ',files_in.anat,' ',civet_folder,filesep,civet_prefix,'_',civet_id,'_t1.mnc'));
     end

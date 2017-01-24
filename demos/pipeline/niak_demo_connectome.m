@@ -91,7 +91,7 @@ path_demo = niak_full_path(path_demo);
 opt = psom_struct_defaults(opt,{'files_in','folder_out','flag_test'},{'',[path_demo,filesep,'region_growing',filesep],false});
 
 %% Set the template
-files_in.network = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
+files_in.network = [GB_NIAK.path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
 
 if ~isempty(opt.files_in)&&~strcmp(opt.files_in,'gb_niak_omitted')
     files_in.fmri = opt.files_in.fmri;
@@ -103,7 +103,7 @@ else
 end
 
 %% Set the seeds
-files_in.seeds = [gb_niak_path_niak 'template' filesep 'list_seeds_cambridge_100.csv'];
+files_in.seeds = [GB_NIAK.path_niak 'template' filesep 'list_seeds_cambridge_100.csv'];
 
 %% Generate the pipeline
 [pipeline,opt_pipe] = niak_pipeline_connectome(files_in,rmfield(opt,'files_in'));
