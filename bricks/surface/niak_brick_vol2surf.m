@@ -95,7 +95,7 @@ files_in = psom_struct_defaults(files_in,{'vol','surf'},{NaN,''});
 
 if isempty(files_in.surf)
     niak_gb_vars
-    path_surf = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0_surface' filesep];
+    path_surf = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0_surface' filesep];
     file_white_l = [path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_white_left.obj'];
     file_white_r = [path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_white_right.obj'];
     file_gray_l  = [path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_gray_left.obj'];

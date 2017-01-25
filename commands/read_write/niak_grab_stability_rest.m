@@ -87,7 +87,7 @@ end
 if ~ismember(opt.type,{'consensus','core','adjusted','threshold'})
     error('%s is not a supported type of network',opt.type)
 end
-list_ext = {'.mnc','.nii',['.mnc' gb_niak_zip_ext],['.nii' gb_niak_zip_ext]};
+list_ext = {'.mnc','.nii',['.mnc' GB_NIAK.zip_ext],['.nii' GB_NIAK.zip_ext]};
 
 %% Grab the list of subject
 files.networks = struct();

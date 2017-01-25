@@ -110,7 +110,7 @@ else
 end
 
 %% Set the timing of events;
-files_in.timing = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.timing = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
 opt = rmfield(opt,'files_in');
 
 %% Set the conditions

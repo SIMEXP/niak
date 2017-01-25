@@ -85,7 +85,7 @@ if ~exist('path_test','var')
 end
 
 if isempty(path_test)
-    path_test = gb_niak_path_test_sve;
+    path_test = GB_NIAK.path_test_sve;
 end
 
 if ~strcmp(path_test(end),filesep)
