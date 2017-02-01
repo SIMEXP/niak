@@ -290,7 +290,7 @@ for net_id = 1:opt.scale
     opt_glm.flag_rsquare = true;
     [results, ~] = niak_glm(model_norm, opt_glm);
     pvals(net_id, :) = results.pce;
-    glm_results.(list_network{net_net_id}) = results;
+    glm_results.(list_network{net_id}) = results;
 end
 
 % Run FDR on the p-values
