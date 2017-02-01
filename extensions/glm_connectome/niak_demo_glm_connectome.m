@@ -88,21 +88,21 @@ files_in = files_du;
 
 
 %% Now use the NIAK Cambridge s100 template twice 
-files_in.networks.cambridge100 = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
-files_in.networks.cambridge100bis = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
+files_in.networks.cambridge100 = [GB_NIAK.path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
+files_in.networks.cambridge100bis = [GB_NIAK.path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
 
 %% Set the timing of events;
-files_in.model.group      = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
-files_in.model.individual.subject1a.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1a.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1b.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1c.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1d.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2a.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2a.intra_run.session2.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2b.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2c.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2d.intra_run.session1.motor.event = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.group      = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+files_in.model.individual.subject1a.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1a.intra_run.session2.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1b.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1c.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1d.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.intra_run.session2.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2b.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2c.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2d.intra_run.session1.motor.event = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
 
 %% GLM
 opt.fdr = 0.05; % The maximal false-discovery rate that is tolerated both for individual (single-seed) maps and whole-connectome discoveries, at each particular scale (multiple comparisons across scales are addressed via permutation testing)

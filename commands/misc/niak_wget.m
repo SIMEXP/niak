@@ -13,21 +13,21 @@ function [status,msg,data] = niak_wget(data)
 %    'cobre_lightweight20_nii': The lightweight COBRE release, with 10 patients and 10 controls (nifti format).
 % DATA.URL (string, see DATA.TYPE for default) the url to get the dataset.
 % DATA.NAME (string, see DATA.TYPE for default) the name of the file to retrieve.
-% DATA.PATH (string, [pwd filesep DATA.NAME], without the extension of the name) 
+% DATA.PATH (string, [pwd filesep DATA.NAME], without the extension of the name)
 %     where to download the dataset.
 %
 % STATUS (integer) the status of the grabbing process. 0: OK, positive values: problem
 % MSG (string) feedback from the grabbing process
 %
-% NOTE 1: If the folder DATA.PATH exists, the grabber assumes the data is present and 
-%   does not do anything. 
+% NOTE 1: If the folder DATA.PATH exists, the grabber assumes the data is present and
+%   does not do anything.
 % NOTE 2: Files are expected to come as .zip.
-% NOTE 3: if DATA is a string, it is treated as if a single field DATA.TYPE was 
+% NOTE 3: if DATA is a string, it is treated as if a single field DATA.TYPE was
 %   provided, and everything else gets assigned default values.
 % NOTE 4: See licensing information in the code.
 
-% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% Copyright (c) Pierre Bellec, Centre de recherche de l'institut de
+% Griatrie de Montral, Dpartement d'informatique et de recherche
 % oprationnelle, Universit de Montral, 2012-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % Keywords : test, NIAK, fMRI preprocessing, pipeline, DEMONIAK
@@ -60,7 +60,7 @@ end
 data = psom_struct_defaults( data , ...
     { 'path' , 'name' , 'url' , 'type' } , ...
     { ''     , ''     , ''    , ''     });
-    
+
 % Set actual defaults, based on data.type
 switch data.type;
     case 'data_test_niak_mnc1'
@@ -69,9 +69,9 @@ switch data.type;
     case 'data_test_niak_nii'
         data.name = 'data_test_niak_nii.zip';
         data.url  = ['http://www.nitrc.org/frs/download.php/9120/' data.name];
-    case 'target_test_niak_mnc1'  
-        url_dir = ['target_test_niak_mnc1-' gb_niak_target_test];
-        data.name = [ 'target_test_niak_mnc1-' gb_niak_target_test '.zip'];
+    case 'target_test_niak_mnc1'
+        url_dir = ['target_test_niak_mnc1-' GB_NIAK.target_test]
+        data.name = [ 'target_test_niak_mnc1-' GB_NIAK.target_test '.zip']
         data.url  = ['https://github.com/simexp/niak/releases/download/' url_dir '/' data.name];
     case 'single_subject_cambridge_preprocessed_nii'
         data.name = 'single_subject_cambridge_preprocessed_nii.zip';
@@ -103,7 +103,7 @@ if ~psom_exist(data.path)
     [status,msg] = system(['wget ' data.url ' -P ' data.path]);
     if status
         warning('There was a problem downloading the test data: %s',msg)
-    end    
+    end
     if strcmp(data.type, 'target_test_niak_mnc1')
         [status,msg] = system(['unzip ' data.path filesep data.name ' -d '  data.path]);
         system(['mv ' data.path filesep '*/* '  data.path ])
@@ -113,8 +113,8 @@ if ~psom_exist(data.path)
     end
     if status
         warning('There was a problem unzipping the dataset: %s',msg)
-    end    
-    psom_clean([data.path filesep data.name]) 
+    end
+    psom_clean([data.path filesep data.name])
 else
     % The folder already exists, don't do anything
     status = 0;

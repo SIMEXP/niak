@@ -201,7 +201,7 @@ else
     else
         flag_aal = true;
         niak_gb_vars;
-        files_in.areas = [gb_niak_path_template 'roi_aal_3mm.mnc.gz'];
+        files_in.areas = [GB_NIAK.path_template 'roi_aal_3mm.mnc.gz'];
     end
     
     if ~isfield(files_in,'mask')||isempty(files_in.mask)||strcmp(files_in.mask,'gb_niak_omitted')

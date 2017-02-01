@@ -146,7 +146,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -461,7 +461,7 @@ if nt1 == 1
     end
     
     if flag_zip
-        system([gb_niak_zip ' ' files_out]);
+        system([GB_NIAK.zip ' ' files_out]);
     end
 
 else

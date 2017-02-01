@@ -113,23 +113,23 @@ for num_f = 1:length(list_files)
     
     [path_tmp,name_tmp,ext] = fileparts(file_name);
     
-    if strcmp(ext,gb_niak_zip_ext)
+    if strcmp(ext,GB_NIAK.zip_ext)
         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
-        ext = [ext gb_niak_zip_ext];
+        ext = [ext GB_NIAK.zip_ext];
     end        
     
     switch ext
-        case {['.nii' gb_niak_zip_ext]}
+        case {['.nii' GB_NIAK.zip_ext]}
             
             target_file = [files_out filesep name_tmp '.mnc'];
             tmp_file = niak_file_tmp('.nii');
-            instr_cp0 = ['cp ' source_file ' ' tmp_file gb_niak_zip_ext];
-            instr_cp0bis = [gb_niak_unzip ' ' tmp_file gb_niak_zip_ext];
+            instr_cp0 = ['cp ' source_file ' ' tmp_file GB_NIAK.zip_ext];
+            instr_cp0bis = [GB_NIAK.unzip ' ' tmp_file GB_NIAK.zip_ext];
             instr_cp1 = ['nii2mnc ',arg_nii2mnc,' ',tmp_file,' ',target_file];
             instr_cp2 = ['rm ' tmp_file];
             instr_cp = char(instr_cp0,instr_cp0bis,instr_cp1,instr_cp2);
             if flag_zip
-                instr_cp = char(instr_cp,[gb_niak_zip ' ' target_file]);
+                instr_cp = char(instr_cp,[GB_NIAK.zip ' ' target_file]);
             end
             msg = sprintf('Convert %s to %s\n',source_file,target_file);
             
@@ -138,7 +138,7 @@ for num_f = 1:length(list_files)
             target_file = [files_out filesep name_tmp '.mnc'];
             instr_cp = ['nii2mnc ',arg_nii2mnc,' ',source_file,' ',target_file];
             if flag_zip
-                instr_cp = char(instr_cp,[gb_niak_zip ' ' target_file]);
+                instr_cp = char(instr_cp,[GB_NIAK.zip ' ' target_file]);
             end
             msg = sprintf('Convert %s to %s\n',source_file,target_file);
             

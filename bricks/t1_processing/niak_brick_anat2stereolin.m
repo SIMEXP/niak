@@ -133,7 +133,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars; % load important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -165,8 +165,8 @@ niak_set_defaults
 
 %% Building default input names for template
 if isempty(files_in.template)
-    files_in.template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
-    files_in.template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
+    files_in.template = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
+    files_in.template_mask = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
 end
 
 %% Building default output names
@@ -199,12 +199,12 @@ if flag_verbose
 end
 
 %% Building the path to access the perl script
-if ~exist('gb_niak_path_niak','var')
-    flag_gb_niak_fast_gb = false;    
+if ~exist('GB_NIAK.path_niak','var')
+
     niak_gb_vars; % load important NIAK variables
 end
 
-file_script = [gb_niak_path_niak 'commands' filesep 't1_processing' filesep 'niak_bestlinreg.pl'];
+file_script = [GB_NIAK.path_niak 'commands' filesep 't1_processing' filesep 'niak_bestlinreg.pl'];
 
 %% Convert inputs, if necessary 
 [path_f,name_f,ext_f] = niak_fileparts(files_in.t1);

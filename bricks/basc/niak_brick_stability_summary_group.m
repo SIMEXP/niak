@@ -195,7 +195,7 @@ if ~strcmp(files_out.figure_sil_max,'gb_niak_omitted')
         fprintf('Building a figure of group summary measures ...\n');
     end
     
-    if strcmp(gb_niak_language,'octave')
+    if strcmp(GB_NIAK.language,'octave')
         file_eps = niak_file_tmp('_summary_group.eps');
     end
     hfa = figure;
@@ -204,14 +204,14 @@ if ~strcmp(files_out.figure_sil_max,'gb_niak_omitted')
     plot(peaks,sil_max(peaks),'r*')
     str_title = sprintf('Group stability contrast');        
     title(str_title);
-    if strcmp(gb_niak_language,'octave')
+    if strcmp(GB_NIAK.language,'octave')
         print(hfa,'-dpsc','-r300',file_eps);
     else
         print(hfa,'-dpdf',files_out.figure_sil_max);            
     end
     close(hfa)
         
-    if strcmp(gb_niak_language,'octave')
+    if strcmp(GB_NIAK.language,'octave')
         % Conversion in pdf
         instr_ps2pdf = ['ps2pdf -dEPSCrop ',file_eps,' ',files_out.figure_sil_max];
         [succ,msg] = system(instr_ps2pdf);

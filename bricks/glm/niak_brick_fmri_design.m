@@ -261,7 +261,7 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f] = fileparts(name_f);
 end
 

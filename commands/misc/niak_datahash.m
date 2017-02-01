@@ -118,7 +118,7 @@ function Hash = niak_datahash(Data, Opt)
 niak_gb_vars
 
 %% OCTAVE FIX
-if ~isequal(gb_niak_language,'matlab')
+if ~isequal(GB_NIAK.language,'matlab')
     Hash = md5sum(Data,true);
     return
 end
