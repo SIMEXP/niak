@@ -1,7 +1,7 @@
 FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-ENV PSOM_VERSION 2.3.0
+ENV PSOM_VERSION 2.2.2
 ENV NIAK_ROOT /usr/local/niak
 ENV NIAK_CONFIG_PATH /local_config
 ENV NIAK_SANDBOX_ROOT /sandbox
