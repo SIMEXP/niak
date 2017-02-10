@@ -54,12 +54,7 @@ tag_windaub = {'PCWIN','windows'};
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
 if exist('psom_gb_vars.m','file')
-    psom_gb_vars
-end
-
-if exist('gb_psom_gb_vars','var') 
-    % loading common psom vars 
-    gb_psom_gb_vars;
+    psom_gb_vars;
     GB_NIAK.tmp = gb_psom_tmp;
     GB_NIAK.language = gb_psom_language;
     GB_NIAK.language_version = gb_psom_language_version;
