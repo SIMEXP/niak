@@ -5,7 +5,7 @@ First you need to ask your system administrator to install [Singularity](http://
 
 The administrator decides in the installation which part of the HPC file system will be accessible to users in the Singularity containers, make sure that the partition where your data lives is include in the "bind path".
 
-Once Singularity is installed, running NIAK is straight forward. Just get the [latest niak_singularity.tgz release](https://github.com/SIMEXP/niak/releases/latest) from the [NIAK github page](https://github.com/SIMEXP/niak/release) and decompress the tar ball on your computer:
+Once Singularity is installed, running NIAK is straight forward. Just get the [latest niak_singularity.tgz release](https://github.com/SIMEXP/niak/releases/latest) from the [NIAK github page](https://github.com/SIMEXP/niak) and decompress the tar ball on your computer:
 
 ```
 tar -zxvf niak_singularity.tgz
@@ -33,9 +33,9 @@ gb_psom_qsub_options = '-A my-guillimin-group-id';.
 With this minimal configuration, you should be able to use the full power of your HPC!
 
 ## More configutations
-The tar ball comes with a `psom.conf` file. This configuration can be stored in three places. In `/etc/psom.conf`, along with the `psom_console.sh` file or here: `${HOME}/.config/psom/psom.conf`. Note that the file are loaded in that order. So a user can overwrite the system `/etc/psom.conf` in ``${HOME}/.config/psom/psom.conf`. If you do not have root access to the system, a `psom.conf` file living in the `psom_console.sh` directory can act as a system wide config.
+The tar ball comes with a `psom.conf` file. This configuration can be stored in three places. In `/etc/psom.conf`, along with the `psom_console.sh` file (that is how it is shipped in the tar ball) or here: `${HOME}/.config/psom/psom.conf`. Note that the file are loaded in that order. So a user can overwrite the system `/etc/psom.conf` in ``${HOME}/.config/psom/psom.conf`. If you do not have root access to the system, a `psom.conf` file living in the `psom_console.sh` directory can act as a system wide config.
 
-The configuration is use to tell "psom_console" where to look for the `psom_gb_vars_local.m` file and the `niak-VERSION-NAME-AND-NUMBER.img` images. The default is to find them at the same location than `psom_console.sh` itself. You also need to set the `PSOM_SINGULARITY_OPTIONS` variable so that directory other than the host `${HOME}` and `/tmp` are accessible to the NIAK software. For example, if you need to mount a `/scratch` partitions you can uncomment the line:
+The configuration tells "psom_console.sh" where to look for the `psom_gb_vars_local.m` file and the `niak-VERSION-NAME-AND-NUMBER.img` images. The default is to find them at the same location than `psom_console.sh` itself. You also need to set the `PSOM_SINGULARITY_OPTIONS` variable so that directory other than the host `${HOME}` and `/tmp` are accessible to the NIAK software. For example, if you need to mount the `/scratch` directory, you can uncomment the line:
 ```
 PSOM_SINGULARITY_OPTIONS='-B /scratch'.
 ```  
