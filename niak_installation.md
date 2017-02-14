@@ -1,6 +1,6 @@
 # NIAK with docker
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Both set of instructions (docker and singularity) are provided below. 
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Both set of instructions (docker and singularity) are provided below.
 
  > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
 
@@ -88,11 +88,7 @@ docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
 And then connect your favorite browser to the the [following address: localhost:8080](localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the niak outputs will be in the directory where you called the `docker run` command (that is $PWD).
 
 # NIAK in Singularity
-We recommend installing NIAK on servers shared by many users, or high-performance computing (HPC) environments, using the singularity technology (http://singularity.lbl.gov/). Singularity first needs to be installed on the HPC by a system administrator. Then, a Singularity image needs to be downloaded on the host. All the released named ending with `.img` on the https://github.com/SIMEXP/niak/releases are valid candidates. Once the image is download, NIAK can be installed on the system (instructions comming soon) or can simply be executed using the `psom_console.sh` script that can be found here: https://github.com/SIMEXP/psom/blob/master/container/psom_console.sh. by running: 
-
-```bash
-psom_console.sh -p niak-boss-vX.X.X.img
-```
+Follow the [HPC Installation section](http://niak.simexp-lab.org/niak_HPC_installation.html)
 
 # Manual installation
 
