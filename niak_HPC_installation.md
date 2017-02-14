@@ -1,4 +1,4 @@
-## Installation
+# Installation
 The most straight forward way of installing NIAK on an HPC system is trough its [Singularity]( http://singularity.lbl.gov/) image. [Singularity]( http://singularity.lbl.gov/) is a Linux container system "designed around the notion of extreme mobility of compute and reproducible science".
 
 First you need to ask your system administrator to install [Singularity](http://singularity.lbl.gov/) on the HPC. We recommend [release](http://singularity.lbl.gov/all-release) 2.2 or higher.
@@ -49,3 +49,7 @@ PSOM_SINGULARITY_IMAGES_PATH=/usr/local/niak_singularity_images/:$HOME/my_niak_i
 psom_console.sh -l
 ```
 will list all the images stored in these directories. Note that all images should preferably have different names.
+
+# Adding new images on the system
+
+Many NIAK versions can be accessible at the same time on a HPC system. Once psom_console has been installed. Just download and decompress any on the `niak-*.img.tgz` tar ball found in the [release section of the NIAK github page](https://github.com/SIMEXP/niak/releases) in a path included in `PSOM_SINGULARITY_IMAGES_PATH`. It is now accessible in `psom_console`.
