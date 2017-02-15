@@ -94,6 +94,11 @@ function [results,opt] = niak_glm(model,opt)
 %      (vector, size 1*N) The R2 statistics of the model (percentage of sum-of-squares
 %      explained by the model).
 %
+%   F2
+%      (vector, size 1*N) Cohen's f2 effect size for the effect of interest. This measure 
+%      makes sense in a F-test, or a t-test with a single variable of interest. 
+%      In other cases, F2 is set to NaN. 
+%
 % _________________________________________________________________________
 % REFERENCES:
 %
@@ -103,6 +108,12 @@ function [results,opt] = niak_glm(model,opt)
 %   Edited By William D. Penny, Karl J. Friston, John T. Ashburner,
 %   Stefan J. Kiebel  &  Thomas E. Nichols. Springer, 2007.
 %   Chapter 7: "The general linear model", S.J. Kiebel, A.P. Holmes.
+%
+%
+% On the definition of the "local" variant of Cohen's f2 effect size (see Eq 2):
+%   Selya et al. A Practical Guide to Calculating Cohen’s f2, a Measure of Local 
+%   Effect Size, from PROC MIXED. Front Psychol. 2012; 3: 111.
+%   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3328081/
 %
 % _________________________________________________________________________
 % COMMENTS:
@@ -135,8 +146,8 @@ if (nargin<2)||(isempty(opt))
 end
 
 %% Default options
-list_fields    = { 'flag_rsquare' , 'flag_eff' , 'flag_residuals' , 'flag_beta', 'test' };
-list_defaults  = {  false         , false     , false           , false      , 'none' };
+list_fields      = { 'flag_rsquare' , 'flag_eff' , 'flag_residuals' , 'flag_beta' , 'test'   };
+list_defaults  = { false              , false       , false                 , false          , 'none' };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 y = model.y;
@@ -147,10 +158,23 @@ if size(x,1)~=N
     error('X should have the same number of rows as Y');
 end
  
-beta = (x'*x)\x'*y;              % Regression coefficient 
-e = y-x*beta;                    % Residuals
-
+beta = (x'*x)\x'*y;   % Regression coefficient 
+e = y-x*beta;           % Residuals
+s = sum(e.^2,1); % Estimate of the residual sum-of-square of the full model
+SSt = sum((y-repmat(mean(y,1),[size(y,1) 1])).^2,1); % Total sum-of-squares (without the mean...)
+    
 if isfield(opt,'test')
+    c = model.c(:);
+    x0 = x(:,~model.c); % restricted model
+    p0 = size(x0,2);
+    if p0>0
+        beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
+        e0 = y-x0*beta0;             % Residuals (restricted model)
+        s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
+    else
+        s0 = sum(y.^2,1); 
+    end
+                
     switch opt.test
 
         case 'ttest'
@@ -159,14 +183,11 @@ if isfield(opt,'test')
             if ~isfield(model,'c')
                 error('Please specify MODEL.C for performing a t-test')
             end
-            c = model.c(:);
-            std_e = sqrt(sum(e.^2,1)/(N-K));        % Standard deviation of the noise
-
-            d     = sqrt(c'*(x'*x)^(-1)*c);         % Intermediate result for the t-test
+            std_e = sqrt(s/(N-K));        % Standard deviation of the noise
+            d = sqrt(c'*(x'*x)^(-1)*c);         % Intermediate result for the t-test
             ttest = (c'*beta)./(std_e*d);           % t-test
             pce = 2*(1-niak_cdf_t(abs(ttest),size(x,1)-size(x,2))); % two-tailed p-value
             eff = c'*beta;                          % The effect matrix
-
             std_eff = std_e*sqrt(c'*(x'*x)^(-1)*c); % The standard deviation of effect
             
             results.std_e = std_e;
@@ -182,20 +203,10 @@ if isfield(opt,'test')
             if ~isfield(model,'c')
                 error('Please specify MODEL.C for performing a F test')
             end
-            c = model.c(:);
-            s  = sum(e.^2,1);  % Estimate of the residual sum-of-square of the full model
-            x0 = x(:,~model.c);
-            p0 = size(x0,2);
-            if p0>0
-                beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
-                e0 = y-x0*beta0;             % Residuals (restricted model)
-                s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
-            else 
-                s0 = sum(y.^2,1);
-            end
-            results.ftest = ((s0-s)/(K-p0))./(s/(N-K)); % F-Test
-            results.pce = 1-fcdf(results.ftest,K-p0,N-K); % p-value
+            results.ftest     = ((s0-s)/(K-p0))./(s/(N-K)); % F-Test
+            results.pce       = 1-fcdf(results.ftest,K-p0,N-K); % p-value
             results.degfree = [K-p0,N-K]; % degrees of freedom
+            
         case 'none'
             
             % Do nothing
@@ -206,10 +217,17 @@ if isfield(opt,'test')
     end
 end
 
-
 %% flags
+if ~strcmp(opt.test,'none')&&~(strcmp(opt.test,'ttest')&&(sum(model.c)>1))
+    % (RAB-RA)/(1-RAB) = (s0./SSt-s./SSt)./(s./SSt)
+    %                               = (s0-s)./s
+    results.f2 = (s0-s)./s;
+else
+    results.f2 = repmat(NaN,size(s));
+end
+
 if opt.flag_rsquare
-    results.rsquare = 1 - (sum(e.^2,1)./sum((y-repmat(mean(y,1),[size(y,1) 1])).^2,1));
+    results.rsquare = 1 - s./SSt;
 end
 if opt.flag_residuals
     results.e = e;       % Residuals
