@@ -96,7 +96,16 @@ end
 if ~psom_exist(data.path)
     % The folder is not present, download data
     psom_mkdir(data.path);
-    [status,msg] = system(['wget ' data.url ' -P ' data.path]);
+    [status,msg] = system(['env -i bash -ilc "wget ' data.url ' -P ' data.path ' ; echo BRAVO"'])
+%    [status,msg] = system(['env -i bash -ilc "env ; echo CRACK"'])
+%    disp(msg)
+%    [status,msg] = system(['env -i bash -ic "env; echo HIP"'])
+%    disp(msg)
+%    [status,msg] = system(['env -i bash -lc "env; echo HOP"'])
+%    disp(msg)
+
+%    [status,msg] = system(['wget ' data.url ' -P ' data.path])
+%    disp(data)
     if status
         warning('There was a problem downloading the test data: %s',msg)
     end    
