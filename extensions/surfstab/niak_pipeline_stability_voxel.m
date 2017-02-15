@@ -258,7 +258,7 @@ opt.psom.path_logs  = niak_full_path([opt.folder_out 'logs']);
 % Check mask
 if strcmp(files_in.areas, 'gb_niak_omitted')
     niak_gb_vars;
-    files_in.areas = [gb_niak_path_template 'roi_aal_3mm.mnc.gz'];
+    files_in.areas = [GB_NIAK.path_template 'roi_aal_3mm.mnc.gz'];
 end
 
 if strcmp(files_in.mask, 'gb_niak_omitted')

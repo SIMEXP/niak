@@ -216,33 +216,33 @@ else
         [path_f,name_f,type] = fileparts(file_name);
         switch type
 
-            case gb_niak_zip_ext
+            case GB_NIAK.zip_ext
 
                 %% The file is zipped... Unzip it first and restart reading              
 
                 [path_f_tmp,name_f,type] = fileparts(name_f);
                 file_extra = [path_f filesep name_f '_extra.mat'];
-                file_tmp_gz = niak_file_tmp([name_f type gb_niak_zip_ext]);
+                file_tmp_gz = niak_file_tmp([name_f type GB_NIAK.zip_ext]);
                 
                 [succ,msg] = system(cat(2,'cp "',file_name,'" ',file_tmp_gz));
                 if succ~=0
                     error(msg)
                 end
                 
-                instr_unzip = cat(2,gb_niak_unzip,' "',file_tmp_gz,'"');
+                instr_unzip = cat(2,GB_NIAK.unzip,' "',file_tmp_gz,'"');
 
                 [succ,msg] = system(instr_unzip);
                 if succ ~= 0
-                    error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',gb_niak_unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
+                    error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',GB_NIAK.unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
                 end
 
                 if nargout == 2
-                    [hdr,vol] = niak_read_vol(file_tmp_gz(1:end-length(gb_niak_zip_ext)));
+                    [hdr,vol] = niak_read_vol(file_tmp_gz(1:end-length(GB_NIAK.zip_ext)));
                 else
-                    hdr = niak_read_vol(file_tmp_gz(1:end-length(gb_niak_zip_ext)));
+                    hdr = niak_read_vol(file_tmp_gz(1:end-length(GB_NIAK.zip_ext)));
                 end
 
-                delete(file_tmp_gz(1:end-length(gb_niak_zip_ext)));               
+                delete(file_tmp_gz(1:end-length(GB_NIAK.zip_ext)));
                 hdr.info.file_parent = file_name;
                 if psom_exist(file_extra)
                     hdr.extra = load(file_extra);

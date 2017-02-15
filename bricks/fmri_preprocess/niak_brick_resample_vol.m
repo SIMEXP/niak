@@ -121,9 +121,9 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 %
 % Copyright (c) Pierre Bellec, McConnell Brain Imaging Center,
 % Montreal Neurological Institute, 2008-2010
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2010-2014
+% University of Montreal, Qubec, Canada, 2010-2014
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, minc, resampling
@@ -146,7 +146,7 @@ function [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,o
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -210,6 +210,49 @@ if opt.flag_skip
     if status~=0
         error(msg)
     end
+    return
+end
+
+%%%%%%%%%%%%%%%%%%%%%
+%% Checking format %%
+%%%%%%%%%%%%%%%%%%%%%
+[path_s,name_s,ext_s] = niak_fileparts(files_in.source);
+[path_t,name_t,ext_t] = niak_fileparts(files_in.target);
+[path_o,name_o,ext_o] = niak_fileparts(files_out);
+flag_conv = false;
+path_tmp = niak_path_tmp(['_' name_o]);
+if ~ismember(ext_s,{'.mnc','.mnc.gz'})
+    flag_conv = true;
+    in_source = [path_tmp 'source.mnc'];
+    niak_brick_copy(files_in.source,in_source,struct('flag_fmri',true));
+else  
+    in_source = files_in.source;
+end
+if ~ismember(ext_t,{'.mnc','.mnc.gz'})
+    flag_conv = true;
+    in_target = [path_tmp 'target.mnc'];
+    niak_brick_copy(files_in.target,in_target,struct('flag_fmri',true));
+else
+    in_target = files_in.target;
+end
+flag_conv_out = false;
+if ~ismember(ext_o,{'.mnc','.mnc.gz'})
+    flag_conv = true;
+    flag_conv_out = true;
+    tmp_out = [path_tmp 'resample.mnc'];
+else
+    tmp_out = files_out;
+end
+
+if flag_conv
+    files_in_tmp = files_in;
+    files_in_tmp.source = in_source;
+    files_in_tmp.target = in_target;
+    niak_brick_resample_vol(files_in_tmp,tmp_out,opt);
+    if flag_conv_out
+        niak_brick_copy(tmp_out,files_out,struct('flag_fmri',true));
+    end
+    psom_clean(path_tmp);
     return
 end
 
@@ -418,7 +461,7 @@ if nt1 == 1
     end
     
     if flag_zip
-        system([gb_niak_zip ' ' files_out]);
+        system([GB_NIAK.zip ' ' files_out]);
     end
 
 else

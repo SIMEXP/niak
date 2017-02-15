@@ -137,7 +137,6 @@ function [files_in,files_out,opt] = niak_brick_qc_coregister(files_in,files_out,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
 niak_gb_vars % Load some important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,9 +170,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+    ext_f = cat(2,ext_f,GB_NIAK.zip_ext);
 end
 
 if isempty(opt.folder_out)
@@ -286,7 +285,7 @@ mean_vol = mean_vol/length(files_in.vol);
 if flag_4d
     std_vol  = std_vol/length(files_in.vol);
 else
-    std_vol  = sqrt((std_vol-length(files_in.vol)*(mean_vol.^2))/(length(files_in.vol)-1));
+    std_vol  = sqrt(abs((std_vol-length(files_in.vol)*(mean_vol.^2)))/(length(files_in.vol)-1));
 end
 
 if flag_verbose

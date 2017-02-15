@@ -56,25 +56,25 @@ function [files_in,files_out,opt] = niak_demo_time_filter(path_demo,opt)
 % THE SOFTWARE.
 
 if nargin>=1
-    gb_niak_path_demo = path_demo;
+    GB_NIAK.path_demo = path_demo;
 end
 
 niak_gb_vars
 
 %% Setting input files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
     
     case 'minc1' % If data are in minc1 format
 
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_in = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc.gz');
 
     case 'minc2' % If data are in minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
+        files_in = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc');
     
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 

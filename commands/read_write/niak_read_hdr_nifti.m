@@ -341,10 +341,10 @@ else
 end
 
 %% hdr.info.dimension_order
+[~,~,~,hdr.info.dimension_order] = niak_hdr_mat2minc(hdr.info.mat);
+
 if hdr.info.dimensions(end)>1
-    hdr.info.dimension_order = 'xyzt';
-else
-    hdr.info.dimension_order = 'xyz';
+    hdr.info.dimension_order = [hdr.info.dimension_order 't'];
 end
 
 %% hdr.info.history

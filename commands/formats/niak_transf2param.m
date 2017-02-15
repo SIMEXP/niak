@@ -3,42 +3,27 @@ function [rot,tsl] = niak_transf2param(transf)
 % 4*4 matrix array (y=M*x+T) to the x/y/z rotation and translation
 % parameters.
 %
-% SYNTAX:
-% [ROT,TSL] = NIAK_TRANSF2PARAM(TRANSF)
+% SYNTAX: [ROT,TSL] = NIAK_TRANSF2PARAM(TRANSF)
 % 
-% _________________________________________________________________________
-% INPUT:
-%
-% TRANSF   
-%       (4*4*N array) TRANSF(:,:,n) is an lsq6 transformation, usually seen 
-%       as a "voxel-to-world" space transform.
-%
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% ROT 
-%       (array 3*N) the rotation parameters (in x, y and z planes). 
-%       Unit is degrees.
-%
+% TRANSF (4*4*N array) TRANSF(:,:,n) is an lsq6 transformation, usually seen 
+%   as a "voxel-to-world" space transform.
+% ROT (array 3*N) the rotation parameters (in x, y and z planes). 
+%   Unit is degrees.
 % TSL 
-%       (array 3*N) the translation parameters.
+%   (array 3*N) the translation parameters. Unit is consistent with the units of 
+%   TRANSF (generally mm).
 %
-% _________________________________________________________________________
-% COMMENTS:
-%
-% This code was written by Giampiero Campa,  
-% PhD, Research Assistant Professor
-% West Virginia University, Aerospace Engineering Dept.
+% This code was written by Giampiero Campa,  PhD, Research Assistant Professor
+% West Virginia University, Aerospace Engineering Dept. 
 % Morgantown, WV, 26506-6106, USA, Copyright 1/11/96
-% See
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=
-% 956&objectType=File
+% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=956&objectType=File
 %
 % Modified by Pierre Bellec, McConnel Brain Imaging Center, Montreal 
 % Neurological Institute, McGill University, Montreal, Canada, 2008.
-% Changing inputs/outputs formats.
-% Maintainer : pbellec@bic.mni.mcgill.ca
-% See licensing information in the code.
+% Centre de recherche de l'institut de geriatrie de Montreal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Qubec, Canada, 2008-2016
+% Maintainer : pierre.bellec@criugm.qc.ca
 % Keywords : rigid-body transformation, rotation, Euler angles
 %
 % See licensing information in the code

@@ -51,31 +51,31 @@ function [files_in,files_out,opt] = niak_demo_anat2stereonl(path_demo)
 % THE SOFTWARE.
 
 if exist('path_demo','var')
-    gb_niak_path_demo = path_demo;
+    GB_NIAK.path_demo = path_demo;
 end
 
 niak_gb_vars
 
 %% Setting input/output files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
         
     case 'minc2' % If data are in minc2 format
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        file_anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
+        file_anat = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1.mnc');
         
     case 'minc1'
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        file_anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
+        file_anat = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1.mnc.gz');
         
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
 end
 
 %% Apply non-uniformity correction
@@ -115,7 +115,7 @@ niak_brick_anat2stereolin(files_in,files_out,opt);
 %% Apply non-uniformity correction in Talairach space
 clear files_in files_out opt
 files_in.vol = file_anat_stereolin;
-files_in.mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];
+files_in.mask = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];
 files_out.vol_nu = '';
 opt.arg = '-distance 50';
 opt.flag_test = true;

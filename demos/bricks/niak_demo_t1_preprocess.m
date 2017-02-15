@@ -47,31 +47,31 @@ function [files_in,files_out,opt] = niak_demo_t1_preprocess(path_demo)
 % THE SOFTWARE.
 
 if exist('path_demo','var')
-    gb_niak_path_demo = path_demo;
+    GB_NIAK.path_demo = path_demo;
 end
 
 niak_gb_vars
 
 %% Setting input/output files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
         
     case 'minc2' % If data are in minc2 format
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        file_anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
+        file_anat = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1.mnc');
         
     case 'minc1'
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        file_anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
+        file_anat = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1.mnc.gz');
         
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
 end
 
 files_out.transformation_lin = '';
