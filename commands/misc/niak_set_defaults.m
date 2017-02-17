@@ -58,41 +58,41 @@
 
 %% Test if the structure exist, otherwise initialize an empty one
 try
-    %gb_niak_struct = evalin('caller',gb_name_structure); % for some reason it does not seem to work in octave     
+    %GB_NIAK.struct = evalin('caller',gb_name_structure); % for some reason it does not seem to work in octave
     
-    eval(sprintf('gb_niak_struct = %s;',gb_name_structure));
+    eval(sprintf('GB_NIAK.struct = %s;',gb_name_structure));
 catch
-    gb_niak_struct = struct([]);
+    GB_NIAK.struct = struct([]);
 end
    
 %% Loop on every field
-gb_niak_nb_fields = length(gb_list_fields);
+GB_NIAK.nb_fields = length(gb_list_fields);
 
-for num_f = 1:gb_niak_nb_fields
+for num_f = 1:GB_NIAK.nb_fields
     
-    gb_niak_field = gb_list_fields{num_f};
-    gb_niak_val = gb_list_defaults{num_f};
-    gb_niak_flag_field = isfield(gb_niak_struct,gb_niak_field);
+    GB_NIAK.field = gb_list_fields{num_f};
+    GB_NIAK.val = gb_list_defaults{num_f};
+    GB_NIAK.flag_field = isfield(GB_NIAK.struct,GB_NIAK.field);
 
     %% If the field does not exist, create it with default value
-    if ~gb_niak_flag_field  
-        if isnumeric(gb_niak_val)
-            if isnan(gb_niak_val)
-                error(cat(2,'niak:defaults: Please specify field ',gb_niak_field,' in structure ',gb_name_structure,' !\n'))                
+    if ~GB_NIAK.flag_field
+        if isnumeric(GB_NIAK.val)
+            if isnan(GB_NIAK.val)
+                error(cat(2,'niak:defaults: Please specify field ',GB_NIAK.field,' in structure ',gb_name_structure,' !\n'))
             end
         end        
-        gb_niak_struct(1).(gb_niak_field) = gb_niak_val;        
+        GB_NIAK.struct(1).(GB_NIAK.field) = GB_NIAK.val;
     end    
                     
     % Upload the field as a variable   
 
-    %assignin('caller',field,gb_niak_struct.(field));
-    instr_upload = sprintf('%s = gb_niak_struct.%s;',gb_niak_field,gb_niak_field);
+    %assignin('caller',field,GB_NIAK.struct.(field));
+    instr_upload = sprintf('%s = GB_NIAK.struct.%s;',GB_NIAK.field,GB_NIAK.field);
     eval(instr_upload);
 end
 
 %% Test if some field were not used, and eventually issue a warning.
-gb_list_fields_init = fieldnames(gb_niak_struct);
+gb_list_fields_init = fieldnames(GB_NIAK.struct);
 if length(gb_list_fields_init)~=length(gb_list_fields);
     gb_mask_init = ismember(gb_list_fields_init,gb_list_fields);
     if min(gb_mask_init)==0
@@ -106,4 +106,4 @@ if length(gb_list_fields_init)~=length(gb_list_fields);
 end
 
 %% Export the structure
-eval(cat(2,gb_name_structure,' = gb_niak_struct;'))
+eval(cat(2,gb_name_structure,' = GB_NIAK.struct;'))

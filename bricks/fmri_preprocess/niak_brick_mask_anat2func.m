@@ -146,9 +146,9 @@ file_mask_bold_r = niak_file_tmp('_mask_bold_r.mnc');
 in.source = files_in.mask_bold;
 in.target = files_in.anat;
 in.transformation = files_in.transf_stereolin2nl;
-opt.flag_invert_transf = true;
-opt.interpolation = 'nearest_neighbour';
-niak_brick_resample_vol(in,file_mask_bold_r,opt);
+opt_r.flag_invert_transf = true;
+opt_r.interpolation = 'nearest_neighbour';
+niak_brick_resample_vol(in,file_mask_bold_r,opt_r);
 
 %% Read brain masks
 [hdr,mask_bold]   = niak_read_vol(file_mask_bold_r);
@@ -203,4 +203,8 @@ hdr.file_name = files_out;
 niak_write_vol(hdr,mask_brain2);
 
 %% Clean up
-psom_clean({file_mask_avg_r,file_mask_bold_r});
+if opt.flag_avg
+    psom_clean(file_mask_avg_r);
+end 
+
+psom_clean(file_mask_bold_r);

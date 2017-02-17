@@ -64,7 +64,7 @@ opt.stack.regress_conf = {'confound1','confound2'};     % a list of varaible nam
 
 %% Subtyping
 opt.subtype.nb_subtype = 2;       % the number of subtypes to extract
-opt.sub_map_type = 'mean';        % the model for the subtype maps (options are 'mean' or 'median')
+opt.subtype.sub_map_type = 'mean';        % the model for the subtype maps (options are 'mean' or 'median')
 
 %% Association testing via GLM
 

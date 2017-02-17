@@ -764,7 +764,7 @@ for num_e = 1:length(fmri)
     job_opt = opt.build_confounds;
     job_opt.folder_out     = opt.folder_resample;
 
-    job_out.confounds = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_n_confounds.tsv' gb_niak_zip_ext]; 
+    job_out.confounds = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_n_confounds.tsv' GB_NIAK.zip_ext];
     job_out.compcor_mask = [opt.folder_intermediate filesep 'regress_confounds' filesep 'fmri_' label(num_e).name '_mask_compcor_stereo' ext_f];     
     pipeline = psom_add_job(pipeline,['build_confounds_' label(num_e).name],'niak_brick_build_confounds',job_in,job_out,job_opt);      
 end

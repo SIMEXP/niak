@@ -100,12 +100,12 @@ for num_f = 1:length(list_files)
     
     [path_tmp,name_tmp,ext] = fileparts(file_name);
     
-    if strcmp(ext,gb_niak_zip_ext)
+    if strcmp(ext,GB_NIAK.zip_ext)
         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
-        ext = [ext gb_niak_zip_ext];
+        ext = [ext GB_NIAK.zip_ext];
     end
     
-    if strcmp(ext,'.mnc')||strcmp(ext,['.mnc' gb_niak_zip_ext])
+    if strcmp(ext,'.mnc')||strcmp(ext,['.mnc' GB_NIAK.zip_ext])
         target_file = [files_out filesep name_tmp ext];
         [hdr,vol] = niak_read_vol(source_file);
         hdr.file_name = target_file;

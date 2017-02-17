@@ -189,10 +189,10 @@ opt_pipe.template.mask_avg     = [path_test.demoniak filesep 'mni_icbm152_asym_0
 opt_pipe.template.mask_dilated = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm' ext_t];
 opt_pipe.template.mask_bold    = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm' ext_t];
 opt_pipe.template.mask_wm      = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_5mm' ext_t];
-opt_pipe.template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
-opt_pipe.template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
-opt_pipe.template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                         
-opt_pipe.template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                              
+opt_pipe.template.fmri         = [GB_NIAK.path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];
+opt_pipe.template.aal          = [GB_NIAK.path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];
+opt_pipe.template.mask_vent    = [GB_NIAK.path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
+opt_pipe.template.mask_willis  = [GB_NIAK.path_niak 'template' filesep 'roi_stem.mnc.gz'];
 [pipe_fp,opt_p,files_fp] = niak_test_fmripreproc_demoniak(path_test_fp,opt_pipe);
 pipe = psom_merge_pipeline(pipe,pipe_fp,'fp_');
 
@@ -292,7 +292,7 @@ for sub_id = 1:numel(fsub)
     end
 end
 files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
-files_sbt.model = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+files_sbt.model = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
 opt_subtype = struct;
 opt_subtype.flag_test = true;
 opt_subtype.flag_target = opt.flag_target;

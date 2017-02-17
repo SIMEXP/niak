@@ -66,7 +66,7 @@ function  [err,msg] = niak_write_csv_cell(file_name,csv_cell,separator)
 % THE SOFTWARE.
 
 % Load global variables
-flag_gb_niak_fast_gb = 1;
+
 niak_gb_vars
 
 %% Default inputs
@@ -125,9 +125,9 @@ fclose(hf);
 
 %% Compress file
 if flag_zip
-    instr_zip = cat(2,gb_niak_zip,' ',file_name);
+    instr_zip = cat(2,GB_NIAK.zip,' ',file_name);
     [status,msg] = system(instr_zip);
     if status~=0
-        error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
+        error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',GB_NIAK.zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
     end
 end

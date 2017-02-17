@@ -88,7 +88,7 @@ if ~exist('path_demo','var')
 end
 
 if isempty(path_demo)
-    path_demo = gb_niak_path_demo;
+    path_demo = GB_NIAK.path_demo;
 end
 
 path_demo = niak_full_path(path_demo);
