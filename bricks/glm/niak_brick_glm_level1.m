@@ -335,7 +335,7 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
     flag_zip = 1;
 else 
@@ -409,12 +409,12 @@ end
 %% Input file
 
 if flag_zip
-    file_input = niak_file_tmp(cat(2,'_func.mnc',gb_niak_zip_ext));
+    file_input = niak_file_tmp(cat(2,'_func.mnc',GB_NIAK.zip_ext));
     instr_cp = cat(2,'cp ',files_in.fmri,' ',file_input);
     system(instr_cp);
-    instr_unzip = cat(2,gb_niak_unzip,' ',file_input);
+    instr_unzip = cat(2,GB_NIAK.unzip,' ',file_input);
     system(instr_unzip);
-    file_input = file_input(1:end-length(gb_niak_zip_ext));
+    file_input = file_input(1:end-length(GB_NIAK.zip_ext));
 else
     file_input = files_in.fmri;
 end

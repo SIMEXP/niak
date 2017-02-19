@@ -7,7 +7,7 @@
 %   Montreal Neurological Institute, McGill University, 2008-2010.
 %   Research Centre of the Montreal Geriatric Institute
 %   & Department of Computer Science and Operations Research
-%   University of Montreal, Québec, Canada, 2010-2012
+%   University of Montreal, Qubec, Canada, 2010-2012
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI, preprocessing, pipeline
@@ -82,7 +82,6 @@ opt.motion.session_ref  = 'session1'; % The session that is used as a reference.
 % resampling in stereotaxic space
 opt.resample_vol.interpolation = 'trilinear'; % The resampling scheme. The fastest and most robust method is trilinear. 
 opt.resample_vol.voxel_size    = [3 3 3];     % The voxel size to use in the stereotaxic space
-opt.resample_vol.flag_skip     = 0;           % Skip resampling (data will stay in native functional space after slice timing/motion correction) (0: don't skip, 1 : skip)
 
 % Linear and non-linear fit of the anatomical image in the stereotaxic
 % space (niak_brick_t1_preprocess)
@@ -90,15 +89,19 @@ opt.t1_preprocess.nu_correct.arg = '-distance 75'; % Parameter for non-uniformit
 
 % Temporal filtering (niak_brick_time_filter)
 opt.time_filter.hp = 0.01; % Cut-off frequency for high-pass filtering, or removal of low frequencies (in Hz). A cut-off of -Inf will result in no high-pass filtering.
-opt.time_filter.lp = Inf;  % Cut-off frequency for low-pass filtering, or removal of high frequencies (in Hz). A cut-off of Inf will result in no low-pass filtering.
+opt.time_filter.lp = 0.1;  % Cut-off frequency for low-pass filtering, or removal of high frequencies (in Hz). A cut-off of Inf will result in no low-pass filtering.
+
+% Parameters for confounds
+opt.build_confounds.thre_fd = 0.5; % The threshold on frame displacement that is used to determine frames with excessive motion in the scrubbing procedure
+opt.build_confounds.nb_min_vol = 40; % The minimal number of volumes left after scrubbing
 
 % Regression of confounds and scrubbing (niak_brick_regress_confounds)
+opt.regress_confounds.flag_high = false;         % Turn on/off the regression of high frequency (true: apply / false : don't apply)
 opt.regress_confounds.flag_wm = true;            % Turn on/off the regression of the average white matter signal (true: apply / false : don't apply)
 opt.regress_confounds.flag_vent = true;          % Turn on/off the regression of the average of the ventricles (true: apply / false : don't apply)
 opt.regress_confounds.flag_motion_params = true; % Turn on/off the regression of the motion parameters (true: apply / false : don't apply)
 opt.regress_confounds.flag_gsc = false;          % Turn on/off the regression of the PCA-based estimation of the global signal (true: apply / false : don't apply)
 opt.regress_confounds.flag_scrubbing = true;     % Turn on/off the scrubbing of time frames with excessive motion (true: apply / false : don't apply)
-opt.regress_confounds.thre_fd = 0.5;             % The threshold on frame displacement that is used to determine frames with excessive motion in the scrubbing procedure
 
 % Correction of physiological noise (niak_pipeline_corsica)
 opt.corsica.sica.nb_comp             = 60;    % Number of components estimated during the ICA. 20 is a minimal number, 60 was used in the validation of CORSICA.

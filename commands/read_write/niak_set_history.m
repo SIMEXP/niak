@@ -79,7 +79,7 @@ niak_gb_vars
 
 %% Generic info (date, username, version of the NIAK, etc...)
 str_hist = datestr(now);
-str_hist = [str_hist ' ' gb_niak_user ' on a ' gb_niak_OS ' system used NIAK v' gb_niak_version '>>>> '];
+str_hist = [str_hist ' ' GB_NIAK.user ' on a ' GB_NIAK.OS ' system used NIAK v' GB_NIAK.version '>>>> '];
 
 %% Name of the command
 if ~isempty(opt.command)

@@ -9,13 +9,19 @@ function csv_cell = niak_read_csv_cell(file_name,opt)
 % INPUTS:
 %
 % FILE_NAME     
-%	(string) the name of the csv file (usually ends in .csv)
+%	(string) the name of the text file. This usually ends in .csv for comma-separated 
+%   values, .tsv for tabulation-separated values and and can have a .gz extension for
+%   compressed files.
 % 
 % OPT
 %   (structure, optional) with the following fields:
 %
+%   FLAG_VERBOSE
+%      (boolean, default false) verbose on progress
+%
 %   SEPARATOR
-%       (string, default ',') The character used to separate values. 
+%      (string, default ',' for csv files, char(9) - tabulation - for .tsv files, ',' otherwise) 
+%      The character used to separate values. 
 %
 %   FLAG_STRING
 %       (boolean, default true) remove the ' and " characters in strings.
@@ -37,10 +43,14 @@ function csv_cell = niak_read_csv_cell(file_name,opt)
 % _________________________________________________________________________
 % COMMENTS:
 %
+% The extension of zipped files is assumed to be .gz. The tools used to zip 
+% files is 'gzip'. This setting can be changed by changing the variables 
+% GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
+%
 % Copyright (c) Pierre Bellec, 
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2013
+% University of Montreal, Qubec, Canada, 2013-2015
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : table, CSV
@@ -63,18 +73,52 @@ function csv_cell = niak_read_csv_cell(file_name,opt)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+% Check that the file exists
 if ~exist(file_name,'file')
     error(cat(2,'Could not find any file matching the description ',file_name));
 end
 
-%% Options
+% Load global variables
 
-list_fields   = {'separator' , 'flag_trim' , 'flag_string' };
-list_defaults = {','         , true        , true          };
+niak_gb_vars
+
+%% Check extension
+[path_f,name_f,ext_f,flag_zip,ext_short] = niak_fileparts(file_name);
+
+%% Options
+list_fields   = {'flag_verbose' , 'separator' , 'flag_trim' , 'flag_string' };
+list_defaults = {false          , ''          , true        , true          };
 if nargin == 1
     opt = struct();
 end
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
+
+%% Default separator
+if isempty(opt.separator)
+   switch ext_short
+       case '.csv'
+           opt.separator = ',';
+       case '.tsv'
+           opt.separator = char(9);
+       otherwise
+           opt.separator = ',';
+   end
+end
+
+%% Unzip if necessary
+if flag_zip
+    file_tmp_gz = niak_file_tmp([name_f ext_f]);
+    [succ,msg] = system(cat(2,'cp "',file_name,'" ',file_tmp_gz));
+    if succ~=0
+        error(msg)
+    end            
+    instr_unzip = cat(2,GB_NIAK.unzip,' "',file_tmp_gz,'"');
+    [succ,msg] = system(instr_unzip);
+    if succ ~= 0
+        error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',GB_NIAK.unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
+    end
+    file_name = file_tmp_gz(1:end-length(GB_NIAK.zip_ext));
+end
 
 %% Reading the table
 hf = fopen(file_name);
@@ -83,21 +127,31 @@ cell_tab = niak_string2lines(str_tab);
 fclose(hf);
 
 %% Extracting the labels
+if opt.flag_verbose
+    fprintf('Parsing .csv file: ')
+end
 for num_r = 1:length(cell_tab)
+    if opt.flag_verbose
+        niak_progress(num_r,length(cell_tab));
+    end
     cell_line = sub_csv(cell_tab{num_r},opt.separator);
     if num_r == 1
         csv_cell = cell(length(cell_tab),length(cell_line));
     end
     for num_c = 1:length(cell_line)
         if opt.flag_string
-            csv_cell(num_r,num_c) = regexprep(cell_line{num_c},'[''"]','');
+            csv_cell{num_r,num_c} = regexprep(cell_line{num_c},'[''"]','');
         else
-            csv_cell(num_r,num_c) = cell_line{num_c};
+            csv_cell{num_r,num_c} = cell_line{num_c};
         end
     end 
 end
 if opt.flag_trim
     csv_cell = strtrim(csv_cell);
+end
+
+if flag_zip
+    psom_clean(file_name,struct('flag_verbose',false));
 end
 
 function cell_values = sub_csv(str_values,separator)

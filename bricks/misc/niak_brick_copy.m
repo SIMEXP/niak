@@ -11,7 +11,7 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %   (cell of strings) a list of file names
 %
 % FILES_OUT       
-%   (cell of strings, default OPT.FOLDER_OUT/<BASE FILES_IN>_copy.<EXT FILES_IN>) 
+%   (cell of strings, default OPT.FOLDER_OUT/(NAME_FILES_IN)) 
 %   File name for outputs. If FILES_OUT is an empty string, the default
 %   name is generated.
 %
@@ -24,7 +24,7 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %       along with fMRI datasets.
 %
 %   FOLDER_OUT 
-%       (string, default: same as FILES_IN{1}) If present, all default 
+%       (string, default: folder of FILES_IN{1}) If present, all default 
 %       outputs will be created in the folder FOLDER_OUT. The folder 
 %       needs to be created beforehand.
 %
@@ -45,6 +45,9 @@ function [files_in,files_out,opt] = niak_brick_copy(files_in,files_out,opt)
 %              
 % _________________________________________________________________________
 % COMMENTS
+%
+% FILES_IN and FILES_OUT can also be passed as strings, in which case a single
+% files is copied. 
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
@@ -80,6 +83,16 @@ if ~exist('files_in','var')
     error('niak:brick','syntax: [FILES_IN,FILES_OUT,OPT] = NIAK_BRICK_COPY(FILES_IN,FILES_OUT,OPT).\n Type ''help niak_brick_copy'' for more info.')
 end
 
+%% Check inputs
+if ischar(files_in)&&ischar(files_out)
+    files_in = {files_in};
+    files_out = {files_out};
+end
+
+if ~iscellstr(files_in)||~iscellstr(files_out)
+    error('FILES_IN and FILES_OUT need to be both either strings or cell of strings')
+end
+
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields    = {'flag_fmri' , 'flag_verbose' , 'flag_test' , 'folder_out' };
@@ -87,20 +100,20 @@ gb_list_defaults  = {false       , 1              , 0           , ''           }
 niak_set_defaults
 
 %% Output files
-
 [path_f,name_f,ext_f] = fileparts(files_in{1});
 if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+    ext_f = cat(2,ext_f,GB_NIAK.zip_ext);
 end
 
 if strcmp(opt.folder_out,'')
     opt.folder_out = path_f;
 end
+opt.folder_out = niak_full_path(opt.folder_out);
 
 %% Building default output names
 nb_files = length(files_in);
@@ -111,7 +124,7 @@ if isempty(files_out)
 
     for num_f = 1:nb_files
         [path_f,name_f,ext_f] = niak_fileparts(files_in{num_f});
-        files_out{num_f} = cat(2,opt.folder_out,filesep,name_f,'_copy',ext_f);
+        files_out{num_f} = cat(2,opt.folder_out,name_f,ext_f);
     end
 
 end
@@ -127,7 +140,7 @@ end
 for num_f = 1:nb_files
 
     if flag_verbose
-        msg = sprintf('Copying file %s to %s',files_in{num_f},files_out{num_f});
+        msg = sprintf('Copying or converting file %s to %s',files_in{num_f},files_out{num_f});
         fprintf('%s\n',msg);
     end
     if opt.flag_fmri

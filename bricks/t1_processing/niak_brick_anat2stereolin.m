@@ -133,7 +133,7 @@ function [files_in,files_out,opt] = niak_brick_anat2stereolin(files_in,files_out
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars; % load important NIAK variables
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -165,8 +165,8 @@ niak_set_defaults
 
 %% Building default input names for template
 if isempty(files_in.template)
-    files_in.template = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
-    files_in.template_mask = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
+    files_in.template = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];
+    files_in.template_mask = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];
 end
 
 %% Building default output names
@@ -199,18 +199,41 @@ if flag_verbose
 end
 
 %% Building the path to access the perl script
-if ~exist('gb_niak_path_niak','var')
-    flag_gb_niak_fast_gb = false;    
+if ~exist('GB_NIAK.path_niak','var')
+
     niak_gb_vars; % load important NIAK variables
 end
 
-file_script = [gb_niak_path_niak 'commands' filesep 't1_processing' filesep 'niak_bestlinreg.pl'];
-   
+file_script = [GB_NIAK.path_niak 'commands' filesep 't1_processing' filesep 'niak_bestlinreg.pl'];
+
+%% Convert inputs, if necessary 
+[path_f,name_f,ext_f] = niak_fileparts(files_in.t1);
+[path_t,name_t,ext_t] = niak_fileparts(files_in.template);
+path_tmp = niak_path_tmp(['_' name_f]);
+
+if ~ismember(ext_f,{'.mnc','.mnc.gz'})
+    in_t1 = [path_tmp 't1.mnc'];
+    in_mask = [path_tmp 'mask.mnc'];
+    niak_brick_copy({files_in.t1,files_in.t1_mask},{in_t1,in_mask},struct('flag_fmri',true));
+else
+    in_t1 = files_in.t1;
+    in_mask = files_in.t1_mask;
+end
+
+if ~ismember(ext_t,{'.mnc','.mnc.gz'})
+    in_template = [path_tmp 'template.mnc'];
+    in_template_mask = [path_tmp 'template_mask.mnc'];
+    niak_brick_copy({files_in.template,files_in.template_mask},{in_template,in_template_mask},struct('flag_fmri',true));
+else
+    in_template = files_in.template;
+    in_template_mask = files_in.template_mask;
+end
+
 %% Setting up the system call to NIAK_BESTLINREG.PL
 if strcmp(files_in.t1_mask,'gb_niak_omitted')
     arg_mask = '';
 else
-    arg_mask = ['-source_mask ' files_in.t1_mask ' -target_mask ' files_in.template_mask];
+    arg_mask = ['-source_mask ' in_mask ' -target_mask ' in_template_mask];
 end
 
 if strcmp(files_out.transformation,'gb_niak_omitted')
@@ -222,10 +245,18 @@ end
 if strcmp(files_out.t1_stereolin,'gb_niak_omitted')
     arg_out = '';
 else
-    arg_out = files_out.t1_stereolin;
+    [path_o,name_o,ext_o] = niak_fileparts(files_out.t1_stereolin);
+    if ismember(ext_o,{'.mnc'})
+        flag_conv = false;
+        arg_out = files_out.t1_stereolin;
+    else
+        flag_conv = true;
+        tmp_out = [path_tmp 't1_stereolin.mnc'];
+        arg_out = tmp_out;
+    end
 end
 
-instr = [file_script ' -clobber ' arg ' ' arg_mask ' ' files_in.t1 ' ' files_in.template ' ' arg_transf ' ' arg_out];    
+instr = [file_script ' -clobber ' arg ' ' arg_mask ' ' in_t1 ' ' in_template ' ' arg_transf ' ' arg_out];    
 
 %% Running NIAK_BESTLINREG.PL
 if flag_verbose
@@ -245,6 +276,10 @@ end
 if strcmp(files_out.transformation,'gb_niak_omitted')
    system(['rm -f ' arg_transf])
 end
+if flag_conv
+    niak_brick_copy(tmp_out,files_out.t1_stereolin,struct('flag_fmri',true));
+end
+psom_clean(path_tmp);
 if flag_verbose
     fprintf('Done !\n')
 end

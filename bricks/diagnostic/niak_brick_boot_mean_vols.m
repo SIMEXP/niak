@@ -109,7 +109,7 @@ function [files_in,files_out,opt] = niak_brick_boot_mean_vols(files_in,files_out
 % THE SOFTWARE.
 
 niak_gb_vars % Load some important NIAK variables
-file_mni152 = cat(2,gb_niak_path_niak,'template',filesep,'roi_aal.mnc');
+file_mni152 = cat(2,GB_NIAK.path_niak,'template',filesep,'roi_aal.mnc');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
@@ -148,9 +148,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+    ext_f = cat(2,ext_f,GB_NIAK.zip_ext);
 end
 
 if strcmp(opt.folder_out,'')

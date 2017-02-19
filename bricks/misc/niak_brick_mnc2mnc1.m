@@ -112,7 +112,7 @@ for num_f = 1:length(list_files)
     
     [path_tmp,name_tmp,ext] = fileparts(file_name);
     
-    if strcmp(ext,gb_niak_zip_ext)
+    if strcmp(ext,GB_NIAK.zip_ext)
         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
     end
     
@@ -135,7 +135,7 @@ for num_f = 1:length(list_files)
             error(err_msg)
         end
         if strcmp(ext,'.mnc')&flag_zip
-            instr_zip = [gb_niak_zip ' ' target_file];
+            instr_zip = [GB_NIAK.zip ' ' target_file];
             [flag_err,err_msg] = system(instr_zip);
             if flag_err
                 error(err_msg)

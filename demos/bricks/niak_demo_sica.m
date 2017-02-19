@@ -58,24 +58,24 @@ function [files_in,files_out,opt] = niak_demo_sica(path_demo)
 % THE SOFTWARE.
 
 if nargin>=1
-    gb_niak_path_demo = path_demo;
+    GB_NIAK.path_demo = path_demo;
 end
 
 niak_gb_vars
 %% Setting input/output files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
     
     case 'minc2' % If data are in minc2 format
         
-        files_demo = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc');
+        files_demo = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc');
         
     case 'minc1' % If data are in minc1 format
 
-        files_demo = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_demo = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc.gz');
 
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 
@@ -102,8 +102,8 @@ opt_sica.flag_test   = 0;  % This is not a test, the spatial ICA is actually per
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 files_in_comp_sel.fmri       = files_demo;
 files_in_comp_sel.component  = files_out_sica.time;
-files_in_comp_sel.mask       = cat(2,gb_niak_path_niak,filesep,'template',filesep,'roi_ventricle.mnc');
-%files_in_comp_sel.component_to_keep = cat(2,gb_niak_path_demo,filesep,'motor_design.dat');
+files_in_comp_sel.mask       = cat(2,GB_NIAK.path_niak,filesep,'template',filesep,'roi_ventricle.mnc');
+%files_in_comp_sel.component_to_keep = cat(2,GB_NIAK.path_demo,filesep,'motor_design.dat');
 files_out_comp_sel           = '';
 opt_comp_sel.flag_test       = 0;
 [files_in_comp_sel,files_out_comp_sel,opt_comp_sel] = niak_brick_component_sel(files_in_comp_sel,files_out_comp_sel,opt_comp_sel);
