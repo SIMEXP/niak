@@ -207,10 +207,7 @@ if isfield(opt,'test') && ~strcmp(opt.test,'none')
             results.ftest     = ((s0-s)/(K-p0))./(s/(N-K)); % F-Test
             results.pce       = 1-fcdf(results.ftest,K-p0,N-K); % p-value
             results.degfree = [K-p0,N-K]; % degrees of freedom
-            
-        case 'none'
-            
-            
+                        
         otherwise,
             error('This test is not supported');
     end
