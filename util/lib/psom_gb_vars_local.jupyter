@@ -1,0 +1,32 @@
+
+%% Here are important PSOM variables. Whenever needed, PSOM will call
+%% this script to initialize the variables. If PSOM does not behave the way
+%% you want, this might be the place to fix that.
+
+%% Use the local configuration file if any
+if ~exist('gb_psom_gb_vars_local','var')&&exist('psom_gb_vars_local.m','file')
+	gb_psom_gb_vars_local = true;
+	psom_gb_vars_local
+	return
+end
+gb_psom_DEBUG = false;
+
+% how to invoke octave
+gb_psom_command_octave = 'octave';
+
+% Options for the execution mode of the pipeline
+gb_psom_mode = 'background';
+
+% Options for the execution mode of the pipeline manager
+gb_psom_mode_pm = 'session';
+
+% Options for the execution mode of the deamon
+gb_psom_mode_deamon = 'background';
+
+% Options for the execution mode of the garbage collector
+gb_psom_mode_garbage = 'background';
+
+% Options for the maximal number of jobs
+gb_psom_max_queued = 4;
+
+

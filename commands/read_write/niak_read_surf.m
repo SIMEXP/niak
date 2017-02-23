@@ -79,7 +79,7 @@ function ssurf = niak_read_surf(file_name,flag_neigh,flag_verbose)
 
 if (nargin<1)||isempty(file_name)
     niak_gb_vars
-    path_surf = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0_surface' filesep];
+    path_surf = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0_surface' filesep];
     file_name = {[path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_mid_left.obj'],[path_surf 'mni_icbm152_t1_tal_nlin_sym_09a_surface_mid_right.obj']};
 end
 

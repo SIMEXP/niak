@@ -53,9 +53,9 @@ flag_tmp = 1;
 
 while flag_tmp == 1
     if ~isempty(gb_psom_name_job)
-        path_name = sprintf('%sniak_tmp_%s_%i%s%s',gb_niak_tmp,gb_psom_name_job,floor(1000000000*rand(1)),ext,filesep);   
+        path_name = sprintf('%sniak_tmp_%s_%i%s%s',GB_NIAK.tmp,gb_psom_name_job,floor(1000000000*rand(1)),ext,filesep);
     else
-        path_name = sprintf('%sniak_tmp_%i%s%s',gb_niak_tmp,floor(1000000000*rand(1)),ext,filesep);   
+        path_name = sprintf('%sniak_tmp_%i%s%s',GB_NIAK.tmp,floor(1000000000*rand(1)),ext,filesep);
     end
     flag_tmp = exist(path_name)>0;
 end

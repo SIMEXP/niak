@@ -18,7 +18,7 @@ dependencies:
 
 test:
   override:
-    - docker run -it -v $PWD:$PWD simexp/niak_dependency:u12_o4 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"; exit $?":
+    - docker run -it -v $PWD:$PWD simexp/niak_dependency:u12_o4 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"":
        timeout: 21600
 
 #deployment:

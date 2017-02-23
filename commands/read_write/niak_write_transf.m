@@ -66,7 +66,7 @@ else
 end
 
 fprintf(hf,'MNI Transform File\n');
-fprintf(hf,'%%Created using NIAK v.%s, %s, by %s\n',gb_niak_version,datestr(now),gb_niak_user)  ;
+fprintf(hf,'%%Created using NIAK v.%s, %s, by %s\n',GB_NIAK.version,datestr(now),GB_NIAK.user)  ;
 fprintf(hf,'\nTransform_Type = Linear;\nLinear_Transform =\n');
 fprintf(hf,'%s\n',num2str(transf(1,:),15));
 fprintf(hf,'%s\n',num2str(transf(2,:),15));

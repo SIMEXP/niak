@@ -55,27 +55,27 @@ clear
 niak_gb_vars
 
 %% Setting input/output files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
         
     case 'minc2' % If data are in minc2 format
         
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc');
-        files_in.session2{1} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc');    
+        files_in.session1{1} = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc');
+        files_in.session2{1} = cat(2,GB_NIAK.path_demo,filesep,'func_rest_subject1.mnc');
         
     case 'minc1' % If data are in minc1 format
 
         %% The two datasets have actually been acquired in the same
         %% session, but this is just to demonstrate how the procedure works
         %% in general.
-        files_in.session1{1} = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz');
-        files_in.session2{1} = cat(2,gb_niak_path_demo,filesep,'func_rest_subject1.mnc.gz');    
+        files_in.session1{1} = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc.gz');
+        files_in.session2{1} = cat(2,GB_NIAK.path_demo,filesep,'func_rest_subject1.mnc.gz');
 
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)        
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
 end
 
 %% Setting output files
