@@ -480,8 +480,14 @@ intra_run.tseries = niak_vol2tseries(vol);
 if isfield(hdr_fmri,'extra')
     if isfield(hdr_fmri.extra,'mask_scrubbing')
         mask_scrubbing = hdr_fmri.extra.mask_scrubbing;
+        intra_run.mask_suppressed = mask_scrubbing;
     else
         mask_scrubbing = false(size(intra_run.tseries,1),1);
+        if isfield(hdr_fmri.extra,'mask_suppressed')
+            intra_run.mask_suppressed = hdr_fmri.extra.mask_suppressed;
+        else
+            intra_run.mask_suppressed = false(size(intra_run.tseries,1),1);
+        end
     end
     intra_run.time_frames = hdr_fmri.extra.time_frames(~mask_scrubbing);
     if isfield(hdr_fmri.extra,'confounds')
@@ -490,12 +496,7 @@ if isfield(hdr_fmri,'extra')
     else
         intra_run.confounds = [];
         intra_run.labels_confounds = {};
-    end
-    if isfield(hdr_fmri.extra,'mask_suppressed')
-        intra_run.mask_suppressed = hdr_fmri.extra.mask_suppressed|mask_scrubbing;
-    else
-        intra_run.mask_suppressed = false(size(intra_run.tseries,1),1);
-    end
+    end 
 else
     intra_run.time_frames = (0:(size(intra_run.tseries,1)-1))*hdr_fmri.info.tr;
     intra_run.confounds   = [];
