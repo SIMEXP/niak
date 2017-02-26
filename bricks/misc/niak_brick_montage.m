@@ -147,6 +147,8 @@ img(img>climits(2)) = climits(2);
 img(img<climits(1)) = climits(1);
 if opt.nb_color < Inf
     bins = linspace(climits(1),climits(2),opt.nb_color);
+    delta = (bins(2)-bins(1))/2;
+    bins = [bins(1)-delta,bins+delta];
 else
     bins = unique(img(:));
 end
@@ -171,7 +173,7 @@ switch opt.colormap
 end
 
 %% build the image
-[tmp,idx] = histc(img,bins);
+[tmp,idx] = histc(img(:),bins);
 idx(idx==0) = 1;
 rgb = zeros([size(img),3]);
 rgb(:,:,1) = reshape(cm(idx(:),1),size(img));
