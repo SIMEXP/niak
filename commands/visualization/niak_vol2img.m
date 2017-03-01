@@ -152,7 +152,7 @@ for vv = 1:length(list_view) % loop over types of views
     slice_vt = slice_vt(mask,:);
 
     % resample
-    slice_res = zeros(size(xx_vt));
+    slice_res = opt.padding*ones(size(xx_vt));
     ind_slice = niak_sub2ind_3d(size(vol),slice_vt(:,1),slice_vt(:,2),slice_vt(:,3));
     slice_res(mask) = vol(ind_slice);
     slices{vv} = niak_flip_vol(squeeze(slice_res),opt.type_flip);
