@@ -184,7 +184,7 @@ end
 %% Options
 gb_name_structure = 'opt';
 gb_list_fields = {'folder_out','environment','bricks'};
-gb_list_defaults = {NaN,gb_niak_language,struct([])};
+gb_list_defaults = {NaN,GB_NIAK.language,struct([])};
 niak_set_defaults
 
 %% The options for the bricks

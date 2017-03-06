@@ -138,7 +138,7 @@ function [files_in,files_out,opt] = niak_brick_component_sel(files_in,files_out,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -172,9 +172,9 @@ if isempty(path_s)
     path_s = '.';
 end
 
-if strcmp(ext_s,gb_niak_zip_ext)
+if strcmp(ext_s,GB_NIAK.zip_ext)
     [tmp,name_s,ext_s] = fileparts(name_s);
-    ext_s = cat(2,ext_s,gb_niak_zip_ext);
+    ext_s = cat(2,ext_s,GB_NIAK.zip_ext);
 end
 
 [path_m,name_m,ext_m] = fileparts(files_in.mask(1,:));
@@ -182,9 +182,9 @@ if isempty(path_m)
     path_m = '.';
 end
 
-if strcmp(ext_m,gb_niak_zip_ext)
+if strcmp(ext_m,GB_NIAK.zip_ext)
     [tmp,name_m,ext_m] = fileparts(name_m);
-    ext_m = cat(2,ext_m,gb_niak_zip_ext);
+    ext_m = cat(2,ext_m,GB_NIAK.zip_ext);
 end
 
 %% Setting up default output
@@ -234,7 +234,7 @@ end
 [path_f,name_f,ext_f,flag_zip] = niak_fileparts(files_in.mask);
 if flag_zip
     niak_gb_vars
-    file_mask_tmp = niak_file_tmp(['_mask_roi.mnc' gb_niak_zip_ext]);
+    file_mask_tmp = niak_file_tmp(['_mask_roi.mnc' GB_NIAK.zip_ext]);
 else
     file_mask_tmp = niak_file_tmp('_mask_roi.mnc');
 end

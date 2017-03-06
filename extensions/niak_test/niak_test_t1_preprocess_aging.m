@@ -86,7 +86,7 @@ if ~exist('path_test','var')
 end
 
 if isempty(path_test)
-    path_test = gb_niak_path_test;
+    path_test = GB_NIAK.path_test;
 end
 
 if ~strcmp(path_test(end),filesep)
@@ -110,7 +110,7 @@ list_subject = [560   561   562   563   564   565   566   567   568   570   571 
 nb_subject = length(num_subject);
 for num_s = num_subject
     subject = ['mni_' num2str(list_subject(num_s))];
-    files_in.(subject) = [gb_niak_path_aging filesep 'anat' filesep subject '_t1.mnc.gz'];        
+    files_in.(subject) = [GB_NIAK.path_aging filesep 'anat' filesep subject '_t1.mnc.gz'];
 end
 
 opt_t1.flag_test = true;

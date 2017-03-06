@@ -9,8 +9,9 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 %   i.e. the volume is resamples to have no direction cosines. 
 % OUT.MONTAGE (string) the file name for the figure. The extension will determine the type. 
 % OUT.COLORMAP (string) the file name for a figure with the color map. 
-% OUT.QUANTIZATION (string) the file name for a .mat file with a variable DATA. 
+% OUT.QUANTIZATION (string) the file name for a .mat file with variables DATA and SIZE_SLICE. 
 %   DATA(N) is the data point associated with the Nth color. 
+%   SIZE_SLICE (vector 1x2) the size of a slice. 
 % OPT.NB_SLICES (scalar, default Inf) the number of slices to produce (with a parameter
 %   Inf, all possible slices will be generated). 
 % OPT.COLORMAP (string, default 'gray') The type of colormap. Anything supported by 
@@ -196,6 +197,6 @@ end
 %% Saving the quantization data
 if ~strcmp(out.quantization,'gb_niak_omitted')
     data = bins;
-    nb_slices = dim_v([1 3 2]);
-    save(out.quantization,'data','nb_slices');    
+    size_slice = dim_v([3 2]);
+    save(out.quantization,'data','size_slice');    
 end

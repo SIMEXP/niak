@@ -209,8 +209,8 @@ if ~ischar(files_out.maps)
             fprintf('Generating connectivity map from fMRI dataset %s, processing seeds:\n    ',files_in.fmri{num_f});
         end
         [hdr,vol] = niak_read_vol(files_in.fmri{num_f});
-        if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_scubbing')
-            vol = vol(:,:,:,~hdr.extra.mask_scubbing);
+        if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_scrubbing')
+            vol = vol(:,:,:,~hdr.extra.mask_scrubbing);
         end
         for num_s = 1:length(list_seed)
             seed = list_seed{num_s};

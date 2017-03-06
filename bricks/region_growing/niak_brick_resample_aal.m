@@ -137,7 +137,7 @@ function [files_in,files_out,opt] = niak_brick_resample_aal(files_in,files_out,o
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = false;
+
 niak_gb_vars
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,12 +146,12 @@ niak_gb_vars
 
 if ~isfield(files_in,'source')||isempty(files_in.source) 
     % no source template provided default AAL template 
-    files_in.source      = [gb_niak_path_template 'roi_aal.mnc.gz']; 
+    files_in.source      = [GB_NIAK.path_template 'roi_aal.mnc.gz'];
 end
 
 if ~isfield(files_in,'target')||isempty(files_in.target)  
     % no target provided default AAL template 
-    files_in.target      = [gb_niak_path_template 'roi_aal.mnc.gz'];  
+    files_in.target      = [GB_NIAK.path_template 'roi_aal.mnc.gz'];
 end
 
 [files_in,files_out,opt] = niak_brick_resample_vol(files_in,files_out,opt);
