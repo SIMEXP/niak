@@ -35,9 +35,12 @@
 
 
 %% Use the local configuration file if any
-if ~exist('gb_niak_gb_vars_local','var')&&exist('niak_gb_vars_local.m','file')
+if ~exist('gb_niak_gb_vars_local','var')
     gb_niak_gb_vars_local = true;
-    niak_gb_vars_local
+    if exist('niak_gb_vars_local.m','file')
+        niak_gb_vars_local
+    end
+else
     return
 end
 
@@ -53,14 +56,9 @@ tag_windaub = {'PCWIN','windows'};
 
 % All niak var that has an equivalent in psom should be assigned in
 % this if block
-if ~exist('gb_psom_gb_vars','var')&&exist('psom_gb_vars.m','file')
-    gb_psom_gb_vars = true;
-    psom_gb_vars
-end
-
-if exist('gb_psom_gb_vars','var') 
+if exist('psom_gb_vars.m','file')
     % loading common psom vars 
-    gb_psom_gb_vars;
+    psom_gb_vars
     gb_niak_tmp = gb_psom_tmp;
     gb_niak_language = gb_psom_language;
     gb_niak_language_version = gb_psom_language_version;
