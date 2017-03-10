@@ -1,7 +1,7 @@
 Before running the following tutorials, NIAK needs to be properly installed. All the codes are to be executed in the matlab/octave environment. It is generally advised to create a new folder and run the script in this folder, as some datasets may be downloaded, and various images may be generated.
 
 # fMRI preprocessing
-[<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_fmri_preprocess.png" height="20px" />](niak_tutorial_fmri_preprocessing.html)
+[<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_fmri_preprocess.png" height="200px" />](niak_tutorial_fmri_preprocessing.html)
 
 # Connectome
  * [Generating seed-based correlation maps](niak_tutorial_rmap_connectome.html)
