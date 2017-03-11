@@ -4,7 +4,7 @@ Before running the following tutorials, NIAK needs to be properly installed. All
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_fmri_preprocess.png" height="200px" />](niak_tutorial_fmri_preprocessing.html)
 
 # Connectome
- * [Generating seed-based correlation maps](niak_tutorial_rmap_connectome.html)
+[<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_rmap.png" height="200px" />](niak_tutorial_rmap_connectome.html)
 
 # Region growing
  * [Region growing with NIAK](niak_tutorial_region_growing.html)
