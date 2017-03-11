@@ -1,12 +1,19 @@
 #!/bin/bash
 cp /usr/local/lib/psom_gb_vars_local.jupyter ${NIAK_CONFIG_PATH}/psom_gb_vars_local.m
 export OCTAVE_EXECUTABLE=/usr/bin/octave
-jupyter notebook --no-browser --port 8080 --ip=* > /dev/null 2>&1 &
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LOG_FILE=$(mktemp /tmp/niak_jypiter_XXXXXX.log)
+CONTAINER_IP=$(ip route|awk '/link/ { print $9 }')
+jupyter notebook --no-browser --config ${CURRENT_DIR}/../lib/jupyter_notebook_config.py > ${LOG_FILE} 2>&1  &
 jupyter_pid=$!
 echo Welcome to NIAK in your browser, powered by jupyter!
 echo NIAK is now available on your machine
 echo Open your favorite browser at the following address: http://localhost:8080
+echo If that does not work, then try http://${CONTAINER_IP=}:8080
 echo "Then click New --> Octave" 
-echo 
+echo
+echo The PASSWORD is: NIAK 
+echo
 echo For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutorials.html
+echo For the notebook logs, look in "${LOG_FILE}"
 wait $jupyter_pid  
