@@ -9,9 +9,11 @@ Before running the following tutorials, NIAK needs to be properly installed. All
 # Region growing
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_region_growing.png" height="200px" />](niak_tutorial_region_growing.html)
 
+# BASC FIR
+ * [Bootstrap Analysis of Stable Clusters](niak_tutorial_basc.html)
 
 # BASC FIR
- * [BASC FIR with NIAK](niak_tutorial_basc_fir.html)
+ * [Bootstrap Analysis of Stable Clusters using FIR](niak_tutorial_basc_fir.html)
 
 # Miscellaneous
  * [How to test NIAK](niak_tutorial_test.html)
