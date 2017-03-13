@@ -143,8 +143,6 @@ end
 climits = opt.limits;
 
 %% Generate colormap
-img(img>climits(2)) = climits(2);
-img(img<climits(1)) = climits(1);
 if opt.nb_color < Inf
     bins = linspace(climits(1),climits(2),opt.nb_color);
     delta = (bins(2)-bins(1))/2;
@@ -152,7 +150,7 @@ if opt.nb_color < Inf
 else
     bins = unique(img(:));
 end
-opt.nb_color = length(bins);
+opt.nb_color = length(bins)-1;
 
 switch opt.colormap
 	case 'hot_cold'   
@@ -191,7 +189,7 @@ if ~strcmp(out.colormap,'gb_niak_omitted')
     rgb = zeros(1,size(cm,1),size(cm,2));
     rgb(1,:,:) = cm;
     if ~isempty(opt.thresh)
-        rgb = rgb(1,bins>opt.thresh,:);
+        rgb = rgb(1,bins(2:end)>=opt.thresh,:);
     end
     imwrite(rgb,out.colormap,'quality',opt.quality);
 end
