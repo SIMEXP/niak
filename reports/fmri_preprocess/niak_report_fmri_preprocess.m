@@ -3,69 +3,69 @@ function pipeline = niak_report_fmri_preprocess(in,opt)
 %
 % SYNTAX: PIPE = NIAK_REPORT_FMRI_PREPROCESS(IN,OPT)
 %
-% IN.PARAMS (string) 
-%   The name of a .mat file with two variables FILES_IN (the input files) and 
-%   OPT (the options), describing the parameters of the pipeline. 
+% IN.PARAMS (string)
+%   The name of a .mat file with two variables FILES_IN (the input files) and
+%   OPT (the options), describing the parameters of the pipeline.
 %
 % IN.GROUP (structure)
 %   with the following fields:
-%   AVG_T1 (string) the file name of the average T1 of all subjects, 
-%     after non-linear coregistration in stereotaxic space. 
-%   AVG_FUNC (string) the file name of the average BOLD volume of all subjects, 
-%     after non-linear coregistration in stereotaxic space. 
+%   AVG_T1 (string) the file name of the average T1 of all subjects,
+%     after non-linear coregistration in stereotaxic space.
+%   AVG_FUNC (string) the file name of the average BOLD volume of all subjects,
+%     after non-linear coregistration in stereotaxic space.
 %   AVG_MASK_FUNC (string) the file name of the average indivudal BOLD mask,
-%     after non-linear coregistration in stereotaxic space. 
-%   MASK_FUNC_GROUP (string) the file name of the group mask for BOLD data, 
-%     in non-linear stereotaxic space. 
-%   SUMMARY_SCRUBBING (string) the file name of a .csv file with a summary of 
-%     scrubbing of fMRI time series. 
+%     after non-linear coregistration in stereotaxic space.
+%   MASK_FUNC_GROUP (string) the file name of the group mask for BOLD data,
+%     in non-linear stereotaxic space.
+%   SUMMARY_SCRUBBING (string) the file name of a .csv file with a summary of
+%     scrubbing of fMRI time series.
 %   SUMMARY_FUNC (string) the file name of a .csv file with a summary of
-%     BOLD registration. 
+%     BOLD registration.
 %   SUMMARY_ANAT (string) the file name of a .csv file with a summary of
-%     T1 registration. 
+%     T1 registration.
 %
 % IN.IND (structure)
 %   with the following fields:
 %   FMRI_NATIVE.(SUBJECT).(SESSION).(RUN) (string) file name of an fMRI dataset
-%     in native space (before resampling for motion). 
+%     in native space (before resampling for motion).
 %   FMRI_STEREO.(SUBJECT).(SESSION).(RUN) (string) file name of an fMRI dataset
-%     after spatial resampling to correct for motion. 
+%     after spatial resampling to correct for motion.
 %   CONFOUNDS.(SUBJECT).(SESSION).(RUN) (string) file name of a .tsv file
-%     with confound variables (motion parameters, FD and scrubbing mask).  
+%     with confound variables (motion parameters, FD and scrubbing mask).
 %   ANAT.(SUBJECT) (string) the file name of an individual T1 volume (in stereotaxic space).
 %   FUNC.(SUBJECT) (string) the file name of an individual functional volume (in stereotaxic space)
-%   REGISTRATION.(SUBJECT) (string) the file name of a .csv file with measures of 
-%     intra-subject, inter-run coregistration quality. 
+%   REGISTRATION.(SUBJECT) (string) the file name of a .csv file with measures of
+%     intra-subject, inter-run coregistration quality.
 %
-% IN.TEMPLATE.ANAT (string) 
+% IN.TEMPLATE.ANAT (string)
 %   the file name of the template used for registration in stereotaxic space.
-% IN.TEMPLATE.FMRI (string) 
+% IN.TEMPLATE.FMRI (string)
 %   the file name of the template used to resample fMRI data.
 % IN.TEMPLATE.OUTLINE (string, default symmetric outline)
-%   the file name of a binary masks, highlighting regions for coregistration. 
+%   the file name of a binary masks, highlighting regions for coregistration.
 %
 % OPT
 %   (structure) with the following fields:
-%   FOLDER_OUT (string) where to generate the outputs. 
-%   COORD (array N x 3) Coordinates for the registration figures. 
+%   FOLDER_OUT (string) where to generate the outputs.
+%   COORD (array N x 3) Coordinates for the registration figures.
 %     The default is:
-%     [-30 , -65 , -15 ; 
-%       -8 , -25 ,  10 ;  
-%       30 ,  45 ,  60];    
+%     [-30 , -65 , -15 ;
+%       -8 , -25 ,  10 ;
+%       30 ,  45 ,  60];
 %   TYPE_OUTLINE (string, default 'sym') what type of registration landmarks to use (either
-%     'sym' for symmetrical templates or 'asym' for asymmetrical templates). 
+%     'sym' for symmetrical templates or 'asym' for asymmetrical templates).
 %   PSOM (structure) options for PSOM. See PSOM_RUN_PIPELINE.
-%   FLAG_VERBOSE (boolean, default true) if true, verbose on progress. 
-%   FLAG_TEST (boolean, default false) if the flag is true, the pipeline will 
+%   FLAG_VERBOSE (boolean, default true) if true, verbose on progress.
+%   FLAG_TEST (boolean, default false) if the flag is true, the pipeline will
 %     be generated but no processing will occur.
 %
 % Note:
-%   Labels SUBJECT, SESSION and RUN are arbitrary but need to conform to matlab's 
-%   specifications for field names. 
+%   Labels SUBJECT, SESSION and RUN are arbitrary but need to conform to matlab's
+%   specifications for field names.
 %
-%   This pipeline needs the PSOM library to run. 
+%   This pipeline needs the PSOM library to run.
 %   http://psom.simexp-lab.org/
-% 
+%
 % Copyright (c) Pierre Bellec
 % Centre de recherche de l'Institut universitaire de griatrie de Montral, 2016.
 % Maintainer : pierre.bellec@criugm.qc.ca
@@ -115,12 +115,12 @@ in.template = psom_struct_defaults( in.template , ...
 
 list_subject = fieldnames(in.ind.anat);
 
-%% Options 
+%% Options
 if nargin < 2
     opt = struct;
 end
-coord_def =[-30 , -65 , -15 ; 
-             -8 , -25 ,  10 ;  
+coord_def =[-30 , -65 , -15 ;
+             -8 , -25 ,  10 ;
              30 ,  45 ,  60];
 opt = psom_struct_defaults ( opt , ...
     { 'type_outline' , 'folder_out' , 'coord'   , 'flag_test' , 'psom'   , 'flag_verbose' }, ...
@@ -132,15 +132,15 @@ opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 if ~ismember(opt.type_outline,{'sym','asym'})
     error(sprintf('%s is an unknown type of outline',opt.type_outline))
 end
-file_outline = [gb_niak_path_niak filesep 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_' opt.type_outline '_09a_outline_registration.mnc.gz'];
+file_outline = [GB_NIAK.path_niak filesep 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_' opt.type_outline '_09a_outline_registration.mnc.gz'];
 
-%% Build file names 
+%% Build file names
 
 %% Copy and update the report templates
 pipeline = struct;
 clear jin jout jopt
 niak_gb_vars
-path_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep ];
+path_template = [GB_NIAK.path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep ];
 jin = niak_grab_folder( path_template , {'.git',[path_template 'motion'],[path_template 'registration'],[path_template 'summary'],[path_template 'group']});
 jout = strrep(jin,path_template,opt.folder_out);
 jopt.folder_out = opt.folder_out;
@@ -164,7 +164,7 @@ pipeline = psom_add_job(pipeline,'summary_func','niak_brick_preproc_func2report'
 
 %% The summary of T1 registration
 clear jin jout jopt
-jin = in.group.summary_func;
+jin = in.group.summary_anat;
 jout = [opt.folder_out 'summary' filesep 'chartT1.js'];
 pipeline = psom_add_job(pipeline,'summary_anat','niak_brick_preproc_anat2report',jin,jout);
 
@@ -270,10 +270,6 @@ for ss = 1:length(list_subject)
     pipeline = psom_add_job(pipeline,['t1_' list_subject{ss} '_overlay'],'niak_brick_add_overlay',jin,jout,jopt);
 end
 
-jopt.transparency = 0.3;
-jopt.threshold = 0.9;
-pipeline = psom_add_job(pipeline,'template_stereo_overlay','niak_brick_add_overlay',jin,jout,jopt);
-
 % Merge average T1 and outline
 clear jin jout jopt
 jin.background = pipeline.template_stereo.files_out;
@@ -283,7 +279,7 @@ jopt.transparency = 0.7;
 jopt.threshold = 0.9;
 pipeline = psom_add_job(pipeline,'template_stereo_overlay','niak_brick_add_overlay',jin,jout,jopt);
 
-% Add a spreadsheet to write the QC. 
+% Add a spreadsheet to write the QC.
 clear jin jout jopt
 jout = [opt.folder_out 'qc_registration.csv'];
 jopt.list_subject = list_subject;
@@ -296,7 +292,7 @@ pipeline = psom_add_job(pipeline,'init_report','niak_brick_init_qc_report','',jo
 [list_fmri_stereo,labels] = niak_fmri2cell(in.ind.fmri_stereo);
 for ll = 1:length(labels)
     clear jin jout jopt
-    
+
     % Native movie
     jin.source = list_fmri_native{ll};
     jin.target = list_fmri_native{ll};
@@ -307,12 +303,12 @@ for ll = 1:length(labels)
     jopt.limits = 'adaptative';
     jopt.flag_decoration = false;
     pipeline = psom_add_job(pipeline,['motion_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-    
+
     % Native spacer
     jopt.flag_median = true;
     jout = [opt.folder_out 'motion' filesep 'target_native_' labels(ll).name '.png'];
     pipeline = psom_add_job(pipeline,['target_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-    
+
     % Stereotaxic movie
     jopt.flag_median = false;
     jopt.coord = [0 0 0];
@@ -320,12 +316,12 @@ for ll = 1:length(labels)
     jin.target = list_fmri_stereo{ll};
     jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.png'];
     pipeline = psom_add_job(pipeline,['motion_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-    
+
     % Stereotaxic spacer
     jopt.flag_median = true;
     jout = [opt.folder_out 'motion' filesep 'target_stereo_' labels(ll).name '.png'];
     pipeline = psom_add_job(pipeline,['target_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-end    
+end
 
 % Motion parameters
 [list_confounds,labels] = niak_fmri2cell(in.ind.confounds);
@@ -334,7 +330,7 @@ for ll = 1:length(labels)
     jin = list_confounds{ll};
     jout = [opt.folder_out 'motion' filesep 'dataMotion_' labels(ll).name '.js'];
     pipeline = psom_add_job(pipeline,['motion_ind_' labels(ll).name],'niak_brick_preproc_ind_motion2report',jin,jout);
-end    
+end
 
 % Pick reference runs
 labels_ref = struct;
@@ -358,7 +354,7 @@ for ll = 1:length(labels)
         jout = [opt.folder_out 'motion' filesep 'motion.html'];
         pipeline = psom_add_job(pipeline,'motion_report','niak_brick_preproc_motion2report','',jout,jopt);
     end
-end    
+end
 
 if ~opt.flag_test
     psom_run_pipeline(pipeline,opt.psom);

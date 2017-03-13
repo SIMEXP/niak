@@ -101,7 +101,7 @@ else
     files_in = opt.files_in;
 end
 
-files_in.model = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+files_in.model = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
 
 %% Duplicate subjects
 files_du = struct();

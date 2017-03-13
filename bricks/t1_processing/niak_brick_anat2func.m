@@ -187,7 +187,7 @@ function [files_in,files_out,opt] = niak_brick_anat2func(files_in,files_out,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Seting up default arguments %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars
 
 %% SYNTAX

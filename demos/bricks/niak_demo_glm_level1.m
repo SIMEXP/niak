@@ -64,7 +64,7 @@ if ~exist('path_demo','var')
 end
 
 if isempty(path_demo)
-    path_demo = gb_niak_path_demo;
+    path_demo = GB_NIAK.path_demo;
 end
 
 if ~strcmp(path_demo(end),filesep)
@@ -87,7 +87,7 @@ frame_times = (0:49)*2.33;
 slice_times = [0:2:40 1:2:41]*(2.33/42);
 events = [1 -13.98 30 1; 1 43.98 30 1; 1 103.98 30 1]; % The design is block/rest/block/rest/block, each block being 30 sec long. The first and last block have been truncated
 X_cache = fmridesign(frame_times,slice_times,events);
-files_in.design = cat(2,gb_niak_path_demo,filesep,'motor_design.mat');
+files_in.design = cat(2,GB_NIAK.path_demo,filesep,'motor_design.mat');
 save(files_in.design,'X_cache');
    
 %% In which format is the niak demo ?
@@ -115,7 +115,7 @@ switch format_demo
         
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 

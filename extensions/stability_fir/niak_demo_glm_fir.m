@@ -47,9 +47,9 @@ function [pipeline,opt_pipe,files_in] = niak_demo_glm_fir(path_demo,opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2013
+% University of Montreal, Qubec, Canada, 2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : FIR, GLM
@@ -107,30 +107,30 @@ files_du.fmri.subject1a.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1a.session2.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1b.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.motor;
-files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1d.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session2.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2b.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session1.motor;
-files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2d.session1.motor = files_in.fmri.subject1.session1.motor;
 files_in = files_du;
 
 %% Now use the NIAK Cambridge s100 template twice 
-files_in.networks.cambridge100 = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
-files_in.networks.cambridge100bis = [gb_niak_path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
+files_in.networks.cambridge100 = [GB_NIAK.path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
+files_in.networks.cambridge100bis = [GB_NIAK.path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];
 
 %% Set the timing of events;
-files_in.model.group      = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
-files_in.model.individual.subject1a.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1a.session2.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1b.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1c.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject1d.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2a.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2a.session2.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2b.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2c.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
-files_in.model.individual.subject2d.session1.motor = [gb_niak_path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.group      = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+files_in.model.individual.subject1a.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1a.session2.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1b.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1c.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject1d.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2a.session2.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2b.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2c.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
+files_in.model.individual.subject2d.session1.motor = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_events.csv'];
 
 %% FIR estimation
 opt.fir.name_condition = 'motor';

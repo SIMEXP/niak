@@ -1,0 +1,23 @@
+%% Here are important PSOM variables. Whenever needed, PSOM will call
+%% this script to initialize the variables. If PSOM does not behave the way
+%% you want, this might be the place to fix that.
+
+%% Use the local configuration file if any
+if ~exist('gb_psom_gb_vars_local','var')
+	gb_psom_gb_vars_local = true;
+else
+    return
+end
+
+gb_psom_command_octave = 'octave';
+gb_psom_mode = 'cbrain';
+gb_psom_mode_pm = 'session';
+gb_psom_mode_deamon = 'background';
+gb_psom_mode_garbage = 'background';
+gb_psom_nb_resub = 2;
+pbs_jobid = getenv('PBS_JOBID');
+if isempty(pbs_jobid)
+    gb_psom_tmp = '/tmp/';
+else
+    gb_psom_tmp = ['/localscratch/' pbs_jobid filesep];
+end
