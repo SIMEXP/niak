@@ -1,6 +1,6 @@
 
 # fMRI preprocessing
-This tutorial shows how to run the NIAK fMRI preprocessing pipeline, using a limited set of options. See the [documentation](http://niak.simexp-lab.org/pipe_preprocessing.html) of the pipeline for a more comprehensive list of options. Download the tutorial as a notebook [here](https://raw.githubusercontent.com/SIMEXP/niak_tutorials/master/fmri_preprocessing/niak_tutorial_fmri_preprocessing.ipynb) and a matlab script [here](https://raw.githubusercontent.com/SIMEXP/niak_tutorials/master/fmri_preprocessing/niak_tutorial_fmri_preprocessing.m). We recommend to use [jupyter](http://jupyter.org/) from a niak docker container, as described in the [NIAK installation page](http://niak.simexp-lab.org/niak_installation.html). 
+This tutorial shows how to run the NIAK fMRI preprocessing pipeline, using a limited set of options. See the [documentation](http://niak.simexp-lab.org/pipe_preprocessing.html) of the pipeline for a more comprehensive list of options. Download the tutorial as a notebook [here](https://raw.githubusercontent.com/SIMEXP/niak_tutorials/master/niak_tutorial_fmri_preprocessing.ipynb) and a matlab script [here](https://raw.githubusercontent.com/SIMEXP/niak_tutorials/master/niak_tutorial_fmri_preprocessing.m). 
 
 ## Preparing files
 First download a small fMRI dataset, with a structural scan. Be aware that all raw and derivatives data will be generated in the current folder. Note that you will need to manually remove the `data_test_niak_mnc1` and `fmri_preprocess` folders to restart this tutorial from scratch.
@@ -11,32 +11,23 @@ clear
 niak_wget('data_test_niak_mnc1');
 ```
 
-    --2016-10-15 18:36:07--  http://www.nitrc.org/frs/download.php/7241/data_test_niak_mnc1.zip
-    Resolving www.nitrc.org (www.nitrc.org)... 132.239.16.23
-    Connecting to www.nitrc.org (www.nitrc.org)|132.239.16.23|:80... connected.
-    HTTP request sent, awaiting response... 200 OK
-    Length: 2726269 (2.6M) [application/force-download]
-    Saving to: `/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip'
-    
-    100%[======================================>] 2,726,269    950K/s   in 2.8s    
-    
-    2016-10-15 18:36:10 (950 KB/s) - `/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip' saved [2726269/2726269]
-    
-    Deleting file '/sandbox/home/git/niak_tutorials/fmri_preprocessing/data_test_niak_mnc1/data_test_niak_mnc1.zip' 
-    ans = 0
-
-
 Now, set up the names of the structural and functional files.
 
 
 ```octave
 path_data = [pwd filesep];
-% Structural scan
+% Structural scan subject 1
 files_in.subject1.anat = ...
     [path_data 'data_test_niak_mnc1/anat_subject1.mnc.gz'];       
-% fMRI run 1
+% fMRI run 1 subject 1
 files_in.subject1.fmri.session1.motor = ...
     [path_data 'data_test_niak_mnc1/func_motor_subject1.mnc.gz'];
+% Structural scan subject 2
+files_in.subject2.anat = ...
+    [path_data 'data_test_niak_mnc1/anat_subject2.mnc.gz'];       
+% fMRI run 1 subject 2
+files_in.subject2.fmri.session1.motor = ...
+    [path_data 'data_test_niak_mnc1/func_motor_subject2.mnc.gz'];
 ```
 
 We start by specifying where to write the results.
@@ -151,73 +142,183 @@ niak_pipeline_fmri_preprocess(files_in,opt);
 ```
 
     Generating pipeline for individual fMRI preprocessing :
-        Adding subject1 ; 0.25 sec
+        Adding subject1 ; 0.14 sec
+        Adding subject2 ; 0.08 sec
     Adding group-level quality control of coregistration in anatomical space (linear stereotaxic space) ; 0.01 sec
     Adding group-level quality control of coregistration in anatomical space (non-linear stereotaxic space) ; 0.01 sec
-    Adding group-level quality control of coregistration in functional space ; 0.02 sec
-    Adding group-level quality control of motion correction (motion parameters) ; 0.02 sec
+    Adding group-level quality control of coregistration in functional space ; 0.01 sec
+    Adding group-level quality control of motion correction (motion parameters) ; 0.01 sec
     Adding group-level quality control of scrubbing time frames with excessive motion ; 0.00 sec
     Adding the report on fMRI preprocessing ; 0.24 sec
     
-    Logs will be stored in /sandbox/home/git/niak_tutorials/fmri_preprocessing/fmri_preprocess/logs/
+    Logs will be stored in /sandbox/home/git/niak_tutorials/fmri_preprocess/logs/
     Generating dependencies ...
-       Percentage completed :  0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100- 0.05 sec
+       Percentage completed :  0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100- 0.07 sec
     Setting up the to-do list ...
-       I found 50 job(s) to do.
-    I could not find any log file. This pipeline has not been started (yet?). Press CTRL-C to cancel.
-    Deamon started on 15-Oct-2016 18:36:20
-    15-Oct-2016 18:36:20 Starting the pipeline manager...
-    15-Oct-2016 18:36:20 Starting the garbage collector...
-    15-Oct-2016 18:36:20 Starting worker number 1...
-    15-Oct-2016 18:36:20 Starting worker number 2...
+       I found 65 job(s) to do, and 10 job(s) already completed.
+    Deamon started on 13-Mar-2017 15:23:15
+    13-Mar-2017 15:23:15 Starting the pipeline manager...
+    13-Mar-2017 15:23:15 Starting the garbage collector...
+    13-Mar-2017 15:23:15 Starting worker number 1...
+    13-Mar-2017 15:23:15 Starting worker number 2...
     
-    Pipeline started on 15-Oct-2016 18:36:21
-    user: , host: 6e3cbb9f4193, system: unix
+    Pipeline started on 13-Mar-2017 15:23:16
+    user: , host: 82112340824c, system: unix
     ****************************************
-    .15-Oct-2016 18:36:22 pipe_params                               submitted  (1 run / 0 fail / 0 done / 49 left)
-    15-Oct-2016 18:36:22 resample_aal                              submitted  (2 run / 0 fail / 0 done / 48 left)
-    15-Oct-2016 18:36:22 cp_confounds_keys                         submitted  (3 run / 0 fail / 0 done / 47 left)
-    15-Oct-2016 18:36:22 cp_template                               submitted  (4 run / 0 fail / 0 done / 46 left)
+    13-Mar-2017 15:23:17 pipe_params                               submitted  (1 run | 0 fail | 10 done | 64 left)
+    13-Mar-2017 15:23:17 t1_preprocess_subject1                    submitted  (2 run | 0 fail | 10 done | 63 left)
+    13-Mar-2017 15:23:17 slice_timing_subject1_session1_motor      submitted  (3 run | 0 fail | 10 done | 62 left)
+    13-Mar-2017 15:23:17 t1_preprocess_subject2                    submitted  (4 run | 0 fail | 10 done | 61 left)
+    13-Mar-2017 15:23:18 pipe_params                               finished   (3 run | 0 fail | 11 done | 61 left)
+    13-Mar-2017 15:23:18 slice_timing_subject2_session1_motor      submitted  (4 run | 0 fail | 11 done | 60 left)
+    13-Mar-2017 15:23:19 slice_timing_subject1_session1_motor      finished   (3 run | 0 fail | 12 done | 60 left)
+    13-Mar-2017 15:23:19 motion_target_subject1_session1_motor     submitted  (4 run | 0 fail | 12 done | 59 left)
+    13-Mar-2017 15:23:20 slice_timing_subject2_session1_motor      finished   (3 run | 0 fail | 13 done | 59 left)
+    13-Mar-2017 15:23:20 motion_target_subject2_session1_motor     submitted  (4 run | 0 fail | 13 done | 58 left)
+    13-Mar-2017 15:23:21 motion_target_subject1_session1_motor     finished   (3 run | 0 fail | 14 done | 58 left)
+    13-Mar-2017 15:23:21 motion_Wrun_subject1_session1_motor       submitted  (4 run | 0 fail | 14 done | 57 left)
+    13-Mar-2017 15:23:22 motion_target_subject2_session1_motor     finished   (3 run | 0 fail | 15 done | 57 left)
+    13-Mar-2017 15:23:22 motion_Wrun_subject2_session1_motor       submitted  (4 run | 0 fail | 15 done | 56 left)
     .
-    15-Oct-2016 18:36:22 pipe_params                               finished   (3 run / 0 fail / 1 done / 46 left)
-    15-Oct-2016 18:36:22 cp_confounds_keys                         finished   (2 run / 0 fail / 2 done / 46 left)
-    15-Oct-2016 18:36:22 cp_template                               finished   (1 run / 0 fail / 3 done / 46 left)
-    15-Oct-2016 18:36:22 resample_fmri_stereo                      submitted  (2 run / 0 fail / 3 done / 45 left)
-    15-Oct-2016 18:36:22 t1_preprocess_subject1                    submitted  (3 run / 0 fail / 3 done / 44 left)
-    15-Oct-2016 18:36:22 slice_timing_subject1_session1_motor      submitted  (4 run / 0 fail / 3 done / 43 left)
+    13-Mar-2017 15:23:48 motion_Wrun_subject1_session1_motor       finished   (3 run | 0 fail | 16 done | 56 left)
+    13-Mar-2017 15:23:48 motion_parameters_subject1_session1_motor submitted  (4 run | 0 fail | 16 done | 55 left)
+    13-Mar-2017 15:24:11 motion_Wrun_subject2_session1_motor       finished   (3 run | 0 fail | 17 done | 55 left)
+    13-Mar-2017 15:24:12 motion_parameters_subject1_session1_motor finished   (2 run | 0 fail | 18 done | 55 left)
+    13-Mar-2017 15:24:12 motion_parameters_subject2_session1_motor submitted  (3 run | 0 fail | 18 done | 54 left)
+    13-Mar-2017 15:24:12 rep_params                                submitted  (4 run | 0 fail | 18 done | 53 left)
+    13-Mar-2017 15:24:12 motion_parameters_subject2_session1_motor finished   (3 run | 0 fail | 19 done | 53 left)
+    13-Mar-2017 15:24:12 rep_params                                finished   (2 run | 0 fail | 20 done | 53 left)
+    13-Mar-2017 15:24:12 rep_init_report                           submitted  (3 run | 0 fail | 20 done | 52 left)
+    13-Mar-2017 15:24:12 rep_motion_native_subject1_session1_motor submitted  (4 run | 0 fail | 20 done | 51 left)
+    13-Mar-2017 15:24:13 rep_init_report                           finished   (3 run | 0 fail | 21 done | 51 left)
+    13-Mar-2017 15:24:13 rep_target_native_subject1_session1_motor submitted  (4 run | 0 fail | 21 done | 50 left)
+    13-Mar-2017 15:24:14 rep_motion_native_subject1_session1_motor finished   (3 run | 0 fail | 22 done | 50 left)
+    13-Mar-2017 15:24:14 rep_motion_native_subject2_session1_motor submitted  (4 run | 0 fail | 22 done | 49 left)
+    13-Mar-2017 15:24:15 rep_target_native_subject1_session1_motor finished   (3 run | 0 fail | 23 done | 49 left)
+    13-Mar-2017 15:24:15 rep_target_native_subject2_session1_motor submitted  (4 run | 0 fail | 23 done | 48 left)
+    13-Mar-2017 15:24:17 rep_motion_native_subject2_session1_motor finished   (3 run | 0 fail | 24 done | 48 left)
+    13-Mar-2017 15:24:17 rep_motion_report_subject2_session1_motor submitted  (4 run | 0 fail | 24 done | 47 left)
+    13-Mar-2017 15:24:17 rep_target_native_subject2_session1_motor finished   (3 run | 0 fail | 25 done | 47 left)
+    .
+    13-Mar-2017 15:24:18 rep_motion_report_subject2_session1_motor finished   (2 run | 0 fail | 26 done | 47 left)
+    ........................
+    13-Mar-2017 15:36:46 t1_preprocess_subject1                    finished   (1 run | 0 fail | 27 done | 47 left)
+    13-Mar-2017 15:36:46 mask_anat2func_subject1                   submitted  (2 run | 0 fail | 27 done | 46 left)
+    13-Mar-2017 15:36:46 rep_t1_subject1                           submitted  (3 run | 0 fail | 27 done | 45 left)
+    ....
+    13-Mar-2017 15:38:41 mask_anat2func_subject1                   finished   (2 run | 0 fail | 28 done | 45 left)
+    13-Mar-2017 15:38:41 anat2func_subject1                        submitted  (3 run | 0 fail | 28 done | 44 left)
+    13-Mar-2017 15:38:51 rep_t1_subject1                           finished   (2 run | 0 fail | 29 done | 44 left)
+    13-Mar-2017 15:38:51 rep_t1_subject1_overlay                   submitted  (3 run | 0 fail | 29 done | 43 left)
+    .........
+    13-Mar-2017 15:43:05 anat2func_subject1                        finished   (2 run | 0 fail | 30 done | 43 left)
+    13-Mar-2017 15:43:05 concat_transf_nl_subject1                 submitted  (3 run | 0 fail | 30 done | 42 left)
+    13-Mar-2017 15:43:06 rep_t1_subject1_overlay                   finished   (2 run | 0 fail | 31 done | 42 left)
+    13-Mar-2017 15:43:08 concat_transf_nl_subject1                 finished   (1 run | 0 fail | 32 done | 42 left)
+    13-Mar-2017 15:43:08 resample_subject1_session1_motor          submitted  (2 run | 0 fail | 32 done | 41 left)
     ..
-    15-Oct-2016 18:36:23 resample_aal                              finished   (3 run / 0 fail / 4 done / 43 left)
-    15-Oct-2016 18:36:23 rep_cp_report_templates                   submitted  (4 run / 0 fail / 4 done / 42 left)
+    13-Mar-2017 15:44:18 resample_subject1_session1_motor          finished   (1 run | 0 fail | 33 done | 41 left)
+    13-Mar-2017 15:44:18 qc_motion_subject1                        submitted  (2 run | 0 fail | 33 done | 40 left)
+    13-Mar-2017 15:44:18 time_filter_subject1_session1_motor       submitted  (3 run | 0 fail | 33 done | 39 left)
+    13-Mar-2017 15:44:18 rep_motion_stereo_subject1_session1_motor submitted  (4 run | 0 fail | 33 done | 38 left)
+    13-Mar-2017 15:44:26 qc_motion_subject1                        finished   (3 run | 0 fail | 34 done | 38 left)
+    13-Mar-2017 15:44:26 mask_confounds_subject1                   submitted  (4 run | 0 fail | 34 done | 37 left)
+    13-Mar-2017 15:44:26 time_filter_subject1_session1_motor       finished   (3 run | 0 fail | 35 done | 37 left)
+    13-Mar-2017 15:44:26 rep_bold_subject1                         submitted  (4 run | 0 fail | 35 done | 36 left)
     .
-    15-Oct-2016 18:36:24 resample_fmri_stereo                      finished   (3 run / 0 fail / 5 done / 42 left)
-    15-Oct-2016 18:36:24 slice_timing_subject1_session1_motor      finished   (2 run / 0 fail / 6 done / 42 left)
-    15-Oct-2016 18:36:24 motion_target_subject1_session1_motor     submitted  (3 run / 0 fail / 6 done / 41 left)
-    15-Oct-2016 18:36:24 rep_params                                submitted  (4 run / 0 fail / 6 done / 40 left)
+    13-Mar-2017 15:44:35 mask_confounds_subject1                   finished   (3 run | 0 fail | 36 done | 36 left)
+    13-Mar-2017 15:44:35 build_confounds_subject1_session1_motor   submitted  (4 run | 0 fail | 36 done | 35 left)
+    13-Mar-2017 15:44:36 rep_bold_subject1                         finished   (3 run | 0 fail | 37 done | 35 left)
+    13-Mar-2017 15:44:36 rep_target_stereo_subject1_session1_motor submitted  (4 run | 0 fail | 37 done | 34 left)
+    13-Mar-2017 15:44:39 build_confounds_subject1_session1_motor   finished   (3 run | 0 fail | 38 done | 34 left)
+    13-Mar-2017 15:44:39 regress_confounds_subject1_session1_motor submitted  (4 run | 0 fail | 38 done | 33 left)
+    13-Mar-2017 15:44:40 rep_target_stereo_subject1_session1_motor finished   (3 run | 0 fail | 39 done | 33 left)
+    13-Mar-2017 15:44:40 rep_motion_ind_subject1_session1_motor    submitted  (4 run | 0 fail | 39 done | 32 left)
+    13-Mar-2017 15:44:41 regress_confounds_subject1_session1_motor finished   (3 run | 0 fail | 40 done | 32 left)
+    13-Mar-2017 15:44:41 rep_motion_ind_subject1_session1_motor    finished   (2 run | 0 fail | 41 done | 32 left)
+    13-Mar-2017 15:44:41 smooth_subject1_session1_motor            submitted  (3 run | 0 fail | 41 done | 31 left)
+    13-Mar-2017 15:44:56 smooth_subject1_session1_motor            finished   (2 run | 0 fail | 42 done | 31 left)
+    13-Mar-2017 15:44:56 clean_subject1                            submitted  (3 run | 0 fail | 42 done | 30 left)
+    13-Mar-2017 15:44:57 clean_subject1                            finished   (2 run | 0 fail | 43 done | 30 left)
+    .............
+    13-Mar-2017 15:51:33 t1_preprocess_subject2                    finished   (1 run | 0 fail | 44 done | 30 left)
+    13-Mar-2017 15:51:33 mask_anat2func_subject2                   submitted  (2 run | 0 fail | 44 done | 29 left)
+    13-Mar-2017 15:51:33 qc_coregister_group_anat_stereolin        submitted  (3 run | 0 fail | 44 done | 28 left)
+    13-Mar-2017 15:51:34 qc_group_coregister_anat_stereonl         submitted  (4 run | 0 fail | 44 done | 27 left)
+    13-Mar-2017 15:51:35 rep_motion_stereo_subject1_session1_motor finished   (3 run | 0 fail | 45 done | 27 left)
+    13-Mar-2017 15:51:35 rep_t1_subject2                           submitted  (4 run | 0 fail | 45 done | 26 left)
     .
-    15-Oct-2016 18:36:24 rep_cp_report_templates                   finished   (3 run / 0 fail / 7 done / 40 left)
-    15-Oct-2016 18:36:24 rep_params                                finished   (2 run / 0 fail / 8 done / 40 left)
-    15-Oct-2016 18:36:24 rep_template_stereo                       submitted  (3 run / 0 fail / 8 done / 39 left)
-    15-Oct-2016 18:36:24 rep_t1_outline_registration               submitted  (4 run / 0 fail / 8 done / 38 left)
-    .................
-    15-Oct-2016 18:36:33 rep_t1_outline_registration               finished   (3 run / 0 fail / 9 done / 38 left)
-    15-Oct-2016 18:36:33 rep_init_report                           submitted  (4 run / 0 fail / 9 done / 37 left)
-    ....................
-    15-Oct-2016 18:36:43 rep_template_stereo                       finished   (3 run / 0 fail / 10 done / 37 left)
-    15-Oct-2016 18:36:43 rep_init_report                           finished   (2 run / 0 fail / 11 done / 37 left)
-    15-Oct-2016 18:36:43 rep_template_stereo_overlay               submitted  (3 run / 0 fail / 11 done / 36 left)
-    15-Oct-2016 18:36:43 rep_motion_native_subject1_session1_motor submitted  (4 run / 0 fail / 11 done / 35 left)
-    ...
-    15-Oct-2016 18:36:45 rep_motion_native_subject1_session1_motor finished   (3 run / 0 fail / 12 done / 35 left)
-    15-Oct-2016 18:36:45 rep_target_native_subject1_session1_motor submitted  (4 run / 0 fail / 12 done / 34 left)
+    13-Mar-2017 15:52:03 qc_group_coregister_anat_stereonl         finished   (3 run | 0 fail | 46 done | 26 left)
+    13-Mar-2017 15:52:03 rep_summary_anat                          submitted  (4 run | 0 fail | 46 done | 25 left)
     .
-    15-Oct-2016 18:36:45 rep_template_stereo_overlay               finished   (3 run / 0 fail / 13 done / 34 left)
-    15-Oct-2016 18:36:45 rep_motion_report_subject1_session1_motor submitted  (4 run / 0 fail / 13 done / 33 left)
+    13-Mar-2017 15:52:15 rep_summary_anat                          finished   (3 run | 0 fail | 47 done | 25 left)
+    13-Mar-2017 15:52:15 rep_t1_subject2                           finished   (2 run | 0 fail | 48 done | 25 left)
+    13-Mar-2017 15:52:15 rep_average_t1_stereo                     submitted  (3 run | 0 fail | 48 done | 24 left)
+    13-Mar-2017 15:52:15 rep_t1_subject2_overlay                   submitted  (4 run | 0 fail | 48 done | 23 left)
+    13-Mar-2017 15:52:27 rep_average_t1_stereo                     finished   (3 run | 0 fail | 49 done | 23 left)
+    13-Mar-2017 15:52:27 rep_t1_subject2_overlay                   finished   (2 run | 0 fail | 50 done | 23 left)
     .
-    15-Oct-2016 18:36:46 rep_target_native_subject1_session1_motor finished   (3 run / 0 fail / 14 done / 33 left)
-    15-Oct-2016 18:36:46 rep_motion_report                         submitted  (4 run / 0 fail / 14 done / 32 left)
+    13-Mar-2017 15:52:59 mask_anat2func_subject2                   finished   (1 run | 0 fail | 51 done | 23 left)
+    13-Mar-2017 15:52:59 anat2func_subject2                        submitted  (2 run | 0 fail | 51 done | 22 left)
     .
-    15-Oct-2016 18:36:46 rep_motion_report_subject1_session1_motor finished   (3 run / 0 fail / 15 done / 32 left)
-    15-Oct-2016 18:36:46 rep_motion_report                         finished   (2 run / 0 fail / 16 done / 32 left)
+    13-Mar-2017 15:53:27 qc_coregister_group_anat_stereolin        finished   (1 run | 0 fail | 52 done | 22 left)
+    .....
+    13-Mar-2017 15:56:01 anat2func_subject2                        finished   (0 run | 0 fail | 53 done | 22 left)
+    13-Mar-2017 15:56:01 concat_transf_nl_subject2                 submitted  (1 run | 0 fail | 53 done | 21 left)
+    13-Mar-2017 15:56:03 concat_transf_nl_subject2                 finished   (0 run | 0 fail | 54 done | 21 left)
+    13-Mar-2017 15:56:03 resample_subject2_session1_motor          submitted  (1 run | 0 fail | 54 done | 20 left)
+    ..
+    13-Mar-2017 15:56:58 resample_subject2_session1_motor          finished   (0 run | 0 fail | 55 done | 20 left)
+    13-Mar-2017 15:56:58 qc_motion_subject2                        submitted  (1 run | 0 fail | 55 done | 19 left)
+    13-Mar-2017 15:56:58 time_filter_subject2_session1_motor       submitted  (2 run | 0 fail | 55 done | 18 left)
+    13-Mar-2017 15:56:58 rep_motion_stereo_subject2_session1_motor submitted  (3 run | 0 fail | 55 done | 17 left)
+    13-Mar-2017 15:56:58 rep_target_stereo_subject2_session1_motor submitted  (4 run | 0 fail | 55 done | 16 left)
+    13-Mar-2017 15:56:59 rep_target_stereo_subject2_session1_motor finished   (3 run | 0 fail | 56 done | 16 left)
+    13-Mar-2017 15:57:00 time_filter_subject2_session1_motor       finished   (2 run | 0 fail | 57 done | 16 left)
+    13-Mar-2017 15:57:03 qc_motion_subject2                        finished   (1 run | 0 fail | 58 done | 16 left)
+    13-Mar-2017 15:57:03 mask_confounds_subject2                   submitted  (2 run | 0 fail | 58 done | 15 left)
+    13-Mar-2017 15:57:03 qc_group_coregister_func                  submitted  (3 run | 0 fail | 58 done | 14 left)
+    13-Mar-2017 15:57:03 qc_group_motion_estimation                submitted  (4 run | 0 fail | 58 done | 13 left)
+    13-Mar-2017 15:57:05 rep_motion_stereo_subject2_session1_motor finished   (3 run | 0 fail | 59 done | 13 left)
+    13-Mar-2017 15:57:05 rep_summary_intra                         submitted  (4 run | 0 fail | 59 done | 12 left)
+    13-Mar-2017 15:57:09 qc_group_coregister_func                  finished   (3 run | 0 fail | 60 done | 12 left)
+    13-Mar-2017 15:57:09 rep_summary_intra                         finished   (2 run | 0 fail | 61 done | 12 left)
+    13-Mar-2017 15:57:09 rep_summary_func                          submitted  (3 run | 0 fail | 61 done | 11 left)
+    13-Mar-2017 15:57:09 rep_average_func_stereo                   submitted  (4 run | 0 fail | 61 done | 10 left)
+    .
+    13-Mar-2017 15:57:11 rep_summary_func                          finished   (3 run | 0 fail | 62 done | 10 left)
+    13-Mar-2017 15:57:11 rep_average_func_stereo                   finished   (2 run | 0 fail | 63 done | 10 left)
+    13-Mar-2017 15:57:11 rep_mask_func_group_stereo                submitted  (3 run | 0 fail | 63 done | 9 left)
+    13-Mar-2017 15:57:11 rep_avg_mask_func_stereo                  submitted  (4 run | 0 fail | 63 done | 8 left)
+    13-Mar-2017 15:57:12 mask_confounds_subject2                   finished   (3 run | 0 fail | 64 done | 8 left)
+    13-Mar-2017 15:57:12 build_confounds_subject2_session1_motor   submitted  (4 run | 0 fail | 64 done | 7 left)
+    13-Mar-2017 15:57:13 rep_avg_mask_func_stereo                  finished   (3 run | 0 fail | 65 done | 7 left)
+    13-Mar-2017 15:57:13 rep_bold_subject2                         submitted  (4 run | 0 fail | 65 done | 6 left)
+    13-Mar-2017 15:57:14 qc_group_motion_estimation                finished   (3 run | 0 fail | 66 done | 6 left)
+    13-Mar-2017 15:57:15 rep_mask_func_group_stereo                finished   (2 run | 0 fail | 67 done | 6 left)
+    13-Mar-2017 15:57:17 build_confounds_subject2_session1_motor   finished   (1 run | 0 fail | 68 done | 6 left)
+    13-Mar-2017 15:57:17 rep_bold_subject2                         finished   (0 run | 0 fail | 69 done | 6 left)
+    13-Mar-2017 15:57:17 regress_confounds_subject2_session1_motor submitted  (1 run | 0 fail | 69 done | 5 left)
+    13-Mar-2017 15:57:17 rep_motion_ind_subject2_session1_motor    submitted  (2 run | 0 fail | 69 done | 4 left)
+    13-Mar-2017 15:57:17 rep_motion_ind_subject2_session1_motor    finished   (1 run | 0 fail | 70 done | 4 left)
+    13-Mar-2017 15:57:18 regress_confounds_subject2_session1_motor finished   (0 run | 0 fail | 71 done | 4 left)
+    13-Mar-2017 15:57:18 smooth_subject2_session1_motor            submitted  (1 run | 0 fail | 71 done | 3 left)
+    13-Mar-2017 15:57:18 qc_group_scrubbing                        submitted  (2 run | 0 fail | 71 done | 2 left)
+    13-Mar-2017 15:57:18 qc_group_scrubbing                        finished   (1 run | 0 fail | 72 done | 2 left)
+    13-Mar-2017 15:57:18 rep_summary_scrubbing                     submitted  (2 run | 0 fail | 72 done | 1 left)
+    13-Mar-2017 15:57:19 rep_summary_scrubbing                     finished   (1 run | 0 fail | 73 done | 1 left)
+    13-Mar-2017 15:57:19 Stopping idle worker 2 (not enough jobs left to do).
+    13-Mar-2017 15:57:35 smooth_subject2_session1_motor            finished   (0 run | 0 fail | 74 done | 1 left)
+    13-Mar-2017 15:57:35 clean_subject2                            submitted  (1 run | 0 fail | 74 done | 0 left)
+    Deamon terminated on 13-Mar-2017 15:57:36
+    
+    13-Mar-2017 15:57:36 clean_subject2                            finished   (0 run | 0 fail | 75 done | 0 left)
+    13-Mar-2017 15:57:36 Stopping idle worker 1 (not enough jobs left to do).
+    
+    *******************************************
+    Pipeline terminated on 13-Mar-2017 15:57:36
+    All jobs have been successfully completed.
+    
 
 
-Once the pipeline has completed, an interactive report is built as part of the output. Just open the file `fmri_preprocess/report/index.html` in your browser. Note that because of the very low resolution in the functional images of these data, the T1-BOLD registration fails. Check an example report on a real sample [here](https://simexp.github.io/qc_cobre/index.html).  
+Once the pipeline has completed, an interactive report is built as part of the output. Just open the file [fmri_preprocess/report/index.html](./fmri_preprocess/report/index.html) in your browser. Note that the images of the test data have very low resolution. Check an example report on a large sample with typical resolution [here](https://simexp.github.io/qc_cobre/index.html).  
