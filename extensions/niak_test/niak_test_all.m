@@ -29,6 +29,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   set up by the pipeline. By default OPT.PSOM.FLAG_PAUSE is false (do 
 %   not wait for the user to confirm starting the tests).
 %
+% OPT.PARTIAL_TEST (cell of strings) if given only the pipeline in the 
+%   list will be tested, if empty, all test are ran.
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -54,7 +56,8 @@ function [pipe,opt,status] = niak_test_all(path_test,opt)
 %   * glm_fir NIAK_PIPELINE_GLM_FIR
 %   * stability_rest NIAK_PIPELINE_STABILITY_REST
 %   * glm_connectome NIAK_PIPELINE_GLM_CONNECTOME
-%   * stability cores NIAK_PIPELINE_SCORES
+%   * scores NIAK_PIPELINE_SCORES
+%   * subtype NIAK_PIPELINE_SUBTYPE
 %
 % Note that with OPT.FLAG_TARGET on, the region growing and connectome pipelines
 % are fed the output of the preprocessing pipeline. When the flag is off, by contrast,
@@ -96,12 +99,17 @@ if nargin < 2
     opt = struct;
 end
 opt = psom_struct_defaults(opt, ...
-      {'format' , 'flag_target' , 'flag_test', 'psom' }, ...
-      {'mnc1'   , false         , false      , struct });
+      {'format' , 'flag_target' , 'flag_test', 'psom', 'partial_test' }, ...
+      {'mnc1'   , false         , false      , struct, {} });
 
 if ~isfield(opt.psom,'flag_pause')
     opt.psom.flag_pause = false;
 end
+
+if ~isfield(opt.psom,'flag_pause')
+    opt.psom.flag_pause = false;
+end
+
 
 %% Check the input paths
 if nargin < 1
@@ -181,10 +189,10 @@ opt_pipe.template.mask_avg     = [path_test.demoniak filesep 'mni_icbm152_asym_0
 opt_pipe.template.mask_dilated = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm' ext_t];
 opt_pipe.template.mask_bold    = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm_5mm' ext_t];
 opt_pipe.template.mask_wm      = [path_test.demoniak filesep 'mni_icbm152_asym_09a_5mm' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_pure_wm_5mm' ext_t];
-opt_pipe.template.fmri         = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
-opt_pipe.template.aal          = [gb_niak_path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                           
-opt_pipe.template.mask_vent    = [gb_niak_path_niak 'template' filesep 'roi_ventricle.mnc.gz'];                                                                         
-opt_pipe.template.mask_willis  = [gb_niak_path_niak 'template' filesep 'roi_stem.mnc.gz'];                                                                              
+opt_pipe.template.fmri         = [GB_NIAK.path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];
+opt_pipe.template.aal          = [GB_NIAK.path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];
+opt_pipe.template.mask_vent    = [GB_NIAK.path_niak 'template' filesep 'roi_ventricle.mnc.gz'];
+opt_pipe.template.mask_willis  = [GB_NIAK.path_niak 'template' filesep 'roi_stem.mnc.gz'];
 [pipe_fp,opt_p,files_fp] = niak_test_fmripreproc_demoniak(path_test_fp,opt_pipe);
 pipe = psom_merge_pipeline(pipe,pipe_fp,'fp_');
 
@@ -257,6 +265,43 @@ path_test_sc.demoniak  = 'gb_niak_omitted'; % The input files are fed directly t
 path_test_sc.reference = [path_test.target 'demoniak_scores'];
 path_test_sc.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_scores_demoniak(path_test_sc,opt_scores),'sco_');
+
+%% Add the test for the subtype pipeline
+if opt.flag_target
+    % In target mode, grab the results of the preprocessing and use them for subtyping
+    files_all = niak_grab_all_preprocess([path_test_fp.result 'demoniak_preproc'],files_fp);
+else
+    % In test mode, use the provided target to feed into the subtyping pipeline
+    files_all = niak_grab_all_preprocess([path_test.target 'demoniak_preproc'],files_fp);
+end
+
+% Bring paths to the structure expected for the subtype pipeline
+fsub = fieldnames(files_all.fmri.vol);
+files_sbt = struct;
+for sub_id = 1:numel(fsub)
+    sub = fsub{sub_id};
+    fses = fieldnames(files_all.fmri.vol.(sub));
+    for ses_id = 1:numel(fses)
+        ses = fses{ses_id};
+        frun = fieldnames(files_all.fmri.vol.(sub).(ses));
+        for run_id = 1:numel(frun)
+            run = frun{run_id};
+            sname = [sub '_' ses '_' run];
+            files_sbt.data.(sname) = files_all.fmri.vol.(sub).(ses).(run);
+        end
+    end
+end
+files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
+files_sbt.model = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
+opt_subtype = struct;
+opt_subtype.flag_test = true;
+opt_subtype.flag_target = opt.flag_target;
+opt_subtype.files_in = files_sbt;
+
+path_test_sbt.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+path_test_sbt.reference = [path_test.target 'demoniak_subtype'];
+path_test_sbt.result    = path_test.result;
+pipe = psom_merge_pipeline(pipe,niak_test_subtype_demoniak(path_test_sbt,opt_subtype),'sbt_');
 
 %% Add the unit tests for GLM-connectome
 path_test = [path_test.result 'glm_connectome_unit'];

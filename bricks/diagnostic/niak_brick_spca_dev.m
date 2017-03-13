@@ -146,9 +146,9 @@ if isempty(path_f)
     path_f = '.';
 end
 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
     [tmp,name_f,ext_f] = fileparts(name_f);
-    ext_f = cat(2,ext_f,gb_niak_zip_ext);
+    ext_f = cat(2,ext_f,GB_NIAK.zip_ext);
 end
 
 if strcmp(opt.folder_out,'')
@@ -343,7 +343,7 @@ if ~strcmp(files_out.figure,'gb_niak_omitted')
 
     end
     
-    instr_ps2pdf = cat(2,gb_niak_ps2pdf,' ',file_fig_eps,' ',files_out.figure);
+    instr_ps2pdf = cat(2,GB_NIAK.ps2pdf,' ',file_fig_eps,' ',files_out.figure);
     [succ,msg] = system(instr_ps2pdf);
     if succ~=0
         warning(cat(2,'There was a problem in the conversion of the figure from ps to pdf : ',msg));

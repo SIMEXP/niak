@@ -57,21 +57,21 @@ clear
 niak_gb_vars
 
 %% Setting input/output files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
     
      case 'minc1' % If data are in minc1 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc.gz'); 
+        files_in = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc.gz');
         files_out = ''; % The default output name will be used
     
     case 'minc2' % If data are in minc2 format
         
-        files_in = cat(2,gb_niak_path_demo,filesep,'func_motor_subject1.mnc'); 
+        files_in = cat(2,GB_NIAK.path_demo,filesep,'func_motor_subject1.mnc');
         files_out = ''; % The default output name will be used
     
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 

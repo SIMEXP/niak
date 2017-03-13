@@ -14,6 +14,8 @@ function [in,out,opt] = niak_brick_preproc_params2report(in,out,opt)
 %   generates a .json description of the input file for a particular subject. 
 % OUT.SUMMARY (string) the name of a .js file with a string summarizing the 
 %   pipeline options. 
+% OPT.LIST_SUBJECT (cell of strings, default use data found in IN) a list of 
+%    subject IDs. 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
 %    update IN, OUT and OPT.
 %
@@ -54,8 +56,8 @@ if nargin < 3
     opt = struct;
 end    
 opt = psom_struct_defaults ( opt , ...
-    { 'flag_test' }, ...
-    { false         });
+    { 'list_subject' , 'flag_test' }, ...
+    { {}             , false         });
 
 if opt.flag_test 
     return
@@ -70,7 +72,11 @@ if ~isfield(data,'opt')
     error('I could not find the variable OPT in the input file');
 end
 [list_fmri,labels] = niak_fmri2cell(data.files_in);
-list_subject = fieldnames(data.files_in);
+if isempty(opt.list_subject)
+    list_subject = fieldnames(data.files_in);
+else
+    list_subject = opt.list_subject;
+end
 
 %% List of subjects
 text_subject = sprintf('var listSubject = [\n');
@@ -132,9 +138,9 @@ text_js = sprintf(['var pipeSummary = ''<p>This report on fMRI preprocessing for
           '<p>%s version "%s" </p>' ... 
           '<p>Minc-toolkit version "%s" </p>' ...
           '<p>PSOM version "%s", located in %s </p>' ...
-          '<p>NIAK version "%s", located in %s</p>'';'],length(list_subject),gb_niak_user, ...
-          gb_psom_localhost,datestr(clock),gb_niak_language,gb_niak_language_version, ...
-          ver_minc,gb_psom_version,gb_psom_path_psom,gb_niak_version,gb_niak_path_niak);
+          '<p>NIAK version "%s", located in %s</p>'';'],length(list_subject),GB_NIAK.user, ...
+          gb_psom_localhost,datestr(clock),GB_NIAK.language,GB_NIAK.language_version, ...
+          ver_minc,gb_psom_version,gb_psom_path_psom,GB_NIAK.version,GB_NIAK.path_niak);
 [hf,msg] = fopen(out.summary,'w');
 if hf == -1
     error(msg)

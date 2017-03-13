@@ -77,7 +77,7 @@ if iscellstr(file_name)
     return
 end
 
-flag_gb_niak_fast_gb = true;
+
 niak_gb_vars
 
 [path_f,name_f,ext_f] = fileparts(file_name);
@@ -85,9 +85,9 @@ if isempty(path_f)
     path_f = ['.' filesep];
 end
                 
-if strcmp(ext_f,gb_niak_zip_ext)
+if strcmp(ext_f,GB_NIAK.zip_ext)
 	[tmp,name_f,ext_short] = fileparts(name_f);
-    ext_f = [ext_short gb_niak_zip_ext];
+    ext_f = [ext_short GB_NIAK.zip_ext];
     flag_zip = true;
 else
     ext_short = ext_f;
