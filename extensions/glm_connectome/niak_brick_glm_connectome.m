@@ -469,6 +469,7 @@ else
     y_x_c.y = model_group.y;
     y_x_c.c = model_group.c; 
     [results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
+    f2 = results.f2;
     beta =  results.beta; 
     
     %% Run White's test of heteroscedasticity
