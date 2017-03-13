@@ -223,6 +223,38 @@ else
         file_name = niak_full_file(file_name);
         [path_f,name_f,type] = niak_fileparts(file_name);
         switch type
+
+            case GB_NIAK.zip_ext
+
+                %% The file is zipped... Unzip it first and restart reading              
+
+                [path_f_tmp,name_f,type] = fileparts(name_f);
+                file_extra = [path_f filesep name_f '_extra.mat'];
+                file_tmp_gz = niak_file_tmp([name_f type GB_NIAK.zip_ext]);
+                
+                [succ,msg] = system(cat(2,'cp "',file_name,'" ',file_tmp_gz));
+                if succ~=0
+                    error(msg)
+                end
+                
+                instr_unzip = cat(2,GB_NIAK.unzip,' "',file_tmp_gz,'"');
+
+                [succ,msg] = system(instr_unzip);
+                if succ ~= 0
+                    error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',GB_NIAK.unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
+                end
+
+                if nargout == 2
+                    [hdr,vol] = niak_read_vol(file_tmp_gz(1:end-length(GB_NIAK.zip_ext)));
+                else
+                    hdr = niak_read_vol(file_tmp_gz(1:end-length(GB_NIAK.zip_ext)));
+                end
+
+                delete(file_tmp_gz(1:end-length(GB_NIAK.zip_ext)));
+                hdr.info.file_parent = file_name;
+                if psom_exist(file_extra)
+                    hdr.extra = load(file_extra);
+                end
                 
             case {'.mnc','.mnc.gz'}
                 

@@ -31,13 +31,13 @@
   object-position: -50px 0;
 }
 
-.register img{
-    -webkit-transition: opacity 0.75s; /* Safari */
-    transition: opacity 0.75s;
+@keyframes flickerAnimation {
+  from { opacity: 1; }
+  to { opacity: 0;}
 }
 
-.register img:hover{
-    opacity:0;
+.register img{
+   animation: flickerAnimation 1s infinite alternate ease-in-out;
 }
 
 </style>
@@ -85,13 +85,13 @@
           </div>
           <div class="chart-stage">
             <div id="T1-indVsTemplate" class="register">
-              <img class="T1" width=100%>
+              <img class="T1 montage" width=100%>
             </div>
-            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
-            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons.png" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons.png" >
           </div>
           <div class="chart-notes">
-            Hover the mouse over to switch between images. Click or press left/right arrows for prev/next subject. 
+            Click or press left/right arrows for prev/next subject. 
           </div>
         </div>
       </div>
@@ -104,13 +104,13 @@
          <div class="chart-stage">
            <div class="chart-stage">
              <div id="boldVsT1" class="register">
-              <img class="BOLD" width=100%>
+              <img class="BOLD montage" width=100%>
              </div>
-            <img class="sliderNext" src="assets/jsImageSlider/navbuttons2.gif" >
-            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons2.gif" >
+            <img class="sliderNext" src="assets/jsImageSlider/navbuttons.png" >
+            <img class="sliderPrev" src="assets/jsImageSlider/navbuttons.png" >
            </div>
           <div class="chart-notes">
-            Hover the mouse over to switch between images. Click or press left/right arrows for prev/next subject.
+            Click or press left/right arrows for prev/next subject.
           </div>
         </div>
       </div>
@@ -161,10 +161,14 @@
     
     <!--Populate figures-->    
     newFigBOLD.src = "registration/" + subject + "_func.png";
-    newFigBOLD.setAttribute("width", "100%");
+    newFigBOLD.setAttribute("width", "80%");
+    newFigBOLD.style.position = "relative";
+    newFigBOLD.style.left = "10%";
     newFigBOLD.className = "BOLD";
     newFigT1.src = "registration/" + subject + "_anat.png";
-    newFigT1.setAttribute("width", "100%");
+    newFigT1.setAttribute("width", "80%");
+    newFigT1.style.position = "relative";
+    newFigT1.style.left = "10%";
     newFigT1.className = "T1";
 
     <!--Update figures-->        
@@ -172,11 +176,15 @@
     figT1.replaceWith(newFigT1);
     figBoldVsT1 = $("#boldVsT1");
     figBoldVsT1.css("backgroundImage","url(registration/" + subject + "_anat.png)");
-    figBoldVsT1.css("backgroundSize","100%");
+    figBoldVsT1.css("backgroundSize","80%");
+    figBoldVsT1.css("backgroundRepeat","no-repeat");
+    figBoldVsT1.css("backgroundPosition","50% 0%");
     figT1vsTemplate = $("#T1-indVsTemplate");
     figT1vsTemplate.css("backgroundImage","url(group/template_stereotaxic.png)");
-    figT1vsTemplate.css("backgroundSize","100%");
-  }  
+    figT1vsTemplate.css("backgroundSize","80%");
+    figT1vsTemplate.css("backgroundRepeat","no-repeat");
+    figT1vsTemplate.css("backgroundPosition","50% 0%");
+    }  
   
   <!--Move on to the next subject-->
   function nextSubject () {

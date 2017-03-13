@@ -34,6 +34,9 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 %   TYPE
 %      (string) the type of connectome (see OPT.TYPE below)
 %
+%   CODE
+%      (string) how the connectome has been vectorized (see comments below)
+%
 %   IND_ROI
 %      (vector) the Nth row/column of CONN corresponds to the region IND_ROI(n) 
 %      in the mask.
@@ -43,11 +46,13 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 %       
 %   TYPE
 %      (string, default 'Z') the type of connectome. Available options:
-%         'S' : covariance
-%         'R' : correlation
-%         'Z' : Fisher transform of the correlation
-%         'U' : concentration
-%         'P' : partial correlation
+%         'S'  : covariance
+%         'R'  : correlation
+%         'Z'  : Fisher transform of the correlation
+%         'U'  : concentration
+%         'P'  : partial correlation
+%         'A'  : same as 'R', but with in addition the average correlation within network on the diagonal
+%         'AZ' : same as 'A', but with an additional Fisher transform
 %
 %   THRESH
 %      (structure, optional) with the following fields:
@@ -89,9 +94,8 @@ function [files_in,files_out,opt] = niak_brick_connectome(files_in,files_out,opt
 % If multiple datasets are specified, the connectomes are generated independently 
 % for each dataset and then averaged. 
 %
-% For 'R' and 'P' connectomes, use NIAK_VEC2MAT to get back the square form. 
-%
-% For 'S' and 'U' connectomes, use NIAK_VEC2LMAT to get back the square form.
+% If CODE is 'vec', use NIAK_VEC2MAT to get back the square form. 
+% If CODE is 'lvec', use NIAK_VEC2LMAT to get back the square form.
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Christian L. Dansereau, 
@@ -151,7 +155,7 @@ end
 
 % OPTIONS
 list_fields      = { 'thresh' , 'type' , 'flag_test'    , 'flag_verbose' };
-list_defaults    = { struct() , 'Z'    , false          , true           };
+list_defaults    = { struct() , 'AZ'   , false          , true           };
 if nargin<3
     opt = struct();
 end
@@ -227,15 +231,35 @@ for num_f = 1:nb_fmri
         switch type
             case 'S'
                 conn = niak_build_srup(tseries,true);
+                code = 'lvec';
             case 'R' 
                 [tmp,conn] = niak_build_srup(tseries,true);
+                code = 'vec';
             case 'Z' 
                 [tmp,conn] = niak_build_srup(tseries,true);
                 conn = niak_fisher(conn);
+                code = 'vec';
             case 'U'
                 [tmp,tmp2,conn] = niak_build_srup(tseries,true);
+                code = 'lvec';
             case 'P' 
                 [tmp,tmp2,tmp3,conn] = niak_build_srup(tseries,true);
+                code = 'vec';
+            case {'A','AZ'}
+                [tmp,conn] = niak_build_srup(tseries,false);
+                tseries_n = niak_build_tseries(vol,all_mask{num_m},struct('correction','mean_var'));
+                ir = var(tseries_n,[],1)';
+                N = niak_build_size_roi (all_mask{num_m});       
+                mask_0 = (N==0)|(N==1);
+                N(mask_0) = 10;
+                ir = ((N.^2).*ir-N)./(N.*(N-1));
+                ir(mask_0) = 0;
+                conn(eye(size(conn))>0) = ir; % A tricky formula to add the average correlation within each network, at the voxel level, on the diagonal
+                conn = niak_mat2lvec(conn);
+                if strcmp(type,'AZ')
+                   conn = niak_fisher(conn);
+                end
+                code = 'lvec';
             otherwise
                 error('%s is an unknown type of connectome',type)
         end
@@ -255,7 +279,12 @@ for num_o = 1:length(files_out)
         fprintf('   %s\n',files_out{num_o})
     end
     conn = mean(all_conn{num_o},2);
-    G = niak_build_graph(conn,thresh);    
+    if ismember(type,{'A','AZ'})
+        % Skip diagonal elements in binary graphs when average intra-network connectivity was calculated
+        G = niak_mat2lvec(niak_vec2mat(niak_build_graph(niak_mat2vec(niak_lvec2mat(conn)),thresh),false));
+    else
+        G = niak_build_graph(conn,thresh);    
+    end
     ind_roi = all_ind_roi{num_o};
-    save(files_out{num_o},'conn','G','ind_roi','type','thresh');
+    save(files_out{num_o},'conn','G','ind_roi','type','thresh','code');
 end

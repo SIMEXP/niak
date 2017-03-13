@@ -52,7 +52,7 @@ function [files_in,files_out,opt] = niak_demo_slice_timing(path_demo)
 if nargin>=1
     path_demo = niak_full_path(path_demo);
 else
-    path_demo = gb_niak_path_demo;
+    path_demo = GB_NIAK.path_demo;
 end
 
 niak_gb_vars
@@ -84,7 +84,7 @@ switch format_demo
     
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 

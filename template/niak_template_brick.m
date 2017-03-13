@@ -101,7 +101,7 @@ function [in,out,opt] = niak_template_brick(in,out,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% global NIAK variables
-flag_gb_niak_fast_gb = true; % Only load the most important global variables for fast initialization
+
 niak_gb_vars 
 
 %% Syntax

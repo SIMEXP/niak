@@ -78,6 +78,10 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 % OPT        
 %    (structure) with the following fields:
 %
+%    CROP_NECK
+%        (scalar, default 0) the percentage of field of view that will
+%        get cropped along the ventro-dorsal axis, from the neck. 
+%
 %    MASK_BRAIN_T1
 %        (structure) See the OPT structure of NIAK_BRICK_MASK_BRAIN_T1
 %        for an exact list of options.
@@ -98,7 +102,7 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %         for 1.5T scan; 50 for 3T scan). 
 %
 %    FLAG_ALL
-%        (boolean, default false) if FLAG_ALL is true, by default 
+%        (boolean, default true) if FLAG_ALL is true, by default 
 %        the brick will generate all outputs with default output 
 %        names.
 %
@@ -161,6 +165,8 @@ function [files_in,files_out,opt] = niak_brick_t1_preprocess(files_in,files_out,
 %
 % NOTE 4:
 %   The flowchart of the brick is as follows :
+%
+%    0.  Neck cropping. 
 %
 %    1.  Non-uniformity correction in native space (without mask):
 %        NIAK_BRICK_NU_CORRECT
@@ -305,23 +311,24 @@ files_in = psom_struct_defaults(files_in, ...
 %% OPTIONS
 opt_tmp.flag_test = false;
 gb_name_structure = 'opt';
-gb_list_fields    = {'flag_all' , 'template'                 , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
-gb_list_defaults  = {false      , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
+gb_list_fields    = {'crop_neck' , 'flag_all' , 'template'                 , 'mask_brain_t1' , 'mask_head_t1' , 'nu_correct' , 'flag_test' , 'folder_out' , 'flag_verbose' };
+gb_list_defaults  = {0           , true       , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
 niak_set_defaults
 
 if ischar(files_in.template)
+    template = struct;
     switch files_in.template
     case 'mni_icbm152_nlin_sym_09a'
-        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average
-        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];             % The brain mask
-        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
-        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
+        template.t1           = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                  % The T1 non-linear average
+        template.mask         = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask.mnc.gz'];             % The brain mask
+        template.mask_eroded  = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
+        template.mask_dilated = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
         files_in.template = template;
     case 'mni_icbm152_nlin_asym_09a'
-        template.t1           = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                  % The T1 non-linear average
-        template.mask         = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz'];             % The brain mask
-        template.mask_eroded  = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
-        template.mask_dilated = [gb_niak_path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm        
+        template.t1           = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a.mnc.gz'];                  % The T1 non-linear average
+        template.mask         = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask.mnc.gz'];             % The brain mask
+        template.mask_eroded  = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_eroded5mm.mnc.gz'];   % The brain mask eroded of 5 mm
+        template.mask_dilated = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_asym_09a_mask_dilated5mm.mnc.gz'];  % The brain mask dilated of 5 mm
         files_in.template = template;
     otherwise
         error('%s is an unkown template space',files_in.template)
@@ -354,10 +361,10 @@ if isempty(path_anat)
     path_anat = '.';
 end
 
-if strcmp(ext_anat,gb_niak_zip_ext)
+if strcmp(ext_anat,GB_NIAK.zip_ext)
     [tmp,name_anat,ext_anat] = fileparts(name_anat);
     type_anat = ext_anat;
-    ext_anat = cat(2,ext_anat,gb_niak_zip_ext);
+    ext_anat = cat(2,ext_anat,GB_NIAK.zip_ext);
 else
     type_anat = ext_anat;
 end
@@ -463,9 +470,22 @@ if strcmp(files_out.classify,'gb_niak_omitted')
     files_out.classify = cat(2,path_tmp,name_anat,'_classify_stereolin',type_anat);
 end
 
+%% Crop neck
+clear files_in_tmp files_out_tmp opt_tmp
+if opt.crop_neck ~= 0 
+    file_crop = [path_tmp 'anat_crop' type_anat];
+    files_in_tmp         = files_in.anat;
+    files_out_tmp        = file_crop;
+    opt_tmp.crop_neck    = opt.crop_neck;
+    opt_tmp.flag_verbose = flag_verbose;
+    niak_brick_crop_neck(files_in_tmp,files_out_tmp,opt_tmp);
+else
+    file_crop = files_in.anat;
+end
+
 %% Apply non-uniformity correction
 clear files_in_tmp files_out_tmp opt_tmp
-files_in_tmp.vol     = files_in.anat;
+files_in_tmp.vol     = file_crop;
 files_out_tmp.vol_nu = files_out.anat_nuc;
 opt_tmp              = opt.nu_correct;
 opt_tmp.flag_verbose = flag_verbose;

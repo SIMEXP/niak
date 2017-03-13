@@ -1,5 +1,5 @@
 function [img,slices] = niak_vol2img(hdr,vol,coord,opt)
-% Generate an image file with a series of brain views. 
+% Generate an image file with a series of brain views.
 %
 % [IMG,SLICES] = NIAK_VOL2IMG( VOL , HDR , COORD , OPT )
 %
@@ -7,18 +7,19 @@ function [img,slices] = niak_vol2img(hdr,vol,coord,opt)
 % HDR.TARGET (structure) the header of a volume defining the sampling space
 % VOL        (3D array) brain volume, in stereotaxic space.
 % COORD      (vector Nx3) each row define a series of slices to display (X,Y,Z).
-% OPT.TYPE_FLIP (string, default 'rot90') how to flip slices to represent them. 
-% OPT.TYPE_VIEW (string, default 'all') the  type of views to include: 
+% OPT.TYPE_FLIP (string, default 'rot90') how to flip slices to represent them.
+% OPT.TYPE_VIEW (string, default 'all') the  type of views to include:
 %   'axial', 'sagital', 'coronal', 'all'
-% IMG (array) all three slices assembled into a single image, in target space. 
-% SLICES (cell of array) each entry is one slice (x, y, then z). 
-% 
-% Note: The montage is generated in voxel space associated with the target. 
-% If no target is specified, the source space is resampled with direction cosines, 
-% and the field of view is adjusted such that it includes all of the voxels. 
-% Only nearest neighbour interpolation is available. 
+% OPT.PADDING (scalar, default 0) the value used to padd slices together
+% IMG (array) all three slices assembled into a single image, in target space.
+% SLICES (cell of array) each entry is one slice (x, y, then z).
 %
-% Copyright (c) Pierre Bellec 
+% Note: The montage is generated in voxel space associated with the target.
+% If no target is specified, the source space is resampled with direction cosines,
+% and the field of view is adjusted such that it includes all of the voxels.
+% Only nearest neighbour interpolation is available.
+%
+% Copyright (c) Pierre Bellec
 % Centre de recherche de l'Institut universitaire de griatrie de Montral, 2016.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
@@ -41,10 +42,10 @@ function [img,slices] = niak_vol2img(hdr,vol,coord,opt)
 % LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
- 
+
 %% Default options
 if nargin < 3
-    error('Please specify VOL, HDR, and COORD') 
+    error('Please specify VOL, HDR, and COORD')
 end
 
 if ~isfield(hdr,'source')||~isfield(hdr,'target')
@@ -57,12 +58,12 @@ if nargin < 4
 end
 
 opt = psom_struct_defaults(opt, ...
-    { 'type_view' , 'method' , 'type_flip' }, ...
-    {'all'              , 'linear'     , 'rot90'      });
-    
+    { 'padding' , 'type_view' , 'method' , 'type_flip' }, ...
+    { 0         , 'all'              , 'linear'     , 'rot90'      });
+
 %% stack slices, if multiple sets of coordinates are specified
 nb_slices = size(coord,1);
-if nb_slices > 1 
+if nb_slices > 1
     img = [];
     for ss = 1:nb_slices
         switch opt.type_view
@@ -77,11 +78,11 @@ if nb_slices > 1
     return
 end
 
-%% size of the source space 
+%% size of the source space
 dim_s = hdr.source.info.dimensions(1:3);
-    
+
 %% Extract world coordinates for the source sampling grid
-[xx_vs,yy_vs,zz_vs] = ndgrid(1:dim_s(1),1:dim_s(2),1:dim_s(3));  
+[xx_vs,yy_vs,zz_vs] = ndgrid(1:dim_s(1),1:dim_s(2),1:dim_s(3));
 slice_ws = niak_coord_vox2world([xx_vs(:) yy_vs(:) zz_vs(:)],hdr.source.info.mat);
 xx_ws = reshape(slice_ws(:,1),size(xx_vs));
 yy_ws = reshape(slice_ws(:,2),size(yy_vs));
@@ -108,7 +109,7 @@ if ischar(coord)
     coord = niak_coord_vox2world( floor(dim_t/2),hdr.target.info.mat );
 end
 
-%% get target coordinates 
+%% get target coordinates
 coord_w = coord(1:3);
 coord_w = coord_w(:)';
 
@@ -129,29 +130,29 @@ switch opt.type_view
         error('%s is an unknown type of view',opt.type_view);
 end
 
-%% resample the three slices 
+%% resample the three slices
 slices = cell(length(list_view),1);
 for vv = 1:length(list_view) % loop over types of views
-    % generate the source image 
-    % and the coordinates of pixels in source and target 
+    % generate the source image
+    % and the coordinates of pixels in source and target
     switch list_view(vv)
-        case 1 
-            [xx_vt,yy_vt,zz_vt] = ndgrid(coord_vt(1),1:dim_t(2),1:dim_t(3));         
-        case 2  
+        case 1
+            [xx_vt,yy_vt,zz_vt] = ndgrid(coord_vt(1),1:dim_t(2),1:dim_t(3));
+        case 2
             [xx_vt,yy_vt,zz_vt] = ndgrid(1:dim_t(1),coord_vt(2),1:dim_t(3));
         case 3
             [xx_vt,yy_vt,zz_vt] = ndgrid(1:dim_t(1),1:dim_t(2),coord_vt(3));
     end
-        
+
     % Build voxel coordinates in source space for the slice in target space
     slice_wt = niak_coord_vox2world([xx_vt(:) yy_vt(:) zz_vt(:)],hdr.target.info.mat);
     slice_vt = niak_coord_world2vox(slice_wt,hdr.source.info.mat);
     slice_vt = round(slice_vt);
     mask = (slice_vt(:,1)>=1)&(slice_vt(:,1)<=dim_s(1))&(slice_vt(:,2)>=1)&(slice_vt(:,2)<=dim_s(2))&(slice_vt(:,3)>=1)&(slice_vt(:,3)<=dim_s(3));
     slice_vt = slice_vt(mask,:);
-    
+
     % resample
-    slice_res = zeros(size(xx_vt));
+    slice_res = opt.padding*ones(size(xx_vt));
     ind_slice = niak_sub2ind_3d(size(vol),slice_vt(:,1),slice_vt(:,2),slice_vt(:,3));
     slice_res(mask) = vol(ind_slice);
     slices{vv} = niak_flip_vol(squeeze(slice_res),opt.type_flip);
@@ -164,7 +165,7 @@ for vv = 1:length(list_view)
     size_h = max( size_h , size(slices{vv},1) );
     size_w = size_w + size(slices{vv},2);
 end
-img = zeros(size_h,size_w);
+img = opt.padding*ones(size_h,size_w);
 pos = 0;
 for vv = 1:length(list_view)
     npad = floor((size_h-size(slices{vv},1))/2);

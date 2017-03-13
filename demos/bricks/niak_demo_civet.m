@@ -50,19 +50,19 @@ function [files_in,files_out,opt] = niak_demo_civet(path_demo)
 % THE SOFTWARE.
 
 if nargin>=1
-    gb_niak_path_demo = path_demo;
+    GB_NIAK.path_demo = path_demo;
 end
 
 niak_gb_vars
 
 
 %% Setting input/output files
-switch gb_niak_format_demo
+switch GB_NIAK.format_demo
     
     case 'minc2' % If data are in minc2 format
 
-        files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc');
-        opt.folder_out = cat(2,gb_niak_path_demo,filesep,'anat_subject1',filesep); 
+        files_in.anat = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1.mnc');
+        opt.folder_out = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1',filesep);
         
         if ~exist(opt.folder_out)
             str = mkdir(opt.folder_out);
@@ -70,8 +70,8 @@ switch gb_niak_format_demo
     
     case 'minc1' % If data are in minc1 format
         
-        files_in.anat = cat(2,gb_niak_path_demo,filesep,'anat_subject1.mnc.gz');
-        opt.folder_out = cat(2,gb_niak_path_demo,filesep,'anat_subject1',filesep); 
+        files_in.anat = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1.mnc.gz');
+        opt.folder_out = cat(2,GB_NIAK.path_demo,filesep,'anat_subject1',filesep);
         
         if ~exist(opt.folder_out)
             str = mkdir(opt.folder_out);
@@ -79,7 +79,7 @@ switch gb_niak_format_demo
         
     otherwise 
         
-        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',gb_niak_format_demo)
+        error('niak:demo','%s is an unsupported file format for this demo. See help to change that.',GB_NIAK.format_demo)
         
 end
 

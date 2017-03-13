@@ -54,7 +54,7 @@ end
 
 %% The template
 niak_gb_vars;
-file_template = [gb_niak_path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'motion' filesep 'motion_template.html'];
+file_template = [GB_NIAK.path_niak 'reports' filesep 'fmri_preprocess' filesep 'templates' filesep 'motion' filesep 'motion_template.html'];
 
 %% Read template
 hf = fopen(file_template);
