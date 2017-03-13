@@ -1,7 +1,7 @@
 FROM simexp/octave:4.0.2_ubuntu_12
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
-ENV PSOM_VERSION 2.2.2
+ENV PSOM_VERSION 2.3.1
 ENV NIAK_ROOT /usr/local/niak
 ENV NIAK_CONFIG_PATH /local_config
 ENV NIAK_SANDBOX_ROOT /sandbox
@@ -52,6 +52,7 @@ RUN python -m octave_kernel.install
 RUN pip install ipywidgets
 ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
 ADD util/lib/psom_gb_vars_local.jupyter /usr/local/lib/psom_gb_vars_local.jupyter
+ADD util/lib/jupyter_notebook_config.py /usr/local/lib/jupyter_notebook_config.py
 EXPOSE 8080
 # To run with jupyter
 # docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak:beta niak_jupyter
