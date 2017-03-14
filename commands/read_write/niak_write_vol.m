@@ -293,8 +293,8 @@ elseif ischar(file_name)
                 n_dims = length(size(vol));
                 if ~all(hdr.details.dim(2:n_dims+1)==size(vol))
                     dims = ones(1,8);
-                    dims(1) = length(size(vol));
-                    dims(2:dims(1)+1) = size(vol);
+                    dims(1) = n_dims;
+                    dims(2:n_dims+1) = size(vol);
                     dims(end-1:end) = 0;
                     hdr.details.dim = dims;
                     
