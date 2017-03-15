@@ -287,24 +287,6 @@ elseif ischar(file_name)
             flag_zip = false;
         end
         
-        %% Check if header dimensions match volume
-        switch type_f
-            case {'nii'} % currently only for niak
-                n_dims = length(size(vol));
-                if ~all(hdr.details.dim(2:n_dims+1)==size(vol))
-                    dims = ones(1,8);
-                    dims(1) = n_dims;
-                    dims(2:n_dims+1) = size(vol);
-                    dims(end-1:end) = 0;
-                    hdr.details.dim = dims;
-                    
-                    if n_dims <= 4
-                        hdr.info.dimensions = ones(1,4);
-                        hdr.info.dimensions(1:n_dims) = size(vol);
-                    end
-                end
-        end
-        
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 niak_write_minc(hdr,vol);
