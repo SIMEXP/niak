@@ -32,7 +32,7 @@ gb_psom_qsub_options = '-A my-guillimin-group-id';.
 
 With this minimal configuration, you should be able to use the full power of your HPC!
 
-## More configutations
+## More configurations
 The tar ball comes with a `psom.conf` file. This configuration can be stored in three places. In `/etc/psom.conf`, along with the `psom_console.sh` file (that is how it is shipped in the tar ball) or here: `${HOME}/.config/psom/psom.conf`. Note that the file are loaded in that order. So a user can overwrite the system `/etc/psom.conf` in ``${HOME}/.config/psom/psom.conf`. If you do not have root access to the system, a `psom.conf` file living in the `psom_console.sh` directory can act as a system wide config.
 
 The configuration tells "psom_console.sh" where to look for the `psom_gb_vars_local.m` file and the `niak-VERSION-NAME-AND-NUMBER.img` images. The default is to find them at the same location than `psom_console.sh` itself. You also need to set the `PSOM_SINGULARITY_OPTIONS` variable so that directory other than the host `${HOME}` and `/tmp` are accessible to the NIAK software. For example, if you need to mount the `/scratch` directory, you can uncomment the line:
