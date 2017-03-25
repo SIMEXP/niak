@@ -54,12 +54,12 @@
     brainMap[mm] = brainsprite({
       canvas: "Map"+mm,
       sprite: "template",
-      nbSlice: params.nbSlice,
+      nbSlice: params[mm].nbSlice,
       colorBackground: "#FFFFFF",
       colorFont: "#000000",
       flagCoordinates: true,
-      origin: params.origin,
-      voxelSize: params.voxelSize,
+      origin: params[mm].origin,
+      voxelSize: params[mm].voxelSize,
       onclick: function(e) {
         for ( nn=0 ; nn<brainMap.length ; nn++) {
           brainMap[nn].numSlice = brain.numSlice;
@@ -68,13 +68,13 @@
       },
       overlay: {
         sprite: "mapSprite"+mm,
-        nbSlice: params.nbSlice,
+        nbSlice: params[mm].nbSlice,
         smooth: true
       },
       colorMap: {
         img: "cmSprite", // That is the ID of the image with the colormap
-        min: 1,
-        max: params.max,
+        min: params[mm].min,
+        max: params[mm].max,
       },
     });
 

@@ -94,7 +94,11 @@ opt = psom_struct_defaults ( opt , ...
 opt.background = psom_struct_defaults( opt.background , ...
     { 'colormap' , 'nb_color' , 'quality' , 'limits'     }, ...
     { 'gray'     , 256        , 90        , 'adaptative' });
-    
+
+opt.overlay = psom_struct_defaults( opt.overlay , ...
+    { 'colormap' , 'nb_color' , 'thresh' , 'limits'     }, ...
+    { 'gray'     , 256        , []       , 'adaptative' });
+  
 if isempty(opt.labels)
     for oo = 1:length(in.overlay)
         opt.labels{oo} = sprintf('map%i',oo);
@@ -118,178 +122,55 @@ jopt.folder_out = opt.folder_out;
 pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jout,jopt);
 
 % background images
+list_background = cell(length(in.background,1));
 for bb = 1:length(in.background)
     jname = ['background_' opt.labels{bb}];
     jin.source = in.background{bb};
     jin.target = in.background{bb};
     jout.montage = [opt.folder_out 'img' filesep jname '.jpg'];
+    list_background{bb} = jout.montage;
     jout.quantization = [opt.folder_out 'img' filesep jname '.mat'];
-    jopt.colormap = opt.colormap;
-    jopt.colorbar = false;
-    jopt.limits = opt.limits;
-    jopt.flag_decoration = false;
+    jopt.colormap = opt.background.colormap;
+    jopt.limits = opt.background.limits;
+    jopt.nb_color = opt.background.nb_color;
+    jopt.quality = opt.background.quality;
     pipeline = psom_add_job(pipeline,jname,'niak_brick_montage',jin,jout,jopt);
 end
 
-% Group average T1
-jin.source = in.group.avg_t1;
-jout = [opt.folder_out 'group' filesep 'average_t1_stereotaxic.png'];
-jopt.colormap = 'gray';
-jopt.limits = 'adaptative';
-jopt.flag_decoration = false;
-pipeline = psom_add_job(pipeline,'average_t1_stereo','niak_brick_vol2img',jin,jout,jopt);
-
-% Group outline
-jin.source = file_outline;
-jout = [opt.folder_out 'group' filesep 'outline.png'];
-jopt.colormap = 'jet';
-jopt.limits = [0 1.1];
-jopt.flag_decoration = false;
-pipeline = psom_add_job(pipeline,'t1_outline_registration','niak_brick_vol2img',jin,jout,jopt);
-
-% Group average BOLD
-jin.source = in.group.avg_func;
-jout = [opt.folder_out 'group' filesep 'average_func_stereotaxic.png'];
-jopt.colormap = 'jet';
-jopt.limits = 'adaptative';
-jopt.flag_decoration = false;
-pipeline = psom_add_job(pipeline,'average_func_stereo','niak_brick_vol2img',jin,jout,jopt);
-
-% Group BOLD mask
-jin.source = in.group.mask_func_group;
-jout = [opt.folder_out 'group' filesep 'mask_func_group_stereotaxic.png'];
-jopt.colormap = 'jet';
-jopt.limits = [0 1];
-jopt.flag_decoration = false;
-pipeline = psom_add_job(pipeline,'mask_func_group_stereo','niak_brick_vol2img',jin,jout,jopt);
-
-% Average BOLD mask
-jin.source = in.group.avg_mask_func;
-jout = [opt.folder_out 'group' filesep 'average_mask_func_stereotaxic.png'];
-jopt.colormap = 'jet';
-jopt.limits = [0 1];
-jopt.flag_decoration = false;
-pipeline = psom_add_job(pipeline,'avg_mask_func_stereo','niak_brick_vol2img',jin,jout,jopt);
-
-%% Panel on individual registration
-
-% Individual T1 images
-jopt.colormap = 'gray';
-jopt.limits = 'adaptative';
-jopt.method = 'linear';
-for ss = 1:length(list_subject)
-    jin.source = in.ind.anat.(list_subject{ss});
-    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_anat_raw.png'];
-    jopt.flag_decoration = false;
-    pipeline = psom_add_job(pipeline,['t1_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
-end
-
-% Individual BOLD images
-jopt.colormap = 'jet';
-jopt.limits = 'adaptative';
-jopt.method = 'linear';
-for ss = 1:length(list_subject)
-    jin.source = in.ind.func.(list_subject{ss});
-    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_func.png'];
-    jopt.flag_decoration = false;
-    pipeline = psom_add_job(pipeline,['bold_' list_subject{ss}],'niak_brick_vol2img',jin,jout,jopt);
-end
-
-% Merge individual T1 and outline
-for ss = 1:length(list_subject)
-    clear jin jout jopt
-    jin.background = pipeline.(['t1_' list_subject{ss}]).files_out;
-    jin.overlay = pipeline.t1_outline_registration.files_out;
-    jout = [opt.folder_out 'registration' filesep list_subject{ss} '_anat.png'];
-    jopt.transparency = 0.7;
-    jopt.threshold = 0.9;
-    pipeline = psom_add_job(pipeline,['t1_' list_subject{ss} '_overlay'],'niak_brick_add_overlay',jin,jout,jopt);
-end
-
-% Merge average T1 and outline
-clear jin jout jopt
-jin.background = pipeline.template_stereo.files_out;
-jin.overlay = pipeline.t1_outline_registration.files_out;
-jout = [opt.folder_out 'group' filesep 'template_stereotaxic.png'];
-jopt.transparency = 0.7;
-jopt.threshold = 0.9;
-pipeline = psom_add_job(pipeline,'template_stereo_overlay','niak_brick_add_overlay',jin,jout,jopt);
-
-% Add a spreadsheet to write the QC.
-clear jin jout jopt
-jout = [opt.folder_out 'qc_registration.csv'];
-jopt.list_subject = list_subject;
-pipeline = psom_add_job(pipeline,'init_report','niak_brick_init_qc_report','',jout,jopt);
-
-%% Panel on motion
-
-% Movies (and target image for all runs)
-[list_fmri_native,labels] = niak_fmri2cell(in.ind.fmri_native);
-[list_fmri_stereo,labels] = niak_fmri2cell(in.ind.fmri_stereo);
-for ll = 1:length(labels)
-    clear jin jout jopt
-
-    % Native movie
-    jin.source = list_fmri_native{ll};
-    jin.target = list_fmri_native{ll};
-    jout = [opt.folder_out 'motion' filesep 'motion_native_' labels(ll).name '.png'];
-    jopt.coord = 'CEN';
-    jopt.colormap = 'jet';
-    jopt.flag_vertical = false;
-    jopt.limits = 'adaptative';
-    jopt.flag_decoration = false;
-    pipeline = psom_add_job(pipeline,['motion_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-
-    % Native spacer
-    jopt.flag_median = true;
-    jout = [opt.folder_out 'motion' filesep 'target_native_' labels(ll).name '.png'];
-    pipeline = psom_add_job(pipeline,['target_native_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-
-    % Stereotaxic movie
-    jopt.flag_median = false;
-    jopt.coord = [0 0 0];
-    jin.source = list_fmri_stereo{ll};
-    jin.target = list_fmri_stereo{ll};
-    jout = [opt.folder_out 'motion' filesep 'motion_stereo_' labels(ll).name '.png'];
-    pipeline = psom_add_job(pipeline,['motion_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-
-    % Stereotaxic spacer
-    jopt.flag_median = true;
-    jout = [opt.folder_out 'motion' filesep 'target_stereo_' labels(ll).name '.png'];
-    pipeline = psom_add_job(pipeline,['target_stereo_' labels(ll).name],'niak_brick_vol2img',jin,jout,jopt);
-end
-
-% Motion parameters
-[list_confounds,labels] = niak_fmri2cell(in.ind.confounds);
-for ll = 1:length(labels)
-    clear jin jout jopt
-    jin = list_confounds{ll};
-    jout = [opt.folder_out 'motion' filesep 'dataMotion_' labels(ll).name '.js'];
-    pipeline = psom_add_job(pipeline,['motion_ind_' labels(ll).name],'niak_brick_preproc_ind_motion2report',jin,jout);
-end
-
-% Pick reference runs
-labels_ref = struct;
-for ss = 1:length(list_subject)
-    session = fieldnames(in.ind.fmri_native.(list_subject{ss}));
-    session = session{1};
-    run = fieldnames(in.ind.fmri_native.(list_subject{ss}).(session));
-    run = run{1};
-    labels_ref.(list_subject{ss}) = [list_subject{ss} '_' session '_' run];
+% Overlay images
+list_overlay = cell(length(in.overlay),1);
+list_colormap = cell(length(in.overlay),1);
+list_quantization = cell(length(in.overlay),1);
+for oo = 1:length(in.overlay)
+    jname = ['overlay_' opt.labels{bb}];
+    jin.source = in.overlay{oo};
+    jin.target = in.background{oo};
+    jout.montage = [opt.folder_out 'img' filesep jname '.png'];
+    list_overlay{oo} = jout.montage;
+    jout.quantization = [opt.folder_out 'img' filesep jname '.mat'];
+    list_quantization{oo} = jout.quantization;
+    jout.colormap = [opt.folder_out 'img' filesep jname '_cm.png'];
+    list_colormap{oo} = jout.colormap;
+    
+    jopt.colormap = opt.overlay.colormap;
+    jopt.limits = opt.overlay.limits;
+    jopt.thresh = opt.overlay.thresh;
+    jopt.nb_color = opt.overlay.nb_color;
+    pipeline = psom_add_job(pipeline,jname,'niak_brick_montage',jin,jout,jopt);
 end
 
 % Generate the motion report
 for ll = 1:length(labels)
     clear jin jout jopt
-    jout = [opt.folder_out 'motion' filesep 'motion_report_' labels(ll).name '.html'];
-    jopt.label = labels(ll).name;
-    jopt.label_ref = labels_ref.(labels(ll).subject);
-    jopt.num_run = ll;
-    pipeline = psom_add_job(pipeline,['motion_report_' labels(ll).name],'niak_brick_preproc_motion2report','',jout,jopt);
-    if ll==1
-        jout = [opt.folder_out 'motion' filesep 'motion.html'];
-        pipeline = psom_add_job(pipeline,'motion_report','niak_brick_preproc_motion2report','',jout,jopt);
-    end
+    jin = list_quantization;
+    jout.index = [opt.folder_out 'index.html'];
+    jout.data = [opt.folder_out 'listMaps.js'];
+    jopt.labels = opt.labels;
+    jopt.class = opt.class;
+    jopt.background = list_background;
+    jopt.overlay = list_overlay;
+    
+    pipeline = psom_add_job(pipeline,'brain_map_report','niak_brick_report_brain_map',jin,jout,jopt);
 end
 
 if ~opt.flag_test
