@@ -1,5 +1,5 @@
 function [in,out,opt] = niak_brick_report_brain_map(in,out,opt)
-% Generate an html report with multipl brain map viewers
+% Generate an html report with multiple brain map viewers
 %
 % SYNTAX: [IN,OUT,OPT] = NIAK_BRICK_REPORT_BRAIN_MAP(IN,OUT,OPT)
 %
@@ -14,6 +14,7 @@ function [in,out,opt] = niak_brick_report_brain_map(in,out,opt)
 %    the same colormap is used for all overlays. 
 % OPT.BACKGROUND (cell of strings) each entry is the png image of a background.
 %    If only one entry is provided, the same background is used for all overlays.  
+% OPT.CLASS_VIEWER (string, default 'col-sm-6') the bootstrap class for the viewer. 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
 %    update IN, OUT and OPT.
 %
@@ -51,9 +52,10 @@ out = psom_struct_defaults ( out , { 'index' , 'data' } , { NaN , NaN });
 if nargin < 3
     opt = struct;
 end    
+
 opt = psom_struct_defaults ( opt , ...
-    { 'overlay' , 'background' , 'colormap' , 'labels' , 'flag_test' }, ...
-    { NaN       , NaN          , NaN        , NaN      , false         });
+    { 'class_viewer' , 'overlay' , 'class' , 'background' , 'colormap' , 'labels' , 'flag_test' }, ...
+    { 'col-sm-6'     , NaN       , NaN     , NaN          , NaN        , NaN      , false         });
 
 if opt.flag_test 
     return
@@ -62,7 +64,7 @@ end
 %% The template
 niak_gb_vars;
 file_template = [GB_NIAK.path_niak 'reports' filesep 'brain_map' filesep 'templates' filesep 'index.html'];
-file_viewer   = [GB_NIAK.path_niak 'reports' filesep 'brain_map' filesep 'templates' filesep 'index.html'];
+file_viewer   = [GB_NIAK.path_niak 'reports' filesep 'brain_map' filesep 'templates' filesep 'viewer.html'];
 
 %% Read template
 hf = fopen(file_template);
@@ -79,17 +81,17 @@ str_viewer = '';
 for oo = 1:length(opt.overlay)
     if (oo==1) || (length(opt.background)>1)
         [~,name,ext] = niak_fileparts(opt.background{oo});
-        map = sptrinf('<img id="background %i" class="hidden" src="img/%s%s">\n',oo,name,ext);
+        map = sprintf('<img id="background %i" class="hidden" src="img/%s%s">\n',oo,name,ext);
     else
         map = '';
     end
     [~,name,ext] = niak_fileparts(opt.overlay{oo});
-    map = sprintf('%s        <img id="overlay%i" class="hidden" src="%s%s">\n',oo,name,ext);
+    map = sprintf('%s        <img id="overlay%i" class="hidden" src="img/%s%s">\n',oo,name,ext);
     [~,name,ext] = niak_fileparts(opt.colormap{oo});
-    map = sprintf('%s        <img id="colormap%i" class="hidden" src="%s%s">\n',oo,name,ext);
+    map = sprintf('%s        <img id="colormap%i" class="hidden" src="img/%s%s">\n',oo,name,ext);
     
     tmp_viewer = str_viewer_raw;
-    tmp_viewer = strrep(tmp_viewer,'$CLASS',['"' opt.class '"']);
+    tmp_viewer = strrep(tmp_viewer,'$CLASS',['"' opt.class_viewer '"']);
     tmp_viewer = strrep(tmp_viewer,'$LABEL',opt.labels{oo});
     tmp_viewer = strrep(tmp_viewer,'$MAP',map);
     
@@ -104,7 +106,7 @@ str_template = strrep(str_template,'$DIV',str_viewer);
 if hf == -1
     error(msg)
 end
-fprintf(hf,'%s',str_viewer);
+fprintf(hf,'%s',str_template);
 fclose(hf);
 
 %% Now save data for quantization
@@ -123,6 +125,6 @@ end
 
 for ii = 1:length(in)
     data = load(in{ii});
-    fprintf(hf,'params[%i] = { origin: {X: %f, Y: %f, Z:%f}, voxelSize: %f, nbSlice: {Y: %i, Z: %i}, min: %f, max: %f};\n', data.origin(1),data.origin(2), data.origin(3), data.voxel_size, data.nb_slice(2),data.nb_slice(3),data.min,data.max);
+    fprintf(hf,'params[%i] = { origin: {X: %f, Y: %f, Z:%f}, voxelSize: %f, nbSlice: {Y: %i, Z: %i}, min: %f, max: %f};\n', data.origin(1),data.origin(2), data.origin(3), data.voxel_size, data.size_slice(1),data.size_slice(2),data.min_img,data.max_img);
 end
 fclose(hf);

@@ -96,7 +96,7 @@ if ndims(vol)==4
 end
 
 %% resample volume
-vol_r = niak_resample_vol(hdr,vol);
+[vol_r,hdr] = niak_resample_vol(hdr,vol);
 
 %% Build montage
 dim_v = size(vol_r);
@@ -162,12 +162,8 @@ switch opt.colormap
         per_hot = 1;
     end
     cm = niak_hot_cold(opt.nb_color,per_hot);
-  case 'gray'
-    cm = gray(opt.nb_color);
-  case 'jet'
-    cm = jet(opt.nb_color);
 	otherwise
-		error('only jet, gray and hot_cold color maps currently supported')
+		cm = eval([opt.colormap '(opt.nb_color);']);
 end
 
 %% build the image
@@ -198,5 +194,13 @@ end
 if ~strcmp(out.quantization,'gb_niak_omitted')
     data = bins;
     size_slice = dim_v([3 2]);
-    save(out.quantization,'data','size_slice');    
+    voxel_size = hdr.target.info.voxel_size(1); % Currently supports only isotropic voxels
+    origin = hdr.target.info.mat(1:3,4);
+    if ~isempty(opt.thresh)
+        min_img = opt.thresh;
+    else
+        min_img = climits(1);
+    end
+    max_img = climits(2);
+    save(out.quantization,'data','size_slice','origin','voxel_size','min_img','max_img');    
 end

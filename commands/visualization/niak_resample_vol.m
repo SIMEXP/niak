@@ -1,12 +1,13 @@
-function vol_r = niak_resample_vol(hdr,vol)
+function [vol_r,hdr] = niak_resample_vol(hdr,vol)
 % Resample a volume in a given space
 %
-% VOL_R = NIAK_RESAMPLE_VOL( HDR , VOL , OPT )
+% [VOL_R,HDR_UP] = NIAK_RESAMPLE_VOL( HDR , VOL , OPT )
 %
 % HDR.SOURCE (structure) the header of the volume
 % HDR.TARGET (structure) the header of a volume defining the sampling space
 % VOL        (3D array) brain volume, in stereotaxic space.
 % VOL_R      (3D array) same as VOL, resampled in the voxel space of TARGET
+% HDR_UP     (structure) an updated version of HDR
 % 
 % Note: The new volume is generated in the voxel space associated with the target. 
 % If no target is specified, the source space is resampled with direction cosines, 
