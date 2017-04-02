@@ -7,7 +7,6 @@
   <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
   <link rel="stylesheet" type="text/css" href="assets/bootstrap/bootstrap.min.css" /> <!--from keen.io-->
   <link rel="stylesheet" type="text/css" href="assets/keen/keen-dashboards.css" />    <!--from keen.io-->
-  <link href="assets/select2/select2.min.css" rel="stylesheet" /> <!--from select 2-->
 </head>
 
 <body class="application">
@@ -52,8 +51,8 @@
     var brainMap = [];
     for (mm=0 ; mm<listMaps.length ; mm++) {
     brainMap[mm] = brainsprite({
-      canvas: "Map"+mm,
-      sprite: "template",
+      canvas: "canvas"+mm,
+      sprite: "background"+mm,
       nbSlice: params[mm].nbSlice,
       colorBackground: "#FFFFFF",
       colorFont: "#000000",
@@ -62,22 +61,22 @@
       voxelSize: params[mm].voxelSize,
       onclick: function(e) {
         for ( nn=0 ; nn<brainMap.length ; nn++) {
-          brainMap[nn].numSlice = brain.numSlice;
+          brainMap[nn].numSlice = this.numSlice;
           brainMap[nn].drawAll();
         }
       },
       overlay: {
-        sprite: "mapSprite"+mm,
+        sprite: "overlay"+mm,
         nbSlice: params[mm].nbSlice,
         smooth: true
       },
       colorMap: {
-        img: "cmSprite", // That is the ID of the image with the colormap
+        img: "colormap"+mm, // That is the ID of the image with the colormap
         min: params[mm].min,
         max: params[mm].max,
       },
     });
-
+  }
   });
   </script>
 

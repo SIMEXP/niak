@@ -81,16 +81,17 @@ str_viewer = '';
 for oo = 1:length(opt.overlay)
     if (oo==1) || (length(opt.background)>1)
         [~,name,ext] = niak_fileparts(opt.background{oo});
-        map = sprintf('<img id="background %i" class="hidden" src="img/%s%s">\n',oo,name,ext);
+        map = sprintf('<img id="background%i" class="hidden" src="img/%s%s">\n',oo-1,name,ext);
     else
         map = '';
     end
     [~,name,ext] = niak_fileparts(opt.overlay{oo});
-    map = sprintf('%s        <img id="overlay%i" class="hidden" src="img/%s%s">\n',oo,name,ext);
+    map = sprintf('%s        <img id="overlay%i" class="hidden" src="img/%s%s">\n',map,oo-1,name,ext);
     [~,name,ext] = niak_fileparts(opt.colormap{oo});
-    map = sprintf('%s        <img id="colormap%i" class="hidden" src="img/%s%s">\n',oo,name,ext);
+    map = sprintf('%s        <img id="colormap%i" class="hidden" src="img/%s%s">\n',map,oo-1,name,ext);
     
     tmp_viewer = str_viewer_raw;
+    tmp_viewer = strrep(tmp_viewer,'$CANVAS',sprintf('canvas%i',oo-1));
     tmp_viewer = strrep(tmp_viewer,'$CLASS',['"' opt.class_viewer '"']);
     tmp_viewer = strrep(tmp_viewer,'$LABEL',opt.labels{oo});
     tmp_viewer = strrep(tmp_viewer,'$MAP',map);
@@ -114,17 +115,18 @@ fclose(hf);
 if hf == -1
     error(msg)
 end
-fprintf(hf,'listMaps = [ ')
+fprintf(hf,'var listMaps = [ ')
 for ll = 1:length(opt.labels)
     if ll < length(opt.labels)
-        fprintf('"%s" ,',opt.labels{ll});
+        fprintf(hf,'"%s" ,',opt.labels{ll});
     else
-        fprintf('"%s" ];\n',opt.labels{ll});
+        fprintf(hf,'"%s" ];\n',opt.labels{ll});
     end
 end
 
+fprintf(hf,'var params = {};\n');
 for ii = 1:length(in)
     data = load(in{ii});
-    fprintf(hf,'params[%i] = { origin: {X: %f, Y: %f, Z:%f}, voxelSize: %f, nbSlice: {Y: %i, Z: %i}, min: %f, max: %f};\n', data.origin(1),data.origin(2), data.origin(3), data.voxel_size, data.size_slice(1),data.size_slice(2),data.min_img,data.max_img);
+    fprintf(hf,'params[%i] = { origin: {X: %f, Y: %f, Z:%f}, voxelSize: %f, nbSlice: {Y: %i, Z: %i}, min: %f, max: %f};\n', ii-1, data.origin(1),data.origin(2), data.origin(3), data.voxel_size, data.size_slice(1),data.size_slice(2),data.min_img,data.max_img);
 end
 fclose(hf);
