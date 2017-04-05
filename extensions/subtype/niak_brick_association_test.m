@@ -27,7 +27,7 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %       (string) path to the .mat file containing the fitted GLM and FDR results
 %
 %   CSV
-%       (string, default 'results_overview.csv') path to the .csv file 
+%       (string, default 'results_overview.csv') path to the .csv file
 %       containing the overview of significant results passing FDR
 %
 % OPT
@@ -59,11 +59,11 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %
 %      <NAME>
 %         (scalar) the weight of the covariate NAME in the contrast.
-% 
+%
 %   INTERACTION
 %      (structure array, optional) with multiple entries and the following
 %      fields:
-%          
+%
 %      LABEL
 %         (string) a label for the interaction covariate.
 %
@@ -131,7 +131,7 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %   FLAG_FILTER_NAN
 %      (boolean, default true) if the flag is true, any observation
 %      associated with a NaN in MODEL.X is removed from the model.
-%   
+%
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
@@ -177,7 +177,7 @@ else
                 { 'stats'           , 'csv'             },...
                 { 'gb_niak_omitted' , 'gb_niak_omitted' });
 end
-  
+
 %% Sanity Checks
 % Since we don't know which optional parameters were set, we'll remove the
 % empty default values again so they don't cause trouble downstream
@@ -229,7 +229,7 @@ if isfield(opt, 'interaction')
         end
     end
 end
-    
+
 
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -284,7 +284,7 @@ for net_id = 1:opt.scale
     % Fit the model
     opt_glm = struct;
     opt_glm.test  = 'ttest';
-    opt_glm.flag_beta = true; 
+    opt_glm.flag_beta = true;
     opt_glm.flag_residuals = true;
     opt_glm.flag_rsquare = true;
     [results, ~] = niak_glm(model_norm, opt_glm);
@@ -293,7 +293,10 @@ for net_id = 1:opt.scale
 end
 
 % Run FDR on the p-values
-[fdr,fdr_test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
+[fdr_vec,fdr_test_vec] = niak_fdr(pvals(:), opt.type_fdr, opt.fdr);
+% Reshape FDR results to network by subtype array
+fdr = reshape(fdr_vec, n_net, n_sbt);
+fdr_test = reshape(fdr_test_vec, n_net, n_sbt);
 
 % Save the model and FDR test
 if ~strcmp(files_out.stats, 'gb_niak_omitted')
