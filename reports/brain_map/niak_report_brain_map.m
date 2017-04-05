@@ -14,6 +14,8 @@ function [pipeline,opt] = niak_report_brain_map(in,opt)
 %   IND (scalar or vector, default 1) if IN.MAP is a 4D volume, the IND-th
 %     volume is extracted. If IND is a vector, IND(I) is used for IN.MAP{I}.
 %   CLASS_VIEWER (string, default 'col-sm-6') the bootstrap class for the viewer. 
+%   COLOR_BACKGROUND (string, default #000000) the color of the background. 
+%   COLOR_FONT (string, default #FFFFFF) the color of the fonts in the viewer. 
 %   BACKGROUND.COLORMAP (string, default 'gray') The type of 
 %     colormap. Anything supported by the instruction `colormap` will work.
 %   BACKGROUND.NB_COLOR (default 256) the number of colors to use in 
@@ -84,8 +86,8 @@ if nargin < 2
     opt = struct;
 end
 opt = psom_struct_defaults ( opt , ...
-    { 'folder_out' , 'labels' , 'ind' , 'class_viewer' , 'background' , 'overlay' , 'flag_test' , 'psom'   , 'flag_verbose' }, ...
-    { NaN          , {}       , [1]   , 'col-sm-6'     , struct       , struct    , false       , struct() , true           });
+    { 'folder_out' , 'color_background' , 'color_font' , 'labels' , 'ind' , 'class_viewer' , 'background' , 'overlay' , 'flag_test' , 'psom'   , 'flag_verbose' }, ...
+    { NaN          , '#000000'          , '#FFFFFF'    , {}       , [1]   , 'col-sm-6'     , struct       , struct    , false       , struct() , true           });
 
 opt.background = psom_struct_defaults( opt.background , ...
     { 'colormap' , 'nb_color' , 'quality' , 'limits'     }, ...
@@ -120,7 +122,11 @@ pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jou
 % background images
 list_background = cell(length(in.background),1);
 for bb = 1:length(in.background)
-    jname = ['background_' opt.labels{bb}];
+    if (length(in.background)==1)&&(length(opt.labels)>1)
+        jname = 'background';
+    else
+        jname = ['background_' opt.labels{bb}];
+    end
     clear jin jout jopt
     jin.source = in.background{bb};
     jin.target = in.background{bb};
@@ -142,7 +148,7 @@ for oo = 1:length(in.overlay)
     jname = ['overlay_' opt.labels{oo}];
     clear jin jout jopt
     jin.source = in.overlay{oo};
-    jin.target = in.background{oo};
+    jin.target = in.background{min(oo,length(in.background))};
     jout.montage = [opt.folder_out 'img' filesep jname '.png'];
     list_overlay{oo} = jout.montage;
     jout.quantization = [opt.folder_out 'img' filesep jname '.mat'];
@@ -150,6 +156,7 @@ for oo = 1:length(in.overlay)
     jout.colormap = [opt.folder_out 'img' filesep jname '_cm.png'];
     list_colormap{oo} = jout.colormap;
     
+    jopt.ind = opt.ind(oo);
     jopt.colormap = opt.overlay.colormap;
     jopt.limits = opt.overlay.limits;
     jopt.thresh = opt.overlay.thresh;
@@ -168,6 +175,8 @@ for ll = 1:length(opt.labels)
     jopt.background = list_background;
     jopt.colormap = list_colormap;
     jopt.overlay = list_overlay;
+    jopt.color_background = opt.color_background;
+    jopt.color_font = opt.color_font;
     
     pipeline = psom_add_job(pipeline,'brain_map_report','niak_brick_report_brain_map',jin,jout,jopt);
 end

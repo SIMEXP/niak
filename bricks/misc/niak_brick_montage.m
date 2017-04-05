@@ -20,9 +20,12 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 % OPT.NB_COLOR (default 256) the number of colors to use in quantization. If Inf is 
 %   specified, all values are included in the colormap. This is handy for integer 
 %   values images (e.g. parcellation).
+% OPT.IND (scalar, default 1) for 4D volume, IND is the temporal index of the volume to use
+%   starting from 1. 
 % OPT.QUALITY (default 90) for jpg images, set the quality of the outputs (from 0, bad, to 100, perfect).
 % OPT.THRESH (scalar, default []) if empty, does nothing. If a scalar, any value 
-%   below threshold becomes transparent. 
+%   below threshold becomes transparent. If two values, anything between these two 
+%   values become transparent. 
 % OPT.LIMITS (vector 1x2) the limits for the colormap. By defaut it is using [min,max].
 %    If a string is specified, the function will implement an adaptative strategy. 
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does nothing but 
@@ -77,8 +80,8 @@ out = psom_struct_defaults( out , ...
     { NaN       , 'gb_niak_omitted' , 'gb_niak_omitted' });
     
 opt = psom_struct_defaults ( opt , ...
-    { 'nb_color' , 'quality' , 'thresh' , 'nb_slices' , 'type_view' , 'limits' , 'colormap' , 'flag_test' }, ...
-    { 256        , 90        , []       , Inf         , 'sagital'   , ''       , 'gray'     , false       });
+    { 'ind' , 'nb_color' , 'quality' , 'thresh' , 'nb_slices' , 'type_view' , 'limits' , 'colormap' , 'flag_test' }, ...
+    { 1     , 256        , 90        , []       , Inf         , 'sagital'   , ''       , 'gray'     , false       });
 
 if opt.flag_test 
     return
@@ -86,6 +89,8 @@ end
 
 %% Read headers
 [hdr.source,vol] = niak_read_vol(in.source);
+vol = vol(:,:,:,opt.ind);
+
 if ~isempty(in.target)
     hdr.target = niak_read_vol(in.target);
 else
@@ -174,8 +179,13 @@ rgb(:,:,1) = reshape(cm(idx(:),1),size(img));
 rgb(:,:,2) = reshape(cm(idx(:),2),size(img));
 rgb(:,:,3) = reshape(cm(idx(:),3),size(img));
 if ~isempty(opt.thresh)
-    img(img<opt.thresh) = 0;
-    imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double(img>opt.thresh));
+    if (length(opt.thresh)==1)
+        mask_alpha = img>opt.thresh;
+    else
+        mask_alpha = (img>opt.thresh(2))|(img<opt.thresh(1));
+    end
+    img(~mask_alpha) = 0;
+    imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double(mask_alpha));
 else
     imwrite(rgb,out.montage,'quality',opt.quality);
 end
@@ -184,7 +194,7 @@ end
 if ~strcmp(out.colormap,'gb_niak_omitted')
     rgb = zeros(1,size(cm,1),size(cm,2));
     rgb(1,:,:) = cm;
-    if ~isempty(opt.thresh)
+    if ~isempty(opt.thresh) && (length(opt.thresh)==1)
         rgb = rgb(1,bins(2:end)>=opt.thresh,:);
     end
     imwrite(rgb,out.colormap,'quality',opt.quality);
@@ -195,8 +205,8 @@ if ~strcmp(out.quantization,'gb_niak_omitted')
     data = bins;
     size_slice = dim_v([3 2]);
     voxel_size = hdr.target.info.voxel_size(1); % Currently supports only isotropic voxels
-    origin = hdr.target.info.mat(1:3,4);
-    if ~isempty(opt.thresh)
+    origin = -hdr.target.info.mat(1:3,4);
+    if ~isempty(opt.thresh) && (length(opt.thresh)==1)
         min_img = opt.thresh;
     else
         min_img = climits(1);

@@ -45,7 +45,7 @@
   <script type="text/javascript" src="assets/brainsprite.js"></script>
   <script type="text/javascript" src="listMaps.js"></script>
   <script>
-  $(document).ready(function() {
+  $(window).load(function() {
 
     <!--Generate a viewer for brain maps--!>
     var brainMap = [];
@@ -54,8 +54,8 @@
       canvas: "canvas"+mm,
       sprite: "background"+mm,
       nbSlice: params[mm].nbSlice,
-      colorBackground: "#FFFFFF",
-      colorFont: "#000000",
+      colorBackground: "$COLORBACKGROUND",
+      colorFont: "$COLORFONT",
       flagCoordinates: true,
       origin: params[mm].origin,
       voxelSize: params[mm].voxelSize,

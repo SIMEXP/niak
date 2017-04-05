@@ -8,6 +8,8 @@ function [in,out,opt] = niak_brick_report_brain_map(in,out,opt)
 % OUT.INDEX (string) the name of the .html report. 
 % OUT.DATA (string) the name of the javascript data. 
 % OPT.LABELS (cell of strings) string labels for each volume.
+% OPT.COLOR_BACKGROUND (string, default #000000) the color of the background. 
+% OPT.COLOR_FONT (string, default #FFFFFF) the color of the fonts in the viewer. 
 % OPT.OVERLAY (cell of strings) each entry is the png image of an overlay. 
 % OPT.COLORMAP (cell of strings) each entry is the png image of the colormap 
 %    associated with corresponding overlay. If only one entry is provided, 
@@ -54,8 +56,8 @@ if nargin < 3
 end    
 
 opt = psom_struct_defaults ( opt , ...
-    { 'class_viewer' , 'overlay' , 'class' , 'background' , 'colormap' , 'labels' , 'flag_test' }, ...
-    { 'col-sm-6'     , NaN       , NaN     , NaN          , NaN        , NaN      , false         });
+    { 'color_background' , 'color_font' , 'class_viewer' , 'overlay' , 'class' , 'background' , 'colormap' , 'labels' , 'flag_test' }, ...
+    { '#000000'          , '#FFFFFF'    , 'col-sm-6'     , NaN       , NaN     , NaN          , NaN        , NaN      , false         });
 
 if opt.flag_test 
     return
@@ -101,6 +103,11 @@ end
 
 %% Update template
 str_template = strrep(str_template,'$DIV',str_viewer);
+str_template = strrep(str_template,'$COLORBACKGROUND',opt.color_background);
+str_template = strrep(str_template,'$COLORFONT',opt.color_font);
+if length(opt.background)==1
+    str_template = strrep(str_template,'"background"+mm','"background0"');
+end
 
 %% Write report
 [hf,msg] = fopen(out.index,'w');
