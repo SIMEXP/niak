@@ -64,12 +64,12 @@ In this case, the index refers to the number associated with one parcel. The lab
 # Overview of the pipeline
 
 The main steps of the `connectome` pipeline are the following:
- * Generate the average fMRI time series for each network in the mask.
- * Generate a connectome for each subject. Multiple measures are available (covariance, correlation, Fisher transform of the correlation, concentration, partial correlation). If multiple runs are available for one subject, the connectomes are averaged across runs.
- * Binarize the connectome, either by applying a fixed threshold on positive or absolute connectivity measures, or by retaining a fixed percentage of the largest connections.
- * Report the values of point-to-point connectivity measures for a selected number of networks specified in FILES_IN.CSV
- * Generate full brain, voxel-level functional connectivity maps for each subject (i.e. correlation or Fisher transform of the correlation, starting from a selected number of networks specified in FILES_IN.CSV. An average of all subjects is also generated for each seed.
- * Generate a battery of graph properties, based on the binarized version of the connectome. These measures are generated using the [brain connectivity toolbox](https://sites.google.com/site/bctnet/Home/functions ).
+  * Generate the average fMRI time series for each network in the mask.
+  * Generate a connectome for each subject. Multiple measures are available (covariance, correlation, Fisher transform of the correlation, concentration, partial correlation). If multiple runs are available for one subject, the connectomes are averaged across runs.
+  * Binarize the connectome, either by applying a fixed threshold on positive or absolute connectivity measures, or by retaining a fixed percentage of the largest connections.
+  * Report the values of point-to-point connectivity measures for a selected number of networks specified in FILES_IN.CSV
+  * Generate full brain, voxel-level functional connectivity maps for each subject (i.e. correlation or Fisher transform of the correlation, starting from a selected number of networks specified in FILES_IN.CSV. An average of all subjects is also generated for each seed.
+  * Generate a battery of graph properties, based on the binarized version of the connectome. These measures are generated using the [brain connectivity toolbox](https://sites.google.com/site/bctnet/Home/functions ).
 
 ## Pipeline options
 
@@ -111,22 +111,22 @@ The pipeline execution is powered by a generic manager called PSOM (Bellec et al
 ## Outputs
 
 The individual connectomes (averaged across runs) are saved in the files `connectomes/connectome_rois_(SUBJECT).mat` with the following variables:
- * `conn`: the vectorized individual connectome. See ''niak_build_srup'' for instructions on how to get back the square form (the method depends on the type of the connectome).
- * `G`: same as `conn` but binarized.
- * `ind_roi`: a vector with the indices of the parcels. This defines the order of rows/columns in the connectome.
- * `type`: same as `opt.connectome.type`. Describes the type of the connectome.
- * `thresh`: same as `opt.connectome.thresh`. Describes the method for binarization.
+  * `conn`: the vectorized individual connectome. See ''niak_build_srup'' for instructions on how to get back the square form (the method depends on the type of the connectome).
+  * `G`: same as `conn` but binarized.
+  * `ind_roi`: a vector with the indices of the parcels. This defines the order of rows/columns in the connectome.
+  * `type`: same as `opt.connectome.type`. Describes the type of the connectome.
+  * `thresh`: same as `opt.connectome.thresh`. Describes the method for binarization.
 
 The individual graph properties are saved in the files `graph_prop/graph_prop_rois_(SUBJECT).mat` with the following variables:
 
- * `(MEASURE)_(PARCEL).type` the type of measure. The labels for `PARCEL` are defined by `files_in.seeds`.
- * `(MEASURE).(PARCEL).param`: the option of the measure. Typically the numerical ID of the parcel used in the calculation. The labels for `PARCEL` are defined by `files_in.seeds`.
- * `(MEASURE).(PARCEL).val`: the value estimated for the measure.
+  * `(MEASURE)_(PARCEL).type` the type of measure. The labels for `PARCEL` are defined by `files_in.seeds`.
+  * `(MEASURE).(PARCEL).param`: the option of the measure. Typically the numerical ID of the parcel used in the calculation. The labels for `PARCEL` are defined by `files_in.seeds`.
+  * `(MEASURE).(PARCEL).val`: the value estimated for the measure.
 
 The functional connectivity maps are saved in the folder `rmaps`:
- * `rmaps/rmap_(SUBJECT)_(PARCEL).(EXT)`: the voxelwise connectivity map using `PARCEL` as a seed (labels are defined in `files_in.seeds`).
- * `rmaps/mask_(PARCEL).(EXT)`: a binary volume of the seed associated with the label `PARCEL`.
- * `rmaps/average_rmap_(PARCEL).(EXT)`: the connectivity map using `PARCEL` as seed, averaged across all subjects.
+  * `rmaps/rmap_(SUBJECT)_(PARCEL).(EXT)`: the voxelwise connectivity map using `PARCEL` as a seed (labels are defined in `files_in.seeds`).
+  * `rmaps/mask_(PARCEL).(EXT)`: a binary volume of the seed associated with the label `PARCEL`.
+  * `rmaps/average_rmap_(PARCEL).(EXT)`: the connectivity map using `PARCEL` as seed, averaged across all subjects.
 
 ## Publication guidelines
 
