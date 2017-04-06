@@ -22,8 +22,8 @@ If the fMRI datasets have been preprocessed using NIAK, setting up the input fil
  % This option is useful when scrubbing is used, and the resulting time series may be too short.
  opt_g.min_nb_vol = 100;
 
- % Specify to the grabber to prepare the files for the region growing pipeline
- % opt_g.type_files = 'glm_connectome';
+ % Specify to the grabber to prepare the files for the connectome pipeline
+ opt_g.type_files = 'glm_connectome';
  files_in.fmri = niak_grab_fmri_preprocess('/home/pbellec/demo_niak_preproc/',opt_g).fmri;
 ```
 
