@@ -173,7 +173,8 @@ end
 
 %% build the image
 [tmp,idx] = histc(img(:),bins);
-idx(idx==0) = 1;
+idx(img<=bins(1)) = 1;
+idx(img>=bins(end)) = opt.nb_color;
 rgb = zeros([size(img),3]);
 rgb(:,:,1) = reshape(cm(idx(:),1),size(img));
 rgb(:,:,2) = reshape(cm(idx(:),2),size(img));
