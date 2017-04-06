@@ -11,6 +11,7 @@ where `files_in` is a structure describing how the dataset is organized, and `op
 ## Input files
 
 The inputs of the pipelines are:
+
   * **Fully preprocessed fMRI datasets**. This is typically the output of `niak_pipeline_fmri_preprocessing`, but the preprocessing can be done with any package.
   * **A mask of brain regions/networks**. This can be for example the AAL template (see notes below), or the result of a boostrap analysis of stable clusters (BASC). Any mask can be used here.
   * **A list of coordinates of interest** (or numerical value corresponding to regions of the mask), along with string labels. This list is specified through a `.csv` file (which can be generated with a text editor or an excel-like program).
@@ -64,6 +65,7 @@ In this case, the index refers to the number associated with one parcel. The lab
 # Overview of the pipeline
 
 The main steps of the `connectome` pipeline are the following:
+
   * Generate the average fMRI time series for each network in the mask.
   * Generate a connectome for each subject. Multiple measures are available (covariance, correlation, Fisher transform of the correlation, concentration, partial correlation). If multiple runs are available for one subject, the connectomes are averaged across runs.
   * Binarize the connectome, either by applying a fixed threshold on positive or absolute connectivity measures, or by retaining a fixed percentage of the largest connections.
@@ -111,6 +113,7 @@ The pipeline execution is powered by a generic manager called PSOM (Bellec et al
 ## Outputs
 
 The individual connectomes (averaged across runs) are saved in the files `connectomes/connectome_rois_(SUBJECT).mat` with the following variables:
+
   * `conn`: the vectorized individual connectome. See ''niak_build_srup'' for instructions on how to get back the square form (the method depends on the type of the connectome).
   * `G`: same as `conn` but binarized.
   * `ind_roi`: a vector with the indices of the parcels. This defines the order of rows/columns in the connectome.
@@ -124,7 +127,8 @@ The individual graph properties are saved in the files `graph_prop/graph_prop_ro
   * `(MEASURE).(PARCEL).val`: the value estimated for the measure.
 
 The functional connectivity maps are saved in the folder `rmaps`:
-  * `rmaps/rmap_(SUBJECT)_(PARCEL).(EXT)`: the voxelwise connectivity map using `PARCEL` as a seed (labels are defined in `files_in.seeds`).
+
+* `rmaps/rmap_(SUBJECT)_(PARCEL).(EXT)`: the voxelwise connectivity map using `PARCEL` as a seed (labels are defined in `files_in.seeds`).
   * `rmaps/mask_(PARCEL).(EXT)`: a binary volume of the seed associated with the label `PARCEL`.
   * `rmaps/average_rmap_(PARCEL).(EXT)`: the connectivity map using `PARCEL` as seed, averaged across all subjects.
 
