@@ -11,9 +11,9 @@ where `files_in` is a structure describing how the dataset is organized, and `op
 ## Input files
 
 The inputs of the pipelines are:
- * The pipeline requires fully preprocessed fMRI datasets. This is typically the output of `niak_pipeline_fmri_preprocessing`, but the preprocessing can be done with any package.
- * A mask of brain regions/networks. This can be for example the AAL template (see notes below), or the result of a boostrap analysis of stable clusters (BASC). Any mask can be used here.
- * A list of coordinates of interest (or numerical value corresponding to regions of the mask), along with string labels. This list is specified through a `.csv` file (which can be generated with a text editor or an excel-like program).
+  * **Fully preprocessed fMRI datasets**. This is typically the output of `niak_pipeline_fmri_preprocessing`, but the preprocessing can be done with any package.
+  * **A mask of brain regions/networks**. This can be for example the AAL template (see notes below), or the result of a boostrap analysis of stable clusters (BASC). Any mask can be used here.
+  * **A list of coordinates of interest** (or numerical value corresponding to regions of the mask), along with string labels. This list is specified through a `.csv` file (which can be generated with a text editor or an excel-like program).
 
 If the fMRI datasets have been preprocessed using NIAK, setting up the input files is very easy. Just grab the results of the preprocessing with the following command:
 ```matlab
