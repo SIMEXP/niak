@@ -56,8 +56,8 @@ if nargin < 3
 end    
 
 opt = psom_struct_defaults ( opt , ...
-    { 'color_background' , 'color_font' , 'class_viewer' , 'overlay' , 'class' , 'background' , 'colormap' , 'labels' , 'flag_test' }, ...
-    { '#000000'          , '#FFFFFF'    , 'col-sm-6'     , NaN       , NaN     , NaN          , NaN        , NaN      , false         });
+    { 'color_background' , 'color_font' , 'class_viewer' , 'overlay' , 'background' , 'colormap' , 'labels' , 'flag_test' }, ...
+    { '#000000'          , '#FFFFFF'    , 'col-sm-6'     , NaN       , NaN          , NaN        , NaN      , false         });
 
 if opt.flag_test 
     return
