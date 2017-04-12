@@ -470,6 +470,7 @@ else
     y_x_c.c = model_group.c; 
     [results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
     beta =  results.beta; 
+    f2 =  results.f2;
     
     %% Run White's test of heteroscedasticity
     model_white.y = model_group.y;
@@ -573,8 +574,8 @@ end
 %% Save results in mat form
 if ~strcmp(files_out.results,'gb_niak_omitted')
     if flag_multisite 
-        save(files_out.results,'flag_multisite','type_measure','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','multisite')
+        save(files_out.results,'flag_multisite','type_measure','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','multisite','f2')
     else 
-        save(files_out.results,'flag_multisite','type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
+        save(files_out.results,'flag_multisite','type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','f2')
     end
 end

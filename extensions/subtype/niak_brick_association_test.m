@@ -3,7 +3,7 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 % weights and variables of interest
 %
 % SYNTAX: [FILE_IN,FILE_OUT,OPT] =
-% NIAK_BRICK_association_test(FILE_IN,FILE_OUT,OPT)
+% NIAK_BRICK_ASSOCIATION_TEST(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 %
 % INPUTS:

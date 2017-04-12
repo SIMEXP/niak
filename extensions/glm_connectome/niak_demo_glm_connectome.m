@@ -18,9 +18,9 @@ function [pipeline,opt_pipe,files_in] = niak_demo_glm_connectome(path_demo,opt)
 %
 % Copyright (c) Pierre Bellec, see license in the code.
 
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2013
+% University of Montreal, Qubec, Canada, 2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : connectome, GLM
@@ -78,14 +78,13 @@ files_du.fmri.subject1a.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1a.session2.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1b.session1.motor = files_in.fmri.subject1.session1.motor;
 files_du.fmri.subject1c.session1.motor = files_in.fmri.subject1.session1.motor;
-files_du.fmri.subject1d.session1.motor = files_in.fmri.subject1.session1.motor;
+files_du.fmri.subject1d.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2a.session2.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2b.session1.motor = files_in.fmri.subject2.session1.motor;
 files_du.fmri.subject2c.session1.motor = files_in.fmri.subject2.session1.motor;
-files_du.fmri.subject2d.session1.motor = files_in.fmri.subject2.session1.motor;
+files_du.fmri.subject2d.session1.motor = files_in.fmri.subject1.session1.motor;
 files_in = files_du;
-
 
 %% Now use the NIAK Cambridge s100 template twice 
 files_in.networks.cambridge100 = [GB_NIAK.path_niak 'template' filesep 'basc_cambridge_sc100.mnc.gz'];

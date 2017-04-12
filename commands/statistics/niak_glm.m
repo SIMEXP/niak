@@ -162,8 +162,11 @@ beta = (x'*x)\x'*y;   % Regression coefficient
 e = y-x*beta;           % Residuals
 s = sum(e.^2,1); % Estimate of the residual sum-of-square of the full model
 SSt = sum((y-repmat(mean(y,1),[size(y,1) 1])).^2,1); % Total sum-of-squares (without the mean...)
-    
-if isfield(opt,'test')
+
+results = struct();
+s0 = sum(y.^2,1); 
+
+if isfield(opt,'test') && ~strcmp(opt.test,'none')
     c = model.c(:);
     x0 = x(:,~model.c); % restricted model
     p0 = size(x0,2);
@@ -171,8 +174,6 @@ if isfield(opt,'test')
         beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
         e0 = y-x0*beta0;             % Residuals (restricted model)
         s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
-    else
-        s0 = sum(y.^2,1); 
     end
                 
     switch opt.test
@@ -206,12 +207,7 @@ if isfield(opt,'test')
             results.ftest     = ((s0-s)/(K-p0))./(s/(N-K)); % F-Test
             results.pce       = 1-fcdf(results.ftest,K-p0,N-K); % p-value
             results.degfree = [K-p0,N-K]; % degrees of freedom
-            
-        case 'none'
-            
-            % Do nothing
-            results = struct();
-            
+                        
         otherwise,
             error('This test is not supported');
     end
