@@ -8,11 +8,7 @@ Before running the following tutorials, NIAK needs to be properly installed. All
 
 # BASC
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_basc_principles.png" height="200px" />](https://nbviewer.jupyter.org/github/simexp/niak_tutorials/blob/master/niak_tutorial_basc_principles.ipynb)
-
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_region_growing.png" height="200px" />](niak_tutorial_region_growing.html)
-
-# BASC FIR
- * [Bootstrap Analysis of Stable Clusters using FIR](niak_tutorial_basc_fir.html)
 
 # Miscellaneous
  * [How to test NIAK](niak_tutorial_test.html)
