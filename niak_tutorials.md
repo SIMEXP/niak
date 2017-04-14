@@ -3,7 +3,6 @@ Before running the following tutorials, NIAK needs to be properly installed. All
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_fmri_preprocess.png" height="200px" />](https://nbviewer.jupyter.org/github/SIMEXP/niak_tutorials/blob/master/niak_tutorial_fmri_preprocessing.ipynb)
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_rmap.png" height="200px" />](https://nbviewer.jupyter.org/github/SIMEXP/niak_tutorials/blob/master/niak_tutorial_rmap_connectome.ipynb)
 [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_basc_principles.png" height="200px" />](https://nbviewer.jupyter.org/github/simexp/niak_tutorials/blob/master/niak_tutorial_basc_principles.ipynb)
-[<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_region_growing.png" height="200px" />](niak_tutorial_region_growing.html)
 
 # Miscellaneous
  * [How to test NIAK](niak_tutorial_test.html)
