@@ -8,7 +8,7 @@ The bootstrap analysis of stable clusters (BASC) is a pipeline that builds brain
 
 # [Connectome](pipe_connectome.html)
 This pipeline takes preprocessed fMRI data as well as a brain parcellation, and generates functional connectivity maps, connectome (with various connectivity measures) as well as graph properties. 
-> [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/logo_connectome.jpg" width="250px" />](pipe_connectome.html) 
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/logo_connectome.jpg" width="250px" />](pipe_connectome.html) 
 
 # [GLM-connectome](pipe_glm_connectome.html)
 The general liner model for connectome (GLM-connectome) pipeline tests for association between group-level variable and brain connectivity systematically at each brain connection. It is possible to extract various connectivity metrics at the intra-run and inter-run/intra-subject levels, before entering a random effect group analysis. The GLM estimation can be replicated at multiple resolutions, i.e. number of brain parcels, and an omnibus test of the overall presence of true association across resolutions is available. 
