@@ -111,7 +111,7 @@ function [results,opt] = niak_glm(model,opt)
 %
 %
 % On the definition of the "local" variant of Cohen's f2 effect size (see Eq 2):
-%   Selya et al. A Practical Guide to Calculating Cohen’s f2, a Measure of Local 
+%   Selya et al. A Practical Guide to Calculating Cohens f2, a Measure of Local 
 %   Effect Size, from PROC MIXED. Front Psychol. 2012; 3: 111.
 %   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3328081/
 %
@@ -119,7 +119,7 @@ function [results,opt] = niak_glm(model,opt)
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Christian L. Dansereau, 
-% Centre de recherche de l'Institut universitaire de gériatrie de Montréal, 2012.
+% Centre de recherche de l'Institut universitaire de griatrie de Montral, 2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : Statistics, General Linear Model, t-test, f-test
@@ -214,10 +214,15 @@ if isfield(opt,'test') && ~strcmp(opt.test,'none')
 end
 
 %% flags
-if ~strcmp(opt.test,'none')&&~(strcmp(opt.test,'ttest')&&(sum(model.c)>1))
-    % (RAB-RA)/(1-RAB) = (s0./SSt-s./SSt)./(s./SSt)
-    %                               = (s0-s)./s
-    results.f2 = (s0-s)./s;
+if ~strcmp(opt.test,'none')&&~(strcmp(opt.test,'ttest')&&(sum(model.c~=0)>1))
+    % (RAB^2-RA^2)/(1-RAB^2) 
+    if p0 > 0 
+        SSAB = sum((x*beta).^2);
+        SSA = sum((x0*beta0).^2);
+        results.f2 = (SSAB-SSA)./s;
+    else
+        results.f2 = NaN;
+    end
 else
     results.f2 = repmat(NaN,size(s));
 end
