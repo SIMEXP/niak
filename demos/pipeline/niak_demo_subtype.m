@@ -54,9 +54,9 @@ function [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_demo,opt)
 %
 % _________________________________________________________________________
 % Copyright (c) Pierre Bellec, Sebastian Urchs, Angela Tam
-% Centre de recherche de l'institut de gériatrie de Montréal, 
+% Centre de recherche de l'institut de griatrie de Montral, 
 % Department of Computer Science and Operations Research
-% University of Montreal, Québec, Canada, 2013
+% University of Montreal, Qubec, Canada, 2013
 % Maintainer : sebastian.urchs@mail.mcgill.ca
 % See licensing information in the code.
 % Keywords : subtyping, fMRI
@@ -108,11 +108,11 @@ files_du = struct();
 files_du.data.subject1a_session1_motor = files_in.data.subject1_session1_motor;
 files_du.data.subject1b_session1_motor = files_in.data.subject1_session1_motor;
 files_du.data.subject1c_session1_motor = files_in.data.subject1_session1_motor;
-files_du.data.subject1d_session1_motor = files_in.data.subject1_session1_motor;
+files_du.data.subject1d_session1_motor = files_in.data.subject2_session1_motor;
 files_du.data.subject2a_session1_motor = files_in.data.subject2_session1_motor;
 files_du.data.subject2b_session1_motor = files_in.data.subject2_session1_motor;
 files_du.data.subject2c_session1_motor = files_in.data.subject2_session1_motor;
-files_du.data.subject2d_session1_motor = files_in.data.subject2_session1_motor;
+files_du.data.subject2d_session1_motor = files_in.data.subject1_session1_motor;
 files_in.data = files_du.data;
 
 %% Options for the subtyping pipeline
