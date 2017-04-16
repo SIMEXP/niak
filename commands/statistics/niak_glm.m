@@ -174,6 +174,8 @@ if isfield(opt,'test') && ~strcmp(opt.test,'none')
         beta0 = (x0'*x0)^(-1)*x0'*y; % Regression coefficients (restricted model)
         e0 = y-x0*beta0;             % Residuals (restricted model)
         s0 = sum(e0.^2,1); % Estimate of the residual sum-of-square of the restricted model
+    else 
+        s0 = sum(y.^2,1);
     end
                 
     switch opt.test
@@ -216,13 +218,13 @@ end
 %% flags
 if ~strcmp(opt.test,'none')&&~(strcmp(opt.test,'ttest')&&(sum(model.c~=0)>1))
     % (RAB^2-RA^2)/(1-RAB^2) 
+    SSAB = sum((x*beta).^2);
     if p0 > 0 
-        SSAB = sum((x*beta).^2);
         SSA = sum((x0*beta0).^2);
-        results.f2 = (SSAB-SSA)./s;
     else
-        results.f2 = NaN;
+        SSA = zeros(size(SSAB));
     end
+    results.f2 = (SSAB-SSA)./s;
 else
     results.f2 = repmat(NaN,size(s));
 end
