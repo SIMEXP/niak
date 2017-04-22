@@ -303,11 +303,7 @@ for num_f = 1:length(files_in.fmri)
             results.time_frames = (0:(size(vol,4)-1))*hdr.info.tr;
             results.time_frames = results.time_frames(1:size(vol,4)); % An apparently useless line to get rid of a really weird bug in Octave
         end
-        if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_suppressed')
-            results.mask_suppressed = hdr.extra.mask_suppressed | results.mask_scrubbing;
-        else
-            results.mask_suppressed = results.mask_scrubbing;
-        end
+        results.mask_suppressed = results.mask_scrubbing;
         
         % Extract confounds
         if isfield(hdr,'extra')&&isfield(hdr.extra,'confounds')
