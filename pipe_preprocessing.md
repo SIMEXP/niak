@@ -1,7 +1,7 @@
 # fMRI preprocessing
 
 ## Overview
-Before any statistical or pattern recognition model is applied on fMRI data, a number of preprocessing steps need to be applied. These steps first aim at reducing various artefacts that compromise the interpretation of fMRI fluctuations, e.g. physiological and motion artefacts. The second major aim is to align the data acquired at different points in time for a single subject, sometimes separated by years, and also to establish some correspondance between the brains of different subjects, such that an inference on the role of a given brain area can be carried at the level of a group. This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI: (1) Slice timing correction; (2) Estimation of rigid-body motion in fMRI runs, both within- and between sessions; (3) Linear or non-linear coregistration of the structural scan in stereotaxic space; (4) Individual coregistration between structural and functional scans; (5) Resampling of functional scans in stereotaxic space; (6) Scrubbing; (7) regression of confounds (average of white matter and CSF, motion parameters, COMPCOR); (8) ICA-based correction of structured noise (CORSICA); (9) Spatial smooting.
+Before any statistical or pattern recognition model is applied on fMRI data, a number of preprocessing steps need to be applied. These steps first aim at reducing various artefacts that compromise the interpretation of fMRI fluctuations, e.g. physiological and motion artefacts. The second major aim is to align the data acquired at different points in time for a single subject, sometimes separated by years, and also to establish some correspondance between the brains of different subjects, such that an inference on the role of a given brain area can be carried at the level of a group. This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI: (1) Slice timing correction; (2) Estimation of rigid-body motion in fMRI runs, both within- and between sessions; (3) Linear or non-linear coregistration of the structural scan in stereotaxic space; (4) Individual coregistration between structural and functional scans; (5) Resampling of functional scans in stereotaxic space; (6) Scrubbing; (7) regression of confounds (average of white matter and CSF, motion parameters, COMPCOR); (8) Spatial smooting.
 >![The fMRI preprocessing workflow](https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_flowchart_fmri_preprocess.jpg)
 
 ## Syntax
@@ -189,25 +189,6 @@ opt.time_filter.lp = Inf;
 **White matter & ventricular signals** The masks of the ventricle and the white matter have been built to be very conservative. This is to avoid getting influenced by the surrounding grey matter tissue maps (see Saad et al. 2012, reference below), in which case the average of the white matter mask becomes highly correlated with the global average.
 
 **Global signal** The global average estimator is not the traditional estimator, but rather the estimator based on a principal component analysis as described in (Carbonell et al. 2012, reference below). This estimator alleviates some of the theoretical limitations of the classical estimator, as reported by Murphy et al., 2010 (reference below). However, as this correction may introduce some bias in the group comparison (Saad et al. 2012), the regression of the global average is turned off by default.
-
-## CORSICA
-
-The method of correction of structured (physiological and motion-related) noise based on component selection in independent component analysis (CORSICA) is implemented in [niak_pipeline_corsica](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_corsica.m). After some extensive evaluation, our current conclusion is that the CORSICA selection is not stable enough to be used in a completely unsupervised way. This step is thus skipped by default. Note that the ICA and selection of noise components is still generated for quality control, but no components are removed from the data. The option of this subpipeline can be changed using `opt.corsica`. The steps of the pipeline are the following&nbsp;:
-
- * Generation of spatial priors on the noise, i.e. masks of the ventricle and a part of the brain stem in individual native functional space ([niak_brick_mask_corsica](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_mask_corsica.m))
- * Individual spatial independent component analysis of each functional run ([niak_brick_sica](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_sica.m)).
- * Selection of independent component related to physiological noise, using spatial priors ([niak_brick_component_sel](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_component_sel.m)).
- * Generation of a "physiological noise corrected" fMRI dataset for each run, where the effect of the selected independent components has been removed ([niak_brick_component_supp](https://github.com/SIMEXP/niak/blob/master/bricks/sica/niak_brick_component_supp.m)).
-
-A complete list of options can be found in the help of [niak_pipeline_corsica](https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_corsica.m). The following example illustrates the most useful (or simply necessary) options.
-```matlab
-% Number of ICA components  
-opt.corsica.sica.nb_comp = 60;
-% Threshold to select noise-related compoenents (between 0 and 1).
-opt.corsica.threshold = 0.15;
-% Skip CORSICA (0: don't skip, 1: skip)
-opt.corsica.flag_skip = 0;
-```
 
 ## Spatial smoothing
 The application of spatial smoothing has the potental to slightly increase the signal-to-noise ratio, and also mitigate the impact of misregistration between functional areas, that were not perfectly aligned across subjects by the non-linear coregistration in stereotaxic space.
