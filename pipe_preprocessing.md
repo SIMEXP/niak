@@ -24,8 +24,7 @@ files_in.subject1.fmri.session1.motor = ...
 files_in.subject1.fmri.session1.rest = ...
    '/home/pbellec/demo_niak/func_rest_subject1.mnc';  
 ```
-Labels for subjects, sessions and runs are arbitrary, however Octave and Matlab impose some restrictions. Please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including '.' '+' '-' or '_'.
->None of these restrictions apply on the naming convention of the raw files, just to the labels that are used to build the structure files_in in Matlab/Octave.
+Labels for subjects, sessions and runs are arbitrary. To use special characters, for example a `-`,  write `files_in.('subject-1')` instead of `files_in.subject-1`. 
 
 ## General options
 
