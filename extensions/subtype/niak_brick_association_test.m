@@ -244,6 +244,11 @@ if opt.flag_verbose
 end
 [model_data, labels_x, labels_y] = niak_read_csv(files_in.model);
 
+% Store the model in the internal structure
+model_raw.x = model_data;
+model_raw.labels_x = labels_x;
+model_raw.labels_y = labels_y;
+
 % Read the weight data
 if opt.flag_verbose
     fprintf('Reading the weight data ...\n');
@@ -285,7 +290,7 @@ for net_id = 1:opt.scale
     % Fit the model
     opt_glm = struct;
     opt_glm.test  = 'ttest';
-    opt_glm.flag_beta = true; 
+    opt_glm.flag_beta = true;
     opt_glm.flag_residuals = true;
     opt_glm.flag_rsquare = true;
     [results, ~] = niak_glm(model_norm, opt_glm);
@@ -294,7 +299,10 @@ for net_id = 1:opt.scale
 end
 
 % Run FDR on the p-values
-[fdr,fdr_test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
+[fdr_vec,fdr_test_vec] = niak_fdr(pvals(:), opt.type_fdr, opt.fdr);
+% Reshape FDR results to network by subtype array
+fdr = reshape(fdr_vec, n_net, n_sbt);
+fdr_test = reshape(fdr_test_vec, n_net, n_sbt);
 
 % Save the model and FDR test
 if ~strcmp(files_out.stats, 'gb_niak_omitted')
