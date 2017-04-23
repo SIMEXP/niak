@@ -279,9 +279,9 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 % for future implementation. 
 %
 % Copyright (c) Pierre Bellec, Jalloul Bouchkara
-%               Centre de recherche de l'institut de Gériatrie de Montréal
-%               Département d'informatique et de recherche opérationnelle
-%               Université de Montréal, 2012-2013
+%               Centre de recherche de l'institut de Griatrie de Montral
+%               Dpartement d'informatique et de recherche oprationnelle
+%               Universit de Montral, 2012-2013
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : pipeline, GLM, fMRI, connectome, PPI.
@@ -395,7 +395,9 @@ for nn = 1:length(list_network)
         job_out.results = [folder_out network filesep test filesep 'glm_' test '_' network '.mat' ];
         if opt.flag_maps
             job_out.ttest          = [folder_out network filesep test filesep 'ttest_'     test '_' network ext_f  ];
-            job_out.fdr            = [folder_out network filesep test filesep 'fdr_'       test '_' network ext_f  ];
+            job_out.fdr            = [folder_out network filesep test filesep 'ttest_fdr_' test '_' network ext_f  ];
+            job_out.f2             = [folder_out network filesep test filesep 'f2_'        test '_' network ext_f  ];
+            job_out.f2_fdr         = [folder_out network filesep test filesep 'f2_fdr_'    test '_' network ext_f  ];
             job_out.effect         = [folder_out network filesep test filesep 'effect_'    test '_' network ext_f  ];
             job_out.std_effect     = [folder_out network filesep test filesep 'std_'       test '_' network ext_f  ];
             job_out.perc_discovery = [folder_out network filesep test filesep 'perc_disc_' test '_' network ext_f  ];

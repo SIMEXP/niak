@@ -105,19 +105,11 @@ precision = hdr.info.precision;
 
 hdr.info.dimensions = size(vol);
 
-if ~isfield(hdr.details,'dim')
-    hdr.details.dim = [ndims(vol) ones(1,4) 1 0 0];    
-end
-if ndims(vol)==2
-    hdr.details.dim(2:3) = size(vol); 
-    hdr.details.dim(4:5) = 1;
-elseif ndims(vol)==3    
-    hdr.details.dim(2:4) = size(vol);    
-    hdr.details.dim(5) = 1;
-elseif ndims(vol)==4
-    hdr.details.dim(2:5) = size(vol);       
+hdr.details.dim = [ndims(vol) ones(1,5) 0 0];  
+if ndims(vol)<=4
+    hdr.details.dim(2:(1+ndims(vol))) = size(vol);
 else
-    error('VOL need to be a 3D or 4D array!');
+    error('VOL need to be have less than 4D!');
 end
 
 hdr.descrip = hdr.info.history;

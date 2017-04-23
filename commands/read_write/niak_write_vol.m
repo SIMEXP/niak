@@ -286,6 +286,7 @@ elseif ischar(file_name)
         else
             flag_zip = false;
         end
+        
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 niak_write_minc(hdr,vol);
