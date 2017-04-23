@@ -2,7 +2,7 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 % Create network, mean and std stack 4D maps from individual functional maps
 %
 % SYNTAX:
-% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_network_stack(FILE_IN,FILE_OUT,OPT)
+% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_NETWORK_STACK(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 %
 % INPUTS:
