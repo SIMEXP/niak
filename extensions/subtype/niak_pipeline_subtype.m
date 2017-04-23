@@ -1,5 +1,5 @@
 function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
-% Estimation of surface space cluster stability
+% Estimation of subtypes based on a collection of brain maps
 %
 % SYNTAX:
 % [PIPELINE,OPT] = NIAK_PIPELINE_SUBTYPE(IN,OPT)
@@ -35,11 +35,6 @@ function [pipe,opt] = niak_pipeline_subtype(files_in,opt)
 %
 %   FOLDER_OUT
 %       (string) this specifies the root path where outputs are generated
-%
-%   SCALE
-%       (integer) this specifies the scale of the networks specified in
-%       FILES_IN.DATA. E.g. a brain partition of 5 networks is considered
-%       to be at scale 5.
 %
 %   STACK
 %       (struct, optional) with the following fields:
@@ -385,8 +380,8 @@ if ~isempty(opt.chi2)
         % Set the network folder
         chi2_opt.folder_out = network_folder;
         chi2_out = struct;
-        chi2_out.stats = [network_folder filesep sprintf('network_%d_group_stats.mat', net_id)];
-        chi2_out.contab = [network_folder filesep sprintf('network_%d_chi2_contingency_table.csv', net_id)];
+        chi2_out.stats = [network_folder filesep sprintf('%s_group_stats.mat', list_net{net_id})];
+        chi2_out.contab = [network_folder filesep sprintf('%s_chi2_contingency_table.csv', list_net{net_id})];
         % Check if external subtypes have been supplied
         if ~ext_sbt
             chi2_in.subtype = pipe.(sub_name).files_out.subtype;
@@ -395,7 +390,7 @@ if ~isempty(opt.chi2)
             chi2_opt.flag_weights = true;
             chi2_in.weights = weight_out.weights;
         end
-        chi2_name = sprintf('chi2_network_%d', net_id);
+        chi2_name = sprintf('chi2_%s', list_net{net_id});
         pipe = psom_add_job(pipe, chi2_name, 'niak_brick_chi_cramer',...
             chi2_in, chi2_out, chi2_opt);
     end
