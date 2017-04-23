@@ -24,13 +24,19 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 %   (structure) structure with the following fields:
 %
 %   WEIGHTS
-%       (string, default 'subtype_weights.mat') path to ...
-%
+%       (string, default 'subtype_weights.mat') a .mat file with two variables.
+%       WEIGHT_MAT  (#subjects x #subtype x #networks) the subtype weights
+%       LIST_SUBJECT (#subjects x 1 cell array of strings) the subject
+%           labels for each row of WEIGHT_MAT. 
+%       LIST_NETWORK (#networks x 1 cell array of strings) the labels of each 
+%           network in the third dimension of WEIGHT_MAT
 %   WEIGHTS_CSV
-%       (cell array, default 'sbt_weights_net_<NETWORK>.csv') path to ...
+%       (cell array, default 'sbt_weights_net_<NETWORK>.csv') a csv version of
+%       the weight matrix. 
 %
 %   WEIGHTS_PDF
-%       (cell array, default 'fig_sbt_weights_net_<NETWORK>.pdf') path to ...
+%       (cell array, default 'fig_sbt_weights_net_<NETWORK>.pdf') a pdf figure
+%       representing the weight matrix. 
 %
 % OPT
 %   (structure) with the following fields:
@@ -69,9 +75,9 @@ function [files_in,files_out,opt] = niak_brick_subtype_weight(files_in, files_ou
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec, Sebastian Urchs
-% Centre de recherche de l'institut de Gériatrie de Montréal, 
-% Département d'informatique et de recherche opérationnelle, 
-% Université de Montréal, 2010-2016.
+% Centre de recherche de l'institut de Griatrie de Montral, 
+% Dpartement d'informatique et de recherche oprationnelle, 
+% Universit de Montral, 2010-2016.
 % Maintainer : sebastian.urchs@mail.mcgill.ca
 % See licensing information in the code.
 % Keywords : subtype, weights, clustering
@@ -141,19 +147,21 @@ end
 
 %% Brick begins here
 % Get the set of networks
-networks = fieldnames(files_in.data);
+list_network = fieldnames(files_in.data);
 % Get the number of networks
-n_networks = length(networks);
+n_networks = length(list_network);
 % Set up the weight matrix with empty dimensions since we don't yet know
 % how many subjects to expect
 weight_mat = [];
 
 % Iterate over the networks and extract the weights
 for net_id = 1:n_networks
-    network = networks{net_id};
+    network = list_network{net_id};
     % Get the network stack data
     tmp_data = load(files_in.data.(network));
     data = tmp_data.stack;
+    list_subject = tmp_data.provenance.subjects(:,1);
+    
     % Get the network subtype maps (i.e. for each subtype one)
     tmp_sbt = load(files_in.subtype.(network));
     sbt = tmp_sbt.sub.map;
@@ -171,18 +179,16 @@ for net_id = 1:n_networks
 end
 
 % Save the weight matrix
-save(files_out.weights, 'weight_mat');
+save(files_out.weights, 'weight_mat','list_subject','list_network');
 
 %% Write the weight matrix for each network as a csv
 
 for net_id = 1:n_networks
-    network = networks{net_id};
-    % Get the subject list
-    tmp_list_sub = load(files_in.data.(network));
-    list_sub = tmp_list_sub.provenance.subjects(:,1);
+    network = list_network{net_id};
+
     % Retrieve the correct weight matrix
     net_weight = weight_mat(:, :, net_id);
-    file_name = files_out.weights_csv{net_id, 1};
+    file_name = files_out.weights_csv{net_id};
     % Labels for the csv
     name_clus = {}; % empty cell array for cluster lables because we don't know how many subtypes there are yet
     tmp_sbt = load(files_in.subtype.(network));
@@ -192,14 +198,14 @@ for net_id = 1:n_networks
         name_clus{cc} = ['sub' num2str(cc)]; % store the subtype labels
     end
     opt_w.labels_y = name_clus;
-    opt_w.labels_x = list_sub;
+    opt_w.labels_x = list_subject;
     opt_w.precision = 3;
     niak_write_csv(file_name, net_weight, opt_w); % Write the csv
 end
 
 %% Visualize the weight matrix for each network as a pdf
 for net_id = 1:n_networks
-    network = networks{net_id};
+    network = list_network{net_id};
     
     if opt.flag_external
         % if external subtypes are supplied, generate a new partition to get the subject order
@@ -227,7 +233,7 @@ for net_id = 1:n_networks
     ax = gca;
     set(ax, 'XTick', 1:n_sbt, 'YTick', []);
     xlabel('Subtypes');
-    file_name = files_out.weights_pdf{net_id, 1};
+    file_name = files_out.weights_pdf{net_id};
     print(fig, file_name, '-dpdf');
 end
 

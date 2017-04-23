@@ -173,7 +173,7 @@ switch opt.format
     case 'mnc1'
         ext_t = '.mnc.gz';
     otherwise
-        error('%s is an unkown file format')
+        error('%s is not supported')
 end
 
 path_test_fp.demoniak  = path_test.demoniak;
@@ -276,29 +276,16 @@ else
 end
 
 % Bring paths to the structure expected for the subtype pipeline
-fsub = fieldnames(files_all.fmri.vol);
-files_sbt = struct;
-for sub_id = 1:numel(fsub)
-    sub = fsub{sub_id};
-    fses = fieldnames(files_all.fmri.vol.(sub));
-    for ses_id = 1:numel(fses)
-        ses = fses{ses_id};
-        frun = fieldnames(files_all.fmri.vol.(sub).(ses));
-        for run_id = 1:numel(frun)
-            run = frun{run_id};
-            sname = [sub '_' ses '_' run];
-            files_sbt.data.(sname) = files_all.fmri.vol.(sub).(ses).(run);
-        end
-    end
-end
-files_sbt.mask = files_all.quality_control.group_coregistration.func.mask_group;
-files_sbt.model = [GB_NIAK.path_niak 'demos' filesep 'data' filesep 'demoniak_model_group.csv'];
 opt_subtype = struct;
+opt_subtype.ext = ext_t;
 opt_subtype.flag_test = true;
 opt_subtype.flag_target = opt.flag_target;
-opt_subtype.files_in = files_sbt;
 
-path_test_sbt.demoniak  = 'gb_niak_omitted'; % The input files are fed directly through opt_pipe.files_in above
+if opt.flag_target
+    path_test_sbt.connectome  = [path_test.target 'demoniak_connectome']; 
+else
+    path_test_sbt.connectome  = [path_test.result 'demoniak_connectome']; 
+end
 path_test_sbt.reference = [path_test.target 'demoniak_subtype'];
 path_test_sbt.result    = path_test.result;
 pipe = psom_merge_pipeline(pipe,niak_test_subtype_demoniak(path_test_sbt,opt_subtype),'sbt_');
