@@ -282,9 +282,9 @@ opt_subtype.flag_test = true;
 opt_subtype.flag_target = opt.flag_target;
 
 if opt.flag_target
-    path_test_sbt.connectome  = [path_test.target 'demoniak_connectome']; 
+    path_test_sbt.connectome  = [path_test.result 'demoniak_connectome'];
 else
-    path_test_sbt.connectome  = [path_test.result 'demoniak_connectome']; 
+    path_test_sbt.connectome  = [path_test.target 'demoniak_connectome'];
 end
 path_test_sbt.reference = [path_test.target 'demoniak_subtype'];
 path_test_sbt.result    = path_test.result;
