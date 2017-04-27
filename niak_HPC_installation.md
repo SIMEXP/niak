@@ -5,7 +5,7 @@ First you need to ask your system administrator to install [Singularity](http://
 
 The administrator decides in the installation which part of the HPC file system will be accessible to users in the Singularity containers, make sure that the partition where your data lives is include in the "bind path".
 
-Once Singularity is installed, running NIAK is straight forward. Download NIAK by clicking in niak_singularity.tgz in the latest [release from the NIAK github page]((https://github.com/SIMEXP/niak/releases/latest). Decompress the tar ball on your computer:
+Once Singularity is installed, running NIAK is straight forward. Download NIAK by clicking in niak_singularity.tgz in the latest [release from the NIAK github page](https://github.com/SIMEXP/niak/releases/latest). Decompress the tar ball on your computer:
 
 ```
 tar -zxvf niak_singularity.tgz
