@@ -19,8 +19,11 @@ The inputs of the pipelines are:
 * A series of .csv models, which can be specified at different levels: intra-run, inter-run intra-subject, inter-subject.
 
 ## Brain parcellations
-There are several options here. We recommend using a single brain parcellation for the main analysis of the paper, and then tests how robust these findings are using other parcellations, possibly using different resolutions. Based on a number of analyses, we recommend using 30-40 parcels for the main analysis, and complement these results with at least 100 parcels.
 
+### General considerations
+There are several options here. We recommend using a single brain parcellation for the main analysis of the paper, and then tests how robust these findings are using other parcellations, possibly using different resolutions. Based on a number of experiments, we recommend using 30-40 parcels for the main analysis, and complement these results with at least 100 parcels. We found that the sensitivity of analyses with 30-40 parcels to be good, while also providing a good summary of connectome-wide association studies performed at much higher resolutions.
+
+### The multiresolution Cambridge functional parcellation
 A first option is to use an existing multi-resolution brain parcellation, for example the BASC-Cambridge generated on about 200 young healthy subjects. Downloading the template in the current folder is achieved using the following instruction:
 ```
 [status,msg,data_template] = niak_wget('cambridge_template_mnc1');
