@@ -128,8 +128,8 @@ if ~exist('in','var')||~exist('out','var')
 end
 
 %% Options
-list_fields   = { 'flag_ignore_format' , 'base_source' , 'base_target' , 'black_list_source' , 'black_list_target' , 'flag_source_only' , 'eps'   , 'flag_verbose' , 'flag_test' };
-list_defaults = { false                , NaN           , NaN           , {}                  , {}                  , false              , 10^(-4) , true           , false       };
+list_fields   = { 'exclude_files' , 'flag_ignore_format' , 'base_source' , 'base_target' , 'exclude_files' , 'black_list_source' , 'black_list_target' , 'flag_source_only' , 'eps'   , 'flag_verbose' , 'flag_test' };
+list_defaults = { {}              , false                , NaN           , NaN           , {}              , {}                  , {}                  , false              , 10^(-4) , true           , false       };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 
 if ~isempty(opt.base_source)
@@ -146,11 +146,11 @@ opt_m.flag_source_only = opt.flag_source_only;
 in = psom_struct_defaults(in,{'source','target'},{{},{}});
 
 if isempty(in.source)
-    in.source = niak_grab_folder(opt.base_source,opt.black_list_source);
+    in.source = niak_grab_folder(opt.base_source,opt.black_list_source,exclude_files);
 end
 
 if isempty(in.target)
-    in.target = niak_grab_folder(opt.base_target,opt.black_list_target);
+    in.target = niak_grab_folder(opt.base_target,opt.black_list_target,exclude_files);
 end
 
 if ~iscellstr(in.source)||~iscellstr(in.target)

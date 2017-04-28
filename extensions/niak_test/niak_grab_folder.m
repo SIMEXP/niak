@@ -1,8 +1,8 @@
- function files = niak_grab_folder(path_data,black_list)
+ function files = niak_grab_folder(path_data,black_list,exclude_files)
 % Grab all the files inside a folder (recursively)
 %
 % SYNTAX:
-% FILES = NIAK_GRAB_FOLDER(PATH_DATA,BLACK_LIST)
+% FILES = NIAK_GRAB_FOLDER(PATH_DATA,BLACK_LIST,EXCLUDE_FILES)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -75,6 +75,16 @@ for num_e = 1:length(black_list)
     if ~isdir(black_list{num_e})
         black_list_file{end+1} = regexprep(black_list{num_e},['(.*)' filesep],'$1') ;
     end
+else
+    black_list = {};
+end
+
+%% List of excluded files
+if (nargin < 3)
+    exclude_files = {};
+end
+if ischar(exclude_files)
+    exclude_files = {exclude_files};
 end
    
 %% List of folders
@@ -86,7 +96,7 @@ end
 files_loc = dir(path_data);
 is_dir = [files_loc.isdir];
 files_loc = {files_loc.name};
-mask = ~ismember(files_loc,{'.','..'});
+mask = ~ismember(files_loc,{'.','..'})&~ismember(files_loc,exclude_files);
 is_dir = is_dir(mask);
 files_loc = files_loc(mask);
 files_loc = strcat(repmat({path_data},size(files_loc)),files_loc);
