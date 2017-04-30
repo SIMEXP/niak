@@ -31,7 +31,7 @@ docker run -i -t --privileged --rm \
        -v /tmp/.X11-unix:/tmp/.X11-unix \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:0.17.0 \
+       simexp/niak-boss:0.19.1 \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
 You can also add the followin to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
@@ -45,12 +45,12 @@ docker run -i -t --privileged --rm \
        -v /tmp/.X11-unix:/tmp/.X11-unix \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:0.17.0 \
+       simexp/niak-boss:0.19.1 \
        /bin/bash -ic \"cd $HOME; octave --force-gui; /bin/bash\""
 
 ```
 
-Replace `simexp/niak-boss:0.17.0` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.17.0)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak-boss:0.19.1` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.19.1)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
@@ -67,7 +67,7 @@ This will start a bash terminal where you will be able to start the simex/niak d
 ```bash
 docker run -i -t --privileged --rm \
        -v $HOME:$HOME \
-       simexp/niak-boss:0.17.0 \
+       simexp/niak-boss:0.19.1 \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
@@ -82,7 +82,7 @@ After a succefull docker installation, niak can be controlled throught a Jypiter
 ```bash
 docker pull simexp/niak-boss:beta
 docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
-       -p 8080:8080 simexp/niak-boss:beta niak_jupyter
+       -p 8080:8080 simexp/niak-boss:0.19.1 niak_jupyter
 ```
 
 And then connect your favorite browser to the the [following address: localhost:8080](localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the niak outputs will be in the directory where you called the `docker run` command (that is $PWD).
