@@ -1,25 +1,18 @@
 # NIAK with docker
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Both set of instructions (docker and singularity) are provided below.
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and improves the repeatability of results across operating systems, including Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Instructions for singularity can be found in the section on [installation for high-performance computing](http://niak.simexp-lab.org/niak_HPC_installation.html).
 
  > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
 
 ### Linux
 The first step is to create a docker group and add the user that will use docker to that list.
-
 ```bash
 # If the group already exists, the command will return an error, just ignore it
 sudo groupadd docker
 # Then add user USERNAME to the docker group
 sudo usermod -a -G docker USERNAME
 ```
-
-For the docker group to become effective, you will need to either restart the system or type:
-``` bash
-sudo chgrp docker /run/docker.sock
-sudo chmod 660 /run/docker.sock
-```
-All the members of the docker group will have access to the docker service.
+All the members of the docker group will have access to the docker service. For the docker group to become effective, you will need to either unlog or restart your system. 
 
 The following command will start NIAK with your home directory accessible (the rest of the file system is not accessible):
 ```bash
@@ -50,13 +43,13 @@ docker run -i -t --privileged --rm \
 
 ```
 
-Replace `simexp/niak-boss:0.19.1` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.19.1)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak-boss:latest` by, for example, `simexp/niak-boss:0.19.1` to use a specific version (here 0.19.1). Note that the first execution will be longer, since the `simexp/niak-boss` image has to be downloaded from the internet. All subsequent call to the line will start niak immediately, and will be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
 ```
 
-The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora `>=` 20, OpenSuse `>=` 13.1 and we expect it to run smoothly on many other Linux distributions.
+The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora `>=` 20, OpenSuse `>=` 13.1 and we expect it to run smoothly on most Linux distributions.
 
 ### Mac OSX
 
