@@ -1,7 +1,8 @@
 # Installation
-The most straight forward way of installing NIAK on an HPC system is trough its [Singularity]( http://singularity.lbl.gov/) image. [Singularity]( http://singularity.lbl.gov/) is a Linux container system "designed around the notion of extreme mobility of compute and reproducible science".
+The most straight forward way of installing NIAK on an HPC (High Performance Computerr) system is trough its [Singularity]( http://singularity.lbl.gov/) image. [Singularity]( http://singularity.lbl.gov/) is a Linux container system "designed around the notion of extreme mobility of compute and reproducible science".
+This installation procedure can also be used on a simple desktop or laptop but we still recommend the [Docker installation](http://niak.simexp-lab.org/niak_installation.html) in this case.
 
-First you need to ask your system administrator to install [Singularity](http://singularity.lbl.gov/) on the HPC. We recommend [release](http://singularity.lbl.gov/all-release) 2.2 or higher.
+First you need to ask your system administrator to install [Singularity](http://singularity.lbl.gov/) on the system. We recommend [release](http://singularity.lbl.gov/all-release) 2.2 or higher.
 
 The administrator decides in the installation which part of the HPC file system will be accessible to users in the Singularity containers, make sure that the partition where your data lives is include in the "bind path".
 
@@ -31,6 +32,15 @@ gb_psom_qsub_options = '-A my-guillimin-group-id';.
 ```
 
 With this minimal configuration, you should be able to use the full power of your HPC!
+
+Note that you can also test the installation on multiple core on the local host by changing `psom_gb_vars_local.m` to
+```octave
+gb_psom_mode = 'background';
+%gb_psom_mode = 'session';
+%gb_psom_mode = 'singularity';
+```
+
+This would be the recommended mode for desktop/laptop install.
 
 ## More configurations
 The tar ball comes with a `psom.conf` file. This configuration can be stored in three places. In `/etc/psom.conf`, along with the `psom_console.sh` file (that is how it is shipped in the tar ball) or here: `${HOME}/.config/psom/psom.conf`. Note that the file are loaded in that order. So a user can overwrite the system `/etc/psom.conf` in ``${HOME}/.config/psom/psom.conf`. If you do not have root access to the system, a `psom.conf` file living in the `psom_console.sh` directory can act as a system wide config.
