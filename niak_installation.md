@@ -53,14 +53,14 @@ The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora 
 
 ### Mac OSX
 
-On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straight forward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
+On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straightforward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
 
-One docker is running, you to start a bash terminal and type
+Once docker has been started, you need to start a terminal and type
 
 ```bash
 bash
-docker run -it --privileged --rm \
+docker run -it --privileged --rm -v $HOME:$HOME \
        simexp/niak-boss:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
@@ -113,9 +113,6 @@ For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
 ```
 
 You can now start your favorite browser and go to the [following address: http://localhost:8080](http://localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD).
-
-# NIAK in Singularity
-Follow the [HPC Installation section](http://niak.simexp-lab.org/niak_HPC_installation.html)
 
 # Manual installation
 
