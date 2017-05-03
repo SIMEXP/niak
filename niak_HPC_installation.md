@@ -24,6 +24,7 @@ You are now ready to run our [tutorials](http://niak.simexp-lab.org/niak_tutoria
 By default the installation runs only on the host where it was installed and with only one core. To change that, open the `psom_gb_vars_local.m` with your favorite editor change `gb_psom_mode` from `session` to `singularity` mode:
 ```octave
 %gb_psom_mode = 'session';
+%gb_psom_mode = 'background';
 gb_psom_mode = 'singularity';
 ```
 Right now the `singularity` mode only works with system using the `qsub` command. Any options needed by your local HPC to run the qsub command can be added to `gb_psom_qsub_options`. For example, on compute Canada Guillmin HPC, ones need to state his group id in every qsub call. This requirement is met by adding the following in `psom_gb_vars_local.m`
@@ -33,11 +34,11 @@ gb_psom_qsub_options = '-A my-guillimin-group-id';.
 
 With this minimal configuration, you should be able to use the full power of your HPC!
 
-Note that you can also test the installation on multiple core on the local host by changing `psom_gb_vars_local.m` to
+Note that you can also test the installation on multiple core, on the local host by changing `psom_gb_vars_local.m` to
 ```octave
-gb_psom_mode = 'background';
 %gb_psom_mode = 'session';
-%gb_psom_mode = 'singularity';
+gb_psom_mode = 'background';
+%gb_psom_mode = 'singularity';.
 ```
 
 This would be the recommended mode for desktop/laptop install.

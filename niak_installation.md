@@ -28,13 +28,13 @@ docker run -i -t --privileged --rm \
        --name niak \
        -v $HOME:$HOME -v /etc/group:/etc/group \
        -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  \
-       -v /tmp/.X11-unix:/tmp/.X11-unix \
+       -v /tmp:/tmp \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
        simexp/niak-boss:latest \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
-You can also add the followin to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
+You can also add the following to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
 
 ```bash
 alias docker_run_niak="xhost +local: && docker stop niak && docker rm niak && \
@@ -42,7 +42,7 @@ docker run -i -t --privileged --rm \
        --name niak \
        -v $HOME:$HOME -v /etc/group:/etc/group \
        -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  \
-       -v /tmp/.X11-unix:/tmp/.X11-unix \
+       -v /tmp:/tmp \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
        simexp/niak-boss:latest \
@@ -56,17 +56,18 @@ docker stop niak
 docker rm niak
 ```
 
-The procedure as been tested on Debian 8.0, Ubuntu 14.10,15.10, 16.04, centOS 7 and fedora 20-23 and we expect it to run smootly on many other Linux distributions.
+The procedure as been tested on Debian 8.0, Ubuntu 14.10,15.10, 16.04, centOS 7 and fedora 20-23 and we expect it to run smoothly on many other Linux distributions.
 
 ### Mac OSX
 
-On more recent OSX distribution (> 10.10.3, or better > 10.11), Docker usage is straight forward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac).
+On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straight forward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
-You then need to start a bash terminal where you will be able to start the simex/niak docker container. Just type
+
+One docker is running, you to start a bash terminal and type
 
 ```bash
 bash
-docker run -i -t --privileged --rm \
+docker run -it --privileged --rm \
        simexp/niak-boss:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
@@ -75,15 +76,36 @@ in that terminal and an octave session with NIAK included starts. (Note that Mac
 
 Note that one could access the octave gui by installing xquart on its mac, we do not officially support this feature but you can have a look [here](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/) for a procedure. We recommend the use of Jupyter notebooks (see below) for a full featured user interface experience of NIAK.
 
+### Windows
+
+If you have a Windows 10 Pro, the [docker installation](https://docs.docker.com/docker-for-windows/install/) is straight forward.
+We recommend using a Jupyter notebook to run NIAK on windows (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+
+For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_windows/).
+
+```bash
+docker run -it --privileged --rm \
+       simexp/niak-boss:latest \
+       /bin/bash -ic "cd $HOME; octave; /bin/bash"
+```
+
+
 # NIAK in a Jupyter notebook
 
 After a successful docker installation, niak can be controlled throught a Jupyter notebook. It is available with niak-boss  >= 0.18.0 image. You can run:
 
+#### Linux & OSX variant
 ```bash
 docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
        -p 8080:8080 simexp/niak-boss:latest niak_jupyter
 ```
-this should output the following lines:
+#### Windows variant
+```bash
+docker run -it --rm  -v $PWD:"/sandbox/home"  -p 8080:8080 \
+ simexp/niak-boss:latest niak_jupyter
+```
+
+the output should looks like the following:
 ```
 Welcome to NIAK in your browser, powered by jupyter!
 NIAK is now available on your machine
