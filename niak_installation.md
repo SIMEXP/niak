@@ -31,7 +31,7 @@ docker run -i -t --privileged --rm \
        -v /tmp/.X11-unix:/tmp/.X11-unix \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:0.19.1 \
+       simexp/niak-boss:latest \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
 You can also add the followin to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
@@ -45,7 +45,7 @@ docker run -i -t --privileged --rm \
        -v /tmp/.X11-unix:/tmp/.X11-unix \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:0.19.1 \
+       simexp/niak-boss:latest \
        /bin/bash -ic \"cd $HOME; octave --force-gui; /bin/bash\""
 
 ```
@@ -60,32 +60,44 @@ The procedure as been tested on Debian 8.0, Ubuntu 14.10,15.10, 16.04, centOS 7 
 
 ### Mac OSX
 
-An extra step is needed to start a docker container on OSX. You first need to start a docker daemon using the boot2docker application. You launch it with a mouse click, or type ```open /Application/boot2docker.app ``` in a terminal to the same effect. Full description is available on the [mac install docker page](https://docs.docker.com/installation/mac/).
+On more recent OSX distribution (> 10.10.3, or better > 10.11), Docker usage is straight forward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac).
 
-This will start a bash terminal where you will be able to start the simex/niak docker container. Just type
+You then need to start a bash terminal where you will be able to start the simex/niak docker container. Just type
 
 ```bash
+bash
 docker run -i -t --privileged --rm \
-       -v $HOME:$HOME \
-       simexp/niak-boss:0.19.1 \
+       simexp/niak-boss:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
-in that terminal.
+in that terminal and an octave session with NIAK included starts. (Note that Macs often have tcsh terminal by default, the first line with `bash` forces your terminal to be in bash mode.)
 
-Note that we do not have a procedure to run the octave gui on OSX yet. You can use jupyter notebooks as an alternative (see below). Also, on OSX, your data input and output has to be under `/Users`, which is the case for `$HOME = /User/your_name`. (Have a look [here](http://stackoverflow.com/questions/26348353/mount-volume-to-docker-image-on-osx), if you really need to access data from other places)
+Note that one could access the octave gui by installing xquart on its mac, we do not officially support this feature but you can have a look [here](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/) for a procedure. We recommend the use of Jupyter notebooks (see below) for a full featured user interface experience of NIAK.
 
-# NIAK in a Jypiter notebook
+# NIAK in a Jupyter notebook
 
-After a succefull docker installation, niak can be controlled throught a Jypiter notebook. It is presently available in the beta release of the niak-boss docker image. You can run:
+After a successful docker installation, niak can be controlled throught a Jupyter notebook. It is available with niak-boss  >= 0.18.0 image. You can run:
 
 ```bash
-docker pull simexp/niak-boss:beta
 docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
-       -p 8080:8080 simexp/niak-boss:0.19.1 niak_jupyter
+       -p 8080:8080 simexp/niak-boss:latest niak_jupyter
+```
+this should output the following lines:
+```
+Welcome to NIAK in your browser, powered by jupyter!
+NIAK is now available on your machine
+Open your favorite browser at the following address: http://localhost:8080
+If that does not work, then try http://172.17.0.2:8080
+Then click New --> Octave
+
+The PASSWORD is: NIAK
+
+For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutorials.html
+For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
 ```
 
-And then connect your favorite browser to the the [following address: localhost:8080](localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the niak outputs will be in the directory where you called the `docker run` command (that is $PWD).
+You can now start your favorite browser and go to the [following address: http://localhost:8080](http://localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD).
 
 # NIAK in Singularity
 Follow the [HPC Installation section](http://niak.simexp-lab.org/niak_HPC_installation.html)
