@@ -17,8 +17,6 @@ function [pipeline,opt_pipe,files_in] = niak_test_subtype_demoniak(path_test,opt
 %   with reference version of the results will be performed, but all test 
 %   pipelines will still run. If this flag is used, PATH_TEST.REFERENCE
 %   does not need to be specified.
-% OPT.FILES_IN (structure, default grab the preprocessed demoniak) the input 
-%   files for the region growing.
 % OPT.FLAG_TEST (boolean, default false) if FLAG_TEST == true, the demo will 
 %   just generate the test PIPELINE.
 % OPT.PSOM (structure) the options of the pipeline manager. See the OPT
@@ -90,11 +88,10 @@ path_logs = [path_test.result 'logs'];
 if nargin < 2
     opt = struct();
 end
-opt = psom_struct_defaults(opt,{'ext','flag_target','files_in','flag_test','psom'},{'.mnc.gz',false,'',false,struct});
+opt = psom_struct_defaults(opt,{'ext','flag_target','flag_test','psom'},{'.mnc.gz',false,false,struct});
 if strcmp(path_test.reference,'gb_niak_omitted')&&opt.flag_target
     error('Please specify PATH_TEST.REFERENCE')
 end
-opt_demo.files_in = opt.files_in;
 opt_demo.folder_out = [path_test.result 'demoniak_subtype' filesep];
 opt_demo.flag_test = true;
 [pipeline,opt_pipe,files_in] = niak_demo_subtype(path_test.connectome,opt_demo);
