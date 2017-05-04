@@ -112,11 +112,9 @@ files_in.data.aMPFC.subject2c = [path_demo 'rmap_seeds' filesep 'rmap_subject2_F
 files_in.data.aMPFC.subject2d = [path_demo 'rmap_seeds' filesep 'rmap_subject2_MTL' opt.ext];
 
 %% Options for the subtyping pipeline
-opt.scale = 1;
 opt.stack.regress_conf = {'site'};
 opt.association.age.contrast.age = 1;
 opt.chi2 = 'subject1';
-opt.visu.data_type = 'continuous';
 opt.rand_seed = 1;
 
 %% Run the pipeline
