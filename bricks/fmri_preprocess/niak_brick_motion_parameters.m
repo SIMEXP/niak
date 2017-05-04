@@ -10,7 +10,7 @@ function [files_in,files_out,opt] = niak_brick_motion_parameters(files_in,files_
 %   FILES_IN
 %       (structure) with the following fields :
 %
-%       RUN
+%       FMRI
 %           (string) a series of fMRI volumes.
 %
 %       TARGET
@@ -33,6 +33,10 @@ function [files_in,files_out,opt] = niak_brick_motion_parameters(files_in,files_
 %       FWHM
 %           (real number, default 5 mm) the fwhm of the blurring kernel
 %           applied to all volumes.
+%
+%       INTERP
+%           (string, default 'trilinear') the type of spatial interpolation. 
+%           Available options: 'trilinear', 'tricubic', 'nearest_neighbour'
 %
 %       STEP
 %           (real number, default 10) The step argument for MINCTRACC.
@@ -126,8 +130,8 @@ end
 
 %% OPTIONS
 gb_name_structure = 'opt';
-gb_list_fields   = {'ignore_slice' ,'folder_out' ,'flag_test' ,'flag_verbose' ,'fwhm' ,'step' ,'tol'};
-gb_list_defaults = {1              ,''           ,false       ,true           ,5      ,10     ,0.0005};
+gb_list_fields   = {'interp'    , 'ignore_slice' ,'folder_out' ,'flag_test' ,'flag_verbose' ,'fwhm' ,'step' ,'tol'};
+gb_list_defaults = {'trilinear' , 1              ,''           ,false       ,true           ,5      ,10     ,0.0005};
 niak_set_defaults
 
 %% Building default output names
@@ -251,7 +255,7 @@ for num_v = 1:nb_vol
     end
 
     %% Perform rigid-body coregistration
-    instr_minctracc = cat(2,'minctracc ',file_vol,' ',file_target,' ',file_xfm_tmp,' -xcorr  -source_mask ',file_mask_target,' -model_mask ',file_mask_target,' -forward -transformation ',file_xfm_tmp,' -clobber -lsq6 -speckle 0 -est_center -tol ',num2str(opt.tol,7),' -tricubic -simplex 10 -model_lattice -step ',num2str(opt.step),' ',num2str(opt.step),' ',num2str(opt.step));
+    instr_minctracc = cat(2,'minctracc ',file_vol,' ',file_target,' ',file_xfm_tmp,' -xcorr  -source_mask ',file_mask_target,' -model_mask ',file_mask_target,' -forward -transformation ',file_xfm_tmp,' -clobber -lsq6 -speckle 0 -est_center -tol ',num2str(opt.tol,7),' -',opt.interp,' -simplex 10 -model_lattice -step ',num2str(opt.step),' ',num2str(opt.step),' ',num2str(opt.step));
     if (num_v == 1)
         [fail,msg] = system(cat(2,'param2xfm ',file_xfm_tmp,' -translation 0 0 0 -rotations 0 0 0 -clobber'));
 

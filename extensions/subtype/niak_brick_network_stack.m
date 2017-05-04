@@ -2,7 +2,7 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 % Create network, mean and std stack 4D maps from individual functional maps
 %
 % SYNTAX:
-% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_network_stack(FILE_IN,FILE_OUT,OPT)
+% [FILE_IN,FILE_OUT,OPT] = NIAK_BRICK_NETWORK_STACK(FILE_IN,FILE_OUT,OPT)
 % _________________________________________________________________________
 %
 % INPUTS:
@@ -42,9 +42,6 @@ function [files_in,files_out,opt] = niak_brick_network_stack(files_in, files_out
 %   REGRESS_CONF 
 %       (Cell of string, Default {}) A list of variables name to be regressed out.
 %
-%   FLAG_CONF
-%       (boolean, default true) turn on/off saving regressed stack arrays
-%   
 %   FLAG_VERBOSE
 %       (boolean, default true) turn on/off the verbose.
 %
@@ -129,8 +126,8 @@ if nargin < 3
     opt = struct;
 end
 opt = psom_struct_defaults(opt,...
-      { 'folder_out' , 'network' , 'regress_conf' , 'flag_verbose' , 'flag_conf' , 'flag_test' },...
-      { ''           , []        , {}             , true           , true        , false       });
+      { 'folder_out' , 'network' , 'regress_conf' , 'flag_verbose' , 'flag_test' },...
+      { ''           , []        , {}             , true           , false       });
 
 % Check the output specification
 if isempty(files_out) && ~strcmp(files_out, 'gb_niak_omitted')
@@ -146,40 +143,50 @@ if opt.flag_test == 1
     return
 end
 
-%% Additional checks
+opt.flag_conf = ~isempty(opt.regress_conf);
 
-% Get the model and check if there are any NaNs in the factors to be
-% regressed
+%% Prepare the confounds
+list_data = fieldnames(files_in.data);
 if ~strcmp(files_in.model, 'gb_niak_omitted')
-    [conf_model, ~, cat_names, ~] = niak_read_csv(files_in.model);
-    n_conf = length(opt.regress_conf);
-    conf_ids = zeros(n_conf, 1);
-    % Go through the confound cell array and find the indices
-    for cid = 1:n_conf
-        conf_name = opt.regress_conf{cid};
-        cidx = find(strcmp(cat_names, conf_name));
-        % Make sure we found the covariate
-        if ~isempty(cidx)
-            conf_ids(cid) = cidx;
-        else
-            error('Could not find column for %s in %s', conf_name, files_in.model);
-        end
-        % Make sure there are no NaNs in the model
-        if any(isnan(conf_model(:, cidx)))
-            % Get the indices of the subjects
-            missing = find(isnan(conf_model(:, cidx)));
-            % Matlab error messages only allow for the double to iterate. Not
-            % sure how we could tell them both the subject ID and the confound
-            % name
-            error('Subject #%d has missing data for one or more confounds. Please fix.\n', missing);
-        end
+
+    % Load the model
+    [conf_model, list_subject , cat_names] = niak_read_csv(files_in.model);
+    
+    % Check that all confounds can be found in the model
+    mask_sanity = ~ismember(opt.regress_conf,cat_names);
+    if any(mask_sanity)
+        opt.regress_conf(mask_sanity);
+        error('Some confounds (listed above) could not be found in the model')
     end
+    
+    % Find the confounds in the variable of the model
+    mask_conf = ismember(cat_names,opt.regress_conf);
+    conf_model = conf_model(:,mask_conf);
+    
+    % Remove subjects with NaN
+    mask_nan = max(isnan(conf_model),[],2);
+    if any(mask_nan)
+        list_subject(mask_nan)
+        warning(sprintf('I had to remove %i subjects (listed above) who had missing values in their confounds.',sum(mask_nan)));
+    end
+    conf_model = conf_model(~mask_nan,:);
+    list_subject = list_subject(~mask_nan,:);
+    
+    % Remove subjects with no imaging data
+    mask_data = ismember(list_subject,list_data);
+    if any(~mask_data)
+        list_subject(~mask_data)
+        warning(sprintf('I had to remove %i subjects (listed above) who had missing imaging data.',sum(~mask_data)));
+    end
+    conf_model = conf_model(mask_data,:);
+    list_subject = list_subject(mask_data,:);
+else
+    list_subject = fieldnames(files_in.data);
 end
  
 % Check the first subject file and see how many networks we have
-subject_list = fieldnames(files_in.data);
-n_input = length(subject_list);
-[~, vol] = niak_read_vol(files_in.data.(subject_list{1}));
+n_input = length(list_subject);
+[~, vol] = niak_read_vol(files_in.data.(list_subject{1}));
 scale = size(vol, 4);
 % If no scale has been supplied, use all networks
 if isempty(opt.network)
@@ -202,12 +209,12 @@ n_scales = length(opt.network);
 
 % Pre-allocate the output matrix. If we have more than one network, we'll
 % repmat it
-raw_stack = zeros(n_input, n_vox, n_scales);
+stack = zeros(n_input, n_vox, n_scales);
 
 % Iterate over the input files
 for in_id = 1:n_input
     % Get the name for the input field we need
-    in_name = subject_list{in_id};
+    in_name = list_subject{in_id};
     % Load the corresponding path
     read_file = files_in.data.(in_name);
     if opt.flag_verbose
@@ -222,36 +229,27 @@ for in_id = 1:n_input
         % Mask the volume
         masked_vol = niak_vol2tseries(vol(:, :, :, net), mask);
         % Save the masked array into the stack variablne
-        raw_stack(in_id, :, net_id) = masked_vol;
+        stack(in_id, :, net_id) = masked_vol;
     end
 end
 
 %% Regress confounds
-if ~strcmp(files_in.model, 'gb_niak_omitted')
+if ~strcmp(files_in.model, 'gb_niak_omitted')&&opt.flag_conf
+
     % Set up the model structure for the regression
     opt_mod = struct;
     opt_mod.flag_residuals = true;
     m = struct;
-    m.x = [ones(length(subject_list),1) conf_model(:, conf_ids)];
-    
-    conf_stack = zeros(n_input, n_vox, n_scales);
+    m.x = [ones(length(list_subject),1) conf_model];
     
     % Loop through the networks again for the regression
     for net_id = 1:length(opt.network)
         % Get the correct network
-        m.y = raw_stack(:, :, net_id);
+        m.y = stack(:, :, net_id);
         [res] = niak_glm(m, opt_mod);
         % Store the residuals in the confound stack
-        conf_stack(:, :, net_id) = res.e;
+        stack(:, :, net_id) = res.e;
     end
-end
-
-%% Build the outputs
-% Decide which of the two stacks to save
-if opt.flag_conf && ~strcmp(files_in.model, 'gb_niak_omitted')
-    stack = conf_stack;
-else
-    stack = raw_stack;
 end
 
 % Build the provenance data
@@ -259,7 +257,7 @@ provenance = struct;
 % Get the subjects
 provenance.subjects = cell(n_input, 2);
 % First column are the input field names
-provenance.subjects(:, 1) = subject_list;
+provenance.subjects(:, 1) = list_subject;
 % Second column is so far undefined
 
 % Add the model information

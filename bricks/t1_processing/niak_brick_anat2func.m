@@ -254,6 +254,7 @@ end
 %% Initialization of volumes and transformations %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Verbose
 if flag_verbose
     msg = 'T1-T2 COREGISTRATION';    
     stars = repmat('*',[1 length(msg)]);
@@ -292,20 +293,13 @@ file_tmp2           = [path_tmp 'vol_tmp2.mnc'];        % Temporary volume #2
 %% Initial transformation
 if strcmp(files_in.transformation_init,'gb_niak_omitted')
     transf = eye(4);
-    niak_write_transf(transf,file_transf_init);
 else    
+    transf = niak_read_transf(files_in.transformation_init);
     if flag_invert_transf_init
-        [succ,msg] = system(cat(2,'xfminvert ',files_in.transformation_init,' ',file_transf_init));
-        if succ ~= 0
-            error(msg);
-        end
-    else
-        [succ,msg] = system(cat(2,'cp ',files_in.transformation_init,' ',file_transf_init));
-        if succ ~= 0
-            error(msg);
-        end
+        transf = transf^(-1);
     end
 end
+niak_write_transf(transf,file_transf_init);
 
 %% Writing the anatomical image in the functional space using the initial
 %% transformation
@@ -504,7 +498,7 @@ for num_i = 1:length(list_fwhm)
     niak_write_vol(hdr_func,vol_func);        
 
     %% applying MINCTRACC    
-    instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -',mes_val,' -threshold ',num2str(floor(min(thresh_anat,thresh_func))),' 0 ',' -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
+    instr_minctracc = cat(2,'minctracc ',file_anat_crop,' ',file_func_crop,' ',file_transf_est,' -',mes_val,' -threshold ',num2str(floor(thresh_anat)),' ',num2str(floor(thresh_func)),' ',' -identity -simplex ',num2str(simplex_val),' -tol 0.00005 -step ',num2str(step_val),' ',num2str(step_val),' ',num2str(step_val),' -lsq6 -clobber');
 
     if flag_verbose
         fprintf('Spatial coregistration using %s :\n     %s\n',mes_val,instr_minctracc);

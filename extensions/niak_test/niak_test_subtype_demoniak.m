@@ -7,11 +7,12 @@ function [pipeline,opt_pipe,files_in] = niak_test_subtype_demoniak(path_test,opt
 % _________________________________________________________________________
 % INPUTS:
 %
-% PATH_TEST.DEMONIAK (string) the path to the (preprocessed) NIAK demo dataset.
+% PATH_TEST.connectome (string) the path to the connectome output for the NIAK demo dataset.
 % PATH_TEST.REFERENCE (string) the full path to a reference version of the 
 %   results of the subtype pipeline. 
 % PATH_TEST.RESULT (string) where to store the results of the test.
 %
+% OPT.EXT (string, default '.mnc.gz') the extension of imaging files.
 % OPT.FLAG_TARGET (boolean, default false) if FLAG_TARGET == true, no comparison
 %   with reference version of the results will be performed, but all test 
 %   pipelines will still run. If this flag is used, PATH_TEST.REFERENCE
@@ -76,27 +77,27 @@ function [pipeline,opt_pipe,files_in] = niak_test_subtype_demoniak(path_test,opt
 % THE SOFTWARE.
 
 %% Check the input paths
-path_test = psom_struct_defaults(path_test,{'demoniak','reference','result'},{NaN,'',NaN});
-if ~ischar(path_test.demoniak)||~ischar(path_test.reference)||~ischar(path_test.result)
-    error('PATH_TEST.{DEMONIAK,REFERENCE,RESULT} should be strings.')
+path_test = psom_struct_defaults(path_test,{'connectome','reference','result'},{NaN,'',NaN});
+if ~ischar(path_test.connectome)||~ischar(path_test.reference)||~ischar(path_test.result)
+    error('PATH_TEST.{CONNECTOME,REFERENCE,RESULT} should be strings.')
 end
-path_test.demoniak  = niak_full_path(path_test.demoniak);
-path_test.reference = niak_full_path(path_test.reference);
-path_test.result    = niak_full_path(path_test.result);
+path_test.connectome = niak_full_path(path_test.connectome);
+path_test.reference  = niak_full_path(path_test.reference);
+path_test.result     = niak_full_path(path_test.result);
 path_logs = [path_test.result 'logs'];
 
 %% Generate the subtype pipeline
 if nargin < 2
     opt = struct();
 end
-opt = psom_struct_defaults(opt,{'flag_target','files_in','flag_test','psom'},{false,'',false,struct});
+opt = psom_struct_defaults(opt,{'ext','flag_target','files_in','flag_test','psom'},{'.mnc.gz',false,'',false,struct});
 if strcmp(path_test.reference,'gb_niak_omitted')&&opt.flag_target
     error('Please specify PATH_TEST.REFERENCE')
 end
 opt_demo.files_in = opt.files_in;
 opt_demo.folder_out = [path_test.result 'demoniak_subtype' filesep];
 opt_demo.flag_test = true;
-[pipeline,opt_pipe,files_in] = niak_demo_subtype(path_test.demoniak,opt_demo);
+[pipeline,opt_pipe,files_in] = niak_demo_subtype(path_test.connectome,opt_demo);
 list_jobs = fieldnames(pipeline);
 
 %% Add a test: comparison of the result of the subtyping against the reference
@@ -107,8 +108,10 @@ if ~opt.flag_target
     out_c = [path_test.result 'report_test_regression_subtype_demoniak.csv'];
     opt_c.base_source = opt_demo.folder_out;
     opt_c.base_target = path_test.reference;
-    opt_c.black_list_source = {[opt_demo.folder_out 'logs' filesep], [opt_demo.folder_out 'provenance' filesep]};
-    opt_c.black_list_target = {[path_test.reference 'logs' filesep], [path_test.reference 'provenance' filesep]};
+    opt_c.black_list_source = {[opt_demo.folder_out 'logs' filesep] ...
+                               ,[opt_demo.folder_out 'networks' filesep 'aMPFC' filesep 'provenance_aMPFC.mat']};
+    opt_c.black_list_target = {[path_test.reference 'logs' filesep] ...
+                               ,[path_test.reference 'networks' filesep 'aMPFC' filesep 'provenance_aMPFC.mat']};
     pipeline = psom_add_job(pipeline,'test_subtype','niak_test_cmp_files',in_c,out_c,opt_c,false);
     pipeline.test_subtype.dep = list_jobs;
 end
