@@ -106,7 +106,7 @@ files = files(:);
 %% Recursively find files in subdirectories
 ind_dir = find(is_dir);
 for num_d = 1:length(ind_dir)
-    if (nargin < 2) || ~ismember(niak_full_path(files_loc{ind_dir(num_d)}),black_list)
+    if (nargin < 2) || ~ismember(files_loc{ind_dir(num_d)},black_list)
         files = [ files ; niak_grab_folder([files_loc{ind_dir(num_d)} filesep],black_list,false) ];    
     end
 end
