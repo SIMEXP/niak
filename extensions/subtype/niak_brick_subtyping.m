@@ -176,6 +176,7 @@ end
 data = load(files_in.data);
 provenance = data.provenance; % loading provenance from the data file
 data = data.stack; % get the stack data
+list_subject = provenance.subjects(:,1);
 
 %% Build the similarity matrix
 sim_matrix = niak_build_correlation(data');
@@ -275,7 +276,7 @@ end
 
 %% Saving subtyping results and statistics
 if ~strcmp(files_out.subtype, 'gb_niak_omitted')
-    save(files_out.subtype,'subj_order','sim_matrix','sub','hier','part')
+    save(files_out.subtype,'subj_order','sim_matrix','sub','hier','part','list_subject')
 end
 
 % Save provenance and options in separate .mat file

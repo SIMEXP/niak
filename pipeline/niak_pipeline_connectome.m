@@ -268,10 +268,10 @@ network = opt.label_network;
 [files_tseries,list_subject] = sub_input(files_in);
 
 %% Copy the networks
+[~,~,ext_f] = niak_fileparts(files_tseries.(list_subject{1}){1});
 pipeline = struct();
 clear job_in job_out job_opt
 job_in.source      = files_in.network;
-[path_f,name_f,ext_f] = niak_fileparts(files_in.network);
 job_in.target      = files_tseries.(list_subject{1}){1};
 job_out            = [folder_out 'network_' network ext_f];
 job_opt.interpolation    = 'nearest_neighbour';

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Report on functional connectivity maps</title>
+  <meta charset="utf-8"/>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <link rel="stylesheet" type="text/css" href="assets/bootstrap/bootstrap.min.css" /> <!--from keen.io-->
+  <link rel="stylesheet" type="text/css" href="assets/keen/keen-dashboards.css" />    <!--from keen.io-->
+</head>
+
+<body class="application">
+
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="https://simexp.github.io/brainsprite.js/index.html">Brainsprite dashboard</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="index.html">Brain maps</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+
+    $DIV
+    <hr>
+</div>
+    <p class="small text-muted">Built with &#9829; by <a href="http://niak.simexp-lab.org">NIAK</a> using dashboards from <a href="https://keen.io">Keen IO</a></p>
+
+  <!--Dependencies-->
+  <script type="text/javascript" src="assets/jquery/jquery.min.js"></script>       <!--from keen.io-->
+  <script type="text/javascript" src="assets/bootstrap/bootstrap.min.js"></script> <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/keen.min.js"></script>           <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/meta.js"></script>               <!--from keen.io-->
+  <script type="text/javascript" src="assets/brainsprite.js"></script>
+  <script type="text/javascript" src="listMaps.js"></script>
+  <script>
+  $(window).load(function() {
+
+    <!--Generate a viewer for brain maps--!>
+    var brainMap = [];
+    for (mm=0 ; mm<listMaps.length ; mm++) {
+    brainMap[mm] = brainsprite({
+      canvas: "canvas"+mm,
+      sprite: "background"+mm,
+      nbSlice: params[mm].nbSlice,
+      colorBackground: "$COLORBACKGROUND",
+      colorFont: "$COLORFONT",
+      flagCoordinates: true,
+      origin: params[mm].origin,
+      voxelSize: params[mm].voxelSize,
+      onclick: function(e) {
+        for ( nn=0 ; nn<brainMap.length ; nn++) {
+          brainMap[nn].numSlice = this.numSlice;
+          brainMap[nn].drawAll();
+        }
+      },
+      overlay: {
+        sprite: "overlay"+mm,
+        nbSlice: params[mm].nbSlice,
+        smooth: true
+      },
+      colorMap: {
+        img: "colormap"+mm, // That is the ID of the image with the colormap
+        min: params[mm].min,
+        max: params[mm].max,
+      },
+    });
+  }
+  });
+  </script>
+
+</body>
+</html>

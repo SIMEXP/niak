@@ -12,13 +12,15 @@ function [files_in,files_out,opt] = niak_brick_association_test(files_in, files_
 %   (structure) with the following fields:
 %
 %   WEIGHT
-%       (string) path to a weight matrix. First column expected to be
-%       subjects ordered the same way as in the MODEL
+%       (string) a .mat file with two variables.
+%       WEIGHT_MAT is a (#subjects)x(#subtype) matrix of weights. 
+%       LIST_SUBJECT is a (#subjects)x1 cell array of strings, with the subject
+%       labels for each row of WEIGHT_MAT. 
 %
 %   MODEL
 %       (string) a .csv files coding for the pheno data. Is expected to
 %       have a header and a first column specifying the case IDs/names
-%       corresponding to the data in FILES_IN.DATA
+%       corresponding to LIST_SUBJECT in FILES_IN.WEIGHT
 %
 % FILES_OUT
 %   (structure) with the following fields:
@@ -228,8 +230,7 @@ if isfield(opt, 'interaction')
             end
         end
     end
-end
-    
+end  
 
 %% If the test flag is true, stop here !
 if opt.flag_test == 1
@@ -254,25 +255,30 @@ if opt.flag_verbose
 end
 
 % Read the weights file
-tmp = load(files_in.weight);
-weights = tmp.weight_mat;
+load(files_in.weight,'weight_mat','list_subject','list_network');
+
 % Figure out how many cases we are dealing with
-[n_sub, n_sbt, n_net] = size(weights);
+[n_sub, n_sbt, n_net] = size(weight_mat);
+
+% Store the model in the internal structure
+model_raw.x = zeros(length(list_subject),size(model_data,2));
+for ss = 1:length(list_subject)
+    ind = find(strcmp(labels_x,list_subject{ss}));
+    model_raw.x(ss,:) = model_data(ind,:);
+end
+model_raw.labels_x = list_subject;
+model_raw.labels_y = labels_y;
 
 % Prepare the variable for the p-value storage
 pvals = zeros(opt.scale, n_sbt);
 % The GLM results will be stored in a structure with the network names as
 % subfield labels
 glm_results = struct;
-net_names = cell(opt.scale);
 
 % Iterate over each network and perform the normalization and fitting
 for net_id = 1:opt.scale
-    % Specify the name of the current network
-    net_name = sprintf('net_%d', net_id);
-    net_names{net_id} = net_name;
     % Select the weight matrix for the current network
-    model_raw.y = weights(:, :, net_id);
+    model_raw.y = weight_mat(:, :, net_id);
     % Perform the model selection, adding the intercept and interaction,
     % and normalization - all in one step. This step is partly redundant
     % since the model will be the same for each network. However, since we
@@ -284,16 +290,19 @@ for net_id = 1:opt.scale
     % Fit the model
     opt_glm = struct;
     opt_glm.test  = 'ttest';
-    opt_glm.flag_beta = true; 
+    opt_glm.flag_beta = true;
     opt_glm.flag_residuals = true;
     opt_glm.flag_rsquare = true;
     [results, ~] = niak_glm(model_norm, opt_glm);
     pvals(net_id, :) = results.pce;
-    glm_results.(net_name) = results;
+    glm_results.(list_network{net_id}) = results;
 end
 
 % Run FDR on the p-values
-[fdr,fdr_test] = niak_fdr(pvals, opt.type_fdr, opt.fdr);
+[fdr_vec,fdr_test_vec] = niak_fdr(pvals(:), opt.type_fdr, opt.fdr);
+% Reshape FDR results to network by subtype array
+fdr = reshape(fdr_vec, n_net, n_sbt);
+fdr_test = reshape(fdr_test_vec, n_net, n_sbt);
 
 % Save the model and FDR test
 if ~strcmp(files_out.stats, 'gb_niak_omitted')
@@ -317,21 +326,10 @@ if ~strcmp(files_out.csv, 'gb_niak_omitted')
     fclose(fid);
 end
 
-function path_array = make_paths(out_path, template, scales)
-    % Get the number of networks
-    n_networks = length(scales);
-    path_array = cell(n_networks, 1);
-    for sc_id = 1:n_networks
-        sc = scales(sc_id);
-        path = fullfile(out_path, sprintf(template, sc));
-        path_array{sc_id, 1} = path;
-    end
-return
-end
-
 function out_str = summarize_results(fdr_test, glm_results, pvals, fdr)
 
     [net_ids, sbt_ids] = find(fdr_test);
+    list_network = fieldnames(glm_results);
     % Sort the subtypes by the network IDs
     [~, ind] = sort(net_ids);
     net_ids = net_ids(ind);
@@ -347,7 +345,7 @@ function out_str = summarize_results(fdr_test, glm_results, pvals, fdr)
         for res_id = 1:length(net_ids)
             net_id = net_ids(res_id);
             sbt_id = sbt_ids(res_id);
-            net_name = net_names{net_id};
+            net_name = list_network{net_id};
             % Get the corresponding T-, p-, and FDR-values
             t_val = glm_results.(net_name).ttest(sbt_id);
             p_val = pvals(net_id, sbt_id);

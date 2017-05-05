@@ -1,34 +1,16 @@
 function transf = niak_read_transf(file_name)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_READ_TRANSF
-%
 % Read a lsq12 transformation matrix from an xfm file
 %
 % SYNTAX:
 % TRANSF = NIAK_READ_TRANSF(FILE_NAME)
 % 
-% _________________________________________________________________________
-% INPUTS:
+% FILE_NAME (string) the name of the xfm file (usually ends in .xfm)
+% TRANSF (matrix 4*4) a classical matrix representation of an lsq12
+%   transformation.
 %
-% FILE_NAME     
-%       (string) the name of the xfm file (usually ends in .xfm)
-% 
-% _________________________________________________________________________
-% OUTPUTS:
-%
-% TRANSF        
-%       (matrix 4*4) a classical matrix representation of an lsq12
-%       transformation.
-%
-% _________________________________________________________________________
-% SEE ALSO:
-%
-% _________________________________________________________________________
-% COMMENTS:
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
+% CRIUGM, DIRO, University of Montreal, 2010-2017
+% Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : xfm, minc
 

@@ -1,8 +1,8 @@
 function files = niak_grab_connectome(path_data)
-% Grab all the connectomes created by NIAK_PIPELINE_CONNECTOME
+% Grab the outputs of NIAK_PIPELINE_CONNECTOME
 %
 % SYNTAX:
-% FILES_OUT = NIAK_GRAB_CONNECTOMES( PATH_DATA )
+% FILES_OUT = NIAK_GRAB_CONNECTOME( PATH_DATA )
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -24,9 +24,9 @@ function files = niak_grab_connectome(path_data)
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal,
-%               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2013.
+%               Centre de recherche de l'institut de Griatrie de Montral,
+%               Dpartement d'informatique et de recherche oprationnelle,
+%               Universit de Montral, 2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : grabber
@@ -62,6 +62,8 @@ path_data = niak_full_path(path_data);
 
 %% Initialize the files
 files = struct;
+file_roi = dir([path_data 'network_rois.*']);
+files.network_rois = [path_data file_roi(1).name];
 
 %% Grab connectomes
 path_conn = [path_data 'connectomes' filesep];
@@ -69,10 +71,35 @@ if psom_exist(path_conn)
     list_conn = dir([path_conn 'connectome_rois_*.mat']);
     list_conn = {list_conn.name};
     ind_start = length('connectome_rois_')+1;
+    list_subject = cell(length(list_conn),1);
     for num_c = 1:length(list_conn)
         conn = list_conn{num_c};
         ind_end = regexp(conn,'.mat$')-1;
         subject = conn(ind_start:ind_end);
+        list_subject{num_c} = subject;
         files.connectome.(subject) = [path_conn conn];
     end
+else
+    error('I could not find the connectomes subfolder')
+end
+
+%% Grab r-map
+path_rmap = [path_data 'rmap_seeds'];
+if psom_exist(path_rmap)
+    % Parse parcel IDs
+    list_net = dir([path_rmap filesep 'rmap_' list_subject{1} '_*']);
+    list_net = {list_net.name};
+    for ff = 1:length(list_net)
+        file_net =  list_net{ff};
+        [~,name_net,ext_net] = niak_fileparts(file_net);
+        ind = length(['rmap_' list_subject{1}]);
+        ind = ind+2;
+        name_net = name_net(ind:end);
+        for ss = 1:length(list_subject)
+            files.rmap.(name_net).(list_subject{ss}) = [path_rmap filesep 'rmap_' list_subject{ss} '_' name_net ext_net];
+        end
+        files.mask.(name_net) = [path_rmap filesep 'mask_' name_net ext_net];
+    end
+else
+    warning ('I could not find the rmaps subfolder')
 end

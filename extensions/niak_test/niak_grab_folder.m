@@ -1,4 +1,4 @@
- function files = niak_grab_folder(path_data,black_list)
+ function files = niak_grab_folder(path_data,black_list,init)
 % Grab all the files inside a folder (recursively)
 %
 % SYNTAX:
@@ -57,26 +57,35 @@ if (nargin<1)||isempty(path_data)
     path_data = [pwd filesep];
 end
 
-path_data = niak_full_path(path_data);
-
-%% The black list
-black_list_file = {};
-if nargin < 2
-    black_list = {};
+if nargin < 3
+    init = true;
 end
 
-if ischar(black_list)
-    black_list = {black_list};
-end
+if init
 
-for num_e = 1:length(black_list)
-    black_list{num_e} = niak_full_path(black_list{num_e});
-    % make sure there is no file separator at the end of a file name.
-    if ~isdir(black_list{num_e})
-        black_list_file{end+1} = regexprep(black_list{num_e},['(.*)' filesep],'$1') ;
+    path_data = niak_full_path(path_data);
+
+    %% The black list
+    black_list_file = {};
+    if nargin < 2
+        black_list = {};
+    end
+
+    if ischar(black_list)
+        black_list = {black_list};
+    end
+
+    for num_e = 1:length(black_list)
+        [path_tmp,name_tmp,ext_tmp] = fileparts(black_list{num_e});
+        if isempty(path_tmp)
+            path_tmp = path_data;
+        else
+            path_tmp = [path_tmp filesep];
+        end
+        black_list{num_e} = [path_tmp name_tmp ext_tmp];
     end
 end
-   
+
 %% List of folders
 if ~exist(path_data,'dir')
     error('I could not find the directory %s',path_data);
@@ -97,10 +106,10 @@ files = files(:);
 %% Recursively find files in subdirectories
 ind_dir = find(is_dir);
 for num_d = 1:length(ind_dir)
-    if (nargin < 2) || ~ismember(niak_full_path(files_loc{ind_dir(num_d)}),black_list)
-        files = [ files ; niak_grab_folder(files_loc{ind_dir(num_d)}) ];    
+    if (nargin < 2) || ~ismember(files_loc{ind_dir(num_d)},black_list)
+        files = [ files ; niak_grab_folder([files_loc{ind_dir(num_d)} filesep],black_list,false) ];    
     end
 end
 
 % Removing black listed files
-files = files(~ismember(files,black_list_file));
+files = files(~ismember(files,black_list));

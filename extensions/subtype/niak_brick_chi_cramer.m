@@ -159,12 +159,14 @@ end
 if opt.flag_weights
     tmp_weights = load(files_in.weights);
     weights = tmp_weights.weight_mat;
+    list_subject = tmp_weights.list_subject;
     nn = opt.network;
     [~, maxind] = max(weights(:,:,nn)'); % determine highest subtype weight for each subject
     part = maxind'; % generate partition based on weights
 else
     subtype = load(files_in.subtype);
     part = subtype.part; % load partition
+    list_subject = subtype.list_subject; % Load list of subjects
 end
 
 %% Build the model from user's csv and input column
@@ -173,18 +175,31 @@ if all(col_ind == 0)
     error('Group column %s has not been found in %s',opt.group_col_id,files_in.model)
 end
 col = tab(:,col_ind);
+
+% Re-order data and filter out subjects with no imaging data
+col_norm = zeros(length(list_subject),size(col,2));
+for ss = 1:length(list_subject)
+    ind = find(strcmp(sub_id,list_subject{ss}));
+    if isempty(ind)
+        error(sprintf('I could not find subject %s in the model',list_subject{ss}));
+    end
+    col_norm(ss,:) = col(ind,:);
+end
+col = col_norm;
+
 % Build a mask for NaN values in model and mask out subjects with NaNs
 [x, y] = find(~isnan(col)); % find subjects that have non-NaN values
 sub_ret = unique(x);
 [a, b] = find(isnan(col));  % the subjects that were dropped due to having NaNs
 sub_drop = unique(a);
 partition = part(sub_ret,:); % mask partition on only subjects with non-NaN values
+
 % Save the model
-model.subject_retained = sub_id(sub_ret,:);
+model.subject_retained = list_subject(sub_ret,:);
 model.partition = partition;
 model.group_name = opt.group_col_id;
 model.group = col;
-model.subject_dropped = sub_id(sub_drop,:);
+model.subject_dropped = list_subject(sub_drop,:);
 
 %% Build the contingency table
 

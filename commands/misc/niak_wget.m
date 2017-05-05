@@ -65,10 +65,10 @@ data = psom_struct_defaults( data , ...
 switch data.type;
     case 'data_test_niak_mnc1'
         data.name = 'data_test_niak_mnc1.zip';
-        data.url  = ['http://www.nitrc.org/frs/download.php/7241/' data.name];
+        data.url  = ['https://github.com/SIMEXP/niak/releases/download/data-test-v1.0/' data.name];
     case 'data_test_niak_nii'
         data.name = 'data_test_niak_nii.zip';
-        data.url  = ['http://www.nitrc.org/frs/download.php/9120/' data.name];
+        data.url  = ['https://github.com/SIMEXP/niak/releases/download/data-test-v1.0/' data.name];
     case 'target_test_niak_mnc1'
         url_dir = ['target_test_niak_mnc1-' GB_NIAK.target_test]
         data.name = [ 'target_test_niak_mnc1-' GB_NIAK.target_test '.zip']
