@@ -427,6 +427,7 @@ end
 clear in jopt
 in.background = pipeline.mask_background.files_out;
 in.network = pipeline.(['select_' network]).files_out;
+in.params = pipeline.pipe_params.files_out;
 if opt.flag_rmap
     for num_seed = 1:length(labels_seed)
         in.average.(seed) = pipeline.(['average_rmap_' seed]).files_out;

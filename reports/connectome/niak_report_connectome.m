@@ -3,6 +3,9 @@ function [pipeline,opt] = niak_report_connectome(in,opt)
 %
 % SYNTAX: [PIPE,OPT] = NIAK_REPORT_RMAP(IN,OPT)
 %
+% IN.PARAMS (string)
+%   The name of a .mat file with two variables FILES_IN (the input files) and
+%   OPT (the options), describing the parameters of the pipeline.
 % IN.BACKGROUND (string) a brain volume to use as a background for each brain map.
 % IN.INDIVIDUAL.(SEED).(SUBJECT) (string) an individual connectivity map, for a 
 %   a given subject and seed.  
@@ -60,8 +63,8 @@ function [pipeline,opt] = niak_report_connectome(in,opt)
 
 % Inputs
 in = psom_struct_defaults( in , ...
-    { 'background' , 'individual' , 'average' , 'network' }, ...
-    { NaN          , NaN          , NaN       , NaN       });
+    { 'params' , 'background' , 'individual' , 'average' , 'network' }, ...
+    { NaN      , NaN          , NaN          , NaN       , NaN       });
 
 %% Options
 if nargin < 2
@@ -82,15 +85,29 @@ opt.avg = psom_struct_defaults( opt.avg , ...
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
 
+%% Seed and subject lists
+list_seed = fieldnames(in.individual);
+list_subject = fieldnames(in.individual.(list_seed{1}));
+
 %% Copy the report templates
 pipeline = struct;
 clear jin jout jopt
 niak_gb_vars
 path_template = [GB_NIAK.path_niak 'reports' filesep 'connectome' filesep 'templates' filesep ];
-jin = niak_grab_folder( path_template , {'.git','index.html','rmap.html'});
+jin = niak_grab_folder( path_template , {'.git','rmap.html'});
 jout = strrep(jin,path_template,opt.folder_out);
 jopt.folder_out = opt.folder_out;
 pipeline = psom_add_job(pipeline,'cp_report_templates','niak_brick_copy',jin,jout,jopt);
+
+%% Write a text description of the pipeline parameters
+clear jin jout jopt
+jin = in.params;
+jout.list_subject = [opt.folder_out 'summary' filesep 'listSubject.js'];
+jout.list_run = [opt.folder_out 'summary' filesep 'listRun.js'];
+jout.files_in = [opt.folder_out 'summary' filesep 'filesIn.js'];
+jout.summary = [opt.folder_out 'summary' filesep 'pipeSummary.js'];
+jopt.list_subject = list_subject;
+pipeline = psom_add_job(pipeline,'params','niak_brick_connectome_params2report',jin,jout,jopt);
 
 % background image
 jname = 'background';
@@ -119,9 +136,6 @@ jopt.thresh = 1;
 pipeline = psom_add_job(pipeline,jname,'niak_brick_montage',jin,jout,jopt);
 
 % Individual images
-list_seed = fieldnames(in.individual);
-list_subject = fieldnames(in.individual.(list_seed{1}));
-
 list_overlay = struct();
 for ll = 1:length(list_seed)
     for ss = 1:length(list_subject)
@@ -181,9 +195,7 @@ clear jin jout jopt
 jin.individual = ind_quantization;
 jin.average    = avg_quantization;
 jin.network    = net_quantization;
-jout.rmap    = [opt.folder_out 'rmap.html'];
-jout.subject = [opt.folder_out 'summary' filesep 'listSubject.js'];
-jout.network = [opt.folder_out 'summary' filesep 'listNetwork.js'];
+jout = [opt.folder_out 'rmap.html'];
 jopt.label_network = list_seed;
 jopt.label_subject = list_subject;
 pipeline = psom_add_job(pipeline,'rmap_report','niak_brick_report_connectome',jin,jout,jopt);

@@ -10,9 +10,7 @@ function [in,out,opt] = niak_brick_report_connectome(in,out,opt)
 % IN.NETWORK    (string) a .mat file with the quantization data for the 
 %     network overlay.
 %
-% OUT.RMAP (string) the name of the rmap.html report. 
-% OUT.NETWORK (string) the name of the javascript data for the networks.
-% OUT.SUBJECT (string) the name of the javascript data for the subjects.
+% OUT (string) the name of the rmap.html report. 
 % 
 % OPT.LABEL_NETWORK (cell of strings) string labels for each network.
 % OPT.LABEL_SUBJECT (cell of strings) string labels for each network.
@@ -45,7 +43,9 @@ function [in,out,opt] = niak_brick_report_connectome(in,out,opt)
 
 %% Defaults
 in = psom_struct_defaults ( in , { 'individual' , 'average' , 'network'} , { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
-out = psom_struct_defaults ( out , {  'rmap' , 'network' , 'subject' } , {  NaN , NaN , NaN});
+if ~ischar(out)
+    error('FILES_OUT should be a string')
+end
 
 if nargin < 3
     opt = struct;
@@ -94,38 +94,9 @@ str_rmap = strrep(str_rmap,'$NETWORK',list_network{1});
 str_rmap = strrep(str_rmap,'$SUBJECT',list_subject{1});
 
 %% Write report
-[hf,msg] = fopen(out.rmap,'w');
+[hf,msg] = fopen(out,'w');
 if hf == -1
     error(msg)
 end
 fprintf(hf,'%s',str_rmap);
-fclose(hf);
-
-%% save a json/javascript list of subjects
-%% List of subjects
-text_subject = sprintf('var listSubject = [\n');
-for ss = 1:(length(list_subject)-1)
-    text_subject = [text_subject sprintf('{id: %i, text: ''%s'' },\n',ss,list_subject{ss})];
-end
-text_subject = sprintf('%s{id: %i, text: ''%s'' }\n];\n',text_subject,length(list_subject),list_subject{end});
-
-[hf,msg] = fopen(out.subject,'w');
-if hf == -1
-    error(msg)
-end
-fprintf(hf,'%s',text_subject);
-fclose(hf);
-
-%% save a json/javascript list of networks
-text_network = sprintf('var listNetwork = [\n');
-for ss = 1:(length(list_network)-1)
-    text_network = [text_network sprintf('{id: %i, text: ''%s'' },\n',ss,list_network{ss})];
-end
-text_network = sprintf('%s{id: %i, text: ''%s'' }\n];\n',text_network,length(list_network),list_network{end});
-
-[hf,msg] = fopen(out.network,'w');
-if hf == -1
-    error(msg)
-end
-fprintf(hf,'%s',text_network);
 fclose(hf);
