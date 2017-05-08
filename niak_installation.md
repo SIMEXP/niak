@@ -119,41 +119,8 @@ For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutori
 For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
 ```
 
-You can now start your favorite browser and go to the [following address: http://localhost:8080](http://localhost:8080), then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD).
+You can now start your favorite browser and go to <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>, then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD).
 
-# NIAK in Singularity
-Follow the [HPC Installation section](http://niak.simexp-lab.org/niak_HPC_installation.html)
-
-# Manual installation
-
-The following instructions describe how to install NIAK without using docker.
-
-**Matlab/Octave.** NIAK requires a recent version of [Matlab](http://www.mathworks.com/) (proprietary software) or [GNU Octave](http://www.gnu.org/software/octave/index.html) (free open-source software, GNU license). In addition to Matlab/Octave, NIAK depends on the "image processing" and "statistics" toolbox. This comes by default with Matlab. In Octave, it needs to be downloaded from [Octave forge](http://octave.sourceforge.net/index.html).
-```matlab
-% For a local install, remove the -global flag.
-pkg install -auto -global -forge control general signal image io statistics
-```
-
-For Octave users, we suggest editing the `~/.octaverc` to change some of octave's default behaviour.
-```matlab
-% Verbose in real time
-more off
-% Use the same .mat files as Matlab
-default_save_options('-7');
-% Set plot engine to gnuplot, to work around an issue with fltk
-graphics_toolkit gnuplot
-```
-
-**NIAK library**. Download the [latest NIAK release on Github](https://github.com/SIMEXP/niak/releases/download/v0.16/niak-with-dependencies.zip), a free open-source software (MIT license). Once the library has been decompressed, all you need to do is to start a Matlab or Octave session and add the NIAK path (with all his subfolders) to your search path. At this stage all pipelines (except the preprocessing pipeline) will work for nifti files. Any manipulation of MINC files will require the installation of the MINC tools (see below). The NIAK archive bundles the [brain connectivity toolbox](https://sites.google.com/site/bctnet/) and [PSOM](http://psom.simexp-lab.org/), which do not need to be installed separately.
-```matlab
- path_niak = '/home/toto/niak/';
- P = genpath(path_niak);
- addpath(P);
-```
-
-**MINC tools.** To read MINC files or run the fMRI preprocessing pipeline, it is necessary to install the [minc toolkit](http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) version 1.9.2 (free open-source software, with a custom MIT-like license).
-
-**Test the installation** Follow the [test tutorial](http://niak.simexp-lab.org/niak_tutorial_test.html) to make sure that your installation is working properly.
 
 # Pipeline manager
 
