@@ -86,7 +86,7 @@ function [files_in,files_out,opt] = niak_brick_subclusters(files_in,files_out,op
 %       into a cluster to enable inclusion in the subcluster list.
 %
 %   FLAG_RAND
-%       (boolean, default 0) If FLAG_RAND is true, the order of the
+%       (boolean, default 1) If FLAG_RAND is true, the order of the
 %       subclusters are randomized. This is useful if for some reason
 %       the order of the cluster is related to their spatial proximity.
 %       Randomizing the order allows to apply a regular colormap when
