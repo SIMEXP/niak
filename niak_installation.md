@@ -1,25 +1,18 @@
 # NIAK with docker
 
-The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and ensures full repeatability of results, regardless of potential upgrades to the production OS. It can be deployed on Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Both set of instructions (docker and singularity) are provided below.
+The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and improves the repeatability of results across operating systems, including Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Instructions for singularity can be found in the section on [installation for high-performance computing](http://niak.simexp-lab.org/niak_HPC_installation.html).
 
  > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
 
 ### Linux
 The first step is to create a docker group and add the user that will use docker to that list.
-
 ```bash
 # If the group already exists, the command will return an error, just ignore it
 sudo groupadd docker
 # Then add user USERNAME to the docker group
 sudo usermod -a -G docker USERNAME
 ```
-
-For the docker group to become effective, you will need to either restart the system or type:
-``` bash
-sudo chgrp docker /run/docker.sock
-sudo chmod 660 /run/docker.sock
-```
-All the members of the docker group will have access to the docker service.
+All the members of the docker group will have access to the docker service. For the docker group to become effective, you will need to either unlog or restart your system.
 
 The following command will start NIAK with your home directory accessible (the rest of the file system is not accessible):
 ```bash
@@ -50,24 +43,24 @@ docker run -i -t --privileged --rm \
 
 ```
 
-Replace `simexp/niak-boss:0.19.1` in the command above by `simexp/niak-boss` to always get the latest niak release. Note that the first execution will be longer, since the `simexp/niak-boss(:0.19.1)` mirror has to be downloaded from the internet. All subsequent call to the line should be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak-boss:latest` by, for example, `simexp/niak-boss:0.19.1` to use a specific version (here 0.19.1). Note that the first execution will be longer, since the `simexp/niak-boss` image has to be downloaded from the internet. All subsequent call to the line will start niak immediately, and will be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
 ```
 
-The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora `>=` 20, OpenSuse `>=` 13.1 and we expect it to run smoothly on many other Linux distributions.
+The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora `>=` 20, OpenSuse `>=` 13.1 and we expect it to run smoothly on most Linux distributions.
 
 ### Mac OSX
 
-On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straight forward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
+On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straightforward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
 
-One docker is running, you to start a bash terminal and type
+Once docker has been started, you need to start a terminal and type
 
 ```bash
 bash
-docker run -it --privileged --rm \
+docker run -it --privileged --rm -v $HOME:$HOME \
        simexp/niak-boss:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
@@ -119,8 +112,11 @@ For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutori
 For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
 ```
 
-You can now start your favorite browser and go to <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>, then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD).
+You can now start your favorite browser and go to <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>, then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD). One the page is open, Jupyter will request a password, use NIAK:
 
+> [<img src="jupyter_localhost.png" width="350px" />]
+
+You should then have access to the file present in the directory where `niak_jupyter` was started.
 
 # Pipeline manager
 
