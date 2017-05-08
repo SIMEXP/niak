@@ -112,7 +112,7 @@ text_files = sprintf(['function buildFilesIn (evt) {\n' ...
                       '  switch(evt.params.data.id) {\n']);
 for ss = 1:length(list_subject)
     json_files = savejson('',data.files_in.(list_subject{ss}));
-    text_files = [text_files sprintf('    case "%i":\n      var filesIn = %s\n',ss,json_files)];
+    text_files = [text_files sprintf('    case "%i":\n      var filesIn = %s\n break\n',ss,json_files)];
 end
 text_files = [text_files sprintf(['};\n' ...
               'return filesIn \n}\n'])];
