@@ -101,7 +101,7 @@ jout.montage = [opt.folder_out 'img' filesep 'template.jpg'];
 jopt.colormap = 'gray';
 jopt.limits = 'adaptative';
 jopt.nb_color = 256;
-jopt.quality = 0.9;
+jopt.quality = 90;
 pipeline = psom_add_job(pipeline,jname,'niak_brick_montage',jin,jout,jopt);
 
 % network image
