@@ -8,8 +8,8 @@ function [in,out,opt] = niak_brick_montage(in,out,opt)
 %   If left empty, or unspecified, OUT is the world space associated with IN.SOURCE 
 %   i.e. the volume is resamples to have no direction cosines. 
 % OUT.MONTAGE (string) the file name for the figure. The extension will determine the type. 
-% OUT.COLORMAP (string) the file name for a figure with the color map. 
-% OUT.QUANTIZATION (string) the file name for a .mat file with variables DATA and SIZE_SLICE. 
+% OUT.COLORMAP (string, default 'gb_niak_omitted') the file name for a figure with the color map. 
+% OUT.QUANTIZATION (string, default 'gb_niak_omitted') the file name for a .mat file with variables DATA and SIZE_SLICE. 
 %   DATA(N) is the data point associated with the Nth color. 
 %   SIZE_SLICE (vector 1x2) the size of a slice. 
 % OPT.NB_SLICES (scalar, default Inf) the number of slices to produce (with a parameter
@@ -81,7 +81,7 @@ out = psom_struct_defaults( out , ...
     
 opt = psom_struct_defaults ( opt , ...
     { 'ind' , 'nb_color' , 'quality' , 'thresh' , 'nb_slices' , 'type_view' , 'limits' , 'colormap' , 'flag_test' }, ...
-    { 1     , 256        , 90        , []       , Inf         , 'sagital'   , ''       , 'gray'     , false       });
+    { 1     , 256        , 90        , []       , Inf         , 'sagital'   , []       , 'gray'     , false       });
 
 if opt.flag_test 
     return
@@ -153,7 +153,7 @@ if opt.nb_color < Inf
     delta = (bins(2)-bins(1))/2;
     bins = [bins(1)-delta,bins+delta];
 else
-    bins = unique(img(:));
+    bins = [unique(img(:)) ; Inf];
 end
 opt.nb_color = length(bins)-1;
 
@@ -181,9 +181,9 @@ rgb(:,:,2) = reshape(cm(idx(:),2),size(img));
 rgb(:,:,3) = reshape(cm(idx(:),3),size(img));
 if ~isempty(opt.thresh)
     if (length(opt.thresh)==1)
-        mask_alpha = img>opt.thresh;
+        mask_alpha = img>=opt.thresh;
     else
-        mask_alpha = (img>opt.thresh(2))|(img<opt.thresh(1));
+        mask_alpha = (img>=opt.thresh(2))|(img<=opt.thresh(1));
     end
     img(~mask_alpha) = 0;
     imwrite(rgb,out.montage,'quality',opt.quality,'Alpha',double(mask_alpha));
@@ -196,7 +196,7 @@ if ~strcmp(out.colormap,'gb_niak_omitted')
     rgb = zeros(1,size(cm,1),size(cm,2));
     rgb(1,:,:) = cm;
     if ~isempty(opt.thresh) && (length(opt.thresh)==1)
-        rgb = rgb(1,bins(2:end)>=opt.thresh,:);
+        rgb = rgb(1,bins(1:(end-1))>=opt.thresh,:);
     end
     imwrite(rgb,out.colormap,'quality',opt.quality);
 end

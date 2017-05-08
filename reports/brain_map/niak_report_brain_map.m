@@ -165,21 +165,19 @@ for oo = 1:length(in.overlay)
 end
 
 % Generate the motion report
-for ll = 1:length(opt.labels)
-    clear jin jout jopt
-    jin = list_quantization;
-    jout.index = [opt.folder_out 'index.html'];
-    jout.data = [opt.folder_out 'listMaps.js'];
-    jopt.labels = opt.labels;
-    jopt.class_viewer = opt.class_viewer;
-    jopt.background = list_background;
-    jopt.colormap = list_colormap;
-    jopt.overlay = list_overlay;
-    jopt.color_background = opt.color_background;
-    jopt.color_font = opt.color_font;
+clear jin jout jopt
+jin = list_quantization;
+jout.index = [opt.folder_out 'index.html'];
+jout.data = [opt.folder_out 'listMaps.js'];
+jopt.labels = opt.labels;
+jopt.class_viewer = opt.class_viewer;
+jopt.background = list_background;
+jopt.colormap = list_colormap;
+jopt.overlay = list_overlay;
+jopt.color_background = opt.color_background;
+jopt.color_font = opt.color_font;
     
-    pipeline = psom_add_job(pipeline,'brain_map_report','niak_brick_report_brain_map',jin,jout,jopt);
-end
+pipeline = psom_add_job(pipeline,'brain_map_report','niak_brick_report_brain_map',jin,jout,jopt);
 
 if ~opt.flag_test
     psom_run_pipeline(pipeline,opt.psom);

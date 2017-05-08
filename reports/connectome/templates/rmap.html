@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Report on functional connectivity maps</title>
+  <meta charset="utf-8"/>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <link rel="stylesheet" type="text/css" href="assets/bootstrap/bootstrap.min.css" /> <!--from keen.io-->
+  <link rel="stylesheet" type="text/css" href="assets/keen/keen-dashboards.css" />    <!--from keen.io-->
+  <link href="assets/select2/select2.min.css" rel="stylesheet" /> <!--from select 2-->
+</head>
+
+<body class="application">
+
+  <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="http://niak.simexp-lab.org/pipe_connectome.html">Connectome pipeline</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+          <li><a href="index.html">Summary</a></li>
+          <li><a href="rmap.html">r-maps</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Brain parcels
+          </div>
+          <div class="chart-stage">
+            <div id="divParcels" >
+              <canvas id="3DviewerParcels">
+              <img id="parcels" class="hidden" src="./img/network.png">
+              <img id="parcelsColorMap" class="hidden" src="./img/network_cm.png">
+            </div>
+          </div>
+          <div class="chart-notes">
+            Click on a parcel to select it.
+          </div>
+        </div>
+      </div>
+
+        <div class="col-sm-6">
+          <div class="chart-wrapper">
+            <div class="chart-title">
+              Average map for parcel
+              <select id="select-network" class="select-network" style="width: 50%"></select>
+            </div>
+            <div class="chart-stage">
+              <div id="divRmapAverage" >
+                <canvas id="3DviewerAverage">
+                <img id="template" class="hidden" src="./img/template.jpg">
+                <img id="rmapAverage" class="hidden" src="./img/img_avg_$NETWORK.png">
+                <img id="colorMap" class="hidden" src="./img/avg_colormap.png">
+              </div>
+            </div>
+            <div class="chart-notes">
+              Press N/M for previous/next parcel.
+            </div>
+          </div>
+        </div>
+
+    <div class="col-sm-6">
+    	<div class="chart-wrapper">
+      	<div class="chart-title">
+            Individual map for subject
+            <select id="select-subject" class="select-subject" style="width: 50%"></select>
+         </div>
+         <div class="chart-stage">
+           <div class="chart-stage">
+             <div id="divRmapSubject">
+              <canvas id="3DviewerSubject">
+              <img id="rmapSubject" class="hidden" src="./img/img_rmap_$NETWORK_$SUBJECT.png">
+             </div>
+           </div>
+          <div class="chart-notes">
+            Press Z/X for previous/next subject.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr>
+</div>
+    <p class="small text-muted">Built with &#9829; by <a href="http://niak.simexp-lab.org">NIAK</a> using dashboards from <a href="https://keen.io">Keen IO</a></p>
+
+  <!--Dependencies-->
+  <script type="text/javascript" src="assets/jquery/jquery.min.js"></script>       <!--from keen.io-->
+  <script type="text/javascript" src="assets/bootstrap/bootstrap.min.js"></script> <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/keen.min.js"></script>           <!--from keen.io-->
+  <script type="text/javascript" src="assets/keen/meta.js"></script>               <!--from keen.io-->
+  <script type="text/javascript" src="assets/brainsprite.js"></script>
+  <script src="assets/select2/select2.min.js"></script> <!--from select 2-->
+  <script src="summary/listSubject.js"></script> <!--List of subjects-->
+  <script src="summary/listNetwork.js"></script> <!--List of subjects-->
+
+  <script>
+  $(window).load(function() {
+
+      <!--Generate a viewer for brain parcels--!>
+      var brainParcels = brainsprite({
+        canvas: "3DviewerParcels",
+        sprite: "template",
+        nbSlice: { 'Y':$NUMELY , 'Z':$NUMELZ },
+        colorBackground: "#FFFFFF",
+        colorFont: "#000000",
+        flagCoordinates: true,
+        origin: {X: $ORIGINX, Y:$ORIGINY, Z:$ORIGINZ},
+        voxelSize: $VOXELSIZE,
+        onclick: function(e) {
+          brainSubject.numSlice = brainParcels.numSlice;
+          brainAverage.numSlice = brainParcels.numSlice;
+          brainSubject.drawAll();
+          brainAverage.drawAll();
+          if (brainParcels.voxelValue) {
+            evt = {idn: Math.floor(brainParcels.voxelValue)};
+            setImg(evt);
+          };
+        },
+        overlay: {
+          sprite: "parcels",
+          nbSlice: {'Y':$NUMELY , 'Z':$NUMELZ },
+          smooth: true,
+          opacity: 0.5
+        },
+        colorMap: {
+          img: "parcelsColorMap", // That is the ID of the image with the colormap
+          min: $NETMIN,
+          max: $NETMAX,
+        },
+      });
+
+        <!--Generate a viewer for group average connectivity map--!>
+        var brainAverage = brainsprite({
+          canvas: "3DviewerAverage",
+          sprite: "template",
+          nbSlice: { 'Y':$NUMELY , 'Z':$NUMELZ },
+          colorBackground: "#FFFFFF",
+          colorFont: "#000000",
+          flagCoordinates: true,
+          origin: {X: $ORIGINX, Y:$ORIGINY, Z:$ORIGINZ},
+          voxelSize: $VOXELSIZE,
+          onclick: function(e) {
+            brainSubject.numSlice = brainAverage.numSlice;
+            brainParcels.numSlice = brainAverage.numSlice;
+            brainParcels.drawAll();
+            brainSubject.drawAll();
+            },
+          overlay: {
+            sprite: "rmapAverage",
+            nbSlice: {'Y':$NUMELY , 'Z':$NUMELZ },
+            smooth: true,
+            opacity: 0.8
+          },
+          colorMap: {
+            img: "colorMap", // That is the ID of the image with the colormap
+            min: $AVGMIN,
+            max: $AVGMAX,
+          },
+        });
+
+        <!--Generate a viewer for individual connectivity map--!>
+        var brainSubject = brainsprite({
+          canvas: "3DviewerSubject",
+          sprite: "template",
+          nbSlice: { 'Y':233 , 'Z':189 },
+          colorBackground: "#FFFFFF",
+          colorFont: "#000000",
+          flagCoordinates: true,
+          origin: {X: $ORIGINX, Y:$ORIGINY, Z:$ORIGINZ},
+          voxelSize: $VOXELSIZE,
+          onclick: function(e) {
+            brainAverage.numSlice = brainSubject.numSlice;
+            brainParcels.numSlice = brainSubject.numSlice;
+            brainParcels.drawAll();
+            brainAverage.drawAll();
+            },
+          overlay: {
+            sprite: "rmapSubject",
+            nbSlice: {'Y':$NUMELY , 'Z':$NUMELZ },
+            smooth: true,
+            opacity: 0.8
+          },
+          colorMap: {
+            img: "colorMap", // That is the ID of the image with the colormap
+            min: $INDMIN,
+            max: $INDMAX,
+          },
+        });
+
+    <!--Add a subject selection-->
+    $(".select-subject").select2({
+    data: listSubject
+    });
+    var $eventSubject = $(".select-subject");
+    $eventSubject.on("select2:select", function (e) { setImg(e); })
+
+    <!--Add a network selection-->
+    $(".select-network").select2({
+    data: listNetwork
+    });
+    var $eventNetwork = $(".select-network");
+    $eventNetwork.on("select2:select", function (e) { setImg(e); })
+
+    <!--Update images-->
+    function setImg (evt) {
+
+      <!--Get subject index and ID-->
+      $es = $(".select-subject");
+      if (!evt.hasOwnProperty('id')) {
+        id = $es.val();
+      }
+      else {
+        id = evt.id;
+      };
+      subject = $("#select-subject option[value=" + id + "]").text();
+
+      <!--Get network index and ID-->
+      $en = $(".select-network");
+      if (!evt.hasOwnProperty('idn')) {
+        idn = $en.val();
+      }
+      else {
+        idn = evt.idn;
+      };
+      network = $("#select-network option[value=" + idn + "]").text();
+
+      <!--Update the selection of the subject button-->
+      $es.val(id);
+      $es.trigger('change');
+      $en.val(idn);
+      $en.trigger('change');
+
+      <!--Update figures-->
+      brainAverage.overlay.sprite.src = "./img/img_avg_" + network + ".png";
+      brainSubject.overlay.sprite.src = "./img/img_rmap_" + network + "_" + subject + ".png";
+    }
+
+    <!--Move on to the next subject-->
+    function nextItem (type) {
+      $es = $(".select-" + type);
+      currId = $es.val();
+      currId = parseInt(currId);
+      switch (type) {
+        case "subject":
+          var maxItem = listSubject.length;
+          break
+        case "network":
+          var maxItem = listNetwork.length;
+          break
+      }
+      if (currId < maxItem) {
+        currId+=1;
+      } else {
+        currId = 1;
+      }
+
+      switch (type) {
+        case "subject":
+          var evt = {id: currId};
+          break
+        case "network":
+          var evt = {idn: currId};
+          break
+      }
+      setImg (evt);
+    }
+
+    <!--Move back to the previous subject-->
+    function prevItem (type) {
+      $es = $(".select-" + type);
+      currId = $es.val();
+      currId = parseInt(currId);
+      switch (type) {
+        case "subject":
+          var maxItem = listSubject.length;
+          break
+        case "network":
+          var maxItem = listNetwork.length;
+          break
+      }
+      if (currId > 1) {
+         currId-=1;
+      } else {
+         currId = maxItem;
+      }
+      switch (type) {
+        case "subject":
+          var evt = {id: currId};
+          break
+        case "network":
+          var evt = {idn: currId};
+          break
+      }
+      setImg (evt);
+    }
+
+    <!--Changing subjects with left and right arrows (prev and next, resp)-->
+    function reactKey(key){
+      switch (key) {
+        case 90:
+          prevItem("subject");
+          break
+        case 77:
+          nextItem("network");
+          break
+        case 88:
+          nextItem("subject");
+          break
+        case 78:
+          prevItem("network");
+          break
+      };
+    };
+
+    window.onkeydown = function(e) { reactKey(e.keyCode)
+        };
+
+  });
+  </script>
+
+</body>
+</html>
