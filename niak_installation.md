@@ -53,11 +53,11 @@ The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora 
 
 ### Mac OSX
 
-On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straightforward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). Docker for mac also requires MMU enable hardware. You should be safe if your laptop was build after 2010.
+On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straightforward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). Docker for mac also requires MMU enable hardware. You should be safe if your laptop was build in 2010 or later.
 
 For older distributions/hardware, you can still install Docker, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
-We recommend using a Jupyter notebook to run NIAK on OSX (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+We recommend using a Jupyter notebook to run NIAK on OSX ([see bellow](#NIAK in a Jupyter notebook)), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
 
 
 ```bash
@@ -78,7 +78,7 @@ If you have a Windows 10 Pro, the [docker installation](https://docs.docker.com/
 For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_windows/).
 
 
-We recommend using a Jupyter notebook to run NIAK on windows (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+We recommend using a Jupyter notebook to run NIAK on windows ([see bellow](#NIAK in a Jupyter notebook)), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
 
 
 ```bash
