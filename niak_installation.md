@@ -53,10 +53,12 @@ The procedure as been tested on Debian 8.0, Ubuntu `>=` 14.10, centOS 7, fedora 
 
 ### Mac OSX
 
-On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straightforward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
+On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is straightforward. Downoload the stable channel from the [docker mac install page](https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac). Docker for mac also requires MMU enable hardware. You should be safe if your laptop was build after 2010.
 
+For older distributions/hardware, you can still install Docker, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
-Once docker has been started, you need to start a terminal and type
+We recommend using a Jupyter notebook to run NIAK on OSX (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+
 
 ```bash
 bash
@@ -65,16 +67,19 @@ docker run -it --privileged --rm -v $HOME:$HOME \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
-in that terminal and an octave session with NIAK included starts. (Note that Macs often have tcsh terminal by default, the first line with `bash` forces your terminal to be in bash mode.)
+Note that Macs often have tcsh terminal by default, the first line with `bash` forces your terminal to be in bash mode.
 
 Note that one could access the octave gui by installing xquart on its mac, we do not officially support this feature but you can have a look [here](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/) for a procedure. We recommend the use of Jupyter notebooks (see below) for a full featured user interface experience of NIAK.
 
 ### Windows
 
-If you have a Windows 10 Pro, the [docker installation](https://docs.docker.com/docker-for-windows/install/) is straight forward.
-We recommend using a Jupyter notebook to run NIAK on windows (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+If you have a Windows 10 Pro, the [docker installation](https://docs.docker.com/docker-for-windows/install/) is straight forward. Note that, as mention in the instruction, [virtualization must be enabled](https://docs.docker.com/docker-for-windows/troubleshoot/#virtualization-must-be-enabled)
 
 For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_windows/).
+
+
+We recommend using a Jupyter notebook to run NIAK on windows (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+
 
 ```bash
 docker run -it --privileged --rm \
@@ -89,6 +94,7 @@ After a successful docker installation, niak can be controlled throught a Jupyte
 
 #### Linux & OSX variant
 ```bash
+bash
 docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
        -p 8080:8080 simexp/niak-boss:latest niak_jupyter
 ```
