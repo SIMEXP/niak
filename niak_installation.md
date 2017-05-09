@@ -57,7 +57,7 @@ On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is
 
 For older distributions/hardware, you can still install Docker, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
-We recommend using a Jupyter notebook to run NIAK on OSX (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+We recommend using a Jupyter notebook to run NIAK on OSX for a full featured user interface experience of NIAK (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
 
 
 ```bash
@@ -69,7 +69,7 @@ docker run -it --privileged --rm -v $HOME:$HOME \
 
 Note that Macs often have tcsh terminal by default, the first line with `bash` forces your terminal to be in bash mode.
 
-Note that one could access the octave gui by installing xquart on its mac, we do not officially support this feature but you can have a look [here](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/) for a procedure. We recommend the use of Jupyter notebooks (see below) for a full featured user interface experience of NIAK.
+Note that one could access the octave gui by installing xquart on its mac, we do not officially support this feature but you can have a look [here](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/) for a procedure.
 
 ### Windows
 
@@ -78,7 +78,7 @@ If you have a Windows 10 Pro, the [docker installation](https://docs.docker.com/
 For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_windows/).
 
 
-We recommend using a Jupyter notebook to run NIAK on windows (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+We recommend using a Jupyter notebook to run NIAK on windows for a full featured user interface experience of NIAK (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
 
 
 ```bash
