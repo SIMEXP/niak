@@ -57,7 +57,7 @@ On more recent OSX distribution (>= 10.10.3, or better > 10.11), Docker usage is
 
 For older distributions/hardware, you can still install Docker, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_mac/).
 
-We recommend using a Jupyter notebook to run NIAK on OSX ([see bellow](#NIAK in a Jupyter notebook)), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+We recommend using a Jupyter notebook to run NIAK on OSX (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
 
 
 ```bash
@@ -78,7 +78,7 @@ If you have a Windows 10 Pro, the [docker installation](https://docs.docker.com/
 For older distributions, the task is not always as smooth, but is [explained in detail here](https://docs.docker.com/toolbox/toolbox_install_windows/).
 
 
-We recommend using a Jupyter notebook to run NIAK on windows ([see bellow](#NIAK in a Jupyter notebook)), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
+We recommend using a Jupyter notebook to run NIAK on windows (see bellow), but you can also run the following command in your favorite terminal to get an `octave` session with NIAK included.
 
 
 ```bash
