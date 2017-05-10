@@ -195,7 +195,8 @@ clear jin jout jopt
 jin.individual = ind_quantization;
 jin.average    = avg_quantization;
 jin.network    = net_quantization;
-jout = [opt.folder_out 'rmap.html'];
+jout.rmap = [opt.folder_out 'rmap.html'];
+jout.network = [opt.folder_out 'summary' filesep 'listNetwork.js'];
 jopt.label_network = list_seed;
 jopt.label_subject = list_subject;
 pipeline = psom_add_job(pipeline,'rmap_report','niak_brick_report_connectome',jin,jout,jopt);
