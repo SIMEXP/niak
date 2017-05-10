@@ -10,7 +10,8 @@ function [in,out,opt] = niak_brick_report_connectome(in,out,opt)
 % IN.NETWORK    (string) a .mat file with the quantization data for the 
 %     network overlay.
 %
-% OUT (string) the name of the rmap.html report. 
+% OUT.RMAP (string) the name of the rmap.html report. 
+% OUT.NETWORK (string) the name of the javascript data for the networks.
 % 
 % OPT.LABEL_NETWORK (cell of strings) string labels for each network.
 % OPT.LABEL_SUBJECT (cell of strings) string labels for each network.
@@ -43,9 +44,8 @@ function [in,out,opt] = niak_brick_report_connectome(in,out,opt)
 
 %% Defaults
 in = psom_struct_defaults ( in , { 'individual' , 'average' , 'network'} , { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' });
-if ~ischar(out)
-    error('FILES_OUT should be a string')
-end
+out = psom_struct_defaults ( out , {  'rmap' , 'network' } , {  NaN , NaN });
+
 
 if nargin < 3
     opt = struct;
@@ -94,9 +94,23 @@ str_rmap = strrep(str_rmap,'$NETWORK',list_network{1});
 str_rmap = strrep(str_rmap,'$SUBJECT',list_subject{1});
 
 %% Write report
-[hf,msg] = fopen(out,'w');
+[hf,msg] = fopen(out.rmap,'w');
 if hf == -1
     error(msg)
 end
 fprintf(hf,'%s',str_rmap);
+fclose(hf);
+
+%% save a json/javascript list of networks
+text_network = sprintf('var listNetwork = [\n');
+for ss = 1:(length(list_network)-1)
+    text_network = [text_network sprintf('{id: %i, text: ''%s'' },\n',ss,list_network{ss})];
+end
+text_network = sprintf('%s{id: %i, text: ''%s'' }\n];\n',text_network,length(list_network),list_network{end});
+
+[hf,msg] = fopen(out.network,'w');
+if hf == -1
+    error(msg)
+end
+fprintf(hf,'%s',text_network);
 fclose(hf);
