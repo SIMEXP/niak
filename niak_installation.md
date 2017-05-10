@@ -24,7 +24,7 @@ docker run -i -t --privileged --rm \
        -v /tmp:/tmp \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:latest \
+       simexp/niak-cog:latest \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
 You can also add the following to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
@@ -38,12 +38,12 @@ docker run -i -t --privileged --rm \
        -v /tmp:/tmp \
        -e DISPLAY=unix$DISPLAY \
        --user $UID \
-       simexp/niak-boss:latest \
+       simexp/niak-cog:latest \
        /bin/bash -ic \"cd $HOME; octave --force-gui; /bin/bash\""
 
 ```
 
-Replace `simexp/niak-boss:latest` by, for example, `simexp/niak-boss:0.19.1` to use a specific version (here 0.19.1). Note that the first execution will be longer, since the `simexp/niak-boss` image has to be downloaded from the internet. All subsequent call to the line will start niak immediately, and will be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
+Replace `simexp/niak-cog:latest` by, for example, `simexp/niak-cog:1.0.1` to use a specific version (here 1.0.1). Note that the first execution will be longer, since the `simexp/niak-cog` image has to be downloaded from the internet. All subsequent call to the line will start niak immediately, and will be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
 docker stop niak
 docker rm niak
@@ -63,7 +63,7 @@ We recommend using a Jupyter notebook to run NIAK on OSX for a full featured use
 ```bash
 bash
 docker run -it --privileged --rm -v $HOME:$HOME \
-       simexp/niak-boss:latest \
+       simexp/niak-cog:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
@@ -83,25 +83,25 @@ We recommend using a Jupyter notebook to run NIAK on windows for a full featured
 
 ```bash
 docker run -it --privileged --rm \
-       simexp/niak-boss:latest \
+       simexp/niak-cog:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
 
 
 # NIAK in a Jupyter notebook
 
-After a successful docker installation, niak can be controlled throught a Jupyter notebook. It is available with niak-boss  >= 0.18.0 image. You can run:
+After a successful docker installation, niak can be controlled throught a Jupyter notebook. It is available with niak >= 0.18.0 image. You can run:
 
 #### Linux & OSX variant
 ```bash
 bash
 docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
-       -p 8080:8080 simexp/niak-boss:latest niak_jupyter
+       -p 8080:8080 simexp/niak-cog:latest niak_jupyter
 ```
 #### Windows variant
 ```bash
 docker run -it --rm  -v $PWD:"/sandbox/home"  -p 8080:8080 \
- simexp/niak-boss:latest niak_jupyter
+ simexp/niak-cog:latest niak_jupyter
 ```
 
 the output should looks like the following:
