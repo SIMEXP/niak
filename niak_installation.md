@@ -98,11 +98,6 @@ bash
 docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
        -p 8080:8080 simexp/niak-cog:latest niak_jupyter
 ```
-#### Windows variant
-```bash
-docker run -it --rm  -v $PWD:"/sandbox/home"  -p 8080:8080 \
- simexp/niak-cog:latest niak_jupyter
-```
 
 the output should looks like the following:
 ```
@@ -117,12 +112,26 @@ The PASSWORD is: NIAK
 For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutorials.html
 For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
 ```
-
-You can now start your favorite browser and go to <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>, then click New --> Octave. You now have access to all niak features! Note that the NIAK outputs will be in the directory where you called the `docker run` command (that is $PWD). One the page is open, Jupyter will request a password, use NIAK:
-
-> [<img src="jupyter_localhost.png" width="350px" />]
+You can now start your favorite browser and go to [http://localhost:8080](http://localhost:8080). Once the page is open, Jupyter will request a password, use NIAK. Then click New --> Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the `docker run` command has been executed.
 
 You should then have access to the file present in the directory where `niak_jupyter` was started.
+
+#### Windows variant
+From the docker web site: _"If you are using Windows containers, keep in mind that there are some limitations with regard to networking [...] One thing you may encounter rather immediately is that published ports on Windows containers do not do loopback to the local host. Instead, container endpoints are only reachable from the host using the container’s IP and port."_
+
+Hence, once you start Docker and spin off NIAK with the following command
+```bash
+docker run -it --rm  -v $PWD:"/sandbox/home"  -p 8080:8080 \
+ simexp/niak-cog:latest niak_jupyter
+```
+> [<img src="docker_windows_niak.png" width="350px" />]
+
+You will need to open your browser with the address provided to you by the docker virtual machine. The adress `192.168.99.100` is circled in red in the example above. You then open your favorite browser to the address appended by port `8080`: `192.168.99.100:8080`. Once the page is open, Jupyter will request a password, use NIAK.
+
+> [<img src="jupyter_login.png" width="350px" />]
+
+Then click New --> Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the `docker run` command has been executed.
+
 
 # Pipeline manager
 
