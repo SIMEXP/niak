@@ -121,7 +121,7 @@ From the docker web site: _"If you are using Windows containers, keep in mind th
 
 Hence, once you start Docker and spin off NIAK with the following command
 ```bash
-docker run -it --rm  -v $PWD:"/sandbox/home"  -p 8080:8080 \
+docker run -it --rm  -v $PWD:"/sandbox/home"  --user nobody  -p 8080:8080 \
  simexp/niak-cog:latest niak_jupyter
 ```
 > [<img src="docker_windows_niak.png" width="350px" />]
