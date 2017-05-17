@@ -243,7 +243,7 @@ Regarding the method for non-uniformity correction of the structural scan.
 >Sled, J.G., Zijdenbos, A.P., and Evans, A.C. (1998). "A Nonparametric Method for Automatic Correction of Intensity Nonuniformity in MRI Data". IEEE Transactions on Medical Imaging 17, pp. 87-97.
 
 Regarding the brain extraction on the structural scan.
->J. G. Park, C. Lee (2009). `Skull stripping based on region growing for magnetic resonance brain images'. NeuroImage 47(4):1394-1407.
+>J. G. Park, C. Lee (2009). "Skull stripping based on region growing for magnetic resonance brain images". NeuroImage 47(4):1394-1407.
 
 Note that the actual algorithm used in NIAK was only inspired by this last paper.
 >A more detailed description can be found in the help of [niak_brick_mask_brain_t1](https://github.com/SIMEXP/niak/blob/master/bricks/t1_processing/niak_brick_mask_brain_t1.m).
@@ -256,6 +256,7 @@ Regarding the estimation of the global signal.
 
 Regarding regression of confounds in fMRI.
 >Lund, T. E., Madsen, K. H., Sidaros, K., Luo, W.-L., Nichols, T. E., Jan. 2006. Non-white noise in fMRI: does modelling have an impact? NeuroImage 29 (1), 54-66. http://dx.doi.org/10.1016/j.neuroimage.2005.07.005
+
 >F. Giove, T. Gili, V. Iacovella, E. Macaluso, and B. Maraviglia. Images-based suppression of unwanted global signals in resting-state functional connectivity studies. Magnetic Resonance Imaging, 27(8):1058–1064, 2009.
 
 Regarding the impact of global signal regression for group comparison.
