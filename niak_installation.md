@@ -6,14 +6,15 @@ The recommended way to install NIAK is to use a [docker](https://www.docker.com/
 
 ## Linux
 #### installing docker
-The first step is to create a docker group and add the user that will use docker to that list.
+After the docker installation, the first step is to create a docker group and add the user that will use docker to that list.
 ```bash
-# If the group already exists, the command will return an error, just ignore it
+# Some distro create the group during installation,
+#   if it is that case, the command will return an error, just ignore it
 sudo groupadd docker
 # Then add user USERNAME to the docker group
 sudo usermod -a -G docker USERNAME
 ```
-All the members of the docker group will have access to the docker service. For the docker group to become effective, you will need to either unlog or restart your system.
+All the members of the docker group will have access to the docker service. For the docker group to become effective, you will need to either logout and login or restart your system.
 
 #### Running NIAK in a Jupyter Notebook
 
@@ -56,21 +57,6 @@ docker run -i -t --privileged --rm \
        simexp/niak-cog:latest \
        /bin/bash -ic "cd $HOME; octave --force-gui; /bin/bash"
 ```
-You can also add the following to you $HOME/.bashrc file so you can simply type `docker_run_niak` to run niak.
-
-```bash
-alias docker_run_niak="xhost +local: && docker stop niak && docker rm niak && \
-docker run -i -t --privileged --rm \
-       --name niak \
-       -v $HOME:$HOME -v /etc/group:/etc/group \
-       -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  \
-       -v /tmp:/tmp \
-       -e DISPLAY=unix$DISPLAY \
-       --user $UID \
-       simexp/niak-cog:latest \
-       /bin/bash -ic \"cd $HOME; octave --force-gui; /bin/bash\""
-
-```
 
 Replace `simexp/niak-cog:latest` by, for example, `simexp/niak-cog:1.0.1` to use a specific version (here 1.0.1). Note that the first execution will be longer, since the `simexp/niak-cog` image has to be downloaded from the internet. All subsequent call to the line will start niak immediately, and will be much faster. Close the GUI and type "exit" in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:
 ```bash
@@ -91,7 +77,7 @@ We recommend using a Jupyter notebook to run NIAK on OSX for a full featured use
 
 ```bash
 bash # Force the use of BASH, you can skip this line if already using BASH
-docker run -it --rm  -v $PWD:/sandbox/home --user $UID \
+docker run -it --rm  -v /tmp:/tmp -v $PWD:/sandbox/home --user $UID \
        -p 8080:8080 simexp/niak-cog:latest niak_jupyter
 ```
 
@@ -118,7 +104,7 @@ You can also run the following command in your favorite terminal to get an `octa
 
 ```bash
 bash
-docker run -it --privileged --rm -v $HOME:$HOME \
+docker run -it --privileged --rm  -v /tmp:/tmp -v $HOME:$HOME \
        simexp/niak-cog:latest \
        /bin/bash -ic "cd $HOME; octave; /bin/bash"
 ```
