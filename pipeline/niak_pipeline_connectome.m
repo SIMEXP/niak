@@ -240,9 +240,9 @@ else
     [hdr,mask] = niak_read_vol(files_in.network);
     list_seed = unique(mask(:));
     list_seed = list_seed(list_seed~=0);
-    labels_seed = cell(length(list_seed,1));
+    labels_seed = cell(length(list_seed),1);
     for ll = 1:length(list_seed)
-        labels_seed = sprintf('seed%i',list_seed(ll));
+        labels_seed{ll} = sprintf('seed%i',list_seed(ll));
     end
 end
 
