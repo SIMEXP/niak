@@ -183,11 +183,11 @@ for num_f = 1:length(list_dir)
         for n_ses = 1:length(all_sessions(:,1))
             if all_sessions{1} == '0'
                 session_path = strcat(path_data, subject_dir);
-                session_id = "sess_1";
+                session_id = "sess1";
                 no_session = true;
             else
                 ses_name = all_sessions(n_ses,1){1}   ;         
-                session_id = ["sess_" all_sessions(n_ses,2){1}];
+                session_id = ["sess" all_sessions(n_ses,2){1}];
                 session_path = strcat(path_data, subject_dir, filesep, ses_name);
                 no_session = false;
             end
@@ -215,9 +215,9 @@ for num_f = 1:length(list_dir)
                     run_num = regexpi(m{1}{1}, func_run_regex, 'tokens') ;
                     full_path = strcat(fmri_path, filesep, m{1}{1});
                     if length(run_num)
-                        fmri.(session_id).(['task_' task_type '_run' run_num{1}{1}]) = full_path ;
+                        fmri.(session_id).(['task' task_type 'run' run_num{1}{1}]) = full_path ;
                     else
-                        fmri.(session_id).(['task_' task_type]) = full_path ;           
+                        fmri.(session_id).(['task' task_type]) = full_path ;           
                     end
                 end
             end
