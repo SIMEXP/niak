@@ -1,4 +1,4 @@
-FROM simexp/octave:4.0.2_ubuntu_12
+FROM simexp/octave:4.2.1_ubuntu_16
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 ENV PSOM_VERSION 2.3.1
@@ -7,6 +7,7 @@ ENV NIAK_CONFIG_PATH /local_config
 ENV NIAK_SANDBOX_ROOT /sandbox
 ENV NIAK_SANDBOX ${NIAK_SANDBOX_ROOT}/home
 ENV HOME ${NIAK_SANDBOX}
+ENV TERM xterm-256color
 
 # Install NIAK  
 
@@ -49,7 +50,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
 RUN pip install notebook octave_kernel && rm get-pip.py
 RUN python -m octave_kernel.install
-RUN pip install ipywidgets
+RUN pip install ipywidgets widgetsnbextension
 ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
 ADD util/lib/psom_gb_vars_local.jupyter /usr/local/lib/psom_gb_vars_local.jupyter
 ADD util/lib/jupyter_notebook_config.py /usr/local/lib/jupyter_notebook_config.py
