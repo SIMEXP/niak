@@ -76,6 +76,7 @@ while (num_l<length(cell_header))&&isempty(findstr(cell_header{num_l},'netcdf'))
     num_l = num_l + 1;
 end
 if num_l == length(cell_header)
+    fprintf(1,'%s\n', file_name )
     error('niak:read: Could not parse the minc header !')
 else
     cell_header = cell_header(num_l:end);
