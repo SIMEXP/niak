@@ -34,16 +34,6 @@
 % THE SOFTWARE.
 
 
-%% Use the local configuration file if any
-if ~exist('gb_niak_gb_vars','var')
-    gb_niak_gb_vars = true;
-    if exist('niak_gb_vars_local.m','file')
-        niak_gb_vars_local
-    end
-else
-    return
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The following variables are needed for very fast initialization %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,10 +133,10 @@ GB_NIAK.ps2pdf = 'ps2pdf';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-GB_NIAK.version = 'v1.0.1';
+GB_NIAK.version = 'dev';
 
 %% Target for tests
-GB_NIAK.target_test = 'ah';
+GB_NIAK.target_test = 'ai';
 
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');

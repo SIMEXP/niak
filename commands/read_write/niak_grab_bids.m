@@ -3,7 +3,7 @@ function files = niak_grab_bids(path_data,opt)
 % http://bids.neuroimaging.io
 %
 % SYNTAX:
-% FILES = NIAK_GRAB_BIDS(PATH_DATA,FILTER)
+% FILES = NIAK_GRAB_BIDS(PATH_DATA,OPT)
 %
 % _________________________________________________________________________
 % INPUTS:
@@ -12,6 +12,36 @@ function files = niak_grab_bids(path_data,opt)
 %   (string, default [pwd filesep], aka './') full path to one site of 
 %   a BIDS dataset
 %
+% OPT 
+%   (structure) grabber options
+%    
+%   FUNC_HINT
+%       (string) A hint to pick one out of many fmri input for exemple 
+%       if the fmri study includes "sub-XX_task-rest-somthing_bold.nii.gz" 
+%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the something flavor 
+%       needs to be selected, FUNC_HINT = 'something', would do the trick.
+%       Note that FUNC_HINT needs to be a string somewhere between 
+%       "task-rest" and the extention (.nii or .mnc)
+%
+%   ANAT_HINT
+%       (string) A hint to pick one out of many anat input. I only one file
+%       is present it will be used by default. If no hint is give an on file
+%       with T1 is given this file will be picked. If two file are present,
+%       "sub-11_T1.nii.gz" and "sub-11_T1w.nii.gz" and you need to select the
+%       "sub-11_T1.nii.gz" then the hint "T1."  will do the trick. 
+%
+%   TASK_TYPE
+%       (string, default = rest) The type of task, explicitely named in bids 
+%       file name
+%
+%   MAX_SUBJECTS
+%       (int, default = 0) 0 return all subjects. Used to put an upper limit
+%       on the number of subjects that are returned (nice an simple 
+%       debugging feature).
+%
+%   SUBJECT_LIST
+%       (cellarray of int) The only subject to be returned
+%   
 % _________________________________________________________________________
 % OUTPUTS:
 %
@@ -28,35 +58,6 @@ function files = niak_grab_bids(path_data,opt)
 %      <SUBJECT>.ANAT 
 %          (string) anatomical volume, from the same subject as in 
 %          FILES_IN.<SUBJECT>.FMRI
-% OPT 
-%   (structure) grabber options
-%    
-%   FMRI_HINT
-%       (string) A hint to pick one out of many fmri input for exemple 
-%       if the fmri study includes "sub-XX_task-rest-somthing_bold.nii.gz" 
-%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the something flavor 
-%       needs to be selected, FMRI_HINT = 'something', would do the trick.
-%       Note that FMRI_HINT needs to be a string somewhere between 
-%       "task-rest" and the extention (.nii or .mnc)
-%
-%   ANAT_HINT
-%       (string) A hint to pick one out of many anat input. I only one file
-%       is present it will be used by default. If no hint is give an on file
-%       with T1 is given this file will be picked. If two file are present,
-%       "sub-11_T1.nii.gz" and "sub-11_T1w.nii.gz" and you need to select the
-%       "sub-11_T1.nii.gz" then the hint "T1."  will do the trick. 
-%
-%   TASK_TYPE
-%       (string, default = rest) The type of task, explicitely name in bids 
-%       file name
-%
-%   MAX_SUBJECTS
-%       (int, default = 0) 0 return all subjects. Used to put an upper limit
-%       on the number of subjects that are returned.
-%
-%   SUBJECT_LIST
-%       (cellarray of int) The only subject to be returned
-%   
 % _________________________________________________________________________
 % SEE ALSO:
 % NIAK_PIPELINE_FMRI_PREPROCESS
@@ -113,10 +114,10 @@ if ~strcmp(path_data(end),filesep);
     path_data = [path_data filesep];
 end
 
-if ~isfield(opt,'fmri_hint')
-    fmri_hint = '';
+if ~isfield(opt,'func_hint')
+    func_hint = '';
 else
-    fmri_hint = regexptranslate('escape', opt.fmri_hint);
+    func_hint = regexptranslate('escape', opt.func_hint);
 end
 
 if ~isfield(opt,'anat_hint')
@@ -182,19 +183,20 @@ for num_f = 1:length(list_dir)
         for n_ses = 1:length(all_sessions(:,1))
             if all_sessions{1} == '0'
                 session_path = strcat(path_data, subject_dir);
-                session_id = "sess-1";
+                session_id = "sess1";
                 no_session = true;
             else
                 ses_name = all_sessions(n_ses,1){1}   ;         
-                session_id = ["sess-" all_sessions(n_ses,2){1}];
+                session_id = ["sess" all_sessions(n_ses,2){1}];
                 session_path = strcat(path_data, subject_dir, filesep, ses_name);
                 no_session = false;
             end
 
             anat_path = strcat(session_path, filesep, 'anat');
             fmri_path = strcat(session_path, filesep, 'func');
-            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*", fmri_hint, ".*\.(nii|mnc).*)"];
-            anat_regex = ['(', subject_dir, '.*_T1w.*', anat_hint, '.*\.(nii|mnc).*)'] ;
+            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*", func_hint, ".*(nii|mnc).*)"];
+%            fmri_regex = [ "(", subject_dir ".*)"];
+            anat_regex = ['(', subject_dir, '.*', anat_hint, '.*(nii|mnc).*)'] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;
             
@@ -213,9 +215,9 @@ for num_f = 1:length(list_dir)
                     run_num = regexpi(m{1}{1}, func_run_regex, 'tokens') ;
                     full_path = strcat(fmri_path, filesep, m{1}{1});
                     if length(run_num)
-                        fmri.(session_id).(['task-' task_type '_run-' run_num{1}{1}]) = full_path ;
+                        fmri.(session_id).(['task' task_type 'run' run_num{1}{1}]) = full_path ;
                     else
-                        fmri.(session_id).(['task-' task_type]) = full_path ;           
+                        fmri.(session_id).(['task' task_type]) = full_path ;           
                     end
                 end
             end
@@ -228,8 +230,8 @@ for num_f = 1:length(list_dir)
             %% TODO add more filters options
             % only return subject if anat and one func is found
             if exist('fmri')
-                files.(subject_dir).anat = anat;
-                files.(subject_dir).fmri = fmri;
+                files.(['sub' sub_id]).anat = anat;
+                files.(['sub' sub_id]).fmri = fmri;
                 if max_subjects
                     if length(fieldnames(files)) >= max_subjects
                         break;

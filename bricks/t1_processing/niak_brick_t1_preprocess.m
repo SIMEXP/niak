@@ -315,6 +315,8 @@ gb_list_fields    = {'crop_neck' , 'flag_all' , 'template'                 , 'ma
 gb_list_defaults  = {0           , true       , 'mni_icbm152_nlin_sym_09a' , opt_tmp         , opt_tmp        , opt_tmp      , 0           , ''           , 1              };
 niak_set_defaults
 
+opt.folder_out = niak_full_path(opt.folder_out);
+
 if ischar(files_in.template)
     template = struct;
     switch files_in.template
