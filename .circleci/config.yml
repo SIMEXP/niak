@@ -1,0 +1,43 @@
+version: 2
+jobs:
+  build:
+    services:
+      - docker 
+    timezone:
+      America/New_York
+      
+    - save_cache:
+       key: main-cache
+       paths:  
+         - cache_dir
+     
+    - run :
+        name: image setup 
+        - if [[ -e ~/cache_dir/niak_u16_o4.tar ]]; then docker load -i ~/cache_dir/niak_u16_o4.tar; fi
+        - docker pull simexp/niak_dependency:u16_o4
+        - mkdir -p ~/cache_dir; docker save simexp/niak_dependency:u16_o4 > ~/cache_dir/niak_u16_o4.tar
+  test:
+    - run:
+      name: niak_test_all
+      command: docker run -it -v $PWD:$PWD simexp/niak_dependency:u16_o4 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"":
+           timeout: 21600
+
+
+
+    - store_artifacts:
+      path: result
+
+
+#deployment:
+#  hub:
+#    branch: master
+#    commands:
+#      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker push $DOCKER_REPO; fi
+
+
+
+
+
+
+
+
