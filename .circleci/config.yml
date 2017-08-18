@@ -1,27 +1,42 @@
 version: 2
 jobs:
   build:
-    services:
-      - docker 
-    timezone:
-      America/New_York
-      
-    - save_cache:
-       key: main-cache
-       paths:  
-         - cache_dir
-     
+    environment:
+      TZ: "/usr/share/zoneinfo/America/New_York"
+
+    docker:
+      - image: simexp/niak_dependency:u16_o4 # all NIAK dependencies but no NIAK
+
+
+    - restore_cache:
+      key: main-cache
+
     - run :
         name: image setup 
-        - if [[ -e ~/cache_dir/niak_u16_o4.tar ]]; then docker load -i ~/cache_dir/niak_u16_o4.tar; fi
-        - docker pull simexp/niak_dependency:u16_o4
-        - mkdir -p ~/cache_dir; docker save simexp/niak_dependency:u16_o4 > ~/cache_dir/niak_u16_o4.tar
-  test:
+        command: |
+          if [[ -e cache_dir/niak_u16_o4.tar ]]; then docker load -i cache_dir/niak_u16_o4.tar; fi
+          docker pull simexp/niak_dependency:u16_o4
+          mkdir -p cache_dir; docker save simexp/niak_dependency:u16_o4 > cache_dir/niak_u16_o4.tar
+          if [[ -e cache_dir/data_test_niak_mnc1 ]]; then mv cache_dir/data_test_niak_mnc1 . ; fi
+
+    - save_cache:
+       key: main-cache
+       paths:
+         - cache_dir
+
     - run:
       name: niak_test_all
       command: docker run -it -v $PWD:$PWD simexp/niak_dependency:u16_o4 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"":
            timeout: 21600
 
+    - run:
+      name: mode-data-around
+      command: mv data_test_niak_mnc1 cache_dir
+
+    - save_cache:
+       key: main-cache
+       paths:
+         - cache_dir
 
 
     - store_artifacts:
