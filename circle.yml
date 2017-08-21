@@ -8,11 +8,11 @@ machine:
     America/New_York
 
 dependencies:
-  cache_directories:
-    - "~/docker"
- # override:
+#  cache_directories:
+#    - "~/docker"
+  override:
  #   - if [[ -e ~/docker/niak_u16_cross.tar ]]; then docker load -i ~/docker/niak_u16_o4.tar; fi
- #   - docker pull simexp/niak_dependency:cross_64
+    - docker pull simexp/niak_dependency:cross_64
  #   - mkdir -p ~/docker
  #   - docker save simexp/niak_dependency:u16_o4 > ~/docker/niak_u16_o4.tar
  #   - if [[ -e ~/docker/data_test_niak_mnc1 ]]; then cp data_test_niak_mnc1 .; fi
