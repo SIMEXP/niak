@@ -1,4 +1,4 @@
-FROM simexp/octave:4.2.1_ubuntu_16
+FROM simexp/octave:4.2.1_cross_u16
 MAINTAINER Pierre-Olivier Quirion <poq@criugm.qc.ca>
 
 ENV PSOM_VERSION 2.3.1

@@ -8,21 +8,21 @@ machine:
     America/New_York
 
 dependencies:
-#  cache_directories:
-#    - "~/docker"
+  cache_directories:
+    - "~/cache"
   override:
- #   - if [[ -e ~/docker/niak_u16_cross.tar ]]; then docker load -i ~/docker/niak_u16_o4.tar; fi
-    - docker pull simexp/niak_dependency:cross_64
- #   - mkdir -p ~/docker
- #   - docker save simexp/niak_dependency:u16_o4 > ~/docker/niak_u16_o4.tar
- #   - if [[ -e ~/docker/data_test_niak_mnc1 ]]; then cp data_test_niak_mnc1 .; fi
-
+    - if [[ -e ~/cache/niak_o4_cross_u16.tar ]]; then docker load -i ~/cache/niak_o4_cross_u16.tar; fi
+    - docker pull simexp/niak_dependency:o4_cross_u16
+    - mkdir -p ~/cache
+    - docker save -o ~/cache/niak_o4_cross_u16.tar simexp/niak_dependency:o4_cross_u16
+    - if [[ -e ~/cache/data_test_niak_mnc1 ]]; then cp ~/cache/data_test_niak_mnc1 . ; fi
+    - find ~/cache  -not -name "*data_test_niak_mnc1*" -not name "*niak_o4_cross_u16*" -exec rm {} \; # delete old cache crap!
 
 test:
   override:
-    - docker run -it -v $PWD:$PWD simexp/niak_dependency:cross_64 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"":
+    - docker run -it -v $PWD:$PWD simexp/niak_dependency:o4_cross_u16 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"":
        timeout: 21600
-    - cp data_test_niak_mnc1 "~/docker"
+    - mv data_test_niak_mnc1 "~/cache/."
 
 #deployment:
 #  hub:
