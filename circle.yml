@@ -14,6 +14,7 @@ dependencies:
     - if [[ -e ~/cache/niak_o4_cross_u16.tar ]]; then docker load -i ~/cache/niak_o4_cross_u16.tar; fi
     - docker pull simexp/niak_dependency:o4_cross_u16
     - mkdir -p ~/cache
+    - ls ~/cache
     - docker save -o ~/cache/niak_o4_cross_u16.tar simexp/niak_dependency:o4_cross_u16
     - if [[ -e ~/cache/data_test_niak_mnc1 ]]; then cp ~/cache/data_test_niak_mnc1 . ; fi
     - find ~/cache -type f -not -name "*data_test_niak_mnc1*" -not -name "*niak_o4_cross_u16*" -exec rm {} \; # delete old cache crap!
