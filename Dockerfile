@@ -58,7 +58,7 @@ EXPOSE 8080
 
 
 # To run with jupyter
-# docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak:beta niak_jupyter
+# docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak-cog niak_jupyter
 
 
 # Command to run octave as GUI
