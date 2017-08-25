@@ -17,11 +17,11 @@ function files = niak_grab_bids(path_data,opt)
 %    
 %   FUNC_HINT
 %       (string) A hint to pick one out of many fmri input for exemple 
-%       if the fmri study includes "sub-XX_task-rest-somthing_bold.nii.gz" 
-%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the something flavor 
-%       needs to be selected, FUNC_HINT = 'something', would do the trick.
+%       if the fmri study includes "sub-XX_task-rest-truite_bold.nii.gz"
+%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the "truite" flavor
+%       needs to be selected, FUNC_HINT = 'truite', would do the trick.
 %       Note that FUNC_HINT needs to be a string somewhere between 
-%       "task-rest" and the extention (.nii or .mnc)
+%       "task-rest" and the extension (.nii or .mnc)
 %
 %   ANAT_HINT
 %       (string) A hint to pick one out of many anat input. I only one file

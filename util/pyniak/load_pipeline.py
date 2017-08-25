@@ -49,7 +49,7 @@ class BasePipeline(object):
     BOUTIQUE_TYPE = "type"
     BOUTIQUE_LIST = "list"
 
-    def __init__(self, pipeline_name, folder_in, folder_out, subjects=None, options=None):
+    def __init__(self, pipeline_name, folder_in, folder_out, options=None, **kwargs):
 
         # literal file name in niak
         self.pipeline_name = pipeline_name
@@ -64,11 +64,6 @@ class BasePipeline(object):
         self.folder_in = folder_in
         self.folder_out = folder_out
         self.octave_options = options
-
-        if subjects is not None:
-            self.subjects = unroll_numbers(subjects)
-        else:
-            self.subjects = None
 
         self.psom_gb_local_path = None
 
@@ -157,8 +152,16 @@ class BasePipeline(object):
 
 class FmriPreprocess(BasePipeline):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, subject=None, func_hint="", **kwargs):
         super(FmriPreprocess, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
+
+        if subjects is not None:
+            self.subjects = unroll_numbers(subjects)
+        else:
+            self.subjects = None
+
+        if func_hint is not None:
+            self.func_hint = func_hint
 
     def grabber_construction(self):
         """
@@ -191,11 +194,14 @@ class FmriPreprocess(BasePipeline):
             opt_list += ["files_in=fcon_get_files(list_subject,opt_g)"]
 
         elif bids_description:
-                if self.subjects is not None and len(self.subjects) >= 1:
+                opt_list += "opt_gr = struct()"
+                if self.subjects is not None or self.func_hint:
                     opt_list += ["opt_gr.subject_list = {0}".format(self.subjects).replace('[', '{').replace(']', '}')]
-                    opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
-                else:
-                    opt_list += ["files_in=niak_grab_bids('{0}')".format(in_full_path)]
+                if self.func_hint:
+                    opt_list += ["opt_gr.func_hint = {0}".format(self.func_hint)]
+
+
+                opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
 
                 # opt_list += ["opt.slice_timing.flag_skip=true"]
 
