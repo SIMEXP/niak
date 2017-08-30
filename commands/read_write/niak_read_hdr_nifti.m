@@ -78,12 +78,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Opening the file
-list_formats = {'native','ieee-le','ieee-be'};
+list_formats = {'ieee-le','ieee-be'};
 fid = -1;
 tag_OK = 0;
 num_f = 1;
 
 while ((tag_OK == 0)||(fid < 0))&&(num_f <= length(list_formats))
+    if fid > 0 
+       fclose(fid)
+    end
     fid = fopen(file_name,'r',list_formats{num_f});
     if ~(fid<0)
         fseek(fid,0,'bof');

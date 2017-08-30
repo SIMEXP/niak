@@ -107,8 +107,10 @@ if ~opt.flag_target
     out_c = [path_test.result 'report_test_regression_connectome_demoniak.csv'];
     opt_c.base_source = opt_demo.folder_out;
     opt_c.base_target = path_test.reference;
-    opt_c.black_list_source = [opt_demo.folder_out 'logs' filesep];
-    opt_c.black_list_target = [path_test.reference 'logs' filesep];
+    opt_c.black_list_source{1} = [opt_demo.folder_out 'logs' filesep];
+    opt_c.black_list_target{1} = [path_test.reference 'logs' filesep];
+    opt_c.black_list_source{2} = [opt_demo.folder_out 'pipe_parameters.mat' ];
+     opt_c.black_list_target{2} = [path_test.reference 'pipe_parameters.mat' ];
     pipeline = psom_add_job(pipeline,'test_connectome','niak_test_cmp_files',in_c,out_c,opt_c,false);
     pipeline.test_connectome.dep = list_jobs;
 end

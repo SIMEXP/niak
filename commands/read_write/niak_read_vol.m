@@ -233,6 +233,7 @@ else
 
                 [succ,msg] = system(instr_unzip);
                 if succ ~= 0
+                    fprintf(1,"can't run: %s\n", instr_unzip)
                     error(cat(2,'niak:read: ',msg,'. There was a problem unzipping the file. Please check that the command ''',GB_NIAK.unzip,''' works, or change this command using the variable GB_NIAK_UNZIP in the file NIAK_GB_VARS'));
                 end
 

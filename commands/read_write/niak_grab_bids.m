@@ -17,12 +17,10 @@ function files = niak_grab_bids(path_data,opt)
 %    
 %   FUNC_HINT
 %       (string) A hint to pick one out of many fmri input for exemple 
-%       if the fmri study includes "sub-XX_task-rest-somthing_bold.nii.gz" 
-%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the something flavor 
-%       needs to be selected, FUNC_HINT = 'something', would do the trick.
-%       Note that FUNC_HINT needs to be a string somewhere between 
-%       "task-rest" and the extention (.nii or .mnc)
-%
+%       if the fmri study includes "sub-XX_task-rest-a_hint_bold.nii.gz"
+%       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the "hint" flavor
+%       needs to be selected, FUNC_HINT = 'hint', would do the trick.
+%       
 %   ANAT_HINT
 %       (string) A hint to pick one out of many anat input. I only one file
 %       is present it will be used by default. If no hint is give an on file
@@ -194,8 +192,7 @@ for num_f = 1:length(list_dir)
 
             anat_path = strcat(session_path, filesep, 'anat');
             fmri_path = strcat(session_path, filesep, 'func');
-            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*", func_hint, ".*(nii|mnc).*)"];
-%            fmri_regex = [ "(", subject_dir ".*)"];
+            fmri_regex = [ "(", subject_dir ".*", func_hint, ".*(nii|mnc).*)"];
             anat_regex = ['(', subject_dir, '.*', anat_hint, '.*(nii|mnc).*)'] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;
