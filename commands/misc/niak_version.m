@@ -51,8 +51,8 @@ function versions = niak_version()
 %%%%%%%%%%%%%%%%%
 %%     SVN     %%
 %%%%%%%%%%%%%%%%%
-
-    versions.svn = psom_version_svn();
+% SVN not used anymore 
+%    versions.svn = psom_version_svn();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%     Release number     %%
