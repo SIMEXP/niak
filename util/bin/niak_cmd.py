@@ -89,7 +89,7 @@ def main(args=None):
         raise IOError("Pipeline {} not supported".format(pipeline_name))
 
     if pipeline_name == "Niak_fmri_preprocess":
-        logging.basicConfig(level=logging.info, format=('%(lineno)s - %(name)s - %(levelname)s - %(message)s'))
+        logging.basicConfig(level=logging.INFO, format=('%(lineno)s - %(name)s - %(levelname)s - %(message)s'))
         pipeline = pyniak.load_pipeline.FmriPreprocess(folder_in=parsed.file_in,
                                                        folder_out=parsed.folder_out,
                                                        subjects=parsed.subjects,
