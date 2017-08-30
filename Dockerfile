@@ -55,8 +55,10 @@ ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
 ADD util/lib/psom_gb_vars_local.jupyter /usr/local/lib/psom_gb_vars_local.jupyter
 ADD util/lib/jupyter_notebook_config.py /usr/local/lib/jupyter_notebook_config.py
 EXPOSE 8080
+
+
 # To run with jupyter
-# docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak:beta niak_jupyter
+# docker run -it --rm  -v /niak_sandbox:$PWD --user $UID -p 8080:6666 simexp/niak-cog niak_jupyter
 
 
 # Command to run octave as GUI
