@@ -208,11 +208,7 @@ class FmriPreprocess(BasePipeline):
                     logging.debug("anat hint {}".format(self.anat_hint))
                     opt_list += ["opt_gr.anat_hint = '{0}'".format(self.func_hint)]
 
-                opt_list += ["disp(opt_gr)"]
                 opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
-                opt_list += ["disp('TRUITE')"]
-                opt_list += ["disp(files_in)"]
-                opt_list += ["disp('MORTE')"]
 
         else:
 
