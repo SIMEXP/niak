@@ -194,8 +194,7 @@ for num_f = 1:length(list_dir)
 
             anat_path = strcat(session_path, filesep, 'anat');
             fmri_path = strcat(session_path, filesep, 'func');
-            fmri_regex = [ "(", subject_dir ".*task-", task_type ,".*", func_hint, ".*(nii|mnc).*)"];
-%            fmri_regex = [ "(", subject_dir ".*)"];
+            fmri_regex = [ "(", subject_dir ".*", func_hint, ".*(nii|mnc).*)"];
             anat_regex = ['(', subject_dir, '.*', anat_hint, '.*(nii|mnc).*)'] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;

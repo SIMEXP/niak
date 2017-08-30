@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import tempfile
+import logging
 
 LOCAL_CONFIG_PATH = '/local_config'
 PSOM_GB_LOCAL = "{}/../lib/psom_gb_vars_local.cbrain".format(os.path.dirname(os.path.realpath(__file__)))
@@ -49,8 +50,9 @@ class BasePipeline(object):
     BOUTIQUE_TYPE = "type"
     BOUTIQUE_LIST = "list"
 
-    def __init__(self, pipeline_name, folder_in, folder_out, options=None, **kwargs):
+    def __init__(self, pipeline_name, folder_in=None, folder_out=None, options=None, **kwargs):
 
+        self.log = logging.getLogger(__file__)
         # literal file name in niak
         self.pipeline_name = pipeline_name
 
@@ -76,7 +78,7 @@ class BasePipeline(object):
         shutil.copyfile(PSOM_GB_LOCAL, self.psom_gb_local_path)
 
     def run(self):
-        print(" ".join(self.octave_cmd))
+        self.log.debug("Run: {}".format(" ".join(self.octave_cmd)))
         p = None
 
         self.psom_gb_vars_local_setup()
@@ -94,12 +96,15 @@ class BasePipeline(object):
                 for child in children:
                     child.kill()
                 parent.kill()
+            logging.error("Could no process octave command")
             raise e
 
     @property
     def octave_cmd(self):
-        return ["/usr/bin/env", "octave", "--eval", "{0};{1}(files_in, opt)"
-                           .format(";".join(self.octave_options), self.pipeline_name)]
+        tmp_oct = tempfile.NamedTemporaryFile('w', prefix='niak_script_', suffix='.m', dir='/tmp', delete=False)
+        tmp_oct.write(("{0};\n{1}(files_in, opt);".format(";\n".join(self.octave_options), self.pipeline_name)))
+        tmp_oct.close()
+        return ["/usr/bin/env", "octave", "{}".format(tmp_oct.name)]
 
     @property
     def octave_options(self):
@@ -152,20 +157,18 @@ class BasePipeline(object):
 
 class FmriPreprocess(BasePipeline):
 
-    def __init__(self, *args, subject=None, func_hint="", **kwargs):
+    def __init__(self, subjects=None, func_hint="", anat_hint="", *args,  **kwargs):
         super(FmriPreprocess, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
 
         if subjects is not None:
             self.subjects = unroll_numbers(subjects)
         else:
             self.subjects = None
-
-        if func_hint is not None:
-            self.func_hint = func_hint
+        self.func_hint = func_hint
+        self.anat_hint = anat_hint
 
     def grabber_construction(self):
         """
-
         :return: A list that contains octave string that fill init the file_in variable
 
         """
@@ -175,7 +178,6 @@ class FmriPreprocess(BasePipeline):
         else:
             in_full_path = "{0}".format(self.folder_in)
         list_in_dir = os.listdir(in_full_path)
-
         # TODO Control that with an option
         bids_description = None
         subject_input_list = None
@@ -184,26 +186,33 @@ class FmriPreprocess(BasePipeline):
                 bid_path = "{0}/{1}".format(in_full_path, f)
                 with open(bid_path) as fp:
                     bids_description = json.load(fp)
-
+                break
             elif f.endswith("_demographics.txt"):
                 subject_input_list = f
+                break
 
         if subject_input_list:
-            opt_list += ["list_subject=fcon_read_demog('{0}/{1}')".format(in_full_path, subject_input_list)]
-            opt_list += ["opt_g.path_database='{0}/'".format(in_full_path)]
-            opt_list += ["files_in=fcon_get_files(list_subject,opt_g)"]
+            opt_list += ["list_subject=fcon_read_demog('{0}/{1}');".format(in_full_path, subject_input_list)]
+            opt_list += ["opt_g.path_database='{0}/';".format(in_full_path)]
+            opt_list += ["files_in=fcon_get_files(list_subject,opt_g);"]
 
         elif bids_description:
-                opt_list += "opt_gr = struct()"
-                if self.subjects is not None or self.func_hint:
+                opt_list += ["opt_gr = struct();"]
+                if self.subjects:
+                    logging.debug("subjects {}".format(self.subjects))
                     opt_list += ["opt_gr.subject_list = {0}".format(self.subjects).replace('[', '{').replace(']', '}')]
                 if self.func_hint:
-                    opt_list += ["opt_gr.func_hint = {0}".format(self.func_hint)]
+                    logging.debug("func hint {}".format(self.func_hint))
+                    opt_list += ["opt_gr.func_hint = '{0}'".format(self.func_hint)]
+                if self.anat_hint:
+                    logging.debug("anat hint {}".format(self.anat_hint))
+                    opt_list += ["opt_gr.anat_hint = '{0}'".format(self.func_hint)]
 
-
+                opt_list += ["disp(opt_gr)"]
                 opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
-
-                # opt_list += ["opt.slice_timing.flag_skip=true"]
+                opt_list += ["disp('TRUITE')"]
+                opt_list += ["disp(files_in)"]
+                opt_list += ["disp('MORTE')"]
 
         else:
 
@@ -246,22 +255,20 @@ class BASC(BasePipeline):
 
 
 
-# Dictionary for supported class
-SUPPORTED_PIPELINES = {"Niak_fmri_preprocess": FmriPreprocess,
-                       "Niak_basc": BASC,
-                       "Niak_stability_rest": BASC}
+# Set for supported class
+SUPPORTED_PIPELINES = {"Niak_fmri_preprocess",
+                       "Niak_basc",
+                       "Niak_stability_rest"}
 
 
-def load(pipeline_name, *args, **kwargs):
+def suported(pipeline_name):
 
-    if not pipeline_name or not pipeline_name in SUPPORTED_PIPELINES:
+    if pipeline_name in SUPPORTED_PIPELINES:
+        return True
+    else:
         m = 'Pipeline {0} is not in not supported\nMust be part of {1}'.format(pipeline_name, SUPPORTED_PIPELINES)
-        raise IOError(m)
-
-    pipe = SUPPORTED_PIPELINES[pipeline_name]
-
-    return pipe(*args, **kwargs)
-
+        logging.warning(m)
+        return False
 
 
 def unroll_numbers(numbers):
@@ -280,6 +287,7 @@ def unroll_numbers(numbers):
 
     return sorted(list(set(unrolled)))
 
+
 if __name__ == '__main__':
     # folder_in = "/home/poquirion/test/data_test_niak_mnc1"
     # folder_out = "/var/tmp"
@@ -288,4 +296,4 @@ if __name__ == '__main__':
     #
     # print(basc.octave_cmd)
 
-    print (unroll_numbers("1,3,4 15-20, 44, 18-27-2"))
+    print(unroll_numbers("1,3,4 15-20, 44, 18-27-2"))
