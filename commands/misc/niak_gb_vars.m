@@ -133,10 +133,10 @@ GB_NIAK.ps2pdf = 'ps2pdf';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-GB_NIAK.version = 'v1.1.0';
+GB_NIAK.version = 'v1.1.3';
 
 %% Target for tests
-GB_NIAK.target_test = 'ai';
+GB_NIAK.target_test = 'aj';
 
 %% In which path is NIAK ?
 str_read_vol = which('niak_read_vol');

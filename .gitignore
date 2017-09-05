@@ -2,8 +2,5 @@
 BCT/
 *.swp
 *.pyc
-<<<<<<< HEAD
 *.asv
-=======
-jsonlab*/
->>>>>>> master
+psom_gb_vars_local.m

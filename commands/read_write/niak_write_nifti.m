@@ -122,23 +122,23 @@ hdr.details.sform_code = 1;
 switch hdr.info.precision
     case 'uint8'
         hdr.details.datatype = 2;
-        hdr.details.bitpix = int16(8);
+        hdr.details.bitpix = 8;
         vol = uint8(vol);
     case 'int16' 
         hdr.details.datatype = 4;
-        hdr.details.bitpix = int16(16);
+        hdr.details.bitpix = 16;
         vol = int16(vol);
     case 'int32'
         hdr.details.datatype = 8;
-        hdr.details.bitpix = int16(32);
+        hdr.details.bitpix = 32;
         vol = int32(vol);
     case {'float32','float'}
         hdr.details.datatype = 16;
-        hdr.details.bitpix = int16(32);        
+        hdr.details.bitpix = 32;
     	vol = single(vol);
     case 'double'
         hdr.details.datatype = 64;
-        hdr.details.bitpix = int16(64);
+        hdr.details.bitpix = 64;
         vol = double(vol);
 end
 
@@ -318,7 +318,7 @@ fwrite(fid, hdr.details.magic(1:4),        'uchar');
 fbytes = ftell(fid);
 
 if ~isequal(fbytes,348),
-    msg = sprintf('For some reason, the header size is not 348 bytes. That should not be the case...');
+    msg = sprintf('For some reason, the header size is %i not 348 bytes. That should not be the case...', fbytes);
     warning(msg);
 end
 
