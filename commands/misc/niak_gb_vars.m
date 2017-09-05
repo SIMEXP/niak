@@ -133,7 +133,7 @@ GB_NIAK.ps2pdf = 'ps2pdf';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% NIAK version
-GB_NIAK.version = 'v1.1.2';
+GB_NIAK.version = 'v1.1.3';
 
 %% Target for tests
 GB_NIAK.target_test = 'aj';
