@@ -84,6 +84,8 @@ class BasePipeline(object):
         self.psom_gb_vars_local_setup()
 
         try:
+            logging.info("{}".format(" ".join(self.octave_cmd)))
+            logging.info(("{0};\n{1}(files_in, opt);".format(";\n".join(self.octave_options), self.pipeline_name)))
             p = subprocess.Popen(self.octave_cmd)
             p.wait()
         except BaseException as e:
@@ -104,7 +106,7 @@ class BasePipeline(object):
         tmp_oct = tempfile.NamedTemporaryFile('w', prefix='niak_script_', suffix='.m', dir='/tmp', delete=False)
         tmp_oct.write(("{0};\n{1}(files_in, opt);".format(";\n".join(self.octave_options), self.pipeline_name)))
         tmp_oct.close()
-        return ["/usr/bin/env", "octave", "{}".format(tmp_oct.name)]
+        return ["/usr/bin/env", "octave", "--no-gui", "{}".format(tmp_oct.name)]
 
     @property
     def octave_options(self):
@@ -205,8 +207,8 @@ class FmriPreprocess(BasePipeline):
                     logging.debug("func hint {}".format(self.func_hint))
                     opt_list += ["opt_gr.func_hint = '{0}'".format(self.func_hint)]
                 if self.anat_hint:
-                    logging.debug("anat hint {}".format(self.anat_hint))
-                    opt_list += ["opt_gr.anat_hint = '{0}'".format(self.func_hint)]
+                    logging.debug("anat_hint :{}".format(self.anat_hint))
+                    opt_list += ["opt_gr.anat_hint = '{0}'".format(self.anat_hint)]
 
                 opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
 
