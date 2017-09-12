@@ -1,39 +1,34 @@
 general:
   artifacts:
-    - "result"
+    - "~/outputs"
 machine:
   services:
-    - docker 
-  timezone:
-    America/New_York
+    - docker #don't use 1.10 - caching is broken
 
 dependencies:
   cache_directories:
-    - "~/cache"
+    - "~/docker"
+    - "~/data"
   override:
-    - if [[ -e ~/cache/niak_o4_cross_u16.tar ]]; then docker load -i ~/cache/niak_o4_cross_u16.tar; fi
-    - docker pull simexp/niak_dependency:o4_cross_u16
-    - mkdir -p ~/cache
-    - ls ~/cache
-    - docker save -o ~/cache/niak_o4_cross_u16.tar simexp/niak_dependency:o4_cross_u16
-    - if [[ -e ~/cache/data_test_niak_mnc1 ]]; then cp ~/cache/data_test_niak_mnc1 . ; fi
-    - find ~/cache -type f -not -name "*data_test_niak_mnc1*" -not -name "*niak_o4_cross_u16*" -exec rm {} \; # delete old cache crap!
+  - if [[ ! -e ~/data/sample_test ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tar"  && cd ${HOME}/data && tar -xvf sample_test.tar && rm sample_test.tar; fi
+  - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+  - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
+      timeout: 21600
+  - mkdir -p ~/docker; docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar
+  - mkdir -p ${HOME}/outputs
+
 
 test:
   override:
-    - docker run -it -v $PWD:$PWD simexp/niak_dependency:o4_cross_u16 /bin/bash -lic "cd $PWD; octave --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\"":
-       timeout: 21600
+    - case $CIRCLE_NODE_INDEX in 0) docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --participant_label "274 275" ;; 1) docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --participant_label "274" ;; esac:
+        parallel: true
 
-#deployment:
-#  hub:
-#    branch: master
-#    commands:
-#      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker push $DOCKER_REPO; fi
-
-
-
-
-
-
-
-
+deployment:
+  hub:
+    owner: BIDS-Apps
+    tag: /.*/
+    commands:
+      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker push bids/${CIRCLE_PROJECT_REPONAME,,}:latest; fi :
+          timeout: 21600
+      - if [[ -n "$DOCKER_PASS" ]]; then docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS && docker tag bids/${CIRCLE_PROJECT_REPONAME,,} bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG && docker push bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG; fi :
+          timeout: 21600

@@ -32,7 +32,6 @@ RUN wget https://sites.google.com/site/bctnet/Home/functions/BCT.zip \
     && ln -s ../niak/extensions/psom-${PSOM_VERSION}/container/psom_image_exec_redirection.sh psom_image_exec_redirection.sh \
     && ln -s ../niak/util/bin/niak_cmd.py niak_cmd.py \
     && mkdir /scratch
-
 # Build octave configure file
 RUN mkdir ${NIAK_CONFIG_PATH} && chmod 777 ${NIAK_CONFIG_PATH} \
     && echo addpath\(genpath\(\'${NIAK_ROOT}\'\)\)\; >> /etc/octave.conf \
@@ -63,3 +62,18 @@ EXPOSE 8080
 
 # Command to run octave as GUI
 # docker run -it --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd   -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak-boss /bin/bash -lic "cd $HOME/software; octave --force-gui ; /bin/bash"
+
+# Bids app setup
+RUN ln -s $NIAK_ROOT /code
+ENV TMPDIR=/outputs/tmp
+RUN mkdir /oasis
+RUN mkdir /projects
+RUN mkdir /scratch
+RUN mkdir /local-scratch
+ADD default_config.yaml /code/
+
+
+RUN mkdir /oasis /projects /scratch /local-scratch
+WORKDIR /outputs
+ENTRYPOINT ["/code/niak/util/bin/niak_bids.py"]
+

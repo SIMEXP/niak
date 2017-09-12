@@ -9,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 Other licenses and contributions:
 
  * The NIAK project was initiated by Pierre Bellec during his post-doctoral work in the laboratory of Alan C. Evans (ACElab), Montreal Neurological Institute, McGill University, Canada. The initial design for NIAK was inspired by the CIVET pipeline developed in the ACElab. 
- * Many of the functions of the NIAK depend on software developed over the years by members and collaborators of the BIC, the minc toolkit (http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit). The minc-toolkit is not part of NIAK and needs to be installed separately. 
+ * Many of the functions of the NIAK depend on software developed over the years by members and collaborators of the BIC, the minc toolkit (http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit). The minc-toolkit is not part of NIAK and needs to be installed separately.
  * Several functions are adapted from fMRIstat developed by the late Pr [http://www.math.mcgill.ca/keith/ Keith Worsley]. *The pipeline system is a project called [http://code.google.com/p/psom/ PSOM] developed by Pierre Bellec (MIT license). PSOM is not part of the NIAK code base, but is bundled as part of the NIAK archive. 
  * The connectome pipeline is based on the brain connectivity toolbox (https://sites.google.com/site/bctnet/). The BCT is not part of NIAK and needs to be installed separately. 
  * The partial-volume estimation was generously contributed by Jussi Tohka, Tampere University of Technology, Finland (MIT license). 
