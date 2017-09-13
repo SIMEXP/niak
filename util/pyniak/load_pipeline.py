@@ -278,8 +278,7 @@ class FmriPreprocess(BasePipeline):
 
 class BaseBid(object):
     """
-    This is the base class to run PSOM/NIAK pipeline under CBRAIN and the
-    BOUTIQUE interface.
+    This is the base class to run PSOM/NIAK pipeline in a bid app
     """
 
     BOUTIQUE_PATH = "{0}/boutique_descriptor"\
@@ -457,6 +456,9 @@ def run_worker(dir, num):
         # sleep long enough to be last on the race condition TODO (FIND A BETTER WAY TO DO THAT)
         time.sleep(5)
     return subprocess.Popen(cmd)
+
+
+def vali
 
 
 class BASC(BasePipeline):

@@ -11,7 +11,7 @@ import os
 import re
 import sys
 
-sys.path.append("{}/..".format(os.path.dirname(os.path.realpath(__file__))))
+#sys.path.append("{}/..".format(os.path.dirname(os.path.realpath(__file__))))
 import pyniak.load_pipeline
 
 OPTION_PREFIX = "--opt"
@@ -89,12 +89,12 @@ def main(args=None):
         os.mkdir('/outputs/tmp')
     except OSError:
         pass
-    if parsed.analysis_level =="group" :
-        pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir,
+    if parsed.analysis_level =="group":
+        pipeline = pyniak.load_pipeline.FmriPreprocessBid(parsed.bids_dir, parsed.output_dir,
                                              config_file=parsed.config_file)
         pipeline.run()
     else:
-        pipeline = pyniak.load_pipeline.load(pipeline_name, parsed.bids_dir, parsed.output_dir,
+        pipeline = pyniak.load_pipeline.FmriPreprocessBid(parsed.bids_dir, parsed.output_dir,
                                              subjects=parsed.participant_label)
         pipeline.run()
 

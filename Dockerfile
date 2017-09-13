@@ -64,6 +64,7 @@ EXPOSE 8080
 # docker run -it --privileged --rm -v /etc/group:/etc/group -v /etc/passwd:/etc/passwd   -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY -v $HOME:$HOME --user $UID simexp/niak-boss /bin/bash -lic "cd $HOME/software; octave --force-gui ; /bin/bash"
 
 # Bids app setup
+ENV PYTHONPATH=/code/niak/util
 RUN ln -s $NIAK_ROOT /code
 ENV TMPDIR=/outputs/tmp
 RUN mkdir /oasis
@@ -75,5 +76,5 @@ ADD default_config.yaml /code/
 
 RUN mkdir /oasis /projects /scratch /local-scratch
 WORKDIR /outputs
-ENTRYPOINT ["/code/niak/util/bin/niak_bids.py"]
+ENTRYPOINT ["/code/niak/util/bin/bids_app.py"]
 
