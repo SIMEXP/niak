@@ -8,10 +8,11 @@ import subprocess
 import tempfile
 import logging
 import time
+import yaml
 
-from .pyyaml import yaml
 
-LOCAL_CONFIG_PATH = '/local_config'
+NIAK_CONFIG_PATH = os.getenv("NIAK_CONFIG_PATH", '/local_config')
+
 PSOM_GB_LOCAL = "{}/../lib/psom_gb_vars_local.cbrain".format(os.path.dirname(os.path.realpath(__file__)))
 
 try:
@@ -20,12 +21,20 @@ try:
 except ImportError:
     psutil_loaded = False
 
+try:
+    astring = basestring
+except NameError:
+    astring = str
+
 
 def num(s):
     try:
         return int(s)
     except ValueError:
         return float(s)
+
+log = logging.getLogger(__file__)
+
 
 def string(s):
     """
@@ -58,7 +67,7 @@ def load_config(yaml_file):
                 bidon[0] = "{0}.{1}".format(bidon[0], k)
                 unfold(v)
         else:
-            if isinstance(value, str):
+            if isinstance(value, astring):
                 cast_value = "'{}'".format(value)
             else:
                 cast_value = value
@@ -124,7 +133,12 @@ class BasePipeline(object):
         This method is crucial to have psom/niak running properly on cbrain.
         :return:
         """
-        self.psom_gb_local_path = "{0}/psom_gb_vars_local.m".format(LOCAL_CONFIG_PATH)
+        self.psom_gb_local_path = "{0}/psom_gb_vars_local.m".format(NIAK_CONFIG_PATH)
+        try:
+            os.makedirs(NIAK_CONFIG_PATH)
+        except OSError as e:
+            if not os.path.isdir(NIAK_CONFIG_PATH):
+                raise e
         shutil.copyfile(PSOM_GB_LOCAL, self.psom_gb_local_path)
 
     def run(self):
@@ -134,8 +148,8 @@ class BasePipeline(object):
         self.psom_gb_vars_local_setup()
 
         try:
-            logging.info("{}".format(" ".join(self.octave_cmd)))
-            logging.info(("{0};\n{1}(files_in, opt);".format(";\n".join(self.octave_options), self.pipeline_name)))
+            self.log.info("{}".format(" ".join(self.octave_cmd)))
+            self.log.info(("{0};\n{1}(files_in, opt);".format(";\n".join(self.octave_options), self.pipeline_name)))
             p = subprocess.Popen(self.octave_cmd)
             p.wait()
         except BaseException as e:
@@ -148,12 +162,12 @@ class BasePipeline(object):
                 for child in children:
                     child.kill()
                 parent.kill()
-            logging.error("Could no process octave command")
+            self.log.error("Could no process octave command")
             raise e
 
     @property
     def octave_cmd(self):
-        tmp_oct = tempfile.NamedTemporaryFile('w', prefix='niak_script_', suffix='.m', dir='/tmp', delete=False)
+        tmp_oct = tempfile.NamedTemporaryFile('w', prefix='niak_script_', suffix='.m', delete=False)
         tmp_oct.write(("{0};\n{1}(files_in, opt);".format(";\n".join(self.octave_options), self.pipeline_name)))
         tmp_oct.close()
         return ["/usr/bin/env", "octave", "--no-gui", "{}".format(tmp_oct.name)]
@@ -251,13 +265,13 @@ class FmriPreprocess(BasePipeline):
         elif bids_description:
                 opt_list += ["opt_gr = struct();"]
                 if self.subjects:
-                    logging.debug("subjects {}".format(self.subjects))
+                    self.log.debug("subjects {}".format(self.subjects))
                     opt_list += ["opt_gr.subject_list = {0}".format(self.subjects).replace('[', '{').replace(']', '}')]
                 if self.func_hint:
-                    logging.debug("func hint {}".format(self.func_hint))
+                    self.log.debug("func hint {}".format(self.func_hint))
                     opt_list += ["opt_gr.func_hint = '{0}'".format(self.func_hint)]
                 if self.anat_hint:
-                    logging.debug("anat_hint :{}".format(self.anat_hint))
+                    self.log.debug("anat_hint :{}".format(self.anat_hint))
                     opt_list += ["opt_gr.anat_hint = '{0}'".format(self.anat_hint)]
 
                 opt_list += ["files_in=niak_grab_bids('{0}',opt_gr)".format(in_full_path)]
@@ -458,7 +472,42 @@ def run_worker(dir, num):
     return subprocess.Popen(cmd)
 
 
-def vali
+def bids_validator(path, ignore_warnings=False, ignore_nifti_headers=False):
+    """ Runs bids validator on path is one is installed on the machines
+
+    :param path:
+    :param ignore_warnings:
+    :param ignore_nifti_headers:
+    :return:
+    """
+
+    cmd = ['bids-validator', '--version']
+    try:
+        p = subprocess.Popen(cmd)
+        out, err = p.communicate()
+        log.info("bids-validator version {}".format(out))
+    except OSError as e:
+        log.warning("cannot validate bids inputs,'bids-validator' is not on the system ")
+        return
+
+    cmd = ['bids-validator']
+    if ignore_nifti_headers:
+        cmd.append('--ignoreNiftiHeaders')
+    if ignore_warnings:
+        cmd.append('--ignoreWarnings')
+
+    cmd.append(path)
+
+    p = subprocess.Popen(cmd)
+    out, err = p.communicate()
+
+    logging.info(out)
+    if err:
+        logging.error(err)
+
+    if p.returncode:
+        logging.warning("bid dataset not valid!")
+
 
 
 class BASC(BasePipeline):
@@ -506,16 +555,23 @@ def suported(pipeline_name):
 
 def unroll_numbers(numbers):
 
-    entries = [a[0].split('-') for a in  re.findall("([0-9]+((-[0-9]+)+)?)", numbers)]
-
     unrolled = []
-    for elem in entries:
-        if len(elem) == 1:
-            unrolled.append(int(elem[0]))
-        elif len(elem) == 2:
-            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1)]
-        elif len(elem) == 3:
-            unrolled += [a for a in range(int(elem[0]), int(elem[1])+1, int(elem[2]) )]
+
+    def unroll_string(number, unrolled):
+        entries = [a[0].split('-') for a in re.findall("([0-9]+((-[0-9]+)+)?)", number)]
+        for elem in entries:
+            if len(elem) == 1:
+                unrolled.append(int(elem[0]))
+            elif len(elem) == 2:
+                unrolled += [a for a in range(int(elem[0]), int(elem[1])+1)]
+            elif len(elem) == 3:
+                unrolled += [a for a in range(int(elem[0]), int(elem[1])+1, int(elem[2]))]
+
+    if isinstance(numbers, astring):
+        unroll_string(numbers, unrolled)
+    else:
+        for n in numbers:
+            unroll_string(n, unrolled)
 
     return sorted(list(set(unrolled)))
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 This module parse arbitrary NIAK opt arguments to run a pipeline with the needed inputs
 """
