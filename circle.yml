@@ -21,6 +21,7 @@ dependencies:
 test:
   override:
     - case $CIRCLE_NODE_INDEX in 0) docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --participant_label "274 275" ;; 1) docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --participant_label "274" ;; esac:
+    - sudo chmod 777 -R /home/ubuntu/outputs
         parallel: true
 
 deployment:

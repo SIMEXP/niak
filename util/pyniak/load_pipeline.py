@@ -335,11 +335,11 @@ class BaseBid(object):
             self.opt_and_tune_config = []
 
     def run(self):
-        print(" ".join(self.octave_cmd))
+        log.info(" ".join(self.octave_cmd))
         p = None
 
         try:
-            print(self.folder_out)
+            log.info(self.folder_out)
             p = subprocess.Popen(self.octave_cmd)
             run_worker(self.folder_out, 1)
             p.wait()
@@ -356,7 +356,7 @@ class BaseBid(object):
     def octave_cmd(self):
         m_file = "{0}/{1}".format(self.folder_out, self.PIPELINE_M_FILE)
         with open(m_file,'w') as fp:
-            print(self.opt_and_tune_config + self.octave_options)
+            log.info(self.opt_and_tune_config + self.octave_options)
             fp.write(";\n".join(self.opt_and_tune_config + self.octave_options))
             fp.write(";\n{0}(files_in, opt);\n".format(self.pipeline_name))
         return ["/usr/bin/env", "octave", m_file]
