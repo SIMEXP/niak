@@ -320,13 +320,6 @@ class BaseBid(object):
         self.folder_out_finale = folder_out
         self.octave_options = options
 
-        if subjects is not None:
-            self.subjects = unroll_numbers(subjects)
-            le_suffix = str(self.subjects[0])
-        else:
-            self.subjects = None
-            le_suffix = 'all'
-
         self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=folder_out)
 
         if config_file:
@@ -412,8 +405,18 @@ class BaseBid(object):
 
 class FmriPreprocessBid(BaseBid):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, subjects=None, func_hint="", anat_hint="", *args, **kwargs):
         super(FmriPreprocessBid, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
+
+        self.func_hint = func_hint
+        self.anat_hint = anat_hint
+
+        if subjects is not None:
+            self.subjects = unroll_numbers(subjects)
+            le_suffix = str(self.subjects[0])
+        else:
+            self.subjects = None
+            le_suffix = 'all'
 
     def grabber_construction(self):
         """
