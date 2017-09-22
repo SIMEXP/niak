@@ -80,6 +80,7 @@ def main(args=None):
     pipeline_name = parsed.pipeline
 
     options = build_opt(unformated_options)
+    print(options)
 
     if pipeline_name is None:
         pipeline_name = "Niak_fmri_preprocess"

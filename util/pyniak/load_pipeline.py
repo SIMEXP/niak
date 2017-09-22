@@ -304,11 +304,13 @@ class BaseBids(object):
     BOUTIQUE_LIST = "list"
     PIPELINE_M_FILE = 'pipeline.m'
 
-    def __init__(self, folder_in, folder_out, config_file=None, options=None):
+    def __init__(self, pipeline_name, folder_in, folder_out, config_file=None, options=None):
 
         # The name should be Provided in the derived class
         self._grabber_options = []
         self._pipeline_options = []
+        # literal file name in niak
+        self.pipeline_name = pipeline_name
 
         if os.path.islink(folder_in):
             self.folder_in = os.readlink(folder_in)
@@ -402,10 +404,7 @@ class BaseBids(object):
 class FmriPreprocessBids(BaseBids):
 
     def __init__(self, subjects=None, func_hint="", anat_hint="", *args, **kwargs):
-        super(FmriPreprocessBids, self).__init__(*args, **kwargs)
-
-        # literal file name in niak
-        self.pipeline_name = "niak_pipeline_fmri_preprocess"
+        super(FmriPreprocessBids, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
 
         self.func_hint = func_hint
         self.anat_hint = anat_hint
