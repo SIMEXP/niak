@@ -19,7 +19,7 @@ ESCAPE_STRING = "666_____666_____666"
 
 def build_opt(option):
     """
-    Translate all option with prefix --opt to into pom options
+    Translate all option with prefix --opt to into psom-niak options
 
     :param option: option of the form  --opt-some-value-meaningful-for-psom VAL
     :return: a string of the form opt.some.value.meaningful.for.psom=VAL
@@ -82,6 +82,7 @@ def main(args=None):
     parsed, unformated_options = parser.parse_known_args(args)
 
     pipeline_name = None
+    options = build_opt(unformated_options)
 
     if pipeline_name is None:
         pipeline_name = "Niak_fmri_preprocess"
@@ -91,11 +92,11 @@ def main(args=None):
         pass
     if parsed.analysis_level =="group":
         pipeline = pyniak.load_pipeline.FmriPreprocessBids(parsed.bids_dir, parsed.output_dir,
-                                                           config_file=parsed.config_file)
+                                                           config_file=parsed.config_file, options=options)
         pipeline.run()
     else:
         pipeline = pyniak.load_pipeline.FmriPreprocessBids(folder_in=parsed.bids_dir, folder_out=parsed.output_dir,
-                                                           subjects=parsed.participant_label)
+                                                           subjects=parsed.participant_label, options=options)
         pipeline.run()
 
 

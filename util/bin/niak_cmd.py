@@ -20,7 +20,7 @@ ESCAPE_STRING = "666_____666_____666"
 
 def build_opt(option):
     """
-    Translate all option with prefix --opt to into pom options
+    Translate all option with prefix --opt to into psom-niak options
 
     :param option: option of the form  --opt-some-value-meaningful-for-psom VAL
     :return: a string of the form opt.some.value.meaningful.for.psom=VAL
@@ -34,7 +34,6 @@ def build_opt(option):
             parser.add_argument(option[i], nargs='?')
 
     parsed = parser.parse_known_args(option)
-    print(parser)
 
     for k, v in parsed[0].__dict__.items():
         if v is None:
