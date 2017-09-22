@@ -290,7 +290,7 @@ class FmriPreprocess(BasePipeline):
         return opt_list
 
 
-class BaseBid(object):
+class BaseBids(object):
     """
     This is the base class to run PSOM/NIAK pipeline in a bid app
     """
@@ -304,10 +304,7 @@ class BaseBid(object):
     BOUTIQUE_LIST = "list"
     PIPELINE_M_FILE = 'pipeline.m'
 
-    def __init__(self, pipeline_name, folder_in, folder_out, subjects=None, config_file=None, options=None):
-
-        # literal file name in niak
-        self.pipeline_name = pipeline_name
+    def __init__(self, folder_in, folder_out, config_file=None, options=None):
 
         # The name should be Provided in the derived class
         self._grabber_options = []
@@ -320,7 +317,6 @@ class BaseBid(object):
         self.folder_out_finale = folder_out
         self.octave_options = options
 
-        self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=folder_out)
 
         if config_file:
             self.opt_and_tune_config = load_config(config_file)
@@ -403,10 +399,13 @@ class BaseBid(object):
 
 
 
-class FmriPreprocessBid(BaseBid):
+class FmriPreprocessBids(BaseBids):
 
     def __init__(self, subjects=None, func_hint="", anat_hint="", *args, **kwargs):
-        super(FmriPreprocessBid, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
+        super(FmriPreprocessBids, self).__init__(*args, **kwargs)
+
+        # literal file name in niak
+        self.pipeline_name = "niak_pipeline_fmri_preprocess"
 
         self.func_hint = func_hint
         self.anat_hint = anat_hint
@@ -417,6 +416,8 @@ class FmriPreprocessBid(BaseBid):
         else:
             self.subjects = None
             le_suffix = 'all'
+
+        self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=self.folder_out_finale)
 
     def grabber_construction(self):
         """

@@ -90,12 +90,12 @@ def main(args=None):
     except OSError:
         pass
     if parsed.analysis_level =="group":
-        pipeline = pyniak.load_pipeline.FmriPreprocessBid(parsed.bids_dir, parsed.output_dir,
-                                             config_file=parsed.config_file)
+        pipeline = pyniak.load_pipeline.FmriPreprocessBids(parsed.bids_dir, parsed.output_dir,
+                                                           config_file=parsed.config_file)
         pipeline.run()
     else:
-        pipeline = pyniak.load_pipeline.FmriPreprocessBid(parsed.bids_dir, parsed.output_dir,
-                                             subjects=parsed.participant_label)
+        pipeline = pyniak.load_pipeline.FmriPreprocessBids(folder_in=parsed.bids_dir, folder_out=parsed.output_dir,
+                                                           subjects=parsed.participant_label)
         pipeline.run()
 
 

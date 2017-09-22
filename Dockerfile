@@ -15,7 +15,6 @@ RUN mkdir ${NIAK_ROOT}
 ADD bricks/ ${NIAK_ROOT}/bricks/
 ADD commands/ ${NIAK_ROOT}/commands/
 ADD demos/ ${NIAK_ROOT}/demos/
-ADD util/  ${NIAK_ROOT}/util/
 ADD reports/ ${NIAK_ROOT}/reports/
 ADD pipeline/ ${NIAK_ROOT}/pipeline/
 ADD template/ ${NIAK_ROOT}/template/
@@ -74,3 +73,4 @@ RUN mkdir /oasis /projects  /local-scratch
 WORKDIR /outputs
 ENTRYPOINT ["/code/util/bin/bids_app.py"]
 CMD ["--help"]
+ADD util/  ${NIAK_ROOT}/util/
