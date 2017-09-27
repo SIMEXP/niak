@@ -50,7 +50,8 @@ def main(args=None):
 
     print("{0} {1}".format(__file__, " ".join(args)))
 
-    parser = argparse.ArgumentParser(description='Run a niak script')
+    parser = argparse.ArgumentParser(description='Run a niak script',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # parser.add_argument("pipeline", default=None)
 
@@ -79,6 +80,44 @@ def main(args=None):
                         'provided all subjects should be analyzed. Multiple '
                         'participants can be specified with a space separated list.')
 
+    parser.add_argument('--n_thread', default=1, help="Number of threads to compute niak")
+
+
+    ## Slice timing options
+    parser.add_argument('--type_scaner', default="", help="Type of MR scanner. The only value that will "
+                                                                  "change something to the processing here is 'Siemens'"
+                                                                 ", which has different conventions for interleaved "
+                                                                  "acquisitions.")
+    aq_type = ['manual', 'sequential ascending',
+               'sequential descending','interleaved ascending',
+               'interleaved descending']
+    parser.add_argument('--type_acquisition', default="interleaved ascending",
+                        help="Type of acquisition used by the scanner. "
+                             "Possible choices are 'manual', 'sequential "
+                             "ascending', 'sequential descending', 'interleaved ascending', "
+                             "'interleaved descending'", choices=aq_type)
+
+    parser.add_argument("--delay_in_tr", default=0, help="The delay (s) between the last slice of the first "
+                                                         "volume and the first slice of the following volume.")
+
+    parser.add_argument("--suppress_vol", default=0, help="The number of volumes that are suppressed at the begining of the time series")
+
+    parser.add_argument("--skip_slice_timing", action="store_true",
+                        help="Skip all slice timing procedure")
+
+
+
+    # Filtering
+    parser.add_argument("--hp", default=0.01, help="Cut-off frequency for high pass")
+    parser.add_argument("--lp", default=float('inf'), help="Cut-off frequency for low pass")
+
+    parser.add_argument("--t1_preprocess_nu_correct", default=50, help="Non-uniformity corrections distance. "
+                                                                       "Sets the N3 spline distance in mm: suggested "
+                                                                       "values: 200 for 1.5T scan, 50 for 3T scan.")
+
+    parser.add_argument("--smooth_vol_fwhm", default=6, help="Full width at half max of the Gaussian kernel (mm) "
+                                                               "used for smoothing")
+
     parsed, unformated_options = parser.parse_known_args(args)
 
     pipeline_name = None
@@ -90,13 +129,31 @@ def main(args=None):
         os.mkdir('/outputs/tmp')
     except OSError:
         pass
+
+
+
+
     if parsed.analysis_level =="group":
         pipeline = pyniak.load_pipeline.FmriPreprocessBids(parsed.bids_dir, parsed.output_dir,
-                                                           config_file=parsed.config_file, options=options)
+                                                           config_file=parsed.config_file,
+                                                           smooth_vol_fwhm=parsed.smooth_vol_fwhm,
+                                                           t1_preprocess_nu_correct=parsed.t1_preprocess_nu_correct,
+                                                           lp=parsed.lp, hp=parsed.hp,suppress_vol=parsed.suppress_vol,
+                                                           delay_in_tr=parsed.delay_in_tr,
+                                                           type_acquisition=parsed.type_acquisition,
+                                                           type_scaner=parsed.type_scaner, n_thread=parsed.n_thread,
+                                                           skip_slice_timing=parsed.skip_slice_timing)
         pipeline.run()
     else:
         pipeline = pyniak.load_pipeline.FmriPreprocessBids(folder_in=parsed.bids_dir, folder_out=parsed.output_dir,
-                                                           subjects=parsed.participant_label, options=options)
+                                                           subjects=parsed.participant_label,
+                                                           smooth_vol_fwhm=parsed.smooth_vol_fwhm,
+                                                           t1_preprocess_nu_correct=parsed.t1_preprocess_nu_correct,
+                                                           lp=parsed.lp, hp=parsed.hp, suppress_vol=parsed.suppress_vol,
+                                                           delay_in_tr=parsed.delay_in_tr,
+                                                           type_acquisition=parsed.type_acquisition,
+                                                           type_scaner=parsed.type_scaner, n_thread=parsed.n_thread,
+                                                           skip_slice_timing=parsed.skip_slice_timing)
         pipeline.run()
 
 

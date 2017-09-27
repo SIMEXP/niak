@@ -233,6 +233,7 @@ class FmriPreprocess(BasePipeline):
         self.func_hint = func_hint
         self.anat_hint = anat_hint
 
+
     def grabber_construction(self):
         """
         :return: A list that contains octave string that fill init the file_in variable
@@ -338,10 +339,10 @@ class BaseBids(object):
             self.rsync_to_finale_folder(self.folder_out_finale)
 
     def rsync_to_finale_folder(self, folder_out):
-        rsync = "rsync -a  --exclude logs --exclude report {0}/ {1}".format(self.folder_out, self.folder_out_finale).split()
+        rsync = ("rsync -a  --exclude logs --exclude report {0}/ {1}"
+                 .format(self.folder_out, self.folder_out_finale).split())
 
         subprocess.call(rsync)
-
 
     @property
     def octave_cmd(self):
@@ -380,7 +381,6 @@ class BaseBids(object):
 
             for optk, optv in options.items():
 
-
                 optv = self.BOUTIQUE_TYPE_CAST[casting_dico[optk][0]](optv)
 
                 # if casting_dico[boutique_opt][1] is True:
@@ -391,7 +391,6 @@ class BaseBids(object):
                     self._pipeline_options.append("{0}={1}".format(optk, optv))
 
 
-
     def grabber_construction(self):
         """
         This method needs to be overload to fill the file_in requirement of NIAK
@@ -400,10 +399,12 @@ class BaseBids(object):
         pass
 
 
-
 class FmriPreprocessBids(BaseBids):
 
-    def __init__(self, subjects=None, func_hint="", anat_hint="", *args, **kwargs):
+    def __init__(self, subjects=None, func_hint="", anat_hint="", n_thread=1
+                 , type_scaner="", type_acquisition=None, delay_in_tr=0, suppress_vol=0
+                 , hp=0.01, lp=float('inf'), t1_preprocess_nu_correct=50, smooth_vol_fwhm=6, skip_slice_timing=False
+                 , *args, **kwargs):
         super(FmriPreprocessBids, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
 
         self.func_hint = func_hint
@@ -417,6 +418,18 @@ class FmriPreprocessBids(BaseBids):
             le_suffix = 'all'
 
         self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=self.folder_out_finale)
+
+        self._pipeline_options.append("opt.psom.max_queued = {}".format(n_thread))
+        self._pipeline_options.append("opt.slice_timing.type_acquisition = '{}'".format(type_acquisition))
+        self._pipeline_options.append("opt.slice_timing.type_scanner = '{}'".format(type_scaner))
+        self._pipeline_options.append("opt.slice_timing.delay_in_tr = {}".format(delay_in_tr))
+        self._pipeline_options.append("opt.slice_timing.suppress_vol = {}".format(suppress_vol))
+        self._pipeline_options.append("opt.t1_preprocess.nu_correct.arg '-distance {}'".format(t1_preprocess_nu_correct))
+        self._pipeline_options.append("opt.time_filter.hp = {}".format(hp))
+        self._pipeline_options.append("opt.time_filter.lp  = {}".format(lp))
+        self._pipeline_options.append("opt.smooth_vol.fwh = {}".format(smooth_vol_fwhm))
+        if skip_slice_timing:
+            self._pipeline_options.append("opt.slice_timing.flag_skip = true")
 
     def grabber_construction(self):
         """
