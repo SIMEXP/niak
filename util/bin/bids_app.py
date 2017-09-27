@@ -71,7 +71,7 @@ def main(args=None):
     parser.add_argument('-v', '--version', action='version',
                         version='BIDS-App example version {}'.format(__version__))
 
-    parser.add_argument('--config_file', '-c', help='a yaml config file with the preprocessing configs')
+    # parser.add_argument('--config_file', '-c', help='a yaml config file with the preprocessing configs')
 
     parser.add_argument("--participant_label", nargs="+",
                         help='The label(s) of the participant(s) that should be analyzed. The label '
@@ -135,7 +135,7 @@ def main(args=None):
 
     if parsed.analysis_level =="group":
         pipeline = pyniak.load_pipeline.FmriPreprocessBids(parsed.bids_dir, parsed.output_dir,
-                                                           config_file=parsed.config_file,
+                                                           # config_file=parsed.config_file,
                                                            smooth_vol_fwhm=parsed.smooth_vol_fwhm,
                                                            t1_preprocess_nu_correct=parsed.t1_preprocess_nu_correct,
                                                            lp=parsed.lp, hp=parsed.hp,suppress_vol=parsed.suppress_vol,
