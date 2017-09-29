@@ -132,29 +132,19 @@ def main(args=None):
 
 
 
-
-    if parsed.analysis_level =="group":
-        pipeline = pyniak.load_pipeline.FmriPreprocessBids(parsed.bids_dir, parsed.output_dir,
-                                                           # config_file=parsed.config_file,
-                                                           smooth_vol_fwhm=parsed.smooth_vol_fwhm,
-                                                           t1_preprocess_nu_correct=parsed.t1_preprocess_nu_correct,
-                                                           lp=parsed.lp, hp=parsed.hp,suppress_vol=parsed.suppress_vol,
-                                                           delay_in_tr=parsed.delay_in_tr,
-                                                           type_acquisition=parsed.type_acquisition,
-                                                           type_scaner=parsed.type_scaner, n_thread=parsed.n_thread,
-                                                           skip_slice_timing=parsed.skip_slice_timing)
-        pipeline.run()
-    else:
-        pipeline = pyniak.load_pipeline.FmriPreprocessBids(folder_in=parsed.bids_dir, folder_out=parsed.output_dir,
-                                                           subjects=parsed.participant_label,
-                                                           smooth_vol_fwhm=parsed.smooth_vol_fwhm,
-                                                           t1_preprocess_nu_correct=parsed.t1_preprocess_nu_correct,
-                                                           lp=parsed.lp, hp=parsed.hp, suppress_vol=parsed.suppress_vol,
-                                                           delay_in_tr=parsed.delay_in_tr,
-                                                           type_acquisition=parsed.type_acquisition,
-                                                           type_scaner=parsed.type_scaner, n_thread=parsed.n_thread,
-                                                           skip_slice_timing=parsed.skip_slice_timing)
-        pipeline.run()
+    group = False
+    if parsed.analysis_level == "group":
+        group = True
+    pipeline = pyniak.load_pipeline.FmriPreprocessBids(folder_in=parsed.bids_dir, folder_out=parsed.output_dir,
+                                                       subjects=parsed.participant_label,
+                                                       smooth_vol_fwhm=parsed.smooth_vol_fwhm,
+                                                       t1_preprocess_nu_correct=parsed.t1_preprocess_nu_correct,
+                                                       lp=parsed.lp, hp=parsed.hp, suppress_vol=parsed.suppress_vol,
+                                                       delay_in_tr=parsed.delay_in_tr,
+                                                       type_acquisition=parsed.type_acquisition,
+                                                       type_scaner=parsed.type_scaner, n_thread=parsed.n_thread,
+                                                       skip_slice_timing=parsed.skip_slice_timing, group=group)
+    pipeline.run()
 
 
 

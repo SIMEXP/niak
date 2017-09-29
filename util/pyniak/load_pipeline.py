@@ -336,13 +336,33 @@ class BaseBids(object):
             run_worker(self.folder_out, 1)
             p.wait()
         finally:
-            self.rsync_to_finale_folder(self.folder_out_finale)
+            self.rsync_to_finale_folder()
 
-    def rsync_to_finale_folder(self, folder_out):
-        rsync = ("rsync -a  --exclude logs --exclude report {0}/ {1}"
-                 .format(self.folder_out, self.folder_out_finale).split())
+    def rsync_to_finale_folder(self):
 
-        subprocess.call(rsync)
+        if self.folder_out != self.folder_out_finale:
+            log.info("sync {} to {}".format(self.folder_out,self.folder_out_finale))
+            rsync = ("rsync -a  --exclude logs --exclude report {0}/ {1}"
+                     .format(self.folder_out, self.folder_out_finale).split())
+            subprocess.call(rsync)
+
+            self.concat_status(self.folder_out, self.folder_out_finale)
+
+    def concat_status(self, src, dest):
+
+        os.makedirs(os.path.join(dest, "logs"), exist_ok=True)
+        l = ["/usr/bin/env", "octave", "--eval"]
+        l.append("new_status = load({})".format(os.path.join(src, "logs/PIPE_status.mat")))
+        # void all group computation
+        l.append("fe = fieldnames(new_status)")
+        l.append("for fn =fe' ; if strfind(fn{1},'group');   new_status.(fn{1}) = 'none'   ; end; end")
+        l.append("save({},'-append','-struct','new_status');".format(os.path.join(dest, "logs/PIPE_status.mat")))
+
+        l.append("jobs = load({})".format(os.path.join(src, "logs/PIPE_jobs.mat")))
+        l.append("save({},'-append','-struct','jobs');".format(os.path.join(dest, "logs/PIPE_jobs.mat")))
+
+        subprocess.call(";".join(l))
+
 
     @property
     def octave_cmd(self):
@@ -401,11 +421,12 @@ class BaseBids(object):
 
 class FmriPreprocessBids(BaseBids):
 
-    def __init__(self, subjects=None, func_hint="", anat_hint="", n_thread=1
+    def __init__(self, subjects=None, func_hint="", anat_hint="", n_thread=1, group=False
                  , type_scaner="", type_acquisition=None, delay_in_tr=0, suppress_vol=0
                  , hp=0.01, lp=float('inf'), t1_preprocess_nu_correct=50, smooth_vol_fwhm=6, skip_slice_timing=False
                  , *args, **kwargs):
         super(FmriPreprocessBids, self).__init__("niak_pipeline_fmri_preprocess", *args, **kwargs)
+
 
         self.func_hint = func_hint
         self.anat_hint = anat_hint
@@ -417,7 +438,14 @@ class FmriPreprocessBids(BaseBids):
             self.subjects = None
             le_suffix = 'all'
 
-        self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=self.folder_out_finale)
+        if not group:
+            self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=self.folder_out_finale)
+            self._pipeline_options.append("opt.size_output = 'all' ")
+        else:
+            self.folder_out = self.folder_out_finale
+            self._pipeline_options.append("opt.psom.flag_update = false")
+            self._pipeline_options.append("opt.psom.flag_verbose = 2")
+
 
         self._pipeline_options.append("opt.psom.max_queued = {}".format(n_thread))
         self._pipeline_options.append("opt.slice_timing.type_acquisition = '{}'".format(type_acquisition))
@@ -485,6 +513,7 @@ def run_worker(dir, num):
     while not os.path.exists("{0}/logs/tmp/".format(dir)):
         # sleep long enough to be last on the race condition TODO (FIND A BETTER WAY TO DO THAT)
         time.sleep(5)
+    # return subprocess.Popen(['ls', '-als', '/usr/local/bin'])
     return subprocess.Popen(cmd)
 
 
