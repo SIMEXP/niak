@@ -1,0 +1,63 @@
+version: 2
+jobs:
+  build:
+    working_directory: /app
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v1-{{ .Branch }}
+          paths:
+            - /caches/
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            docker load -i /caches/app.tar | true
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build --cache-from=app -t app .
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /caches
+            docker save -o /caches/app.tar app
+      - run:
+          name: Set sample data
+          command: |
+            if [[ ! -e "/cache/sample_test" ]]; then
+              mkdir -p /cache/sample_test
+              wget -c -P /cache https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz
+              cd /cache
+              tar -zxvf sample_test.tgz
+              rm sample_test.tgz
+            fi
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/
+
+      - run:
+          name: Run tests
+          command: |
+            mkdir -p /outputs
+            docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
+            docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
+            docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
+            sudo chmod 777 -R /outputs
+      - store_artifacts:
+          path: /outputs
+
+      - deploy:
+          name: Push application Docker image
+          command: |
+            if [[ "${CIRCLE_BRANCH}" == "master" and -n "$DOCKER_PASS" ]]; then
+              docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+              docker push bids/${CIRCLE_PROJECT_REPONAME,,}:latest
+              docker tag bids/${CIRCLE_PROJECT_REPONAME,,} bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG
+              docker push bids/${CIRCLE_PROJECT_REPONAME,,}:$CIRCLE_TAG;
+            fi
