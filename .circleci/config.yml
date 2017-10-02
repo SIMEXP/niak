@@ -25,12 +25,7 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            docker build --cache-from=app -t app .
-      - run:
-          name: Save Docker image layer cache
-          command: |
-            mkdir -p /caches
-            docker save -o /caches/app.tar app
+            docker build --cache-from=app -t bid/${CIRCLE_PROJECT_REPONAME} .
       - run:
           name: Set sample data
           command: |
@@ -41,27 +36,26 @@ jobs:
               tar -zxvf sample_test.tgz
               rm sample_test.tgz
             fi
-      - save_cache:
-          key: v1-{{ .Branch }}-{{ epoch }}
-          paths:
-            - /caches/app.tar
-            - /caches/sample_test
-
       - run:
           name: Run tests
           command: |
             mkdir -p /outputs
-            echo TTTTTTTTTTTTTTTTTTTTTTTT
-            env
-            echo TTTTTTTTTTTTTTTTTTTTTTTT
-            echo docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
-            echo TTTTTTTTTTTTTTTTTTTTTTTT
             docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
             docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
             docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
             sudo chmod 777 -R /outputs
       - store_artifacts:
           path: /outputs
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/app.tar
+            - /caches/sample_test
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /caches
+            docker save -o /caches/app.tar bid/"${CIRCLE_PROJECT_REPONAME}"
 
       - deploy:
           name: Push application Docker image
