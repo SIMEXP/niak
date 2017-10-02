@@ -10,20 +10,20 @@ dependencies:
     - "~/docker"
     - "~/data"
   override:
-  #- if [[ -e ~/data/sample_test ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz"  && cd ${HOME}/data && tar -zxvf sample_test.tgz && rm sample_test.tgz; fi
-  - mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz"  && cd ${HOME}/data && tar -zxvf sample_test.tgz && rm sample_test.tgz; fi
-  #- if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+  - if [[ ! -e ~/data/sample_test ]]; then mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz"  && cd ${HOME}/data && tar -zxvf sample_test.tgz && rm sample_test.tgz; fi
+#  - mkdir -p ${HOME}/data && wget -c -P ${HOME}/data/ "https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz"  && cd ${HOME}/data && tar -zxvf sample_test.tgz && rm sample_test.tgz; fi
+  - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
   - docker build -t bids/${CIRCLE_PROJECT_REPONAME,,} . :
       timeout: 21600
-  #- mkdir -p ~/docker; docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar
-  - mkdir -p ${HOME}/outputs
+  - mkdir -p ~/docker; docker save "bids/${CIRCLE_PROJECT_REPONAME,,}" > ~/docker/image.tar
+#  - mkdir -p ${HOME}/outputs
 
 
 test:
   override:
     - docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
     - docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
-    - docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} group /bids_dataset /outputs  --n_thread 2
+    - docker run -it --read-only -v ${HOME}/outputs:/outputs -v ${HOME}/data/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
     - sudo chmod 777 -R /home/ubuntu/outputs
 
 
