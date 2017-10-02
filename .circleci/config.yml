@@ -11,7 +11,8 @@ jobs:
           keys:
             - v1-{{ .Branch }}
           paths:
-            - /caches/
+            - /caches/app.tar
+            - /caches/sample_test
       - run:
           name: Install dependencies
           command: |
@@ -33,17 +34,18 @@ jobs:
       - run:
           name: Set sample data
           command: |
-            if [[ ! -e "/cache/sample_test" ]]; then
-              mkdir -p /cache/sample_test
-              wget -c -P /cache https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz
-              cd /cache
+            if [[ ! -e "/caches/sample_test" ]]; then
+              mkdir -p /caches/sample_test
+              wget -c -P /caches https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz
+              cd /caches
               tar -zxvf sample_test.tgz
               rm sample_test.tgz
             fi
       - save_cache:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
-            - /caches/
+            - /caches/app.tar
+            - /caches/sample_test
 
       - run:
           name: Run tests
@@ -52,11 +54,11 @@ jobs:
             echo TTTTTTTTTTTTTTTTTTTTTTTT
             env
             echo TTTTTTTTTTTTTTTTTTTTTTTT
-            echo docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
+            echo docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
             echo TTTTTTTTTTTTTTTTTTTTTTTT
-            docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
-            docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
-            docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
+            docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
+            docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
+            docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
             sudo chmod 777 -R /outputs
       - store_artifacts:
           path: /outputs
