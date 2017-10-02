@@ -49,6 +49,11 @@ jobs:
           name: Run tests
           command: |
             mkdir -p /outputs
+            echo TTTTTTTTTTTTTTTTTTTTTTTT
+            env
+            echo TTTTTTTTTTTTTTTTTTTTTTTT
+            echo docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
+            echo TTTTTTTTTTTTTTTTTTTTTTTT
             docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
             docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
             docker run -it --read-only -v /outputs:/outputs -v /cache/sample_test:/bids_dataset bids/${CIRCLE_PROJECT_REPONAME,,} group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
