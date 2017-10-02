@@ -13,6 +13,10 @@ jobs:
           paths:
             - /caches/
       - run:
+          name: Install dependencies
+          command: |
+            apk add --update openssl
+      - run:
           name: Load Docker image layer cache
           command: |
             set +o pipefail
