@@ -11,8 +11,8 @@ jobs:
           keys:
             - v1-{{ .Branch }}
           paths:
-            - /caches/app.tar
-            - /caches/sample_test
+#            - /caches/app.tar
+#            - /caches/sample_test
       - run:
           name: Install dependencies
           command: |
