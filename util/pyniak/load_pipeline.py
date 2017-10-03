@@ -350,7 +350,11 @@ class BaseBids(object):
 
     def concat_status(self, src, dest):
 
-        os.makedirs(os.path.join(dest, "logs"), exist_ok=True)
+        try:
+            os.makedirs(os.path.join(dest, "logs"))
+        except OSError:
+            pass
+
         l = ["/usr/bin/env", "octave", "--eval"]
         l.append("new_status = load({})".format(os.path.join(src, "logs/PIPE_status.mat")))
         # void all group computation
