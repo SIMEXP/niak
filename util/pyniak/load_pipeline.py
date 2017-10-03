@@ -348,7 +348,7 @@ class BaseBids(object):
 
         if self.folder_out != self.folder_out_finale:
             log.info("sync {} to {}".format(self.folder_out,self.folder_out_finale))
-            rsync = ("rsync -a  --exclude logs --exclude report {0}/ {1}"
+            rsync = ("rsync -a  --remove-source-files   --exclude logs --exclude report {0}/ {1}"
                      .format(self.folder_out, self.folder_out_finale).split())
             subprocess.call(rsync)
 
