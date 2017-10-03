@@ -7,10 +7,10 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - restore_cache:
-          keys:
-            - v1-{{ .Branch }}
-          paths:
+#      - restore_cache:
+#          keys:
+#            - v1-{{ .Branch }}
+#          paths:
 #            - /caches/app.tar
 #            - /caches/sample_test
       - run:
