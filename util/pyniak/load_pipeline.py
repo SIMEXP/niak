@@ -15,11 +15,17 @@ NIAK_CONFIG_PATH = os.getenv("NIAK_CONFIG_PATH", '/local_config')
 
 PSOM_GB_LOCAL = "{}/../lib/psom_gb_vars_local.cbrain".format(os.path.dirname(os.path.realpath(__file__)))
 
+DEBUG = False
+if os.getenv("DEBUG", False):
+    DEBUG = True
+
+
 try:
     import psutil
     psutil_loaded = True
 except ImportError:
     psutil_loaded = False
+
 
 try:
     astring = basestring
@@ -356,14 +362,14 @@ class BaseBids(object):
             pass
 
         l = []
-        l.append("new_status = load({})".format(os.path.join(src, "logs/PIPE_status.mat")))
+        l.append("new_status = load('{}')".format(os.path.join(src, "logs/PIPE_status.mat")))
         # void all group computation
         l.append("fe = fieldnames(new_status)")
         l.append("for fn =fe' ; if strfind(fn{1},'group');   new_status.(fn{1}) = 'none'   ; end; end")
-        l.append("save({},'-append','-struct','new_status');".format(os.path.join(dest, "logs/PIPE_status.mat")))
+        l.append("save('{}','-append','-struct','new_status');".format(os.path.join(dest, "logs/PIPE_status.mat")))
 
-        l.append("jobs = load({})".format(os.path.join(src, "logs/PIPE_jobs.mat")))
-        l.append("save({},'-append','-struct','jobs');".format(os.path.join(dest, "logs/PIPE_jobs.mat")))
+        l.append("jobs = load('{}')".format(os.path.join(src, "logs/PIPE_jobs.mat")))
+        l.append("save('{}','-append','-struct','jobs');".format(os.path.join(dest, "logs/PIPE_jobs.mat")))
         subprocess.call(self.octave_run(l))
 
     @property
@@ -375,13 +381,13 @@ class BaseBids(object):
             fp.write(";\n{0}(files_in, opt);\n".format(self.pipeline_name))
         return ["/usr/bin/env", "octave", m_file]
 
-    def octave_run(self,options):
-        m_file = tempfile.mkdtemp(prefix='rsync.', dir=self.folder_out_finale)
-        with open(m_file,'w') as fp:
-            log.info(options)
-            fp.write(";\n".join(options))
-        return ["/usr/bin/env", "octave", m_file]
+    def octave_run(self, options, script_name="octave_run"):
 
+        tmp_oct = tempfile.NamedTemporaryFile('w', prefix=script_name, suffix='.m', delete=False)
+        log.info(options)
+        tmp_oct.write(";\n".join(options))
+        tmp_oct.close()
+        return ["/usr/bin/env", "octave", tmp_oct.name]
 
     @property
     def octave_options(self):
@@ -449,7 +455,11 @@ class FmriPreprocessBids(BaseBids):
             le_suffix = 'all'
 
         if not group:
-            self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=self.folder_out_finale)
+            if DEBUG:
+                self.folder_out = os.path.join(self.folder_out_finale, "results_debug")
+            else:
+                self.folder_out = tempfile.mkdtemp(prefix='results', suffix=le_suffix, dir=self.folder_out_finale)
+
             self._pipeline_options.append("opt.size_output = 'all' ")
         else:
             self.folder_out = self.folder_out_finale
