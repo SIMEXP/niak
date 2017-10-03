@@ -70,7 +70,7 @@ ENV TMPDIR=/outputs/tmp
 
 ENV NIAK_CONFIG_PATH /outputs/tmp/local_config
 RUN mkdir /oasis /projects  /local-scratch
-WORKDIR /outputs
+WORKDIR /tmp
 ENTRYPOINT ["/code/util/bin/bids_app.py"]
 CMD ["--help"]
 ADD util/  ${NIAK_ROOT}/util/

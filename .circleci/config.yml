@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: /app
+    working_directory: /niak
     docker:
       - image: docker:17.05.0-ce-git
     steps:
@@ -25,37 +25,41 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            docker build --cache-from=app -t bids/"${CIRCLE_PROJECT_REPONAME}" .
+            docker build --cache-from=app -t bids/niak .
       - run:
           name: Set sample data
           command: |
-            if [[ ! -e "/caches/sample_test" ]]; then
+            if [[ ! -e "/caches/bids_dataset" ]]; then
               mkdir -p /caches/sample_test
               wget -c -P /caches https://github.com/BIDS-Apps/niak/releases/download/data_for_test/sample_test.tgz
               cd /caches
               tar -zxvf sample_test.tgz
+              mv sample_test bids_dataset
               rm sample_test.tgz
             fi
       - run:
           name: Run tests
           command: |
             mkdir -p /outputs
-            docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
-            docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
-            docker run -it --read-only -v /outputs:/outputs -v /caches/sample_test:/bids_dataset bids/"${CIRCLE_PROJECT_REPONAME}" group /bids_dataset /outputs  --n_thread 2 --participant_label "274-275"
+            docker create -v /bids_dataset -v  /outputs --name data alpine /bin/true
+            docker cp  /caches/bids_dataset data:/
+            docker run -it --read-only --volumes-from data bids/niak participant /bids_dataset /outputs --n_thread 2 --participant_label "275"
+            docker run -it --read-only --volumes-from data bids/niak participant /bids_dataset /outputs --n_thread 2 --participant_label "274"
+            docker run -it --read-only --volumes-from data bids/niak group /bids_dataset /outputs --n_thread 2 --participant_label "274-275"
+            docker cp data:/outputs /outputs
             sudo chmod 777 -R /outputs
       - store_artifacts:
           path: /outputs
-      - save_cache:
-          key: v1-{{ .Branch }}-{{ epoch }}
-          paths:
-            - /caches/app.tar
-            - /caches/sample_test
-      - run:
-          name: Save Docker image layer cache
-          command: |
-            mkdir -p /caches
-            docker save -o /caches/app.tar bid/"${CIRCLE_PROJECT_REPONAME}"
+#      - save_cache:
+#          key: v1-{{ .Branch }}-{{ epoch }}
+#          paths:
+#            - /caches/app.tar
+#            - /caches/sample_test
+#      - run:
+#          name: Save Docker image layer cache
+#          command: |
+#            mkdir -p /caches
+#            docker save -o /caches/app.tar bid/"${CIRCLE_PROJECT_REPONAME}"
 
       - deploy:
           name: Push application Docker image
