@@ -355,7 +355,7 @@ class BaseBids(object):
         except OSError:
             pass
 
-        l = ["/usr/bin/env", "octave", "--eval"]
+        l = []
         l.append("new_status = load({})".format(os.path.join(src, "logs/PIPE_status.mat")))
         # void all group computation
         l.append("fe = fieldnames(new_status)")
@@ -364,9 +364,7 @@ class BaseBids(object):
 
         l.append("jobs = load({})".format(os.path.join(src, "logs/PIPE_jobs.mat")))
         l.append("save({},'-append','-struct','jobs');".format(os.path.join(dest, "logs/PIPE_jobs.mat")))
-
-        subprocess.call(";".join(l))
-
+        subprocess.call(self.octave_run(l))
 
     @property
     def octave_cmd(self):
@@ -376,6 +374,14 @@ class BaseBids(object):
             fp.write(";\n".join(self.opt_and_tune_config + self.octave_options))
             fp.write(";\n{0}(files_in, opt);\n".format(self.pipeline_name))
         return ["/usr/bin/env", "octave", m_file]
+
+    def octave_run(self,options):
+        m_file = tempfile.mkdtemp(prefix='rsync.', dir=self.folder_out_finale)
+        with open(m_file,'w') as fp:
+            log.info(options)
+            fp.write(";\n".join(options))
+        return ["/usr/bin/env", "octave", m_file]
+
 
     @property
     def octave_options(self):
