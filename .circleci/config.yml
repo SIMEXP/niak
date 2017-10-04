@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    working_directory: /niak
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Niak test all
+          command: |
+            [ ! "$(docker ps -a | grep data_container)" ] && docker create -v /niak --name data_container alpine /bin/true
+            docker cp /niak data_container:/
+            docker run -it --volumes-from data_container simexp/niak_dependency:o4_cross_u16 /bin/bash -lic "cd /niak; octave --no-gui --eval \"addpath(genpath(pwd));[pipe,opt,status] = niak_test_all(struct(),struct('psom',struct('mode_pipeline_manager','session','mode','background','max_queued',6,'flag_pause',false))); exit(status)\""
+            docker cp data_container:/niak/result /niak/result
+      - store_artifacts:
+          path: /niak/result
+#      - deploy:
+#          name: Push application Docker image
+#          command: |
+#            docker build -t simexp/niak:${A_TAG} .
