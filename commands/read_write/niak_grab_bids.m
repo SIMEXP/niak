@@ -1,5 +1,5 @@
 function files = niak_grab_bids(path_data,opt)
-% Grab the T1+fMRI scans in a BIDS dataset 
+% Grab the T1w+fMRI scans in a BIDS dataset 
 % http://bids.neuroimaging.io
 %
 % SYNTAX:
@@ -19,14 +19,14 @@ function files = niak_grab_bids(path_data,opt)
 %       (string) A hint to pick one out of many fmri input for exemple 
 %       if the fmri study includes "sub-XX_task-rest-a_hint_bold.nii.gz"
 %       and "sub-XX_task-rest-a_thing_bold.nii.gz" and the "hint" flavor
-%       needs to be selected, FUNC_HINT = 'hint', would do the trick.
+%       needs to be selected, opt.func_hint = 'hint', would do the trick.
 %       
 %   ANAT_HINT
-%       (string) A hint to pick one out of many anat input. I only one file
-%       is present it will be used by default. If no hint is give an on file
-%       with T1 is given this file will be picked. If two file are present,
-%       "sub-11_T1.nii.gz" and "sub-11_T1w.nii.gz" and you need to select the
-%       "sub-11_T1.nii.gz" then the hint "T1."  will do the trick. 
+%       (string, defaut = T1w) A hint to pick one out of many anat input. 
+%       If no hint is give the first file to be listed by the OS will be picked. 
+%       If you want to select a different input than T1w, let say 
+%       sub-XX_ses-XX_FLAIR_run-001.nii.gz input the following option:
+%       opt.anat_hint = "FLAIR" 
 %
 %   TASK_TYPE
 %       (string, default = rest) The type of task, explicitely named in bids 
@@ -119,7 +119,7 @@ else
 end
 
 if ~isfield(opt,'anat_hint')
-    anat_hint = '';
+    anat_hint = 'T1w';
 else
     anat_hint = regexptranslate('escape', opt.anat_hint);
 end
