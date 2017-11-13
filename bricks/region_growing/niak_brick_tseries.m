@@ -140,9 +140,9 @@ function [files_in,files_out,opt] = niak_brick_tseries(files_in,files_out,opt)
 % dataset, those are saved in the output. 
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008-2010.
-%       Centre de recherche de l'institut de Gériatrie de Montréal
-%       Département d'informatique et de recherche opérationnelle
-%       Université de Montréal, 2011
+%       Centre de recherche de l'institut de Griatrie de Montral
+%       Dpartement d'informatique et de recherche oprationnelle
+%       Universit de Montral, 2011
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : medical imaging, fMRI, time series
@@ -278,23 +278,36 @@ for num_f = 1:length(files_in.fmri)
         if isfield(data,'mask_suppressed')
             results.mask_suppressed = data.mask_suppressed;
         end
+        if isfield(data,'mask_scrubbing')
+            results.mask_scrubbing = data.mask_scrubbing;
+        end
         if isfield(data,'confounds')
             results.confounds = data.confounds;
             results.labels_confounds = data.labels_confounds;
         end
     else
         [hdr,vol] = niak_read_vol(files_in.fmri{num_f}); % read fMRI data
+        
+        % Implement the scrubbing mask
+        if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_scrubbing')
+            results.mask_scrubbing = hdr.extra.mask_scrubbing;
+        else
+            results.mask_scrubbing = false(size(vol,4),1);
+        end
+        vol = vol(:,:,:,~results.mask_scrubbing);
+        
+        % Extract time frames
         if isfield(hdr,'extra')&&isfield(hdr.extra,'time_frames')
-            results.time_frames = hdr.extra.time_frames;
+            results.time_frames = hdr.extra.time_frames(~results.mask_scrubbing);
         else
             results.time_frames = (0:(size(vol,4)-1))*hdr.info.tr;
             results.time_frames = results.time_frames(1:size(vol,4)); % An apparently useless line to get rid of a really weird bug in Octave
         end
-        if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_suppressed')
-            results.mask_suppressed = hdr.extra.mask_suppressed;
-        end
+        results.mask_suppressed = results.mask_scrubbing;
+        
+        % Extract confounds
         if isfield(hdr,'extra')&&isfield(hdr.extra,'confounds')
-            results.confounds = hdr.extra.confounds;
+            results.confounds = hdr.extra.confounds(~results.mask_scrubbing,:);
             results.labels_confounds = hdr.extra.labels_confounds;
         end
     end

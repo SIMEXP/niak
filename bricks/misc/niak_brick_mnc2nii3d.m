@@ -118,7 +118,7 @@ try
         end
         
         [path_tmp,name_tmp,ext] = fileparts(file_name);
-        if strcmp(ext,gb_niak_zip_ext)
+        if strcmp(ext,GB_NIAK.zip_ext)
             [path_tmp,name_tmp,ext] = fileparts(name_tmp);
         end
         
@@ -135,7 +135,7 @@ try
                 flag_exist = true;
                 for num_g = 1:length(files_out_3d)
                     [path_tmp,name_tmp,ext] = fileparts(files_out_3d{num_g});
-                    if strcmp(ext,gb_niak_zip_ext)
+                    if strcmp(ext,GB_NIAK.zip_ext)
                         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
                     end
                     target_file = [files_out filesep name_tmp '.nii'];
@@ -150,7 +150,7 @@ try
                 [var_tmp,files_out_3d] = niak_brick_4d_to_3d(source_file,'',opt_3d);
                 for num_g = 1:length(files_out_3d)
                     [path_tmp,name_tmp,ext] = fileparts(files_out_3d{num_g});
-                    if strcmp(ext,gb_niak_zip_ext)
+                    if strcmp(ext,GB_NIAK.zip_ext)
                         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
                     end
                     target_file = [files_out filesep name_tmp '.nii'];

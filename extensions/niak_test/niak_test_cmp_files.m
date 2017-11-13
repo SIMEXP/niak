@@ -11,9 +11,9 @@ function [in,out,opt] = niak_test_cmp_files(in,out,opt)
 % 
 % OPT.BASE_SOURCE (string) the base folder for SOURCE files.
 % OPT.BASE_TARGET (string) the base folder for TARGET files.
-% OPT.BLACK_LIST_SOURCE (string) the black list to grab files from SOURCE,
+% OPT.BLACK_LIST_SOURCE (string or cell of sting) the black list to grab files from SOURCE,
 %   if IN.SOURCE is omitted.
-% OPT.BLACK_LIST_TARGET (string) the black list to grab files from TARGET,
+% OPT.BLACK_LIST_TARGET (string or cell of sting) the black list to grab files from TARGET,
 %   if IN.TARGET is omitted.
 % OPT.EPS (scalar, default 10^(-5)) the amount of "numeric noise" tolerated to 
 %   declare two volumes to be equal

@@ -29,6 +29,10 @@ function [files_in,files_out,opt] = niak_brick_mnc2nii(files_in,files_out,opt)
 %       can be changed by editing the variable GB_NIAK_ZIP in the file 
 %       NIAK_GB_VARS.
 %
+%   FLAG_TEST
+%       (boolean, default false) if FLAG_TEST is true, the brick only
+%       updates FILES_IN, FILES_OUT and OPT, and does nothing else. 
+%
 %   FLAG_VERBOSE 
 %       (boolean, default 1) if the flag is 1, then the function prints 
 %       some infos during the processing.
@@ -86,10 +90,13 @@ files_out = niak_full_path(files_out);
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields    = { 'flag_zip' , 'flag_recursive' , 'flag_verbose' , 'arg_mnc2nii' };
-gb_list_defaults  = { true       , true             , true           , ''            };
+gb_list_fields    = { 'flag_test' , 'flag_zip' , 'flag_recursive' , 'flag_verbose' , 'arg_mnc2nii' };
+gb_list_defaults  = { false       , true       , true             , true           , ''            };
 niak_set_defaults
 
+if opt.flag_test
+    return
+end
 dir_files = dir(files_in);
 
 mask_dir = [dir_files.isdir];
@@ -110,7 +117,7 @@ for num_f = 1:length(list_files)
     
     [path_tmp,name_tmp,ext] = fileparts(file_name);
     
-    if strcmp(ext,gb_niak_zip_ext)
+    if strcmp(ext,GB_NIAK.zip_ext)
         [path_tmp,name_tmp,ext] = fileparts(name_tmp);
     end
     
@@ -133,7 +140,7 @@ for num_f = 1:length(list_files)
             error(err_msg)
         end
         if strcmp(ext,'.mnc')&&flag_zip
-            instr_zip = [gb_niak_zip ' ' target_file];
+            instr_zip = [GB_NIAK.zip ' ' target_file];
             [flag_err,err_msg] = system(instr_zip);
             if flag_err
                 error(err_msg)

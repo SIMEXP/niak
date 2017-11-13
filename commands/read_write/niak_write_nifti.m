@@ -105,19 +105,11 @@ precision = hdr.info.precision;
 
 hdr.info.dimensions = size(vol);
 
-if ~isfield(hdr.details,'dim')
-    hdr.details.dim = [ndims(vol) ones(1,4) 1 0 0];    
-end
-if ndims(vol)==2
-    hdr.details.dim(2:3) = size(vol); 
-    hdr.details.dim(4:5) = 1;
-elseif ndims(vol)==3    
-    hdr.details.dim(2:4) = size(vol);    
-    hdr.details.dim(5) = 1;
-elseif ndims(vol)==4
-    hdr.details.dim(2:5) = size(vol);       
+hdr.details.dim = [ndims(vol) ones(1,5) 0 0];  
+if ndims(vol)<=4
+    hdr.details.dim(2:(1+ndims(vol))) = size(vol);
 else
-    error('VOL need to be a 3D or 4D array!');
+    error('VOL need to be have less than 4D!');
 end
 
 hdr.descrip = hdr.info.history;
@@ -130,23 +122,23 @@ hdr.details.sform_code = 1;
 switch hdr.info.precision
     case 'uint8'
         hdr.details.datatype = 2;
-        hdr.details.bitpix = int16(8);
+        hdr.details.bitpix = 8;
         vol = uint8(vol);
     case 'int16' 
         hdr.details.datatype = 4;
-        hdr.details.bitpix = int16(16);
+        hdr.details.bitpix = 16;
         vol = int16(vol);
     case 'int32'
         hdr.details.datatype = 8;
-        hdr.details.bitpix = int16(32);
+        hdr.details.bitpix = 32;
         vol = int32(vol);
     case {'float32','float'}
         hdr.details.datatype = 16;
-        hdr.details.bitpix = int16(32);        
+        hdr.details.bitpix = 32;
     	vol = single(vol);
     case 'double'
         hdr.details.datatype = 64;
-        hdr.details.bitpix = int16(64);
+        hdr.details.bitpix = 64;
         vol = double(vol);
 end
 
@@ -326,7 +318,7 @@ fwrite(fid, hdr.details.magic(1:4),        'uchar');
 fbytes = ftell(fid);
 
 if ~isequal(fbytes,348),
-    msg = sprintf('For some reason, the header size is not 348 bytes. That should not be the case...');
+    msg = sprintf('For some reason, the header size is %i not 348 bytes. That should not be the case...', fbytes);
     warning(msg);
 end
 

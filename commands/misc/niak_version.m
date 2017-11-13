@@ -51,8 +51,8 @@ function versions = niak_version()
 %%%%%%%%%%%%%%%%%
 %%     SVN     %%
 %%%%%%%%%%%%%%%%%
-
-    versions.svn = psom_version_svn();
+% SVN not used anymore 
+%    versions.svn = psom_version_svn();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%     Release number     %%
@@ -72,7 +72,7 @@ function versions = niak_version()
         k=k+1;
         niak_gb_vars;
         versions.release(k).name = 'niak';
-        versions.release(k).release = gb_niak_version;
+        versions.release(k).release = GB_NIAK.version;
     end
    
 

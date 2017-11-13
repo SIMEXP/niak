@@ -2,4 +2,6 @@
 BCT/
 *.swp
 *.pyc
-jsonlab*/
+*.asv
+psom_gb_vars_local.m
+TODO

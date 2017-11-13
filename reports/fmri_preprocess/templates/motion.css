@@ -1,0 +1,58 @@
+.hidden {display: none;}
+
+.sliderNext {
+  position: absolute;
+  top: 30%;
+  right: 0;
+  object-fit: none;
+  object-position: 0 -150px;
+  width: 50px;
+  height: 150px;
+}
+
+.sliderNext:hover{
+  object-position: -50px -150px;
+}
+
+.sliderPrev {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  object-fit: none;
+  object-position: 0 0;
+  width: 50px;
+  height: 150px;
+}
+
+.sliderPrev:hover{
+  object-position: -50px 0;
+}
+
+@keyframes flickerAnimation {
+  0%   { opacity:1; }
+  50%  { opacity:0; }
+  100% { opacity:1; }
+}
+@-o-keyframes flickerAnimation{
+  0%   { opacity:1; }
+  50%  { opacity:0; }
+  100% { opacity:1; }
+}
+@-moz-keyframes flickerAnimation{
+  0%   { opacity:1; }
+  50%  { opacity:0; }
+  100% { opacity:1; }
+}
+@-webkit-keyframes flickerAnimation{
+  0%   { opacity:1; }
+  25%  { opacity:0.5; }
+  50%  { opacity:0; }
+  75%  { opacity:0.5; }
+  100% { opacity:1; }
+}
+.register img{
+   -webkit-animation: flickerAnimation 1.5s infinite;
+   -moz-animation: flickerAnimation 1.5s infinite;
+   -o-animation: flickerAnimation 1.5s infinite;
+    animation: flickerAnimation 1.5s infinite;
+}

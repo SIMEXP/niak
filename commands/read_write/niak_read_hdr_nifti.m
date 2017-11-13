@@ -78,12 +78,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Opening the file
-list_formats = {'native','ieee-le','ieee-be'};
+list_formats = {'ieee-le','ieee-be'};
 fid = -1;
 tag_OK = 0;
 num_f = 1;
 
 while ((tag_OK == 0)||(fid < 0))&&(num_f <= length(list_formats))
+    if fid > 0 
+       fclose(fid)
+    end
     fid = fopen(file_name,'r',list_formats{num_f});
     if ~(fid<0)
         fseek(fid,0,'bof');
@@ -341,10 +344,10 @@ else
 end
 
 %% hdr.info.dimension_order
+[~,~,~,hdr.info.dimension_order] = niak_hdr_mat2minc(hdr.info.mat);
+
 if hdr.info.dimensions(end)>1
-    hdr.info.dimension_order = 'xyzt';
-else
-    hdr.info.dimension_order = 'xyz';
+    hdr.info.dimension_order = [hdr.info.dimension_order 't'];
 end
 
 %% hdr.info.history

@@ -61,6 +61,10 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %         (matrix 1*W) A t-test for the significance of the contrast
 %         at each connection.
 %
+%      F2
+%         (matrix 1*W) A F2 effect size estimate of the contrast
+%         at each connection.
+%
 %      PCE 
 %         (matrix 1*W) the per-comparison error associated with each t-test
 %         against a bilateral hypothesis of BETA(w)=0.
@@ -95,6 +99,14 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 %   TTEST
 %      (string, default 'gb_niak_omitted') the file name of a 4D dataset. 
 %      TTEST(:,:,:,n) is the t-stat map associated with the n-th network.
+%
+%   F2
+%      (string, default 'gb_niak_omitted') the file name of a 4D dataset. 
+%      F2(:,:,:,n) is the F2 effect size map associated with the n-th network.
+%
+%   F2_FDR
+%      (string, default 'gb_niak_omitted') the file name of a 4D dataset. 
+%      Same as FILES_OUT.F2, except only effects that pass FDR are non-0. 
 %
 %   EFFECT
 %      (string, default 'gb_niak_omitted') the file name of a 4D dataset. 
@@ -246,17 +258,17 @@ function [files_in,files_out,opt] = niak_brick_glm_connectome(files_in,files_out
 % site, and then generated an average weighted by the standard deviation of the 
 % effect at each site. See Table 1, method "inverse variance based" from the 
 % METAL software described in the following publication:
-% Cristen J. Willer, Yun Li and Gonçalo R. Abecasis
+% Cristen J. Willer, Yun Li and Gonalo R. Abecasis
 % METAL: fast and efficient meta-analysis of genomewide association scans
-% bioinformatics application notes Vol. 26 no. 17 2010, pages 2190–2191
+% bioinformatics application notes Vol. 26 no. 17 2010, pages 21902191
 % doi:10.1093/bioinformatics/btq340
 % This is well adapted for multisite data with unequal sample size, and possibly
 % unbalanced groups.
 % Thanks to Thomas Nichols for suggesting this method. 
 % 
 % Copyright (c) Pierre Bellec, Centre de recherche de l'institut de 
-% Gériatrie de Montréal, Département d'informatique et de recherche 
-% opérationnelle, Université de Montréal, 2010-2013.
+% Griatrie de Montral, Dpartement d'informatique et de recherche 
+% oprationnelle, Universit de Montral, 2010-2013.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : GLM, functional connectivity, connectome,PPI.
@@ -298,8 +310,8 @@ if ~ischar(files_in.networks)
 end
 
 %% Files out
-list_fields   = { 'results'         , 'ttest'           , 'effect'          , 'std_effect'      , 'fdr'             , 'perc_discovery'  };
-list_defaults = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
+list_fields   = { 'f2'              , 'f2_fdr'          , 'results'         , 'ttest'           , 'effect'          , 'std_effect'      , 'fdr'             , 'perc_discovery'  };
+list_defaults = { 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' , 'gb_niak_omitted' };
 files_out = psom_struct_defaults(files_out,list_fields,list_defaults);
 
 %% Options
@@ -445,6 +457,7 @@ if flag_multisite
     std_eff = sqrt(1./std_eff);
     ttest = eff./std_eff;
     pce = 2*(1-normcdf(abs(ttest)));
+    f2 = repmat(NaN,size(eff));
     
 else
 
@@ -469,7 +482,14 @@ else
     y_x_c.y = model_group.y;
     y_x_c.c = model_group.c; 
     [results, opt_glm_gr] = niak_glm(y_x_c , opt_glm_gr);
+    
+    %% Reformat the results of the group-level model
+    ttest = results.ttest ;
+    pce = results.pce ; 
+    eff =  results.eff ;
+    std_eff =  results.std_eff ; 
     beta =  results.beta; 
+    f2 =  results.f2;
     
     %% Run White's test of heteroscedasticity
     model_white.y = model_group.y;
@@ -484,12 +504,7 @@ else
     [test_white.p,model_white] = niak_white_test_hetero(model_white);
     model_white = rmfield(model_white,'y'); % remove the square residuals from the model, as this is very large data & is easy to regenerate
     [test_white.fdr,test_white.result] = niak_fdr(test_white.p(:),'BH',0.2);   
-    
-    %% Reformat the results of the group-level model
-    ttest = results.ttest ;
-    pce = results.pce ; 
-    eff =  results.eff ;
-    std_eff =  results.std_eff ; 
+
 end
 
 %% Reshape the results intro matrix form
@@ -498,10 +513,12 @@ switch type_measure
         ttest_mat = niak_lvec2mat (ttest);
         eff_mat   = niak_lvec2mat (eff);
         std_mat   = niak_lvec2mat (std_eff);
+        f2_mat    = niak_lvec2mat (f2);
     case 'glm'
         ttest_mat = reshape (ttest,[sqrt(length(ttest)),sqrt(length(ttest))]);
         eff_mat   = reshape (eff,[sqrt(length(eff)),sqrt(length(eff))]);
         std_mat   = reshape (std_eff,[sqrt(length(std_eff)),sqrt(length(std_eff))]);
+        f2_mat   = reshape (f2,[sqrt(length(std_eff)),sqrt(length(std_eff))]);
     otherwise
         error('%s is an unkown type of intra-run measure',opt.test.(test).run.type)
 end
@@ -525,17 +542,24 @@ if ~strcmp(files_out.perc_discovery,'gb_niak_omitted')||~strcmp(files_out.fdr,'g
     end    
     nb_net = size(ttest_mat,1);
     mask(mask>nb_net) = 0;
-    t_maps   = zeros([size(mask) nb_net]);
-    fdr_maps = zeros([size(mask) nb_net]);
-    eff_maps = zeros([size(mask) nb_net]);
-    std_maps = zeros([size(mask) nb_net]);
+    t_maps      = zeros([size(mask) nb_net]);
+    fdr_maps    = zeros([size(mask) nb_net]);
+    eff_maps    = zeros([size(mask) nb_net]);
+    std_maps    = zeros([size(mask) nb_net]);
+    f2_maps     = zeros([size(mask) nb_net]);
+    f2_fdr_maps = zeros([size(mask) nb_net]);  
     for num_net = 1:nb_net
         t_maps(:,:,:,num_net)   = niak_part2vol(ttest_mat(:,num_net),mask);    
         eff_maps(:,:,:,num_net) = niak_part2vol(eff_mat(:,num_net),mask);
         std_maps(:,:,:,num_net) = niak_part2vol(std_mat(:,num_net),mask);
+        f2_maps(:,:,:,num_net)   = niak_part2vol(f2_mat(:,num_net),mask);    
         ttest_thre = ttest_mat(:,num_net);
         ttest_thre( ~test_q(:,num_net) ) = 0;
         fdr_maps(:,:,:,num_net) = niak_part2vol(ttest_thre,mask);
+        f2_thre = f2_mat(:,num_net);
+        f2_thre( ~test_q(:,num_net) ) = 0;
+        f2_fdr_maps(:,:,:,num_net) = niak_part2vol(f2_thre,mask);
+        
     end
     discovery_maps = niak_part2vol(perc_discovery,mask);
 end
@@ -546,16 +570,28 @@ if ~strcmp(files_out.ttest,'gb_niak_omitted')
     niak_write_vol(hdr,t_maps);
 end
 
-% perc_discovery
-if ~strcmp(files_out.perc_discovery,'gb_niak_omitted')
-    hdr.file_name = files_out.perc_discovery;
-    niak_write_vol(hdr,discovery_maps);
-end
-
 % FDR-thresholded t-test maps
 if ~strcmp(files_out.fdr,'gb_niak_omitted')
     hdr.file_name = files_out.fdr;
     niak_write_vol(hdr,fdr_maps);
+end
+
+% f2 maps
+if ~strcmp(files_out.f2,'gb_niak_omitted')
+    hdr.file_name = files_out.f2;
+    niak_write_vol(hdr,f2_maps);
+end
+
+% FDR-thresholded f2 maps
+if ~strcmp(files_out.f2_fdr,'gb_niak_omitted')
+    hdr.file_name = files_out.f2_fdr;
+    niak_write_vol(hdr,f2_fdr_maps);
+end
+
+% perc_discovery
+if ~strcmp(files_out.perc_discovery,'gb_niak_omitted')
+    hdr.file_name = files_out.perc_discovery;
+    niak_write_vol(hdr,discovery_maps);
 end
 
 % effect maps
@@ -573,8 +609,8 @@ end
 %% Save results in mat form
 if ~strcmp(files_out.results,'gb_niak_omitted')
     if flag_multisite 
-        save(files_out.results,'flag_multisite','type_measure','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','multisite')
+        save(files_out.results,'flag_multisite','type_measure','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','multisite','f2')
     else 
-        save(files_out.results,'flag_multisite','type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery')
+        save(files_out.results,'flag_multisite','type_measure','test_white','model_white','model_group','beta','eff','std_eff','ttest','pce','fdr','test_q','q','perc_discovery','nb_discovery','vol_discovery','f2')
     end
 end

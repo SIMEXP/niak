@@ -1,4 +1,4 @@
- function files = niak_grab_folder(path_data,black_list)
+ function files = niak_grab_folder(path_data,black_list,init)
 % Grab all the files inside a folder (recursively)
 %
 % SYNTAX:
@@ -11,9 +11,9 @@
 %   (string, default [pwd filesep], aka './') a folder
 %
 % BLACK_LIST
-%   (string or cell of string) a list of folder (or subfolders) to 
+%   (string or cell of string) a list of folders, or files to 
 %   be ignored by the grabber. Absolute names should be used
-%   (i.e. 'toto' rather than '/home/user23/database/toto'). If not, the names
+%   (i.e. '/home/user23/database/toto' rather than 'toto'). If not, the names
 %   will be assumed to refer to the current directory.
 %
 % _________________________________________________________________________
@@ -27,9 +27,9 @@
 % COMMENTS:
 %
 % Copyright (c) Pierre Bellec
-%               Centre de recherche de l'institut de Gériatrie de Montréal,
-%               Département d'informatique et de recherche opérationnelle,
-%               Université de Montréal, 2011-2012.
+%               Centre de recherche de l'institut de Griatrie de Montral,
+%               Dpartement d'informatique et de recherche oprationnelle,
+%               Universit de Montral, 2011-2012.
 % Maintainer : pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
 % Keywords : grabber
@@ -57,19 +57,35 @@ if (nargin<1)||isempty(path_data)
     path_data = [pwd filesep];
 end
 
-path_data = niak_full_path(path_data);
+if nargin < 3
+    init = true;
+end
 
-%% The black list
-if (nargin > 1)
-    if iscellstr(black_list)
-        for num_e = 1:length(black_list)
-            black_list{num_e} = niak_full_path(black_list{num_e});
+if init
+
+    path_data = niak_full_path(path_data);
+
+    %% The black list
+    black_list_file = {};
+    if nargin < 2
+        black_list = {};
+    end
+
+    if ischar(black_list)
+        black_list = {black_list};
+    end
+
+    for num_e = 1:length(black_list)
+        [path_tmp,name_tmp,ext_tmp] = fileparts(black_list{num_e});
+        if isempty(path_tmp)
+            path_tmp = path_data;
+        else
+            path_tmp = [path_tmp filesep];
         end
-    elseif ischar(black_list)
-        black_list = {niak_full_path(black_list)};
+        black_list{num_e} = [path_tmp name_tmp ext_tmp];
     end
 end
-   
+
 %% List of folders
 if ~exist(path_data,'dir')
     error('I could not find the directory %s',path_data);
@@ -90,7 +106,10 @@ files = files(:);
 %% Recursively find files in subdirectories
 ind_dir = find(is_dir);
 for num_d = 1:length(ind_dir)
-    if (nargin < 2) || ~ismember(niak_full_path(files_loc{ind_dir(num_d)}),black_list)
-        files = [ files ; niak_grab_folder(files_loc{ind_dir(num_d)}) ];    
+    if (nargin < 2) || ~ismember(files_loc{ind_dir(num_d)},black_list)
+        files = [ files ; niak_grab_folder([files_loc{ind_dir(num_d)} filesep],black_list,false) ];    
     end
 end
+
+% Removing black listed files
+files = files(~ismember(files,black_list));

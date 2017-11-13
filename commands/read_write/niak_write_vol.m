@@ -102,12 +102,22 @@ function [] = niak_write_vol(hdr,vol)
 % COMMENTS:
 %
 % As mentioned in the description of HDR.FILE_NAME, the extension of zipped 
-% file is assumed to be .gz. The tools used to zip files in 'gzip'. This 
+% file is assumed to be .gz. The tools used to zip files is 'gzip'. This 
 % setting can be changed by changing the variables GB_NIAK_ZIP_EXT and 
 % GB_NIAK_UNZIP in the file NIAK_GB_VARS.
 %
 % Other fields of HDR can be used in MINC format to speed up writting. 
 % See the help of NIAK_WRITE_MINC.
+%
+% The field HDR.TYPE is forced by the extension of the file name:
+%   '.mnc.gz' -> ',minc1' ; '.mnc' -> 'minc2'; 
+%   '.nii' or '.nii.gz' -> 'nii'; 
+%   '.img' -> HDR.TYPE if it is 'img' or 'analyze', 'img' otherwise.
+%
+% If the file type is changed, HDR.DETAILS is ignored and all header fields
+% are extrapolated from HDR.INFO. The exception to this behaviour is 
+% a conversion across nifti/analyze variants, which share the structure of 
+% their details. 
 %
 % Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
 % Maintainer : pbellec@bic.mni.mcgill.ca
@@ -133,7 +143,7 @@ function [] = niak_write_vol(hdr,vol)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
-flag_gb_niak_fast_gb = 1;
+
 niak_gb_vars
 
 if isempty(vol)
@@ -221,18 +231,43 @@ elseif ischar(file_name)
     else
 
         %% Case 2b : a regular string
-        try
-            type_f = hdr.type;
-        catch
-            error('niak:write: Please specify a file format in hdr.type.\n')
-        end
-
-        [path_f,name_f,ext_f] = fileparts(hdr.file_name);
         
+        %% Check the type of the file
+        [path_f,name_f,ext_f] = niak_fileparts(hdr.file_name);
         if isempty(path_f)
             path_f = '.';
         end
         
+        if ~isfield(hdr,'type')
+            error('niak:write: Please specify a file format in hdr.type.')
+        end
+        switch ext_f
+          case '.mnc.gz'
+            type_f = 'minc1';
+          case '.mnc'
+            type_f = 'minc2';
+          case {'.nii','.nii.gz'}
+            type_f = 'nii';
+          case '.img'
+            if ismember(hdr.type,{'img','analyze'})        
+                type_f = hdr.type;
+            else 
+                type_f = 'img';
+            end
+          otherwise
+            error('%s is not a supported extension',ext_f)
+        end
+        
+        %% Check if the format has changed
+        %% if it has, remove details, unless we are only moving between nifti subtypes
+        if ~strcmp(type_f,hdr.type)&&~min(ismember({type_f,hdr.type},{'analyze','nii','img'}))
+            hdr.type = type_f;
+            if isfield(hdr,'details')
+                hdr = rmfield(hdr,'details');
+            end
+        end
+        
+        %% Deal with extra information
         if isfield(hdr,'extra')
             extra = hdr.extra;
             hdr = rmfield(hdr,'extra');
@@ -245,9 +280,13 @@ elseif ischar(file_name)
             error(sprintf('Could not write %s, the folder %s does not exist !',hdr.file_name,path_f));
         end
         file_name = hdr.file_name;
-        if strcmp(ext_f,gb_niak_zip_ext)
-            hdr.file_name = niak_file_tmp(['_' name_f]);
+        if (length(ext_f)>=3) && strcmp( ext_f((end-2):end) , '.gz');
+            flag_zip = true;
+            hdr.file_name = niak_file_tmp(['_' name_f ext_f(1:(end-3))]);
+        else
+            flag_zip = false;
         end
+        
         switch type_f
             case {'minc1','minc2'} % That's a minc file
                 niak_write_minc(hdr,vol);
@@ -257,19 +296,20 @@ elseif ischar(file_name)
                 error('niak:write: %s : unrecognized file format\n',type_f);
         end
 
-        if strcmp(ext_f,gb_niak_zip_ext)
-            instr_zip = cat(2,gb_niak_zip,' ',hdr.file_name);
+        if flag_zip
+            instr_zip = cat(2,GB_NIAK.zip,' ',hdr.file_name);
             [status,msg] = system(instr_zip);
             if status~=0
-                error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',gb_niak_zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
+                error(cat(2,'niak:write: ',msg,'. There was a problem when attempting to zip the file. Please check that the command ''',GB_NIAK.zip,''' works, or change program using the variable GB_NIAK_ZIP in the file NIAK_GB_VARS'));
             end
-            instr_mv = ['mv "' hdr.file_name gb_niak_zip_ext '" "' file_name '"'];
+            instr_mv = ['mv "' hdr.file_name GB_NIAK.zip_ext '" "' file_name '"'];
             [status,msg] = system(instr_mv);
             if status~=0
                 error(cat(2,'niak:write: ',msg,'. There was a problem moving the compressed file from the temporary folder to its final destination'));
             end
         end
         
+        %% Copy extra information, only if the number of time frames match with the actual data
         if (length(fieldnames(extra))>1)&&(length(extra.time_frames)==size(vol,4))
             [path_extra,name_extra] = niak_fileparts(file_name);
             file_extra = [path_extra filesep name_extra '_extra.mat'];

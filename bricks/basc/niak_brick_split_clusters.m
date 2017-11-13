@@ -5,7 +5,7 @@ function [in, out, opt] = niak_brick_split_clusters(in, out, opt)
 %
 % FILES_IN (string) a 3D volume with clusters (cluster I is filled with I)
 % FILES_OUT (string) a 3D volume with the splitted clusters.
-% OPT.TYPE_NEIG (integer, default 8) the spatial neighbourhood of a
+% OPT.TYPE_NEIG (integer, default 6) the spatial neighbourhood of a
 %    voxel, possible values: 4,6,8,10,18,26
 % OPT.FLAG_VERBOSE (boolean, default true) turn verbose on/off
 % OPT.FLAG_TEST (boolean, default false) if the flag is true, the brick does 
@@ -62,7 +62,7 @@ if nargin < 3
 end
 opt = psom_struct_defaults(opt, ...
       { 'type_neig' , 'flag_verbose' , 'flag_test' } , ...
-      { 8           , true           , false       });
+      { 6           , true           , false       });
       
 % If the test flag is true, stop here !
 if opt.flag_test == 1

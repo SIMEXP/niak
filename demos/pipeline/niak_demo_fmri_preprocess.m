@@ -88,7 +88,7 @@ if ~exist('path_demo','var')
 end
 
 if isempty(path_demo)
-    path_demo = gb_niak_path_demo;
+    path_demo = GB_NIAK.path_demo;
 end
 
 path_demo = niak_full_path(path_demo);
@@ -101,7 +101,12 @@ else
     opt = psom_struct_defaults(opt,{'folder_out'},{folder_out},false);
 end
 
-% Hard-coded processing parameters
+%% Check if the input folder exists 
+if (~isfield(opt,'flag_test')||(isfield(opt,'flag_test')&&~opt.flag_test))&&~psom_exist(path_demo)
+    error('The input folder %s does not exist',path_demo)
+end
+ 
+%% Hard-coded processing parameters
 opt.slice_timing.type_acquisition = 'interleaved ascending'; 
 opt.slice_timing.type_scanner     = 'Bruker';                
 opt.t1_preprocess.nu_correct.arg = '-distance 50'; 
@@ -112,9 +117,8 @@ if psom_exist(cat(2,path_demo,'anat_subject1.img'))
     error('analyze format is not currently supported');
 elseif psom_exist(cat(2,path_demo,'anat_subject1.mnc.gz'))
     ext = '.mnc.gz';
-elseif psom_exist(cat(2,path_demo,'anat_subject1.nii'))
-    ext = '.nii';
-    error('analyze format is not currently supported');
+elseif psom_exist(cat(2,path_demo,'anat_subject1.nii.gz'))
+    ext = '.nii.gz';
 else
     ext = '.mnc';
 end

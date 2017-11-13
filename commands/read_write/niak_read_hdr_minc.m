@@ -1,40 +1,23 @@
 function hdr = niak_read_hdr_minc(file_name)
-%
-% _________________________________________________________________________
-% SUMMARY NIAK_READ_HDR_MINC
-%
 % Read the header of a MINC(1/2) file (.mnc)
 % http://www.bic.mni.mcgill.ca/software/minc/
 %
 % SYNTAX:
 % HDR = NIAK_READ_HDR_MINC(FILE_NAME)
 %
-% _________________________________________________________________________
-% INPUT:
-%
 % FILE_NAME     
-%       (string) name of a single 3D+t minc file or a 3D minc file.
-%
-% _________________________________________________________________________
-% OUTPUT:
-%
+%   (string) name of a single 3D+t minc file or a 3D minc file.
 % HDR           
-%       (structure) contain a description of the data. For a list of fields 
-%       common to all data types, see NIAK_READ_VOL.
-%
-%       HDR.DETAILS 
-%           (structure) describe the standard variables of a minc file.
-%           Each field of HDR.DETAILS is one variable of the MINC files, 
-%           and is a structure with two fields.
-%
-%           HDR.DETAILS.<VAR_NAME>.VARATTS 
-%               (cell of string) the list of the attribute name.
-%                   
-%           HDR.DETAILS.<VAR_NAME>.ATTVALUE
-%               (cell of string/double) a list of the attribute values.
-%
-% _________________________________________________________________________
-% COMMENTS:
+%   (structure) contain a description of the data. For a list of fields 
+%   common to all data types, see NIAK_READ_VOL.
+%   HDR.DETAILS 
+%     (structure) describe the standard variables of a minc file.
+%     Each field of HDR.DETAILS is one variable of the MINC files, 
+%     and is a structure with two fields.
+%   HDR.DETAILS.<VAR_NAME>.VARATTS 
+%     (cell of string) the list of the attribute name.                   
+%   HDR.DETAILS.<VAR_NAME>.ATTVALUE
+%     (cell of string/double) a list of the attribute values.
 %
 % The reader uses system calls to MINCINFO and MINCHEADER, which requires
 % a version of minc tools available.
@@ -93,6 +76,7 @@ while (num_l<length(cell_header))&&isempty(findstr(cell_header{num_l},'netcdf'))
     num_l = num_l + 1;
 end
 if num_l == length(cell_header)
+    fprintf(1,'%s\n', file_name )
     error('niak:read: Could not parse the minc header !')
 else
     cell_header = cell_header(num_l:end);

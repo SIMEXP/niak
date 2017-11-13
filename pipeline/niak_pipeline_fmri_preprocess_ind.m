@@ -88,8 +88,12 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %       (string, default FOLDER_OUT/logs/) where to write the logs of the
 %       pipeline.
 %
+%   FOLDER_RESAMPLE
+%       (string, default FOLDER_OUT/resample/) where to write the minimally 
+%       preprocessed (spatially resampled) fMRI volumes.
+%
 %   FOLDER_FMRI
-%       (string, default FOLDER_OUT/fmri/) where to write the preprocessed 
+%       (string, default FOLDER_OUT/fmri/) where to write the fully preprocessed 
 %       fMRI volumes.
 %
 %   FOLDER_ANAT
@@ -246,11 +250,28 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           (real, default: Inf) the cut-off frequency for low pass 
 %           filtering. opt.lp = Inf means no low-pass filtering.
 %
+%   BUILD_CONFOUNDS
+%       (structure) Options of NIAK_BRICK_BUILD_CONFOUNDS. 
+%
+%      WW_FD
+%           (vector, default [3 6]) defines the time window to be removed around each time frame
+%           identified with excessive motion. First value is for time prior to motion peak, and second value 
+%           is for time following motion peak. 
+%
+%       NB_VOL_MIN
+%           (integer, default 40) the minimal number of volumes remaining after 
+%           scrubbing (unless the data themselves are shorter). If there are not enough
+%           time frames after scrubbing, the time frames with lowest FD are selected.
+%
+%       THRE_FD
+%           (scalar, default 0.5) the maximal acceptable framewise displacement 
+%           after scrubbing.
+%
+%       COMPCOR
+%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
+%
 %   REGRESS_CONFOUNDS
 %       (structure) Options of NIAK_BRICK_REGRESS_CONFOUNDS.
-%       FOLDER_OUT
-%           (string, default folder of FMRI) the folder where the default outputs
-%           are generated.
 %
 %       FLAG_SLOW
 %           (boolean, default true) turn on/off the correction of slow time drifts
@@ -277,37 +298,9 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %          (boolean, default true) turn on/off the removal of the average 
 %          signal in the lateral ventricles.
 %
-%       PCT_VAR_EXPLAINED 
-%           (boolean, default 0.95) the % of variance explained by the selected 
-%           PCA components when reducing the dimensionality of motion parameters.
-%
-%       COMPCOR
-%           (structure, default see NIAK_COMPCOR) the OPT argument of NIAK_COMPCOR.
-% 
 %       FLAG_PCA_MOTION 
 %           (boolean, default true) turn on/off the PCA reduction of motion 
 %           parameters.
-%
-%   CORSICA
-%       (structure) options of NIAK_PIPELINE_CORSICA (correction of the
-%       physiological noise based on automatic component selection in an
-%       independent component analysis).
-%               
-%       SICA.NB_COMP
-%           (integer, default min(60,foor(0.95*T)))
-%           Number of components to compute (for default : T is the number 
-%           of time samples).
-%
-%       COMPONENT_SUPP.THRESHOLD 
-%           (scalar, default 0.15) a threshold to apply on the score for 
-%           suppression (scores above the thresholds are selected, values
-%           from 0 to 1).
-%
-%       FLAG_SKIP
-%           (boolean, default true) if FLAG_SKIP is true, the brick does 
-%           not do anything, just copying the inputs to the outputs (the 
-%           ICA decomposition will still be generated and the component 
-%           selection will still be generated for quality control purposes)
 %
 %   SMOOTH_VOL 
 %       (structure) options of NIAK_BRICK_SMOOTH_VOL (spatial smoothing).
@@ -395,32 +388,23 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess_ind(files_in,opt)
 %           See NIAK_BRICK_QC_COREGISTER
 %       9.  Estimation of a temporal model of slow time drifts.
 %           See NIAK_BRICK_TIME_FILTER
-%      10.  Regression of confounds (slow time drifts, motion parameters, 
+%      10.  Generation of confounds (slow time drifts, motion parameters, 
+%           WM average, COMPCOR, global signal) preceeded by scrubbing of time frames 
+%           with an excessive motion.
+%           See NIAK_BRICK_BUILD_CONFOUNDS and OPT.BUILD_CONFOUNDS. 
+%      11.  Regression of confounds (slow time drifts, motion parameters, 
 %           WM average, COMPCOR, global signal) preceeded by scrubbing of time frames 
 %           with an excessive motion.
 %           See NIAK_BRICK_REGRESS_CONFOUNDS and OPT.REGRESS_CONFOUNDS
-%      11.  Correction of physiological noise.
-%           See NIAK_PIPELINE_CORSICA and OPT.CORSICA
-%           Also, see NIAK_BRICK_MASK_CORSICA (no option there)
 %      12.  Spatial smoothing.
 %           See NIAK_BRICK_SMOOTH_VOL and OPT.SMOOTH_VOL
 %
 % NOTE 2:
-%   The physiological & motion noise correction CORSICA is changing the
-%   degrees of freedom of the data. It is usullay negligible for 
-%   intra-label analysis, and will have no impact on the between-label 
-%   variance estimate (except those should be less noisy). The slice timing 
-%   and scrubbing of time series also changes the sampling grid in time. 
-%   These effects have to be taken into account in the linear model 
-%   analysis. This will be taken care of in the (yet to come) 
-%   NIAK_PIPELINE_FMRISTAT
-%
-% NOTE 3:
 %   The exact list of outputs generated by the pipeline depend on the 
 %   OPT.SIZE_OUTPUTS field. See the internet documentation for details :
 %   http://www.nitrc.org/plugins/mwiki/index.php/niak:FmriPreprocessing
 %
-% NOTE 4:
+% NOTE 3:
 %   The PSOM pipeline manager is used to process the pipeline if
 %   OPT.FLAG_TEST is false. PSOM has a number of interesting features to 
 %   deal with job failures or pipeline updates. You can read the following
@@ -475,8 +459,6 @@ list_defaults  = { 'gb_niak_omitted' ,'gb_niak_omitted' , 'stereonl'     , []   
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
-opt.corsica = psom_struct_defaults(opt.corsica,{'flag_skip'},{true},false); % Skip CORSICA by default
-
 opt.template = psom_struct_defaults(opt.template, ...
                { 't1' , 'fmri' , 'aal' , 'mask' , 'mask_dilated' , 'mask_eroded' , 'mask_bold' , 'mask_avg' , 'mask_wm' , 'mask_vent' , 'mask_willis' }, ...
                { NaN  , NaN    , NaN   , NaN    , NaN            , NaN           , NaN         , NaN        , NaN       , NaN         , NaN           });
@@ -500,6 +482,10 @@ end
 
 if isempty(opt.folder_logs)
     opt.folder_logs = [opt.folder_out 'logs'];
+end
+
+if isempty(opt.folder_resample)
+    opt.folder_resample = [opt.folder_out 'resample'];
 end
 
 if isempty(opt.folder_fmri)
@@ -749,13 +735,10 @@ for num_e = 1:length(fmri);
         otherwise
             error('%s is an unknown target space (see OPT.TARGET_SPACE)',opt.target_space)
     end
-    job_out = '';            
+    job_out = [opt.folder_resample filesep 'fmri_' label(num_e).name '_n' ext_f];            
     job_opt = opt.resample_vol;
-    job_opt.folder_out = [opt.folder_intermediate 'resample' filesep];
+    job_opt.folder_out = [opt.folder_resample filesep];
     pipeline = psom_add_job(pipeline,['resample_' label(num_e).name],'niak_brick_resample_vol',job_in,job_out,job_opt);
-    if strcmp(opt.size_output,'quality_control')
-        pipeline = psom_add_clean(pipeline,['clean_resample_' label(num_e).name],pipeline.(['resample_' label(num_e).name]).files_out);
-    end
 end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
@@ -782,7 +765,7 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
-%% CORSICA masks
+%% Confounds masks
 if opt.flag_verbose
     t1 = clock;
     fprintf('corsica (');
@@ -796,12 +779,12 @@ job_in.aal                = opt.template.aal;
 job_in.functional_space   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
 job_in.transformation_nl  = pipeline.(['t1_preprocess_',subject]).files_out.transformation_nl;
 job_in.segmentation       = pipeline.(['t1_preprocess_' subject]).files_out.classify;
-job_out.mask_vent_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_vent_func' opt.target_space ext_f];
-job_out.mask_stem_ind     = [opt.folder_qc 'corsica' filesep subject '_mask_stem_func' opt.target_space ext_f];
-job_out.white_matter_ind  = [opt.folder_qc 'corsica' filesep subject '_mask_wm_func' opt.target_space ext_f];
+job_out.mask_vent_ind     = [opt.folder_anat 'func_' subject '_mask_vent_stereo' ext_f];
+job_out.mask_stem_ind     = [opt.folder_anat 'func_' subject '_mask_stem_stereo' ext_f];
+job_out.white_matter_ind  = [opt.folder_anat 'func_' subject '_mask_wm_stereo' ext_f];
 job_opt.target_space = opt.target_space;
 job_opt.flag_test = false;
-pipeline = psom_add_job(pipeline,['mask_corsica_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
+pipeline = psom_add_job(pipeline,['mask_confounds_' subject],'niak_brick_mask_corsica',job_in,job_out,job_opt);
 
 %% temporal filtering 
 if opt.flag_verbose
@@ -824,6 +807,33 @@ if opt.flag_verbose
     fprintf('%1.2f sec) - ',etime(clock,t1));
 end
 
+%% Build confounds
+if opt.flag_verbose
+    t1 = clock;
+    fprintf('Build confounds (');
+end
+for num_e = 1:length(fmri)
+    clear job_opt job_in job_out
+    job_in.fmri         = pipeline.(['resample_' label(num_e).name]).files_out;
+    job_in.dc_low       = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_low;
+    job_in.dc_high      = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_high;
+    job_in.mask_vent    = pipeline.(['mask_confounds_' subject]).files_out.mask_vent_ind;
+    job_in.mask_wm      = pipeline.(['mask_confounds_' subject]).files_out.white_matter_ind;
+    job_in.mask_brain   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
+    job_in.motion_param = pipeline.(['motion_parameters_' label(num_e).name]).files_out;
+    job_in.custom_param = files_in.custom_confounds;
+
+    job_opt = opt.build_confounds;
+    job_opt.folder_out     = opt.folder_resample;
+
+    job_out.confounds = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_n_confounds.tsv' GB_NIAK.zip_ext];
+    job_out.compcor_mask = [opt.folder_intermediate filesep 'regress_confounds' filesep 'fmri_' label(num_e).name '_mask_compcor_stereo' ext_f];     
+    pipeline = psom_add_job(pipeline,['build_confounds_' label(num_e).name],'niak_brick_build_confounds',job_in,job_out,job_opt);      
+end
+if opt.flag_verbose        
+    fprintf('%1.2f sec) - ',etime(clock,t1));
+end
+
 %% Regress Confounds 
 if opt.flag_verbose
     t1 = clock;
@@ -832,84 +842,18 @@ end
 for num_e = 1:length(fmri)
     clear job_opt job_in job_out
     job_in.fmri         = pipeline.(['resample_' label(num_e).name]).files_out;
-    job_in.dc_low       = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_low;
-    job_in.dc_high      = pipeline.(['time_filter_' label(num_e).name]).files_out.dc_high;
-    job_in.mask_vent    = pipeline.(['mask_corsica_' subject]).files_out.mask_vent_ind;
-    job_in.mask_wm      = pipeline.(['mask_corsica_' subject]).files_out.white_matter_ind;
-    job_in.mask_brain   = pipeline.(['qc_motion_' subject]).files_out.mask_group;
-    job_in.motion_param = pipeline.(['motion_parameters_' label(num_e).name]).files_out;
-    job_in.custom_param = files_in.custom_confounds;
-
+    job_in.confounds    = pipeline.(['build_confounds_' label(num_e).name]).files_out.confounds;
     job_opt = opt.regress_confounds;
-    job_opt.folder_out     = [opt.folder_intermediate 'regress_confounds' filesep];
-    job_out.filtered_data  = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
-    job_out.confounds      = [job_opt.folder_out filesep 'confounds_gs_' label(num_e).name '_cor.mat']; 
-    job_out.scrubbing      = [job_opt.folder_out filesep 'scrubbing_' label(num_e).name '.mat'];
-    job_out.compcor_mask   = [job_opt.folder_out filesep 'compcor_mask_' label(num_e).name ext_f]; 
-    job_out.qc_wm          = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_wm_func' opt.target_space ext_f]; 
-    job_out.qc_vent        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_vent_func' opt.target_space ext_f]; 
-    job_out.qc_slow_drift  = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_slow_drift_func' opt.target_space ext_f]; 
-    job_out.qc_high        = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_high_func' opt.target_space ext_f];  
-    job_out.qc_motion      = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_motion_func' opt.target_space ext_f]; 
-    job_out.qc_compcor     = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_compcor_func' opt.target_space ext_f]; 
-    job_out.qc_gse         = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
-    if ~strcmp(job_in.custom_param,'gb_niak_omitted')
-        job_out.qc_custom_param = [opt.folder_qc filesep 'regress_confounds' filesep label(num_e).name '_qc_gse_func' opt.target_space ext_f]; 
-    end
-    pipeline = psom_add_job(pipeline,['confounds_' label(num_e).name],'niak_brick_regress_confounds',job_in,job_out,job_opt);    
+    job_opt.folder_out = [opt.folder_intermediate 'regress_confounds' filesep];
+    job_out.filtered_data = [job_opt.folder_out filesep 'fmri_' label(num_e).name '_cor' ext_f]; 
+    job_out.scrubbing     = [job_opt.folder_out filesep 'scrubbing_' label(num_e).name '.mat'];
+    pipeline = psom_add_job(pipeline,['regress_confounds_' label(num_e).name],'niak_brick_regress_confounds',job_in,job_out,job_opt);    
     if strcmp(opt.size_output,'quality_control')
-        pipeline = psom_add_clean(pipeline,['clean_confounds_' label(num_e).name],pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data);
+        pipeline = psom_add_clean(pipeline,['clean_confounds_' label(num_e).name],pipeline.(['regress_confounds_' label(num_e).name]).files_out.filtered_data);
     end    
 end
 if opt.flag_verbose        
     fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
-%% CORSICA
-clear job_in job_out job_opt 
-job_in.(subject).fmri = cell(length(fmri),1);
-for num_e = 1:length(fmri)
-    job_in.(subject).fmri{num_e} = pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data;
-end
-job_in.(subject).component_to_keep  = files_in.component_to_keep;
-job_in.(subject).mask_brain         = pipeline.(['qc_motion_' subject]).files_out.mask_group;
-job_in.(subject).mask_selection{1}  = pipeline.(['mask_corsica_' subject]).files_out.mask_vent_ind;
-job_in.(subject).mask_selection{2}  = pipeline.(['mask_corsica_' subject]).files_out.mask_stem_ind;
-job_opt = opt.corsica;
-job_opt.rand_seed = opt.rand_seed;
-if isfield(opt.corsica,'size_output')
-  job_opt.size_output = opt.corsica.size_output;
-else
-  job_opt.size_output = opt.size_output;
-end
-job_opt.folder_out  = [opt.folder_intermediate 'corsica' filesep];
-job_opt.folder_sica = [opt.folder_qc 'corsica' filesep];
-job_opt.flag_test   = true;
-job_opt.labels_mask = {'ventricles','stem'};
-[pipeline_corsica,job_opt,files_co] = niak_pipeline_corsica(job_in,job_opt);
-files_co = files_co.suppress_vol.(subject);
-pipeline = psom_merge_pipeline(pipeline,pipeline_corsica);
-if strcmp(opt.size_output,'quality_control')
-    pipeline = psom_add_clean(pipeline,['clean_corsica_' subject],files_co); 
-end
-
-if opt.flag_verbose        
-    fprintf('%1.2f sec) - ',etime(clock,t1));
-end
-
-%% CORSICA QC: variance explained 
-for num_e = 1:size(files_co,1)
-    clear job_in job_out job_opt
-    name_job = ['qc_corsica_var_' label(num_e).name];
-    job_in{1} = files_co{num_e};
-    job_in{2} = pipeline.(['confounds_' label(num_e).name]).files_out.filtered_data;
-    job_out     = [opt.folder_qc 'corsica' filesep name_job '_func' opt.target_space ext_f];
-    job_opt.operation = [ 'var1 = std(vol_in{1},[],4).^2; ' ...
-                          'var2 = std(vol_in{2},[],4).^2; ' ...
-                          'mask = (var1>0) & (var2>0); ' ...
-                          'vol = ones(size(var1)); ' ...
-                          'vol(mask)=var1(mask)./var2(mask);' ]; 
-    pipeline = psom_add_job(pipeline,name_job,'niak_brick_math_vol',job_in,job_out,job_opt);
 end
 
 %% Spatial smoothing (stereotaxic space) 
@@ -919,7 +863,7 @@ if opt.flag_verbose
 end
 for num_e = 1:length(fmri)
     clear job_in job_out job_opt     
-    job_in = files_co{num_e};
+    job_in = pipeline.(['regress_confounds_' label(num_e).name]).files_out.filtered_data;
     job_out = [opt.folder_fmri filesep 'fmri_' label(num_e).name ext_f];            
     job_opt = opt.smooth_vol;    
     pipeline = psom_add_job(pipeline,['smooth_' label(num_e).name],'niak_brick_smooth_vol',job_in,job_out,job_opt);

@@ -104,7 +104,7 @@ end
 
 if ischar(in) % it's a folder !
     % Build the list of expected outputs
-    in = niak_grab_folder(in,[niak_full_path(in) filesep 'logs']); % grab all the files in the folder
+    in = niak_grab_folder(in,{ [niak_full_path(in) filesep 'logs'] , [niak_full_path(in) filesep 'report']}); % grab all the files in the folder
 end
 
 if opt.flag_test

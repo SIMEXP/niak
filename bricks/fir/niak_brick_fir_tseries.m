@@ -232,12 +232,21 @@ for num_r = 1:length(files_in.fmri)
     % Read the 3D+t 
     [hdr,vol] = niak_read_vol(files_in.fmri{num_r});
     
+     % scrubbing
+    if isfield(hdr,'extra')&&isfield(hdr.extra,'mask_scrubbing')
+        mask_scrubbing = hdr.extra.mask_scrubbing;
+    else
+        mask_scrubbing = false(size(vol,4),1);
+    end
+    
     % Read the time frames 
     if isfield(hdr,'extra')
         opt_fir.time_frames = hdr.extra.time_frames;
     else
         opt_fir.time_frames = (0:(size(vol,4)-1))*hdr.info.tr;
     end
+    opt_fir.time_frames = opt_fir.time_frames(~mask_scrubbing);
+    vol = vol(:,:,:,~mask_scrubbing);
     
     % Read the event times
     [time_events,labels_conditions] = niak_read_csv(files_in.timing{num_r});
