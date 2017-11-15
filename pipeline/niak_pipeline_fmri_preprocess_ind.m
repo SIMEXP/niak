@@ -454,8 +454,8 @@ end
 files_in = sub_check_format(files_in); % Checking that FILES_IN is in the correct format
 
 %% OPT
-list_fields    = { 'minc_standard'   , 'civet'          , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'corsica' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'region_growing' , 'regress_confounds'};
-list_defaults  = { 'gb_niak_omitted' ,'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()        , struct()  , struct()      , struct()       , struct()     , struct()         , struct()           };
+list_fields    = { 'minc_standard'   , 'civet'          , 'target_space' , 'rand_seed' , 'subject' , 'template' , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_resample' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'flag_verbose' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'    , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'build_confounds' , 'regress_confounds'};
+list_defaults  = { 'gb_niak_omitted' ,'gb_niak_omitted' , 'stereonl'     , []          , NaN       , NaN        , 'quality_control' , NaN          , ''            , ''                , ''            , ''            , ''          , ''                    , false       , false          , struct() , struct()       , struct() , struct()                   , struct()        , struct() , struct()         , struct()    , struct()         , struct()      , struct()       , struct()     , struct()          , struct()           };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 subject = opt.subject;
 
@@ -540,10 +540,10 @@ if isstruct(opt.minc_standard)
 
     job_opt                         = opt.t1_preprocess;
     job_opt.folder_out              = opt.folder_anat;
-    job_opt.scanner_strength        = opt.minc_standard.scanner_strength
-    job_opt.symetric_template       = opt.minc_standard.symetric_template
-    job_opt.nl_resolution          = opt.minc_standard.nl_resolution
-    job_opt.template_dir            = opt.minc_standard.template_dir
+    job_opt.scanner_strength        = opt.minc_standard.scanner_strength;
+    job_opt.symetric_template       = opt.minc_standard.symetric_template;
+    job_opt.nl_resolution           = opt.minc_standard.nl_resolution;
+    job_opt.template_dir            = opt.minc_standard.template_dir;
     
     pipeline = psom_add_job(pipeline,['t1_preprocess_' subject],'niak_brick_t1_preprocess_minc',job_in,job_out,job_opt);
     

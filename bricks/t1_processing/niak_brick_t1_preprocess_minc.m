@@ -321,12 +321,18 @@ if regexpi(opt.scanner_strength, "3.*t");
   scanner_strength = '--3t';
 end
 
-if strcmp(ext_anat, gb_niak_zip_ext);
+if strcmp(ext_anat, GB_NIAK.zip_ext);
     [bidon, name_anat, ext_anat] = fileparts(name_anat);
     is_gz = true;
 else
     is_gz = false;
     t1_path = files_in.anat;
+end
+
+if strcmp(ext_anat, '.nii')
+    is_nii = true;
+else
+    is_nii = false;
 end
 
 
@@ -392,16 +398,15 @@ if flag_verbose
     fprintf('Original brain volume : %s\n',files_in.anat);
 end
 
-
 standard_pipeline_out_tmp  = niak_path_tmp('')
-% DEBUG
-%standard_pipeline_out_tmp  = '/home/poquirion/test/standard/pipo';
-% /home/poquirion/test/standard_subject_1_level2
 
-if is_gz;
+if is_nii
+    niak_brick_nii2mnc(files_in.anat, standard_pipeline_out_tmp);
+    t1_path = [standard_pipeline_out_tmp, filesep, name_anat, '.mnc'];
+elseif is_gz
     copyfile(files_in.anat, standard_pipeline_out_tmp);
-    system([gb_niak_unzip , standard_pipeline_out_tmp, filesep, name_anat, ext_anat, gb_niak_zip_ext]);
-    t1_path = [standard_pipeline_out_tmp, filesep, name_anat, ext_anat];
+    system([GB_NIAK.unzip , standard_pipeline_out_tmp, filesep, name_anat, ext_anat, GB_NIAK.zip_ext]);
+    t1_path = [standard_pipeline_out_tmp, filesep, name_anat, Ac];
 end
 
 if opt.symetric_template
@@ -428,12 +433,9 @@ cmd = sprintf('standard_pipeline.pl %s %s  %s %s --basedir %s --verbose 0 0 %s '
 
 fprintf("executing: \n\t%s\n", cmd);
 
-[status,cmdout] = system( cmd );
+system( cmd );
 
-
-if ~status
-    fprintf("Minc standard_pipeline.pl t1 registration  failed with status %s", status)
-end 
+fprintf("Minc standard_pipeline.pl t1 registration done")
 
 if strcmp(files_out.transformation_lin,'gb_niak_omitted')
     files_out.transformation_lin =  cat(2,folder_anat,name_anat,'_native2stereolin.xfm');   
@@ -508,13 +510,33 @@ niak_brick_resample_vol(files_in_resample,files_out_resample,opt_resample);
 end
 
 function copy_and_zip(src,dest)
+    % SCR: path path to mnc file 
+    % DEST: path to nii, nii.gz, mnc or mnc.gz file
+    fprintf('converting %s to %s \n',src, dest);
     niak_gb_vars
-    [bidon, src_name, ext_src] = fileparts(src);
-    [bidon, bidon, ext_dst] = fileparts(dest);
-    if strcmp(ext_dst,gb_niak_zip_ext) && ~strcmp(ext_src, gb_niak_zip_ext)
-        system(sprintf(" %s -c %s > %s ", gb_niak_zip, src, dest));  
-    else
-        fprintf('copying %s to %s\n', src, dest)
-        copyfile(src, dest);
+    [src_dir, src_name, ext_src] = fileparts(src);
+    [bidon, dest_name, ext_dst] = fileparts(dest);
+    opt.flag_zip = false; 
+
+    if strcmp(ext_dst,GB_NIAK.zip_ext)
+        [bidon, name , file_type] = fileparts(dest_name);
+        if strcmp(file_type, '.nii')
+            niak_brick_mnc2nii(src, src_dir, opt);
+            sct_conv_path = [src_dir filesep src_name '.nii'];
+            cmd = sprintf(" %s -c %s > %s ", GB_NIAK.zip, sct_conv_path, dest);
+        else 
+            cmd = sprintf(" %s -c %s > %s ", GB_NIAK.zip, src, dest);
+        end
+        fprintf('running %s \n', cmd);
+        system(cmd);  
+    elseif strcmp(ext_dst, '.nii')
+            niak_mnc2nii(src, scr_dir, opt);
+            sct_conv_path = [scr_dir filesep src_name '.nii'];
+            fprintf('copying %s to %s\n', src_conv_path, dest);
+            copyfile(sct_conv_path, dest);
+    else 
+            fprintf('copying %s to %s\n', src, dest);
+            copyfile(src, dest);
     end
+    
 end

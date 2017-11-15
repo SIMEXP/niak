@@ -97,18 +97,24 @@ niak_set_defaults
 if opt.flag_test
     return
 end
-dir_files = dir(files_in);
+if exist(files_in, 'file') == 2
+    list_files = {files_in};
+    # in this case the full path is in list_files and files_in is '' 
+    files_in = '';
+    list_dir = {};
+else
+    dir_files = dir(files_in);
 
-mask_dir = [dir_files.isdir];
-list_all = {dir_files.name};
-mask_dot = ismember(list_all,{'.','..'});
-dir_files = dir_files(~mask_dot);
-mask_dir = mask_dir(~mask_dot);
-list_all = list_all(~mask_dot);
-list_files = list_all(~mask_dir);
-list_dir = list_all(mask_dir);
-
-niak_mkdir(files_out);
+    mask_dir = [dir_files.isdir];
+    list_all = {dir_files.name};
+    mask_dot = ismember(list_all,{'.','..'});
+    dir_files = dir_files(~mask_dot);
+    mask_dir = mask_dir(~mask_dot);
+    list_all = list_all(~mask_dot);
+    list_files = list_all(~mask_dir);
+    list_dir = list_all(mask_dir);
+end
+    niak_mkdir(files_out);
 
 for num_f = 1:length(list_files)
     

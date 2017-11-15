@@ -7,10 +7,10 @@ function [files_in,files_out,opt] = niak_brick_nii2mnc(files_in,files_out,opt)
 % INPUTS:
 %
 % FILES_IN  
-%   (string) a relative or full path.
+%   (string) a relative or full path to a file or a directory.
 %
 % FILES_OUT 
-%   (string, default FILES_IN) a relative or full path name
+%   (string, default FILES_IN) a relative or full path name to a directory
 %
 % OPT   
 %   (structure) with the following fields :
@@ -93,16 +93,22 @@ niak_set_defaults
 files_in = niak_full_path(files_in);
 files_out = niak_full_path(files_out);
 
-dir_files = dir(files_in);
-
-mask_dir = [dir_files.isdir];
-list_all = {dir_files.name};
-mask_dot = ismember(list_all,{'.','..'});
-dir_files = dir_files(~mask_dot);
-mask_dir = mask_dir(~mask_dot);
-list_all = list_all(~mask_dot);
-list_files = list_all(~mask_dir);
-list_dir = list_all(mask_dir);
+if exist(files_in, 'file') == 2
+    list_files = {files_in};
+    # in this case the full path is in list_files and files_in is '' 
+    files_in = ''
+    list_dir = {};
+else
+    dir_files = dir(files_in);
+    mask_dir = [dir_files.isdir];
+    list_all = {dir_files.name};
+    mask_dot = ismember(list_all,{'.','..'});
+    dir_files = dir_files(~mask_dot);
+    mask_dir = mask_dir(~mask_dot);
+    list_all = list_all(~mask_dot);
+    list_files = list_all(~mask_dir);
+    list_dir = list_all(mask_dir);
+end
 
 niak_mkdir(files_out);
 
@@ -160,7 +166,11 @@ for num_f = 1:length(list_files)
             fprintf('%s',msg)
         end
         for num_e = 1:size(instr_cp,1)
+            printf('Running %s\n',instr_cp(num_e,:));
             [flag_err,err_msg] = system(instr_cp(num_e,:));
+            printf('%s\n',err_msg)
+            printf('Done\n');
+            
             if flag_err
                 warning(err_msg)
             end

@@ -489,9 +489,9 @@ end
 if ischar(opt.template)&&~ismember(opt.template,{'mni_icbm152_nlin_sym_09a','mni_icbm152_nlin_asym_09a'})
     error('%s is an unkown T1 template space',opt.template)
 end
-
 if ischar(opt.template)
     switch opt.template
+    case 'mni_icbm152_nlin_sym_09a'
         template.t1           = [GB_NIAK.path_niak 'template' filesep 'mni-models_icbm152-nl-2009-1.0' filesep 'mni_icbm152_t1_tal_nlin_sym_09a.mnc.gz'];                    % The T1 non-linear average
         template.fmri         = [GB_NIAK.path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                 % the functional stereotaxic space (is only using the FOV and resolution)
         template.aal          = [GB_NIAK.path_niak 'template' filesep 'roi_aal_3mm.mnc.gz'];                                                                                 % the AAL parcellation
@@ -519,8 +519,8 @@ if ischar(opt.template)
         error('%s is an unkown template space',template)
     end
 
-        template.root_path    = [gb_niak_path_niak 'template']
-        template.space        = [opt.template]
+        template.root_path    = [GB_NIAK.path_niak 'template'];
+        template.space        = [opt.template];
         opt.template = template;
 
 end

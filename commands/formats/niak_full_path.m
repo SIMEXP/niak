@@ -57,7 +57,7 @@ else
 end
 
 %% Append filesep at the end
-if ~strcmp(path_name_f(end),filesep)
+if ~strcmp(path_name_f(end),filesep) && exist(path_name_f, 'dir') == 7
     path_name_f = [path_name_f filesep];
 end
 
