@@ -59,7 +59,9 @@ if opt.flag_test
     return
 end
 
+
 if opt.flag_verbose
+    fprintf('***********************************\nNeck Cropping\n***********************************\n');
     fprintf('Reading file %s...\n',in);
 end
 [hdr,vol] = niak_read_vol(in);

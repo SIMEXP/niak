@@ -226,7 +226,7 @@ for num_f = 1:length(list_dir)
             anat= anat_match{1} ;
             %% TODO add more filters options
             % only return subject if anat and one func is found
-            if exist('fmri')
+            if exist('fmri', 'var')
                 files.(['sub' sub_id]).anat = anat;
                 files.(['sub' sub_id]).fmri = fmri;
                 if max_subjects
