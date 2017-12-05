@@ -1,4 +1,4 @@
-function files = niak_grab_bids(path_data,opt)
+function [files, meta_data]   = niak_grab_bids(path_data,opt)
 % Grab the T1w+fMRI scans in a BIDS dataset 
 % http://bids.neuroimaging.io
 %
@@ -104,7 +104,7 @@ elseif nargin < 2
 end
 
 if ~isdir(path_data)
-    error('Bid directory does not exist: %s', path_data)
+    error('Bid directory does not exist: %s', path_data) ;
 end
 
 
@@ -147,6 +147,15 @@ end
 
 list_dir = dir(path_data);
 files = struct;
+
+try
+    descriton_path = [path_data filesep "dataset_description.json"] ;
+    data_description = loadjson(descriton_path) ;
+catch the_error
+    fprintf('cannot load json file %s in bids dataset', descriton_path) ;
+    rethrow(the_error) ;
+end
+    
 for num_f = 1:length(list_dir)
 
     if list_dir(num_f).isdir && ~strcmpi(list_dir(num_f).name, '.') ...
@@ -170,6 +179,11 @@ for num_f = 1:length(list_dir)
             if ~isempty(subdir_name)
                 all_sessions = [all_sessions; (subdir_name{1})];
             end
+            sub_json = regexp(list_sub_dir(n_ses).name,"(.*)\.json", 'tokens');
+            if ~isempty(sub_json)
+                a_path = [path_data, subject_dir filesep sub_json] ;
+                data_description = update_meta(a_path, data_description) ;
+            end
         end
 
         if isempty(all_sessions);
@@ -184,7 +198,7 @@ for num_f = 1:length(list_dir)
                 session_id = "sess1";
                 no_session = true;
             else
-                ses_name = all_sessions(n_ses,1){1}   ;         
+                ses_name = all_sessions(n_ses,1){1} ;
                 session_id = ["sess" all_sessions(n_ses,2){1}];
                 session_path = strcat(path_data, subject_dir, filesep, ses_name);
                 no_session = false;
@@ -194,37 +208,60 @@ for num_f = 1:length(list_dir)
             fmri_path = strcat(session_path, filesep, 'func');
             fmri_regex = [ "(", subject_dir ".*", func_hint, ".*(nii|mnc).*)"];
             anat_regex = ['(', subject_dir, '.*', anat_hint, '.*(nii|mnc).*)'] ;
+            fjson_regex = [ "(", subject_dir ".*", func_hint, "\.json)"];
+            ajson_regex = ['(', subject_dir, '.*', anat_hint, '\.json)'] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;
             
             anat_match = {} ;
+            meta_anat_match = {} ;
             for n_f = 1:length(list_anat_dir) ;
                 m = regexpi(list_anat_dir(n_f).name, anat_regex, 'tokens');
+                json_m = regexpi(list_anat_dir(n_f).name, ajson_regex, 'tokens');
                 if ~isempty(m)
                     anat_match = [ anat_match; strcat(anat_path, filesep, m{1}{1})];
+                elseif ~isempty(json_m)
+                    meta_anat_match = [ meta_anat_match; strcat(anat_path, filesep, json_m{1}{1})] ;
+                    meta_anat = update_meta(meta_anat_match{length(meta_anat_match)}, data_description) ;
                 end
             end
-            fmri_match = {} ;
+            if ~exist('meta_anat', 'var')
+                meta_anat = data_description ;
+            end
             func_run_regex = 'run-([0-9]+)' ;
+            meta_fmri = {} ;
             for n_f = 1:length(list_fmri_dir) ;
                 m = regexpi(list_fmri_dir(n_f).name, fmri_regex, 'tokens') ;
+                json_m = regexpi(list_fmri_dir(n_f).name, fjson_regex, 'tokens') ;
                 if ~isempty(m)
                     run_num = regexpi(m{1}{1}, func_run_regex, 'tokens') ;
                     full_path = strcat(fmri_path, filesep, m{1}{1});
                     if length(run_num)
-                        fmri.(session_id).(['task' task_type 'run' run_num{1}{1}]) = full_path ;
+                        task_tag = ['task' task_type 'run' run_num{1}{1}] ;
                     else
-                        fmri.(session_id).(['task' task_type]) = full_path ;           
+                        task_tag = ['task' task_type] ;
+                    end
+                    fmri.(session_id).(task_tag) = full_path ;
+                    if ~isfield(meta_fmri,session_id) ... 
+                        && ~isfield(meta_fmri.(session_id), task_tag)
+                        meta_fmri.(session_id).(task_tag) = data_description ;
+                    end
+                elseif ~isempty(json_m)
+                    run_num = regexpi(json_m{1}{1}, func_run_regex, 'tokens') ;
+                    full_path = strcat(fmri_path, filesep, json_m{1}{1});
+                    if length(run_num)                        
+                        meta_fmri.(session_id).(['task' task_type 'run' run_num{1}{1}]) ...
+                        = update_meta(full_path, data_description) ;
+                    else
+                        meta_fmri.(session_id).(['task' task_type]) = ...
+                        update_meta(full_path, data_description) ;
                     end
                 end
             end
             
-        end      
-        
-        % TODO figure out a way to pick the right anat file if there is more thant one 
-        if length(anat_match)             
+        end
+        if length(anat_match)
             anat= anat_match{1} ;
-            %% TODO add more filters options
             % only return subject if anat and one func is found
             if exist('fmri', 'var')
                 files.(['sub' sub_id]).anat = anat;
@@ -234,8 +271,25 @@ for num_f = 1:length(list_dir)
                         break;
                     end
                 end
+                
+%            meta_anat = meta_anat{1} ; 
+            meta_data.(['sub' sub_id]).anat = meta_anat ;
+            meta_data.(['sub' sub_id]).fmri = meta_fmri ;
             end 
         end
-        clear fmri anat
+        clear fmri anat meta_anat meta_fmri ; 
     end
 end
+end
+
+function meta_data = update_meta(in_file,meta_data)
+
+    new_json = loadjson(in_file) ;
+
+    for f_name = fieldnames(new_json)' ;
+       meta_data = setfield(meta_data, f_name{1}, getfield(new_json, f_name{1}));
+    end
+   
+end
+    
+    
