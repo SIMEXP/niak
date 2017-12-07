@@ -68,6 +68,10 @@ function [files_in,files_out,opt] = niak_brick_slice_timing(files_in,files_out,o
 %        (integer, default 0) the delay between the last slice of the
 %        first volume and the first slice of the following volume.
 %    
+%    SLICE_TIMING
+%       (vector of float, default []) explicite slice timing of the sequence
+%       if given, it override SLICE_ORDER and TIMING inputs.
+%    
 %    SLICE_ORDER 
 %        (vector of integer) SLICE_ORDER(i) = k means that the kth slice 
 %        was acquired in ith position. The order of the slices is 
@@ -254,8 +258,8 @@ end
 
 %% Options
 gb_name_structure = 'opt';
-gb_list_fields      = { 'iter_nu_correct' , 'arg_nu_correct' , 'flag_nu_correct' , 'flag_center' , 'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
-gb_list_defaults    = { 3                 , '-distance 200'  , false             , false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,'linear'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
+gb_list_fields      = { 'iter_nu_correct' , 'arg_nu_correct' , 'flag_nu_correct' , 'flag_center' , 'type_scanner','flag_history','flag_even_odd','flag_regular','flag_skip','flag_variance','suppress_vol','slice_timing','interpolation','slice_order','type_acquisition','first_number','step'   ,'ref_slice','timing','nb_slices','tr','delay_in_tr','flag_verbose','flag_test','folder_out' };
+gb_list_defaults    = { 3                 , '-distance 200'  , false             , false         , ''            ,0             ,0              ,1             ,0          ,1              ,0             ,[]            ,'linear'       ,[]           ,'manual'          ,'odd'         ,[]       ,[]         ,[]      ,[]         ,[]  ,0            ,1             ,0          ,''           };
 niak_set_defaults;
 
 %% Use specified values if defined. Use header values otherwise.
@@ -309,7 +313,8 @@ end
 hdr = hdr(1);
 [mat,step,start] = niak_hdr_mat2minc(hdr.info.mat);
 
-% Z step
+% Z step 
+% Positive mean Foot to Head Negative Head to Foot
 if isempty(opt.step)
     opt.step = step(3);
 end
@@ -473,6 +478,7 @@ opt_a.slice_order = opt.slice_order;
 opt_a.timing = opt.timing;
 opt_a.ref_slice = opt.ref_slice;
 opt_a.interpolation = opt.interpolation;
+opt_a.slice_timing = opt.slice_timing
 
 if flag_skip
     vol_a = vol;

@@ -18,6 +18,10 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 %           (string, default 'linear') the method for temporal interpolation,
 %           Available choices : 'linear', 'spline', 'cubic' or 'sinc'.
 %
+%       SLICE_TIMING
+%           (vector of float, default []) explicite slice timing of the sequence
+%           if given, it override SLICE_ORDER and TIMING inputs
+%
 %       SLICE_ORDER
 %           (vector of integer) SLICE_ORDER(i) = k means that the kth slice
 %           was acquired in ith position. The order of the slices is
@@ -100,8 +104,8 @@ function [vol_a,opt] = niak_slice_timing(vol,opt)
 
 % Setting up default
 gb_name_structure = 'opt';
-gb_list_fields   = {'interpolation' , 'slice_order' , 'ref_slice' , 'timing' , 'flag_verbose' };
-gb_list_defaults = {'linear'        , NaN           , []          , NaN      , 1              };
+gb_list_fields   = {'interpolation' , 'slice_order' , 'ref_slice' , 'timing' , 'flag_verbose', 'slice_timing'};
+gb_list_defaults = {'linear'        , NaN           , []          , NaN      , 1             , []            };
 niak_set_defaults
 
 nb_slices = length(slice_order);
@@ -133,12 +137,17 @@ switch interpolation
 
     case {'linear','spline','cubic'}
 
-        [tmp,time_slices] = sort(slice_order);
-        time_slices = time_slices * timing(1);
-        time_slices = time_slices-time_slices(ref_slice);
+        if isempty(opt.slice_timing)
+            [tmp,time_slices] = sort(slice_order);
+            time_slices = time_slices * timing(1);
+            time_slices = time_slices-time_slices(ref_slice);
+        else
+            time_slices = 1.e-3*(opt.slice_timing - opt.slice_timing(ref_slice));
+        end
+            
+        times_ref = (1:nt)*TR;
 
         for num_z = 1:nz
-            times_ref = (1:nt)*TR;
             times_z = (0:nt+1)*TR+time_slices(num_z);
 
             slices_z = squeeze(vol(:,:,num_z,:));

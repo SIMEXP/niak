@@ -209,15 +209,15 @@ for num_f = 1:length(list_dir)
             fmri_regex = [ "(", subject_dir ".*", func_hint, ".*(nii|mnc).*)"];
             anat_regex = ['(', subject_dir, '.*', anat_hint, '.*(nii|mnc).*)'] ;
             fjson_regex = [ "(", subject_dir ".*", func_hint, "\.json)"];
-            ajson_regex = ['(', subject_dir, '.*', anat_hint, '\.json)'] ;
+            ajson_regex = ['(', subject_dir, '.*', anat_hint, "\.json)"] ;
             list_anat_dir = dir(anat_path) ;
             list_fmri_dir = dir(fmri_path) ;
             
             anat_match = {} ;
             meta_anat_match = {} ;
             for n_f = 1:length(list_anat_dir) ;
-                m = regexpi(list_anat_dir(n_f).name, anat_regex, 'tokens');
-                json_m = regexpi(list_anat_dir(n_f).name, ajson_regex, 'tokens');
+                m = regexpi(list_anat_dir(n_f).name, anat_regex, 'tokens') ;
+                json_m = regexpi(list_anat_dir(n_f).name, ajson_regex, 'tokens') ;
                 if ~isempty(m)
                     anat_match = [ anat_match; strcat(anat_path, filesep, m{1}{1})];
                 elseif ~isempty(json_m)
@@ -267,8 +267,8 @@ for num_f = 1:length(list_dir)
                 files.(['sub' sub_id]).anat = anat;
                 files.(['sub' sub_id]).fmri = fmri;
                 if max_subjects
-                    if length(fieldnames(files)) >= max_subjects
-                        break;
+                    if length(fieldnames(files)) >= max_subjects ; 
+                        break ;
                     end
                 end
                 
