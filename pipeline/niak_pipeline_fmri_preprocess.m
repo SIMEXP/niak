@@ -769,10 +769,7 @@ if isfield(opt.tune, 'slice_timing')
                     type_scaner = lower(strtrim(test_feild.Manufacturer));
                     type_scaner = [upper(type_scaner(1)) type_scaner(2:end)];
                     pipeline.(slice_pipe{1}).opt.type_scanner = type_scaner ;
-                    
-                end
-    
-                    
+                end 
             end
         end    
     end 
