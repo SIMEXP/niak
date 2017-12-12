@@ -328,6 +328,8 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %          present in PARAM will override the fields of OPT of the subject
 %          or group of subjects that fit with LABEL.
 %
+%       SLICE_TIMING
+%           (structure) Tuning to apply to slice timing 
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -744,6 +746,37 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
+if isfield(opt.tune, 'slice_timing')
+    # simple hack to add the slice timing option for all run and sessions
+    # could be generalize for other options
+    slice_tune = opt.tune.slice_timing;
+    for slice_pipe = fieldnames(pipeline)';
+        if regexp(slice_pipe{1}, '^slice_timing');
+            sp = strsplit(slice_pipe{1},'_'); % slice_timing_subXXX_sessXX_runXX
+            try
+                eval(sprintf('slice_tune.%s.fmri.%s.%s;',sp{3},sp{4},sp{5}));
+                is_tune=true;
+            catch
+                is_tune=false;
+            end
+            if is_tune
+                test_feild = slice_tune.(sp{3}).fmri.(sp{4}).(sp{5});
+                if isfield(test_feild,'SliceTiming')
+                    pipeline.(slice_pipe{1}).opt.slice_timing = ...
+                    test_feild.SliceTiming;
+                end
+                if isfield(test_feild,'Manufacturer')
+                    type_scaner = lower(strtrim(test_feild.Manufacturer));
+                    type_scaner = [upper(type_scaner(1)) type_scaner(2:end)];
+                    pipeline.(slice_pipe{1}).opt.type_scanner = type_scaner ;
+                    
+                end
+    
+                    
+            end
+        end    
+    end 
+end
 %% Run the pipeline 
 if ~opt.flag_test
     psom_run_pipeline(pipeline,opt.psom);
