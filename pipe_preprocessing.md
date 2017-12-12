@@ -69,10 +69,10 @@ Note that all of these infos are usually (but not always...) stored in the MINC 
 
 The slice timing correction module is used to apply several minor additional operations. These additional operations need to be controlled through dedicated flags, independently from `opt.slice_timing.flag_skip`.
 
-It is first possible to suppress "dummy" volumes. Dummy scans are the first volumes of an fMRI run, when the signal values have not yet stabilized. Modern scanners typically discard the dummy scans automatically.
+It is first possible to suppress "dummy" volumes. Dummy scans are the first volumes of an fMRI run, when the signal values have not yet stabilized. Modern scanners typically discard the dummy scans automatically. In doubt, it is better to suppress about 10 seconds of signal. For example, for fMRI data with a TR (inter-scan time) of 3 sec, the following option will remove 3 volumes (equivalent to 9s of scanning):
 ```matlab
 % Number of dummy scans to suppress.
-opt.slice_timing.suppress_vol = 0;
+opt.slice_timing.suppress_vol = 3;
 ```
 
 Modern coils feature large number of channels (32 and more), which is associated with massive intensity inhomogeneities throughout the image. It is possible to apply an a posteriori (multiplicative) correction for these inhomogeneities, which may improve the T1-fMRI coregistration. This step is experimental, and should only be applied with caution.
