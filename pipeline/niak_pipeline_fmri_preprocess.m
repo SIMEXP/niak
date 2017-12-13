@@ -769,10 +769,23 @@ if isfield(opt.tune, 'slice_timing')
                     type_scaner = lower(strtrim(test_feild.Manufacturer));
                     type_scaner = [upper(type_scaner(1)) type_scaner(2:end)];
                     pipeline.(slice_pipe{1}).opt.type_scanner = type_scaner ;
-                end 
+                end
+                if isfield(test_feild,'SliceTiming')
+                    pipeline.(slice_pipe{1}).opt.slice_timing = ...
+                    test_feild.SliceTiming;
+                end
+                if isfield(test_feild,'SliceOrder')
+                    aq_type = test_feild.SliceOrder
+                    if strfind(lower(aq_type), 'interleave')
+                      aq_type = [aq_type];
+                    else
+                      aq_type = ['sequential ' aq_type];
+                    end
+                    pipeline.(slice_pipe{1}).opt.type_acquisition = aq_type;
+                end
             end
-        end    
-    end 
+        end
+    end
 end
 %% Run the pipeline 
 if ~opt.flag_test
