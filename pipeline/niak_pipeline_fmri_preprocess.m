@@ -328,8 +328,8 @@ function [pipeline,opt] = niak_pipeline_fmri_preprocess(files_in,opt)
 %          present in PARAM will override the fields of OPT of the subject
 %          or group of subjects that fit with LABEL.
 %
-%       SLICE_TIMING
-%           (structure) Tuning to apply to slice timing 
+%   SLICE_TUNE
+%      (structure) Tuning to apply to slice timing
 % _________________________________________________________________________
 % OUTPUTS : 
 %
@@ -451,8 +451,8 @@ files_in = sub_check_format(files_in); % check the format of FILES_IN
 %% OPT
 opt = sub_backwards(opt); % Fiddling with OPT for backwards compatibility
 
-list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'build_confounds' , 'regress_confounds' };
-list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()          , struct()    , struct()        , struct()      , struct()       , struct()     , struct()          , struct()            };
+list_fields    = { 'civet'           , 'target_space' , 'flag_rand' , 'granularity' , 'slice_tune'   , 'tune'   , 'flag_verbose' , 'template'                 , 'size_output'     , 'folder_out' , 'folder_logs' , 'folder_fmri' , 'folder_anat' , 'folder_qc' , 'folder_intermediate' , 'flag_test' , 'psom'   , 'slice_timing' , 'motion' , 'qc_motion_correction_ind' , 't1_preprocess' , 'pve'   , 'mask_anat2func' , 'anat2func' , 'qc_coregister' , 'time_filter' , 'resample_vol' , 'smooth_vol' , 'build_confounds' , 'regress_confounds' };
+list_defaults  = { 'gb_niak_omitted' , 'stereonl'     , false       , 'cleanup'     , struct()       , struct() , true           , 'mni_icbm152_nlin_sym_09a' , 'quality_control' , NaN          , ''            , ''            , ''            , ''          , ''                    , false       , struct() , struct()       , struct() , struct()                   , struct()        , struct(), struct()          , struct()    , struct()        , struct()      , struct()       , struct()     , struct()          , struct()            };
 opt = psom_struct_defaults(opt,list_fields,list_defaults);
 opt.folder_out = niak_full_path(opt.folder_out);
 opt.psom.path_logs = [opt.folder_out 'logs' filesep];
@@ -562,6 +562,8 @@ for num_s = 1:length(list_subject)
         fprintf('    Adding %s ; ',subject);
     end
     opt_ind = sub_tune(opt,subject); % Tune the pipeline parameters for this subject    
+    # big sloppy hack, slice_tune should be done in niak_pipeline_fmri_preprocess_ind
+    opt_ind = rmfield(opt_ind, 'slice_tune') ; 
     if ~opt.flag_rand
         opt_ind.rand_seed = double(niak_datahash(subject));
         opt_ind.rand_seed = opt_ind.rand_seed(1:min(length(opt_ind.rand_seed),625));
@@ -746,10 +748,10 @@ if opt.flag_verbose
     fprintf('%1.2f sec\n',etime(clock,t1));
 end
 
-if isfield(opt.tune, 'slice_timing')
+if ~isempty(opt.slice_tune)
     # simple hack to add the slice timing option for all run and sessions
     # could be generalize for other options
-    slice_tune = opt.tune.slice_timing;
+    slice_tune = opt.slice_tune;
     for slice_pipe = fieldnames(pipeline)';
         if regexp(slice_pipe{1}, '^slice_timing');
             sp = strsplit(slice_pipe{1},'_'); % slice_timing_subXXX_sessXX_runXX
@@ -775,7 +777,7 @@ if isfield(opt.tune, 'slice_timing')
                     test_feild.SliceTiming;
                 end
                 if isfield(test_feild,'SliceOrder')
-                    aq_type = test_feild.SliceOrder
+                    aq_type = test_feild.SliceOrder;
                     if strfind(lower(aq_type), 'interleave')
                       aq_type = [aq_type];
                     else
