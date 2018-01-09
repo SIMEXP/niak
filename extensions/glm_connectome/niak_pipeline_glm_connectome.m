@@ -228,7 +228,7 @@ function [pipeline,opt] = niak_pipeline_glm_connectome(files_in,opt)
 %               By default all the volumes are used. See OPT.TEST.<LABEL>.GROUP.SELECT above.
 %
 %            SELECT_DIFF
-%               (structure, optional) If SELECT_DIFF is specified has two entries, the 
+%               (structure, optional) If SELECT_DIFF is specified, the 
 %               measure will be the difference in correlations between the two subsets of time frames 
 %               SELECT_DIFF-SELECT, instead a single correlation coefficient. 
 %               See OPT.TEST.<LABEL>.GROUP.SELECT above.
