@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install --force-yes -y python-dev
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python get-pip.py
 RUN pip install notebook octave_kernel && rm get-pip.py
-RUN python -m octave_kernel.install
+RUN python -m octave_kernel install
 RUN pip install ipywidgets widgetsnbextension
 ADD util/bin/niak_jupyter /usr/local/bin/niak_jupyter
 ADD util/lib/psom_gb_vars_local.jupyter /usr/local/lib/psom_gb_vars_local.jupyter
