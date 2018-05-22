@@ -13,8 +13,10 @@ After the docker installation, the first step is to create a docker group and ad
 sudo groupadd docker
 # Then add user USERNAME to the docker group
 sudo usermod -a -G docker USERNAME
+# Activate the new group
+newgrp docker
 ```
-All the members of the docker group will have access to the docker service. For the docker group to become effective, you will need to either logout and login or restart your system.
+All the members of the docker group will have access to the docker service. For the docker group to become effective, you may need to either logout and login or restart your system.
 
 #### Running NIAK in a Jupyter Notebook
 
