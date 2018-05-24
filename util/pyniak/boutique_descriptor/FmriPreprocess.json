@@ -1,224 +1,318 @@
 {
     "name": "Niak_fmri_preprocess",
-    "tool-version": "0.13.5",
+    "command-line": "niak_cmd.py Niak_fmri_preprocess [FILE_IN] [FOLDER_OUT] [OPT_PSOM_MAX_QUEUED] [OPT_SLICE_TIMING_FLAG_SKIP] [OPT_SLICE_TIMING_TYPE_SCANNER] [OPT_SLICE_TIMING_TYPE_ACQUISITION] [OPT_SLICE_TIMING_DELAY_IN_TR] [OPT_RESAMPLE_VOL_VOXEL_SIZE] [OPT_T1_PREPROCESS_NU_CORRECT_ARG] [OPT_TIME_FILTER_HP] [OPT_TIME_FILTER_LP] [OPT_REGRESS_CONFOUNDS_FLAG_GSC] [OPT_REGRESS_CONFOUNDS_FLAG_SCRUBBING] [OPT_REGRESS_CONFOUNDS_THRE_FD] [OPT_SMOOTH_VOL_FWHM] [SUBJECTS] [ANAT_HINT] [FUNC_HINT] [OPT_MOTION_CORRECTION_SUPPRESS_VOL] [EXTRA_ARGS]",
+    "container-image": {
+        "type": "singularity",
+        "image": "simexp/niak-cog:1.1.4",
+        "index": "docker://"
+    },
+    "output-files": [
+        {
+            "name": "Output folder",
+            "id": "folder_out",
+            "list": false,
+            "path-template": "[FOLDER_OUT]",
+            "optional": false,
+            "description": "A folder containing the output files."
+        }
+    ],
+    "suggested-resources": {
+        "walltime-estimate": 10799
+    },
+    "groups": [
+        {
+            "name": "Data",
+            "members": [
+                "file_in",
+                "subjects",
+                "folder_out_name",
+                "anat_hint",
+                "func_hint"
+            ],
+            "id": "input_data"
+        },
+        {
+            "name": "Slice timing",
+            "members": [
+                "opt_slice_timing_type_scanner",
+                "opt_slice_timing_flag_skip",
+                "opt_slice_timing_type_acquisition",
+                "opt_slice_timing_delay_in_tr"
+            ],
+            "id": "slice_timing"
+        },
+        {
+            "name": "Time filter",
+            "members": [
+                "opt_time_filter_hp",
+                "opt_time_filter_lp"
+            ],
+            "id": "time_filter"
+        },
+        {
+            "name": "Regress confounds",
+            "members": [
+                "opt_regress_confounds_flag_gsc",
+                "opt_regress_confounds_flag_scrubbing",
+                "opt_regress_confounds_thre_fd"
+            ],
+            "id": "regress_confounds"
+        },
+        {
+            "name": "PSOM options",
+            "members": [
+                "psom_max_queued"
+            ],
+            "id": "psom_params"
+        },
+        {
+            "name": "Other options",
+            "members": [
+                "opt_smooth_vol_fwhm",
+                "opt_resample_vol_voxel_size",
+                "opt_t1_preprocess_nu_correct_arg",
+                "opt_motion_correction_suppress_vol",
+                "extra_args"
+            ],
+            "id": "other_params"
+        }
+    ],
+    "schema-version": "0.5",
+    "custom": {
+        "cbrain:can-submit-new-tasks": true,
+        "cbrain:inherits-from-class": "CbrainTask::PsomPipelineTask",
+        "cbrain:readonly-input-files": true
+    },
+    "inputs": [
+        {
+            "name": "Input files",
+            "value-key": "[FILE_IN]",
+            "id": "file_in",
+            "list": false,
+            "type": "File",
+            "optional": false,
+            "description": "A directory containing input files. Warning: if the input directory is more than 100GB, please contact the PSOM team before launching the processing.",
+            "command-line-flag": "--file_in"
+        },
+        {
+            "name": "Output folder name",
+            "value-key": "[FOLDER_OUT]",
+            "id": "folder_out_name",
+            "list": false,
+            "type": "String",
+            "default-value": "results-directory.niak",
+            "optional": false,
+            "description": "The name of the output folder where results will be produced. Be careful, if a folder with the same name alreay exists on the same data provider, it's content will be overwritten. Output folder name must end with '.niak' for CBRAIN to use the correct file type.",
+            "command-line-flag": "--folder_out"
+        },
+        {
+            "name": "PSOM max queued",
+            "value-key": "[OPT_PSOM_MAX_QUEUED]",
+            "id": "psom_max_queued",
+            "minimum": 12,
+            "list": false,
+            "type": "Number",
+            "default-value": 12,
+            "maximum": 1200,
+            "optional": false,
+            "description": "Number of workers to use in PSOM. This is the maximum number of computing nodes that the pipeline will use. It should be adjusted depending on the number of subjects to be processed. Use the default value if you don't know how to set this parameter.",
+            "command-line-flag": "--opt-psom-max_queued"
+        },
+        {
+            "name": "Slice timing type scanner",
+            "type": "String",
+            "command-line-flag": "--opt-slice_timing-type_scanner",
+            "list": false,
+            "value-key": "[OPT_SLICE_TIMING_TYPE_SCANNER]",
+            "default-value": "Siemens",
+            "value-choices": [
+                "Siemens",
+                "Other"
+            ],
+            "optional": false,
+            "id": "opt_slice_timing_type_scanner"
+        },
+        {
+            "name": "Skip slice timing",
+            "type": "String",
+            "command-line-flag": "--opt-slice_timing-flag_skip",
+            "list": false,
+            "value-key": "[OPT_SLICE_TIMING_FLAG_SKIP]",
+            "default-value": "false",
+            "value-choices": [
+                "false",
+                "true"
+            ],
+            "optional": true,
+            "description": "Skip all slice timing procedures",
+            "id": "opt_slice_timing_flag_skip"
+        },
+        {
+            "name": "hint to select anatomical scans",
+            "value-key": "[ANAT_HINT]",
+            "id": "anat_hint",
+            "list": false,
+            "type": "String",
+            "optional": true,
+            "description": "A hint to pick one out of many anatomical scans. For example if the fmri study includes 'sub-XX_T1.nii.gz' and 'sub-XX_T1w.nii.gz' and you need the 'T1', '--func_hint _T1.' would do the trick",
+            "command-line-flag": "--anat_hint"
+        },
+        {
+            "name": "hint to select functional scans",
+            "value-key": "[FUNC_HINT]",
+            "id": "func_hint",
+            "list": false,
+            "type": "String",
+            "optional": true,
+            "description": "A hint to pick one out of many functional scans. For example if the fmri study includes 'sub-XX_task-rest-inpace_bold.nii.gz' and 'sub-XX_task-rest-again.nii.gz' and you need the 'inpace' flavor '--func_hint inpace' would do the trick.",
+            "command-line-flag": "--func_hint"
+        },
+        {
+            "name": "Subjects to process",
+            "value-key": "[SUBJECTS]",
+            "id": "subjects",
+            "list": false,
+            "type": "String",
+            "optional": true,
+            "description": "Subjects to be processed by the pipeline. Examples: (1) \"1,3-8\" will process subjects 1 to 8 except 2. (2) \"1-10-2\" will process subjects 1,3,5,7,9.",
+            "command-line-flag": "--subjects"
+        },
+        {
+            "name": "Slice timing type acquisition",
+            "type": "String",
+            "command-line-flag": "--opt-slice_timing-type_acquisition",
+            "list": false,
+            "value-key": "[OPT_SLICE_TIMING_TYPE_ACQUISITION]",
+            "default-value": "interleaved ascending",
+            "value-choices": [
+                "sequential",
+                "sequential ascending",
+                "sequential descending",
+                "interleaved",
+                "interleaved ascending",
+                "interleaved descending"
+            ],
+            "optional": false,
+            "id": "opt_slice_timing_type_acquisition"
+        },
+        {
+            "name": "Slice timing delay in tr",
+            "value-key": "[OPT_SLICE_TIMING_DELAY_IN_TR]",
+            "command-line-flag": "--opt-slice_timing-delay_in_tr",
+            "list": false,
+            "type": "Number",
+            "default-value": 0,
+            "optional": false,
+            "id": "opt_slice_timing_delay_in_tr"
+        },
+        {
+            "name": "Resample vol voxel size",
+            "value-key": "[OPT_RESAMPLE_VOL_VOXEL_SIZE]",
+            "id": "opt_resample_vol_voxel_size",
+            "list": false,
+            "type": "Number",
+            "optional": true,
+            "description": "The voxel size to use in the stereotaxic space.",
+            "command-line-flag": "--opt-resample_vol-voxel_size"
+        },
+        {
+            "name": "T1 preprocess nu correct arg",
+            "value-key": "[OPT_T1_PREPROCESS_NU_CORRECT_ARG]",
+            "id": "opt_t1_preprocess_nu_correct_arg",
+            "list": false,
+            "type": "String",
+            "default-value": "-distance 75",
+            "optional": false,
+            "description": " Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 75 for 3T images.",
+            "command-line-flag": "--opt-t1_preprocess-nu_correct-arg"
+        },
+        {
+            "name": "Time filter hp",
+            "value-key": "[OPT_TIME_FILTER_HP]",
+            "id": "opt_time_filter_hp",
+            "list": false,
+            "type": "Number",
+            "default-value": 0.01,
+            "optional": false,
+            "description": "Cut-off frequency for high-pass filtering, or removal of low frequencies (in Hz).",
+            "command-line-flag": "--opt-time_filter-hp"
+        },
+        {
+            "name": "Time filter lp",
+            "value-key": "[OPT_TIME_FILTER_LP]",
+            "id": "opt_time_filter_lp",
+            "list": false,
+            "type": "String",
+            "default-value": "Inf",
+            "optional": false,
+            "description": "Cut-off frequency for low-pass filtering, or removal of high frequencies (in Hz).",
+            "command-line-flag": "--opt-time_filter-lp"
+        },
+        {
+            "name": "Regress confounds flag gsc",
+            "value-key": "[OPT_REGRESS_CONFOUNDS_FLAG_GSC]",
+            "id": "opt_regress_confounds_flag_gsc",
+            "list": false,
+            "type": "String",
+            "default-value": "true",
+            "optional": false,
+            "description": "Global signal regression.",
+            "command-line-flag": "--opt-regress_confounds-flag_gsc"
+        },
+        {
+            "name": "Regress confounds flag scrubbing.",
+            "value-key": "[OPT_REGRESS_CONFOUNDS_FLAG_SCRUBBING]",
+            "command-line-flag": "--opt-regress_confounds-flag_scrubbing",
+            "list": false,
+            "type": "String",
+            "default-value": "true",
+            "optional": false,
+            "id": "opt_regress_confounds_flag_scrubbing"
+        },
+        {
+            "name": "Regress confounds thre fd",
+            "value-key": "[OPT_REGRESS_CONFOUNDS_THRE_FD]",
+            "id": "opt_regress_confounds_thre_fd",
+            "list": false,
+            "type": "Number",
+            "default-value": "0.5",
+            "optional": false,
+            "description": "The threshold on frame displacement for scrubbing",
+            "command-line-flag": "--opt-regress_confounds-thre_fd"
+        },
+        {
+            "name": "Smooth vol fwhm",
+            "value-key": "[OPT_SMOOTH_VOL_FWHM]",
+            "id": "opt_smooth_vol_fwhm",
+            "list": false,
+            "type": "Number",
+            "default-value": 6,
+            "optional": false,
+            "description": "Full-width at maximum (FWHM) of the Gaussian blurring kernel, in mm.",
+            "command-line-flag": "--opt-smooth_vol-fwhm"
+        },
+        {
+            "name": "Motion correction suppress vol",
+            "value-key": "[OPT_MOTION_CORRECTION_SUPPRESS_VOL]",
+            "integer": true,
+            "id": "opt_motion_correction_suppress_vol",
+            "list": false,
+            "type": "Number",
+            "default-value": 0,
+            "optional": false,
+            "description": "The number of volumes that are suppressed at the beginning of a time series",
+            "command-line-flag": "--opt-motion_correction-suppress_vol"
+        },
+        {
+            "name": "Extra arguments",
+            "value-key": "[EXTRA_ARGS]",
+            "id": "extra_args",
+            "list": false,
+            "type": "String",
+            "optional": true,
+            "description": "Extra arguments passed to niak_cmd for expert users."
+        }
+    ],
     "description": "fMRI pre-processing pipeline as available in Niak. More information at https://github.com/SIMEXP/niak",
-    "command-line": "/home/niak/util/bin/niak_cmd.py Niak_fmri_preprocess [FILE_IN] [FOLDER_OUT] [OPT_PSOM_MAX_QUEUED] [OPT_SLICE_TIMING_TYPE_SCANNER] [OPT_SLICE_TIMING_TYPE_ACQUISITION] [OPT_SLICE_TIMING_DELAY_IN_TR] [OPT_RESAMPLE_VOL_VOXEL_SIZE] [OPT_T1_PREPROCESS_NU_CORRECT_ARG] [OPT_TIME_FILTER_HP] [OPT_TIME_FILTER_LP] [OPT_REGRESS_CONFOUNDS_FLAG_GSC] [OPT_REGRESS_CONFOUNDS_FLAG_SCRUBBING] [OPT_REGRESS_CONFOUNDS_THRE_FD] [OPT_SMOOTH_VOL_FWHM] [OPT_CORSICA_SICA_NB_COMP] [OPT_CORSICA_THRESHOLD] [OPT_CORSICA_FLAG_SKIP] [OPT_SIZE_OUTPUT] [OPT_MOTION_CORRECTION_SUPPRESS_VOL] [OPT_GRANULARITY] [EXTRA_ARGS]",
-    "docker-image": "simexp/boutique:1.0",
-    "docker-index": "http://index.docker.io",
-    "cbrain:can-submit-new-tasks": true,
-    "cbrain:inherits-from-class": "CbrainTask::PsomPipelineTask",
-    "schema-version": "0.2",
-    "inputs": [{
-        "id": "file_in",
-        "name": "Input files",
-        "type": "File",
-        "description": "A directory containing input files.",
-        "command-line-key": "[FILE_IN]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--file_in"
-    }, {
-        "id": "folder_out",
-        "name": "Output folder name",
-        "type": "String",
-        "description": "The name of the output folder where results will be produced.",
-        "command-line-key": "[FOLDER_OUT]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--folder_out",
-        "default-value": "results-directory"
-    }, {
-        "id": "psom_max_queued",
-        "name": "PSOM max queued",
-        "type": "Number",
-        "description": "Number of workers to use in PSOM. This is the maximum number of computing nodes that the pipeline will use. It should be adjusted depending on the number of subjects to be processed. Use the default value if you don't know how to set this parameter.",
-        "command-line-key": "[OPT_PSOM_MAX_QUEUED]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-psom-max_queued",
-        "default-value": 4
-    }, {
-        "id": "opt_slice_timing_type_scanner",
-        "name": "Slice timing type scanner",
-        "type": "String",
-        "command-line-key": "[OPT_SLICE_TIMING_TYPE_SCANNER]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-slice_timing-type_scanner",
-        "default-value": "Bruker"
-    }, {
-        "id": "opt_granularity",
-        "name": "Granularity",
-        "description": "Level of granularity of the pipeline",
-        "type": "String",
-        "command-line-key": "[OPT_GRANULARITY]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-granularity",
-        "default-value": "max"
-    }, {
-        "id": "opt_corsica_sica_nb_comp",
-        "name": "Corsica nb comp",
-        "description": "Correction of the physiological noise based on automatic component selection in an independent component analysis. Number of components to compute.",
-        "type": "Number",
-        "command-line-key": "[OPT_CORSICA_SICA_NB_COMP]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-corsica-sica-nb_comp"
-    }, {
-        "id": "opt_corsica_threshold",
-        "name": "Corsica threshold",
-        "description": "Correction of the physiological noise based on automatic component selection in an independent component analysis. Threshold on score for suppression.",
-        "type": "Number",
-        "command-line-key": "[OPT_CORSICA_THRESHOLD]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-corsica-threshold",
-        "default-value": 0.15
-    }, {
-        "id": "opt_corsica_flag_skip",
-        "name": "Corsica flag skip",
-        "description": "Correction of the physiological noise based on automatic component selection in an independent component analysis. If true, the brick does not do anything, just copying the inputs to the outputs.",
-        "type": "String",
-        "command-line-key": "[OPT_CORSICA_FLAG_SKIP]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-corsica-flag_skip",
-        "default-value": "false"
-    }, {
-        "id": "opt_slice_timing_type_acquisition",
-        "name": "Slice timing type acquisition",
-        "type": "String",
-        "command-line-key": "[OPT_SLICE_TIMING_TYPE_ACQUISITION]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-slice_timing-type_acquisition",
-        "default-value": "interleaved ascending"
-    }, {
-        "id": "opt_slice_timing_delay_in_tr",
-        "name": "Slice timing delay in tr",
-        "type": "Number",
-        "command-line-key": "[OPT_SLICE_TIMING_DELAY_IN_TR]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-slice_timing-delay_in_tr",
-        "default-value": 0
-    }, {
-        "id": "opt_resample_vol_voxel_size",
-        "name": "Resample vol voxel size",
-        "type": "Number",
-        "description": "The voxel size to use in the stereotaxic space.",
-        "command-line-key": "[OPT_RESAMPLE_VOL_VOXEL_SIZE]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-resample_vol-voxel_size",
-        "default-value": 10
-    }, {
-        "id": "opt_t1_preprocess_nu_correct_arg",
-        "name": "T1 preprocess nu correct arg",
-        "type": "String",
-        "description": " Parameter for non-uniformity correction. 200 is a suggested value for 1.5T images, 75 for 3T images.",
-        "command-line-key": "[OPT_T1_PREPROCESS_NU_CORRECT_ARG]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-t1_preprocess-nu_correct-arg",
-        "default-value": "-distance 75"
-    }, {
-        "id": "opt_time_filter_hp",
-        "name": "Time filter hp",
-        "type": "Number",
-        "description": "Cut-off frequency for high-pass filtering, or removal of low frequencies (in Hz).",
-        "command-line-key": "[OPT_TIME_FILTER_HP]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-time_filter-hp",
-        "default-value": 0.01
-    }, {
-        "id": "opt_time_filter_lp",
-        "name": "Time filter lp",
-        "type": "String",
-        "description": "Cut-off frequency for low-pass filtering, or removal of high frequencies (in Hz).",
-        "command-line-key": "[OPT_TIME_FILTER_LP]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-time_filter-lp",
-        "default-value": "Inf"
-    }, {
-        "id": "opt_regress_confounds_flag_gsc",
-        "name": "Regress confounds flag gsc",
-        "type": "String",
-        "description": "Global signal regression.",
-        "command-line-key": "[OPT_REGRESS_CONFOUNDS_FLAG_GSC]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-regress_confounds-flag_gsc",
-        "default-value": "true"
-    }, {
-        "id": "opt_regress_confounds_flag_scrubbing",
-        "name": "Regress confounds flag scrubbing.",
-        "type": "String",
-        "command-line-key": "[OPT_REGRESS_CONFOUNDS_FLAG_SCRUBBING]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-regress_confounds-flag_scrubbing",
-        "default-value": "true"
-    }, {
-        "id": "opt_regress_confounds_thre_fd",
-        "name": "Regress confounds thre fd",
-        "type": "Number",
-        "description": "The threshold on frame displacement for scrubbing",
-        "command-line-key": "[OPT_REGRESS_CONFOUNDS_THRE_FD]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-regress_confounds-thre_fd",
-        "default-value": "0.5"
-    }, {
-        "id": "opt_smooth_vol_fwhm",
-        "name": "Smooth vol fwhm",
-        "type": "Number",
-        "description": "Full-width at maximum (FWHM) of the Gaussian blurring kernel, in mm.",
-        "command-line-key": "[OPT_SMOOTH_VOL_FWHM]",
-        "list": false,
-        "optional": false,
-        "command-line-flag": "--opt-smooth_vol-fwhm",
-        "default-value": 6
-    }, {
-        "id": "opt_size_output",
-        "name": "Size output",
-        "type": "String",
-        "description":"The quantity of intermediate results that are generated.",
-        "command-line-key": "[OPT_SIZE_OUTPUT]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-size_output",
-        "default-value": "quality_control"
-        
-    }, {
-        "id": "opt_motion_correction_suppress_vol",
-        "name": "Motion correction suppress vol",
-        "type": "Number",
-        "description": "The number of volumes that are suppressed at the beginning of a time series",
-        "command-line-key": "[OPT_MOTION_CORRECTION_SUPPRESS_VOL]",
-        "list": false,
-        "optional": true,
-        "command-line-flag": "--opt-motion_correction-suppress_vol",
-        "default-value": 0 
-    }, {
-        "id": "extra_args",
-        "name": "Extra arguments",
-        "type": "String",
-        "description": "Extra arguments passed to niak_cmd",
-        "command-line-key": "[EXTRA_ARGS]",
-        "list": false,
-        "optional": true
-    }
-              ],
-    "output-files": [{
-        "id": "folder_out",
-        "name": "Output folder",
-        "description": "A folder containing the output files.",
-        "path-template": "[FOLDER_OUT]",
-        "list": false,
-        "optional": false
-    }]
+    "tool-version": "beta"
 }
