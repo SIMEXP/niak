@@ -310,7 +310,7 @@ elseif ischar(file_name)
         end
         
         %% Copy extra information, only if the number of time frames match with the actual data
-        if (length(fieldnames(extra))>1)&&(length(extra.time_frames)==size(vol,4))
+        if (length(fieldnames(extra))>1) && isfield(extra, 'time_frames') && (length(extra.time_frames)==size(vol,4))
             [path_extra,name_extra] = niak_fileparts(file_name);
             file_extra = [path_extra filesep name_extra '_extra.mat'];
             save(file_extra,'-struct','extra')
