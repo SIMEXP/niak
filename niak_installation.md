@@ -12,7 +12,7 @@ After the docker installation, the first step is to create a docker group and ad
 #   if it is that case, the command will return an error, just ignore it
 sudo groupadd docker
 # Then add user USERNAME to the docker group
-sudo usermod -a -G docker USERNAME
+sudo usermod -a -G docker $USERNAME
 # Activate the new group
 newgrp docker
 ```
