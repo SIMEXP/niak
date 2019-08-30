@@ -2,7 +2,7 @@
 
 The recommended way to install NIAK is to use a [docker](https://www.docker.com/) container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and improves the repeatability of results across operating systems, including Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official [docker installation site](https://docs.docker.com/installation/). **Disclaimer**: Be aware that any user that can execute a "docker run"  command on a machine have access to the complete file system as a super user. Alternatively, you can use [singularity](http://singularity.lbl.gov/) which will be able to play the same docker image, while keeping tight control on user rights. Instructions for singularity can be found in the section on [installation for high-performance computing](http://niak.simexp-lab.org/niak_HPC_installation.html).
 
- > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" />](https://www.docker.com/)
+ > [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/source/docker_logo.png" width="350px" />](https://www.docker.com/)
 
  ## General configuration
 
@@ -141,11 +141,11 @@ Hence, once you start Docker and spin off NIAK with the following command
 docker run -it --rm  -v $PWD:"/sandbox/home"  --user nobody  -p 8080:8080 \
  simexp/niak-cog:latest niak_jupyter
 ```
-> [<img src="docker_windows_niak.png" width="350px" />]
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/source/docker_windows_niak.png" width="350px" />]
 
 You will need to open your browser with the address provided to you by the docker virtual machine. The adress `192.168.99.100` is circled in red in the example above. You then open your favorite browser to the address appended by port `8080`: `192.168.99.100:8080`. Once the page is open, Jupyter will request a password, use NIAK.
 
-> [<img src="jupyter_login.png" width="350px" />]
+> [<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/source/jupyter_login.png" width="350px" />]
 
 Then click New --> Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the `docker run` command has been executed.
 

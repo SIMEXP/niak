@@ -118,7 +118,6 @@
 <li class="toctree-l1"><a class="reference internal" href="PREPROCESSING.html">fMRI preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONNECTOME.html">Connectome pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BASC.html">BASC pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="BASC_FIR.html">BASC FIR pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TUTORIALS.html">Tutorials</a></li>
 </ul>
 
@@ -188,7 +187,7 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>The recommended way to install NIAK is to use a <a class="reference external" href="https://www.docker.com/">docker</a> container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and improves the repeatability of results across operating systems, including Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official <a class="reference external" href="https://docs.docker.com/installation/">docker installation site</a>. <strong>Disclaimer</strong>: Be aware that any user that can execute a “docker run”  command on a machine have access to the complete file system as a super user. Alternatively, you can use <a class="reference external" href="http://singularity.lbl.gov/">singularity</a> which will be able to play the same docker image, while keeping tight control on user rights. Instructions for singularity can be found in the section on <a class="reference external" href="http://niak.simexp-lab.org/niak_HPC_installation.html">installation for high-performance computing</a>.</p>
 <blockquote>
-<div><p><a class="reference external" href="https://www.docker.com/"><img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" /></a></p>
+<div><p><a class="reference external" href="https://www.docker.com/"><img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/source/docker_logo.png" width="350px" /></a></p>
 </div></blockquote>
 <div class="section" id="general-configuration">
 <h2>General configuration<a class="headerlink" href="#general-configuration" title="Permalink to this headline">¶</a></h2>
@@ -321,11 +320,11 @@ docker run -it --privileged --rm  -v /tmp:/tmp -v <span class="nv">$HOME</span>:
 </pre></div>
 </div>
 <blockquote>
-<div><p>[<img src="docker_windows_niak.png" width="350px" />]</p>
+<div><p>[<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/source/docker_windows_niak.png" width="350px" />]</p>
 </div></blockquote>
 <p>You will need to open your browser with the address provided to you by the docker virtual machine. The adress <code class="docutils literal notranslate"><span class="pre">192.168.99.100</span></code> is circled in red in the example above. You then open your favorite browser to the address appended by port <code class="docutils literal notranslate"><span class="pre">8080</span></code>: <code class="docutils literal notranslate"><span class="pre">192.168.99.100:8080</span></code>. Once the page is open, Jupyter will request a password, use NIAK.</p>
 <blockquote>
-<div><p>[<img src="jupyter_login.png" width="350px" />]</p>
+<div><p>[<img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/source/jupyter_login.png" width="350px" />]</p>
 </div></blockquote>
 <p>Then click New –&gt; Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> command has been executed.</p>
 </div>

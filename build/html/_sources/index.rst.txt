@@ -8,9 +8,8 @@
   PREPROCESSING
   CONNECTOME
   BASC
-  BASC_FIR
   TUTORIALS
-  
+
 Indices and tables
 ******************
 
