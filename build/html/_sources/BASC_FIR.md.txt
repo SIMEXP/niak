@@ -93,7 +93,7 @@ The second option is the size of the regions, when they are mature (i.e. they st
 opt.thre_size = 1000;
 ```
 
->![An example of FIR estimation](https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/user_guide_fig/basc_fir/Screenshot%20at%202014-10-19%2015.03.19.png)
+>![An example of FIR estimation](tseries_fir.png)
 
 ## Publication guidelines
 
