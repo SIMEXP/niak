@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>BASC FIR pipeline &mdash; NIAK 1.1.4 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="BASC pipeline" href="BASC.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> NIAK
+          
+
+          
+            
+            <img src="_static/angelniak.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="PREPROCESSING.html">fMRI preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONNECTOME.html">Connectome pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BASC.html">BASC pipeline</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BASC FIR pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inputs">Inputs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#preprocessed-fmri-data">Preprocessed fMRI data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis-mask">Analysis mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#brain-areas">Brain areas</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-options">Pipeline options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#publication-guidelines">Publication guidelines</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NIAK</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>BASC FIR pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/BASC_FIR.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="basc-fir-pipeline">
+<h1>BASC FIR pipeline<a class="headerlink" href="#basc-fir-pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This documentation describes how to apply a bootstrap analysis of stable clusters (BASC) on a group of task-based fMRI datasets acquired on multiple subjects. This variant of the BASC pipeline builds brain parcellations (clusters) based on the similarity of individual finite-impulse response (FIR). The BASC implements some boostrap replications of the cluster analysis as well as a consensus clustering approach to capture stable clusters at the individual and group levels. The pipeline also includes an automated method (called MSTEPS) to identify critical numbers of clusters, that summarize accurately a whole hierarchy of decomposition into brain networks. The steps of the pipelines are:</p>
+<ul class="simple">
+<li><p>Mask the brain.</p></li>
+<li><p>Extract the time series and estimated FIR in seleccted area.</p></li>
+<li><p>Perform region growing in each area independently based on FIR estimates. See <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_region_growing.m"><code class="docutils literal notranslate"><span class="pre">niak_pipeline_region_growing</span></code></a></p></li>
+</ul>
+<ol class="simple">
+<li><p>Merge all regions of all areas into one mask of regions, along with the corresponding time series for each functional run.</p></li>
+<li><p>Individual-level stability analysis of FIR estimates. See <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_stability_multi.m">niak_pipeline_stability_multi</a></p></li>
+<li><p>Group-level stability analysis See <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_stability_multi.m">niak_pipeline_stability_multi</a></p></li>
+<li><p>Group-level test of significance of the average FIR per network, as well as the significance of the difference in FIR across networks.</p></li>
+<li><p>Selection of critical scales using MSTEPS.</p></li>
+<li><p>(optional) Generation of cluster and stability maps.</p></li>
+</ol>
+</div>
+<div class="section" id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">¶</a></h2>
+<p>The command to run the pipeline in a Matlab/Octave session is:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">niak_pipeline_stability_fir</span><span class="p">(</span><span class="n">files_in</span><span class="p">,</span><span class="n">opt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where ‘’files_in’’ is a structure describing how the dataset is organized, and ‘’opt’’ is a structure describing the options of the pipeline. The code of <a class="reference external" href="https://raw.githubusercontent.com/SIMEXP/niak/master/template/niak_template_stability_fir.m">niak_template_stability_fir</a> would be a good starting point to write your own script.</p>
+<p>The fMRI datasets are reduced to N time*space arrays using a region-growing algorithm, where N is the number of subjects and the spatial dimension is selected by the user through a parameter which is the size of the regions when the region growing stops. Other methods to stop the region growing are available, such as a maximum number of regions in the brain or the level of homogeneity within region. The regions are built to maximize the correlation between time series averaged across all pairs of voxels within each region as well as across all subjects.</p>
+<p>The pipeline is invoked by <code class="docutils literal notranslate"><span class="pre">niak_pipeline_region_growing</span></code>.
+The argument <code class="docutils literal notranslate"><span class="pre">files_in</span></code> is a structure describing how the dataset is organized, and <code class="docutils literal notranslate"><span class="pre">opt</span></code> is a structure describing the options of the pipeline. The code of <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/template/niak_template_region_growing.m">niak_template_region_growing</a> would be a good starting point to write your own script.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">niak_pipeline_region_growing</span><span class="p">(</span><span class="n">files_in</span><span class="p">,</span><span class="n">opt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can test the region growing on a <a class="reference external" href="http://www.nitrc.org/frs/?group_id=411">demo data</a>. After uncompressing and unarchiving the demo data in a folder, the demo can be started using niak_demo_pipeline_region_growing.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">niak_demo_region_growing</span><span class="p">(</span><span class="s">&#39;/home/bic/my_login/data/demo_niak_preproc/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
+<p>The inputs of the pipelines are:</p>
+<ul class="simple">
+<li><p>Fully preprocessed fMRI datasets. This is typically the output of <code class="docutils literal notranslate"><span class="pre">niak_pipeline_fmri_preprocessing</span></code>, but the preprocessing can be done with any package.</p></li>
+<li><p>An analysis mask. This is a (3D) binary mask, at the same resolution and in the same space as the preprocessed datasets. The region growing will be applied only to the voxels within the mask.</p></li>
+<li><p>A mask of brain areas. By default, this is the AAL template (see notes below). The region growing is applied on the concatenated time series of all subjects. To limit the memory demand, this step is applied independently in each of the areas. This input is optional. If unspecified, the region growing is performed on the whole analysis mask at once. The mask of areas needs to be at the same resolution and in the same space as the preprocessed datasets.</p></li>
+</ul>
+<div class="section" id="preprocessed-fmri-data">
+<h3>Preprocessed fMRI data<a class="headerlink" href="#preprocessed-fmri-data" title="Permalink to this headline">¶</a></h3>
+<p>If the fMRI datasets have been preprocessed using NIAK, setting up the input files is very easy. Just grab the results of the preprocessing with <code class="docutils literal notranslate"><span class="pre">niak_grab_fmri_preprocess</span></code>.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% The minimum tolerable number of volumes</span>
+<span class="n">opt_g</span><span class="p">.</span><span class="n">min_nb_vol</span> <span class="p">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="n">opt_g</span><span class="p">.</span><span class="n">type_files</span> <span class="p">=</span> <span class="s">&#39;roi&#39;</span><span class="p">;</span>
+<span class="n">files_in</span> <span class="p">=</span> <span class="c">...</span>
+   <span class="n">niak_grab_fmri_preprocess</span><span class="p">(</span><span class="s">&#39;/home/pbellec/demo_niak_preproc/&#39;</span><span class="p">,</span><span class="n">opt_g</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>More options for the grabber are available, see <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">niak_grab_fmri_preprocess</span></code>. , and the areas are the AAL segmentation (see the description below).</p>
+<p>If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field <code class="docutils literal notranslate"><span class="pre">fmri</span></code> lists the preprocessed fMRI datasets, organized by subject, session and runs.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">files_in</span><span class="p">.</span><span class="n">fmri</span><span class="p">.</span><span class="n">subject1</span><span class="p">.</span><span class="n">session1</span><span class="p">.</span><span class="n">rest</span> <span class="p">=</span> <span class="c">...</span>
+   <span class="s">&#39;/home/pbellec/demo_niak_preproc/fmri/fmri_sub1_sess1_rest.nii.gz&#39;</span><span class="p">;</span>
+<span class="n">files_in</span><span class="p">.</span><span class="n">fmri</span><span class="p">.</span><span class="n">subject2</span><span class="p">.</span><span class="n">session1</span><span class="p">.</span><span class="n">rest</span> <span class="p">=</span> <span class="c">...</span>
+   <span class="s">&#39;/home/pbellec/demo_niak_preproc/fmri/fmri_sub2_sess1_rest.nii.gz&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Labels for subjects, sessions and runs are arbitrary, however Octave and Matlab impose some restrictions. Please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including <code class="docutils literal notranslate"><span class="pre">.</span></code> <code class="docutils literal notranslate"><span class="pre">+</span></code> <code class="docutils literal notranslate"><span class="pre">-</span></code> or <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p>
+<blockquote>
+<div><p>None of these restrictions apply on the naming convention of the raw files, just to the labels that are used to build the structure files_in in Matlab/Octave.</p>
+</div></blockquote>
+</div>
+<div class="section" id="analysis-mask">
+<h3>Analysis mask<a class="headerlink" href="#analysis-mask" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">mask</span></code> field is the name of a 3D binary volume serving as a mask for the analysis. It can be a mask of the brain common to all subjects, or a mask of a specific brain area, e.g. the thalami. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If <code class="docutils literal notranslate"><span class="pre">niak_grab_fmri_preprocess</span></code> is used, the mask is set to the group mask (i.e. voxels that fall in the brain for more than 50% of subjects) generated in the quality control step. Otherwise, use SPM or MINCRESAMPLE to resample the mask at the correct resolution.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">files_in</span><span class="p">.</span><span class="n">mask</span> <span class="p">=</span> <span class="s">&#39;/data/func_mask_group_stereonl.nii.gz&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="brain-areas">
+<h3>Brain areas<a class="headerlink" href="#brain-areas" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">areas</span></code> field is the name of a volume of integer values, describing some brain areas that are used to save memory space in the region-growing algorithm. Different brain areas are treated independently at this step of the analysis. If the brain mask is small enough, this may not be necessary. Otherwise, you can use for example the AAL segmentation. That is the segmentation used by <code class="docutils literal notranslate"><span class="pre">niak_grab_fmri_preprocess</span></code>. It is important to make sure that this segmentation is in the same space and resolution as the fMRI datasets. If not, use SPM or mincresample to resample the AAL segmentation at the correct resolution.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">files_in</span><span class="p">.</span><span class="n">areas</span> <span class="p">=</span> <span class="s">&#39;/data/roi_aal.nii.gz&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="pipeline-options">
+<h2>Pipeline options<a class="headerlink" href="#pipeline-options" title="Permalink to this headline">¶</a></h2>
+<p>The first option <code class="docutils literal notranslate"><span class="pre">opt.folder_out</span></code> is used to specify the folder where the results of the pipeline will be saved.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">opt</span><span class="p">.</span><span class="n">folder_out</span> <span class="p">=</span> <span class="s">&#39;/data/region_growing/&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The second option is the size of the regions, when they are mature (i.e. they stop growing). The parameter is set in mm3, if the size of voxels is specified in mm in the header (that is pretty much always the case). A threshold of 1000 mm3 will give about 1000 regions on the grey matter.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">opt</span><span class="p">.</span><span class="n">thre_size</span> <span class="p">=</span> <span class="mi">1000</span><span class="p">;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p><img alt="An example of FIR estimation" src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/user_guide_fig/basc_fir/Screenshot%20at%202014-10-19%2015.03.19.png" /></p>
+</div></blockquote>
+</div>
+<div class="section" id="publication-guidelines">
+<h2>Publication guidelines<a class="headerlink" href="#publication-guidelines" title="Permalink to this headline">¶</a></h2>
+<p>Here is a short description of the fMRI preprocessing pipeline that can be adapted in a publication. You are encouraged to include the script that was used to preprocess the fMRI database as supplementary material of the article.</p>
+<blockquote>
+<div><p>To reduce the computational burden of the analysis, the spatial dimension of the individual fMRI dataset was reduced using a region-growing algorithm. The spatial dimension was selected arbitrarily by setting the size where the growing process stopped (a threshold of 1000 mm3 resulted into R=957 regions). The regions were built to maximize the homogeneity of the time series within the region, i.e. the average correlation between the time series associated with any pair of voxels of the region. The region growing was applied on the time series concatenated across all subjects (after correction to zero mean and unit variance), such that the homogeneity was maximized on average for all subjects, and the small homogeneous regions are identical for all subjects. Because of the temporal concatenation of time series, we had to limit the memory demand, and the region-growing was thus applied independently in each of the 116 areas of the AAL template \citep{Tzourio-Mazoyer2002}. See (Bellec et al. 2006) for more details regarding the implementation of the region-growing algorithm. Overall, this process reduced the dataset of each subject into a (T x R) data array, where T is the number of time samples and R is the number of regions.</p>
+</div></blockquote>
+<p>The AAL template that ships with NIAK 0.7+ is not identical to the original AAL template described by Tzouri-Mazoyer et al., 2002. A description of the differences follows:</p>
+<blockquote>
+<div><p>The original AAL template was modified for inclusion in NIAK, as NIAK uses a different stereotaxic space for coregistration than the one used by (Tzourio-Mazoyer et al., 2002). The AAL parcels have been drawn in the Colin27 template space. Colin27 is the average of 27 structural scan of a single subject, linearly registered in the Montreal Neurological Institute (MNI) International Consortium for Brain Mapping (ICBM) 152 stereotaxic space. The MNI-ICBM152 is the average of 152 young adults that were linearly realigned. Only coarse anatomical details can be seen on an average brain after such a linear coregistration. However, the AAL template precisely follows the unique sulcal anatomy of Colin27, which is in particular highly asymmetric. By contrast, we used the MNI-ICBM152-2009c template (http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009), described in (Fonov et al. 2011). The MNI-ICBM152-2009c is the average of the same structural scans as the MNI-ICBM152, but after a non-linear (rather than linear) coregistration process. The processus of coregistration/template generation was iterated 40 times in order to produce MNI-ICBM152-2009c. In addition, the template was constrained to be symmetrical with respect to the mid-sagital plane, such that homotopic connections can be easily studied. Because of the non-linear coregistration procedure, many details of the sulcal anatomy are visible in the MNI-ICBM152-2009c, which were lost in the linear version. The Colin27 template was thus co-registered non-linearly to the MNI-ICBM152-2009c in order for the parcellation to respect these landmarks. Some morphomathematical operations were in addition applied to ensure that homotopic parcels were symmetric and that each of the AAL parcels remained spatially connex after the non-linear transformation. A nearest-neighbour extrapolation of the parcels was also applied to cover all of the mask of the grey matter, as defined by a liberal threshold on the average grey matter partial volume map released as part of the MNI ICBM152 2009c template. In particular, some novel ventral cerebellar regions were included in the 2009c version of the AAL template, that were missing in the original work. For that reason the anatomical labels inherited from the original AAL atlas should be interpreted with great caution in the cerebellar regions for the updated AAL-2009c template. The result of the extrapolation process was manually edited in some areas.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="BASC.html" class="btn btn-neutral float-left" title="BASC pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, NIAK dev team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Connectome pipeline &mdash; NIAK 1.1.4 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="fMRI preprocessing" href="PREPROCESSING.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> NIAK
+          
+
+          
+            
+            <img src="_static/angelniak.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="PREPROCESSING.html">fMRI preprocessing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Connectome pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-files">Input files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-of-seeds">List of seeds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-options">Pipeline options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-management">Pipeline management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outputs">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#publication-guidelines">Publication guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NIAK</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Connectome pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/CONNECTOME.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="connectome-pipeline">
+<h1>Connectome pipeline<a class="headerlink" href="#connectome-pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This pipeline creates connectomes as well as functional connectivity maps and graph measures from preprocessed fMRI data. The command to run the pipeline in a Matlab/Octave session is:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="n">niak_pipeline_connectome</span><span class="p">(</span><span class="n">files_in</span><span class="p">,</span><span class="n">opt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">files_in</span></code> is a structure describing how the dataset is organized, and <code class="docutils literal notranslate"><span class="pre">opt</span></code> is a structure describing the options of the pipeline.</p>
+</div>
+<div class="section" id="input-files">
+<h2>Input files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h2>
+<p>The inputs of the pipelines are:</p>
+<ul class="simple">
+<li><p><strong>Fully preprocessed fMRI datasets</strong>. This is typically the output of <code class="docutils literal notranslate"><span class="pre">niak_pipeline_fmri_preprocessing</span></code>, but the preprocessing can be done with any package.</p></li>
+<li><p><strong>A mask of brain regions/networks</strong>. This can be for example the AAL template (see notes below), or the result of a boostrap analysis of stable clusters (BASC). Any mask can be used here.</p></li>
+<li><p><strong>A list of coordinates of interest</strong> (or numerical value corresponding to regions of the mask), along with string labels. This list is specified through a <code class="docutils literal notranslate"><span class="pre">.csv</span></code> file (which can be generated with a text editor or an excel-like program).</p></li>
+</ul>
+<p>If the fMRI datasets have been preprocessed using NIAK, setting up the input files is very easy. Just grab the results of the preprocessing with the following command:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="c">% The minimum number of volumes for an fMRI dataset to be included.</span>
+ <span class="c">% This option is useful when scrubbing is used, and the resulting time series may be too short.</span>
+ <span class="n">opt_g</span><span class="p">.</span><span class="n">min_nb_vol</span> <span class="p">=</span> <span class="mi">100</span><span class="p">;</span>
+
+ <span class="c">% Specify to the grabber to prepare the files for the connectome pipeline</span>
+ <span class="n">opt_g</span><span class="p">.</span><span class="n">type_files</span> <span class="p">=</span> <span class="s">&#39;glm_connectome&#39;</span><span class="p">;</span>
+ <span class="n">files_in</span><span class="p">.</span><span class="n">fmri</span> <span class="p">=</span> <span class="n">niak_grab_fmri_preprocess</span><span class="p">(</span><span class="s">&#39;/home/pbellec/demo_niak_preproc/&#39;</span><span class="p">,</span><span class="n">opt_g</span><span class="p">).</span><span class="n">fmri</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>More options for the grabber are available. See <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">niak_grab_fmri_preprocess</span></code> or the template of the region growing pipeline for more info. The mask is specified as follows:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="n">files_in</span><span class="p">.</span><span class="n">network</span> <span class="p">=</span> <span class="s">&#39;/home/pbellec/niak/template/roi_aal.mnc.gz&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Finally the (optional) list of seeds is specified by:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="n">files_in</span><span class="p">.</span><span class="n">seeds</span> <span class="p">=</span> <span class="s">&#39;/home/pbellec/database/list_seeds.csv&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>If NIAK was not used to prepocess the data, all inputs have to be manually specified in the script. The first field ‘’fmri’’ directly lists all of the preprocessed fMRI datasets, organized by subject, session and runs. Example:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="n">files_in</span><span class="p">.</span><span class="n">subject1</span><span class="p">.</span><span class="n">session1</span><span class="p">.</span><span class="n">rest</span> <span class="p">=</span> <span class="s">&#39;/home/pbellec/demo_niak_preproc/fmri/fmri_subject1_session1_rest.nii.gz&#39;</span><span class="p">;</span>
+ <span class="n">files_in</span><span class="p">.</span><span class="n">subject2</span><span class="p">.</span><span class="n">session1</span><span class="p">.</span><span class="n">rest</span> <span class="p">=</span> <span class="s">&#39;/home/pbellec/demo_niak_preproc/fmri/fmri_subject2_session1_rest.nii.gz&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><em>NOTE</em>: you can customize the names for the subjects, sessions and runs.</p>
+<p><em>WARNING</em>: Octave and Matlab impose some restrictions on the labels used for subject, session and run. In order to avoid any issue, please do not use long labels (say less than 8 characters for subject, and ideally 4 characters or less for session/run). Also avoid to use any special character, including <code class="docutils literal notranslate"><span class="pre">.</span></code> <code class="docutils literal notranslate"><span class="pre">+</span></code> <code class="docutils literal notranslate"><span class="pre">-</span></code> or <code class="docutils literal notranslate"><span class="pre">_</span></code>. None of these restrictions apply on the naming convention of the files, just to the labels that are used to build the structure files_in in Matlab/Octave.</p>
+</div>
+<div class="section" id="list-of-seeds">
+<h2>List of seeds<a class="headerlink" href="#list-of-seeds" title="Permalink to this headline">¶</a></h2>
+<p>The .csv FILES_IN.SEEDS can take two forms. Example 1, (world) coordinates in stereotaxic space:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>         <span class="p">,</span>   <span class="n">x</span> <span class="p">,</span>  <span class="n">y</span> <span class="p">,</span>  <span class="n">z</span>
+ <span class="n">ROI1</span>    <span class="p">,</span>  <span class="mi">12</span> <span class="p">,</span>  <span class="mi">7</span> <span class="p">,</span> <span class="mi">33</span>
+ <span class="n">ROI2</span>    <span class="p">,</span>  <span class="mi">45</span> <span class="p">,</span> <span class="o">-</span><span class="mi">3</span> <span class="p">,</span> <span class="mi">27</span>
+</pre></div>
+</div>
+<p>With that method, the region will load the parcellation, extract the number of the parcels corresponding to the coordinates, and associate them to labels ROI1 and ROI2. WARNING: the labels for the ROI must be acceptable as field names for matlab, i.e. no special characters (+ - / * space) and relatively short.</p>
+<p>Example 2, string and numeric labels:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="p">,</span> <span class="n">index</span>
+ <span class="n">ROI1</span>   <span class="p">,</span> <span class="mi">3010</span>
+ <span class="n">ROI2</span>   <span class="p">,</span> <span class="mi">3020</span>
+</pre></div>
+</div>
+<p>In this case, the index refers to the number associated with one parcel. The labels will be attached. With both methods, the first row does not really matter. It is still important that the row is present, and that the intersection of first column and first row is left empty. If two rows are associated with the same parcel, the pipeline will throw an error. This can occur in particular with method 1.</p>
+</div>
+<div class="section" id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h2>
+<p>The main steps of the <code class="docutils literal notranslate"><span class="pre">connectome</span></code> pipeline are the following:</p>
+<ul class="simple">
+<li><p>Generate the average fMRI time series for each network in the mask.</p></li>
+<li><p>Generate a connectome for each subject. Multiple measures are available (covariance, correlation, Fisher transform of the correlation, concentration, partial correlation). If multiple runs are available for one subject, the connectomes are averaged across runs.</p></li>
+<li><p>Binarize the connectome, either by applying a fixed threshold on positive or absolute connectivity measures, or by retaining a fixed percentage of the largest connections.</p></li>
+<li><p>Report the values of point-to-point connectivity measures for a selected number of networks specified in FILES_IN.CSV</p></li>
+<li><p>Generate full brain, voxel-level functional connectivity maps for each subject (i.e. correlation or Fisher transform of the correlation, starting from a selected number of networks specified in FILES_IN.CSV. An average of all subjects is also generated for each seed.</p></li>
+<li><p>Generate a battery of graph properties, based on the binarized version of the connectome. These measures are generated using the <a class="reference external" href="https://sites.google.com/site/bctnet/Home/functions">brain connectivity toolbox</a>.</p></li>
+</ul>
+</div>
+<div class="section" id="pipeline-options">
+<h2>Pipeline options<a class="headerlink" href="#pipeline-options" title="Permalink to this headline">¶</a></h2>
+<p>The first option <code class="docutils literal notranslate"><span class="pre">opt.folder_out</span></code> is used to specify the folder where the results of the pipeline will be saved. The pipeline manager will create but also delete many files and subfolders in that location. It is thus highly recommended to use a new folder dedicated to the analysis, and to prevent any manual modification of that folder at all times. Example:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="n">opt</span><span class="p">.</span><span class="n">folder_out</span> <span class="p">=</span> <span class="s">&#39;/database/data_demo/region_growing/&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The following option sets the type of connectome (see <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">niak_brick_connectome</span></code> for more info):</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span>  <span class="n">opt</span><span class="p">.</span><span class="n">connectome</span><span class="p">.</span><span class="n">type</span> <span class="p">=</span> <span class="s">&#39;Z&#39;</span><span class="p">;</span>
+ <span class="c">% &#39;S&#39;: covariance;</span>
+ <span class="c">% &#39;R&#39;: correlation;</span>
+ <span class="c">% &#39;Z&#39;: Fisher transform of the correlation;</span>
+ <span class="c">% &#39;U&#39;: concentration;</span>
+ <span class="c">% &#39;P&#39;: partial correlation</span>
+</pre></div>
+</div>
+<p>The following option sets how the connectome is binarized (See “help niak_brick_connectome” for more info):</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span>  <span class="n">opt</span><span class="p">.</span><span class="n">connectome</span><span class="p">.</span><span class="n">thresh</span><span class="p">.</span><span class="n">type</span> <span class="p">=</span> <span class="s">&#39;sparsity_pos&#39;</span><span class="p">;</span>
+  <span class="c">% The type of treshold used to binarize the connectome. See &quot;help niak_brick_connectome&quot; for more info.</span>
+  <span class="c">% &#39;sparsity&#39;: keep a proportion of the largest connection (in absolute value);</span>
+  <span class="c">% &#39;sparsity_pos&#39;: keep a proportion of the largest connection (positive only)</span>
+  <span class="c">% &#39;cut_off&#39;: a cut-off on connectivity (in absolute value)</span>
+  <span class="c">% &#39;cut_off_pos&#39;: a cut-off on connectivity (only positive)</span>
+</pre></div>
+</div>
+<p>The following option sets the threshold used to binarize the connectome (See <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">niak_brick_connectome</span></code> for more info):</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span>  <span class="n">opt</span><span class="p">.</span><span class="n">connectome</span><span class="p">.</span><span class="n">thresh</span><span class="p">.</span><span class="n">param</span> <span class="p">=</span> <span class="mf">0.2</span><span class="p">;</span><span class="o">&amp;</span><span class="n">nbsp</span><span class="p">;</span>
+  <span class="c">% The parameter of the thresholding. The actual definition depends of THRESH.TYPE:</span>
+  <span class="c">% &#39;sparsity&#39;: (scalar, default 0.2) percentage of connections</span>
+  <span class="c">% &#39;sparsity_pos&#39;: (scalar, default 0.2) percentage of connections</span>
+  <span class="c">% &#39;cut_off&#39;: (scalar, default 0.25) the cut-off</span>
+  <span class="c">% &#39;cut_off_pos&#39;: (scalar, default 0.25) the cut-off</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pipeline-management">
+<h2>Pipeline management<a class="headerlink" href="#pipeline-management" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline execution is powered by a generic manager called PSOM (Bellec et al. 2012, see reference below). See the <a class="reference external" href="http://psom.simexp-lab.org">PSOM website</a> for guidelines to set the configuration. Parameters for PSOM are specified through <code class="docutils literal notranslate"><span class="pre">opt.psom</span></code>.</p>
+</div>
+<div class="section" id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Permalink to this headline">¶</a></h2>
+<p>The individual connectomes (averaged across runs) are saved in the files <code class="docutils literal notranslate"><span class="pre">connectomes/connectome_rois_(SUBJECT).mat</span></code> with the following variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">conn</span></code>: the vectorized individual connectome. See ‘’niak_build_srup’’ for instructions on how to get back the square form (the method depends on the type of the connectome).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">G</span></code>: same as <code class="docutils literal notranslate"><span class="pre">conn</span></code> but binarized.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ind_roi</span></code>: a vector with the indices of the parcels. This defines the order of rows/columns in the connectome.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: same as <code class="docutils literal notranslate"><span class="pre">opt.connectome.type</span></code>. Describes the type of the connectome.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thresh</span></code>: same as <code class="docutils literal notranslate"><span class="pre">opt.connectome.thresh</span></code>. Describes the method for binarization.</p></li>
+</ul>
+<p>The individual graph properties are saved in the files <code class="docutils literal notranslate"><span class="pre">graph_prop/graph_prop_rois_(SUBJECT).mat</span></code> with the following variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(MEASURE)_(PARCEL).type</span></code> the type of measure. The labels for <code class="docutils literal notranslate"><span class="pre">PARCEL</span></code> are defined by <code class="docutils literal notranslate"><span class="pre">files_in.seeds</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(MEASURE).(PARCEL).param</span></code>: the option of the measure. Typically the numerical ID of the parcel used in the calculation. The labels for <code class="docutils literal notranslate"><span class="pre">PARCEL</span></code> are defined by <code class="docutils literal notranslate"><span class="pre">files_in.seeds</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(MEASURE).(PARCEL).val</span></code>: the value estimated for the measure.</p></li>
+</ul>
+<p>The functional connectivity maps are saved in the folder <code class="docutils literal notranslate"><span class="pre">rmaps</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rmaps/rmap_(SUBJECT)_(PARCEL).(EXT)</span></code>: the voxelwise connectivity map using <code class="docutils literal notranslate"><span class="pre">PARCEL</span></code> as a seed (labels are defined in <code class="docutils literal notranslate"><span class="pre">files_in.seeds</span></code>).</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">rmaps/mask_(PARCEL).(EXT)</span></code>: a binary volume of the seed associated with the label <code class="docutils literal notranslate"><span class="pre">PARCEL</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rmaps/average_rmap_(PARCEL).(EXT)</span></code>: the connectivity map using <code class="docutils literal notranslate"><span class="pre">PARCEL</span></code> as seed, averaged across all subjects.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="publication-guidelines">
+<h2>Publication guidelines<a class="headerlink" href="#publication-guidelines" title="Permalink to this headline">¶</a></h2>
+<p>Here is a short description of the connectome pipeline that can be adapted in a publication. You are encouraged to include the script that was used to generate the connectomes as supplementary material of the article.</p>
+<p>The individual connectomes were generated using the Neuroimaging Analysis Kit (NIAK) release 0.7 (Bellec et al. 2011, NIAK website). For each run, the correlation matrix [REPLACE HERE BY COVARIANCE, CONCENTRATION OR PARTIAL CORRELATION, DEPENDING ON OPT.CONNECTOME.TYPE] was generated base on the time series averaged on the [DESCRIBE THE EMPLOYED PARCELLATION HERE] parcellation. For each subject, the connectomes were averaged across all runs [SUPPRESS THIS IF THERE IS ONLY ONE RUN]. The individual connectomes were binarized by application by retaining positive connections larger than XX [THIS SENTENCE APPLIES ONLY IF OPT.CONNECTOME.THRESH.TYPE IS ‘cut_off_pos’. XX IS OPT.CONNECTOME.TRESH.PARAM]. The individual connectomes were binarized by application by retaining connections larger than XX in absolute value[THIS SENTENCE APPLIES ONLY IF OPT.CONNECTOME.THRESH.TYPE IS ‘cut_off’. XX IS OPT.CONNECTOME.TRESH.PARAM]. The individual connectomes were binarized by application by retaining the XX larger connections [THIS SENTENCE APPLIES ONLY IF OPT.CONNECTOME.THRESH.TYPE IS ‘sparsity_pos’. XX IS OPT.CONNECTOME.TRESH.PARAM]. The individual connectomes were binarized by application by retaining the XX larger connections in absolute value [THIS SENTENCE APPLIES ONLY IF OPT.CONNECTOME.THRESH.TYPE IS ‘sparsity’. XX IS OPT.CONNECTOME.TRESH.PARAM]. The following regions were selected based on the literature [THIS SENTENCE APPLIES ONLY IF A SUBSET OF REGIONS IS EXTRACTED FROM THE PARCELLATION]. The following graph metrics were generated for each subject based on binarized connections: clustering coefficient for each parcel, average clustering, local efficiency for each parcel, average efficiency, modularity coefficient, as defined in (Rubinov and Sporns, 2010) and implemented in the brain connectivity toolbox (https://sites.google.com/site/bctnet/Home/functions). In addition, degree centrality was generated as the number of edge associated with each parcel, corrected to have a zero mean and unit variance across all parcels, as described in (Buckner et al., 2009). Finally, the average voxelwise functional connectivity maps were generated for each selected region, i.e. Pearson’s correlation corrected by the Fisher transform and averaged across all runs for each subject.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Regarding the NIAK package:</p>
+<p>P. Bellec, F. M. Carbonell, V. Perlbarg, C. Lepage, O. Lyttelton, V. Fonov, A. Janke, J. Tohka, A. Evans, A neuroimaging analysis kit for Matlab and Octave. Proceedings of the 17th International Conference on Functional Mapping of the Human Brain, 2011.</p>
+<p>Regarding the pipeline system for Octave and Matlab (PSOM):</p>
+<p>P. Bellec, S. Lavoie-Courchesne, P. Dickinson, J. Lerch, A. Zijdenbos, A. C. Evans. The pipeline system for Octave and Matlab (PSOM): a lightweight scripting framework and execution engine for scientific workflows. Front. Neuroinform. (2012) 6:7. Full text open-access: http://dx.doi.org/10.3389/fninf.2012.00007</p>
+<p>Regarding the graph properties:</p>
+<p>Rubinov, M., Sporns, O., Sep. 2010. Complex network measures of brain connectivity: Uses and interpretations. NeuroImage 52 (3), 1059-1069. URL http://dx.doi.org/10.1016/j.neuroimage.2009.10.003</p>
+<p>Regarding the degree centrality:</p>
+<p>Buckner et al. Cortical Hubs Revealed by Intrinsic Functional Connectivity: Mapping, Assessment of Stability, and Relation to Alzheimer’s Disease. The Journal of Neuroscience, February 11, 2009.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="PREPROCESSING.html" class="btn btn-neutral float-left" title="fMRI preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, NIAK dev team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,406 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorials &mdash; NIAK 1.1.4 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="BASC FIR pipeline" href="BASC_FIR.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> NIAK
+          
+
+          
+            
+            <img src="_static/angelniak.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="PREPROCESSING.html">fMRI preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONNECTOME.html">Connectome pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BASC.html">BASC pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BASC_FIR.html">BASC FIR pipeline</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#notebooks">Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-test-niak">How to test NIAK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-and-write-volumes-in-niak">Read and write volumes in NIAK</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NIAK</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Tutorials</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/TUTORIALS.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="notebooks">
+<h2>Notebooks<a class="headerlink" href="#notebooks" title="Permalink to this headline">¶</a></h2>
+<p>Before running the following tutorials, NIAK needs to be properly installed. All the codes are to be executed in the matlab/octave environment. It is generally advised to create a new folder and run the script in this folder, as some datasets may be downloaded, and various images may be generated.</p>
+<p><a class="reference external" href="https://nbviewer.jupyter.org/github/SIMEXP/niak_tutorials/blob/master/niak_tutorial_fmri_preprocessing.ipynb"><img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_fmri_preprocess.png" width="250px" /></a>
+<a class="reference external" href="https://nbviewer.jupyter.org/github/SIMEXP/niak_tutorials/blob/master/niak_tutorial_rmap_connectome.ipynb"><img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_rmap.png" width="250px" /></a>
+<a class="reference external" href="https://nbviewer.jupyter.org/github/simexp/niak_tutorials/blob/master/niak_tutorial_basc_principles.ipynb"><img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_basc_principles.png" width="250px" /></a>
+<a class="reference external" href="https://nbviewer.jupyter.org/github/simexp/niak_tutorials/blob/master/niak_tutorial_basc.ipynb"><img src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/tutorial_basc.png" width="250px" /></a></p>
+</div>
+<div class="section" id="how-to-test-niak">
+<h2>How to test NIAK<a class="headerlink" href="#how-to-test-niak" title="Permalink to this headline">¶</a></h2>
+<p>In order to validate that a computational environment behaves the way it should, NIAK offers a series
+of tests. To run all NIAK tests, fir create a folder to put all the test results:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">psom_mkdir</span><span class="p">(</span><span class="s">&#39;test_niak&#39;</span><span class="p">)</span>
+<span class="n">cd</span> <span class="n">test_niak</span>
+</pre></div>
+</div>
+<p>Then simply type:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">niak_test_all</span>
+</pre></div>
+</div>
+<p>This command will download the test dataset, as well as a series of results generated on a trusted sy
+stem. All the pipelines available in NIAK will run. The tests will compare all the results generated
+locally with those previous results, and produce a series of reports in .csv format.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>report_test_regression_connectome_demoniak.csv</p></li>
+<li><p>report_test_regression_region_growing_demoniak.csv</p></li>
+<li><p>report_test_regression_connectome_demoniak.csv</p></li>
+</ul>
+</div></blockquote>
+<p>Those are spreadsheets formatted as comma-separated values. Each row is about one file of the associa
+ted pipeline, and includes the following information:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">source</span></code></strong> (boolean)</p>
+<ul>
+<li><p><strong>1</strong>: the file exists in the source (generated results).</p></li>
+<li><p><strong>0</strong>: the file is absent in the source (generated results).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">target</span></code></strong> (boolean)</p>
+<ul>
+<li><p><strong>1</strong>: the file exists in the target (reference results).</p></li>
+<li><p><strong>0</strong>: the file is absent in the target (reference results).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">identical</span></code></strong> (boolean or NaN)</p>
+<ul>
+<li><p><strong>1</strong>: the files are identical (the actual test depends on file type, see the note below).</p></li>
+<li><p><strong>0</strong>: the files are different (the actual test depends on file type, see the note below).</p></li>
+<li><p><strong>NaN</strong>: unsupported file type, or the file exists only on source or target.</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">same_labels</span></code></strong> (boolean or NaN)</p>
+<ul>
+<li><p><strong>1</strong>: the .csv files have the same labels for rows and columns.</p></li>
+<li><p><strong>0</strong>: the .csv files have different labels for rows or columns.</p></li>
+<li><p><strong>NaN</strong>: not .csv files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">same_variables</span></code></strong> (boolean or NaN)</p>
+<ul>
+<li><p><strong>1</strong>: the .mat files contain the same variables.</p></li>
+<li><p><strong>0</strong>: the .mat files contain different variables.</p></li>
+<li><p><strong>NaN</strong>: not .mat files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">same_header_info</span></code></strong> (boolean or NaN)</p>
+<ul>
+<li><p><strong>1</strong>: the .nii/.mnc files have the same headers.</p></li>
+<li><p><strong>0</strong>: the .nii/.mnc files have different headers.</p></li>
+<li><p><strong>NaN</strong>: not .mnc/.nii files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">same_dim</span></code></strong> (boolean or NaN)</p>
+<ul>
+<li><p><strong>1</strong>: the data inside .nii/.mnc or .csv files have the same dimensions.</p></li>
+<li><p><strong>0</strong>: the data inside .nii/.mnc or .csv files have different dimensions.</p></li>
+<li><p><strong>NaN</strong>: not .mnc/.nii/.csv files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">dice_mask_brain</span></code></strong> (scalar in [0,1] or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the dice coefficient for brain masks generated for two volumes (.nii/.mnc).</p></li>
+<li><p><strong>NaN</strong>: not .mnc/.nii files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">max_diff</span></code></strong> (positive scalar or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the max absolute difference between two volumes (.nii/.mnc) or spreadsheets (.csv).</p></li>
+<li><p><strong>NaN</strong>: not .mnc/.nii/.csv files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">min_diff</span></code></strong> (positive scalar or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the min absolute difference between two volumes (.nii/.mnc) or spreadsheets (.csv).</p></li>
+<li><p><strong>NaN</strong>: not .mnc/.nii/.csv files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">mean_diff</span></code></strong> (positive scalar or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the mean absolute difference between two volumes (.nii/.mnc) or spreadsheets (.csv).</p></li>
+<li><p><strong>NaN</strong>: not .mnc/.nii/.csv files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">max_corr</span></code></strong> (scalar in [0,1] or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the max correlation between the time series of voxels inside the brain masks, for tw
+o 4D volumes (.nii/.mnc).</p></li>
+<li><p><strong>NaN</strong>: not 4D .mnc/.nii files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">min_corr</span></code></strong> (scalar in [0,1] or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the min correlation between the time series of voxels inside the brain masks, for tw
+o 4D volumes (.nii/.mnc).</p></li>
+<li><p><strong>NaN</strong>: not 4D .mnc/.nii files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">mean_corr</span></code></strong> (scalar in [0,1] or NaN)</p>
+<ul>
+<li><p><strong>scalar</strong>: the mean correlation between the time series of voxels inside the brain masks, for t
+wo 4D volumes (.nii/.mnc).</p></li>
+<li><p><strong>NaN</strong>: not 4D .mnc/.nii files (the test does not apply, ignore value).</p></li>
+</ul>
+</li>
+</ul>
+<p>Two files are identical if they exist in both source and target and</p>
+<ul class="simple">
+<li><p><strong>.nii/.mnc</strong> files: the headers are identical and the max absolute difference is less than a toler
+ance value (10^-4).</p></li>
+<li><p><strong>.csv</strong> files: the labels of rows and columns are identical and the max absolute difference is les
+s than a tolerance value (10^-4, see <code class="docutils literal notranslate"><span class="pre">opt.eps</span></code> in <code class="docutils literal notranslate"><span class="pre">niak_brick_cmp_files</span></code>).</p></li>
+<li><p><strong>.mat</strong> files: the content is identical up to a tolerance value (10^-4, see <code class="docutils literal notranslate"><span class="pre">opt.eps</span></code> in <code class="docutils literal notranslate"><span class="pre">niak_bri</span> <span class="pre">ck_cmp_files</span></code>).</p></li>
+</ul>
+<p>The tests fail if any two pairs of file are not identical in the reference results and the generated
+results. Note that tests can fail if slightly different versions of Matlab/Octave/minc tools are used
+when generating results as compared to the reference results. When NIAK is executed through docker,
+perfect replications are expected.</p>
+</div>
+<div class="section" id="read-and-write-volumes-in-niak">
+<h2>Read and write volumes in NIAK<a class="headerlink" href="#read-and-write-volumes-in-niak" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial shows how to read and write volumes using the NIAK tools, as well as perform some basic
+operations. It does not generate figures. The script can be downloaded [here](https://raw.githubuser
+content.com/SIMEXP/niak_tutorials/master/read_write_vol/niak_tutorial_read_write_vol.m).</p>
+<p>First download the single subject, preprocessed cambridge dataset.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">clear</span>
+<span class="k">if</span> <span class="o">~</span><span class="n">psom_exist</span><span class="p">(</span><span class="s">&#39;single_subject_cambridge_preprocessed_nii&#39;</span><span class="p">)</span>
+    <span class="n">system</span><span class="p">(</span><span class="s">&#39;wget http://www.nitrc.org/frs/download.php/6784/single_subject_cambridge_preprocessed_nii</span>
+<span class="s">.zip&#39;</span><span class="p">)</span>
+    <span class="n">system</span><span class="p">(</span><span class="s">&#39;unzip single_subject_cambridge_preprocessed_nii.zip&#39;</span><span class="p">)</span>
+    <span class="n">psom_clean</span><span class="p">(</span><span class="s">&#39;single_subject_cambridge_preprocessed_nii.zip&#39;</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p>To read the data, use <code class="docutils literal notranslate"><span class="pre">niak_read_vol</span></code>.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">hdr</span><span class="p">,</span><span class="n">vol</span><span class="p">]</span> <span class="p">=</span> <span class="n">niak_read_vol</span><span class="p">(</span><span class="s">&#39;single_subject_cambridge_preprocessed_nii/fmri_sub00156_session1_rest.nii.</span>
+<span class="s">gz&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">hdr</span></code> output is a structure with a full description of the volume. In particular, <code class="docutils literal notranslate"><span class="pre">hdr.info</span></code> cont
+ains some basic info found in both nifti and minc.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">hdr</span><span class="p">.</span><span class="n">info</span>
+</pre></div>
+</div>
+<p>For example, the voxel size is found in</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">hdr</span><span class="p">.</span><span class="n">info</span><span class="p">.</span><span class="n">voxel_size</span>
+</pre></div>
+</div>
+<p>All the detailed information are contained in <code class="docutils literal notranslate"><span class="pre">hdr.details</span></code>. This field will vary based on the format
+of the original volume. Here, for nifti, each field corresponds to a nifti field.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">hdr</span><span class="p">.</span><span class="n">details</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">vol</span></code> output is the data itself, in either a 3D or a 4D array. Any normalization (min/max) has be
+en applied. It is in voxel space however, and no spatial transformation has been applied.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">size</span><span class="p">(</span><span class="n">vol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To write volumes, the name of the volume is going into the header.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">hdr</span><span class="p">.</span><span class="n">file_name</span> <span class="p">=</span> <span class="s">&#39;mean_vol.nii.gz&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The number of time frames can vary, and is automatically updated. Let’s comupte the average volume</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">vol_mean</span> <span class="p">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">vol</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>To write the volume, call <code class="docutils literal notranslate"><span class="pre">niak_write_vol</span></code>.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">niak_write_vol</span><span class="p">(</span><span class="n">hdr</span><span class="p">,</span><span class="n">vol_mean</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="BASC_FIR.html" class="btn btn-neutral float-left" title="BASC FIR pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, NIAK dev team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

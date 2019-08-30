@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fMRI preprocessing &mdash; NIAK 1.1.4 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Connectome pipeline" href="CONNECTOME.html" />
+    <link rel="prev" title="Installation" href="INSTALLATION.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> NIAK
+          
+
+          
+            
+            <img src="_static/angelniak.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="INSTALLATION.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">fMRI preprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-options">General options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#slice-timing-correction">Slice timing correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#motion-estimation">Motion estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#t1-normalization">T1 normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bold-t1-coregistration">BOLD-T1 coregistration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-resampling">Spatial resampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#regression-of-confounds">Regression of confounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-smoothing">Spatial smoothing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tuning-individual-parameters">Tuning individual parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#publication-guidelines">Publication guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CONNECTOME.html">Connectome pipeline</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NIAK</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>fMRI preprocessing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/PREPROCESSING.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fmri-preprocessing">
+<h1>fMRI preprocessing<a class="headerlink" href="#fmri-preprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Before any statistical or pattern recognition model is applied on fMRI data, a number of preprocessing steps need to be applied. These steps first aim at reducing various artefacts that compromise the interpretation of fMRI fluctuations, e.g. physiological and motion artefacts. The second major aim is to align the data acquired at different points in time for a single subject, sometimes separated by years, and also to establish some correspondance between the brains of different subjects, such that an inference on the role of a given brain area can be carried at the level of a group. This page describes the steps of the NIAK preprocessing pipeline for fMRI (and T1) data. The pipeline includes most of the preprocessing tools currently available for connectivity analysis in fMRI: (1) Slice timing correction; (2) Estimation of rigid-body motion in fMRI runs, both within- and between sessions; (3) Linear or non-linear coregistration of the structural scan in stereotaxic space; (4) Individual coregistration between structural and functional scans; (5) Resampling of functional scans in stereotaxic space; (6) Scrubbing; (7) regression of confounds (average of white matter and CSF, motion parameters, COMPCOR); (8) Spatial smooting.</p>
+<blockquote>
+<div><p><img alt="The fMRI preprocessing workflow" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_flowchart_fmri_preprocess.jpg" /></p>
+</div></blockquote>
+</div>
+<div class="section" id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline is invoked by <code class="docutils literal notranslate"><span class="pre">niak_pipeline_fmri_preprocess</span></code>.
+The argument <code class="docutils literal notranslate"><span class="pre">files_in</span></code> is a structure describing how the dataset is organized, and <code class="docutils literal notranslate"><span class="pre">opt</span></code> is a structure describing the options of the pipeline.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="n">niak_pipeline_fmri_preprocess</span><span class="p">(</span><span class="n">files_in</span><span class="p">,</span><span class="n">opt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The structure <code class="docutils literal notranslate"><span class="pre">files_in</span></code> has an arbitrary number of fields, each one coding for a subject. Each subject field itself has two subfields <code class="docutils literal notranslate"><span class="pre">fmri</span></code> (describing all fMRI data available for this subject) and <code class="docutils literal notranslate"><span class="pre">anat</span></code> (describing one T1 data available for this subject). The <code class="docutils literal notranslate"><span class="pre">fmri</span></code> data field can have an arbitrary number of session subfields. A session correspond to a single acquisition of a single subject where only small movements are expected between brain volumes. Multiple runs are typically acquired within one session.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">%% Subject 1</span>
+<span class="c">% T1 scan</span>
+<span class="n">files_in</span><span class="p">.</span><span class="n">subject1</span><span class="p">.</span><span class="n">anat</span> <span class="p">=</span> <span class="c">...</span>
+   <span class="s">&#39;/home/pbellec/demo_niak/anat_subject1.mnc&#39;</span><span class="p">;</span>
+<span class="c">% fMRI (motor)</span>
+<span class="n">files_in</span><span class="p">.</span><span class="n">subject1</span><span class="p">.</span><span class="n">fmri</span><span class="p">.</span><span class="n">session1</span><span class="p">.</span><span class="n">motor</span> <span class="p">=</span> <span class="c">...</span>
+   <span class="s">&#39;/home/pbellec/demo_niak/func_motor_subject1.mnc&#39;</span><span class="p">;</span>
+<span class="c">% fMRI (rest)</span>
+<span class="n">files_in</span><span class="p">.</span><span class="n">subject1</span><span class="p">.</span><span class="n">fmri</span><span class="p">.</span><span class="n">session1</span><span class="p">.</span><span class="n">rest</span> <span class="p">=</span> <span class="c">...</span>
+   <span class="s">&#39;/home/pbellec/demo_niak/func_rest_subject1.mnc&#39;</span><span class="p">;</span>  
+</pre></div>
+</div>
+<p>Labels for subjects, sessions and runs are arbitrary. To use special characters, for example a <code class="docutils literal notranslate"><span class="pre">-</span></code>,  write <code class="docutils literal notranslate"><span class="pre">files_in.('subject-1')</span></code> instead of <code class="docutils literal notranslate"><span class="pre">files_in.subject-1</span></code>.</p>
+</div>
+<div class="section" id="general-options">
+<h2>General options<a class="headerlink" href="#general-options" title="Permalink to this headline">¶</a></h2>
+<p>The option <code class="docutils literal notranslate"><span class="pre">opt.folder_out</span></code> is used to specify the folder where the results of the pipeline will be saved. The pipeline manager will create but also delete many files and subfolders in that location.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">opt</span><span class="p">.</span><span class="n">folder_out</span> <span class="p">=</span> <span class="s">&#39;/database/data_demo/fmri_preprocess/&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The option <code class="docutils literal notranslate"><span class="pre">opt.size_output</span></code> can be used to adjust the quantity of intermediate results that are generated by the pipeline.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">opt</span><span class="p">.</span><span class="n">size_output</span> <span class="p">=</span> <span class="s">&#39;quality_control&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Possible values are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'quality_control'</span></code>: some outputs are generated at each step of the analysis for purposes of quality control. Intermediate steps are deleted as soon as they are no longer necessary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'all'</span></code>: all possible outputs are generated at each stage of the pipeline.</p></li>
+</ul>
+</div>
+<div class="section" id="slice-timing-correction">
+<h2>Slice timing correction<a class="headerlink" href="#slice-timing-correction" title="Permalink to this headline">¶</a></h2>
+<p>In echo-planar imaging (EPI), the most common form of functional MRI sequences, different slices are acquired at different times. This can confound task-based regression analysis (especially with event-related designs), as well as connectivity analysis that rely on the correlation of fMRI time series located in different parts of the brain.</p>
+<blockquote>
+<div><p><img alt="Slice timing correction" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_slice_timing.jpg" /></p>
+</div></blockquote>
+<p>The slice timing correction is performed with <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_slice_timing.m">niak_brick_slice_timing</a>, and its options can be set in the pipeline using <code class="docutils literal notranslate"><span class="pre">opt.slice_timing</span></code>. The full list of option is available through the Matlab/Octave’s <code class="docutils literal notranslate"><span class="pre">help</span></code> command. This processing step is performing a temporal interpolation for each slice of each volume to a time of reference corresponding to one slice of reference of the volume. Specifying the parameters for slice timing correction essentially involves to specify the slice timing scheme (sequential or interleaved, ascending or descending), the scanner type (Siemens has sometimes a different way of defining interleaved) and the delay in TR. Note that the slice-timing correction is changing the timing of the acquisition. For this reason, a companion <code class="docutils literal notranslate"><span class="pre">_extra.mat</span></code> file is created for each fMRI dataset. This .mat file contains (amongst other things) a variable time_frames, with the time associated with each time frame (in the same unit as the TR,
+typically seconds).</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="c">% Slice timing order. Available options:</span>
+ <span class="c">% &#39;sequential ascending&#39;  , &#39;sequential descending&#39;,</span>
+ <span class="c">% &#39;interleaved ascending&#39; , &#39;interleaved descending&#39;</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">type_acquisition</span> <span class="p">=</span> <span class="s">&#39;interleaved ascending&#39;</span><span class="p">;</span><span class="o">&amp;</span><span class="n">nbsp</span><span class="p">;</span>
+
+ <span class="c">% Scanner manufacturer.</span>
+ <span class="c">% Only the value &#39;Siemens&#39; will actually have an impact</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">type_scanner</span>     <span class="p">=</span> <span class="s">&#39;Bruker&#39;</span><span class="p">;</span>               
+
+ <span class="c">% The delay in TR (&quot;blank&quot; time between two volumes)</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">delay_in_tr</span>      <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="c">% Skip the slice timing (0: don&#39;t skip, 1&amp;nbsp;: skip)</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">flag_skip</span>        <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Note that all of these infos are usually (but not always…) stored in the MINC header.</p>
+<blockquote>
+<div><p>Type <code class="docutils literal notranslate"><span class="pre">mincheader</span> <span class="pre">my_volume.mnc</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">acquisition</span></code> in a shell terminal, and look at the section called <code class="docutils literal notranslate"><span class="pre">acquisition</span></code>.</p>
+</div></blockquote>
+<p>The slice timing correction module is used to apply several minor additional operations. These additional operations need to be controlled through dedicated flags, independently from <code class="docutils literal notranslate"><span class="pre">opt.slice_timing.flag_skip</span></code>.</p>
+<p>It is first possible to suppress “dummy” volumes. Dummy scans are the first volumes of an fMRI run, when the signal values have not yet stabilized. Modern scanners typically discard the dummy scans automatically. In doubt, it is better to suppress about 10 seconds of signal. For example, for fMRI data with a TR (inter-scan time) of 3 sec, the following option will remove 3 volumes (equivalent to 9s of scanning):</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Number of dummy scans to suppress.</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">suppress_vol</span> <span class="p">=</span> <span class="mi">3</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Modern coils feature large number of channels (32 and more), which is associated with massive intensity inhomogeneities throughout the image. It is possible to apply an a posteriori (multiplicative) correction for these inhomogeneities, which may improve the T1-fMRI coregistration. This step is experimental, and should only be applied with caution.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Apply a correction for non-uniformities on the EPI volumes (1: on, 0: of)</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">flag_nu_correct</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c">% The distance between control points for non-uniformity correction</span>
+<span class="c">% (in mm, lower values can capture faster varying slow spatial drifts).</span>
+<span class="c">% That parameter should be tweaked on an individual basis if large non-uniformities remain</span>
+<span class="c">% on the average functional volume</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">arg_nu_correct</span> <span class="p">=</span> <span class="s">&#39;-distance 200&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>When the conversion from DICOM to NIFTI or MINC somehow did not work properly, the origin of the field of view can be very far from the center of the brain. This typically causes problems in coregistration steps. It is possible to ask NIAK to place the center of the field of view at the center of mass of the brain.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Set the origin of the volume at the center of mass of a brain mask.</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">flag_center</span>      <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="motion-estimation">
+<h2>Motion estimation<a class="headerlink" href="#motion-estimation" title="Permalink to this headline">¶</a></h2>
+<p>The motion of subjects over long period of time can cause severe misrealignement between fMRI brain volumes. Even small motion (say, less than one millimeter in translation or 1 degree in rotation) can cause substantial motion artefacts. A range of techniques exist to mitigate the impact of motion on fMRI time series, and it all starts by estimating the subject’s motion over time. This is done by estimating a rigid-body (three translation parameters, three rotation parameters) transform between each individual volume and one volume of reference (typically the median volume of the run). When multiple runs are acquired, possibly spread over multiple sessions, a single transformation is estimated across runs within session to a single reference run, and then a single transformation is estimated between sessions, using one session of reference.</p>
+<blockquote>
+<div><p><img alt="Within-run motion estimation" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_motion_within_run.jpg" /></p>
+</div></blockquote>
+<p>The motion of the subject during the fMRI runs is estimated using <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_motion.m">niak_pipeline_motion</a> and its options can be set using <code class="docutils literal notranslate"><span class="pre">opt.motion</span></code>. The method is based on <code class="docutils literal notranslate"><span class="pre">minctracc</span></code> and performs a rigid-body registration of each fMRI volume to one volume of reference. The registration is actually performed on smoothed gradient images. The motion correction follows a hierachical strategy: <strong>(1)</strong> Rigid-body transforms are first estimated within each run independently by registering all volumes of the run to the median of the volumes. <strong>(2)</strong> The median volume of each run is coregistered to the median volume of a run of reference within each session. <strong>(3)</strong> The median volume of the runs of reference for all sessions are coregistered to the median volume of the run of reference of the session of reference. <strong>(4)</strong> The within-run, within-session and between-session estimates are combined to produce the final motion parameters.</p>
+<blockquote>
+<div><p><img alt="Within-run motion estimation" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_motion_within_session.jpg" /></p>
+</div></blockquote>
+<p>A complete list of options for this brick can be found in the help of <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/pipeline/niak_pipeline_motion.m">niak_pipeline_motion</a>. The following example illustrates the most useful (or simply necessary) options.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% The session that is used as a reference.</span>
+<span class="c">% In general, use the session including the acqusition of the T1 scan.</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">motion</span><span class="p">.</span><span class="n">session_ref</span>  <span class="p">=</span> <span class="s">&#39;session1&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="t1-normalization">
+<h2>T1 normalization<a class="headerlink" href="#t1-normalization" title="Permalink to this headline">¶</a></h2>
+<p>To be able to automatically compare features of a given brain areas in the brain of many subjects, each individual brain is coregistered into a common stereotaxic space. By default, NIAK uses the MNI template, which is the average of 152 young healthy subjects. The coregistration is done first by linear transformation, i.e. translation, rotation and scaling, then a non-linear deformation is applied to correct for local differences in the volume and shape of brain areas.</p>
+<blockquote>
+<div><p><img alt="Within-run motion estimation" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_stereonl.jpg" /></p>
+</div></blockquote>
+<p>This step of the analysis is performed by <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/t1_processing/niak_brick_t1_preprocess.m">niak_brick_t1_preprocess</a>, and its options can be set using <code class="docutils literal notranslate"><span class="pre">opt.t1_preprocess</span></code>. This brick essentially implements the method for non-linear coregistration of a T1 scan in stereotaxic space found in the <a class="reference external" href="http://www.bic.mni.mcgill.ca/users/yaddab/Yasser-HBM2006-Poster.pdf">CIVET pipeline</a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Non-uniformity correction of the T1 image;</p></li>
+<li><p>Extraction of a brain mask; segmentation of the T1 image in white matter/grey matter/cerebrospinal fluid;</p></li>
+<li><p>Estimation of a linear and a non-linear transformation from the native T1 space to the MNI152 linear and non-linear stereotaxic space.</p></li>
+</ul>
+</div></blockquote>
+<p>More details about the flowchart as well as a complete list of options for this brick can be found in the help of <code class="docutils literal notranslate"><span class="pre">niak_pipeline_t1_preprocess</span></code>. The following example illustrates the most useful (or simply necessary) option.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="c">% Parameter for non-uniformity correction.</span>
+ <span class="c">% 200 is a suggested value for 1.5T images, 75 for 3T images.</span>
+ <span class="c">% If you find that this stage did not work well, this parameter is usually critical to improve the results.</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">t1_preprocess</span><span class="p">.</span><span class="n">nu_correct</span><span class="p">.</span><span class="n">arg</span> <span class="p">=</span> <span class="s">&#39;-distance 75&#39;</span><span class="p">;</span><span class="o">&amp;</span><span class="n">nbsp</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bold-t1-coregistration">
+<h2>BOLD-T1 coregistration<a class="headerlink" href="#bold-t1-coregistration" title="Permalink to this headline">¶</a></h2>
+<p>Even when acquired in the same session, the functional and structural scans need to be coregistered. Subjects indeed often move quite a lot between runs. This is a within-subject (rigid-body transform), between-modality (the images have inverted contrasts, amongst other differences) problem.</p>
+<blockquote>
+<div><p><img alt="Within-run motion estimation" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_coregister_t1_t2.jpg" /></p>
+</div></blockquote>
+<p>This step is implemented by <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/t1_processing/niak_brick_anat2func.m">niak_brick_anat2func</a>, and its options can be set using <code class="docutils literal notranslate"><span class="pre">opt.anat2func</span></code>. The brick is based on <code class="docutils literal notranslate"><span class="pre">minctracc</span></code> and performs a rigid-body registration of a BOLD volume with a T1-weighted volume from a single subject. In the pipeline, the BOLD volume is the median of all fMRI volumes of the run of reference of the session of reference of each subject (as defined during the motion estimation). A complete list of options for this brick can be found in the help of ‘’niak_brick_anat2func’’.</p>
+<blockquote>
+<div><p>Both volumes are corrected to have a zero mean inside their brain masks, and values outside the masks are set to zero. Those transformed volumes are then coregistered using an lsq6 transformation and a mutual information cost function following a “progressive fit” approach: the transformation is refined in 5 iterations using smaller bluring kernel and steps at each stage.</p>
+</div></blockquote>
+</div>
+<div class="section" id="spatial-resampling">
+<h2>Spatial resampling<a class="headerlink" href="#spatial-resampling" title="Permalink to this headline">¶</a></h2>
+<p>For each brain volume, the estimated parameters for motion with the run/session of reference as target are combined with the transformation from the run/session of reference (functional volume) to the structural volume, and then combined with the non-linear transformation to stereotaxic space. The functional brain volumes are resamples in one pass to the stereotaxic space using the combined (non-linear) transformation.</p>
+<blockquote>
+<div><p><img alt="The fMRI preprocessing workflow" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_resample.jpg" /></p>
+</div></blockquote>
+<p>This step is performed by <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_resample_vol.m">niak_brick_resample_vol</a>, and its options can be set using <code class="docutils literal notranslate"><span class="pre">opt.resample_vol</span></code>. The brick is a simple overlay of the minc tool called <code class="docutils literal notranslate"><span class="pre">mincresample</span></code>. It is performing spatial resampling of 3D or 3D+t volumes, using a number of interpolation methods. A complete list of options for this brick can be found in the help of <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_resample_vol.m">niak_brick_resample_vol</a>. The following example illustrates the most useful (or simply necessary) option.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="c">% The resampling scheme.</span>
+ <span class="c">% The fastest and most robust method is trilinear.</span>
+ <span class="c">% Available options are: &#39;nearest_neighbour&#39;,</span>
+ <span class="c">% &#39;trilinear&#39;, &#39;tricubic&#39;, &#39;sinc&#39;</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">resample_vol</span><span class="p">.</span><span class="n">interpolation</span> <span class="p">=</span> <span class="s">&#39;trilinear&#39;</span><span class="p">;</span>
+
+ <span class="c">% The voxel size to use in the stereotaxic space.</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">resample_vol</span><span class="p">.</span><span class="n">voxel_size</span> <span class="p">=</span> <span class="p">[</span><span class="mi">3</span> <span class="mi">3</span> <span class="mi">3</span><span class="p">];</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="regression-of-confounds">
+<h2>Regression of confounds<a class="headerlink" href="#regression-of-confounds" title="Permalink to this headline">¶</a></h2>
+<p>In order to reduce the influence of spatially structured noise on the fMRI time series, a number of confounds are regressed out from the time series using <code class="docutils literal notranslate"><span class="pre">niak_brick_regress_confounds</span></code>, after censoring of time points with an excessive amount of motion. The full list of options is accessible through Matlab/Octave’s <code class="docutils literal notranslate"><span class="pre">help</span></code>. Flags are avaible to turn on/off each group of confounding factors: slow time drifts, high frequencies, motion parameters, average signal of the white matter and ventricles, and the global signal. All the confounds are saved in the companion <code class="docutils literal notranslate"><span class="pre">_extra.mat</span></code> file that comes with every fMRI dataset, see the confounds and labels_confounds variables.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% 1: include the specified confounds in the regression,</span>
+<span class="c">% 0: exclude</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">regress_confounds</span><span class="p">.</span><span class="n">flag_wm</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>            
+<span class="n">opt</span><span class="p">.</span><span class="n">regress_confounds</span><span class="p">.</span><span class="n">flag_vent</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">regress_confounds</span><span class="p">.</span><span class="n">flag_motion_params</span> <span class="p">=</span> <span class="n">true</span><span class="p">;</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">regress_confounds</span><span class="p">.</span><span class="n">flag_gsc</span> <span class="p">=</span> <span class="n">false</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Scrubbing</strong> Before any regression of confounds is implemented, the time frames with excessive motion are removed from the dataset following Power et al. (Neuroimage 2012). The censoring is based solely on one of the indices defined by Power and coll. (frame displacement, FD). Note that the scrubbing is changing the temporal grid of the dataset (i.e. some volumes are now missing). Most neuroimaging software will not handle these changes properly. In particular, if NIAK is used to preprocess dataset before a GLM analysis in another software package such as FSL or fMRIstat, it is important to skip scrubbing. A binary vector (named <code class="docutils literal notranslate"><span class="pre">mask_suppressed</span></code>) describing all the volumes that were removed from the original time series can be found in the <code class="docutils literal notranslate"><span class="pre">_extra.mat</span></code> companion file of each fMRI dataset. This includes the suppression of dummy scans from the slice timing correction as well as the scrubbing. The vector <code class="docutils literal notranslate"><span class="pre">time_frames</span></code> describe the time of each frame present in the dataset (i.e. excluding the volumes that
+have been removed).</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% (1: apply scrubing / 0: don&#39;t apply)</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">regress_confounds</span><span class="p">.</span><span class="n">flag_scrubbing</span> <span class="p">=</span> <span class="n">true</span><span class="p">;</span>
+
+<span class="c">% The threshold on frame displacement</span>
+<span class="c">% 0.5 is recommended</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">regress_confounds</span><span class="p">.</span><span class="n">thre_fd</span> <span class="p">=</span> <span class="mf">0.5</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Slow time drifts/high frequencies</strong> A model of low-frequency temporal drifts as well as high frequency noise is generated using <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_time_filter.m">niak_brick_time_filter</a>. The correction of slow time drifts is highly recommended because the frequencies below 0.01 Hz explain a large portion of the variance of the data, and mainly reflect motion artifacts. The correction of high-frequency noise is reducing the degrees of freedom of the time series without significant gain in SNR, so it is in general not advisable. It still seems to be common practice to filter out frequency above 0.08 Hz is the resting-state community, but this is not the default parameter in NIAK.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span> <span class="c">% Cut-off frequency for removal of low frequencies (in Hz).</span>
+ <span class="c">% A cut-off of -Inf will result in no high-pass filtering.</span>
+ <span class="n">opt</span><span class="p">.</span><span class="n">time_filter</span><span class="p">.</span><span class="n">hp</span> <span class="p">=</span> <span class="mf">0.01</span><span class="p">;</span>
+
+<span class="c">% Cut-off frequency for removal of high frequencies (in Hz).</span>
+<span class="c">% A cut-off of Inf will result in no low-pass filtering.</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">time_filter</span><span class="p">.</span><span class="n">lp</span> <span class="p">=</span> <span class="n">Inf</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Motion parameters</strong> The 6 rigid-body motion parameters (3 translations and 3 rotations) are not entered as such in the model. First a twelve parameters model is built by including the original 6 parameters as well as their square (Lund et al. 2006, reference below). Then a principal component analysis is used to retain 95% of the variance of these twelve parameters, which typically entail around 8 covariates but may vary from dataset to dataset.</p>
+<p><strong>White matter &amp; ventricular signals</strong> The masks of the ventricle and the white matter have been built to be very conservative. This is to avoid getting influenced by the surrounding grey matter tissue maps (see Saad et al. 2012, reference below), in which case the average of the white matter mask becomes highly correlated with the global average.</p>
+<p><strong>Global signal</strong> The global average estimator is not the traditional estimator, but rather the estimator based on a principal component analysis as described in (Carbonell et al. 2012, reference below). This estimator alleviates some of the theoretical limitations of the classical estimator, as reported by Murphy et al., 2010 (reference below). However, as this correction may introduce some bias in the group comparison (Saad et al. 2012), the regression of the global average is turned off by default.</p>
+</div>
+<div class="section" id="spatial-smoothing">
+<h2>Spatial smoothing<a class="headerlink" href="#spatial-smoothing" title="Permalink to this headline">¶</a></h2>
+<p>The application of spatial smoothing has the potental to slightly increase the signal-to-noise ratio, and also mitigate the impact of misregistration between functional areas, that were not perfectly aligned across subjects by the non-linear coregistration in stereotaxic space.</p>
+<blockquote>
+<div><p><img alt="Spatial smoothing of 3D volumes" src="https://raw.githubusercontent.com/SIMEXP/niak_manual/master/website/fig_smooth.jpg" /></p>
+</div></blockquote>
+<p>The spatial smoothing is performed using <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/fmri_preprocess/niak_brick_smooth_vol.m">niak_brick_smooth_vol</a>, and its options can be set using <code class="docutils literal notranslate"><span class="pre">opt.smooth_vol</span></code>. The brick is a simple wrapper of the minc tool called <code class="docutils literal notranslate"><span class="pre">mincblur</span></code>. It is implementing spatial smoothing using a Gaussian kernel. A complete list of options for this brick can be found using Matlab/Octave’s <code class="docutils literal notranslate"><span class="pre">help</span></code>. The following example illustrates the most useful (or simply necessary) options.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Field width at half maximum of the bluring kernel</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">smooth_vol</span><span class="p">.</span><span class="n">fwhm</span> <span class="p">=</span> <span class="mi">6</span><span class="p">;</span>
+<span class="c">% Skip spatial smoothing (0: don&#39;t skip, 1 skip)</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">smooth_vol</span><span class="p">.</span><span class="n">flag_skip</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tuning-individual-parameters">
+<h2>Tuning individual parameters<a class="headerlink" href="#tuning-individual-parameters" title="Permalink to this headline">¶</a></h2>
+<p>It is not generally possible to process successfully all subjects in a dataset with the same parameters. Please refer to the <a class="reference external" href="https://github.com/SIMEXP/niak_manual/raw/master/qc_manual_v1.0/qc_manual_niak.pdf">quality control manual</a> for a list of what outputs to check and how to fix problems. The following mechanism can be used to change the parameters of individual subjects:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">opt</span><span class="p">.</span><span class="n">tune</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">subject</span> <span class="p">=</span> <span class="s">&#39;subject1&#39;</span><span class="p">;</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">tune</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">param</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">flag_center</span> <span class="p">=</span> <span class="n">true</span><span class="p">;</span>
+
+<span class="n">opt</span><span class="p">.</span><span class="n">tune</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">subject</span> <span class="p">=</span> <span class="s">&#39;subject2&#39;</span><span class="p">;</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">tune</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="n">param</span><span class="p">.</span><span class="n">slice_timing</span><span class="p">.</span><span class="n">flag_center</span> <span class="p">=</span> <span class="n">false</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Here the parameters of the slice timing will be tuned specifically for <code class="docutils literal notranslate"><span class="pre">subject1</span></code> and <code class="docutils literal notranslate"><span class="pre">subject2</span></code>. Anything that usually goes in <code class="docutils literal notranslate"><span class="pre">opt</span></code> can go in <code class="docutils literal notranslate"><span class="pre">param</span></code>. The parameters specified in <code class="docutils literal notranslate"><span class="pre">opt</span></code> apply by default, but will be overridden by <code class="docutils literal notranslate"><span class="pre">tune.param</span></code>. Specifically, in that example, all the parameters specified for <code class="docutils literal notranslate"><span class="pre">opt.slice_timing</span></code> will still apply for <code class="docutils literal notranslate"><span class="pre">subject1</span></code> and <code class="docutils literal notranslate"><span class="pre">subjec2</span></code>, except for <code class="docutils literal notranslate"><span class="pre">flag_center</span></code> that will be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">subject1</span></code>, and <code class="docutils literal notranslate"><span class="pre">false</span></code> for <code class="docutils literal notranslate"><span class="pre">subject2</span></code>.</p>
+</div>
+<div class="section" id="publication-guidelines">
+<h2>Publication guidelines<a class="headerlink" href="#publication-guidelines" title="Permalink to this headline">¶</a></h2>
+<p>Here is a short description of the fMRI preprocessing pipeline that can be adapted in a publication. You are encouraged to include the script that was used to preprocess the fMRI database as supplementary material of the article.</p>
+<p>The fMRI database was preprocessed using the Neuroimaging Analysis Kit (NIAK) release 0.12.4 (Bellec et al. 2011, NIAK website). The three first volumes of each run were suppressed to allow the magnetisation to reach equilibrium. Each fMRI dataset was corrected of inter-slice difference in acquisition time and the parameters of a rigid-body motion was estimated for each time frame. Rigid-body motion was estimated within as well as between runs. The median volume of one selected fMRI run for each subject was coregistered with a T1 individual scan using Minctracc (Collins et al. 1997), which was itself non-linearly transformed to the Montreal Neurological Institute (MNI) template (Fonov et al 2011) using the CIVET pipeline (Ad-Dab’bagh et al. 2006). The MNI symmetric template was generated from the ICBM152 sample of 152 young adults, after 40 iterations of non-linear coregistration. The rigid-body transform, fMRI-to-T1 transform and T1-to-stereotaxic transform were all combined, and the functional volumes were resampled in the MNI space at a 3 mm isotropic resolution. The “scrubbing” method of Power et al., 2012, was used to remove the volumes with excessive motion (frame displacement greater than 0.5). The following nuisance parameters were regressed out from the time series at each voxel: slow time drifts (basis of discrete cosines with a 0.01 Hz high-pass cut-off), average signals in conservative masks of the white matter and the lateral ventricles as well as the first principal components (95% energy) of the six rigid-body motion parameters and their squares (Lund et al. 2006, Giove et al. 2009). The fMRI volumes were finally spatially smoothed with a 6 mm isotropic Gaussian blurring kernel. A more detailed description of the pipeline can be found on the NIAK website.</p>
+<p>Relevant references for the fMRI preprocessing pipeline are listed below.</p>
+<p>Regarding the NIAK package</p>
+<blockquote>
+<div><p>P. Bellec, F. M. Carbonell, V. Perlbarg, C. Lepage, O. Lyttelton, V. Fonov, A. Janke, J. Tohka, A. Evans, A neuroimaging analysis kit for Matlab and Octave. Proceedings of the 17th International Conference on Functional Mapping of the Human Brain, 2011.</p>
+</div></blockquote>
+<p>The documentation of the NIAK package.</p>
+<blockquote>
+<div><p>Online NIAK fMRI preprocessing documentation. http://niak.simexp-lab.org/pipe_preprocessing.html</p>
+</div></blockquote>
+<p>On the minctracc coregistration tool.</p>
+<blockquote>
+<div><p>Collins, D.L. Evans, A.C. (1997). “ANIMAL: Validation and Applications of Non-Linear Registration-Based Segmentation”. “International Journal of Pattern Recognition and Artificial Intelligence”, vol. 11, pp. 1271-1294.</p>
+</div></blockquote>
+<p>On the “scrubbing” method.</p>
+<blockquote>
+<div><p>J. D. Power, K. A. Barnes, Abraham Z. Snyder, B. L. Schlaggar, S. E. Petersen. Spurious but systematic correlations in functional connectivity MRI networks arise from subject motion. NeuroImage Volume 59, Issue 3, 1 February 2012, Pages 2142–2154</p>
+</div></blockquote>
+<p>On the MNI ICBM152 young adult symmetric non-linear 50 iterations template</p>
+<blockquote>
+<div><p>VS Fonov, AC Evans, K Botteron, CR Almli, RC McKinstry, DL Collins and the brain development cooperative group. Unbiased average age-appropriate atlases for pediatric studies. NeuroImage, Volume 54, 2011, pp. 313-327. http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009</p>
+</div></blockquote>
+<p>On the CIVET pipeline.</p>
+<blockquote>
+<div><p>Ad-Dab’bagh, Y., Einarson, D., Lyttelton, O., Muehlboeck, J.-S., Mok, K., Ivanov, O., Vincent, R.D., Lepage, C., Lerch, J., Fombonne, E., and Evans, A.C. (2006). The CIVET Image-Processing Environment: A Fully Automated Comprehensive Pipeline for Anatomical Neuroimaging Research. In Proceedings of the 12th Annual Meeting of the Organization for Human Brain Mapping, M. Corbetta, ed. (Florence, Italy, NeuroImage). <a class="reference external" href="http://www.bic.mni.mcgill.ca/users/yaddab/Yasser-HBM2006-Poster.pdf">Poster.</a></p>
+</div></blockquote>
+<p>Regarding the method for non-uniformity correction of the structural scan.</p>
+<blockquote>
+<div><p>Sled, J.G., Zijdenbos, A.P., and Evans, A.C. (1998). “A Nonparametric Method for Automatic Correction of Intensity Nonuniformity in MRI Data”. IEEE Transactions on Medical Imaging 17, pp. 87-97.</p>
+</div></blockquote>
+<p>Regarding the brain extraction on the structural scan.</p>
+<blockquote>
+<div><p>J. G. Park, C. Lee (2009). “Skull stripping based on region growing for magnetic resonance brain images”. NeuroImage 47(4):1394-1407.</p>
+</div></blockquote>
+<p>Note that the actual algorithm used in NIAK was only inspired by this last paper.</p>
+<blockquote>
+<div><p>A more detailed description can be found in the help of <a class="reference external" href="https://github.com/SIMEXP/niak/blob/master/bricks/t1_processing/niak_brick_mask_brain_t1.m">niak_brick_mask_brain_t1</a>.</p>
+</div></blockquote>
+<p>Regarding partial volume effects.</p>
+<blockquote>
+<div><p>Tohka, J., Zijdenbos, A., and Evans, A.C. (2004). “Fast and robust parameter estimation for statistical partial volume models in brain MRI”. NeuroImage, 23(1), pp. 84-97.</p>
+</div></blockquote>
+<p>Regarding the estimation of the global signal.</p>
+<blockquote>
+<div><p>F. Carbonell, P. Bellec, A. Shmuel. Validation of a superposition model of global and system-specific resting state activity reveals anti-correlated networks. Brain Connectivity 2011 1(6): 496-510. http://dx.doi:10.1089/brain.2011.0065</p>
+</div></blockquote>
+<p>Regarding regression of confounds in fMRI.</p>
+<blockquote>
+<div><p>Lund, T. E., Madsen, K. H., Sidaros, K., Luo, W.-L., Nichols, T. E., Jan. 2006. Non-white noise in fMRI: does modelling have an impact? NeuroImage 29 (1), 54-66. http://dx.doi.org/10.1016/j.neuroimage.2005.07.005</p>
+</div></blockquote>
+<blockquote>
+<div><p>F. Giove, T. Gili, V. Iacovella, E. Macaluso, and B. Maraviglia. Images-based suppression of unwanted global signals in resting-state functional connectivity studies. Magnetic Resonance Imaging, 27(8):1058–1064, 2009.</p>
+</div></blockquote>
+<p>Regarding the impact of global signal regression for group comparison.</p>
+<blockquote>
+<div><p>Saad, Z. S., Gotts, S. J., Murphy, K., Chen, G., Jo, H. J. J., Martin, A., Cox, R. W., 2012. Trouble at rest: how correlation patterns and group differences become distorted after global signal regression. Brain connectivity 2 (1), 25-32. URL http://dx.doi.org/10.1089/brain.2012.0080</p>
+</div></blockquote>
+<p>Regarding the pipeline system for Octave and Matlab (PSOM).</p>
+<blockquote>
+<div><p>P. Bellec, S. Lavoie-Courchesne, P. Dickinson, J. Lerch, A. Zijdenbos, A. C. Evans. The pipeline system for Octave and Matlab (PSOM): a lightweight scripting framework and execution engine for scientific workflows. Front. Neuroinform. (2012) 6:7. Full text open-access: http://dx.doi.org/10.3389/fninf.2012.00007</p>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CONNECTOME.html" class="btn btn-neutral float-right" title="Connectome pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="INSTALLATION.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, NIAK dev team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

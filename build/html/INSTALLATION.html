@@ -1,0 +1,450 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; NIAK 1.1.4 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fMRI preprocessing" href="PREPROCESSING.html" />
+    <link rel="prev" title="Welcome to NIAK’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> NIAK
+          
+
+          
+            
+            <img src="_static/angelniak.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-configuration">General configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linux">Linux</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installing-docker">installing docker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-niak-in-a-jupyter-notebook">Running NIAK in a Jupyter Notebook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-niak-in-a-terminal">Running NIAK in a terminal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mac-osx">Mac OSX</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Installing docker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Running NIAK in a Jupyter Notebook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Running NIAK in a terminal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Installing Docker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Running NIAK in a Jupyter Notebook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Running NIAK in a terminal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#high-performance-computing">High performance computing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-hpc-configuration">Basic HPC Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#more-configurations">More configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-new-images-on-the-system">Adding new images on the system</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="PREPROCESSING.html">fMRI preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONNECTOME.html">Connectome pipeline</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NIAK</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/INSTALLATION.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>The recommended way to install NIAK is to use a <a class="reference external" href="https://www.docker.com/">docker</a> container, which bundles the NIAK library with all of its dependencies. Docker acts as a lightweight virtual machine, and improves the repeatability of results across operating systems, including Linux, Windows or Mac OSX. Using NIAK through docker also makes it very easy to update the software. To run niak with docker on your work station, you will need super user or sudo privilege. Start by installing docker, following the official <a class="reference external" href="https://docs.docker.com/installation/">docker installation site</a>. <strong>Disclaimer</strong>: Be aware that any user that can execute a “docker run”  command on a machine have access to the complete file system as a super user. Alternatively, you can use <a class="reference external" href="http://singularity.lbl.gov/">singularity</a> which will be able to play the same docker image, while keeping tight control on user rights. Instructions for singularity can be found in the section on <a class="reference external" href="http://niak.simexp-lab.org/niak_HPC_installation.html">installation for high-performance computing</a>.</p>
+<blockquote>
+<div><p><a class="reference external" href="https://www.docker.com/"><img src="https://raw.githubusercontent.com/SIMEXP/niak/gh-pages/docker_logo.png" width="350px" /></a></p>
+</div></blockquote>
+<div class="section" id="general-configuration">
+<h2>General configuration<a class="headerlink" href="#general-configuration" title="Permalink to this headline">¶</a></h2>
+<p>NIAK is using a pipeline system called <a class="reference external" href="http://psom.simexp-lab.org">PSOM</a>, a free open-source software (MIT license). With PSOM, it is possible to run computations in parallel on a laptop or a supercomputer, restart efficiently analysis or access detailed logs. In all pipelines, the options of psom are set using the field <code class="docutils literal notranslate"><span class="pre">opt.psom</span></code>. The most important parameter is the maximal number of processes that PSOM can run in parallel. More details about PSOM capabilities and configuration can be found in the dedicated <a class="reference external" href="http://psom.simexp-lab.org/psom_configuration.html">tutorial</a>.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="c">% Use up to four processes</span>
+<span class="n">opt</span><span class="p">.</span><span class="n">psom</span><span class="p">.</span><span class="n">max_queued</span> <span class="p">=</span> <span class="mi">4</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="linux">
+<h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installing-docker">
+<h3>installing docker<a class="headerlink" href="#installing-docker" title="Permalink to this headline">¶</a></h3>
+<p>After the docker installation, the first step is to create a docker group and add the user that will use docker to that list.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Some distro create the group during installation,</span>
+<span class="c1">#   if it is that case, the command will return an error, just ignore it</span>
+sudo groupadd docker
+<span class="c1"># Then add user USERNAME to the docker group</span>
+sudo usermod -a -G docker <span class="nv">$USERNAME</span>
+<span class="c1"># Activate the new group</span>
+newgrp docker
+</pre></div>
+</div>
+<p>All the members of the docker group will have access to the docker service. For the docker group to become effective, you may need to either logout and login or restart your system.</p>
+</div>
+<div class="section" id="running-niak-in-a-jupyter-notebook">
+<h3>Running NIAK in a Jupyter Notebook<a class="headerlink" href="#running-niak-in-a-jupyter-notebook" title="Permalink to this headline">¶</a></h3>
+<p>NIAK in a Jupyter Notebook is the preferred method to run NIAK. Type the following command in a terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -it --rm  -v <span class="nv">$PWD</span>:/sandbox/home --user <span class="nv">$UID</span> <span class="se">\</span>
+       -p <span class="m">8080</span>:8080 simexp/niak-cog:latest niak_jupyter
+</pre></div>
+</div>
+<p>the output should looks like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Welcome to NIAK in your browser, powered by jupyter!
+NIAK is now available on your machine
+Open your favorite browser at the following address: http://localhost:8080
+If that does not work, then try http://172.17.0.2:8080
+Then click New --&gt; Octave
+
+The PASSWORD is: NIAK
+
+For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutorials.html
+For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
+</pre></div>
+</div>
+<p>You can now start your favorite browser and go to <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>. Once the page is open, Jupyter will request a password, use NIAK. Then click New –&gt; Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> command has been executed.</p>
+<p>You should then have access to the file present in the directory where <code class="docutils literal notranslate"><span class="pre">niak_jupyter</span></code> was started.</p>
+</div>
+<div class="section" id="running-niak-in-a-terminal">
+<h3>Running NIAK in a terminal<a class="headerlink" href="#running-niak-in-a-terminal" title="Permalink to this headline">¶</a></h3>
+<p>The following command will start NIAK with your home directory accessible (the rest of the file system is not accessible):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xhost +local:
+docker run -i -t --privileged --rm <span class="se">\</span>
+       --name niak <span class="se">\</span>
+       -v <span class="nv">$HOME</span>:<span class="nv">$HOME</span> -v /etc/group:/etc/group <span class="se">\</span>
+       -v /etc/passwd:/etc/passwd -v /etc/shadow:/etc/shadow  <span class="se">\</span>
+       -v /tmp:/tmp <span class="se">\</span>
+       -e <span class="nv">DISPLAY</span><span class="o">=</span>unix<span class="nv">$DISPLAY</span> <span class="se">\</span>
+       --user <span class="nv">$UID</span> <span class="se">\</span>
+       simexp/niak-cog:latest <span class="se">\</span>
+       /bin/bash -ic <span class="s2">&quot;cd </span><span class="nv">$HOME</span><span class="s2">; octave --force-gui; /bin/bash&quot;</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">simexp/niak-cog:latest</span></code> by, for example, <code class="docutils literal notranslate"><span class="pre">simexp/niak-cog:1.0.1</span></code> to use a specific version (here 1.0.1). Note that the first execution will be longer, since the <code class="docutils literal notranslate"><span class="pre">simexp/niak-cog</span></code> image has to be downloaded from the internet. All subsequent call to the line will start niak immediately, and will be much faster. Close the GUI and type “exit” in the terminal to stop your session. if somehow the process did not exit properly and docker complains that niak is already running when you restart it, type:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker stop niak
+docker rm niak
+</pre></div>
+</div>
+<p>The procedure as been tested on Debian 8.0, Ubuntu <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> 14.10, centOS 7, fedora <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> 20, OpenSuse <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> 13.1 and we expect it to run smoothly on most Linux distributions.</p>
+</div>
+</div>
+<div class="section" id="mac-osx">
+<h2>Mac OSX<a class="headerlink" href="#mac-osx" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Installing docker<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>On more recent OSX distribution (&gt;= 10.10.3, or better &gt; 10.11), Docker usage is straightforward. Downoload the stable channel from the <a class="reference external" href="https://docs.docker.com/docker-for-mac/install/#download-docker-for-mac">docker mac install page</a>. Docker for mac also requires MMU enable hardware. You should be safe if your laptop was build in 2010 or later.</p>
+<p>For older distributions/hardware, you can still install Docker, the task is not always as smooth, but is <a class="reference external" href="https://docs.docker.com/toolbox/toolbox_install_mac/">explained in detail here</a>.</p>
+</div>
+<div class="section" id="id2">
+<h3>Running NIAK in a Jupyter Notebook<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>We recommend using a Jupyter notebook to run NIAK on OSX for a full featured user interface experience of NIAK. Type the following command in a terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash <span class="c1"># Force the use of BASH, you can skip this line if already using BASH</span>
+docker run -it --rm  -v /tmp:/tmp -v <span class="nv">$PWD</span>:/sandbox/home --user <span class="nv">$UID</span> <span class="se">\</span>
+       -p <span class="m">8080</span>:8080 simexp/niak-cog:latest niak_jupyter
+</pre></div>
+</div>
+<p>the output should looks like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Welcome to NIAK in your browser, powered by jupyter!
+NIAK is now available on your machine
+Open your favorite browser at the following address: http://localhost:8080
+If that does not work, then try http://172.17.0.2:8080
+Then click New --&gt; Octave
+
+The PASSWORD is: NIAK
+
+For a tutorials on how to run Niak, go to http://niak.simexp-lab.org/niak_tutorials.html
+For the notebook logs, look in /tmp/niak_jypiter_Ln3BTm.log
+</pre></div>
+</div>
+<p>You can now start your favorite browser and go to <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>. Once the page is open, Jupyter will request a password, use NIAK. Then click New –&gt; Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> command has been executed.</p>
+<p>You should then have access to the file present in the directory where <code class="docutils literal notranslate"><span class="pre">niak_jupyter</span></code> was started.</p>
+</div>
+<div class="section" id="id3">
+<h3>Running NIAK in a terminal<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>You can also run the following command in your favorite terminal to get an <code class="docutils literal notranslate"><span class="pre">octave</span></code> session with NIAK included.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bash
+docker run -it --privileged --rm  -v /tmp:/tmp -v <span class="nv">$HOME</span>:<span class="nv">$HOME</span> <span class="se">\</span>
+       simexp/niak-cog:latest <span class="se">\</span>
+       /bin/bash -ic <span class="s2">&quot;cd </span><span class="nv">$HOME</span><span class="s2">; octave; /bin/bash&quot;</span>
+</pre></div>
+</div>
+<p>Note that Macs often have tcsh terminal by default, the first line with <code class="docutils literal notranslate"><span class="pre">bash</span></code> forces your terminal to be in bash mode.</p>
+<p>Note that one could access the octave gui by installing xquart on its mac, we do not officially support this feature but you can have a look <a class="reference external" href="https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/">here</a> for a procedure.</p>
+</div>
+</div>
+<div class="section" id="windows">
+<h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h3>Installing Docker<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>If you have a Windows 10 Pro, the <a class="reference external" href="https://docs.docker.com/docker-for-windows/install/">docker installation</a> is straight forward. Note that, as mention in the instruction, <a class="reference external" href="https://docs.docker.com/docker-for-windows/troubleshoot/#virtualization-must-be-enabled">virtualization must be enabled</a></p>
+<p>For older distributions, the task is not always as smooth, but is <a class="reference external" href="https://docs.docker.com/toolbox/toolbox_install_windows/">explained in detail here</a>.</p>
+</div>
+<div class="section" id="id5">
+<h3>Running NIAK in a Jupyter Notebook<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>We recommend using a Jupyter notebook to run NIAK on windows for a full featured user interface experience of NIAK (see bellow), but you can also run the following command in your favorite terminal to get an <code class="docutils literal notranslate"><span class="pre">octave</span></code> session with NIAK included.</p>
+<p>From the docker web site: <em>“If you are using Windows containers, keep in mind that there are some limitations with regard to networking […] One thing you may encounter rather immediately is that published ports on Windows containers do not do loopback to the local host. Instead, container endpoints are only reachable from the host using the container’s IP and port.”</em></p>
+<p>Hence, once you start Docker and spin off NIAK with the following command</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -it --rm  -v <span class="nv">$PWD</span>:<span class="s2">&quot;/sandbox/home&quot;</span>  --user nobody  -p <span class="m">8080</span>:8080 <span class="se">\</span>
+ simexp/niak-cog:latest niak_jupyter
+</pre></div>
+</div>
+<blockquote>
+<div><p>[<img src="docker_windows_niak.png" width="350px" />]</p>
+</div></blockquote>
+<p>You will need to open your browser with the address provided to you by the docker virtual machine. The adress <code class="docutils literal notranslate"><span class="pre">192.168.99.100</span></code> is circled in red in the example above. You then open your favorite browser to the address appended by port <code class="docutils literal notranslate"><span class="pre">8080</span></code>: <code class="docutils literal notranslate"><span class="pre">192.168.99.100:8080</span></code>. Once the page is open, Jupyter will request a password, use NIAK.</p>
+<blockquote>
+<div><p>[<img src="jupyter_login.png" width="350px" />]</p>
+</div></blockquote>
+<p>Then click New –&gt; Octave. You now have access to all NIAK features! Note that the NIAK outputs will be in the directory where the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> command has been executed.</p>
+</div>
+<div class="section" id="id6">
+<h3>Running NIAK in a terminal<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>You can also run the following command in your favorite terminal to get an <code class="docutils literal notranslate"><span class="pre">octave</span></code> session with NIAK included.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -it --privileged --rm <span class="se">\</span>
+       simexp/niak-cog:latest <span class="se">\</span>
+       /bin/bash -ic <span class="s2">&quot;cd </span><span class="nv">$HOME</span><span class="s2">; octave; /bin/bash&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="high-performance-computing">
+<h2>High performance computing<a class="headerlink" href="#high-performance-computing" title="Permalink to this headline">¶</a></h2>
+<p>The most straight forward way of installing NIAK on an HPC (High Performance Computer) system is trough its <a class="reference external" href="http://singularity.lbl.gov/">Singularity</a> image. <a class="reference external" href="http://singularity.lbl.gov/">Singularity</a> is a Linux container system “designed around the notion of extreme mobility of compute and reproducible science”.
+This installation procedure can also be used on a simple desktop or laptop but we still recommend the <a class="reference external" href="http://niak.simexp-lab.org/niak_installation.html">Docker installation</a> in this case.</p>
+<p>First you need to ask your system administrator to install <a class="reference external" href="http://singularity.lbl.gov/">Singularity</a> on the system. We recommend <a class="reference external" href="http://singularity.lbl.gov/all-release">release</a> 2.2 or higher.</p>
+<p>The administrator decides in the installation which part of the HPC file system will be accessible to users in the Singularity containers, make sure that the partition where your data lives is include in the “bind path”.</p>
+<p>Once Singularity is installed, running NIAK is straight forward. Download NIAK by clicking in niak_singularity.tgz in the latest <a class="reference external" href="https://github.com/SIMEXP/niak/releases/latest">release from the NIAK github page</a>. Decompress the tar ball on your computer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tar</span> <span class="o">-</span><span class="n">zxvf</span> <span class="n">niak_singularity</span><span class="o">.</span><span class="n">tgz</span>
+</pre></div>
+</div>
+<p>you can test the installation right away by typing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">niak_singularity</span>
+<span class="o">./</span><span class="n">psom_console</span><span class="o">.</span><span class="n">sh</span> <span class="n">niak</span><span class="o">-</span><span class="n">VERSION</span><span class="o">-</span><span class="n">NAME</span><span class="o">-</span><span class="n">AND</span><span class="o">-</span><span class="n">NUMBER</span><span class="o">.</span><span class="n">img</span>
+</pre></div>
+</div>
+<p>Depending on the local file system setup, it can take a couple of seconds to load  NIAK the first time. Wait a bit, you should now be in an octave console with a fully functional NIAK installation.
+You are now ready to run our <a class="reference external" href="http://niak.simexp-lab.org/niak_tutorials.html">tutorials</a> on the local host.</p>
+<div class="section" id="basic-hpc-configuration">
+<h3>Basic HPC Configuration<a class="headerlink" href="#basic-hpc-configuration" title="Permalink to this headline">¶</a></h3>
+<p>By default the installation runs only on the host where it was installed and with only one core. To change that, open the <code class="docutils literal notranslate"><span class="pre">psom_gb_vars_local.m</span></code> with your favorite editor change <code class="docutils literal notranslate"><span class="pre">gb_psom_mode</span></code> from <code class="docutils literal notranslate"><span class="pre">session</span></code> to <code class="docutils literal notranslate"><span class="pre">singularity</span></code> mode:</p>
+<div class="highlight-octave notranslate"><div class="highlight"><pre><span></span><span class="c">%gb_psom_mode = &#39;session&#39;;</span>
+<span class="c">%gb_psom_mode = &#39;background&#39;;</span>
+<span class="n">gb_psom_mode</span> <span class="p">=</span> <span class="s">&#39;singularity&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Right now the <code class="docutils literal notranslate"><span class="pre">singularity</span></code> mode only works with system using the <code class="docutils literal notranslate"><span class="pre">qsub</span></code> command. Any options needed by your local HPC to run the qsub command can be added to <code class="docutils literal notranslate"><span class="pre">gb_psom_qsub_options</span></code>. For example, on compute Canada Guillmin HPC, ones need to state his group id in every qsub call. This requirement is met by adding the following in <code class="docutils literal notranslate"><span class="pre">psom_gb_vars_local.m</span></code></p>
+<div class="highlight-octave notranslate"><div class="highlight"><pre><span></span><span class="n">gb_psom_qsub_options</span> <span class="p">=</span> <span class="s">&#39;-A my-guillimin-group-id&#39;</span><span class="p">;.</span>
+</pre></div>
+</div>
+<p>With this minimal configuration, you should be able to use the full power of your HPC!</p>
+<p>Note that you can also test the installation on multiple core, on the local host by changing <code class="docutils literal notranslate"><span class="pre">psom_gb_vars_local.m</span></code> to</p>
+<div class="highlight-octave notranslate"><div class="highlight"><pre><span></span><span class="c">%gb_psom_mode = &#39;session&#39;;</span>
+<span class="n">gb_psom_mode</span> <span class="p">=</span> <span class="s">&#39;background&#39;</span><span class="p">;</span>
+<span class="c">%gb_psom_mode = &#39;singularity&#39;;.</span>
+</pre></div>
+</div>
+<p>This would be the recommended mode for desktop/laptop install.</p>
+</div>
+<div class="section" id="more-configurations">
+<h3>More configurations<a class="headerlink" href="#more-configurations" title="Permalink to this headline">¶</a></h3>
+<p>The tar ball comes with a <code class="docutils literal notranslate"><span class="pre">psom.conf</span></code> file. This configuration can be stored in three places. In <code class="docutils literal notranslate"><span class="pre">/etc/psom.conf</span></code>, along with the <code class="docutils literal notranslate"><span class="pre">psom_console.sh</span></code> file (that is how it is shipped in the tar ball) or here: <code class="docutils literal notranslate"><span class="pre">${HOME}/.config/psom/psom.conf</span></code>. Note that the file are loaded in that order. So a user can overwrite the system <code class="docutils literal notranslate"><span class="pre">/etc/psom.conf</span></code> in <code class="docutils literal notranslate"><span class="pre">${HOME}/.config/psom/psom.conf</span></code>. If you do not have root access to the system, a <code class="docutils literal notranslate"><span class="pre">psom.conf</span></code> file living in the <code class="docutils literal notranslate"><span class="pre">psom_console.sh</span></code> directory can act as a system wide config.</p>
+<p>The configuration tells “psom_console.sh” where to look for the <code class="docutils literal notranslate"><span class="pre">psom_gb_vars_local.m</span></code> file and the <code class="docutils literal notranslate"><span class="pre">niak-VERSION-NAME-AND-NUMBER.img</span></code> images. The default is to find them at the same location than <code class="docutils literal notranslate"><span class="pre">psom_console.sh</span></code> itself. You also need to set the <code class="docutils literal notranslate"><span class="pre">PSOM_SINGULARITY_OPTIONS</span></code> variable so that directory other than the host <code class="docutils literal notranslate"><span class="pre">${HOME}</span></code> and <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> are accessible to the NIAK software. For example, if you need to mount the <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> directory, you can uncomment the line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PSOM_SINGULARITY_OPTIONS</span><span class="o">=</span><span class="s1">&#39;-B /scratch&#39;</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">PSOM_SINGULARITY_IMAGES_PATH</span></code> works in the same way as $PATH does. One can add valid NIAK images in many directories like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PSOM_SINGULARITY_IMAGES_PATH=/usr/local/niak_singularity_images/:$HOME/my_niak_images
+</pre></div>
+</div>
+<p>then,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om_console</span><span class="o">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">l</span>
+</pre></div>
+</div>
+<p>will list all the images stored in these directories. Note that all images should preferably have different names.</p>
+</div>
+<div class="section" id="adding-new-images-on-the-system">
+<h3>Adding new images on the system<a class="headerlink" href="#adding-new-images-on-the-system" title="Permalink to this headline">¶</a></h3>
+<p>Many NIAK versions can be accessible at the same time on a HPC system. Once psom_console has been installed. Just download and decompress any on the <code class="docutils literal notranslate"><span class="pre">niak-*.img.tgz</span></code> tar ball found in the <a class="reference external" href="https://github.com/SIMEXP/niak/releases">release section of the NIAK github page</a> in a path included in <code class="docutils literal notranslate"><span class="pre">PSOM_SINGULARITY_IMAGES_PATH</span></code>. It is now accessible in <code class="docutils literal notranslate"><span class="pre">psom_console</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="PREPROCESSING.html" class="btn btn-neutral float-right" title="fMRI preprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to NIAK’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, NIAK dev team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
