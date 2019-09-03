@@ -220,39 +220,39 @@ These outputs of the fMRI/T1 preprocessing pipeline are generated in the `opt.fo
 ## fMRI images
 
 The final preprocessed fMRI datasets are located in the folder ''fmri'': 
-
+ 
  * **fmri/fmri_subject_session_run.ext**:fMRI datasets after the full preprocessing pipeline was applied.
  * **fmri/fmri_subject_session_run._extra.mat**:the .mat companion of the fMRI dataset. It contains four variables: 
  * **mask_suppressed** (vector, same length as the number of time frames in the raw data) binary vector indicating if a time frame from the raw dataset was removed (1) or retained (0).  
- * **time_frames** (vector, same length as the preprocessed time series) vector indicating the time associated with each time frame. This is accurate only if the dataset has been corrected for slice timing.  
-  **confounds** (matrix, length of the preprocessed time series x number of confounds) each column is a counfound that has been regressed out from the preprocessed data 
-* **labels_confounds** (cell of strings) the kth entry is the (string) label of the kth confound.
+   **time_frames** (vector, same length as the preprocessed time series) vector indicating the time associated with each time frame. This is accurate only if the dataset has been corrected for slice timing.  
+   **confounds** (matrix, length of the preprocessed time series x number of confounds) each column is a counfound that has been regressed out from the preprocessed data 
+   **labels_confounds** (cell of strings) the kth entry is the (string) label of the kth confound.
 
 ## anatomical images
 
 The final results regarding the T1 image as well as all coregistration processes using the T1 image (thus including fMRI to T1 and fMRI to stereotaxic) are located in the folder ''anat'': 
 
-* **anat/subject/anat_subject_classify_stereolin.ext**:a 3 tissue-type classification (cerebrospinal fluid / gray matter / white matter, in this order) in the stereotaxic (linear) MNI152 space. 
-* **anat/subject/anat_subject_mask_stereolin.ext**:a mask of the brain for the T1 scan in stereotaxic linear space. 
-* **anat/subject/anat_subject_mask_stereonl.ext**:a mask of the brain for the T1 scan in stereotaxic non-linear space. 
-* **anat/subject/anat_subject_nativefunc_hires.ext**:the T1 scan resampled in native functional space at high spatial resolution. 
-* **anat/subject/anat_subject_nativefunc_lowres.ext**:the T1 scan resampled in native functional space at native functional resolution. 
-* **anat/subject/anat_subject_nuc_nativet1.ext**:the T1 scan in native space after non-uniformity correction. 
-* **anat/subject/anat_subject_nuc_stereolin.ext**:the T1 scan in stereotaxic linear space after non-uniformity correction. 
-* **anat/subject/anat_subject_nuc_stereonl.ext**:the T1 scan in stereotaxic non-linear space after non-uniformity correction. 
-* **anat/subject/func_subject_mask_nativefunc.ext**:a mask of the brain based on fMRI in native functional space. 
-* **anat/subject/func_subject_mask_stereolin.ext**:a mask of the brain based on fMRI in stereotaxic linear space. 
-* **anat/subject/func_subject_mask_stereonl.ext**:a mask of the brain based on fMRI in stereotaxic non-linear space. 
-* **anat/subject/func_subject_mean_nativefunc.ext**:a mean fMRI volume in native functional space. 
-* **anat/subject/func_subject_mean_stereolin.ext**:a mean fMRI volume in stereotaxic linear space. 
-* **anat/subject/func_subject_mean_stereonl.ext**:a mean fMRI volume in stereotaxic non-linear space. 
-* **anat/subject/func_subject_std_nativefunc.ext**:an average image (across all runs) of the standard deviation of the fMRI time series in native functional space. 
-* **anat/subject/transf_subject_nativefunc_to_stereolin.xfm**:a linear transformation from native functional space to stereotaxic space. 
-* **anat/subject/transf_subject_nativefunc_to_stereonl.xfm**:a non-linear transformation from native functional space to stereotaxic space. 
-* **anat/subject/transf_subject_nativefunc_to_stereonl.mnc**:the grid images associated to the preceeding non-linear transformation. 
-* **anat/subject/transf_subject_nativet1_to_stereolin.xfm**:a linear transformation from native structural (T1) space to stereotaxic space. 
-* **anat/subject/transf_subject_stereolin_to_stereonl.xfm**:a non-linear transformation from stereotaxic space to itself, based on the T1 scan after linear transformation into stereotaxic space. 
-* **anat/subject/transf_subject_stereolin_to_stereonl.mnc**:the grid images associated to the preceeding non-linear transformation.
+ * **anat/subject/anat_subject_classify_stereolin.ext**:a 3 tissue-type classification (cerebrospinal fluid / gray matter / white matter, in this order) in the stereotaxic (linear) MNI152 space. 
+ * **anat/subject/anat_subject_mask_stereolin.ext**:a mask of the brain for the T1 scan in stereotaxic linear space. 
+ * **anat/subject/anat_subject_mask_stereonl.ext**:a mask of the brain for the T1 scan in stereotaxic non-linear space. 
+ * **anat/subject/anat_subject_nativefunc_hires.ext**:the T1 scan resampled in native functional space at high spatial resolution. 
+ * **anat/subject/anat_subject_nativefunc_lowres.ext**:the T1 scan resampled in native functional space at native functional resolution. 
+ * **anat/subject/anat_subject_nuc_nativet1.ext**:the T1 scan in native space after non-uniformity correction. 
+ * **anat/subject/anat_subject_nuc_stereolin.ext**:the T1 scan in stereotaxic linear space after non-uniformity correction. 
+ * **anat/subject/anat_subject_nuc_stereonl.ext**:the T1 scan in stereotaxic non-linear space after non-uniformity correction. 
+ * **anat/subject/func_subject_mask_nativefunc.ext**:a mask of the brain based on fMRI in native functional space. 
+ * **anat/subject/func_subject_mask_stereolin.ext**:a mask of the brain based on fMRI in stereotaxic linear space. 
+ * **anat/subject/func_subject_mask_stereonl.ext**:a mask of the brain based on fMRI in stereotaxic non-linear space. 
+ * **anat/subject/func_subject_mean_nativefunc.ext**:a mean fMRI volume in native functional space. 
+ * **anat/subject/func_subject_mean_stereolin.ext**:a mean fMRI volume in stereotaxic linear space. 
+ * **anat/subject/func_subject_mean_stereonl.ext**:a mean fMRI volume in stereotaxic non-linear space. 
+ * **anat/subject/func_subject_std_nativefunc.ext**:an average image (across all runs) of the standard deviation of the fMRI time series in native functional space. 
+ * **anat/subject/transf_subject_nativefunc_to_stereolin.xfm**:a linear transformation from native functional space to stereotaxic space. 
+ * **anat/subject/transf_subject_nativefunc_to_stereonl.xfm**:a non-linear transformation from native functional space to stereotaxic space. 
+ * **anat/subject/transf_subject_nativefunc_to_stereonl.mnc**:the grid images associated to the preceeding non-linear transformation. 
+ * **anat/subject/transf_subject_nativet1_to_stereolin.xfm**:a linear transformation from native structural (T1) space to stereotaxic space. 
+ * **anat/subject/transf_subject_stereolin_to_stereonl.xfm**:a non-linear transformation from stereotaxic space to itself, based on the T1 scan after linear transformation into stereotaxic space. 
+ * **anat/subject/transf_subject_stereolin_to_stereonl.mnc**:the grid images associated to the preceeding non-linear transformation.
 
 ## Quality control
 
