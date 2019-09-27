@@ -219,8 +219,8 @@ These outputs of the fMRI/T1 preprocessing pipeline are generated in the `opt.fo
 
 ## fMRI images
 
-The final preprocessed fMRI datasets are located in the folder ''fmri'': 
- 
+The final preprocessed fMRI datasets are located in the folder ''fmri''
+
 * **fmri/fmri_subject_session_run.ext**: fMRI datasets after the full preprocessing pipeline was applied.
 * **fmri/fmri_subject_session_run._extra.mat**:the .mat companion of the fMRI dataset. It contains four variables: 
 * **mask_suppressed** (vector, same length as the number of time frames in the raw data) binary vector indicating if a time frame from the raw dataset was removed (1) or retained (0).  
