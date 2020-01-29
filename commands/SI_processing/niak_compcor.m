@@ -100,7 +100,7 @@ y = niak_normalize_tseries(y);
 [val,x] = niak_pca(y');
 
 if ~isempty(opt.nb_comp)
-    x = x(:,1:opt.nb_comp);
+    x = x(:,1:min(opt.nb_comp, size(X,2)));
     return
 end
 
