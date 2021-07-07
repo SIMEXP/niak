@@ -14,10 +14,10 @@ function [hdr,vol] = niak_read_vol(file_name)
 %    Supported formats are either NIFIT (*.nii,*.img/hdr), ANALYZE 
 %    (.img/.hdr/.mat) or MINC1/MINC2 (.mnc). Extra blanks are ignored. 
 %    File separator can be / or \ on Windows. Gzipped files (with an 
-%    additional .gz) are supported. Frames must be equally spaced in 
-%    time. For single file names, wild cards are supported (mutliple 
-%    files are treated in the same way as a matrix of image files 
-%    names).
+%    additional .gz) are supported using the gunzip system commad. 
+%    Frames must be equally spaced in time. For single file names, 
+%    wild cards are supported (mutliple files are treated in the same way 
+%    as a matrix of image files names).
 %
 % _________________________________________________________________________
 % OUTPUTS :
@@ -86,49 +86,56 @@ function [hdr,vol] = niak_read_vol(file_name)
 % SEE ALSO :
 % NIAK_READ_HDR_MINC, NIAK_WRITE_MINC, NIAK_WRITE_VOL, NIAK_READ_HDR_NIFTI,
 % NIAK_READ_NIFTI, NIAK_HDR_MAT2MINC, NIAK_HDR_MINC2MAT,
-% NIAK_COORD_VOX2WORLD, NIAK_COORD_WORLD2VOX.
+% NIAK_COORD_VOX2WORLD, NIAK_COORD_WORLD2VOX, NIAK_READ_DATA_NIFTI, 
+% NIAK_READ_DATA_MINC
 %
 % _________________________________________________________________________
 % COMMENTS
 %
 % NOTE 1:
-% If multiple files are specified, make sure all those files are in the
-% same space and are simple 3D volumes.
-% All data will be concatenated along the 4th dimension in the VOL array,
-% i.e. VOL(:,:,:,i) is the data of the ith file.
-% The HDR structure have multiple entries, each one corresponding to one
-% file.
+%   If multiple files are specified, make sure all those files are in the
+%   same space and are simple 3D volumes.
+%   All data will be concatenated along the 4th dimension in the VOL array,
+%   i.e. VOL(:,:,:,i) is the data of the ith file.
+%   The HDR structure have multiple entries, each one corresponding to one
+%   file.
 %
 % NOTE 2:
-% In order to read MINC files, a proper installation of minc tools is
-% required (see http://www.bic.mni.mcgill.ca/software/minc/).
+%   In order to read MINC files, a proper installation of minc tools is
+%   required (see http://www.bic.mni.mcgill.ca/software/minc/).
 %
 % NOTE 3:
-% The extension of zipped file is assumed to be .gz. The tools used to
-% unzip files in 'gunzip'. This setting can be changed by changing the
-% variables GB_NIAK_ZIP_EXT and GB_NIAK_UNZIP in the file NIAK_GB_VARS.
+%   The extension of zipped file is assumed to be .gz. The tools used to
+%   unzip files is 'gunzip'. 
 %
 % NOTE 4:
-% "voxel coordinates" start from 0. This is not the default matlab
-% behaviour, that indexes array starting from 1. To convert coordinates
-% from (matlab) voxel system to world system see NIAK_COORD_WORLD2VOX and
-% NIAK_COORD_VOX2WORLD.
+%   "voxel coordinates" start from 0. This is not the default matlab
+%   behaviour, that indexes array starting from 1. To convert coordinates
+%   from (matlab) voxel system to world system see NIAK_COORD_WORLD2VOX and
+%   NIAK_COORD_VOX2WORLD.
 %
 % NOTE 5:
-% If the name of the file is of the form toto.ext, the reader will look for 
-% a file toto_extra.mat. If such a file exist, it is assumed to contain matlab
-% variables and is loaded in HDR.EXTRA. This generic mechanism makes it easy to 
-% attach custom information to a file which may not be easy to achieve in a 
-% consistent way for all data formats. 
+%   If the name of the file is of the form toto.ext, the reader will look for 
+%   a file toto_extra.mat. If such a file exist, it is assumed to contain matlab
+%   variables and is loaded in HDR.EXTRA. This generic mechanism makes it easy to 
+%   attach custom information to a file. 
 %
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Centre de recherche de l'institut de Griatrie de Montral,
-% Dpartement d'informatique et de recherche oprationnelle,
-% Universit de Montral, 2010-2011.
-% Maintainer : pierre.bellec@criugm.qc.ca
+% _________________________________________________________________________
+% EXAMPLES
+%   To read the header and data array from a file:
+%     [hdr,vol] = niak_read_vol('my_file.nii.gz');
+%
+% See license in the code. 
+ 
+% Copyright (c) Pierre Bellec, 2008-2016.
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de geriatrie de Montreal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Qubec, Canada, 2010-2016
+% Maintainer: pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : medical imaging, I/O, reader, minc
-
+% Keywords: medical imaging, I/O, reader, minc, nifti
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
@@ -147,10 +154,11 @@ function [hdr,vol] = niak_read_vol(file_name)
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 
+flag_gb_niak_fast_gb = true;
 niak_gb_vars
   
 if ~ischar(file_name)
-    error('niak_read_vol: FILE_NAME should be a string or a matrix of strings')
+    error('niak_read_vol: FILE_NAME should be a structure, a string or a matrix of strings')
 end
 
 nb_file = size(file_name,1);
@@ -213,7 +221,7 @@ else
 
         %% The file exists
         file_name = niak_full_file(file_name);
-        [path_f,name_f,type] = fileparts(file_name);
+        [path_f,name_f,type] = niak_fileparts(file_name);
         switch type
 
             case GB_NIAK.zip_ext
@@ -249,7 +257,7 @@ else
                     hdr.extra = load(file_extra);
                 end
                 
-            case {'.mnc'}
+            case {'.mnc','.mnc.gz'}
                 
                 %% This is either a minc1 or minc2 file
                 if nargout == 2
@@ -262,7 +270,7 @@ else
                     hdr.extra = load(file_extra);
                 end
                 
-            case {'.nii','.img'}
+            case {'.nii','.nii.gz','.img'}
                 
                 %% This is a nifti file (either one file .nii, or two files
                 %% .img/hdr
@@ -279,7 +287,7 @@ else
             otherwise
 
                 %% Unsupported extension
-                error('niak:read: Unknown file extension %s. Only .mnc, .nii and .img are supported.',type)
+                error('niak:read: Unknown file extension %s. Only .mnc(.gz), .nii(.gz) and .img are supported.',type)
         end
     end
 

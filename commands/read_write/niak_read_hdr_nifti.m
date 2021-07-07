@@ -4,47 +4,32 @@ function hdr = niak_read_hdr_nifti(file_name)
 % affine transformation information will be included.
 % http://nifti.nimh.nih.gov/nifti-1
 % 
-% SYNTAX:
-% HDR = NIAK_READ_HDR_NIFTI(FILE_NAME)
+% SYNTAX: HDR = NIAK_READ_HDR_NIFTI(FILE_NAME)
 %
-% _________________________________________________________________________
-% INPUT:
+% FILE_NAME (string) name of a single 3D+t nifti file or a 3D nifti file.
+%   Compressed files (.nii.gz) are not supported.
+% HDR (structure) contain a description of the data. For a list of fields 
+%   common to all data types, see NIAK_READ_VOL.
+% HDR.DETAILS (structure) contains the standard fields of a nifti file. 
+%   See http://nifti.nimh.nih.gov/nifti-1.
 %
-% FILE_NAME     
-%    (string) name of a single 3D+t minc file or a 3D minc file.
+% EXAMPLE:
+%   hdr = niak_read_hdr_nifti('my_vol.nii');
 %
-% _________________________________________________________________________
-% OUTPUT:
-%
-% HDR           
-%    (structure) contain a description of the data. For a list of fields 
-%    common to all data types, see NIAK_READ_VOL.
-%
-%    HDR.DETAILS 
-%        (structure) contains the standard fields of a nifti file. 
-%        See http://nifti.nimh.nih.gov/nifti-1.
-%
-% _________________________________________________________________________
 % SEE ALSO:
+%   NIAK_READ_NIFTI, NIAK_WRITE_NIFTI, NIAK_READ_VOL, NIAK_WRITE_VOL
 %
-% NIAK_READ_NIFTI, NIAK_WRITE_NIFTI, NIAK_READ_VOL, NIAK_WRITE_VOL
-%
-% _________________________________________________________________________
-% COMMENTS:
-%
-% Part of this file is copied and modified under GNU license from
-% MRI_TOOLBOX developed by CNSP in Flinders University, Australia
-%
-% Important parts of this code are copied and modified from a matlab
-% toolbox by Jimmy Shen (pls@rotman-baycrest.on.ca). Unfortunately, this
-% toolbox did not include a copyright notice.
-% http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=8797&objectType=file
-%
-% Copyright (c) Pierre Bellec, Montreal Neurological Institute, 2008.
-% Maintainer : pbellec@bic.mni.mcgill.ca
+% See license in the code. 
+ 
+% Copyright (c) Pierre Bellec, Jimmy Shen, 2008-2016.
+% Montreal Neurological Institute, 2008-2010
+% Centre de recherche de l'institut de geriatrie de Montreal, 
+% Department of Computer Science and Operations Research
+% University of Montreal, Qubec, Canada, 2010-2016
+% Maintainer: pierre.bellec@criugm.qc.ca
 % See licensing information in the code.
-% Keywords : medical imaging, I/O, reader, nifti
-
+% Keywords: medical imaging, I/O, reader, nifti
+%
 % Permission is hereby granted, free of charge, to any person obtaining a copy
 % of this software and associated documentation files (the "Software"), to deal
 % in the Software without restriction, including without limitation the rights
