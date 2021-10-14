@@ -1,6 +1,6 @@
 [![Build Status](https://circleci.com/gh/SIMEXP/niak.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/SIMEXP/niak) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Important disclaimer: the NIAK team is committed to continue maintenance of this software until the end of 2020, but is not developping new features. The NIAK team will discontinue the software past 2020. 
+Important disclaimer: the SIMEXP lab has stopped developing or maintaining the NIAK library.
 
 The neuroimaging analysis kit (NIAK) is a library of functions for the preprocessing and connectivity analysis of large functional neuroimaging data, using GNU Octave, and distributed under a MIT license. Essential documentation can be found on the [NIAK website](http://niak.simexp-lab.org/). The NIAK is developed and maintained by members and collaborators of the [SIMEXP laboratory](simexp-lab.org), Department of Computer Science and Operations research ([DIRO](http://en.diro.umontreal.ca/home/)), Geriatric institute of Montreal ([CRIUGM](http://www.criugm.qc.ca/)), [University of Montreal](http://www.umontreal.ca/english/). Many of the functions of the kit are based on software developed over the years by members and collaborators of the [Brain Imaging Center](http://www.bic.mni.mcgill.ca/), [McGill University](http://www.mcgill.ca/). See the [contributors](https://github.com/SIMEXP/niak/wiki/NIAK-contributors) page for more details.
 
